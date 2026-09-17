@@ -456,7 +456,7 @@ def _m303_foral_snapshot(
     )
     profile = _m303_profile().model_copy(
         update={
-            "tax_territory": M303TaxTerritory.from_registry("foral"),
+            "tax_territory": M303TaxTerritory.from_registry("foral_unsupported"),
             "regime_composition": M303RegimeComposition.from_registry("mixed"),
             "redeme_enrolled": True,
             "cash_accounting_regime_enrolled": True,
@@ -686,7 +686,7 @@ def test_modelo_303_foral_territory_projects_true_without_a_constant_fallback() 
         taxpayer_tax_id=_TAXPAYER_TAX_ID,
         taxpayer_identity=_taxpayer_identity(),
         presenter=_presenter(),
-        model_profile=_m303_profile().model_copy(update={"tax_territory": M303TaxTerritory.from_registry("foral")}),
+        model_profile=_m303_profile().model_copy(update={"tax_territory": M303TaxTerritory.from_registry("foral_unsupported")}),
         elections=_elections(ResultDisposition.NEGATIVA),
         amendment_evidence=None,
         refund_account=None,

@@ -39,7 +39,7 @@ from ._authenticator_support import (
     _load_cert,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter, pytest.mark.usefixtures("operation")]
 
 
 def test_exact_active_certificate_session_guard_rejects_copies_and_other_providers() -> None:

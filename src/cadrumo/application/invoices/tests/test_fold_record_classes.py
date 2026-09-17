@@ -210,7 +210,7 @@ def test_a_simplificada_without_a_counterparty_tax_id_is_representable() -> None
     invoice = Invoice.model_validate(payload)
 
     assert invoice.counterparty_tax_id is None
-    assert invoice.invoice_class is InvoiceClass.from_registry("SIMPLIFICADA")
+    assert invoice.invoice_class == InvoiceClass.from_registry("SIMPLIFICADA")
 
 
 def test_a_received_invoice_without_a_tax_id_refuses_even_as_simplificada() -> None:

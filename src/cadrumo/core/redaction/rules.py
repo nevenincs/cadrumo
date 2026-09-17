@@ -31,9 +31,10 @@ The redaction strategies, defined in
     which are matched on shape alone.
 
 ``SHA256_PREFIX_IF_IDENTITY``
-    As ``SHA256_PREFIX``, but only when the matched span has the lexical
-    shape of a tax identity. Filing-grade leader and checksum validation
-    remains an explicit authority operation outside this innermost module.
+    As ``SHA256_PREFIX``, but only when the matched span is a real Spanish
+    tax identity. Used for the CIF shape, whose letter-led form collides with
+    ordinary document references; the control character, checked by the
+    host-bound admission gate, is what tells the two apart.
 
 ``SHA256_PREFIX_IF_IBAN``
     As ``SHA256_PREFIX``, but only when the matched span passes the ISO
@@ -74,6 +75,7 @@ from ..iban import IBAN_SHAPE_RE as _IBAN_SHAPE_RE
 from ..iban import iban_mod_97 as _iban_mod_97
 from ..iban import normalise_iban as _normalise_iban
 from ..type_guards import is_object_dict, is_object_list, is_object_tuple
+from .tax_identity_admission import tax_identity_admission
 
 ALWAYS_REDACT_KEY_TERMS: frozenset[str] = frozenset(
     {
@@ -136,9 +138,9 @@ already knew to redact.
 # evidence: ``SE-2026-000412`` survives today precisely BECAUSE the hyphen
 # breaks the token, so a pattern that simply admits more characters starts
 # eating ordinary hyphenated operator output. Normalising and then asking the
-# existing gate keeps the shape as weak evidence and the structural predicate
-# as the decision. Dated per-country admission remains a
-# domain-registry concern outside this core module.
+# existing gate keeps the shape as weak evidence and the checksum or per-State
+# structure as the decision, which is the arrangement this module already
+# documents for the CIF and IBAN arms.
 #
 # **Punctuation only, and the exclusion of the space is measured rather than
 # cautious.** A space is what separates TOKENS in prose, so admitting it lets the
@@ -151,9 +153,10 @@ already knew to redact.
 # tokens.
 _IDENTITY_SEPARATOR = r"[.\-]?"
 
-# The prefixed arm alone admits the space, and its gate applies the core
-# structural predicate to the normalised span. Dated country membership and
-# per-country patterns remain in the domain registry. ``SE 556677889901`` -- the
+# The prefixed arm alone admits the space, and only because two things constrain
+# it that constrain no other arm: a match must begin with two letters naming a
+# real Member State, and the per-State structural format then has to accept the
+# whole normalised number. ``SE 556677889901`` -- the
 # printed rendering this row exists for -- is caught here; the same string
 # cannot be caught by the arms above, since its body carries no leading letter
 # for the CIF shape and no trailing one for the personal shape.
@@ -189,9 +192,10 @@ _PREFIXED_IDENTITY_SEPARATOR = r"[ .\-]?"
 # sequence outputs, the separator-bearing population was more over-redaction
 # than redaction.
 #
-# So the separated arm asks the core identity structural predicate, and a rule
-# that can refuse belongs behind :func:`_gated_sub` like the other gated arms.
-# Filing-grade validation remains at the explicit authority boundary. Err-wide
+# So the separated arm asks the admission gate, whose control-character check
+# refuses every work-unit name and accepts every real printed identity, and a
+# rule that can refuse belongs behind :func:`_gated_sub` like the other gated
+# arms. Err-wide
 # is not weakened where its claim still holds; it is withdrawn only from the
 # population that disproved it.
 #
@@ -216,8 +220,7 @@ _SEPARATED_NIF_PATTERN = (
 # control character. Unlike the personal shapes above this one is LETTER-led,
 # which is the same shape as an ordinary document reference (an invoice
 # ``F1234567B``, a batch id), so it is paired with
-# ``SHA256_PREFIX_IF_IDENTITY``: the core structural predicate admits the
-# candidate while filing-grade control validation remains authority-owned.
+# ``SHA256_PREFIX_IF_IDENTITY``: the control character decides.
 # Widening the personal pattern's leading class instead would have admitted
 # every such reference.
 _CIF_PATTERN = (
@@ -239,8 +242,8 @@ _CIF_PATTERN = (
 # Deliberately a WIDE scan admitted by a STRICT gate, following the IBAN arm
 # rather than the identity arms: two leading letters plus an alphanumeric run
 # collides with hashes, opaque ids and document references, so the shape cannot
-# be the evidence alone. `SHA256_PREFIX_IF_NIF_IVA` applies the core structural
-# predicate; callers that need dated country admission use the domain registry.
+# be the evidence. `SHA256_PREFIX_IF_NIF_IVA` decides on the per-State
+# structure, and a prefix naming no State admits nothing at all.
 _NIF_IVA_PATTERN = (
     rf"\b[A-Za-z]{_PREFIXED_IDENTITY_SEPARATOR}[A-Za-z]{_PREFIXED_IDENTITY_SEPARATOR}"
     rf"[0-9A-Za-z](?:{_PREFIXED_IDENTITY_SEPARATOR}[0-9A-Za-z]){{1,12}}\b"
@@ -721,6 +724,15 @@ def _gated_replacement(
     return None, stop
 
 
+def _admits_spanish_identity(normalised: str, structurally_shaped: Callable[[object], bool]) -> bool:
+    """Ask the host's authority gate, falling back to lexical shape when it cannot answer."""
+    if (admission := tax_identity_admission()) is not None:
+        admitted = admission.admits_spanish_identity(normalised)
+        if admitted is not None:
+            return admitted
+    return structurally_shaped(normalised)
+
+
 def _apply_one(rule: _RedactionRule, value: str) -> str:
     pattern = _compiled_rule_pattern(rule.pattern)
     protected = _timestamp_spans(value)
@@ -754,7 +766,7 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
             # and reached the operator raw -- while ``same_tax_identifier``
             # answered that it is the very same bearer as the ``B12345674``
             # this funnel hashes.
-            if not is_identity_structurally_shaped(normalise_nif_iva(span)):
+            if not _admits_spanish_identity(normalise_nif_iva(span), is_identity_structurally_shaped):
                 return None
             return _sha256_prefix(span)
 
@@ -780,12 +792,19 @@ def _apply_one(rule: _RedactionRule, value: str) -> str:
             if _nif_iva_span_absorbs_a_word(span):
                 return None
             if prefix == "ES":
-                # The prefixed branch is a core lexical admission only. The
-                # Spanish authority validates BODY at the filing boundary.
-                if not is_identity_structurally_shaped(body):
+                # Spain is absent from the per-State IVA formats, because its own
+                # identities are the control-character authority's. So the ES
+                # arm asks that authority about the BODY -- which is the whole of
+                # what the prefixed spelling adds.
+                if not _admits_spanish_identity(body, is_identity_structurally_shaped):
                     return None
                 return _sha256_prefix(span)
-            if not is_nif_iva_structurally_shaped(normalised):
+            admitted = None
+            if (admission := tax_identity_admission()) is not None:
+                admitted = admission.admits_nif_iva(normalised)
+            if admitted is None:
+                admitted = is_nif_iva_structurally_shaped(normalised)
+            if not admitted:
                 return None
             return _sha256_prefix(span)
 
@@ -1054,11 +1073,11 @@ _CLI_STRING_CACHE_MAX_LENGTH = 512
 def _redact_cli_string(text: str, *, reveal_identifiers: bool = False) -> str:
     if len(text) > _CLI_STRING_CACHE_MAX_LENGTH:
         return _redact_cli_string_uncached(text, reveal_identifiers)
-    return _redact_cli_string_cached(text, reveal_identifiers)
+    return _redact_cli_string_cached(text, reveal_identifiers, tax_identity_admission())
 
 
 @lru_cache(maxsize=16384)
-def _redact_cli_string_cached(text: str, reveal_identifiers: bool) -> str:
+def _redact_cli_string_cached(text: str, reveal_identifiers: bool, admission: object) -> str:
     """Return the redaction of ``text``, reusing an earlier answer for the same input.
 
     The cache holds each input string in PLAINTEXT, next to its redaction, for
@@ -1067,7 +1086,11 @@ def _redact_cli_string_cached(text: str, reveal_identifiers: bool) -> str:
     entries of at most :data:`_CLI_STRING_CACHE_MAX_LENGTH` characters each. A
     one-shot CLI process exits moments later; the TUI and MCP hosts are
     long-lived and keep the entries for as long as they run.
+
+    ``admission`` is part of the key only: an answer computed under one
+    identity gate must not be reused under another.
     """
+    del admission
     return _redact_cli_string_uncached(text, reveal_identifiers)
 
 

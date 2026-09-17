@@ -721,6 +721,10 @@ errors:
     internal_operation_declaration_breach: 'Error intern: un executor d''operació
       ha reclamat una fase, un efecte, un recurs o una interacció que la seva definició
       no declara.'
+    internal_operation_unsettled: 'Error intern: l''operació s''ha aturat abans de
+      poder registrar-ne el resultat. Queda oberta i es tancarà automàticament quan
+      caduqui el seu bloqueig de propietari; consulteu els registres de diagnòstic
+      per veure''n la causa.'
     internal_output_rendering: 'Error intern: la sortida de l''ordre no s''ha pogut
       representar de manera segura.'
     internal_profile_project_answers_not_registered: 'Error intern: les respostes

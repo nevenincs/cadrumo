@@ -251,6 +251,19 @@ class M303RegimeCompositionCatalogue:
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
 
+    def require_simplified_scope(self, value: object) -> M303RegimenSimplificadoScope:
+        """Validate and return one simplified-regime scope some composition declares."""
+        if not isinstance(value, str):
+            raise RegistryValidationError("M303 simplified-regime scope must be a string token")
+        raw = str(value).strip()
+        if raw not in {definition.simplified_scope for definition in self.definitions}:
+            raise RegistryValidationError(
+                f"M303 simplified-regime scope {raw!r} is not declared by the facts registry",
+            )
+        if isinstance(value, M303RegimenSimplificadoScope):
+            return value
+        return M303RegimenSimplificadoScope.from_registry(raw)
+
 
 @dataclass(frozen=True, slots=True)
 class IvaExemptionArticleDefinition:
@@ -894,6 +907,19 @@ def m303_regime_composition_simplified_scope(
     return M303RegimenSimplificadoScope.from_registry(scope)
 
 
+def require_m303_regimen_simplificado_scope(
+    value: object,
+    *,
+    effective_date: date | None = None,
+    authority: GovernedFactSource | None = None,
+) -> M303RegimenSimplificadoScope:
+    """Validate one persisted simplified-regime scope against the dated composition fact."""
+    return resolve_m303_regime_composition_catalogue(
+        effective_date=effective_date,
+        authority=authority,
+    ).require_simplified_scope(value)
+
+
 def iva_regime_choices(
     *,
     effective_date: date | None = None,
@@ -1078,6 +1104,7 @@ __all__ = [
     "require_iva_exemption_article",
     "require_iva_regime",
     "require_m303_regime_composition",
+    "require_m303_regimen_simplificado_scope",
     "require_m303_tax_territory",
     "require_registry_declared_iva_cash_accounting_treatment",
     "resolve_iva_art69_dos_service_catalogue",

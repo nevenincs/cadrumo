@@ -27,6 +27,7 @@ See Also:
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Awaitable, Callable, Sequence
 from contextvars import copy_context
 from dataclasses import replace
@@ -564,6 +565,9 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         self._table_by_section.clear()
         self._columns_by_section.clear()
         for section in self.overview.sections:
+            # One section per loop turn: building every table in one pass held
+            # the loop for over half a second on a complete profile.
+            await asyncio.sleep(0)
             panel = self.query_one(f"#section-{section.key}", Static)
             panel.border_title = self._section_title(section)
             await panel.remove_children()

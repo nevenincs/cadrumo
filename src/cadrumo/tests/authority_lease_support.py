@@ -34,10 +34,22 @@ def private_authority_lease() -> Iterator[PinnedAuthorityOperation]:
             lease_context.run(lease.close)
 
 
+def _parametrizes(request: pytest.FixtureRequest, argname: str) -> bool:
+    """Whether the test supplies ``argname`` itself through parametrization.
+
+    pytest lists a parametrized argument in ``fixturenames`` exactly like a
+    fixture, so a test's own argument that merely shares the lease fixture's
+    name must not be mistaken for a request for the lease. The lease fixture
+    reads no ``request.param``, so indirect parametrization cannot target it.
+    """
+    callspec = getattr(request.node, "callspec", None)
+    return callspec is not None and argname in callspec.params
+
+
 @contextmanager
 def scoped_when_requested(request: pytest.FixtureRequest, fixture_name: str) -> Iterator[None]:
     """Scope governed facts to ``fixture_name``'s lease when the test depends on it."""
-    if fixture_name not in request.fixturenames:
+    if fixture_name not in request.fixturenames or _parametrizes(request, fixture_name):
         yield
         return
     pinned = request.getfixturevalue(fixture_name)

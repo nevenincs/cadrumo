@@ -175,7 +175,7 @@ def test_validation_accepts_candidate_matching_destination_fr_general_rate() -> 
         iva=Decimal("20"),
     )
     observation = validate_oss_ioss_observation(candidate)
-    assert observation.destination_member_state is EUMemberState.from_registry("fr")
+    assert observation.destination_member_state == EUMemberState.from_registry("fr")
     assert observation.iva_amount == Decimal("20")
 
 

@@ -42,7 +42,7 @@ from ..models import (
     resolve_multiple_pagadores_reduced_limit,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _deadline_facts(filing_year: int) -> DeadlineFactResolutionContext:
@@ -107,11 +107,11 @@ class TestTaxpayerModelRoundTrip:
         restored = TaxpayerProfile.model_validate_json(original.model_dump_json())
         assert restored == original
         # Spot-check each axis explicitly so a regression names the axis.
-        assert restored.entity_type is EntityType.from_registry("legal_entity")
+        assert restored.entity_type == EntityType.from_registry("legal_entity")
         assert restored.declaration_roles == frozenset(
             {ThirdPartyDeclarationRole.from_registry("third_party_fee_collector")}
         )
-        assert restored.legal_entity_form is LegalEntityForm.from_registry("cooperativa")
+        assert restored.legal_entity_form == LegalEntityForm.from_registry("cooperativa")
         assert restored.irpf_income_categories == frozenset(
             {
                 IrpfIncomeCategory.from_registry("capital_inmobiliario"),
@@ -119,7 +119,7 @@ class TestTaxpayerModelRoundTrip:
                 IrpfIncomeCategory.from_registry("trabajo"),
             },
         )
-        assert restored.irpf_estimation_regime is IrpfEstimationRegime.from_registry("directa_simplificada")
+        assert restored.irpf_estimation_regime == IrpfEstimationRegime.from_registry("directa_simplificada")
         assert restored.iva_regime == IVARegime("REAGP")
         iva = restored.iva
         assert iva is not None
@@ -146,7 +146,7 @@ class TestTaxpayerModelRoundTrip:
         )
         restored = TaxpayerProfile.model_validate_json(original.model_dump_json())
         assert restored == original
-        assert restored.irpf_estimation_regime is IrpfEstimationRegime.from_registry("objetiva")
+        assert restored.irpf_estimation_regime == IrpfEstimationRegime.from_registry("objetiva")
 
 
 class TestObjectiveEstimationRegimeAxis:
@@ -158,7 +158,7 @@ class TestObjectiveEstimationRegimeAxis:
             iva_regime=IVARegime("GENERAL"),
             irpf_estimation_regime=IrpfEstimationRegime.from_registry("objetiva"),
         )
-        assert profile.irpf_estimation_regime is IrpfEstimationRegime.from_registry("objetiva")
+        assert profile.irpf_estimation_regime == IrpfEstimationRegime.from_registry("objetiva")
 
     def test_directa_regime_is_not_objective_estimation(self) -> None:
         profile = TaxpayerProfile(
@@ -166,7 +166,7 @@ class TestObjectiveEstimationRegimeAxis:
             iva_regime=IVARegime("GENERAL"),
             irpf_estimation_regime=IrpfEstimationRegime.from_registry("directa_normal"),
         )
-        assert profile.irpf_estimation_regime is IrpfEstimationRegime.from_registry("directa_normal")
+        assert profile.irpf_estimation_regime == IrpfEstimationRegime.from_registry("directa_normal")
 
     def test_old_objective_estimation_boolean_is_rejected(self) -> None:
         """The retired objective-estimation boolean is no longer a profile input."""
@@ -265,7 +265,7 @@ class TestImpatriado:
             irpf_special_regime=IrpfSpecialRegime.from_registry("impatriado"),
             special_regime_start_date=date(2023, 1, 15),
         )
-        assert profile.irpf_special_regime is IrpfSpecialRegime.from_registry("impatriado")
+        assert profile.irpf_special_regime == IrpfSpecialRegime.from_registry("impatriado")
         assert profile.special_regime_start_date == date(2023, 1, 15)
 
     def test_general_regime_without_start_date_is_accepted(self) -> None:
@@ -408,7 +408,7 @@ class TestNonResidentAxis:
             representante_fiscal_nif="12345678Z",
             representante_fiscal_nombre="Test Representative",
         )
-        assert profile.fiscal_residency is FiscalResidency.from_registry("non_resident_irnr")
+        assert profile.fiscal_residency == FiscalResidency.from_registry("non_resident_irnr")
         assert profile.country_of_fiscal_residence == "GB"
 
     def test_ue_eee_status_true_for_eu_member(self) -> None:
@@ -706,7 +706,7 @@ class TestThirdPartyDeclarationRoleOrthogonality:
                 declaration_roles=roles,
             )
             assert derive_tax_route(colegio_profesional) is TaxRoute.IMPUESTO_SOCIEDADES
-            assert colegio_profesional.entity_type is EntityType.from_registry("legal_entity")
+            assert colegio_profesional.entity_type == EntityType.from_registry("legal_entity")
 
     def test_every_role_combination_leaves_the_natural_person_tax_route_unchanged(self) -> None:
         """The same proof for IRPF, so the axis is orthogonal on both routes it could distort."""

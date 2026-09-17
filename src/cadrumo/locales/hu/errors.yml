@@ -669,6 +669,9 @@ errors:
     internal_operation_declaration_breach: 'Belső hiba: egy művelet-végrehajtó olyan
       fázist, hatást, erőforrást vagy interakciót igényelt, amelyet a definíciója
       nem deklarál.'
+    internal_operation_unsettled: 'Belső hiba: a művelet leállt, mielőtt az eredményét
+      rögzíteni lehetett volna. Nyitva marad, és a tulajdonosi zárolás lejártakor
+      automatikusan lezárul; az okot a diagnosztikai naplókban találja.'
     internal_output_rendering: 'Belső hiba: a parancs kimenetét nem sikerült biztonságosan
       megjeleníteni.'
     internal_profile_project_answers_not_registered: 'Belső hiba: a project_answers

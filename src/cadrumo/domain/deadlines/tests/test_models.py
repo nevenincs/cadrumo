@@ -30,7 +30,7 @@ from ..models import (
 )
 from ..profiles import taxpayer_profile_from_mapping
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 _P_2026_1T = Period.from_year_and_code(2026, "1T")
 
 

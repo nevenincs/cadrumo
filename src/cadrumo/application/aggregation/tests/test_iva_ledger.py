@@ -348,7 +348,7 @@ def test_outgoing_business_transaction_projects_to_soportado_iva_observation() -
     assert observation.transaction_date == date(2026, 4, 5)
     assert observation.category == IvaCategory("domestic_general")
     assert observation.rate_kind is IvaRateKind("general")
-    assert observation.flow_direction is IvaFlowDirection.from_registry("soportado")
+    assert observation.flow_direction == IvaFlowDirection.from_registry("soportado")
     assert observation.base_amount == transaction.taxable_base
     assert observation.iva_amount == transaction.iva_amount
 
@@ -423,7 +423,7 @@ def test_incoming_business_transaction_projects_to_repercutido_iva_observation()
     observation = result.observations[0]
     assert observation.category == IvaCategory("domestic_reduced")
     assert observation.rate_kind is IvaRateKind("reduced")
-    assert observation.flow_direction is IvaFlowDirection.from_registry("repercutido")
+    assert observation.flow_direction == IvaFlowDirection.from_registry("repercutido")
     assert observation.iva_amount == Decimal("10.00")
 
 
@@ -466,7 +466,7 @@ def test_outgoing_input_row_carries_legal_prorrata_reference_separately_from_obs
     assert reference.transaction_id == transaction.transaction_id
     assert reference.transaction_date == date(2026, 4, 5)
     assert reference.reference.year == 2026
-    assert reference.reference.kind is ProrrataKind.from_registry("provisional")
+    assert reference.reference.kind == ProrrataKind.from_registry("provisional")
     assert reference.reference.regime is ProrrataRegime("general")
     assert reference.base_amount == Decimal("200.00")
     assert reference.input_iva_amount == Decimal("42.00")
@@ -521,7 +521,7 @@ def test_prorrata_reference_on_output_iva_row_is_reported_but_output_observation
         period=_Q2_2026,
     )
 
-    assert result.observations[0].flow_direction is IvaFlowDirection.from_registry("repercutido")
+    assert result.observations[0].flow_direction == IvaFlowDirection.from_registry("repercutido")
     assert result.prorrata_references == ()
     assert result.issues[0].reason is IvaLedgerAggregationIssueReason.INVALID_PRORRATA_REFERENCE
 

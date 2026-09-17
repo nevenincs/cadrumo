@@ -31,7 +31,7 @@ from ....domain.calculations.registry.tests.published_authority import published
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ..sector_lifecycle import seed_sector_carried_definitive_from_register, settle_sector_definitive
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _m303_snapshot_ref(ejercicio: int) -> RegistrySnapshotRef:
@@ -47,7 +47,7 @@ def _provisional_entry(*, ejercicio: int, sector_id: str, percentage: Decimal) -
         provisional_percentage=percentage,
         provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
         source_observation_ref=f"prorrata-register:{ejercicio - 1}:{sector_id}",
-        source_registry_snapshot_refs=(),
+        source_registry_snapshot_refs=(_m303_snapshot_ref(ejercicio - 1),),
     )
 
 

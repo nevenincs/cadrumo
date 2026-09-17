@@ -176,7 +176,7 @@ def _observation(
         deduction_provenance=IvaDeductionClassificationProvenance(
             authority=(
                 IvaDeductionEvidenceAuthority.from_registry("bienes_inversion_register")
-                if kind is IvaDeductionFactKind.from_registry("investment_goods_regularisation")
+                if kind == IvaDeductionFactKind.from_registry("investment_goods_regularisation")
                 else IvaDeductionEvidenceAuthority.from_registry("invoice_evidence")
             ),
             source_locator=f"invoice:{ledger_id}",
@@ -343,7 +343,7 @@ def test_canonical_aggregation_emits_apportioned_sector_kind_contributions() -> 
             item
             for item in apportioned
             if item.sector_id == "a"
-            and item.deduction_fact_kind is IvaDeductionFactKind.from_registry("domestic_current")
+            and item.deduction_fact_kind == IvaDeductionFactKind.from_registry("domestic_current")
         )
         assert domestic.base_amount == Decimal("200")
         assert domestic.deducible_iva_amount == Decimal("30")

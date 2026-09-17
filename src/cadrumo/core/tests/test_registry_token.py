@@ -21,6 +21,13 @@ class _StrictFromRegistry(StrictRegistryToken):
     _projection_source = "registry"
 
 
+class _Labelled(StrictRegistryToken):
+    __slots__ = ()
+
+    _vocabulary_label = "demo income-category"
+    _refusal_error = ValueError
+
+
 class _Text(TextProjectedRegistryToken):
     __slots__ = ()
 
@@ -71,3 +78,12 @@ def test_a_text_model_boundary_projects_stripped_text_and_refuses_blank_input() 
         adapter.validate_python("   ")
     with pytest.raises(ValidationError):
         adapter.validate_python(5)
+
+
+def test_a_declared_label_and_refusal_error_word_every_diagnostic() -> None:
+    with pytest.raises(TypeError, match=r"^demo income-category tokens must be projected from the facts registry$"):
+        _Labelled("x")
+    with pytest.raises(ValueError, match=r"^demo income-category token must be a non-empty string$"):
+        _Labelled.from_registry("")
+    with pytest.raises(ValidationError, match="demo income-category must be a registry-projected token"):
+        TypeAdapter(_Labelled).validate_python("x")

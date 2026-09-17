@@ -122,7 +122,7 @@ class AccountBar(Static):
     AccountBar {
         dock: top;
         width: 100%;
-        height: 1;
+        height: $cadrumo-band-height;
         background: $surface;
         color: $text;
         padding: $cadrumo-space-0 $cadrumo-gutter;
@@ -159,9 +159,9 @@ class AccountChromeScreen(Screen[None]):
     """
 
     SCOPED_CSS: ClassVar[bool] = False
-    DEFAULT_CSS: ClassVar[str] = """
-    AccountChromeScreen .cadrumo-banner { margin-top: 1; }
-    """
+    DEFAULT_CSS: ClassVar[str] = tokenised("""
+    AccountChromeScreen .cadrumo-banner { margin-top: $cadrumo-band-height; }
+    """)
 
     @on(events.Mount)
     def _mount_account_chrome(self) -> None:

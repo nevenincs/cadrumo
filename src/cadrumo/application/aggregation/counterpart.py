@@ -261,13 +261,14 @@ def _aggregate_for_modelo(
     operation: PinnedAuthorityOperation,
 ) -> CounterpartAggregation:
     registry_catalogue = _registry_counterpart_catalogue(period.end_date, operation=operation)
-    unsupported = sorted(
-        {observation.operation_kind for observation in observations}
-        - registry_catalogue.model_kinds.get(modelo, frozenset())
+    # A clave of the other modelo is filtered below; only a token in neither
+    # vocabulary would silently vanish from both passes.
+    undeclared = sorted(
+        {observation.operation_kind for observation in observations} - registry_catalogue.operation_kinds
     )
-    if unsupported:
+    if undeclared:
         raise ValueError(
-            f"operation_kind is not declared for modelo {modelo}: {', '.join(unsupported)}",
+            f"operation_kind is not a declared 347/349 clave: {', '.join(undeclared)}",
         )
     filtered = filter_observations_for_modelo(
         observations,

@@ -274,7 +274,7 @@ def test_a_registration_disagreeing_with_the_address_settles_neither(
         )
         assert lower_rung_answer == IvaTerritorialScope.from_registry("es_canarias")
         assert resolved.scope is not lower_rung_answer
-        assert resolved.scope is not IvaTerritorialScope.from_registry("eu_member")
+        assert resolved.scope != IvaTerritorialScope.from_registry("eu_member")
 
 
 def test_a_greek_iva_prefix_resolves_through_its_iso_code(

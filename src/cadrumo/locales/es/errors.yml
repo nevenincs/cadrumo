@@ -715,6 +715,10 @@ errors:
     internal_operation_declaration_breach: 'Error interno: un ejecutor de operación
       reclamó una fase, un efecto, un recurso o una interacción que su definición
       no declara.'
+    internal_operation_unsettled: 'Error interno: la operación se detuvo antes de
+      poder registrar su resultado. Queda abierta y se cerrará automáticamente cuando
+      caduque su bloqueo de propietario; consulte los registros de diagnóstico para
+      ver la causa.'
     internal_output_rendering: 'Error interno: la salida del comando no se pudo representar
       de forma segura.'
     internal_profile_project_answers_not_registered: 'Error interno: las respuestas

@@ -20,4 +20,6 @@ to notice when it changes.
 
 from __future__ import annotations
 
-pytest_plugins = ("cadrumo.conftest",)
+from cadrumo import conftest as runtime_conftest
+
+compose_runtime_ports = runtime_conftest.compose_runtime_ports

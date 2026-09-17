@@ -22,6 +22,7 @@ import re
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.cache_root import DEV_CACHE_ROOT_ENV
 
 from ..env_reference import render_environment_reference, target_path
 
@@ -30,6 +31,10 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 _REPO_ROOT = REPO_ROOT
 _ENV_EXAMPLE = _REPO_ROOT / "env" / ".env.example"
 _KEY_RE = re.compile(r"^#?\s*([A-Z][A-Z0-9_]+)=", re.MULTILINE)
+
+#: Template keys for development tooling, which reads them itself rather than
+#: through the product settings model.
+_DEVELOPMENT_TOOLING_KEYS = frozenset({DEV_CACHE_ROOT_ENV})
 
 
 def _settings_env_names() -> frozenset[str]:
@@ -56,7 +61,7 @@ def test_generated_page_is_fresh() -> None:
 def test_env_example_keys_all_resolve_to_settings_fields() -> None:
     """Every key in env/.env.example is a live Settings env name."""
     keys = frozenset(_KEY_RE.findall(_ENV_EXAMPLE.read_text(encoding="utf-8")))
-    dead = sorted(keys - _settings_env_names())
+    dead = sorted(keys - _settings_env_names() - _DEVELOPMENT_TOOLING_KEYS)
     assert not dead, f"env/.env.example keys with no Settings field (dead knobs): {dead}"
 
 

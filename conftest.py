@@ -187,6 +187,20 @@ def pytest_unconfigure(config: pytest.Config) -> None:
     _run_logging.restate(config)
 
 
+@pytest.fixture(scope="session", autouse=True)
+def _configure_logging_at_the_host_boundary() -> None:
+    """Configure logging once, as every host does at its process boundary.
+
+    Left unconfigured, the first warning a test emits installs the configuration
+    mid-test, and ``dictConfig`` then replaces the root handlers -- including the
+    one ``caplog`` attached for that test, which loses the very record it waited
+    for.
+    """
+    from cadrumo.core.logging import configure_logging
+
+    configure_logging()
+
+
 @pytest.fixture(scope="session")
 def _resident_service_environment() -> Iterator[None]:
     """Give resident-service child processes one isolated singleton scope."""

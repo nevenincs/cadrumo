@@ -929,7 +929,7 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
 
     matched = _run(_profile_with_ccaa("canarias"))
     assert matched.issues == ()
-    assert matched.observations[0].proportionality_kind is ProportionalityKind.from_registry(
+    assert matched.observations[0].proportionality_kind == ProportionalityKind.from_registry(
         "fixed_percentage",
         requires_fixed_pct=True,
         is_full_deductible=False,
@@ -942,7 +942,7 @@ def test_repository_wrapper_threads_profile_residence_into_region_override_selec
 
     other_region = _run(_profile_with_ccaa("madrid"))
     assert other_region.issues == ()
-    assert other_region.observations[0].proportionality_kind is not ProportionalityKind.from_registry(
+    assert other_region.observations[0].proportionality_kind != ProportionalityKind.from_registry(
         "fixed_percentage",
         requires_fixed_pct=True,
         is_full_deductible=False,

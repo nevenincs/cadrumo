@@ -28,7 +28,7 @@ from ....domain.calculations.registry.prorrata_register_catalogue import (
 )
 from ..election import ProrrataElectionError, ProrrataElectionRefusal, validate_prorrata_election
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_the_carried_prior_definitive_needs_no_reference() -> None:
@@ -38,7 +38,7 @@ def test_the_carried_prior_definitive_needs_no_reference() -> None:
         reference=None,
     )
 
-    assert provenance is ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
+    assert provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
     assert reference is None
 
 

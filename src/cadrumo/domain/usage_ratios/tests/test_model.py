@@ -238,7 +238,7 @@ def test_validate_usage_ratio_reference_accepts_configured_category_key() -> Non
     )
 
     assert isinstance(reference, UsageRatioReference)
-    assert reference.category is SpendingCategory.from_registry("telefonia_movil")
+    assert reference.category == SpendingCategory.from_registry("telefonia_movil")
     assert reference.ratio == Decimal("0.60")
 
 

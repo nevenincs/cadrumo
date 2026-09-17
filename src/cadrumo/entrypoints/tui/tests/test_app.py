@@ -8,6 +8,7 @@ from typing import ClassVar, cast
 
 import pytest
 from textual.binding import Binding
+from textual.pilot import Pilot
 from textual.screen import Screen
 from textual.widgets import Static
 
@@ -57,6 +58,13 @@ class MarkerScreen(Screen[None]):
     def action_close(self) -> None:
         """Dismiss through Textual's real child-screen return protocol."""
         self.dismiss(None)
+
+
+async def _settle(app: CadrumoTuiApp, pilot: Pilot[AccountRecomposeRequiredV1 | None]) -> None:
+    """Let Home's off-loop rebuild land and the screen it pushes lay out."""
+    await app.workers.wait_for_complete()
+    await pilot.pause()
+    await pilot.pause()
 
 
 def _catalogue(
@@ -187,6 +195,7 @@ async def test_child_dismissal_refreshes_home_and_restores_its_semantic_focus() 
     )
 
     async with app.run_test() as pilot:
+        await _settle(app, pilot)
         initial_home = app.screen
         assert isinstance(initial_home, HomeScreen)
         assert len(app.screen_stack) == 2
@@ -206,7 +215,7 @@ async def test_child_dismissal_refreshes_home_and_restores_its_semantic_focus() 
         assert len(app.screen_stack) == 2
 
         await pilot.press("escape")
-        await pilot.pause()
+        await _settle(app, pilot)
 
         returned_home = app.screen
         assert isinstance(returned_home, HomeScreen)
@@ -459,6 +468,7 @@ async def test_successful_sign_out_tears_down_root_but_refusal_does_not_claim_lo
     )
 
     async with app.run_test() as pilot:
+        await _settle(app, pilot)
         app._on_sign_out_dismissed(refused)
         assert app.return_value is None
         assert str(app.query_one("#root-account-refusal", Static).render())

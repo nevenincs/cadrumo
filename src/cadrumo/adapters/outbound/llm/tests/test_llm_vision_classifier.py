@@ -91,7 +91,7 @@ def test_vision_classifier_classifies_from_images() -> None:
 
         observed, response = run_against_loopback_ollama(classification_json, _call)
     assert response.classification is BusinessClassification.BUSINESS
-    assert response.category is SpendingCategory.from_registry("hardware_amortizable")
+    assert response.category == SpendingCategory.from_registry("hardware_amortizable")
     assert response.iva_category is IvaCategory("domestic_general")
 
     body = json_object(observed["body"])

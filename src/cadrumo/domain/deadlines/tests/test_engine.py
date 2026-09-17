@@ -27,7 +27,7 @@ from ..models import (
     TaxpayerProfile,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 
 def _period(year: int, code: str) -> Period:

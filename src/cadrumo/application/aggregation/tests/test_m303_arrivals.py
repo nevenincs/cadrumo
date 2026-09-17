@@ -129,7 +129,7 @@ def test_prorrata_transition_arrival_carries_option_register_evidence() -> None:
 
     assert arrival.period == _Q4_2026
     assert arrival.is_applicable is True
-    assert arrival.transition is ProrrataEspecialTransitionKind.from_registry("opcion")
+    assert arrival.transition == ProrrataEspecialTransitionKind.from_registry("opcion")
     assert arrival.register_evidence == (entry,)
 
 
@@ -272,7 +272,7 @@ def test_prorrata_transition_arrival_accepts_a_revocation_after_the_prior_especi
     arrival = resolve_m303_prorrata_transition_arrival(period=_Q4_2026, prorrata_register=register)
 
     assert arrival.is_applicable is True
-    assert arrival.transition is ProrrataEspecialTransitionKind.from_registry("revocacion")
+    assert arrival.transition == ProrrataEspecialTransitionKind.from_registry("revocacion")
     assert arrival.register_evidence == (revocation_entry,)
 
 

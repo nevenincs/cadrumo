@@ -200,7 +200,7 @@ def test_seed_persists_the_carried_prior_definitiva_entry(
     stored = _service(authority_operation).get(_CURRENT_YEAR)
     assert stored is not None
     assert stored.provisional_percentage == _PRIOR_DEFINITIVE
-    assert stored.provisional_provenance is ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
+    assert stored.provisional_provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
     assert stored.source_observation_ref == f"303:{_PRIOR_YEAR}:{_SETTLEMENT_PERIOD}"
 
     entries = _register_entries()
@@ -313,7 +313,7 @@ def test_seed_refuses_to_displace_a_standing_regulated_override(
     standing = service.get(_CURRENT_YEAR)
     assert standing is not None
     assert standing.provisional_percentage == Decimal("55")
-    assert standing.provisional_provenance is ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
+    assert standing.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
 
 
 @pytest.mark.usefixtures("cli_profile")

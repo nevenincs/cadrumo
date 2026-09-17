@@ -356,6 +356,7 @@ class _ExecutionDriver:
         )
         assert isinstance(cancellation, OperationCancellationRefusalV1)
         await self.services.submission.start(submitted.receipt.operation_id)
+        await self.services.submission.settled(submitted.receipt.operation_id)
         return submitted, await self.observe(submitted.receipt.operation_id)
 
     async def observe(self, operation_id: str) -> OperationObservationSuccessV1:
@@ -1116,6 +1117,7 @@ def test_censo_cooperative_cancellation_settles_after_its_irreversible_section(
                 secret=secret,
             )
             await driver.services.submission.start(submitted.receipt.operation_id)
+            await driver.services.submission.settled(submitted.receipt.operation_id)
             waiting = await driver.observe(submitted.receipt.operation_id)
             operation_id = await driver.respond_apply(submitted, waiting)
             await reached_boundary.wait()

@@ -66,7 +66,7 @@ def _recargo_invoice(*, recargo: str, day: date = _ORDINARY_DAY, slot: IvaRate =
     carry zero, which the invoice model enforces, so a hardcoded figure would
     make the exempt variant unconstructible.
     """
-    cuota = Decimal("210.00") if slot is IvaRate.from_registry("RATE_21") else Decimal("0.00")
+    cuota = Decimal("210.00") if slot == IvaRate.from_registry("RATE_21") else Decimal("0.00")
     total = _BASE + cuota + Decimal(recargo)
     return Invoice.model_validate(
         {

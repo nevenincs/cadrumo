@@ -21,10 +21,30 @@ it the first fixture gets as far as opening a profile session and then fails on
 ``profile custody infrastructure has not been composed``, which is a second,
 quieter consequence of the same move.
 
-Re-exporting a fixture is what makes it visible to pytest here; the ``noqa``
-marks each as used by collection rather than by any statement in this file.
+Binding a fixture into this module's namespace is what makes it visible to
+pytest here; a ``pytest_plugins`` declaration outside the root conftest is
+refused at collection.
 """
 
 from __future__ import annotations
 
-pytest_plugins = ("cadrumo.conftest", "cadrumo.entrypoints.cli.conftest")
+from collections.abc import Iterator
+
+import pytest
+
+from cadrumo import conftest as runtime_conftest
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.entrypoints.cli import conftest as cli_conftest
+
+compose_runtime_ports = runtime_conftest.compose_runtime_ports
+operation = runtime_conftest.operation
+source_tree_ast = runtime_conftest.source_tree_ast
+overview_cli_backend = cli_conftest.overview_cli_backend
+
+
+@pytest.fixture
+def governed_fact_scope(operation: PinnedAuthorityOperation) -> Iterator[None]:
+    """Resolve registry-validated values in one requesting test against the published lease."""
+    with validating_governed_facts(operation):
+        yield

@@ -26,17 +26,23 @@ class RegistryToken(str):
 
     __slots__ = ()
 
+    #: Names the token in diagnostics; the class name when unset.
+    _vocabulary_label: ClassVar[str | None] = None
     #: Names the authority in the refusal raised for unprojected construction.
     _projection_source: ClassVar[str] = "facts registry"
     #: Replaces the default empty-token refusal when the vocabulary words it differently.
     _empty_value_message: ClassVar[str | None] = None
 
+    @classmethod
+    def _diagnostic_label(cls) -> str:
+        return cls._vocabulary_label or cls.__name__
+
     def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
         """Construct only when called by the registry projection boundary."""
         if not _registry_validated:
-            raise TypeError(f"{cls.__name__} tokens must be projected from the {cls._projection_source}")
+            raise TypeError(f"{cls._diagnostic_label()} tokens must be projected from the {cls._projection_source}")
         if not isinstance(value, str) or not value:
-            raise ValueError(cls._empty_value_message or f"{cls.__name__} token must be a non-empty string")
+            raise ValueError(cls._empty_value_message or f"{cls._diagnostic_label()} token must be a non-empty string")
         return str.__new__(cls, value)
 
     @classmethod
@@ -55,11 +61,14 @@ class StrictRegistryToken(RegistryToken):
 
     __slots__ = ()
 
+    #: The error a typed model boundary raises for an unprojected value.
+    _refusal_error: ClassVar[type[Exception]] = CoreValidationError
+
     @classmethod
     def _require_registry_token(cls, value: object) -> Self:
         if isinstance(value, cls):
             return value
-        raise CoreValidationError(f"{cls.__name__} must be a registry-projected token")
+        raise cls._refusal_error(f"{cls._diagnostic_label()} must be a registry-projected token")
 
     @classmethod
     def __get_pydantic_core_schema__(

@@ -135,6 +135,7 @@ _NO_WORKERS: Final = "-n0"
 _NODE_ID: Final = re.compile(r"^(?P<node_id>\S+\.py::\S.*)$")
 _COLLECTED: Final = re.compile(r"(?:^|\s)(?P<count>\d+)(?:/\d+)? tests? collected")
 _NO_TESTS_COLLECTED: Final = re.compile(r"(?:^|\s)no tests collected")
+_LISTING_LOCATION: Final = re.compile(r"^collect-only: .*; listing in (?P<path>.+?) \(exit=", re.MULTILINE)
 
 
 def parse_node_ids(output: str) -> frozenset[str]:
@@ -254,6 +255,19 @@ def packaging_pytest_invocations(test_workers: int | None = None) -> tuple[Recip
 
 
 @functools.cache
+def _collection_transcript(stdout: str) -> str:
+    """Return the collect-only listing, wherever the test-run harness sent it.
+
+    The harness keeps the terminal to one summary line naming the run log and
+    writes the listing itself into that log, so the readers are pointed at the
+    log when the summary names one.
+    """
+    match = _LISTING_LOCATION.search(stdout)
+    if match is None:
+        return stdout
+    return Path(match.group("path")).read_text(encoding="utf-8", errors="replace")
+
+
 def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     """Boot a real pytest collection and return the node ids it selected.
 
@@ -316,10 +330,11 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     assert completed.returncode == 0, (
         f"{label} failed to collect (exit {completed.returncode}):\n{completed.stdout}\n{completed.stderr}"
     )
-    node_ids = parse_node_ids(completed.stdout)
-    reported = parse_collected_count(completed.stdout)
+    transcript = _collection_transcript(completed.stdout)
+    node_ids = parse_node_ids(transcript)
+    reported = parse_collected_count(transcript)
 
-    unread = [line for line in completed.stdout.splitlines() if line.strip() and _NODE_ID.match(line.rstrip()) is None]
+    unread = [line for line in transcript.splitlines() if line.strip() and _NODE_ID.match(line.rstrip()) is None]
 
     assert len(node_ids) == reported, (
         f"{label} listed {len(node_ids)} node ids but reported {reported} collected; "

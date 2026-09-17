@@ -46,14 +46,14 @@ def test_residence_change_validates_closed_ccaa() -> None:
         effective_from=date(2025, 1, 1),
         reason="move",
     )
-    assert change.to_ccaa is CCAA.ANDALUCIA
+    assert change.to_ccaa == CCAA.ANDALUCIA
     assert ResidenceChange.model_validate_json(change.model_dump_json()) == change
 
 
 def test_parse_tax_region_accepts_accented_display_names() -> None:
-    assert parse_tax_region("Aragón") is CCAA.ARAGON
-    assert parse_tax_region("Cataluña") is CCAA.CATALUNA
-    assert parse_tax_region("Castilla y León") is CCAA.CASTILLA_Y_LEON
+    assert parse_tax_region("Aragón") == CCAA.ARAGON
+    assert parse_tax_region("Cataluña") == CCAA.CATALUNA
+    assert parse_tax_region("Castilla y León") == CCAA.CASTILLA_Y_LEON
 
 
 def test_parse_tax_region_refuses_accented_foral_alias() -> None:
@@ -85,8 +85,8 @@ def test_ccaa_from_iso_code_maps_all_common_regime_codes() -> None:
 
 
 def test_ccaa_from_iso_code_is_case_insensitive() -> None:
-    assert CCAA.from_iso_code("and") is CCAA.ANDALUCIA
-    assert CCAA.from_iso_code("And") is CCAA.ANDALUCIA
+    assert CCAA.from_iso_code("and") == CCAA.ANDALUCIA
+    assert CCAA.from_iso_code("And") == CCAA.ANDALUCIA
 
 
 def test_ccaa_from_iso_code_raises_key_error_for_unknown_code() -> None:
@@ -95,19 +95,19 @@ def test_ccaa_from_iso_code_raises_key_error_for_unknown_code() -> None:
 
 
 def test_ccaa_from_label_accepts_canonical_value() -> None:
-    assert CCAA.from_label("andalucia") is CCAA.ANDALUCIA
-    assert CCAA.from_label("madrid") is CCAA.MADRID
-    assert CCAA.from_label("castilla_la_mancha") is CCAA.CASTILLA_LA_MANCHA
+    assert CCAA.from_label("andalucia") == CCAA.ANDALUCIA
+    assert CCAA.from_label("madrid") == CCAA.MADRID
+    assert CCAA.from_label("castilla_la_mancha") == CCAA.CASTILLA_LA_MANCHA
 
 
 def test_ccaa_from_label_accepts_iso_code() -> None:
-    assert CCAA.from_label("AND") is CCAA.ANDALUCIA
-    assert CCAA.from_label("and") is CCAA.ANDALUCIA
+    assert CCAA.from_label("AND") == CCAA.ANDALUCIA
+    assert CCAA.from_label("and") == CCAA.ANDALUCIA
 
 
 def test_ccaa_from_label_normalises_hyphens() -> None:
-    assert CCAA.from_label("castilla-la-mancha") is CCAA.CASTILLA_LA_MANCHA
-    assert CCAA.from_label("comunidad-valenciana") is CCAA.COMUNIDAD_VALENCIANA
+    assert CCAA.from_label("castilla-la-mancha") == CCAA.CASTILLA_LA_MANCHA
+    assert CCAA.from_label("comunidad-valenciana") == CCAA.COMUNIDAD_VALENCIANA
 
 
 def test_ccaa_from_label_raises_value_error_for_unknown_label() -> None:

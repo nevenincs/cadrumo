@@ -33,7 +33,7 @@ from ..models import (
     TaxpayerProfile,
 )
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _UTC_STAMP = datetime(2026, 1, 1, 12, 0, tzinfo=UTC)
 

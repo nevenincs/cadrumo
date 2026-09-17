@@ -1464,8 +1464,13 @@ def profile_free_adapter_composition() -> Generator[None]:
     from ..adapters.persistence.storage.profile_custody import build_profile_custody_port
     from ..application.user_profile.custody_ports import bind_profile_custody_port
     from ..application.user_profile.language_resolver import register_language_resolver
+    from ..core.redaction.tax_identity_admission import bind_tax_identity_admission
+    from ..domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
 
-    with bind_profile_custody_port(build_profile_custody_port()):
+    with (
+        bind_tax_identity_admission(RegistryTaxIdentityAdmission()),
+        bind_profile_custody_port(build_profile_custody_port()),
+    ):
         register_language_resolver()
         yield
 
@@ -1508,8 +1513,11 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..application.user_profile.language_resolver import register_language_resolver
     from ..application.user_profile.login_session_port import bind_profile_login_session_port
     from ..application.workflow.persistence import bind_workflow_persistence_port
+    from ..core.redaction.tax_identity_admission import bind_tax_identity_admission
+    from ..domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
 
     with ExitStack() as composition:
+        composition.enter_context(bind_tax_identity_admission(RegistryTaxIdentityAdmission()))
         profile_custody = build_profile_custody_port()
         composition.enter_context(bind_profile_custody_port(profile_custody))
         composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))

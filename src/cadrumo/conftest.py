@@ -96,6 +96,8 @@ def _scope_tests_that_request_the_operation(request: pytest.FixtureRequest) -> I
     if "operation" not in request.fixturenames:
         yield
         return
+    # A test's own parametrized ``operation`` argument also appears in
+    # ``fixturenames``; ``scoped_when_requested`` tells the two apart.
     from .tests.authority_lease_support import scoped_when_requested
 
     with scoped_when_requested(request, "operation"):
@@ -241,9 +243,12 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .application.workflow.persistence import bind_workflow_persistence_port
+    from .core.redaction.tax_identity_admission import bind_tax_identity_admission
+    from .domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
     from .tests.recorded_ecb_rates import recorded_ecb_rate_provider
 
     with (
+        bind_tax_identity_admission(RegistryTaxIdentityAdmission()),
         composed_profile_persistence_ports(),
         bind_workflow_persistence_port(build_workflow_persistence_port()),
         bind_bucket_event_history_repository_factory(build_bucket_event_history_repository),

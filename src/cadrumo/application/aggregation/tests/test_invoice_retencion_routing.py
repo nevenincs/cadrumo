@@ -337,7 +337,7 @@ def test_the_role_is_read_from_the_axis_a_table_not_from_the_invoice_kind() -> N
 
     projection = project_received_invoice_retencion(received_no_liability, scheme=_PROFESIONAL)
 
-    assert role is not IvaRetencionRole.from_registry("taxpayer_liability")
+    assert role != IvaRetencionRole.from_registry("taxpayer_liability")
     assert received_no_liability.kind is InvoiceKind.RECEIVED
     assert projection.defects == (InvoiceRetencionProjectionDefect.NOT_A_RETENEDOR_LIABILITY,)
 

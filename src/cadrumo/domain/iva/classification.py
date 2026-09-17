@@ -45,12 +45,13 @@ from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
 from types import MappingProxyType
-from typing import TYPE_CHECKING, NamedTuple, Self, TypeGuard
+from typing import TYPE_CHECKING, NamedTuple, TypeGuard
 
-from pydantic import Field, GetCoreSchemaHandler, model_validator
-from pydantic_core import CoreSchema, core_schema
+from pydantic import Field, model_validator
+from pydantic_core import core_schema
 
 from ...core.logging import get_logger
+from ...core.registry_token import StrictRegistryToken
 from ..calculations.registry.iva_category_catalogue import (
     IvaCategoryCatalogue,
     resolve_iva_category_catalogue,
@@ -83,48 +84,12 @@ if TYPE_CHECKING:
 # -- Registry-projected classification vocabulary ------------------------
 
 
-class _RegistryProjectedToken(str):
+class _RegistryProjectedToken(StrictRegistryToken):
     """Opaque token whose membership is established by a facts projection."""
 
     __slots__ = ()
 
-    def __new__(cls, value: str, *, _registry_validated: bool = False) -> Self:
-        if not _registry_validated:
-            raise TypeError(f"{cls.__name__} tokens must be projected from the facts registry")
-        if not isinstance(value, str) or not value:
-            raise ValueError(f"{cls.__name__} token must be a non-empty string")
-        return str.__new__(cls, value)
-
-    @classmethod
-    def from_registry(cls, value: str) -> Self:
-        """Construct the typed value from its canonical registry token."""
-        return cls(value, _registry_validated=True)
-
-    @classmethod
-    def _require_registry_token(cls, value: object) -> Self:
-        if isinstance(value, cls):
-            return value
-        raise IvaValidationError(f"{cls.__name__} must be a registry-projected token")
-
-    @classmethod
-    def __get_pydantic_core_schema__(
-        cls,
-        _source_type: object,
-        _handler: GetCoreSchemaHandler,
-    ) -> CoreSchema:
-        return core_schema.no_info_plain_validator_function(
-            cls._require_registry_token,
-            json_schema_input_schema=core_schema.str_schema(),
-            serialization=core_schema.to_string_ser_schema(),
-        )
-
-    @property
-    def value(self) -> str:
-        return str(self)
-
-    @property
-    def name(self) -> str:
-        return str(self)
+    _refusal_error = IvaValidationError
 
 
 class IvaTerritorialScope(_RegistryProjectedToken):
@@ -269,8 +234,6 @@ class TransactionKind(str):
     @classmethod
     def __get_pydantic_core_schema__(cls, _source_type: object, _handler: object) -> object:
         """Expose the opaque token as a string to Pydantic without a catalogue."""
-        from pydantic_core import core_schema
-
         return core_schema.no_info_after_validator_function(cls, core_schema.str_schema())
 
     @property

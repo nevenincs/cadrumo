@@ -1,8 +1,8 @@
 """Every exact-year-resolved IVA corpus must cover the master filing window.
 
 Two IVA corpora are resolved by EXACT filing year and raise on a miss:
-:func:`~domain.iva.iva_catalogue_years` (rate and regulation catalogue) and
-:func:`~domain.iva.place_of_supply_years` (the provision establishing each
+:func:`~dev.registry.conformance.iva_regulation_catalogue.iva_catalogue_years` (rate and regulation catalogue) and
+:func:`~cadrumo.domain.iva.place_of_supply.place_of_supply_years` (the provision establishing each
 classification rule's placement). Neither falls back to an adjacent year, and
 that refusal is deliberate -- an ungrounded placement has no provision behind
 it, so answering anyway would manufacture one.
@@ -41,9 +41,8 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
-
-from ..catalogue import iva_catalogue_years
-from ..place_of_supply import place_of_supply_years
+from cadrumo.domain.iva.place_of_supply import place_of_supply_years
+from dev.registry.conformance.iva_regulation_catalogue import iva_catalogue_years
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
