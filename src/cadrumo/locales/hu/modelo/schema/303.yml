@@ -216,6 +216,9 @@ modelo:
             label: Közös adózás éves korrekciós eredménye
           dr303-70:
             label: Ugyanazon év és időszak korábbi önbevallásaiból fizetendő összegek
+          dr303-71:
+            help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
+              véve.
           dr303-74:
             label: Kiegészítő információ - pénzforgalmi szemléletű beszerzések adóalapja
           dr303-75:
@@ -304,6 +307,9 @@ modelo:
             label: Az ügyletek éves teljes volumene
           iva-regularizacion-inversiones:
             label: Beruházási javak korrekciója (LIVA 107-110. cikk)
+          iva-resultado-autoliquidacion:
+            help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
+              véve.
           iva-resultado-regimen-general:
             label: Általános rendszer eredménye
           m303-deducciones-sector-1-domestic-current-base:
@@ -623,12 +629,8 @@ modelo:
                 véve.
               label: Eredmény. Az állami adóhatóságnak tulajdonítható
             '71':
-              help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
-                véve.
               label: Az elszámolás eredménye
             x-d5r62bjiclpnar3kc5i6u:
-              help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
-                véve.
               label: Az önadózás eredménye
           field:
             label: 303-as modelo, 2022. adóév
@@ -643,10 +645,8 @@ modelo:
                 Hivatkozások: [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
-              help: 'Tekintse át a rovat adatait: Végeredmény ([69]-[70]+[109]).'
               label: Végeredmény ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Tekintse át a rovat adatait: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78]).'
               label: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, adóév 2023
@@ -661,12 +661,10 @@ modelo:
                 Hivatkozások: [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
-              help: 'Tekintse át a rovat adatait: Végeredmény ([69]-[70]+[109]).'
               label: Végeredmény ([69]-[70]+[109])
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
               help: 'A 303-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Tekintse át a rovat adatait: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78]).'
               label: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78])
           field:
             label: 303-as modelo, 2024. adóév, a 09-es időszaktól és a 3. negyedévtől
@@ -681,12 +679,10 @@ modelo:
                 Hivatkozások: [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
-              help: 'Tekintse át a rovat adatait: Végeredmény ([69]-[70]+[109]).'
               label: Végeredmény ([69]-[70]+[109])
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
               help: 'A 303-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Tekintse át a rovat adatait: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78]).'
               label: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78])
           field:
             label: 303-as modelo, 2024. adóév, a 08-as időszakig és a 2. negyedévig
@@ -701,12 +697,10 @@ modelo:
                 Hivatkozások: [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
-              help: 'Tekintse át a rovat adatait: Végeredmény ([69]-[70]+[109]).'
               label: Végeredmény ([69]-[70]+[109])
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
               help: 'A 303-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Tekintse át a rovat adatait: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78]).'
               label: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, adóév 2025
@@ -949,7 +943,6 @@ modelo:
               help: '70. mező: ugyanazon év és időszak korábbi önbevallásaiból fizetendő
                 összegek.'
             '71':
-              help: 'Tekintse át a rovat adatait: Végeredmény ([69]-[70]+[109]).'
               label: Végeredmény ([69]-[70]+[109])
             '74':
               help: '74. mező: pénzforgalmi szemléletű beszerzések adóalapja.'
@@ -1019,7 +1012,6 @@ modelo:
               help: A 4%-os szupercsökkentett kulccsal kiszámított teljes felszámított
                 ÁFA.
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Tekintse át a rovat adatait: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78]).'
               label: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78])
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: Az általános rendszer eredménye, a keletkezett ÁFA és a levonható

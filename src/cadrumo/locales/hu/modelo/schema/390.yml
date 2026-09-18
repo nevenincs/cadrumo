@@ -134,27 +134,27 @@ modelo:
           iva-anual-repercutido-recargo-tipo-0-26-base:
             help: A 390-es éves IVA-összesítőn bevallott összeg a megadott kulcsú
               egyenértékűségi felárhoz.
-            label: Általános rendszerű ügyletek. Egyenértékűségi felár. 0,26%-os mérték.
+            label: Általános rendszerű ügyletek. Egyenértékűségi felár. Mérték 0,26%.
               Adóalap
           iva-anual-repercutido-recargo-tipo-0-62-base:
             help: A 390-es éves IVA-összesítőn bevallott összeg a megadott kulcsú
               egyenértékűségi felárhoz.
-            label: Általános rendszerű ügyletek. Egyenértékűségi felár. 0,62%-os mérték.
+            label: Általános rendszerű ügyletek. Egyenértékűségi felár. Mérték 0,62%.
               Adóalap
           iva-anual-repercutido-recargo-tipo-0-base:
             help: A 390-es éves IVA-összesítőn bevallott összeg a megadott kulcsú
               egyenértékűségi felárhoz.
-            label: Általános rendszerű ügyletek. Egyenértékűségi felár. 0%-os mérték.
+            label: Általános rendszerű ügyletek. Egyenértékűségi felár. Mérték 0%.
               Adóalap
           iva-anual-repercutido-recargo-tipo-0-cuota:
             help: A 390-es éves IVA-összesítőn bevallott összeg a megadott kulcsú
               egyenértékűségi felárhoz.
-            label: Általános rendszerű ügyletek. Egyenértékűségi felár. 0%-os mérték.
+            label: Általános rendszerű ügyletek. Egyenértékűségi felár. Mérték 0%.
               Adóösszeg
           iva-anual-repercutido-recargo-tipo-1-base:
             help: A 390-es éves IVA-összesítőn bevallott összeg a megadott kulcsú
               egyenértékűségi felárhoz.
-            label: Általános rendszerű ügyletek. Egyenértékűségi felár. 1%-os mérték.
+            label: Általános rendszerű ügyletek. Egyenértékűségi felár. Mérték 1%.
               Adóalap
           iva-anual-resultado-regimen-general:
             label: Általános rendszer eredménye
@@ -1213,9 +1213,11 @@ modelo:
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
               help: Fordított adózású ÁFA adóalapja belföldi ügyleteknél
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+              help: Keletkezett fordított adózású ÁFA belföldi ügyleteknél (LIVA 84.
+                cikk Uno.2.; hivatalos 13. rovat).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+                (LIVA 84. cikk Uno.2.).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Előző évi adójóváírás beszámítása
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -1613,7 +1615,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: 'A 390-es nyomtatvány 82. rovatának adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Beruházási javak korrekciója
+              help: Beruházási javak korrekciója (LIVA 107-110. cikk).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: A LIVA 80. cikk Ötödik bekezdés 5. pontja szerinti adóösszegek
                 helyesbítése
@@ -1929,7 +1931,8 @@ modelo:
             x-d5r62bj1dpqm2r1eedim6t3fe8mm8qb6clp6arj3d5gm8rpd6cn76tbdc4mm8pb4elhm6qbfdpin6:
               help: 3. elkülönült tevékenységi kör - Levonások összege [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
-              help: Levonható előzetesen felszámított ÁFA folyó áruk importján
+              help: Levonható előzetesen felszámított ÁFA folyó áruk importján (LIVA
+                17. és 92. cikk; hivatalos 33. rovat).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Levonható ÁFA összeg belföldi folyó ügyletek után
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
@@ -2094,9 +2097,11 @@ modelo:
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
               help: Fordított adózású ÁFA adóalapja belföldi ügyleteknél
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+              help: Keletkezett fordított adózású ÁFA belföldi ügyleteknél (LIVA 84.
+                cikk Uno.2.; hivatalos 13. rovat).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+                (LIVA 84. cikk Uno.2.).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Előző évi adójóváírás beszámítása
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -2494,7 +2499,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: 'A 390-es nyomtatvány 82. rovatának adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Beruházási javak korrekciója
+              help: Beruházási javak korrekciója (LIVA 107-110. cikk).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: A LIVA 80. cikk Ötödik bekezdés 5. pontja szerinti adóösszegek
                 helyesbítése
@@ -2806,7 +2811,8 @@ modelo:
             x-d5r62bj1dpqm2r1eedim6t3fe8mm8qb6clp6arj3d5gm8rpd6cn76tbdc4mm8pb4elhm6qbfdpin6:
               help: 3. elkülönült tevékenységi kör - Levonások összege [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
-              help: Levonható előzetesen felszámított ÁFA folyó áruk importján
+              help: Levonható előzetesen felszámított ÁFA folyó áruk importján (LIVA
+                17. és 92. cikk; hivatalos 33. rovat).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Levonható ÁFA összeg belföldi folyó ügyletek után
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
@@ -2995,9 +3001,11 @@ modelo:
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
               help: Fordított adózású ÁFA adóalapja belföldi ügyleteknél
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+              help: Keletkezett fordított adózású ÁFA belföldi ügyleteknél (LIVA 84.
+                cikk Uno.2.; hivatalos 13. rovat).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
               help: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+                (LIVA 84. cikk Uno.2.).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Előző évi adójóváírás beszámítása
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -3395,7 +3403,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: 'A 390-es nyomtatvány 82. rovatának adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Beruházási javak korrekciója
+              help: Beruházási javak korrekciója (LIVA 107-110. cikk).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: A LIVA 80. cikk Ötödik bekezdés 5. pontja szerinti adóösszegek
                 helyesbítése
@@ -3707,7 +3715,8 @@ modelo:
             x-d5r62bj1dpqm2r1eedim6t3fe8mm8qb6clp6arj3d5gm8rpd6cn76tbdc4mm8pb4elhm6qbfdpin6:
               help: 3. elkülönült tevékenységi kör - Levonások összege [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
-              help: Levonható előzetesen felszámított ÁFA folyó áruk importján
+              help: Levonható előzetesen felszámított ÁFA folyó áruk importján (LIVA
+                17. és 92. cikk; hivatalos 33. rovat).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Levonható ÁFA összeg belföldi folyó ügyletek után
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:

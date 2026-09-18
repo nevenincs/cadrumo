@@ -1219,9 +1219,11 @@ modelo:
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
               help: Taxable base of accrued reverse-charge VAT on domestic transactions
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Accrued reverse-charge VAT on domestic transactions
+              help: Output VAT self-charged on domestic transactions under the reverse
+                charge (LIVA art 84.Uno.2; official box 13).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
-              help: Reverse-charge VAT amount on intra-Community acquisitions
+              help: Output VAT self-charged on intra-Community acquisitions (LIVA
+                art 84.Uno.2).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Carry-forward of VAT credits from the previous year
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -1619,7 +1621,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Tax information about tax information in box 82 of Modelo 390.
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Capital goods adjustment
+              help: Adjustment for capital goods (LIVA arts. 107-110).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: Adjustment of VAT amounts under LIVA art. 80.Five.5
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
@@ -1935,7 +1937,8 @@ modelo:
             x-d5r62bj1dpqm2r1eedim6t3fe8mm8qb6clp6arj3d5gm8rpd6cn76tbdc4mm8pb4elhm6qbfdpin6:
               help: Differentiated sector 3 - Total deductions [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
-              help: Deductible input VAT on imports of current goods
+              help: Input VAT deductible on imports of current goods (LIVA art 17
+                + art 92; official box 33).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Deductible input VAT on domestic current transactions
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
@@ -2101,9 +2104,11 @@ modelo:
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
               help: Taxable base of accrued reverse-charge VAT on domestic transactions
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Accrued reverse-charge VAT on domestic transactions
+              help: Output VAT self-charged on domestic transactions under the reverse
+                charge (LIVA art 84.Uno.2; official box 13).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
-              help: Reverse-charge VAT amount on intra-Community acquisitions
+              help: Output VAT self-charged on intra-Community acquisitions (LIVA
+                art 84.Uno.2).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Carry-forward of VAT credits from the previous year
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -2501,7 +2506,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Tax information about tax information in box 82 of Modelo 390.
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Capital goods adjustment
+              help: Adjustment for capital goods (LIVA arts. 107-110).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: Adjustment of VAT amounts under LIVA art. 80.Five.5
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
@@ -2813,7 +2818,8 @@ modelo:
             x-d5r62bj1dpqm2r1eedim6t3fe8mm8qb6clp6arj3d5gm8rpd6cn76tbdc4mm8pb4elhm6qbfdpin6:
               help: Differentiated sector 3 - Total deductions [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
-              help: Deductible input VAT on imports of current goods
+              help: Input VAT deductible on imports of current goods (LIVA art 17
+                + art 92; official box 33).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Deductible input VAT on domestic current transactions
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
@@ -3003,9 +3009,11 @@ modelo:
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushec9gn6p8:
               help: Taxable base of accrued reverse-charge VAT on domestic transactions
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: Accrued reverse-charge VAT on domestic transactions
+              help: Output VAT self-charged on domestic transactions under the reverse
+                charge (LIVA art 84.Uno.2; official box 13).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
-              help: Reverse-charge VAT amount on intra-Community acquisitions
+              help: Output VAT self-charged on intra-Community acquisitions (LIVA
+                art 84.Uno.2).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Carry-forward of VAT credits from the previous year
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -3403,7 +3411,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Tax information about tax information in box 82 of Modelo 390.
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Capital goods adjustment
+              help: Adjustment for capital goods (LIVA arts. 107-110).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: Adjustment of VAT amounts under LIVA art. 80.Five.5
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
@@ -3715,7 +3723,8 @@ modelo:
             x-d5r62bj1dpqm2r1eedim6t3fe8mm8qb6clp6arj3d5gm8rpd6cn76tbdc4mm8pb4elhm6qbfdpin6:
               help: Differentiated sector 3 - Total deductions [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
-              help: Deductible input VAT on imports of current goods
+              help: Input VAT deductible on imports of current goods (LIVA art 17
+                + art 92; official box 33).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Deductible input VAT on domestic current transactions
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:

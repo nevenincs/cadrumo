@@ -1206,9 +1206,11 @@ modelo:
               help: Base imposable de l'IVA autorepercutit en operacions interiors
                 amb inversió del subjecte passiu
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: IVA autorepercutit meritat en operacions interiors
+              help: Quota d'IVA autorepercutida en operacions interiors amb inversió
+                del subjecte passiu (LIVA art. 84.Uno.2; casella oficial 13).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
-              help: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+              help: Quota d'IVA autorepercutida en adquisicions intracomunitàries
+                (LIVA art. 84.Uno.2).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Compensació de quotes de l'exercici anterior
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -1610,7 +1612,7 @@ modelo:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Regularització de béns d'inversió
+              help: Regularització per béns d'inversió (LIVA arts. 107-110).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: Regularització de quotes de l'art. 80.Cinc.5a LIVA
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
@@ -1916,6 +1918,7 @@ modelo:
               help: Sector diferenciat 3 - Suma de deduccions [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
               help: Quota d'IVA suportat deduïble en importacions de béns corrents
+                (LIVA art. 17 + art. 92; casella oficial 33).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Quota IVA suportat en operacions interiors corrents
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
@@ -2083,9 +2086,11 @@ modelo:
               help: Base imposable de l'IVA autorepercutit en operacions interiors
                 amb inversió del subjecte passiu
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: IVA autorepercutit meritat en operacions interiors
+              help: Quota d'IVA autorepercutida en operacions interiors amb inversió
+                del subjecte passiu (LIVA art. 84.Uno.2; casella oficial 13).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
-              help: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+              help: Quota d'IVA autorepercutida en adquisicions intracomunitàries
+                (LIVA art. 84.Uno.2).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Compensació de quotes de l'exercici anterior
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -2487,7 +2492,7 @@ modelo:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Regularització de béns d'inversió
+              help: Regularització per béns d'inversió (LIVA arts. 107-110).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: Regularització de quotes de l'art. 80.Cinc.5a LIVA
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
@@ -2789,6 +2794,7 @@ modelo:
               help: Sector diferenciat 3 - Suma de deduccions [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
               help: Quota d'IVA suportat deduïble en importacions de béns corrents
+                (LIVA art. 17 + art. 92; casella oficial 33).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Quota IVA suportat en operacions interiors corrents
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
@@ -2980,9 +2986,11 @@ modelo:
               help: Base imposable de l'IVA autorepercutit en operacions interiors
                 amb inversió del subjecte passiu
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: IVA autorepercutit meritat en operacions interiors
+              help: Quota d'IVA autorepercutida en operacions interiors amb inversió
+                del subjecte passiu (LIVA art. 84.Uno.2; casella oficial 13).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
-              help: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+              help: Quota d'IVA autorepercutida en adquisicions intracomunitàries
+                (LIVA art. 84.Uno.2).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Compensació de quotes de l'exercici anterior
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -3384,7 +3392,7 @@ modelo:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Regularització de béns d'inversió
+              help: Regularització per béns d'inversió (LIVA arts. 107-110).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: Regularització de quotes de l'art. 80.Cinc.5a LIVA
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
@@ -3686,6 +3694,7 @@ modelo:
               help: Sector diferenciat 3 - Suma de deduccions [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
               help: Quota d'IVA suportat deduïble en importacions de béns corrents
+                (LIVA art. 17 + art. 92; casella oficial 33).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Quota IVA suportat en operacions interiors corrents
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:

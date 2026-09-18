@@ -55,8 +55,8 @@ modelo:
               by the tax authority of the country of origin for an entity.'
             label: Tax identification number in the country of tax residence
           m270-numero-identificativo:
-            help: Thirteen-position sequential number whose first three digits are
-              the code 270.
+            help: 13-position sequential number whose first three digits correspond
+              to code 270.
             label: Identification number of the return
           m270-numero-identificativo-anterior:
             help: Identification number of the return this one supplements or replaces.
