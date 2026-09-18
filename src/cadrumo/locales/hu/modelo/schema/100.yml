@@ -3150,6 +3150,8 @@ modelo:
             label: 'A korábbi levonásoknak megfelelő késedelmi kamatok: autonóm-közösségi
               rész'
           irpf-intereses-demora-perdida-deducciones-autonomicas:
+            help: Tüntesse fel az előző levonásokhoz kapcsolódó autonóm közösségi
+              késedelmi kamatokat ebben a rendezési blokkban.
             label: 'A korábbi levonásoknak megfelelő késedelmi kamatok: autonóm-közösségi
               rész'
           irpf-intereses-demora-perdida-transitoria-estatal:
@@ -4396,9 +4398,6 @@ modelo:
               label: 'Ha a rendezést az adótörvény 45. kiegészítő rendelkezése 2.a)
                 pontjában vagy 45. kiegészítő rendelkezése 3. pontjában meghatározott
                 körülmények indokolják, jelölje ezt a mezőt ''X''-szel: állami rész'
-            0581:
-              help: 'Korábbi adókedvezmények késedelmi kamata: Autonóm tartományi
-                rész'
             0585:
               label: 'Megnövelt állami nettó adó: Állami rész'
             0586:
@@ -7302,9 +7301,6 @@ modelo:
                 pontjában vagy 45. kiegészítő rendelkezése 3. pontjában meghatározott
                 körülmények indokolják, jelölje ezt a mezőt ''X''-szel: autonóm közösségi
                 rész'
-            0581:
-              help: 'Adja meg vagy ellenőrizze a(z) „A korábbi levonásoknak megfelelő
-                késedelmi kamatok: autonóm-közösségi rész” értékét ehhez az önadózáshoz.'
             0584:
               label: 'La Palma szigetén szerzett jövedelmek miatt (ezen rovatok összegei
                 az A.6 mellékletből): autonóm közösségi rész'
@@ -8631,9 +8627,6 @@ modelo:
                 pontjában vagy 45. kiegészítő rendelkezése 3. pontjában meghatározott
                 körülmények indokolják, jelölje ezt a mezőt ''X''-szel: autonóm közösségi
                 rész'
-            0581:
-              help: 'Adja meg vagy ellenőrizze a(z) „A korábbi levonásoknak megfelelő
-                késedelmi kamatok: autonóm-közösségi rész” értékét ehhez az önadózáshoz.'
             0584:
               label: 'La Palma szigetén fennálló szokásos és tényleges lakóhely miatt
                 (e mezők összegei az A.7 mellékletből): autonóm közösségi rész'
@@ -11470,9 +11463,6 @@ modelo:
                 2024-ben elveszett.
               label: 'Azon autonóm közösségi levonások összege, amelyekre a jogosultság
                 2024-ben elveszett: autonóm közösségi rész'
-            0581:
-              help: Tüntesse fel az előző levonásokhoz kapcsolódó autonóm közösségi
-                késedelmi kamatokat ebben a rendezési blokkban.
             0582:
               help: Tüntesse fel az előző rendezéshez kapcsolódó késedelmi kamatok
                 állami részét.
@@ -16491,9 +16481,6 @@ modelo:
             0579:
               label: 'A 2025-ben elveszített jogosultságú autonóm-közösségi levonások
                 összege: autonóm-közösségi rész'
-            0581:
-              help: 'Adja meg vagy ellenőrizze a(z) „A korábbi levonásoknak megfelelő
-                késedelmi kamatok: autonóm-közösségi rész” értékét ehhez az önadózáshoz.'
             0584:
               label: 'A La Palma-szigeten való szokásos és tényleges tartózkodás után
                 (az A.6 melléklet e rovatainak összege): autonóm-közösségi rész'

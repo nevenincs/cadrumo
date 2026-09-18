@@ -202,13 +202,19 @@ modelo:
           dr303-63:
             label: Additional information - Supplies accrued under the cash accounting
               scheme (Art. 75 LIVA) - Tax amount
+          dr303-64:
+            help: Field declared on modelo 303, taken from the official record design.
           dr303-65:
             label: Result - percentage attributable to the State Tax Administration
+          dr303-66:
+            help: Field declared on modelo 303, taken from the official record design.
           dr303-68:
             label: Result - Joint taxation, annual adjustment result
           dr303-70:
             label: Result - Amounts payable from previous self-assessments of the
               tax year and period
+          dr303-71:
+            help: Data declared in modelo 303, taken from the official record design.
           dr303-74:
             label: Additional information - Acquisitions under the cash accounting
               scheme - Taxable base
@@ -292,6 +298,8 @@ modelo:
             label: Total annual turnover
           iva-regularizacion-inversiones:
             label: Capital goods adjustment (LIVA arts. 107-110)
+          iva-resultado-autoliquidacion:
+            help: Data declared in modelo 303, taken from the official record design.
           iva-resultado-regimen-general:
             label: General regime result
           m303-deducciones-sector-1-domestic-current-base:
@@ -610,84 +618,64 @@ modelo:
         '2022':
           casilla:
             '64':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result. Sum of results
             '66':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result. Attributable to the State Administration
             '71':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result of the settlement
             x-d5r62bjiclpnar3kc5i6u:
-              help: Field declared on modelo 303, taken from the official record design.
               label: Self-assessment result
           field:
             label: Modelo 303, tax year 2022
         '2023':
           casilla:
             '64':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: Data declared in Modelo 303, taken from the official record design.
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: Data declared in Modelo 303, taken from the official record design.
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2023
         2024-desde-09-y-3t:
           casilla:
             '64':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: Data declared in Modelo 303, taken from the official record design.
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: Data declared in Modelo 303, taken from the official record design.
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2024, from periods 09 and Q3 onwards
         2024-hasta-08-y-2t:
           casilla:
             '64':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: Data declared in Modelo 303, taken from the official record design.
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: Data declared in Modelo 303, taken from the official record design.
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2024, up to periods 08 and Q2
         '2025':
           casilla:
             '64':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: Data declared in Modelo 303, taken from the official record design.
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: Data declared in Modelo 303, taken from the official record design.
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2025
@@ -913,12 +901,10 @@ modelo:
               help: 'Box 63: amount of supplies accrued under the cash accounting
                 scheme pursuant to article 75 LIVA.'
             '64':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Sum of results ([46]+[58]+[76])
             '65':
               help: 'Box 65: percentage of the result attributable to the State Administration.'
             '66':
-              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '68':
@@ -927,7 +913,6 @@ modelo:
               help: 'Box 70: amounts payable arising from previous self-assessments
                 for the same year and period.'
             '71':
-              help: Data declared in Modelo 303, taken from the official record design.
               label: Result final ([69]-[70]+[109])
             '74':
               help: 'Box 74: taxable base of acquisitions under the cash accounting
@@ -991,7 +976,6 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: Total output VAT calculated at the super-reduced 4% rate.
             x-d5r62bjiclpnar3kc5i6u:
-              help: Data declared in Modelo 303, taken from the official record design.
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: General regime result calculated as accrued VAT minus deductible

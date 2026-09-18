@@ -3104,6 +3104,7 @@ modelo:
             label: 'Late-payment interest corresponding to the above deductions: Regional
               portion'
           irpf-intereses-demora-perdida-deducciones-autonomicas:
+            help: 'Late-payment interest on previous deductions: Regional share'
             label: 'Late-payment interest corresponding to the above deductions: Regional
               portion'
           irpf-intereses-demora-perdida-transitoria-estatal:
@@ -4323,8 +4324,6 @@ modelo:
               label: 'If the regularisation is due to the circumstances set out in
                 Additional Provision 45.2.a) or 45.3 of the Tax Law, mark this box
                 with an "X": State portion'
-            0581:
-              help: 'Late-payment interest on previous deductions: Regional share'
             0585:
               label: 'Increased state net tax liability: State part'
             0586:
@@ -7148,9 +7147,6 @@ modelo:
               label: 'If the regularisation is due to the circumstances set out in
                 Additional Provision 45.2.a) or 45.3 of the Tax Law, mark this box
                 with an "X": Regional portion'
-            0581:
-              help: 'Enter or review “Late-payment interest corresponding to the above
-                deductions: Regional portion” for this self-assessment.'
             0584:
               label: 'For income obtained on the island of La Palma (amounts from
                 these boxes in Annex A.6): Regional part'
@@ -8435,9 +8431,6 @@ modelo:
               label: 'If the regularisation is due to the circumstances set out in
                 Additional Provision 45.2.a) or 45.3 of the Tax Law, mark this box
                 with an "X": Regional portion'
-            0581:
-              help: 'Enter or review “Late-payment interest corresponding to the above
-                deductions: Regional portion” for this self-assessment.'
             0584:
               label: 'For habitual and effective residence on the island of La Palma
                 (amounts from these boxes in Annex A.7): Autonomous-community part'
@@ -11199,9 +11192,6 @@ modelo:
                 was lost in 2024.
               label: 'Amount of autonomous-community deductions to which entitlement
                 was lost in 2024: Autonomous-community part'
-            0581:
-              help: Enter the autonomous-community late-payment interest corresponding
-                to the previous deductions for this regularization block.
             0582:
               help: Enter the state-part late-payment interest corresponding to the
                 previous regularization.
@@ -16054,9 +16044,6 @@ modelo:
             0579:
               label: 'Amount of the regional deductions to which entitlement was lost
                 in 2025: Regional portion'
-            0581:
-              help: 'Enter or review “Late-payment interest corresponding to the above
-                deductions: Regional portion” for this self-assessment.'
             0584:
               label: 'For habitual and effective residence on the island of La Palma
                 (amounts from these boxes of Annex A.6): Regional portion'

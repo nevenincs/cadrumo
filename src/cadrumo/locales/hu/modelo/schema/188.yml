@@ -39,22 +39,6 @@ modelo:
           field:
             label: 188-as modelo, 2022. adóév
         2023-y-siguientes:
-          casilla:
-            '01':
-              help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja
-                pozitív.
-            '02':
-              help: A pozitív alappal rendelkező kedvezményezetti rekordokban szereplő
-                levonási alapok összege.
-            '03':
-              help: A bevallott jövedelmekre alkalmazott levonások és előlegfizetések
-                összege.
-            '04':
-              help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja
-                negatív.
-            '05':
-              help: A negatív alappal rendelkező kedvezményezetti rekordokban szereplő
-                levonási alapok összege.
           construct:
             modelo-188-calculation-construct:
               field:

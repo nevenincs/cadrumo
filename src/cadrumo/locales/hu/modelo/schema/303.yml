@@ -210,8 +210,14 @@ modelo:
           dr303-63:
             label: Kiegészítő információ - a LIVA 75. cikke szerint keletkezett pénzforgalmi
               szemléletű teljesítések ÁFA összege
+          dr303-64:
+            help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
+              véve.
           dr303-65:
             label: Eredmény - az Állami Adóigazgatásnak tulajdonítható százalék
+          dr303-66:
+            help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
+              véve.
           dr303-68:
             label: Közös adózás éves korrekciós eredménye
           dr303-70:
@@ -277,7 +283,7 @@ modelo:
           iva-cuota-devengada-total:
             label: Összes keletkezett ÁFA összeg
           iva-cuota-repercutida-general:
-            help: A 21%-os általános kulccsal számított felszámított ÁFA teljes összege.
+            help: A 21%-os általános kulccsal számított felszámított IVA teljes összege.
             label: Felszámított ÁFA összeg általános kulccsal (21%)
           iva-cuota-repercutida-reducido:
             label: Felszámított ÁFA összeg csökkentett kulccsal (10%)
@@ -621,12 +627,8 @@ modelo:
         '2022':
           casilla:
             '64':
-              help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
-                véve.
               label: Eredmény. Eredmények összege
             '66':
-              help: A 303-es nyomtatványon bevallott adat, a hivatalos nyomtatványtervből
-                véve.
               label: Eredmény. Az állami adóhatóságnak tulajdonítható
             '71':
               label: Az elszámolás eredménye
@@ -637,12 +639,8 @@ modelo:
         '2023':
           casilla:
             '64':
-              help: 'A 303-es nyomtatvány 64. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [46], [58], [76].'
               label: Eredmény - az eredmények összege ([46]+[58]+[76])
             '66':
-              help: 'A 303-es nyomtatvány 66. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
               label: Végeredmény ([69]-[70]+[109])
@@ -653,17 +651,11 @@ modelo:
         2024-desde-09-y-3t:
           casilla:
             '64':
-              help: 'A 303-es nyomtatvány 64. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [46], [58], [76].'
               label: Eredmény - az eredmények összege ([46]+[58]+[76])
             '66':
-              help: 'A 303-es nyomtatvány 66. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
               label: Végeredmény ([69]-[70]+[109])
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: 'A 303-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
             x-d5r62bjiclpnar3kc5i6u:
               label: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78])
           field:
@@ -671,17 +663,11 @@ modelo:
         2024-hasta-08-y-2t:
           casilla:
             '64':
-              help: 'A 303-es nyomtatvány 64. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [46], [58], [76].'
               label: Eredmény - az eredmények összege ([46]+[58]+[76])
             '66':
-              help: 'A 303-es nyomtatvány 66. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
               label: Végeredmény ([69]-[70]+[109])
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: 'A 303-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
             x-d5r62bjiclpnar3kc5i6u:
               label: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78])
           field:
@@ -689,17 +675,11 @@ modelo:
         '2025':
           casilla:
             '64':
-              help: 'A 303-es nyomtatvány 64. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [46], [58], [76].'
               label: Eredmény - az eredmények összege ([46]+[58]+[76])
             '66':
-              help: 'A 303-es nyomtatvány 66. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
               label: Végeredmény ([69]-[70]+[109])
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
-              help: 'A 303-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
             x-d5r62bjiclpnar3kc5i6u:
               label: Eredmény - önadózási bevallás ([66]+[77]+[68]-[78])
           field:
@@ -928,14 +908,10 @@ modelo:
               help: '63. mező: LIVA 75. cikk szerint keletkezett pénzforgalmi szemléletű
                 teljesítések ÁFA összege.'
             '64':
-              help: 'A 303-es nyomtatvány 64. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [46], [58], [76].'
               label: Eredmény - az eredmények összege ([46]+[58]+[76])
             '65':
               help: '65. mező: az eredmény Állami Adóigazgatásnak tulajdonítható százaléka.'
             '66':
-              help: 'A 303-es nyomtatvány 66. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '68':
               help: '68. mező: közös adózás éves korrekciós eredménye.'
@@ -1003,8 +979,6 @@ modelo:
                 ügyletvolumen.
             x-d5r62bjicljnar31e9knkob3d5nmsbb9dpr6asjjd5nmspbj:
               help: Beruházási javakhoz kapcsolódó ÁFA-korrekció.
-            x-d5r62bjiclo6asj3elq6ip3f5pjmarj5e9gmo:
-              help: Az általános 21%-os kulccsal kiszámított teljes felszámított ÁFA.
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: A 10%-os csökkentett kulccsal kiszámított teljes felszámított
                 ÁFA.
