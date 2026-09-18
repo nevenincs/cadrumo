@@ -9,6 +9,7 @@ import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.revision_order import revisions_coexist
 from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ._revision_span_coverage_support import (
@@ -92,7 +93,18 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
     both claim the SAME period token (or one restricts nothing at all) inside
     that year, so which applies is undefined.
 
-    OVERLAP IS PERIOD-TOKEN AWARE, NOT A BARE "MORE THAN ONE REVISION" COUNT
+    OVERLAP IS WINDOW-AWARE BEFORE IT IS PERIOD-TOKEN AWARE. Two revisions
+    collide only if they could both be IN FORCE for one and the same period,
+    which is exactly ``revisions_coexist`` -- intersecting validity windows AND
+    intersecting period selectors. The window half matters because AEAT also
+    splits an era INSIDE a year: modelo 036 at 2025-02-03 and modelo 308 at
+    2011-07-01 each give two editions the same filing year and the same period
+    vocabulary, while their windows are disjoint and the production resolver
+    separates them by date. Reading the window axis from the canonical
+    predicate, rather than reimplementing it, keeps this gate and the resolver
+    answering the same question.
+
+    OVERLAP IS ALSO PERIOD-TOKEN AWARE, NOT A BARE "MORE THAN ONE REVISION" COUNT
     (:func:`_period_overlap`), because more than one revision legitimately
     resolving a single year is a real, correct shape here -- AEAT splits some
     modelos mid-year by PERIOD (Modelo 303's 2024) and runs others as parallel
@@ -146,6 +158,18 @@ def test_every_modelo_resolves_exactly_one_revision_for_every_filing_year_throug
                 holes.append(f"modelo {modelo.id}: no revision resolves filing year {year}")
                 continue
             for (id_a, rev_a), (id_b, rev_b) in combinations(covering, 2):
+                # A shared filing year and a shared period token are not yet a
+                # collision: an era split INSIDE a year -- modelo 036 at
+                # 2025-02-03, modelo 308 at 2011-07-01 -- gives two editions the
+                # same year and the same period vocabulary while their validity
+                # windows are disjoint, and the production resolver separates
+                # them by date. ``revisions_coexist`` is the project's own
+                # answer to "could both be in force for one and the same
+                # period", so the window axis is read from it rather than
+                # reimplemented here; the period-token evidence below stays the
+                # message for the collisions that survive it.
+                if not revisions_coexist(rev_a, rev_b):
+                    continue
                 collision = _period_overlap(id_a, rev_a.period_selector.periods, id_b, rev_b.period_selector.periods)
                 if collision:
                     overlaps.append(f"modelo {modelo.id} filing year {year}: {collision}")
