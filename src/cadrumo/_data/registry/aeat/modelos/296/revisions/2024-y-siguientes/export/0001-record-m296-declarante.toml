@@ -225,11 +225,12 @@ offset = 145
 length = 15
 kind = 'casilla'
 casilla_id = '02'
-data_type = 'text'
+data_type = 'money'
 required = false
-padding = 'right_space'
-justification = 'left'
-signed = false
+padding = 'left_zero'
+justification = 'right'
+signed = true
+sign_position = 'blank_or_n'
 legal_refs = [
     'trlirnr-rdleg-5-2004:art-24',
     'orden-eha-3290-2008:art-6',

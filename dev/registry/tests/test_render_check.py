@@ -22,7 +22,11 @@ from cadrumo.domain.calculations.registry.authority import (
 )
 
 from ..compiler.authority import compiled_bundled_authority
-from ..pipeline.generated_tree_dispositions import disposition_ledger_from_path, record_drift_dispositions
+from ..pipeline.generated_tree_dispositions import (
+    below_floor_dispositions,
+    disposition_ledger_from_path,
+    record_drift_dispositions,
+)
 from ..pipeline.render_check import (
     compare_export_tree_roots,
     compare_revision_against_committed,
@@ -243,6 +247,11 @@ def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_li
         assert source is not None, f"{row.subject}: disposition source is absent"
         assert source.sha256 == row.source_sha256, f"{row.subject}: disposition source was reissued; reconsider the pin"
 
+    # A revision every one of whose filing years sits below the supported floor
+    # cannot be regenerated at all -- the publisher refuses its coordinate before
+    # rendering -- so it is explained by its own below-floor row instead, and
+    # owing a second row here would describe the same tree twice.
+    below_floor = {row.subject for row in below_floor_dispositions()}
     drifting: set[str] = set()
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         for code in sorted(str(item) for item in registry_modelo_codes(operation=_authority_operation_for_test)):
@@ -250,7 +259,7 @@ def test_every_record_drifting_tree_is_dispositioned_and_every_disposition_is_li
                 if not bundled_path("registry", "aeat", "modelos", code, "revisions", revision_id, "export").is_dir():
                     continue
                 comparison = compare_revision_against_committed(authority, modelo=code, revision=revision_id)
-                if comparison.disposition_class == "record_drift":
+                if comparison.disposition_class == "record_drift" and f"{code}/{revision_id}" not in below_floor:
                     drifting.add(f"{code}/{revision_id}")
 
     assert drifting == set(dispositioned), (
