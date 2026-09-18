@@ -80,7 +80,7 @@ def rename_directory_noreplace(
             raise ProfileCustodyRecordError("profile capsule staging is not identity-anchored")
         rename_windows_directory_by_handle(staging_handle, destination, root_handle=root_handle)
         return
-    if sys.platform.startswith("linux"):
+    if sys.platform == "linux":
         if staging.parent != destination.parent:
             raise ProfileCustodyRecordError("profile capsule staging and destination roots must match")
         with posix_directory_fd(staging.parent) as parent_fd:
