@@ -82,10 +82,7 @@ _HARNESS = (
     import sys
     from contextlib import ExitStack
 
-    from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
-    from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
@@ -97,8 +94,7 @@ _HARNESS = (
     payload = json.loads(sys.argv[1])
     settings = Settings(_env_file=None, **payload["settings"])
     composition = ExitStack()
-    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+    composition.enter_context(composed_profile_persistence_ports())
     token = config_module.settings_override.set(settings)
     exit_code = 0
     try:
@@ -175,10 +171,7 @@ _WINDOWS_HANDLE_HARNESS = (
     import sys
     from contextlib import ExitStack
 
-    from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
-    from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
@@ -191,8 +184,7 @@ _WINDOWS_HANDLE_HARNESS = (
     payload = json.loads(sys.argv[1])
     settings = Settings(_env_file=None, **payload["settings"])
     composition = ExitStack()
-    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+    composition.enter_context(composed_profile_persistence_ports())
     argv = bootstrap_argv(
         profile_handle=payload.get("profile_handle"),
         secrets_handle=payload.get("secrets_handle"),
