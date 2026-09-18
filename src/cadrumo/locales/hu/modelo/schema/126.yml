@@ -4,7 +4,7 @@ modelo:
       construct:
         modelo-126-calculation-construct:
           field:
-            title: '126-os modelo: az önadózás számítása'
+            title: '126-os nyomtatvány: az önadózás számítása'
       field:
         official_name: Modelo 126. Adóelőleg-levonások és -befizetések. A pénzügyi
           intézményeknél vezetett bármely számla ellenértékéből származó tőkejövedelmek.

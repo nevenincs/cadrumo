@@ -62,14 +62,14 @@ modelo:
           construct:
             modelo-136-calculation-construct:
               field:
-                title: '136-os modelo: egyes lottó- és fogadási nyeremények különadója'
+                title: '136-os nyomtatvány: egyes lottó- és fogadási nyeremények különadója'
           field:
             label: 136-os modelo, 2022-2025. adóévek
         '2026':
           construct:
             modelo-136-calculation-construct:
               field:
-                title: '136-os modelo: a lottó- és fogadásnyeremények különadójának
+                title: '136-os nyomtatvány: a lottó- és fogadásnyeremények különadójának
                   számítása'
           field:
             label: 136-os modelo, 2026. adóév (HAP/70/2013 és HAC/763/2018 rendelet)

@@ -6,8 +6,8 @@ modelo:
           actividad-principal-espanola:
             label: FŐ TEVÉKENYSÉG
           base-deduccion-o-importe:
-            help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
-              részre bontja.
+            help: A 184-es nyomtatványon bevallott összeg. A nyomtatvány egész és
+              tizedes részre bontja.
             label: A levonás alapja / összeg
           cesionario-denominacion:
             label: AZ ÁTVEVŐ MEGNEVEZÉSE VAGY CÉGNEVE / A KOLLEKTÍV BEFEKTETÉSI INTÉZMÉNY
@@ -16,7 +16,7 @@ modelo:
             label: AZ ÁTVEVŐ SZEMÉLY VAGY SZERVEZET NIF SZÁMA / A KOLLEKTÍV BEFEKTETÉSI
               INTÉZMÉNY NIF SZÁMA
           clave-declarado:
-            help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
+            help: A 184-es nyomtatványon, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
               bevallott adat.
             label: Bejelentett fél kódja
           clave-pais-entidad-extranjera:
@@ -36,135 +36,135 @@ modelo:
           filing-year:
             label: A bevallás tárgyát képező adóév
           ganancias-perdidas-patrimoniales-atribuibles:
-            help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
-              részre bontja.
+            help: A 184-es nyomtatványon bevallott összeg. A nyomtatvány egész és
+              tizedes részre bontja.
             label: Nyereség / veszteség
           gasto-actividad-amortizaciones:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Értékcsökkenés
           gasto-actividad-arrendamientos-canones:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Bérleti díjak és jogdíjak
           gasto-actividad-consumos-explotacion:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Működési anyagfelhasználás
           gasto-actividad-gastos-financieros:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Pénzügyi ráfordítások
           gasto-actividad-gastos-personal:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Személyi jellegű ráfordítások
           gasto-actividad-otros-gastos-deducibles:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Egyéb adózásban levonható költségek
           gasto-actividad-provisiones:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Céltartalékok
           gasto-actividad-reparaciones-conservacion:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Javítás és karbantartás
           gasto-actividad-servicios-profesionales:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Független szakmai szolgáltatások
           gasto-actividad-suministros:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Közüzemi szolgáltatások
           gasto-actividad-tributos-deducibles:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Gazdasági tevékenység költségei. Adózásban levonható adók
           gasto-inmobiliario-amortizacion-bienes-muebles:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Ingóságok értékcsökkenése
           gasto-inmobiliario-amortizacion-inmueble:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Az ingatlan értékcsökkenése
           gasto-inmobiliario-cantidades-devengadas-terceros:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Harmadik felek által elszámolt összegek
           gasto-inmobiliario-conservacion-reparacion:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Karbantartás és javítás
           gasto-inmobiliario-intereses-financiacion:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Kamatok és egyéb finanszírozási költségek
           gasto-inmobiliario-intereses-gastos-reparacion:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Függő kamatok, javítási és karbantartási
               költségek
           gasto-inmobiliario-otros-gastos-deducibles:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Egyéb levonható költségek
           gasto-inmobiliario-primas-seguros:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Biztosítási díjak
           gasto-inmobiliario-saldos-dudoso-cobro:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Kétes követelések
           gasto-inmobiliario-tributos-recargos:
-            help: A 184-es modelo szervezeti rekordjában bevallott, adózásban levonható
-              költség. A nyomtatvány egész és tizedes részre bontja.
+            help: A 184-es nyomtatvány szervezeti rekordjában bevallott, adózásban
+              levonható költség. A nyomtatvány egész és tizedes részre bontja.
             label: Ingatlantőke költségei. Adók és pótlékok
           gastos-deducibles-atribuibles:
-            help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
-              részre bontja.
+            help: A 184-es nyomtatványon bevallott összeg. A nyomtatvány egész és
+              tizedes részre bontja.
             label: Költségek / negatív jövedelem többlete
           importe-atribuido-miembro:
             label: ÖSSZEG (HOZAM / FORRÁSADÓ / LEVONÁS)
           importe-neto-cifra-negocios:
-            help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
-              részre bontja.
+            help: A 184-es nyomtatványon bevallott összeg. A nyomtatvány egész és
+              tizedes részre bontja.
             label: Nettó árbevétel
           ingresos-integros-atribuibles:
-            help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
+            help: A 184-es nyomtatványon, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
               bevallott adat.
             label: Bruttó bevétel / esedékessé vált hozamok összege / számviteli eredmény
           miembro-a-31-diciembre:
-            help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+            help: A 184-es nyomtatvány 3-as típusú rekordjában bevallott tag adata.
             label: Tag december 31-én
           miembro-clave-pais:
             label: ORSZÁGKÓD
           miembro-codigo-provincia:
-            help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+            help: A 184-es nyomtatvány 3-as típusú rekordjában bevallott tag adata.
             label: Tartománykód
           miembro-domicilio-fiscal:
             label: A SZERVEZET TAGJÁNAK ADÓÜGYI CÍME
           miembro-nif:
-            help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+            help: A 184-es nyomtatvány 3-as típusú rekordjában bevallott tag adata.
             label: A tag NIF száma
           miembro-nombre-razon-social:
-            help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+            help: A 184-es nyomtatvány 3-as típusú rekordjában bevallott tag adata.
             label: A tag vezetékneve és utóneve, cégneve vagy megnevezése
           miembro-representante-fiscal-nif:
-            help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
+            help: A 184-es nyomtatványon, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
               bevallott adat.
             label: Az adóügyi képviselő NIF száma
           naturaleza-inmueble:
-            help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+            help: A 184-es nyomtatvány 3-as típusú rekordjában bevallott tag adata.
             label: Az ingatlan jellege
           numero-dias-arrendamiento:
             label: A BÉRBEADÁS VAGY HASZNÁLAT ÁTENGEDÉSÉNEK NAPJAI
           numero-dias-miembro:
-            help: A 184-es modelo 3-as típusú rekordjában bevallott tag adata.
+            help: A 184-es nyomtatvány 3-as típusú rekordjában bevallott tag adata.
             label: Tagsági napok száma
           numero-justificante:
             label: A BEVALLÁS AZONOSÍTÓ SZÁMA
@@ -173,15 +173,15 @@ modelo:
           persona-relacion:
             label: TELEFON
           porcentaje-participacion:
-            help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
-              részre bontja.
+            help: A 184-es nyomtatványon bevallott összeg. A nyomtatvány egész és
+              tizedes részre bontja.
             label: Részesedés százaléka
           porcentaje-reduccion-renta-atribuible:
-            help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
-              részre bontja.
+            help: A 184-es nyomtatványon bevallott összeg. A nyomtatvány egész és
+              tizedes részre bontja.
             label: Csökkentés százaléka
           porcentaje-renta-atribuible-residentes:
-            help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
+            help: A 184-es nyomtatványon, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
               bevallott adat.
             label: A hozzárendelhető jövedelem százaléka
           porcentaje-titularidad-inmueble:
@@ -189,8 +189,8 @@ modelo:
           provisiones-y-gastos-dificil-justificacion:
             label: LEVONHATÓ CÉLTARTALÉKOK ÉS NEHEZEN IGAZOLHATÓ KÖLTSÉGEK
           reduccion-atribuida-miembro:
-            help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
-              részre bontja.
+            help: A 184-es nyomtatványon bevallott összeg. A nyomtatvány egész és
+              tizedes részre bontja.
             label: Csökkentés
           referencia-catastral:
             label: KATASZTERI HIVATKOZÁS
@@ -200,8 +200,8 @@ modelo:
             label: MEZŐGAZDASÁGI, ÁLLATTENYÉSZTÉSI ÉS ERDŐGAZDÁLKODÁSI TEVÉKENYSÉG
               CSÖKKENTETT NETTÓ HOZAMA TÁRGYI ADÓALAP-MEGÁLLAPÍTÁS SZERINT
           rendimiento-neto-previo-estimacion-objetiva:
-            help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
-              részre bontja.
+            help: A 184-es nyomtatványon bevallott összeg. A nyomtatvány egész és
+              tizedes részre bontja.
             label: Objektív megállapítás szerinti tevékenységek előzetes nettó hozama
           renta-atribuible-con-derecho-reduccion:
             label: KEDVEZMÉNYRE JOGOSÍTÓ BESZÁMÍTHATÓ JÖVEDELEM
@@ -213,8 +213,8 @@ modelo:
           representante-nombre:
             label: A KÉPVISELŐ VEZETÉKNEVE ÉS UTÓNEVE VAGY CÉGNEVE
           retenciones-ingresos-a-cuenta-atribuibles:
-            help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
-              részre bontja.
+            help: A 184-es nyomtatványon bevallott összeg. A nyomtatvány egész és
+              tizedes részre bontja.
             label: Forrásadó és részletfizetés
           situacion-inmueble:
             label: AZ INGATLAN ELHELYEZKEDÉSE
@@ -257,17 +257,18 @@ modelo:
           tributacion-impuesto-sociedades:
             label: ADÓZÁS A TÁRSASÁGI ADÓ RENDSZERÉBEN
           valor-adquisicion-o-ajustes-disminuciones:
-            help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
-              részre bontja.
+            help: A 184-es nyomtatványon bevallott összeg. A nyomtatvány egész és
+              tizedes részre bontja.
             label: Beszerzési, jegyzési vagy könyv szerinti érték
           valor-liquidativo-o-ajustes-aumentos:
-            help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
-              részre bontja.
+            help: A 184-es nyomtatványon bevallott összeg. A nyomtatvány egész és
+              tizedes részre bontja.
             label: 'Nettó eszközérték / kiigazítások: növelések'
       construct:
         modelo-184-informative:
           field:
-            title: 184-es modelo, jövedelem-hozzárendelési rendszerű szervezetek adatbevallása
+            title: 184-es nyomtatvány, jövedelem-hozzárendelési rendszerű szervezetek
+              adatbevallása
       field:
         official_name: Modelo 184. A jövedelem-hozzárendelési rendszerbe tartozó szervezetek
           éves adatszolgáltatási bevallása.
@@ -276,220 +277,221 @@ modelo:
         '2015':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: A 184-es modelo ejercicio. rovata, 2015. adóév.
+              help: A 184-es nyomtatvány ejercicio. rovata, 2015. adóév.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 184-es modelo tipo-declaracion. rovata, 2015. adóév.
+              help: A 184-es nyomtatvány tipo-declaracion. rovata, 2015. adóév.
           field:
             label: 184-es modelo, 2015. adóév
         2016-2018:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: A 184-es modelo ejercicio. rovata, 2016–2018. adóévek.
+              help: A 184-es nyomtatvány ejercicio. rovata, 2016–2018. adóévek.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 184-es modelo tipo-declaracion. rovata, 2016–2018. adóévek.
+              help: A 184-es nyomtatvány tipo-declaracion. rovata, 2016–2018. adóévek.
           field:
             label: 184-es modelo, 2016–2018. adóévek
         2019-2021:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: A 184-es modelo ejercicio. rovata, 2019–2021. adóévek.
+              help: A 184-es nyomtatvány ejercicio. rovata, 2019–2021. adóévek.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 184-es modelo tipo-declaracion. rovata, 2019–2021. adóévek.
+              help: A 184-es nyomtatvány tipo-declaracion. rovata, 2019–2021. adóévek.
           field:
             label: 184-es modelo, 2019–2021. adóévek
         '2022':
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: A 184-es modelo ejercicio. rovata, 2022. adóév.
+              help: A 184-es nyomtatvány ejercicio. rovata, 2022. adóév.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 184-es modelo tipo-declaracion. rovata, 2022. adóév.
+              help: A 184-es nyomtatvány tipo-declaracion. rovata, 2022. adóév.
           field:
             label: 184-es modelo, 2022. adóév
         2023-2024:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: A 184-es modelo 121-122. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 121-122. rovata, 2023. és 2024. adóévek.
             x-chim6r1ecll6asj3d5hmiro:
-              help: A 184-es modelo ejercicio. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány ejercicio. rovata, 2023. és 2024. adóévek.
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
-              help: A 184-es modelo 146. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 146. rovata, 2023. és 2024. adóévek.
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
-              help: A 184-es modelo 145. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 145. rovata, 2023. és 2024. adóévek.
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
-              help: A 184-es modelo 149-150. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 149-150. rovata, 2023. és 2024. adóévek.
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
-              help: A 184-es modelo 148. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 148. rovata, 2023. és 2024. adóévek.
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
-              help: A 184-es modelo 147. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 147. rovata, 2023. és 2024. adóévek.
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              help: A 184-es modelo 108-120. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 108-120. rovata, 2023. és 2024. adóévek.
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
-              help: A 184-es modelo 59-107. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 59-107. rovata, 2023. és 2024. adóévek.
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
-              help: A 184-es modelo 172-180. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 172-180. rovata, 2023. és 2024. adóévek.
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: A 184-es modelo 181-220. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 181-220. rovata, 2023. és 2024. adóévek.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 184-es modelo tipo-declaracion. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány tipo-declaracion. rovata, 2023. és 2024.
+                adóévek.
             x-chim6r1eehkn0rpdednn0rriehig:
-              help: A 184-es modelo 58. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 58. rovata, 2023. és 2024. adóévek.
             x-chim6r1eehnn8obc5lpmuor9dtpg:
-              help: A 184-es modelo 136-144. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 136-144. rovata, 2023. és 2024. adóévek.
             x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
-              help: A 184-es modelo 156. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 156. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
-              help: A 184-es modelo 97-116. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 97-116. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
-              help: A 184-es modelo 88-96. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 88-96. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5phmoobmck:
-              help: A 184-es modelo 77. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 77. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5phmoobmckmn0ob9ec:
-              help: A 184-es modelo 80-81. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 80-81. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
-              help: A 184-es modelo 396. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 396. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
-              help: A 184-es modelo 498-500. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 498-500. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
-              help: A 184-es modelo 84-87. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 84-87. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
-              help: A 184-es modelo 117-124. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 117-124. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
-              help: A 184-es modelo 246-265. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 246-265. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
-              help: A 184-es modelo 82. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 82. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
-              help: A 184-es modelo 196-207. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 196-207. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
-              help: A 184-es modelo 177-190. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 177-190. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
-              help: A 184-es modelo 245. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 245. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5ppnaoj3dhgncp8:
-              help: A 184-es modelo 78-79. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 78-79. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
-              help: A 184-es modelo 83. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 83. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpi5pq6is3f5lk6uqj1:
-              help: A 184-es modelo 76. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 76. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5phmoobmck:
-              help: A 184-es modelo 93. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 93. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5phmoobmckmn0ob9ec:
-              help: A 184-es modelo 79-80. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 79-80. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
-              help: A 184-es modelo 81. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 81. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
-              help: A 184-es modelo 200-202. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 200-202. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
-              help: A 184-es modelo 120-159. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 120-159. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5pkmqs3fe9q6a:
-              help: A 184-es modelo 96-108. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 96-108. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
-              help: A 184-es modelo 195-199. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 195-199. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
-              help: A 184-es modelo 160-171. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 160-171. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
-              help: A 184-es modelo 174-193. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 174-193. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
-              help: A 184-es modelo 216-229. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 216-229. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
-              help: A 184-es modelo 173. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 173. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5ppnaoj3dhgncp8:
-              help: A 184-es modelo 94-95. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 94-95. rovata, 2023. és 2024. adóévek.
             x-ehkn0rpj5pq6is3f5lk6uqj1:
-              help: A 184-es modelo 76. rovata, 2023. és 2024. adóévek.
+              help: A 184-es nyomtatvány 76. rovata, 2023. és 2024. adóévek.
           field:
             label: 184-es modelo, 2023. és 2024. adóévek
         2025-y-siguientes:
           casilla:
             x-chim6r1ecdnmqs3cclmmarjkc5p6io9dedqn6t39ehqn8qbmc4:
-              help: A 184-es modelo 121-122. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 121-122. rovata, 2025. adóév.
             x-chim6r1ecll6asj3d5hmiro:
-              help: A 184-es modelo ejercicio. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány ejercicio. rovata, 2025. adóév.
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n62orkd5r6ip31cgmn0sj9dphmis31dg:
-              help: A 184-es modelo 146. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 146. rovata, 2025. adóév.
             x-chim6r1ecln78qb4c5i2qpbje1gmsrrcc4n78qbgdsmmarjkd5i62p0:
-              help: A 184-es modelo 145. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 145. rovata, 2025. adóév.
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bj3dhgncp9de1gmiso:
-              help: A 184-es modelo 149-150. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 149-150. rovata, 2025. adóév.
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjfc9l6at3f:
-              help: A 184-es modelo 148. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 148. rovata, 2025. adóév.
             x-chim6r1ecln78qb4c5i2qpboehp62rjaclp62bjkd5o6ubb5dpq6ip31cg:
-              help: A 184-es modelo 147. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 147. rovata, 2025. adóév.
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
-              help: A 184-es modelo 108-120. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 108-120. rovata, 2025. adóév.
             x-chim6r1ee1in4srfdpgiqsj5dhgm6qbfdo:
-              help: A 184-es modelo 59-107. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 59-107. rovata, 2025. adóév.
             x-chim6r1ee9in0sj5edimst31dpq6abbed5j0:
-              help: A 184-es modelo 172-180. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 172-180. rovata, 2025. adóév.
             x-chim6r1ee9in0sj5edimst31dpq6abbedtmm4sj5:
-              help: A 184-es modelo 181-220. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 181-220. rovata, 2025. adóév.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 184-es modelo tipo-declaracion. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány tipo-declaracion. rovata, 2025. adóév.
             x-chim6r1eehkn0rpdednn0rriehig:
-              help: A 184-es modelo 58. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 58. rovata, 2025. adóév.
             x-chim6r1eehnn8obc5lp6apr9edq74rrj5limst39chgm8:
-              help: A 184-es modelón, a jövedelem-hozzárendelési szervezetek adatszolgáltatásán
-                bevallott adat.
+              help: A 184-es nyomtatványon, a jövedelem-hozzárendelési szervezetek
+                adatszolgáltatásán bevallott adat.
               label: A szervezeti rekordok teljes száma
             x-chim6r1eehnn8obc5lpmuor9dtpg:
-              help: A 184-es modelo 136-144. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 136-144. rovata, 2025. adóév.
             x-chim6r1eehp6iojlehgm6qbfdommirbgelin6t3f5lpmuor9cli62p35ec:
-              help: A 184-es modelo 156. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 156. rovata, 2025. adóév.
             x-ehkn0rpi5phmasr9dtn62sj9dsmm8pbedtmmirj1cdkmurg:
-              help: A 184-es modelo 97-116. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 97-116. rovata, 2025. adóév.
             x-ehkn0rpi5phmasr9dtn62sj9dsmmsqb6:
-              help: A 184-es modelo 88-96. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 88-96. rovata, 2025. adóév.
             x-ehkn0rpi5phmoobmck:
-              help: A 184-es modelo 77. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 77. rovata, 2025. adóév.
             x-ehkn0rpi5phmoobmckmn0ob9ec:
-              help: A 184-es modelo 80-81. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 80-81. rovata, 2025. adóév.
             x-ehkn0rpi5phn4qbkclp6irpdcdnm4sjfecmn0ob7dtpg:
-              help: A 184-es modelo 396. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 396. rovata, 2025. adóév.
             x-ehkn0rpi5pi6iobj5lgn4sj5dpi62rb9cln78ro:
-              help: A 184-es modelo 498-500. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 498-500. rovata, 2025. adóév.
             x-ehkn0rpi5pin0qb7e9gmcp9dd5gma:
-              help: A 184-es modelo 84-87. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 84-87. rovata, 2025. adóév.
             x-ehkn0rpi5pj6aor8c4mm2p3helkn6qb3d5nms:
-              help: A 184-es modelo 117-124. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 117-124. rovata, 2025. adóév.
             x-ehkn0rpi5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
-              help: A 184-es modelo 246-265. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 246-265. rovata, 2025. adóév.
             x-ehkn0rpi5pp6apr9dlimsbb4clq6asjdd5n62or9dtn2qsj5dpi6irb9cln78rrj:
-              help: A 184-es modelo 82. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 82. rovata, 2025. adóév.
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqorfdomn4pb4elhm6qbfdo:
-              help: A 184-es modelo 196-207. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 196-207. rovata, 2025. adóév.
             x-ehkn0rpi5pp6arjkc4mm2t3id5h7aqb2dhiiqqbde1nn4t35:
-              help: A 184-es modelo 177-190. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 177-190. rovata, 2025. adóév.
             x-ehkn0rpi5ppmit3lc5hmirre5lkmsrblclh6op8:
-              help: A 184-es modelo 245. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 245. rovata, 2025. adóév.
             x-ehkn0rpi5ppnaoj3dhgncp8:
-              help: A 184-es modelo 78-79. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 78-79. rovata, 2025. adóév.
             x-ehkn0rpi5pq6is3f5lgm6t39epkm8ob4:
-              help: A 184-es modelo 83. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 83. rovata, 2025. adóév.
             x-ehkn0rpi5pq6is3f5lk6uqj1:
-              help: A 184-es modelo 76. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 76. rovata, 2025. adóév.
             x-ehkn0rpj5phmoobmck:
-              help: A 184-es modelo 93. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 93. rovata, 2025. adóév.
             x-ehkn0rpj5phmoobmckmn0ob9ec:
-              help: A 184-es modelo 79-80. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 79-80. rovata, 2025. adóév.
             x-ehkn0rpj5phmoobmckmn8qbgdsmn0obiehkm6qbgck:
-              help: A 184-es modelo 81. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 81. rovata, 2025. adóév.
             x-ehkn0rpj5pi6iobj5lgn4sj5dpi62rb9cln78ro:
-              help: A 184-es modelo 200-202. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 200-202. rovata, 2025. adóév.
             x-ehkn0rpj5pi6urb9cdkmoqbf5lj6isr3c5m0:
-              help: A 184-es modelo 120-159. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 120-159. rovata, 2025. adóév.
             x-ehkn0rpj5pkmqs3fe9q6a:
-              help: A 184-es modelo 96-108. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 96-108. rovata, 2025. adóév.
             x-ehkn0rpj5po6usj3cln78obackmn8qbkelm62sj9chgm8bb9dpmnapb2dhig:
-              help: A 184-es modelo 195-199. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 195-199. rovata, 2025. adóév.
             x-ehkn0rpj5po74rrmd5pmirreclpiqpr1edq6uspdchkmcqb3d5m2qqjledq6ipj9cdgm6qbfdo:
-              help: A 184-es modelo 160-171. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 160-171. rovata, 2025. adóév.
             x-ehkn0rpj5pp6apj5e9imsor9c4mm6obkc5pn8sj1dg:
-              help: A 184-es modelo 174-193. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 174-193. rovata, 2025. adóév.
             x-ehkn0rpj5pp6arj4d5mmipbeehniqrj5ehniqrb9dpnn4ob4dsmm2prid5hmur315limu:
-              help: A 184-es modelo 216-229. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 216-229. rovata, 2025. adóév.
             x-ehkn0rpj5ppmit3lc5hmirre5lkmsrblclh6op8:
-              help: A 184-es modelo 173. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 173. rovata, 2025. adóév.
             x-ehkn0rpj5ppnaoj3dhgncp8:
-              help: A 184-es modelo 94-95. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 94-95. rovata, 2025. adóév.
             x-ehkn0rpj5pq6is3f5lk6uqj1:
-              help: A 184-es modelo 76. rovata, 2025. adóév.
+              help: A 184-es nyomtatvány 76. rovata, 2025. adóév.
           field:
             label: 184-es modelo, 2025. adóévtől

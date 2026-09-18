@@ -10,7 +10,7 @@ modelo:
       construct:
         modelo-038-informative:
           field:
-            title: Modelo 038 bevallás tájékoztató
+            title: '038-as nyomtatvány: tájékoztató jellegű adatszolgáltatás'
       field:
         official_name: Modelo 038. A közhitelű nyilvántartásba bejegyzett szervezetek
           által végzett ügyletek kimutatása. Adatszolgáltatási bevallás.

@@ -91,8 +91,8 @@ modelo:
       construct:
         modelo-604-autoliquidacion:
           field:
-            title: Modelo 604 önadózási bevallás - Impuesto sobre las Transacciones
-              Financieras
+            title: '604-es nyomtatvány: önadózási bevallás - Pénzügyi tranzakciós
+              adó'
       field:
         official_name: Modelo 604. Pénzügyi tranzakciós adó. Önbevallás.
         title: Pénzügyi tranzakciós adó - önbevallás

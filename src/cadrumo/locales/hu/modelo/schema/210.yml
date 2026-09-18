@@ -89,14 +89,14 @@ modelo:
           construct:
             m210-irnr-calculation:
               field:
-                title: A 210-es modelo IRNR-számítása
+                title: A 210-es nyomtatvány IRNR-számítása
           field:
             label: 210-es modelo, 2023. adóév
         '2024':
           construct:
             m210-irnr-calculation:
               field:
-                title: A 210-es modelo IRNR-számítása
+                title: A 210-es nyomtatvány IRNR-számítása
           field:
             label: 210-es modelo, 2024. adóév
         '2025':
@@ -111,74 +111,75 @@ modelo:
           construct:
             m210-irnr-calculation:
               field:
-                title: '210-es modelo: a nem rezidensek jövedelemadójának (IRNR) számítása'
+                title: '210-es nyomtatvány: a nem rezidensek jövedelemadójának (IRNR)
+                  számítása'
           field:
             label: Adóév 2025 és következő
         2026-y-siguientes:
           casilla:
             base_imponible:
-              help: A 210-es modelo 8. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 8. rovata, 2026. adóév.
             base_imponible_directa_g:
-              help: A 210-es modelo 18. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 18. rovata, 2026. adóév.
             base_imponible_directa_i:
-              help: A 210-es modelo 4. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 4. rovata, 2026. adóév.
             base_imponible_ganancias_h:
-              help: A 210-es modelo 17. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 17. rovata, 2026. adóév.
             convenio_indicador:
-              help: A 210-es modelo 20. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 20. rovata, 2026. adóév.
             cuota_diferencial:
-              help: A 210-es modelo 31. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 31. rovata, 2026. adóév.
             cuota_integra:
-              help: A 210-es modelo 22. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 22. rovata, 2026. adóév.
             cuota_integra_reducida:
-              help: A 210-es modelo 28. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 28. rovata, 2026. adóév.
             cuota_ley_irnr:
-              help: A 210-es modelo 24. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 24. rovata, 2026. adóév.
             deduccion_donativos:
-              help: A 210-es modelo 23. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 23. rovata, 2026. adóév.
             exencion_dividendos:
-              help: A 210-es modelo 6. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 6. rovata, 2026. adóév.
               label: Osztalékokra alkalmazott mentesség (éves korlát 1500 euró) (210
                 R)
             exenciones_ley_irnr_indicador:
-              help: A 210-es modelo 19. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 19. rovata, 2026. adóév.
             ganancia_diferencia:
-              help: A 210-es modelo 11. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 11. rovata, 2026. adóév.
             ganancia_importe:
-              help: A 210-es modelo 12. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 12. rovata, 2026. adóév.
             ganancia_valor_adquisicion:
-              help: A 210-es modelo 10. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 10. rovata, 2026. adóév.
             ganancia_valor_transmision:
-              help: A 210-es modelo 9. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 9. rovata, 2026. adóév.
             gastos_deducibles:
-              help: A 210-es modelo 7. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 7. rovata, 2026. adóév.
             ingreso_devolucion_anterior:
-              help: A 210-es modelo 30. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 30. rovata, 2026. adóév.
             limite_convenio:
-              help: A 210-es modelo 26. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 26. rovata, 2026. adóév.
               label: Egyezményes korlát
             mejora_diferencia:
-              help: A 210-es modelo 15. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 15. rovata, 2026. adóév.
             mejora_ganancia:
-              help: A 210-es modelo 16. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 16. rovata, 2026. adóév.
             mejora_valor_adquisicion:
-              help: A 210-es modelo 14. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 14. rovata, 2026. adóév.
             mejora_valor_transmision:
-              help: A 210-es modelo 13. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 13. rovata, 2026. adóév.
             porcentaje_convenio:
-              help: A 210-es modelo 25. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 25. rovata, 2026. adóév.
             reduccion_convenio:
-              help: A 210-es modelo 27. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 27. rovata, 2026. adóév.
               label: Egyezményes csökkentés ([24]-[26])
             rendimientos_integros:
-              help: A 210-es modelo 5. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 5. rovata, 2026. adóév.
             retencion_practicada:
-              help: A 210-es modelo 29. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 29. rovata, 2026. adóév.
             tipo_gravamen:
-              help: A 210-es modelo 21. rovata, 2026. adóév.
+              help: A 210-es nyomtatvány 21. rovata, 2026. adóév.
           construct:
             m210-irnr-calculation:
               field:
-                title: A 210-es modelo IRNR-számítása
+                title: A 210-es nyomtatvány IRNR-számítása
           field:
             label: 2026. adóév és az azt követők

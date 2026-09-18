@@ -4,7 +4,7 @@ modelo:
       construct:
         modelo-216-calculation-construct:
           field:
-            title: '216-os modelo: az IRNR forrásadójának számítása'
+            title: '216-os nyomtatvány: az IRNR forrásadójának számítása'
       field:
         official_name: Modelo 216. A külföldi illetőségűek jövedelemadója. Állandó
           telephely közbenjárása nélkül elért jövedelmek. Adóelőleg-levonások és -befizetések.

@@ -1087,7 +1087,7 @@ modelo:
       construct:
         modelo-220-declaration-construct:
           field:
-            title: Modelo 220 annual return of the tax group under the fiscal consolidation
+            title: Modelo 220 annual return of the tax group under the tax consolidation
               regime
       field:
         official_name: Modelo 220. Corporate Income Tax. Tax consolidation regime.

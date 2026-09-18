@@ -44,7 +44,7 @@ modelo:
           construct:
             modelo-123-capital-withholding:
               field:
-                title: '123-as modelo: tőkejövedelmek adóelőleg-levonása (2019-2023
+                title: '123-as nyomtatvány: tőkejövedelmek adóelőleg-levonása (2019-2023
                   közötti adóévek)'
           field:
             label: EHA/3435/2007 rendelet, 2019-2023. adóévek
@@ -57,7 +57,7 @@ modelo:
           construct:
             modelo-123-capital-withholding:
               field:
-                title: '123-as modelo: ingótőke-jövedelmekre vonatkozó forrásadó és
-                  előlegfizetés'
+                title: '123-as nyomtatvány: ingótőke-jövedelmekre vonatkozó forrásadó
+                  és előlegfizetés'
           field:
             label: HAC/56/2024 rendelet, 2024. adóévtől

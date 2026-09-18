@@ -1043,7 +1043,7 @@ modelo:
               24.7 LIS 2023 - Applied in this settlement [00697]
           00698:
             help: Applied in this settlement - Technological innovation (IT)
-            label: Innovación tecnológica (IT). Applied in this settlement
+            label: Technological innovation (IT). Applied in this settlement
           00699:
             label: Detail of offset of negative tax bases - 2014 - Pending application
               in future periods [00699]
@@ -1196,7 +1196,7 @@ modelo:
               deduction [00779]
           00799:
             help: Applied in this settlement - Research and development (CT)
-            label: Investigación y desarrollo (CT). Applied in this settlement
+            label: Research and development (CT). Applied in this settlement
           00801:
             label: Reserve for investments in the Balearic Islands (DA 70 Law 31/2022)
               - Decrease - Adjustments for the tax year - Temporary (originating in
@@ -1458,7 +1458,7 @@ modelo:
               for non-compliance with SOCIMI requirements - Bizkaia [00915]
           00916:
             label: Joint taxation of State and provincial tax administrations - Increase
-              for non-compliance with SOCIMI requirements - Navarra [00916]
+              for non-compliance with SOCIMI requirements - Navarre [00916]
           00918:
             label: R&D&i deductions excluded from the limit - 2013 Research and development
               - Pending/generated deduction [00918]
@@ -1826,7 +1826,7 @@ modelo:
               - Total - Pending amount [01173]
           '01174':
             help: '6.- Double taxation relief: deduction amount - B) Financial data'
-            label: 'B) Datos económicos. 6.- Double taxation relief: deduction amount'
+            label: 'B) Economic data. 6.- Double taxation relief: deduction amount'
           '01175':
             label: Special regime for the Canary Islands investment reserve - Canary
               Islands investment reserve 2021 - RIC pending materialization at end
@@ -2206,11 +2206,11 @@ modelo:
               in future periods [01328]
           '01332':
             label: Settlement IV - Self-assessment result - Credit of R&D&I deductions
-              due to insufficient tax liability - Provincial tax administrations/Navarra
+              due to insufficient tax liability - Provincial tax administrations/Navarre
               (Totals) [01332]
           '01333':
             label: Settlement IV - Self-assessment result - Credit for deductions
-              for foreign film productions - Provincial tax administrations/Navarra
+              for foreign film productions - Provincial tax administrations/Navarre
               [01333]
           '01335':
             label: Joint taxation of State and provincial tax administrations - Credit
@@ -2220,13 +2220,13 @@ modelo:
               of R&D&I deductions due to insufficient tax liability - Bizkaia [01336]
           '01337':
             label: Joint taxation of State and provincial tax administrations - Credit
-              of R&D&I deductions due to insufficient tax liability - Navarra [01337]
+              of R&D&I deductions due to insufficient tax liability - Navarre [01337]
           '01340':
             label: Joint taxation of State and provincial tax administrations - Payment
               of foreign-production deductions - Bizkaia [01340]
           '01341':
             label: Joint taxation of State and provincial tax administrations - Payment
-              of foreign-production deductions - Navarra [01341]
+              of foreign-production deductions - Navarre [01341]
           '01343':
             label: Internal double taxation deductions (Transitional Provision 23.1
               LIS) - Total - 2025 - Pending deduction [01343]
@@ -2734,7 +2734,7 @@ modelo:
           01586:
             label: Settlement IV - Self-assessment result - State [01586]
           01587:
-            label: Settlement IV - Self-assessment result - Provincial tax administrations/Navarra
+            label: Settlement IV - Self-assessment result - Provincial tax administrations/Navarre
               [01587]
           01592:
             label: Detail of offsetting negative tax bases - 2017 - Pending application
@@ -2787,7 +2787,7 @@ modelo:
           '01610':
             label: 'Joint taxation of State and provincial tax administrations - Corrective:
               amount payable following the processing of earlier self-assessments
-              or administrative assessments for tax period 2025 - Navarra [01610]'
+              or administrative assessments for tax period 2025 - Navarre [01610]'
           '01614':
             label: Deductions for investment in the Canary Islands - Fixed assets
               2024 - Pending/generated deduction [01614]
@@ -2835,13 +2835,13 @@ modelo:
               result - Bizkaia [01629]
           '01630':
             label: Joint taxation of State and provincial tax administrations - Self-assessment
-              result - Navarra [01630]
+              result - Navarre [01630]
           '01633':
             label: Joint taxation of State and provincial tax administrations - Instalment
               option art. 19.1 LIS - Included amount - Bizkaia [01633]
           '01634':
             label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - Included amount - Navarra [01634]
+              option art. 19.1 LIS - Included amount - Navarre [01634]
           '01635':
             label: Joint taxation of State and provincial tax administrations - Instalment
               option art. 19.1 LIS - Tax debt - Araba/Alava [01635]
@@ -2870,7 +2870,7 @@ modelo:
               generated from the attributed deduction bases'
           '01641':
             label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - Tax debt - Navarra [01641]
+              option art. 19.1 LIS - Tax debt - Navarre [01641]
           '01642':
             label: Joint taxation of State and provincial tax administrations - Instalment
               option art. 19.1 LIS - First instalment - Araba/Alava [01642]
@@ -2882,7 +2882,7 @@ modelo:
               option art. 19.1 LIS - First instalment - Bizkaia [01644]
           '01645':
             label: Joint taxation of State and provincial tax administrations - Instalment
-              option art. 19.1 LIS - First instalment - Navarra [01645]
+              option art. 19.1 LIS - First instalment - Navarre [01645]
           '01646':
             label: Joint taxation of State and provincial tax administrations - Self-assessment
               result including the first instalment - Araba/Alava [01646]
@@ -2891,7 +2891,7 @@ modelo:
               result including the first instalment - Bizkaia [01648]
           01649:
             label: Joint taxation of State and provincial tax administrations - Self-assessment
-              result including the first instalment - Navarra [01649]
+              result including the first instalment - Navarre [01649]
           '01654':
             label: Joint taxation of State and provincial tax administrations - Result
               included in the first instalment under art. 19.1 LIS - Araba/Alava [01654]
@@ -2903,7 +2903,7 @@ modelo:
               included in the first instalment under art. 19.1 LIS - Bizkaia [01656]
           '01657':
             label: Joint taxation of State and provincial tax administrations - Result
-              included in the first instalment under art. 19.1 LIS - Navarra [01657]
+              included in the first instalment under art. 19.1 LIS - Navarre [01657]
           01681:
             label: Transactions under art. 19 LIS other than change of residence to
               European Union or EEA Member States - Decrease - Balance pending at
@@ -4782,7 +4782,7 @@ modelo:
           02408:
             label: Joint taxation of State and provincial tax administrations - Disagreement
               with the administrative position for certain corrective self-assessment
-              cases that do not belong in other boxes - Navarra [02408]
+              cases that do not belong in other boxes - Navarre [02408]
           02409:
             label: Limitation on deductibility of financial expenses. Financial expenses
               pending deduction - Year of generation 2024 - Pending application at
@@ -5324,8 +5324,8 @@ modelo:
               Islands investment reserve 2023 - Canary Islands investment reserve
               pending materialisation at period-end [02822]
           02827:
-            label: Cooperative regime - Determination of the taxable base - 1, Ingresos
-              computables - Cooperative results [02827]
+            label: Cooperative regime - Determination of the taxable base - 1, Computable
+              income - Cooperative results [02827]
           02828:
             label: Cooperative regime - Determination of the taxable base - 1. Assessable
               income - Non-cooperative results [02828]
@@ -6556,28 +6556,27 @@ modelo:
           is-agrupacion-interes-econo-2-gastos-financieros-netos-no-deducidos-por-la-e:
             help: 2.- Net finance costs not deducted by the entity - B) Financial
               data
-            label: B) Datos económicos. 2.- Net finance costs not deducted by the
-              entity
+            label: B) Economic data. 2.- Net finance costs not deducted by the entity
           is-agrupacion-interes-econo-3-reserva-capitaliz-no-aplicada-por-la-entidad:
             help: 3.- Capitalisation reserve not applied by the entity - B) Financial
               data
-            label: B) Datos económicos. 3.- Capitalisation reserve not applied by
-              the entity
+            label: B) Economic data. 3.- Capitalisation reserve not applied by the
+              entity
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-base-de-la-deduc:
             help: '6.- Double taxation relief: deduction base - B) Financial data'
             label: 'B) Economic data. 6.- Double taxation relief: deduction base'
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-importe-de-la-de:
             help: '6.- Double taxation relief: deduction amount - B) Financial data'
-            label: 'B) Datos económicos. 6.- Double taxation relief: deduction amount'
+            label: 'B) Economic data. 6.- Double taxation relief: deduction amount'
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-total-base-de-la:
             help: '6.- Double taxation relief: total deduction base - B) Financial
               data'
-            label: 'B) Datos económicos. 6.- Double taxation relief: total deduction
+            label: 'B) Economic data. 6.- Double taxation relief: total deduction
               base'
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-total-importe-de:
             help: '6.- Double taxation relief: total deduction amount - B) Financial
               data'
-            label: 'B) Datos económicos. 6.- Double taxation relief: total deduction
+            label: 'B) Economic data. 6.- Double taxation relief: total deduction
               amount'
           is-agrupacion-interes-econo-base-de-la-bonificacion:
             help: Allowance base - B) Financial data
@@ -8621,15 +8620,15 @@ modelo:
               36.2 LIS and Additional Provision 14 Law 19/1994) - 2024 -Deduction
               carried forward/generated [02445]
           is-deduccion-creacion-empleo-discapacidad:
-            help: Deduction pending or generated - Deducción por creación de empleo
-              trabaj. con discapacidad (CE)
-            label: Deducción por creación de empleo trabaj. con discapacidad (CE).
-              Deduction pending or generated
+            help: Deduction pending or generated - Deduction for creating employment
+              for workers with disabilities (CE)
+            label: Deduction for creating employment for workers with disabilities
+              (CE). Deduction pending or generated
           is-deduccion-creacion-empleo-discapacidad-pendiente-futuros:
-            help: Pending application in future periods - Deducción por creación de
-              empleo trabaj. con discapacidad (CE)
-            label: Deducción por creación de empleo trabaj. con discapacidad (CE).
-              Pending application in future periods
+            help: Pending application in future periods - Deduction for creating employment
+              for workers with disabilities (CE)
+            label: Deduction for creating employment for workers with disabilities
+              (CE). Pending application in future periods
           is-deduccion-di-interna-dt231-detalle:
             label: Internal double taxation deductions (Transitional Provision 23.1
               LIS) - Internal D.T. 2023 - Pending deduction [01270]
@@ -8749,18 +8748,17 @@ modelo:
           is-deduccion-idi-innovacion-pendiente:
             help: Pending application in future periods - Technological innovation
               (IT)
-            label: Innovación tecnológica (IT). Pending application in future periods
+            label: Technological innovation (IT). Pending application in future periods
           is-deduccion-idi-innovacion-tecnologica:
             help: Deduction pending or generated - Technological innovation (IT)
-            label: Innovación tecnológica (IT). Deduction pending or generated
+            label: Technological innovation (IT). Deduction pending or generated
           is-deduccion-idi-investigacion-desarrollo-periodo:
             help: Deduction pending or generated - Research and development (CT)
-            label: Investigación y desarrollo (CT). Deduction pending or generated
+            label: Research and development (CT). Deduction pending or generated
           is-deduccion-idi-investigacion-pendiente:
             help: Pending application in future periods - Research and development
               (CT)
-            label: Investigación y desarrollo (CT). Pending application in future
-              periods
+            label: Research and development (CT). Pending application in future periods
           is-deduccion-idi-suma-pendiente:
             label: Deductions to incentivise certain activities - 2008 Sum of deductions
               - Pending application in future periods [00182]
@@ -8790,56 +8788,51 @@ modelo:
             label: Deductions for investment in the Canary Islands - Total - Pending/generated
               deduction [00886]
           is-deduccion-inversion-en-beneficios-aplicado-periodo:
-            help: Applied in this settlement - Deducción por inversión en beneficios
-              (IB)
-            label: Deducción por inversión en beneficios (IB). Applied in this settlement
+            help: Applied in this settlement - Investment of profits (IB)
+            label: Investment of profits (IB). Applied in this settlement
           is-deduccion-inversion-en-beneficios-pendiente-futuros:
-            help: Pending application in future periods - Deducción por inversión
-              en beneficios (IB)
-            label: Deducción por inversión en beneficios (IB). Pending application
-              in future periods
+            help: Pending application in future periods - Investment of profits (IB)
+            label: Investment of profits (IB). Pending application in future periods
           is-deduccion-inversiones-africa-canarias:
-            help: Deduction pending or generated - Inversiones en territ. África Occidental
-              y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)
-            label: Inversiones en territ. África Occidental y gastos de propaganda
-              y publicidad (art. 27 bis Ley 19/1994) (TAP). Deduction pending or generated
+            help: Deduction pending or generated - Investments in West African territories
+              and advertising and publicity expenses (art. 27 bis Ley 19/1994) (TAP)
+            label: Investments in West African territories and advertising and publicity
+              expenses (art. 27 bis Ley 19/1994) (TAP). Deduction pending or generated
           is-deduccion-inversiones-africa-canarias-pendiente:
-            help: Pending application in future periods - Inversiones en territ. África
-              Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994)
-              (TAP)
-            label: Inversiones en territ. África Occidental y gastos de propaganda
-              y publicidad (art. 27 bis Ley 19/1994) (TAP). Pending application in
-              future periods
+            help: Pending application in future periods - Investments in West African
+              territories and advertising and publicity expenses (art. 27 bis Ley
+              19/1994) (TAP)
+            label: Investments in West African territories and advertising and publicity
+              expenses (art. 27 bis Ley 19/1994) (TAP). Pending application in future
+              periods
           is-deduccion-inversiones-africa-canarias-periodo:
-            help: Applied in this settlement - Inversiones en territ. África Occidental
-              y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994) (TAP)
-            label: Inversiones en territ. África Occidental y gastos de propaganda
-              y publicidad (art. 27 bis Ley 19/1994) (TAP). Applied in this settlement
+            help: Applied in this settlement - Investments in West African territories
+              and advertising and publicity expenses (art. 27 bis Ley 19/1994) (TAP)
+            label: Investments in West African territories and advertising and publicity
+              expenses (art. 27 bis Ley 19/1994) (TAP). Applied in this settlement
           is-deduccion-produccion-cinematografica-espanola-financiador:
-            help: 'Deduction pending or generated - Financiador: producciones cinematográficas
-              españolas (FPC)'
+            help: 'Deduction pending or generated - Financier: Spanish film productions
+              (FPC)'
             label: 'Financier: Spanish film productions (FPC). Deduction pending or
               generated'
           is-deduccion-produccion-cinematografica-espanola-financiador-aplicado-periodo:
-            help: 'Applied in this settlement - Financiador: producciones cinematográficas
-              españolas (FPC)'
-            label: 'Financiador: producciones cinematográficas españolas (FPC). Applied
-              in this settlement'
+            help: 'Applied in this settlement - Financier: Spanish film productions
+              (FPC)'
+            label: 'Financier: Spanish film productions (FPC). Applied in this settlement'
           is-deduccion-produccion-cinematografica-espanola-financiador-pendiente-futuros:
-            help: 'Pending application in future periods - Financiador: producciones
-              cinematográficas españolas (FPC)'
-            label: 'Financiador: producciones cinematográficas españolas (FPC). Pending
-              application in future periods'
+            help: 'Pending application in future periods - Financier: Spanish film
+              productions (FPC)'
+            label: 'Financier: Spanish film productions (FPC). Pending application
+              in future periods'
           is-deduccion-produccion-cinematografica-espanola-productor:
             help: 'Deduction pending or generated - Producer: Spanish film productions
               (PC)'
-            label: 'Productor: producciones cinematográficas españolas (PC). Deduction
-              pending or generated'
+            label: 'Producer: Spanish film productions (PC). Deduction pending or
+              generated'
           is-deduccion-produccion-cinematografica-espanola-productor-aplicado-periodo:
             help: 'Applied in this settlement - Producer: Spanish film productions
               (PC)'
-            label: 'Productor: producciones cinematográficas españolas (PC). Applied
-              in this settlement'
+            label: 'Producer: Spanish film productions (PC). Applied in this settlement'
           is-deduccion-produccion-cinematografica-espanola-productor-pendiente-futuros:
             help: 'Pending application in future periods - Producer: Spanish film
               productions (PC)'
@@ -8881,8 +8874,8 @@ modelo:
           is-deduccion-sociedades-forestales:
             help: Deduction pending or generated - Expenses and investments of forestry
               companies (SF)
-            label: Gastos e inversiones de sociedades forestales (SF). Deduction pending
-              or generated
+            label: Expenses and investments of forestry companies (SF). Deduction
+              pending or generated
           is-deduccion-sociedades-forestales-aplicado-periodo:
             help: Applied in this settlement - Expenses and investments of forestry
               companies (SF)
@@ -8891,7 +8884,7 @@ modelo:
           is-deduccion-sociedades-forestales-pendiente-futuros:
             help: Pending application in future periods - Expenses and investments
               of forestry companies (SF)
-            label: Gastos e inversiones de sociedades forestales (SF). Pending application
+            label: Expenses and investments of forestry companies (SF). Pending application
               in future periods
           is-diocesis-provincia-religiosa-o-entidad-eclesiastica-que-integra-entidades-menores-de-ellas-dependientes:
             label: Diocese, religious province or ecclesiastical entity that includes
@@ -10787,12 +10780,12 @@ modelo:
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Credit for asset conversion -
-                Navarra [01303]
+                Navarre [01303]
             01308:
               label: Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
                 Tax Administration (art. 130 LIS) - Offset for asset conversion -
-                Navarra [01308]
+                Navarre [01308]
             01329:
               label: Deduction for donations to non-profit entities - Donations for
                 priority patronage activities and others entitled to increased deduction
@@ -11195,7 +11188,7 @@ modelo:
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: refund agreed by the Tax Agency as a result of processing
                 prior self-assessments or administrative assessments corresponding
-                to the 2025 tax period - Navarra [01623]'
+                to the 2025 tax period - Navarre [01623]'
             '01650':
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: self-assessment result including the first instalment
@@ -11215,7 +11208,7 @@ modelo:
               label: 'Joint taxation of State and provincial tax administrations -
                 Corrective: self-assessment result including the first instalment
                 under art. 19.1 LIS arising from an earlier self-assessment or administrative
-                assessment for tax period 2025 - Navarra [01653]'
+                assessment for tax period 2025 - Navarre [01653]'
             01658:
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -11233,7 +11226,7 @@ modelo:
             '01661':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Corrective: refund - Navarra [01661]'
+                Tax Administration (art. 130 LIS) - Corrective: refund - Navarre [01661]'
             '01662':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
@@ -11252,7 +11245,7 @@ modelo:
             '01665':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: credit - Navarra
+                Tax Administration (art. 130 LIS) - Conversion result: credit - Navarre
                 [01665]'
             '01666':
               label: 'Joint taxation of State and provincial tax administrations -
@@ -11272,7 +11265,7 @@ modelo:
             01669:
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: Offset - Navarra
+                Tax Administration (art. 130 LIS) - Conversion result: Offset - Navarre
                 [01669]'
             '01670':
               label: 'Joint taxation of State and provincial tax administrations -
@@ -11292,7 +11285,7 @@ modelo:
             '01673':
               label: 'Joint taxation of State and provincial tax administrations -
                 Conversion of deferred tax assets into a credit claimable from the
-                Tax Administration (art. 130 LIS) - Conversion result: Payable - Navarra
+                Tax Administration (art. 130 LIS) - Conversion result: Payable - Navarre
                 [01673]'
             01679:
               label: Transactions under art. 19 LIS other than change of residence
@@ -15099,20 +15092,20 @@ modelo:
                 financial entities (Final Provision 9, Law 7/2024) - Increase - Adjustments
                 for the tax year - Permanent [03646]
             '03647':
-              help: RIC allocation outstanding at the start of the period - Inversiones
-                anticipadas 2022
-              label: Inversiones anticipadas 2022. RIC allocation outstanding at the
-                start of the period
+              help: RIC allocation outstanding at the start of the period - Advance
+                investments 2022
+              label: Advance investments 2022. RIC allocation outstanding at the start
+                of the period
             03648:
               help: RIC allocation outstanding at the start of the period - Advance
                 investments 2023
-              label: Inversiones anticipadas 2023. RIC allocation outstanding at the
-                start of the period
+              label: Advance investments 2023. RIC allocation outstanding at the start
+                of the period
             03649:
               help: RIC allocation outstanding at the end of the period - Advance
                 investments 2023
-              label: Inversiones anticipadas 2023. RIC allocation outstanding at the
-                end of the period
+              label: Advance investments 2023. RIC allocation outstanding at the end
+                of the period
             x-8h834c1g60o32ehg60o3gcg:
               label: Ultimate parent company of a multinational group or large-scale
                 domestic group [00082]

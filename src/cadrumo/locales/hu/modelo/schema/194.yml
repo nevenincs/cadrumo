@@ -26,7 +26,7 @@ modelo:
       construct:
         modelo-194-calculation-construct:
           field:
-            title: '194-es modelo: a tőkejövedelmek forrásadójának éves összesítője'
+            title: '194-es nyomtatvány: a tőkejövedelmek forrásadójának éves összesítője'
       field:
         official_name: Modelo 194. A magánszemélyek jövedelemadója, a társasági adó
           és a külföldi illetőségűek jövedelemadója (állandó telephelyek). Tőkejövedelmekre,

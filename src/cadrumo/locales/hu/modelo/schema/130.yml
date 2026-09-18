@@ -4,7 +4,8 @@ modelo:
       construct:
         modelo-130-direct-estimation-instalment:
           field:
-            title: '130-as modelo: negyedéves előlegfizetés a közvetlen becslés rendszerében'
+            title: '130-as nyomtatvány: negyedéves előlegfizetés a közvetlen becslés
+              rendszerében'
       field:
         official_name: A magánszemélyek jövedelemadója. Közvetlen megállapítás alá
           tartozó gazdasági tevékenységek. Részletfizetés.
@@ -58,8 +59,8 @@ modelo:
               help: Az I. és II. rész részeredményeinek összege.
               label: Részeredmények összege
             '13':
-              help: A Modelo 130 szabályozási küszöbe alapján alkalmazható nettó jövedelmi
-                csökkentés.
+              help: A 130-as nyomtatvány szabályozási küszöbe alapján alkalmazható
+                nettó jövedelmi csökkentés.
               label: Nettó jövedelem miatti csökkentés
             '14':
               help: A nettó jövedelmi csökkentés alkalmazása után fennmaradó összeg.
@@ -81,8 +82,8 @@ modelo:
                 fizetendőként bevallott összeg.
               label: Korábbi önadózásokban fizetendőként szereplő összeg
             '19':
-              help: A Modelo 130 végső fizetendő összege minden levonás és korábbi
-                önadózás után.
+              help: A 130-as nyomtatvány végső fizetendő összege minden levonás és
+                korábbi önadózás után.
               label: Végső eredmény
             saldo-negativo-fin-periodo:
               help: Számított átvihető érték, amikor a 17. mező negatív; későbbi negyedévben

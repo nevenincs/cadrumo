@@ -1238,7 +1238,7 @@ modelo:
       construct:
         modelo-036-censo-foundation:
           field:
-            title: '036-os modelo: alap cenzusadatok'
+            title: '036-os nyomtatvány: alap cenzusadatok'
       field:
         official_name: Modelo 036. Nyilvántartásba-vételi bevallás a vállalkozók,
           szakemberek és adólevonásra kötelezettek nyilvántartásába való bejelentkezésről,

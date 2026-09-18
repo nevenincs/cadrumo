@@ -44,7 +44,7 @@ modelo:
           construct:
             modelo-369:
               field:
-                title: Modelo 369 - Esquema Importacion (règim especial IOSS)
+                title: Model 369 - Esquema Importació (règim especial IOSS)
           field:
             label: Modelo 369 - Esquema Importacion (IOSS) - règim especial ventas
               a distancia de béns importados (LIVA art 163 quinvicies a octovicies).
@@ -70,7 +70,7 @@ modelo:
           construct:
             modelo-369:
               field:
-                title: Modelo 369 - Esquema Union (règim especial OSS Union)
+                title: Model 369 - Esquema Unió (règim especial OSS Union)
           field:
             label: Model 369 - Règim de la Unió - règim especial de vendes intracomunitàries
               a distància, interfícies electròniques i serveis establerts a la Comunitat

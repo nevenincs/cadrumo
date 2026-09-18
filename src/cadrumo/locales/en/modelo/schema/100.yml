@@ -3620,7 +3620,7 @@ modelo:
       construct:
         renta-anexo-c-base-liquidable-negativa-general:
           field:
-            title: Modelo 100 Anexo C general net taxable base negative carry-forward
+            title: Modelo 100 Annex C general net taxable base negative carry-forward
         renta-cuota-chain:
           field:
             title: 'Modelo 100: IRPF tax-quota calculation chain'
@@ -3898,7 +3898,7 @@ modelo:
             '0223':
               label: Total deductible expenses ([0218] + [0222])
             '0224':
-              label: Rendimiento net ( [0180] - [0220] or [0180] - [0223] )
+              label: Net income ( [0180] - [0220] or [0180] - [0223] )
             '0225':
               label: Reductions for income generated over more than 2 years or obtained
                 in a markedly irregular manner (article 32.1 and Transitional Provision
@@ -4480,12 +4480,14 @@ modelo:
                 in Spain in 2020 by the other members of the family unit resident
                 in a Member State of the European Union or the European Economic Area
             '0733':
-              label: 'Reserva for Investments in Canarias 2016: Amount of the allocations'
+              label: 'Reserve for Investments in the Canary Islands 2016: Amount of
+                the allocations'
             '0734':
               label: 'Reserve for Investments in the Canary Islands 2016: Year of
                 the allocation'
             '0735':
-              label: 'Reserva for Investments in Canarias 2017: Amount of the allocations'
+              label: 'Reserve for Investments in the Canary Islands 2017: Amount of
+                the allocations'
             '0736':
               label: 'Canary Islands Investment Reserve 2017: investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -4572,9 +4574,11 @@ modelo:
             '0774':
               label: For the birth and adoption of children
             '0777':
-              label: 'Reserva for Investments in Canarias 2016: Amount of the allocations'
+              label: 'Reserve for Investments in the Canary Islands 2016: Amount of
+                the allocations'
             0778:
-              label: 'Reserva for Investments in Canarias 2016: Amount of the allocations'
+              label: 'Reserve for Investments in the Canary Islands 2016: Amount of
+                the allocations'
             0779:
               label: '"Plan de Fomento de la Lectura (2017-2020)": applied in this
                 return'
@@ -4773,8 +4777,8 @@ modelo:
               label: For renting a primary residence in favour of certain groups (this
                 amount is transferred to box [1130] of Annex B.6)
             0909:
-              label: For the letting of real estate in the territory of the Illes
-                Balears used as housing
+              label: For the letting of real estate in the Balearic Islands used as
+                housing
             0911:
               label: Tax ID (NIF/NIE) of landlord 1
             0919:
@@ -5417,8 +5421,8 @@ modelo:
               label: Net income from the activity
             '1480':
               label: Reductions for income generated over more than 2 years or obtained
-                in a markedly irregular manner (Artículo 32.1 y D.T 25ª de la Ley
-                del Impuesto)
+                in a markedly irregular manner (article 32.1 and Transitional Provision
+                25 of the Personal Income Tax Law)
             '1488':
               label: Gross income
             '1491':
@@ -5479,8 +5483,8 @@ modelo:
               label: Mark an "X" if you entered a Tax ID (NIF) from another country
                 in box [1562]
             '1567':
-              label: Reductions applicable (article 26.2 and D.T. 25.ª of the Law
-                of the Impuesto)
+              label: Reductions applicable (article 26.2 and Transitional Provision
+                25 of the Personal Income Tax Law)
             '1574':
               label: Reductions applicable (articles 23.3 and Transitional Provision
                 25 of the Personal Income Tax Law)
@@ -5531,7 +5535,7 @@ modelo:
             '1646':
               label: Part of the capital gain susceptible of reduction (D.T. 9.ª)
             '1648':
-              label: Reduction applicable (D.T. 9.ª of the Law of the Impuesto)
+              label: Reduction applicable (D.T. 9.ª of the Personal Income Tax Law)
           construct:
             renta-dependent-modelos:
               field:
@@ -5545,7 +5549,7 @@ modelo:
                 title: Model 100 2020 objective-assessment summary fields
             renta-mini-model-base-y-cuota:
               field:
-                title: Modelo 100 2020 base imponible / base net taxable / tax liability
+                title: Modelo 100 2020 taxable base / net taxable base / tax liability
                   aggregators
             renta-mini-model-capital-inmobiliario:
               field:
@@ -5603,9 +5607,9 @@ modelo:
               label: Amount of improvements made in 2021 to the accessory property
                 (breakdown in Annex D, voluntary completion)
             0149:
-              label: Rendimiento net ([0102] - [0104] - [0107] - [0109] - [0110] -
-                [0111] - [0112] - [0113] - [0114] - [0115] - [0116] - [0157] - [0117]
-                - [0131] - [0132] - [0146] - [0147] - [0148])
+              label: Net income ([0102] - [0104] - [0107] - [0109] - [0110] - [0111]
+                - [0112] - [0113] - [0114] - [0115] - [0116] - [0157] - [0117] - [0131]
+                - [0132] - [0146] - [0147] - [0148])
             '0157':
               label: Deductible expense for rent of premises to certain businesses
                 in January, February and March 2021 (Royal Decree-Law 35/2020, of
@@ -5951,8 +5955,8 @@ modelo:
               label: 'Reserve for Investments in the Canary Islands 2017 (2)(3): Year
                 of the allocation'
             '0735':
-              label: 'Reserva for Investments in Canarias 2018 (4): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2018 (4): Amount
+                of the allocations'
             '0736':
               label: 'Canary Islands Investment Reserve 2018 (4): investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -6601,30 +6605,30 @@ modelo:
             '1595':
               label: Reduced capital gains not exempt attributable to 2021
             '1600':
-              label: Atribución of withholdings of capital gains and losses attributable
+              label: Attribution of withholdings of capital gains and losses attributable
                 to 2021
             '1610':
               label: Amount generated in 2021
             '1611':
               label: Amount generated in 2021 pending application
             '1639':
-              label: Pérdida patrimonial attributable to 2021
+              label: Capital loss attributable to 2021
             '1650':
               label: Reduced non-exempt capital gain attributable to 2021
             '1654':
               label: Reduced non-exempt capital gain attributable to 2021
             '1656':
-              label: Cadastral reference (vivienda 1)
+              label: Cadastral reference (dwelling 1)
             '1660':
               label: Amounts paid in 2021, from 6 October (in respect of each property)
                 (*)
             '1664':
-              label: Cadastral reference (vivienda 1)
+              label: Cadastral reference (dwelling 1)
             '1668':
               label: Amounts paid in 2021, from 6 October (in respect of each property)
                 (*)
             '1673':
-              label: Cadastral reference (vivienda 1)
+              label: Cadastral reference (dwelling 1)
             '1677':
               label: Amounts paid in 2021, from 6 October (in respect of each property)
                 (*)
@@ -6638,8 +6642,8 @@ modelo:
               label: Excess of amounts paid in tax year 2021, from 6 October, qualifying
                 for deduction (to be deducted over the following 4 tax years)
             '1681':
-              label: 'Reserva for Investments in Canarias 2016 (1): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2016 (1): Amount
+                of the allocations'
             '1682':
               label: 'Reserve for Investments in the Canary Islands 2016 (1): Year
                 of the allocation'
@@ -6647,11 +6651,11 @@ modelo:
               label: 'Canary Islands Investment Reserve 2018 (4): investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             '1684':
-              label: 'Reserva for Investments in Canarias 2016 (1): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2016 (1): Amount
+                of the allocations'
             '1685':
-              label: 'Reserva for Investments in Canarias 2016 (1): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2016 (1): Amount
+                of the allocations'
             '1687':
               label: 'For investments in foreign film productions in Spain (Article
                 36.2 of the LIS) (*): applied in this return'
@@ -6762,7 +6766,7 @@ modelo:
                 title: Model 100 2021 objective-assessment summary fields
             renta-mini-model-base-y-cuota:
               field:
-                title: Modelo 100 2021 base imponible / base net taxable / tax liability
+                title: Modelo 100 2021 taxable base / net taxable base / tax liability
                   aggregators
             renta-mini-model-capital-inmobiliario:
               field:
@@ -7193,14 +7197,14 @@ modelo:
                 in Spain in 2022 by the other members of the family unit resident
                 in a Member State of the European Union or the European Economic Area
             '0733':
-              label: 'Reserva for Investments in Canarias 2018 (2): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2018 (2): Amount
+                of the allocations'
             '0734':
               label: 'Reserve for Investments in the Canary Islands 2018 (2): Year
                 of the allocation'
             '0735':
-              label: 'Reserva for Investments in Canarias 2019 (2): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2019 (2): Amount
+                of the allocations'
             '0736':
               label: 'Canary Islands Investment Reserve 2019 (2): investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -7208,8 +7212,8 @@ modelo:
               label: 'Canary Islands Investment Reserve 2019 (2): investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             0738:
-              label: 'Reserva for Investments in Canarias 2020 (2): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2020 (2): Amount
+                of the allocations'
             0739:
               label: 'Canary Islands Investment Reserve 2020 (2): investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -7907,7 +7911,7 @@ modelo:
             '1595':
               label: Reduced capital gains not exempt attributable to 2022
             '1600':
-              label: Atribución of withholdings of capital gains and losses attributable
+              label: Attribution of withholdings of capital gains and losses attributable
                 to 2022
             '1610':
               label: Amount generated in 2022
@@ -7923,8 +7927,8 @@ modelo:
             '1639':
               label: Capital loss imputable to 2022
             '1643':
-              label: 'Reserva for Investments in Canarias 2016 (1): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2016 (1): Amount
+                of the allocations'
             '1650':
               label: Reduced non-exempt capital gain attributable to 2022
             '1654':
@@ -7939,8 +7943,8 @@ modelo:
               label: Excess of the amounts paid in tax year 2022 with right to deduction
                 (to be deducted in the following 4 tax years) (complete Annex C.4)
             '1681':
-              label: 'Reserva for Investments in Canarias 2017 (1)(2)(3): Amount of
-                the allocations'
+              label: 'Reserve for Investments in the Canary Islands 2017 (1)(2)(3):
+                Amount of the allocations'
             '1682':
               label: 'Reserve for Investments in the Canary Islands 2017 (1)(2)(3):
                 Year of the allocation'
@@ -7974,7 +7978,7 @@ modelo:
               label: Amount qualifying for the deduction for works carried out on
                 buildings predominantly used for residential purposes in 2022
             '1812':
-              label: Ganancia no exenta attributable to 2022
+              label: Non-exempt gain attributable to 2022
             '1826':
               label: Transfer value
             '1829':
@@ -7986,7 +7990,7 @@ modelo:
             '1837':
               label: Part of the capital gain susceptible of reduction (D.T. 9.ª)
             '1839':
-              label: Reduction applicable (D.T. 9.ª of the Law of the Impuesto)
+              label: Reduction applicable (D.T. 9.ª of the Personal Income Tax Law)
             '1841':
               label: Non-exempt capital gain imputable to 2022
             '1845':
@@ -8042,7 +8046,7 @@ modelo:
                 title: Model 100 2022 objective-assessment summary fields
             renta-mini-model-base-y-cuota:
               field:
-                title: Modelo 100 2022 base imponible / base net taxable / tax liability
+                title: Modelo 100 2022 taxable base / net taxable base / tax liability
                   aggregators
             renta-mini-model-capital-inmobiliario:
               field:
@@ -8486,8 +8490,8 @@ modelo:
               label: 'Reserve for Investments in the Canary Islands 2019 (1): allocation
                 year'
             '0735':
-              label: 'Reserva for Investments in Canarias 2020 (1): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2020 (1): Amount
+                of the allocations'
             '0736':
               label: 'Canary Islands Investment Reserve 2020 (1): investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -9174,7 +9178,7 @@ modelo:
             '1595':
               label: Reduced capital gains not exempt attributable to 2023
             '1600':
-              label: Atribución of withholdings of capital gains and losses attributable
+              label: Attribution of withholdings of capital gains and losses attributable
                 to 2023
             '1610':
               label: 'For investment in a habitual residence considered protected:
@@ -9184,7 +9188,7 @@ modelo:
                 for application in later tax years): amount generated in 2022 pending
                 application'
             '1639':
-              label: Pérdida patrimonial attributable to 2023
+              label: Capital loss attributable to 2023
             '1650':
               label: Reduced non-exempt capital gain attributable to 2023
             '1654':
@@ -9203,8 +9207,8 @@ modelo:
               label: Excess of the amounts paid in tax year 2023 with right to deduction
                 (to be deducted in the following 4 tax years) (complete Annex C.5)
             '1681':
-              label: 'Reserva for Investments in Canarias 2018 (1): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2018 (1): Amount
+                of the allocations'
             '1682':
               label: 'Reserve for Investments in the Canary Islands 2018 (1): Year
                 of the allocation'
@@ -9242,15 +9246,15 @@ modelo:
             '1794':
               label: Account number
             '1808':
-              label: Pérdida patrimonial attributable to 2023
+              label: Capital loss attributable to 2023
             '1812':
-              label: Ganancia no exenta attributable to 2023
+              label: Non-exempt gain attributable to 2023
             '1832':
-              label: Pérdida patrimonial attributable to 2023
+              label: Capital loss attributable to 2023
             '1841':
               label: Reduced non-exempt capital gain attributable to 2023
             '1843':
-              label: Ganancia patrimonial no exenta attributable to 2023
+              label: Non-exempt capital gain attributable to 2023
             '1854':
               label: 'Tax year 2022: pending application at the beginning of the period'
             '1855':
@@ -9276,12 +9280,12 @@ modelo:
               label: 'Reserve for Investments in the Balearic Islands 2023: Pending
                 materialisation'
             '1942':
-              label: 'Advance investments of future allocations to the Investment
-                Reserve for the Illes Balears, made in 2023: investments provided
+              label: 'Advance investments of future allocations to the Reserve for
+                Investments in the Balearic Islands, made in 2023: investments provided
                 for in points A and B of section 4'
             '1943':
-              label: 'Advance investments of future allocations to the Investment
-                Reserve for the Illes Balears, made in 2023: investments provided
+              label: 'Advance investments of future allocations to the Reserve for
+                Investments in the Balearic Islands, made in 2023: investments provided
                 for in point C of section 4'
             '1946':
               label: '"60 Aniversario Rally Blendio Princesa de Asturias Ciudad de
@@ -9316,7 +9320,7 @@ modelo:
                 title: Model 100 2023 objective-assessment summary fields
             renta-mini-model-base-y-cuota:
               field:
-                title: Modelo 100 2023 base imponible / base net taxable / tax liability
+                title: Modelo 100 2023 taxable base / net taxable base / tax liability
                   aggregators
             renta-mini-model-capital-inmobiliario:
               field:
@@ -10838,10 +10842,10 @@ modelo:
                 C.4)
             '0473':
               help: Enter excess amounts from tax years 2019 to 2023 still pending
-                reduction for contributions made in favor of relatives or wards with
+                reduction for contributions made in favour of relatives or wards with
                 disability; complete Annex C.4 where applicable.
               label: Excess amounts pending reduction from tax years 2019 to 2023
-                for contributions made in favor of relatives or wards with disability
+                for contributions made in favour of relatives or wards with disability
                 (complete Annex C.4)
             '0474':
               help: Enter contributions made in 2024 by the person with disability
@@ -10849,8 +10853,8 @@ modelo:
               label: Contributions made in 2024 by the person with disability themself
             '0475':
               help: Enter contributions made in 2024 by relatives or guardians in
-                favor of the person with disability.
-              label: Contributions made in 2024 by relatives or guardians in favor
+                favour of the person with disability.
+              label: Contributions made in 2024 by relatives or guardians in favour
                 of the person with disability
             '0476':
               help: Enter the total amount eligible for reduction for social-welfare
@@ -10917,7 +10921,7 @@ modelo:
                 society member, or holder.
             0494:
               help: Enter the amount from box [0476] that is applied for payments
-                and contributions to social-welfare systems set up in favor of persons
+                and contributions to social-welfare systems set up in favour of persons
                 with disability.
             0495:
               help: Enter the amount from box [0481] that is applied for contributions
@@ -11011,9 +11015,9 @@ modelo:
               help: Enter exempt income amounts corresponding to the savings net taxable
                 base.
             '0527':
-              help: This computed field totals maintenance annuities in favor of children
-                paid by court decision from boxes [1741], [1744], [1749], [1754],
-                and [1759].
+              help: This computed field totals maintenance annuities in favour of
+                children paid by court decision from boxes [1741], [1744], [1749],
+                [1754], and [1759].
             0528:
               help: This computed field applies the state part of the general and
                 autonomous-community tax scale to the amount in box [0505].
@@ -15389,7 +15393,7 @@ modelo:
                 title: Model 100 2024 objective-assessment summary fields
             renta-mini-model-base-y-cuota:
               field:
-                title: Modelo 100 2024 base imponible / base net taxable / tax liability
+                title: Modelo 100 2024 taxable base / net taxable base / tax liability
                   aggregators
             renta-mini-model-capital-inmobiliario:
               field:
@@ -17633,7 +17637,7 @@ modelo:
                 title: Model 100 2025 objective-assessment summary fields
             renta-mini-model-base-y-cuota:
               field:
-                title: Modelo 100 2025 base imponible / base net taxable / tax liability
+                title: Modelo 100 2025 taxable base / net taxable base / tax liability
                   aggregators
             renta-mini-model-capital-inmobiliario:
               field:

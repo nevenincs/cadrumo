@@ -135,27 +135,27 @@ modelo:
           iva-anual-repercutido-recargo-tipo-0-26-base:
             help: Amount declared on the annual IVA summary, modelo 390, for the equivalence
               surcharge at the stated rate.
-            label: General-regime transactions. Equivalence surcharge. Tipo 0,26%.
+            label: General-regime transactions. Equivalence surcharge. Rate 0.26%.
               Taxable base
           iva-anual-repercutido-recargo-tipo-0-62-base:
             help: Amount declared on the annual IVA summary, modelo 390, for the equivalence
               surcharge at the stated rate.
-            label: General-regime transactions. Equivalence surcharge. Tipo 0,62%.
+            label: General-regime transactions. Equivalence surcharge. Rate 0.62%.
               Taxable base
           iva-anual-repercutido-recargo-tipo-0-base:
             help: Amount declared on the annual IVA summary, modelo 390, for the equivalence
               surcharge at the stated rate.
-            label: General-regime transactions. Equivalence surcharge. Tipo 0%. Taxable
+            label: General-regime transactions. Equivalence surcharge. Rate 0%. Taxable
               base
           iva-anual-repercutido-recargo-tipo-0-cuota:
             help: Amount declared on the annual IVA summary, modelo 390, for the equivalence
               surcharge at the stated rate.
-            label: General-regime transactions. Equivalence surcharge. Tipo 0%. Tax
+            label: General-regime transactions. Equivalence surcharge. Rate 0%. Tax
               amount
           iva-anual-repercutido-recargo-tipo-1-base:
             help: Amount declared on the annual IVA summary, modelo 390, for the equivalence
               surcharge at the stated rate.
-            label: General-regime transactions. Equivalence surcharge. Tipo 1%. Taxable
+            label: General-regime transactions. Equivalence surcharge. Rate 1%. Taxable
               base
           iva-anual-resultado-regimen-general:
             label: General regime result

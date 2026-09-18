@@ -72,8 +72,8 @@ modelo:
       construct:
         modelo-180-annual-summary:
           field:
-            title: A 180-as modelo éves összesítője a 115-ös modelo negyedéves bevallásai
-              alapján
+            title: A 180-as nyomtatvány éves összesítője a 115-ös nyomtatvány negyedéves
+              bevallásai alapján
       field:
         official_name: Modelo 180. Adatszolgáltatási bevallás. Adóelőleg-levonások
           és -befizetések. Városi ingatlanok bérbeadásából származó jövedelmek. Éves

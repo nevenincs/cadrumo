@@ -4,7 +4,7 @@ modelo:
       construct:
         modelo-156-informative:
           field:
-            title: Modelo 156 bevallás tájékoztató
+            title: '156-os nyomtatvány: tájékoztató jellegű adatszolgáltatás'
       field:
         official_name: Modelo 156. A magánszemélyek jövedelemadója. Tagok és önsegélyező-tagok
           járulékai az anyasági kedvezmény céljából. Éves adatszolgáltatási bevallás.

@@ -10,7 +10,7 @@ modelo:
       construct:
         modelo-185-informative:
           field:
-            title: Modelo 185 bevallás tájékoztató
+            title: '185-ös nyomtatvány: tájékoztató jellegű adatszolgáltatás'
       field:
         official_name: Modelo 185. A tagok és önsegélyező-tagok járulékainak havi
           adatszolgáltatási bevallása.
@@ -28,7 +28,7 @@ modelo:
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 185 . rovat adóügyi adatai: adóév.'
+              help: 'A 185-ös nyomtatvány rovatának adóügyi adatai: adóév.'
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: E bevallás sorszámos azonosító száma, 13 számjegyű.
               label: A BEVALLÁS AZONOSÍTÓ SZÁMA
@@ -36,7 +36,7 @@ modelo:
               help: A bevallással érintett naptári hónap, 01 januártól 12 decemberig.
               label: IDŐSZAK
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A Modelo 185 . rovat adóügyi adatai.
+              help: A 185-ös nyomtatvány rovatának adóügyi adatai.
             x-chim6r1eehnn8obc5lp6apr9edq74rrj:
               help: Az e bevallóhoz tartozó bejelentett személyek, azaz a 2-es típusú
                 rekordok teljes száma.

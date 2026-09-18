@@ -188,7 +188,7 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: '202-es modelo: részletfizetés (2019-2022 közötti adóévek)'
+                title: '202-es nyomtatvány: részletfizetés (2019-2022 közötti adóévek)'
           field:
             label: 202-es modelo, 2019-2022. adóévek (DR202v52.xlsx, HAC/941/2018
               rendelet)
@@ -207,7 +207,7 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: '202-es modelo: részletfizetés (2023-2024 közötti adóévek)'
+                title: '202-es nyomtatvány: részletfizetés (2023-2024 közötti adóévek)'
           field:
             label: 202-es modelo, 2023-2024. adóévek (DR202e23.xlsx)
         2025-y-siguientes:
@@ -242,6 +242,6 @@ modelo:
           construct:
             modelo-202-foundation:
               field:
-                title: '202-es modelo: a részletfizetés alapja'
+                title: '202-es nyomtatvány: a részletfizetés alapja'
           field:
             label: 202-es modelo hatályos, 2025. adóévtől (DR202e25.xlsx)

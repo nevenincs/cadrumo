@@ -70,7 +70,7 @@ modelo:
       construct:
         modelo-165-informative:
           field:
-            title: Modelo 165 bevallás tájékoztató
+            title: '165-ös nyomtatvány: tájékoztató jellegű adatszolgáltatás'
       field:
         official_name: Modelo 165. Az újonnan vagy nemrég alapított szervezetek tagjai
           vagy résztvevői részére kiadott egyedi igazolások adatszolgáltatási bevallása.

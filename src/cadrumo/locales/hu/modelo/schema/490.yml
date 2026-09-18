@@ -658,7 +658,7 @@ modelo:
       construct:
         modelo-490-autoliquidacion:
           field:
-            title: 490-es modelo, egyes digitális szolgáltatások adója, önadózás
+            title: 490-es nyomtatvány, egyes digitális szolgáltatások adója, önadózás
       field:
         official_name: Modelo 490. Egyes digitális szolgáltatások adója. Önbevallás.
         title: Egyes digitális szolgáltatások adója - önbevallás

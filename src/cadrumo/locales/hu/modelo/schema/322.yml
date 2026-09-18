@@ -265,13 +265,13 @@ modelo:
             label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
               Tárgyi eszközök korrekciója. Levonható adóösszeg [734]
           m322-informacion-adicional-criterio-caja-base-imponible:
-            help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-              adat.
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
             label: A pénzforgalmi különös rendszer alá tartozó termék- és szolgáltatásbeszerzések.
               adóalap
           m322-informacion-adicional-criterio-caja-cuota-soportada:
-            help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-              adat.
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
             label: A pénzforgalmi különös rendszer alá tartozó termék- és szolgáltatásbeszerzések.
               Előzetesen felszámított adó
           m322-informacion-adicional-entregas-intracomunitarias-bienes-servicios:
@@ -302,8 +302,8 @@ modelo:
             label: Elszámolás (folytatás). Az állami adóhatóságnak tulajdonítható
               (%) [64]
           m322-liquidacion-continuacion-a-deducir-resultado-autoliquidaciones-anteriores:
-            help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-              adat.
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
             label: 'Levonandó (kizárólag kiegészítő önadózás esetén): az azonos jogcímen,
               évre és időszakra korábban benyújtott önadózások eredménye'
           m322-liquidacion-continuacion-cuotas-compensar-periodos-anteriores-incorporacion-grupo:
@@ -441,8 +441,8 @@ modelo:
             label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
               szerint. Adókulcs % [13]
           m322-operaciones-ejercicio-criterio-caja-regla-general-art-75-liva:
-            help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-              adat.
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
             label: A pénzforgalmi különös rendszer alá tartozó ügyletek, amelyek a
               LIVA 75. cikke szerinti általános szabály alapján váltak esedékessé
           m322-operaciones-ejercicio-entregas-bienes-inversion:
@@ -488,7 +488,7 @@ modelo:
           m322-operaciones-intragrupo-valoradas-arts-78-79-liva:
             label: A 78 y 79 LIVA szerint értékelt csoporton belüli ügyletek [128]
           m322-operaciones-no-sujetas-o-inversion-con-derecho-deduccion:
-            help: A 322-es modelo 73. rovata, 2008. adóév.
+            help: A 322-es nyomtatvány 73. rovata, 2008. adóév.
             label: Kiegészítő információ. Nem adóköteles vagy fordított adózás alá
               eső, levonási jogot keletkeztető ügyletek [73] (június 30-ig, a többi
               0)
@@ -558,7 +558,7 @@ modelo:
       construct:
         modelo-322-iva-grupo-individual:
           field:
-            title: 322-es modelo IVA-csoport, egyedi bevallás
+            title: 322-es nyomtatvány IVA-csoport, egyedi bevallás
       field:
         official_name: Modelo 322. Hozzáadottérték-adó. Cégcsoport. Egyedi nyomtatvány.
           Havi önbevallás.
@@ -567,331 +567,331 @@ modelo:
         2008-2022:
           casilla:
             '01':
-              help: A 322-es modelo 01. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 01. rovata, 2008. adóév.
             '02':
-              help: A 322-es modelo 02. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 02. rovata, 2008. adóév.
             '03':
-              help: A 322-es modelo 03. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 03. rovata, 2008. adóév.
             '04':
-              help: A 322-es modelo 04. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 04. rovata, 2008. adóév.
             '05':
-              help: A 322-es modelo 05. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 05. rovata, 2008. adóév.
             '06':
-              help: A 322-es modelo 06. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 06. rovata, 2008. adóév.
             '07':
-              help: A 322-es modelo 07. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 07. rovata, 2008. adóév.
             08:
-              help: A 322-es modelo 08. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 08. rovata, 2008. adóév.
             09:
-              help: A 322-es modelo 09. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 09. rovata, 2008. adóév.
             '10':
-              help: A 322-es modelo 10. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 10. rovata, 2008. adóév.
             '107':
-              help: A 322-es modelo 107. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 107. rovata, 2008. adóév.
             '11':
-              help: A 322-es modelo 11. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 11. rovata, 2008. adóév.
             '12':
-              help: A 322-es modelo 12. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 12. rovata, 2008. adóév.
             '120':
-              help: A 322-es modelo 120. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 120. rovata, 2008. adóév.
             '122':
-              help: A 322-es modelo 122. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 122. rovata, 2008. adóév.
             '123':
-              help: A 322-es modelo 123. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 123. rovata, 2008. adóév.
             '124':
-              help: A 322-es modelo 124. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 124. rovata, 2008. adóév.
             '125':
-              help: A 322-es modelo 125. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 125. rovata, 2008. adóév.
             '126':
-              help: A 322-es modelo 126. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 126. rovata, 2008. adóév.
             '127':
-              help: A 322-es modelo 127. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 127. rovata, 2008. adóév.
             '128':
-              help: A 322-es modelo 128. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 128. rovata, 2008. adóév.
             '13':
-              help: A 322-es modelo 13. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 13. rovata, 2008. adóév.
             '14':
-              help: A 322-es modelo 14. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 14. rovata, 2008. adóév.
             '15':
-              help: A 322-es modelo 15. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 15. rovata, 2008. adóév.
             '16':
-              help: A 322-es modelo 16. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 16. rovata, 2008. adóév.
             '17':
-              help: A 322-es modelo 17. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 17. rovata, 2008. adóév.
             '18':
-              help: A 322-es modelo 18. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 18. rovata, 2008. adóév.
             '19':
-              help: A 322-es modelo 19. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 19. rovata, 2008. adóév.
             '20':
-              help: A 322-es modelo 20. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 20. rovata, 2008. adóév.
             '21':
-              help: A 322-es modelo 21. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 21. rovata, 2008. adóév.
             '22':
-              help: A 322-es modelo 22. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 22. rovata, 2008. adóév.
             '23':
-              help: A 322-es modelo 23. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 23. rovata, 2008. adóév.
             '24':
-              help: A 322-es modelo 24. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 24. rovata, 2008. adóév.
             '25':
-              help: A 322-es modelo 25. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 25. rovata, 2008. adóév.
             '26':
-              help: A 322-es modelo 26. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 26. rovata, 2008. adóév.
             '27':
-              help: A 322-es modelo 27. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 27. rovata, 2008. adóév.
             '28':
-              help: A 322-es modelo 28. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 28. rovata, 2008. adóév.
             '29':
-              help: A 322-es modelo 29. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 29. rovata, 2008. adóév.
             '30':
-              help: A 322-es modelo 30. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 30. rovata, 2008. adóév.
             '31':
-              help: A 322-es modelo 31. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 31. rovata, 2008. adóév.
             '32':
-              help: A 322-es modelo 32. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 32. rovata, 2008. adóév.
             '33':
-              help: A 322-es modelo 33. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 33. rovata, 2008. adóév.
             '34':
-              help: A 322-es modelo 34. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 34. rovata, 2008. adóév.
             '35':
-              help: A 322-es modelo 35. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 35. rovata, 2008. adóév.
             '36':
-              help: A 322-es modelo 36. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 36. rovata, 2008. adóév.
             '37':
-              help: A 322-es modelo 37. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 37. rovata, 2008. adóév.
             '38':
-              help: A 322-es modelo 38. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 38. rovata, 2008. adóév.
               label: Összes fizetendő adó ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
                 [38]
             '39':
-              help: A 322-es modelo 39. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 39. rovata, 2008. adóév.
             '40':
-              help: A 322-es modelo 40. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 40. rovata, 2008. adóév.
             '41':
-              help: A 322-es modelo 41. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 41. rovata, 2008. adóév.
             '42':
-              help: A 322-es modelo 42. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 42. rovata, 2008. adóév.
             '43':
-              help: A 322-es modelo 43. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 43. rovata, 2008. adóév.
             '44':
-              help: A 322-es modelo 44. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 44. rovata, 2008. adóév.
             '45':
-              help: A 322-es modelo 45. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 45. rovata, 2008. adóév.
             '46':
-              help: A 322-es modelo 46. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 46. rovata, 2008. adóév.
             '47':
-              help: A 322-es modelo 47. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 47. rovata, 2008. adóév.
             '48':
-              help: A 322-es modelo 48. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 48. rovata, 2008. adóév.
             '49':
-              help: A 322-es modelo 49. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 49. rovata, 2008. adóév.
             '50':
-              help: A 322-es modelo 50. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 50. rovata, 2008. adóév.
             '500':
-              help: A 322-es modelo 500. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 500. rovata, 2008. adóév.
             '501':
-              help: A 322-es modelo 501. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 501. rovata, 2008. adóév.
             '502':
-              help: A 322-es modelo 502. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 502. rovata, 2008. adóév.
             '503':
-              help: A 322-es modelo 503. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 503. rovata, 2008. adóév.
             '504':
-              help: A 322-es modelo 504. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 504. rovata, 2008. adóév.
             '505':
-              help: A 322-es modelo 505. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 505. rovata, 2008. adóév.
             '506':
-              help: A 322-es modelo 506. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 506. rovata, 2008. adóév.
             '507':
-              help: A 322-es modelo 507. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 507. rovata, 2008. adóév.
             '508':
-              help: A 322-es modelo 508. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 508. rovata, 2008. adóév.
             '509':
-              help: A 322-es modelo 509. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 509. rovata, 2008. adóév.
             '51':
-              help: A 322-es modelo 51. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 51. rovata, 2008. adóév.
             '510':
-              help: A 322-es modelo 510. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 510. rovata, 2008. adóév.
             '511':
-              help: A 322-es modelo 511. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 511. rovata, 2008. adóév.
             '512':
-              help: A 322-es modelo 512. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 512. rovata, 2008. adóév.
             '513':
-              help: A 322-es modelo 513. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 513. rovata, 2008. adóév.
             '514':
-              help: A 322-es modelo 514. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 514. rovata, 2008. adóév.
             '515':
-              help: A 322-es modelo 515. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 515. rovata, 2008. adóév.
             '516':
-              help: A 322-es modelo 516. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 516. rovata, 2008. adóév.
             '517':
-              help: A 322-es modelo 517. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 517. rovata, 2008. adóév.
             '518':
-              help: A 322-es modelo 518. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 518. rovata, 2008. adóév.
             '519':
-              help: A 322-es modelo 519. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 519. rovata, 2008. adóév.
             '52':
-              help: A 322-es modelo 52. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 52. rovata, 2008. adóév.
             '520':
-              help: A 322-es modelo 520. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 520. rovata, 2008. adóév.
             '521':
-              help: A 322-es modelo 521. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 521. rovata, 2008. adóév.
             '522':
-              help: A 322-es modelo 522. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 522. rovata, 2008. adóév.
             '523':
-              help: A 322-es modelo 523. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 523. rovata, 2008. adóév.
             '524':
-              help: A 322-es modelo 524. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 524. rovata, 2008. adóév.
             '53':
-              help: A 322-es modelo 53. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 53. rovata, 2008. adóév.
             '54':
-              help: A 322-es modelo 54. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 54. rovata, 2008. adóév.
             '55':
-              help: A 322-es modelo 55. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 55. rovata, 2008. adóév.
             '56':
-              help: A 322-es modelo 56. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 56. rovata, 2008. adóév.
             '57':
-              help: A 322-es modelo 57. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 57. rovata, 2008. adóév.
             '58':
-              help: A 322-es modelo 58. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 58. rovata, 2008. adóév.
             '59':
-              help: A 322-es modelo 59. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 59. rovata, 2008. adóév.
             '60':
-              help: A 322-es modelo 60. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 60. rovata, 2008. adóév.
             '61':
-              help: A 322-es modelo 61. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 61. rovata, 2008. adóév.
             '62':
-              help: A 322-es modelo 62. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 62. rovata, 2008. adóév.
             '63':
-              help: A 322-es modelo 63. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 63. rovata, 2008. adóév.
             '64':
-              help: A 322-es modelo 64. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 64. rovata, 2008. adóév.
             '65':
-              help: A 322-es modelo 65. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 65. rovata, 2008. adóév.
             '66':
-              help: A 322-es modelo 66. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 66. rovata, 2008. adóév.
             '67':
-              help: A 322-es modelo 67. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 67. rovata, 2008. adóév.
             '68':
-              help: A 322-es modelo 68. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 68. rovata, 2008. adóév.
               label: Elszámolás (folytatás). Eredmény ([65] - [66] + [67]) [68]
             '70':
-              help: A 322-es modelo 70. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 70. rovata, 2008. adóév.
               label: Az önadózás eredménye ([68] - [69]) [70]
             '700':
-              help: A 322-es modelo 700. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 700. rovata, 2008. adóév.
             '701':
-              help: A 322-es modelo 701. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 701. rovata, 2008. adóév.
             '702':
-              help: A 322-es modelo 702. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 702. rovata, 2008. adóév.
             '703':
-              help: A 322-es modelo 703. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 703. rovata, 2008. adóév.
             '704':
-              help: A 322-es modelo 704. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 704. rovata, 2008. adóév.
             '705':
-              help: A 322-es modelo 705. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 705. rovata, 2008. adóév.
             '706':
-              help: A 322-es modelo 706. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 706. rovata, 2008. adóév.
             '707':
-              help: A 322-es modelo 707. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 707. rovata, 2008. adóév.
             '708':
-              help: A 322-es modelo 708. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 708. rovata, 2008. adóév.
             '709':
-              help: A 322-es modelo 709. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 709. rovata, 2008. adóév.
             '71':
-              help: A 322-es modelo 71. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 71. rovata, 2008. adóév.
             '710':
-              help: A 322-es modelo 710. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 710. rovata, 2008. adóév.
             '711':
-              help: A 322-es modelo 711. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 711. rovata, 2008. adóév.
             '712':
-              help: A 322-es modelo 712. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 712. rovata, 2008. adóév.
             '713':
-              help: A 322-es modelo 713. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 713. rovata, 2008. adóév.
             '714':
-              help: A 322-es modelo 714. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 714. rovata, 2008. adóév.
             '715':
-              help: A 322-es modelo 715. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 715. rovata, 2008. adóév.
             '716':
-              help: A 322-es modelo 716. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 716. rovata, 2008. adóév.
             '717':
-              help: A 322-es modelo 717. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 717. rovata, 2008. adóév.
             '718':
-              help: A 322-es modelo 718. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 718. rovata, 2008. adóév.
             '719':
-              help: A 322-es modelo 719. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 719. rovata, 2008. adóév.
             '72':
-              help: A 322-es modelo 72. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 72. rovata, 2008. adóév.
             '720':
-              help: A 322-es modelo 720. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 720. rovata, 2008. adóév.
             '721':
-              help: A 322-es modelo 721. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 721. rovata, 2008. adóév.
             '722':
-              help: A 322-es modelo 722. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 722. rovata, 2008. adóév.
             '723':
-              help: A 322-es modelo 723. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 723. rovata, 2008. adóév.
             '724':
-              help: A 322-es modelo 724. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 724. rovata, 2008. adóév.
             '725':
-              help: A 322-es modelo 725. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 725. rovata, 2008. adóév.
             '726':
-              help: A 322-es modelo 726. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 726. rovata, 2008. adóév.
             '727':
-              help: A 322-es modelo 727. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 727. rovata, 2008. adóév.
             '728':
-              help: A 322-es modelo 728. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 728. rovata, 2008. adóév.
             '729':
-              help: A 322-es modelo 729. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 729. rovata, 2008. adóév.
             '730':
-              help: A 322-es modelo 730. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 730. rovata, 2008. adóév.
             '731':
-              help: A 322-es modelo 731. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 731. rovata, 2008. adóév.
             '732':
-              help: A 322-es modelo 732. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 732. rovata, 2008. adóév.
             '733':
-              help: A 322-es modelo 733. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 733. rovata, 2008. adóév.
             '734':
-              help: A 322-es modelo 734. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 734. rovata, 2008. adóév.
             '735':
-              help: A 322-es modelo 735. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 735. rovata, 2008. adóév.
             '76':
-              help: A 322-es modelo 76. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 76. rovata, 2008. adóév.
             '77':
-              help: A 322-es modelo 77. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 77. rovata, 2008. adóév.
               label: A vámhatóság által megállapított, még be nem fizetett import
                 áfa [77]
             '79':
-              help: A 322-es modelo 79. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 79. rovata, 2008. adóév.
             '80':
-              help: A 322-es modelo 80. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 80. rovata, 2008. adóév.
             '83':
-              help: A 322-es modelo 83. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 83. rovata, 2008. adóév.
             '84':
-              help: A 322-es modelo 84. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 84. rovata, 2008. adóév.
             '86':
-              help: A 322-es modelo 86. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 86. rovata, 2008. adóév.
             '88':
-              help: A 322-es modelo 88. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 88. rovata, 2008. adóév.
             '89':
-              help: A 322-es modelo 89. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 89. rovata, 2008. adóév.
             '90':
-              help: A 322-es modelo 90. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 90. rovata, 2008. adóév.
             '91':
-              help: A 322-es modelo 91. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 91. rovata, 2008. adóév.
             '92':
-              help: A 322-es modelo 92. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 92. rovata, 2008. adóév.
             '93':
-              help: A 322-es modelo 93. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 93. rovata, 2008. adóév.
             '94':
-              help: A 322-es modelo 94. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 94. rovata, 2008. adóév.
             '95':
-              help: A 322-es modelo 95. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 95. rovata, 2008. adóév.
             '96':
-              help: A 322-es modelo 96. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 96. rovata, 2008. adóév.
             '97':
-              help: A 322-es modelo 97. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 97. rovata, 2008. adóév.
             '98':
-              help: A 322-es modelo 98. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 98. rovata, 2008. adóév.
             '99':
-              help: A 322-es modelo 99. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 99. rovata, 2008. adóév.
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
               help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: Tevékenységi kód - Egyéb 1.
@@ -927,518 +927,524 @@ modelo:
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
               help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Azonosítás. Ön a pénzforgalmi különös rendszer alá tartozó ügyletek
                 címzettje?
             x-chim6r1ecll6asj3d5hmiro:
-              help: A 322-es modelo ejercicio. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány ejercicio. rovata, 2008. adóév.
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Azonosítás. Az uralkodó szervezet NIF száma
             x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
-              label: Azonosítás. Mentesül a 390-es modelo éves IVA-összesítő bevallás
-                alól?
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
+              label: Azonosítás. Mentesül a 390-es nyomtatvány éves IVA-összesítő
+                bevallás alól?
             x-chim6r1ectp7as3f5ln7arb5e9ng:
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Azonosítás. Csoportszám
             x-chim6r1ectp7as3f5lp6ur0:
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Azonosítás. Uralkodó / függő
             x-chim6r1ee1in4qbfchng:
-              help: A 322-es modelo periodo. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány periodo. rovata, 2008. adóév.
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: 'Azonosítás. A különös arányosítás alkalmazása (LIVA 103.Dos.1º
                 cikk): választás vagy a választás visszavonása'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Azonosítás. Szerepel a havi visszatérítési nyilvántartásban (RIVA
                 30. cikk)?
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: 'Azonosítás. Alkalmazandó különös rendszer: LIVA 163 sexies.Cinco
                 cikk'
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Kizárólag foral adóhatóság alá tartozó adóalany, a Vámhatóság
                 által megállapított, még befizetetlen import-IVA-val
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Azonosítás. Van ügyleti forgalom (LIVA 121. cikk)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: A 322-es modelo iva.autorepercutido.intracomunitaria. rovata,
+              help: A 322-es nyomtatvány iva.autorepercutido.intracomunitaria. rovata,
                 2008. adóév.
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: A 322-es modelo iva.cuota-deducible-total. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány iva.cuota-deducible-total. rovata, 2008.
+                adóév.
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: A 322-es modelo iva.cuota-devengada-total. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány iva.cuota-devengada-total. rovata, 2008.
+                adóév.
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: A 322-es modelo iva.repercutido.reducido. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány iva.repercutido.reducido. rovata, 2008. adóév.
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: A 322-es modelo iva.repercutido.super-reducido. rovata, 2008.
+              help: A 322-es nyomtatvány iva.repercutido.super-reducido. rovata, 2008.
                 adóév.
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: A 322-es modelo iva.resultado-regimen-general. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány iva.resultado-regimen-general. rovata, 2008.
+                adóév.
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: A 322-es modelo iva.soportado.interiores. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány iva.soportado.interiores. rovata, 2008. adóév.
           field:
             label: 322-es modelo, 2022. adóév
         '2023':
           casilla:
             '150':
-              help: A 322-es modelo 150. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 150. rovata, 2008. adóév.
             '151':
-              help: A 322-es modelo 151. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 151. rovata, 2008. adóév.
             '152':
-              help: A 322-es modelo 152. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 152. rovata, 2008. adóév.
             '153':
-              help: A 322-es modelo 153. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 153. rovata, 2008. adóév.
             '154':
-              help: A 322-es modelo 154. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 154. rovata, 2008. adóév.
             '155':
-              help: A 322-es modelo 155. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 155. rovata, 2008. adóév.
             '156':
-              help: A 322-es modelo 156. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 156. rovata, 2008. adóév.
             '157':
-              help: A 322-es modelo 157. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 157. rovata, 2008. adóév.
             '158':
-              help: A 322-es modelo 158. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 158. rovata, 2008. adóév.
             '159':
-              help: A 322-es modelo 159. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 159. rovata, 2008. adóév.
             '160':
-              help: A 322-es modelo 160. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 160. rovata, 2008. adóév.
             '161':
-              help: A 322-es modelo 161. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 161. rovata, 2008. adóév.
             '162':
-              help: A 322-es modelo 162. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 162. rovata, 2008. adóév.
             '163':
-              help: A 322-es modelo 163. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 163. rovata, 2008. adóév.
             '164':
-              help: A 322-es modelo 164. rovata, 2008. adóév.
+              help: A 322-es nyomtatvány 164. rovata, 2008. adóév.
           field:
             label: 322-es modelo, 2023. adóév
         2024-2025:
           casilla:
             '01':
-              help: A 322-es modelo 01. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 01. rovata, 2024. adóév.
             '02':
-              help: A 322-es modelo 02. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 02. rovata, 2024. adóév.
             '03':
-              help: A 322-es modelo 03. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 03. rovata, 2024. adóév.
             '04':
-              help: A 322-es modelo 04. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 04. rovata, 2024. adóév.
             '05':
-              help: A 322-es modelo 05. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 05. rovata, 2024. adóév.
             '06':
-              help: A 322-es modelo 06. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 06. rovata, 2024. adóév.
             '07':
-              help: A 322-es modelo 07. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 07. rovata, 2024. adóév.
             08:
-              help: A 322-es modelo 08. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 08. rovata, 2024. adóév.
             09:
-              help: A 322-es modelo 09. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 09. rovata, 2024. adóév.
             '10':
-              help: A 322-es modelo 10. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 10. rovata, 2024. adóév.
             '107':
-              help: A 322-es modelo 107. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 107. rovata, 2024. adóév.
             '11':
-              help: A 322-es modelo 11. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 11. rovata, 2024. adóév.
             '12':
-              help: A 322-es modelo 12. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 12. rovata, 2024. adóév.
             '120':
-              help: A 322-es modelo 120. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 120. rovata, 2024. adóév.
             '122':
-              help: A 322-es modelo 122. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 122. rovata, 2024. adóév.
             '123':
-              help: A 322-es modelo 123. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 123. rovata, 2024. adóév.
             '124':
-              help: A 322-es modelo 124. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 124. rovata, 2024. adóév.
             '125':
-              help: A 322-es modelo 125. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 125. rovata, 2024. adóév.
             '126':
-              help: A 322-es modelo 126. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 126. rovata, 2024. adóév.
             '127':
-              help: A 322-es modelo 127. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 127. rovata, 2024. adóév.
             '128':
-              help: A 322-es modelo 128. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 128. rovata, 2024. adóév.
             '13':
-              help: A 322-es modelo 13. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 13. rovata, 2024. adóév.
             '14':
-              help: A 322-es modelo 14. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 14. rovata, 2024. adóév.
             '15':
-              help: A 322-es modelo 15. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 15. rovata, 2024. adóév.
             '150':
-              help: A 322-es modelo 150. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 150. rovata, 2024. adóév.
             '151':
-              help: A 322-es modelo 151. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 151. rovata, 2024. adóév.
             '152':
-              help: A 322-es modelo 152. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 152. rovata, 2024. adóév.
             '153':
-              help: A 322-es modelo 153. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 153. rovata, 2024. adóév.
             '154':
-              help: A 322-es modelo 154. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 154. rovata, 2024. adóév.
             '155':
-              help: A 322-es modelo 155. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 155. rovata, 2024. adóév.
             '156':
-              help: A 322-es modelo 156. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 156. rovata, 2024. adóév.
             '157':
-              help: A 322-es modelo 157. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 157. rovata, 2024. adóév.
             '158':
-              help: A 322-es modelo 158. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 158. rovata, 2024. adóév.
             '159':
-              help: A 322-es modelo 159. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 159. rovata, 2024. adóév.
             '16':
-              help: A 322-es modelo 16. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 16. rovata, 2024. adóév.
             '160':
-              help: A 322-es modelo 160. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 160. rovata, 2024. adóév.
             '161':
-              help: A 322-es modelo 161. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 161. rovata, 2024. adóév.
             '162':
-              help: A 322-es modelo 162. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 162. rovata, 2024. adóév.
             '163':
-              help: A 322-es modelo 163. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 163. rovata, 2024. adóév.
             '164':
-              help: A 322-es modelo 164. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 164. rovata, 2024. adóév.
             '165':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
                 Adóalap
             '166':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
                 Kulcs %
             '167':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
                 Adóösszeg
             '168':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Adóalap
             '169':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Kulcs %
             '17':
-              help: A 322-es modelo 17. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 17. rovata, 2024. adóév.
             '170':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Egyenértékűségi felár. Adóösszeg
             '171':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Adóalap
             '172':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Kulcs %
             '173':
-              help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
-                adat.
+              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Csoporton belüli ügyletek. Adóösszeg
             '18':
-              help: A 322-es modelo 18. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 18. rovata, 2024. adóév.
             '19':
-              help: A 322-es modelo 19. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 19. rovata, 2024. adóév.
             '20':
-              help: A 322-es modelo 20. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 20. rovata, 2024. adóév.
             '21':
-              help: A 322-es modelo 21. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 21. rovata, 2024. adóév.
             '22':
-              help: A 322-es modelo 22. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 22. rovata, 2024. adóév.
             '23':
-              help: A 322-es modelo 23. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 23. rovata, 2024. adóév.
             '24':
-              help: A 322-es modelo 24. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 24. rovata, 2024. adóév.
             '25':
-              help: A 322-es modelo 25. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 25. rovata, 2024. adóév.
             '26':
-              help: A 322-es modelo 26. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 26. rovata, 2024. adóév.
             '27':
-              help: A 322-es modelo 27. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 27. rovata, 2024. adóév.
             '28':
-              help: A 322-es modelo 28. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 28. rovata, 2024. adóév.
             '29':
-              help: A 322-es modelo 29. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 29. rovata, 2024. adóév.
             '30':
-              help: A 322-es modelo 30. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 30. rovata, 2024. adóév.
             '31':
-              help: A 322-es modelo 31. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 31. rovata, 2024. adóév.
             '32':
-              help: A 322-es modelo 32. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 32. rovata, 2024. adóév.
             '33':
-              help: A 322-es modelo 33. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 33. rovata, 2024. adóév.
             '34':
-              help: A 322-es modelo 34. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 34. rovata, 2024. adóév.
             '35':
-              help: A 322-es modelo 35. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 35. rovata, 2024. adóév.
             '36':
-              help: A 322-es modelo 36. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 36. rovata, 2024. adóév.
             '37':
-              help: A 322-es modelo 37. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 37. rovata, 2024. adóév.
             '38':
-              help: A 322-es modelo 38. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 38. rovata, 2024. adóév.
             '39':
-              help: A 322-es modelo 39. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 39. rovata, 2024. adóév.
             '40':
-              help: A 322-es modelo 40. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 40. rovata, 2024. adóév.
             '41':
-              help: A 322-es modelo 41. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 41. rovata, 2024. adóév.
             '42':
-              help: A 322-es modelo 42. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 42. rovata, 2024. adóév.
             '43':
-              help: A 322-es modelo 43. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 43. rovata, 2024. adóév.
             '44':
-              help: A 322-es modelo 44. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 44. rovata, 2024. adóév.
             '45':
-              help: A 322-es modelo 45. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 45. rovata, 2024. adóév.
             '46':
-              help: A 322-es modelo 46. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 46. rovata, 2024. adóév.
             '47':
-              help: A 322-es modelo 47. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 47. rovata, 2024. adóév.
             '48':
-              help: A 322-es modelo 48. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 48. rovata, 2024. adóév.
             '49':
-              help: A 322-es modelo 49. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 49. rovata, 2024. adóév.
             '50':
-              help: A 322-es modelo 50. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 50. rovata, 2024. adóév.
             '500':
-              help: A 322-es modelo 500. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 500. rovata, 2024. adóév.
             '501':
-              help: A 322-es modelo 501. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 501. rovata, 2024. adóév.
             '502':
-              help: A 322-es modelo 502. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 502. rovata, 2024. adóév.
             '503':
-              help: A 322-es modelo 503. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 503. rovata, 2024. adóév.
             '504':
-              help: A 322-es modelo 504. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 504. rovata, 2024. adóév.
             '505':
-              help: A 322-es modelo 505. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 505. rovata, 2024. adóév.
             '506':
-              help: A 322-es modelo 506. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 506. rovata, 2024. adóév.
             '507':
-              help: A 322-es modelo 507. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 507. rovata, 2024. adóév.
             '508':
-              help: A 322-es modelo 508. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 508. rovata, 2024. adóév.
             '509':
-              help: A 322-es modelo 509. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 509. rovata, 2024. adóév.
             '51':
-              help: A 322-es modelo 51. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 51. rovata, 2024. adóév.
             '510':
-              help: A 322-es modelo 510. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 510. rovata, 2024. adóév.
             '511':
-              help: A 322-es modelo 511. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 511. rovata, 2024. adóév.
             '512':
-              help: A 322-es modelo 512. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 512. rovata, 2024. adóév.
             '513':
-              help: A 322-es modelo 513. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 513. rovata, 2024. adóév.
             '514':
-              help: A 322-es modelo 514. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 514. rovata, 2024. adóév.
             '515':
-              help: A 322-es modelo 515. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 515. rovata, 2024. adóév.
             '516':
-              help: A 322-es modelo 516. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 516. rovata, 2024. adóév.
             '517':
-              help: A 322-es modelo 517. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 517. rovata, 2024. adóév.
             '518':
-              help: A 322-es modelo 518. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 518. rovata, 2024. adóév.
             '519':
-              help: A 322-es modelo 519. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 519. rovata, 2024. adóév.
             '52':
-              help: A 322-es modelo 52. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 52. rovata, 2024. adóév.
             '520':
-              help: A 322-es modelo 520. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 520. rovata, 2024. adóév.
             '521':
-              help: A 322-es modelo 521. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 521. rovata, 2024. adóév.
             '522':
-              help: A 322-es modelo 522. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 522. rovata, 2024. adóév.
             '523':
-              help: A 322-es modelo 523. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 523. rovata, 2024. adóév.
             '524':
-              help: A 322-es modelo 524. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 524. rovata, 2024. adóév.
             '53':
-              help: A 322-es modelo 53. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 53. rovata, 2024. adóév.
             '54':
-              help: A 322-es modelo 54. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 54. rovata, 2024. adóév.
             '55':
-              help: A 322-es modelo 55. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 55. rovata, 2024. adóév.
             '56':
-              help: A 322-es modelo 56. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 56. rovata, 2024. adóév.
             '57':
-              help: A 322-es modelo 57. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 57. rovata, 2024. adóév.
             '58':
-              help: A 322-es modelo 58. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 58. rovata, 2024. adóév.
             '59':
-              help: A 322-es modelo 59. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 59. rovata, 2024. adóév.
             '60':
-              help: A 322-es modelo 60. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 60. rovata, 2024. adóév.
             '61':
-              help: A 322-es modelo 61. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 61. rovata, 2024. adóév.
             '62':
-              help: A 322-es modelo 62. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 62. rovata, 2024. adóév.
             '63':
-              help: A 322-es modelo 63. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 63. rovata, 2024. adóév.
             '64':
-              help: A 322-es modelo 64. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 64. rovata, 2024. adóév.
             '65':
-              help: A 322-es modelo 65. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 65. rovata, 2024. adóév.
             '66':
-              help: A 322-es modelo 66. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 66. rovata, 2024. adóév.
             '67':
-              help: A 322-es modelo 67. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 67. rovata, 2024. adóév.
             '68':
-              help: A 322-es modelo 68. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 68. rovata, 2024. adóév.
             '70':
-              help: A 322-es modelo 70. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 70. rovata, 2024. adóév.
             '700':
-              help: A 322-es modelo 700. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 700. rovata, 2024. adóév.
             '701':
-              help: A 322-es modelo 701. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 701. rovata, 2024. adóév.
             '702':
-              help: A 322-es modelo 702. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 702. rovata, 2024. adóév.
             '703':
-              help: A 322-es modelo 703. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 703. rovata, 2024. adóév.
             '704':
-              help: A 322-es modelo 704. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 704. rovata, 2024. adóév.
             '705':
-              help: A 322-es modelo 705. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 705. rovata, 2024. adóév.
             '706':
-              help: A 322-es modelo 706. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 706. rovata, 2024. adóév.
             '707':
-              help: A 322-es modelo 707. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 707. rovata, 2024. adóév.
             '708':
-              help: A 322-es modelo 708. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 708. rovata, 2024. adóév.
             '709':
-              help: A 322-es modelo 709. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 709. rovata, 2024. adóév.
             '71':
-              help: A 322-es modelo 71. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 71. rovata, 2024. adóév.
             '710':
-              help: A 322-es modelo 710. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 710. rovata, 2024. adóév.
             '711':
-              help: A 322-es modelo 711. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 711. rovata, 2024. adóév.
             '712':
-              help: A 322-es modelo 712. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 712. rovata, 2024. adóév.
             '713':
-              help: A 322-es modelo 713. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 713. rovata, 2024. adóév.
             '714':
-              help: A 322-es modelo 714. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 714. rovata, 2024. adóév.
             '715':
-              help: A 322-es modelo 715. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 715. rovata, 2024. adóév.
             '716':
-              help: A 322-es modelo 716. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 716. rovata, 2024. adóév.
             '717':
-              help: A 322-es modelo 717. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 717. rovata, 2024. adóév.
             '718':
-              help: A 322-es modelo 718. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 718. rovata, 2024. adóév.
             '719':
-              help: A 322-es modelo 719. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 719. rovata, 2024. adóév.
             '72':
-              help: A 322-es modelo 72. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 72. rovata, 2024. adóév.
             '720':
-              help: A 322-es modelo 720. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 720. rovata, 2024. adóév.
             '721':
-              help: A 322-es modelo 721. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 721. rovata, 2024. adóév.
             '722':
-              help: A 322-es modelo 722. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 722. rovata, 2024. adóév.
             '723':
-              help: A 322-es modelo 723. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 723. rovata, 2024. adóév.
             '724':
-              help: A 322-es modelo 724. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 724. rovata, 2024. adóév.
             '725':
-              help: A 322-es modelo 725. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 725. rovata, 2024. adóév.
             '726':
-              help: A 322-es modelo 726. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 726. rovata, 2024. adóév.
             '727':
-              help: A 322-es modelo 727. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 727. rovata, 2024. adóév.
             '728':
-              help: A 322-es modelo 728. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 728. rovata, 2024. adóév.
             '729':
-              help: A 322-es modelo 729. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 729. rovata, 2024. adóév.
             '730':
-              help: A 322-es modelo 730. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 730. rovata, 2024. adóév.
             '731':
-              help: A 322-es modelo 731. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 731. rovata, 2024. adóév.
             '732':
-              help: A 322-es modelo 732. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 732. rovata, 2024. adóév.
             '733':
-              help: A 322-es modelo 733. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 733. rovata, 2024. adóév.
             '734':
-              help: A 322-es modelo 734. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 734. rovata, 2024. adóév.
             '735':
-              help: A 322-es modelo 735. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 735. rovata, 2024. adóév.
             '76':
-              help: A 322-es modelo 76. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 76. rovata, 2024. adóév.
             '77':
-              help: A 322-es modelo 77. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 77. rovata, 2024. adóév.
             '79':
-              help: A 322-es modelo 79. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 79. rovata, 2024. adóév.
             '80':
-              help: A 322-es modelo 80. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 80. rovata, 2024. adóév.
             '83':
-              help: A 322-es modelo 83. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 83. rovata, 2024. adóév.
             '84':
-              help: A 322-es modelo 84. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 84. rovata, 2024. adóév.
             '86':
-              help: A 322-es modelo 86. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 86. rovata, 2024. adóév.
             '88':
-              help: A 322-es modelo 88. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 88. rovata, 2024. adóév.
             '89':
-              help: A 322-es modelo 89. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 89. rovata, 2024. adóév.
             '90':
-              help: A 322-es modelo 90. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 90. rovata, 2024. adóév.
             '91':
-              help: A 322-es modelo 91. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 91. rovata, 2024. adóév.
             '92':
-              help: A 322-es modelo 92. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 92. rovata, 2024. adóév.
             '93':
-              help: A 322-es modelo 93. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 93. rovata, 2024. adóév.
             '94':
-              help: A 322-es modelo 94. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 94. rovata, 2024. adóév.
             '95':
-              help: A 322-es modelo 95. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 95. rovata, 2024. adóév.
             '96':
-              help: A 322-es modelo 96. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 96. rovata, 2024. adóév.
             '97':
-              help: A 322-es modelo 97. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 97. rovata, 2024. adóév.
             '98':
-              help: A 322-es modelo 98. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 98. rovata, 2024. adóév.
             '99':
-              help: A 322-es modelo 99. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány 99. rovata, 2024. adóév.
             x-chim6r1ecll6asj3d5hmiro:
-              help: A 322-es modelo ejercicio. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány ejercicio. rovata, 2024. adóév.
             x-chim6r1ee1in4qbfchng:
-              help: A 322-es modelo periodo. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány periodo. rovata, 2024. adóév.
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: A 322-es modelo iva.autorepercutido.intracomunitaria. rovata,
+              help: A 322-es nyomtatvány iva.autorepercutido.intracomunitaria. rovata,
                 2024. adóév.
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: A 322-es modelo iva.cuota-deducible-total. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány iva.cuota-deducible-total. rovata, 2024.
+                adóév.
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: A 322-es modelo iva.cuota-devengada-total. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány iva.cuota-devengada-total. rovata, 2024.
+                adóév.
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: A 322-es modelo iva.repercutido.reducido. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány iva.repercutido.reducido. rovata, 2024. adóév.
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: A 322-es modelo iva.repercutido.super-reducido. rovata, 2024.
+              help: A 322-es nyomtatvány iva.repercutido.super-reducido. rovata, 2024.
                 adóév.
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: A 322-es modelo iva.resultado-regimen-general. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány iva.resultado-regimen-general. rovata, 2024.
+                adóév.
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: A 322-es modelo iva.soportado.interiores. rovata, 2024. adóév.
+              help: A 322-es nyomtatvány iva.soportado.interiores. rovata, 2024. adóév.
           field:
             label: 322-es modelo, 2024-2025. adóévek
         2026-y-siguientes:
@@ -1471,70 +1477,70 @@ modelo:
               help: 'Tekintse át a rovat adatait: Adóelszámolás. Felszámított áfa.
                 Ügyletek intragrupo. Adóösszeg [09].'
             '10':
-              help: 'A Modelo 322 10. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [10].'
+              help: 'A 322-es nyomtatvány 10. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [10].'
             '107':
-              help: 'A Modelo 322 107. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [107].'
+              help: 'A 322-es nyomtatvány 107. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [107].'
             '11':
-              help: 'A Modelo 322 11. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [11].'
+              help: 'A 322-es nyomtatvány 11. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [11].'
             '112':
               label: Elszámolás (folytatás). Benzin, gázolaj és bioüzemanyag értékesítése
                 utáni előlegfizetés a nem vámjellegű raktározási eljárás lezárását
                 követően [112]
             '12':
-              help: 'A Modelo 322 12. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [12].'
+              help: 'A 322-es nyomtatvány 12. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [12].'
             '120':
-              help: 'A Modelo 322 120. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [120].'
+              help: 'A 322-es nyomtatvány 120. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [120].'
             '122':
-              help: 122. rovat, 322. modelo, 2008. adóév.
+              help: 122. rovat, 322. nyomtatvány, 2008. adóév.
             '123':
-              help: 'A Modelo 322 123. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [123].'
+              help: 'A 322-es nyomtatvány 123. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [123].'
             '124':
-              help: 'A Modelo 322 124. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [124].'
+              help: 'A 322-es nyomtatvány 124. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [124].'
             '125':
-              help: 125. rovat, 322. modelo, 2008. adóév.
+              help: 125. rovat, 322. nyomtatvány, 2008. adóév.
             '126':
-              help: 'A Modelo 322 126. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [126].'
+              help: 'A 322-es nyomtatvány 126. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [126].'
             '127':
-              help: 'A Modelo 322 127. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [127].'
+              help: 'A 322-es nyomtatvány 127. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [127].'
             '128':
               help: 'Tekintse át a rovat adatait: A LIVA 78. és 79. cikkében foglaltak
                 szerint értékelt, csoporton belüli ügyletek [128].'
             '13':
-              help: 'A Modelo 322 13. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [13].'
+              help: 'A 322-es nyomtatvány 13. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [13].'
             '14':
-              help: 'A Modelo 322 14. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [14].'
+              help: 'A 322-es nyomtatvány 14. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [14].'
             '15':
-              help: 'A Modelo 322 15. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [15].'
+              help: 'A 322-es nyomtatvány 15. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [15].'
             '150':
-              help: 'A Modelo 322 150. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [150].'
+              help: 'A 322-es nyomtatvány 150. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [150].'
             '151':
-              help: 'A Modelo 322 151. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [151].'
+              help: 'A 322-es nyomtatvány 151. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [151].'
             '152':
-              help: 'A Modelo 322 152. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [152].'
+              help: 'A 322-es nyomtatvány 152. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [152].'
             '153':
-              help: 'A Modelo 322 153. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [153].'
+              help: 'A 322-es nyomtatvány 153. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [153].'
             '154':
-              help: 'A Modelo 322 154. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [154].'
+              help: 'A 322-es nyomtatvány 154. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [154].'
             '155':
-              help: 'A Modelo 322 155. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [155].'
+              help: 'A 322-es nyomtatvány 155. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [155].'
             '156':
               help: 'Tekintse át a rovat adatait: Adóelszámolás. Felszámított áfa.
                 Egyenértékűségi felár. Adóalap [156].'
@@ -1548,8 +1554,8 @@ modelo:
               help: 'Tekintse át a rovat adatait: Adóelszámolás. Felszámított áfa.
                 Ügyletek intragrupo. Adóalap [159].'
             '16':
-              help: 'A Modelo 322 16. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [16].'
+              help: 'A 322-es nyomtatvány 16. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [16].'
             '160':
               help: 'Tekintse át a rovat adatait: Adóelszámolás. Felszámított áfa.
                 Ügyletek intragrupo. Kulcs % [160].'
@@ -1566,18 +1572,18 @@ modelo:
               help: 'Tekintse át a rovat adatait: Adóelszámolás. Felszámított áfa.
                 Ügyletek intragrupo. Adóösszeg [164].'
             '165':
-              help: 'A Modelo 322 165. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [165].'
+              help: 'A 322-es nyomtatvány 165. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [165].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóalap [165]
             '166':
-              help: 'A Modelo 322 166. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [166].'
+              help: 'A 322-es nyomtatvány 166. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [166].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [166]
             '167':
-              help: 'A Modelo 322 167. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [167].'
+              help: 'A 322-es nyomtatvány 167. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [167].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [167]
             '168':
@@ -1591,8 +1597,8 @@ modelo:
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Egyenértékűségi felár. Adókulcs
                 % [169]
             '17':
-              help: 'A Modelo 322 17. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [17].'
+              help: 'A 322-es nyomtatvány 17. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [17].'
             '170':
               help: 'Tekintse át a rovat adatait: Adóelszámolás. Felszámított áfa.
                 Egyenértékűségi felár. Adóösszeg [170].'
@@ -1614,26 +1620,26 @@ modelo:
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
                 [173]
             '18':
-              help: 'A Modelo 322 18. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [18].'
+              help: 'A 322-es nyomtatvány 18. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [18].'
             '19':
-              help: 'A Modelo 322 19. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [19].'
+              help: 'A 322-es nyomtatvány 19. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [19].'
             '20':
-              help: 'A Modelo 322 20. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [20].'
+              help: 'A 322-es nyomtatvány 20. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [20].'
             '21':
-              help: 'A Modelo 322 21. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [21].'
+              help: 'A 322-es nyomtatvány 21. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [21].'
             '22':
-              help: 'A Modelo 322 22. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [22].'
+              help: 'A 322-es nyomtatvány 22. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [22].'
             '23':
-              help: 'A Modelo 322 23. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [23].'
+              help: 'A 322-es nyomtatvány 23. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [23].'
             '24':
-              help: 'A Modelo 322 24. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [24].'
+              help: 'A 322-es nyomtatvány 24. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [24].'
             '25':
               help: 'Tekintse át a rovat adatait: Adóelszámolás. Felszámított áfa.
                 Adóalapok és adóösszegek módosítása az általános rendszerben. Adóalap
@@ -1689,138 +1695,138 @@ modelo:
               help: 'Tekintse át a rovat adatait: Adóelszámolás. IVA Levonható. Viselt
                 adóösszegek a folyó csoporton belüli ügyletek után. Adóösszeg [40].'
             '41':
-              help: 'A Modelo 322 41. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [41].'
+              help: 'A 322-es nyomtatvány 41. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [41].'
             '42':
-              help: 'A Modelo 322 42. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [42].'
+              help: 'A 322-es nyomtatvány 42. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [42].'
             '43':
-              help: 'A Modelo 322 43. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [43].'
+              help: 'A 322-es nyomtatvány 43. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [43].'
             '44':
-              help: 'A Modelo 322 44. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [44].'
+              help: 'A 322-es nyomtatvány 44. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [44].'
             '45':
-              help: 'A Modelo 322 45. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [45].'
+              help: 'A 322-es nyomtatvány 45. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [45].'
             '46':
-              help: 'A Modelo 322 46. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [46].'
+              help: 'A 322-es nyomtatvány 46. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [46].'
             '47':
-              help: 'A Modelo 322 47. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [47].'
+              help: 'A 322-es nyomtatvány 47. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [47].'
             '48':
-              help: 'A Modelo 322 48. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [48].'
+              help: 'A 322-es nyomtatvány 48. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [48].'
             '49':
-              help: 'A Modelo 322 49. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [49].'
+              help: 'A 322-es nyomtatvány 49. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [49].'
             '50':
-              help: 'A Modelo 322 50. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [50].'
+              help: 'A 322-es nyomtatvány 50. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [50].'
             '500':
               help: 'Tekintse át a rovat adatait: Prorratas - 1 - Kód CNAE [500].'
             '501':
-              help: 'A Modelo 322 501. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [501].'
+              help: 'A 322-es nyomtatvány 501. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [501].'
             '502':
-              help: 'A Modelo 322 502. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [502].'
+              help: 'A 322-es nyomtatvány 502. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [502].'
             '503':
-              help: 'A Modelo 322 503. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [503].'
+              help: 'A 322-es nyomtatvány 503. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [503].'
             '504':
-              help: 'A Modelo 322 504. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [504].'
+              help: 'A 322-es nyomtatvány 504. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [504].'
             '505':
               help: 'Tekintse át a rovat adatait: Prorratas - 2 - Kód CNAE [505].'
             '506':
-              help: 'A Modelo 322 506. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [506].'
+              help: 'A 322-es nyomtatvány 506. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [506].'
             '507':
-              help: 'A Modelo 322 507. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [507].'
+              help: 'A 322-es nyomtatvány 507. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [507].'
             '508':
-              help: 'A Modelo 322 508. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [508].'
+              help: 'A 322-es nyomtatvány 508. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [508].'
             '509':
-              help: 'A Modelo 322 509. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [509].'
+              help: 'A 322-es nyomtatvány 509. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [509].'
             '51':
-              help: 'A Modelo 322 51. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [51].'
+              help: 'A 322-es nyomtatvány 51. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [51].'
             '510':
               help: 'Tekintse át a rovat adatait: Prorratas - 3 - Kód CNAE [510].'
             '511':
-              help: 'A Modelo 322 511. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [511].'
+              help: 'A 322-es nyomtatvány 511. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [511].'
             '512':
-              help: 'A Modelo 322 512. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [512].'
+              help: 'A 322-es nyomtatvány 512. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [512].'
             '513':
-              help: 'A Modelo 322 513. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [513].'
+              help: 'A 322-es nyomtatvány 513. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [513].'
             '514':
-              help: 'A Modelo 322 514. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [514].'
+              help: 'A 322-es nyomtatvány 514. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [514].'
             '515':
               help: 'Tekintse át a rovat adatait: Prorratas - 4 - Kód CNAE[515].'
             '516':
-              help: 'A Modelo 322 516. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [516].'
+              help: 'A 322-es nyomtatvány 516. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [516].'
             '517':
-              help: 'A Modelo 322 517. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [517].'
+              help: 'A 322-es nyomtatvány 517. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [517].'
             '518':
-              help: 'A Modelo 322 518. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [518].'
+              help: 'A 322-es nyomtatvány 518. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [518].'
             '519':
-              help: 'A Modelo 322 519. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [519].'
+              help: 'A 322-es nyomtatvány 519. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [519].'
             '52':
-              help: 'A Modelo 322 52. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [52].'
+              help: 'A 322-es nyomtatvány 52. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [52].'
             '520':
               help: 'Tekintse át a rovat adatait: Prorratas - 5 - Kód CNAE [520].'
             '521':
-              help: 'A Modelo 322 521. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [521].'
+              help: 'A 322-es nyomtatvány 521. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [521].'
             '522':
-              help: 'A Modelo 322 522. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [522].'
+              help: 'A 322-es nyomtatvány 522. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [522].'
             '523':
-              help: 'A Modelo 322 523. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [523].'
+              help: 'A 322-es nyomtatvány 523. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [523].'
             '524':
-              help: 'A Modelo 322 524. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [524].'
+              help: 'A 322-es nyomtatvány 524. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [524].'
             '53':
-              help: 'A Modelo 322 53. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [53].'
+              help: 'A 322-es nyomtatvány 53. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [53].'
             '54':
-              help: 'A Modelo 322 54. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [54].'
+              help: 'A 322-es nyomtatvány 54. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [54].'
             '55':
-              help: 'A Modelo 322 55. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [55].'
+              help: 'A 322-es nyomtatvány 55. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [55].'
             '56':
-              help: 'A Modelo 322 56. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [56].'
+              help: 'A 322-es nyomtatvány 56. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [56].'
             '57':
-              help: 'A Modelo 322 57. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [57].'
+              help: 'A 322-es nyomtatvány 57. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [57].'
             '58':
-              help: 'A Modelo 322 58. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [58].'
+              help: 'A 322-es nyomtatvány 58. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [58].'
             '59':
               help: 'Tekintse át a rovat adatait: Adóelszámolás. IVA Levonható.Beszámítás
                 - speciális rendszer (A.G. és P.). Adóösszeg [59].'
             '60':
-              help: 'A Modelo 322 60. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [60].'
+              help: 'A 322-es nyomtatvány 60. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [60].'
             '61':
-              help: 'A Modelo 322 61. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [61].'
+              help: 'A 322-es nyomtatvány 61. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [61].'
             '62':
               help: 'Tekintse át a rovat adatait: Total a levonni ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
                 [62].'
@@ -1828,17 +1834,17 @@ modelo:
               help: 'Tekintse át a rovat adatait: Adóelszámolás (continuación). Diferencia
                 ([38] - [62]) . [63].'
             '64':
-              help: 'A Modelo 322 64. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [64].'
+              help: 'A 322-es nyomtatvány 64. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [64].'
             '65':
-              help: 'A Modelo 322 65. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [65].'
+              help: 'A 322-es nyomtatvány 65. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [65].'
             '66':
-              help: 'A Modelo 322 66. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [66].'
+              help: 'A 322-es nyomtatvány 66. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [66].'
             '67':
-              help: 'A Modelo 322 67. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [67].'
+              help: 'A 322-es nyomtatvány 67. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [67].'
             '68':
               help: 'Tekintse át a rovat adatait: Adóelszámolás (continuación). Eredmény
                 ([65] + [77] - [66] + [67]) [68].'
@@ -1849,221 +1855,221 @@ modelo:
                 - [69] - [112]) [70].'
               label: Eredmény - önadózási bevallás ([68] - [69] - [112]) [70]
             '700':
-              help: 'A Modelo 322 700. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [700].'
+              help: 'A 322-es nyomtatvány 700. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [700].'
             '701':
-              help: 'A Modelo 322 701. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [701].'
+              help: 'A 322-es nyomtatvány 701. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [701].'
             '702':
-              help: 'A Modelo 322 702. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [702].'
+              help: 'A 322-es nyomtatvány 702. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [702].'
             '703':
-              help: 'A Modelo 322 703. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [703].'
+              help: 'A 322-es nyomtatvány 703. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [703].'
             '704':
-              help: 'A Modelo 322 704. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [704].'
+              help: 'A 322-es nyomtatvány 704. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [704].'
             '705':
-              help: 'A Modelo 322 705. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [705].'
+              help: 'A 322-es nyomtatvány 705. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [705].'
             '706':
-              help: 'A Modelo 322 706. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [706].'
+              help: 'A 322-es nyomtatvány 706. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [706].'
             '707':
-              help: 'A Modelo 322 707. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [707].'
+              help: 'A 322-es nyomtatvány 707. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [707].'
             '708':
-              help: 'A Modelo 322 708. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [708].'
+              help: 'A 322-es nyomtatvány 708. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [708].'
             '709':
-              help: 'A Modelo 322 709. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [709].'
+              help: 'A 322-es nyomtatvány 709. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [709].'
             '71':
-              help: 'A Modelo 322 71. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [71].'
+              help: 'A 322-es nyomtatvány 71. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [71].'
             '710':
-              help: 'A Modelo 322 710. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [710].'
+              help: 'A 322-es nyomtatvány 710. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [710].'
             '711':
-              help: 'A Modelo 322 711. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [711].'
+              help: 'A 322-es nyomtatvány 711. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [711].'
             '712':
-              help: 'A Modelo 322 712. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [712].'
+              help: 'A 322-es nyomtatvány 712. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [712].'
             '713':
-              help: 'A Modelo 322 713. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [713].'
+              help: 'A 322-es nyomtatvány 713. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [713].'
             '714':
-              help: 'A Modelo 322 714. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [714].'
+              help: 'A 322-es nyomtatvány 714. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [714].'
             '715':
-              help: 'A Modelo 322 715. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [715].'
+              help: 'A 322-es nyomtatvány 715. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [715].'
             '716':
-              help: 'A Modelo 322 716. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [716].'
+              help: 'A 322-es nyomtatvány 716. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [716].'
             '717':
-              help: 'A Modelo 322 717. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [717].'
+              help: 'A 322-es nyomtatvány 717. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [717].'
             '718':
-              help: 'A Modelo 322 718. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [718].'
+              help: 'A 322-es nyomtatvány 718. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [718].'
             '719':
-              help: 'A Modelo 322 719. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [719].'
+              help: 'A 322-es nyomtatvány 719. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [719].'
             '72':
               help: 'Tekintse át a rovat adatait: További információ. Exportok és
                 azokkal egyenértékű ügyletek. [72].'
             '720':
-              help: 'A Modelo 322 720. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [720].'
+              help: 'A 322-es nyomtatvány 720. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [720].'
             '721':
-              help: 'A Modelo 322 721. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [721].'
+              help: 'A 322-es nyomtatvány 721. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [721].'
             '722':
-              help: 'A Modelo 322 722. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [722].'
+              help: 'A 322-es nyomtatvány 722. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [722].'
             '723':
-              help: 'A Modelo 322 723. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [723].'
+              help: 'A 322-es nyomtatvány 723. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [723].'
             '724':
-              help: 'A Modelo 322 724. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [724].'
+              help: 'A 322-es nyomtatvány 724. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [724].'
             '725':
-              help: 'A Modelo 322 725. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [725].'
+              help: 'A 322-es nyomtatvány 725. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [725].'
             '726':
-              help: 'A Modelo 322 726. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [726].'
+              help: 'A 322-es nyomtatvány 726. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [726].'
             '727':
-              help: 'A Modelo 322 727. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [727].'
+              help: 'A 322-es nyomtatvány 727. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [727].'
             '728':
-              help: 'A Modelo 322 728. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [728].'
+              help: 'A 322-es nyomtatvány 728. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [728].'
             '729':
-              help: 'A Modelo 322 729. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [729].'
+              help: 'A 322-es nyomtatvány 729. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [729].'
             '730':
-              help: 'A Modelo 322 730. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [730].'
+              help: 'A 322-es nyomtatvány 730. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [730].'
             '731':
-              help: 'A Modelo 322 731. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [731].'
+              help: 'A 322-es nyomtatvány 731. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [731].'
             '732':
-              help: 'A Modelo 322 732. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [732].'
+              help: 'A 322-es nyomtatvány 732. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [732].'
             '733':
-              help: 'A Modelo 322 733. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [733].'
+              help: 'A 322-es nyomtatvány 733. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [733].'
             '734':
-              help: 'A Modelo 322 734. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [734].'
+              help: 'A 322-es nyomtatvány 734. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [734].'
             '735':
-              help: 'A Modelo 322 735. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [735].'
+              help: 'A 322-es nyomtatvány 735. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [735].'
             '76':
               help: 'Tekintse át a rovat adatait: Korrekció adóösszegek art. 80.Cinco.5ª
                 LIVA [76].'
             '77':
-              help: 'A Modelo 322 77. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [77].'
+              help: 'A 322-es nyomtatvány 77. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [77].'
               label: Elszámolás (folytatás). A vámhatóság által megállapított, még
                 be nem fizetett import áfa [77]
             '79':
-              help: 'A Modelo 322 79. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [79].'
+              help: 'A 322-es nyomtatvány 79. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [79].'
             '80':
               help: 'Tekintse át a rovat adatait: Az adóévben teljesített ügyletek.
                 Az általános rendszerben végzett ügyletek [80].'
             '83':
-              help: 'A Modelo 322 83. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [83].'
+              help: 'A 322-es nyomtatvány 83. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [83].'
             '84':
-              help: 'A Modelo 322 84. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [84].'
+              help: 'A 322-es nyomtatvány 84. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [84].'
             '86':
               help: 'Tekintse át a rovat adatait: Az adóévben teljesített ügyletek.
                 Az egyszerűsített rendszerben végzett ügyletek [86].'
             '88':
-              help: 'A Modelo 322 88. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [88].'
+              help: 'A 322-es nyomtatvány 88. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [88].'
             '89':
-              help: 'A Modelo 322 89. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [89].'
+              help: 'A 322-es nyomtatvány 89. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [89].'
             '90':
-              help: 'A Modelo 322 90. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [90].'
+              help: 'A 322-es nyomtatvány 90. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [90].'
             '91':
-              help: 'A Modelo 322 91. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [91].'
+              help: 'A 322-es nyomtatvány 91. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [91].'
             '92':
-              help: 'A Modelo 322 92. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [92].'
+              help: 'A 322-es nyomtatvány 92. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [92].'
             '93':
-              help: 'A Modelo 322 93. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [93].'
+              help: 'A 322-es nyomtatvány 93. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [93].'
             '94':
-              help: 'A Modelo 322 94. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [94].'
+              help: 'A 322-es nyomtatvány 94. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [94].'
             '95':
               help: 'Tekintse át a rovat adatait: Az adóévben teljesített ügyletek.
                 A mezőgazdasági, állattenyésztési és halászati különleges rendszerben
                 végzett ügyletek [95].'
             '96':
-              help: 'A Modelo 322 96. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [96].'
+              help: 'A 322-es nyomtatvány 96. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [96].'
             '97':
-              help: 'A Modelo 322 97. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [97].'
+              help: 'A 322-es nyomtatvány 97. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [97].'
             '98':
-              help: 'A Modelo 322 98. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [98].'
+              help: 'A 322-es nyomtatvány 98. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [98].'
             '99':
-              help: 'A Modelo 322 99. rovat adóügyi adatai: adóügyi információ Hivatkozások:
-                [99].'
+              help: 'A 322-es nyomtatvány 99. rovatának adóügyi adatai: adóügyi információ
+                Hivatkozások: [99].'
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              help: A Modelo 322 . rovat adóügyi adatai.
+              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Tevékenységi kód - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: 'A Modelo 322 . rovat adóügyi adatai: adóügyi információ.'
+              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              help: A Modelo 322 . rovat adóügyi adatai.
+              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Tevékenységi kód - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: 'A Modelo 322 . rovat adóügyi adatai: adóügyi információ.'
+              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              help: A Modelo 322 . rovat adóügyi adatai.
+              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Tevékenységi kód - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: 'A Modelo 322 . rovat adóügyi adatai: adóügyi információ.'
+              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              help: A Modelo 322 . rovat adóügyi adatai.
+              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Tevékenységi kód - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: 'A Modelo 322 . rovat adóügyi adatai: adóügyi információ.'
+              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              help: A Modelo 322 . rovat adóügyi adatai.
+              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Tevékenységi kód - Egyéb 5.
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: 'A Modelo 322 . rovat adóügyi adatai: adóügyi információ.'
+              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 5.
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              help: A Modelo 322 . rovat adóügyi adatai.
+              help: A 322-es nyomtatvány rovatának adóügyi adatai.
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              help: A Modelo 322 . rovat adóügyi adatai.
+              help: A 322-es nyomtatvány rovatának adóügyi adatai.
             x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
               label: Jogosult a benzin, gázolaj és bioüzemanyag értékesítése utáni
                 előleg levonására
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: 'A Modelo 322 . rovat adóügyi adatai: adóügyi információ.'
+              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: Pénzforgalmi elszámolású ügyletek címzettje
             x-chim6r1ecll6asj3d5hmiro:
-              help: 'A Modelo 322 . rovat adóügyi adatai: adóév.'
+              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóév.'
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               help: 'Tekintse át a rovat adatait: NIF - szervezet anyavállalat.'
               label: Az anyavállalat adószáma
@@ -2072,35 +2078,31 @@ modelo:
                 modelo 390.'
               label: Mentesül a 390-es éves összesítő bevallás alól
             x-chim6r1ectp7as3f5ln7arb5e9ng:
-              help: A Modelo 322 . rovat adóügyi adatai.
+              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Csoportszám
             x-chim6r1ectp7as3f5lp6ur0:
-              help: 'A Modelo 322 . rovat adóügyi adatai: adóügyi információ.'
+              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: Anyavállalat vagy leányvállalat
             x-chim6r1ee1in4qbfchng:
               help: 'Tekintse át a rovat adatait: Időszak (éves, 0A).'
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: 'A Modelo 322 . rovat adóügyi adatai: adóügyi információ.'
+              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: 'Különleges arányosítás: választás vagy visszavonás'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              help: A Modelo 322 . rovat adóügyi adatai.
+              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: A havi visszatérítési nyilvántartásban szerepel
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: 'A Modelo 322 . rovat adóügyi adatai: adóügyi információ.'
+              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: A LIVA 163 sexies.Ötödik cikke szerinti rendszer választása
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
-              help: A Modelo 322 . rovat adóügyi adatai.
+              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Kizárólag tartományi adóztatás
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: 'A Modelo 322 . rovat adóügyi adatai: adóügyi információ.'
+              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: Az éves forgalom nem nulla
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: 'Tekintse át a rovat adatait: Adóösszeg IVA autorepercutida en
                 Közösségen belüli beszerzések (LIVA art 84.Uno.2).'
-            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: A 322-es modelo iva.cuota-deducible-total. rovata, 2008. adóév.
-            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: A 322-es modelo iva.cuota-devengada-total. rovata, 2008. adóév.
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: 'Tekintse át a rovat adatait: Adóösszeg Felszámított áfa al kulcs
                 csökkentett (10%).'

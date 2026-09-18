@@ -1210,7 +1210,7 @@ modelo:
               2012 Jövőbeli időszakokban alkalmazandó [00777]
           00778:
             label: Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
-              részletezése - Befektetési tartalékok az Illes Balears területén (31/2022.
+              részletezése - Befektetési tartalékok a Baleár-szigeteken (31/2022.
               törvény 70. kiegészítő rendelkezés) - Növelések [00778]
           00779:
             label: LIS 24.1. átmeneti rendelkezés levonásai - 2025 Időbeli elhatárolás
@@ -1242,13 +1242,12 @@ modelo:
               rendelkezés) - Csökkenés - Év végi függő egyenleg [00811]
           00813:
             label: Elszámolás II - Az eredménykimutatás eredményét érintő korrekciók
-              részletezése - Befektetési tartalékok az Illes Balears területén (31/2022.
+              részletezése - Befektetési tartalékok a Baleár-szigeteken (31/2022.
               törvény 70. kiegészítő rendelkezés) - Csökkentések [00813]
           00815:
-            label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - Az Illes
-              Balears területén előállított tárgyi javak értékesítéséből származó
-              jövedelem kedvezménye (31/2022. törvény 70. kiegészítő rendelkezés ötödik
-              pontja) [00815]
+            label: Elszámolás III - Kedvezmények/Kettős adóztatás levonásai - A Baleár-szigeteken
+              előállított tárgyi javak értékesítéséből származó jövedelem kedvezménye
+              (31/2022. törvény 70. kiegészítő rendelkezés ötödik pontja) [00815]
           00818:
             label: Nonprofit szervezeteknek adott adományok levonása - Általános adományok
               - 2015 - Ugyanazon szervezetnek ismételt adományozással - Függőben lévő/keletkezett
@@ -1850,7 +1849,7 @@ modelo:
           '01174':
             help: '6.- Kettős adóztatás elkerülése: a levonás összege - B) gazdasági
               adatok'
-            label: 'B) Datos económicos. 6.- Kettős adóztatás elkerülése: a levonás
+            label: 'B) Gazdasági adatok. 6.- Kettős adóztatás elkerülése: a levonás
               összege'
           '01175':
             label: Kanári-szigeteki beruházási tartalék különös rendszere - RIC 2021
@@ -6567,12 +6566,12 @@ modelo:
           is-agrupacion-interes-econo-2-gastos-financieros-netos-no-deducidos-por-la-e:
             help: 2.- Az entitás által le nem vont nettó pénzügyi ráfordítások - B)
               gazdasági adatok
-            label: B) Datos económicos. 2.- Az entitás által le nem vont nettó pénzügyi
+            label: B) Gazdasági adatok. 2.- Az entitás által le nem vont nettó pénzügyi
               ráfordítások
           is-agrupacion-interes-econo-3-reserva-capitaliz-no-aplicada-por-la-entidad:
             help: 3.- Az entitás által nem alkalmazott tőkésítési tartalék - B) gazdasági
               adatok
-            label: B) Datos económicos. 3.- Az entitás által nem alkalmazott tőkésítési
+            label: B) Gazdasági adatok. 3.- Az entitás által nem alkalmazott tőkésítési
               tartalék
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-base-de-la-deduc:
             help: '6.- Kettős adóztatás elkerülése: a levonás alapja - B) gazdasági
@@ -6582,17 +6581,17 @@ modelo:
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-importe-de-la-de:
             help: '6.- Kettős adóztatás elkerülése: a levonás összege - B) gazdasági
               adatok'
-            label: 'B) Datos económicos. 6.- Kettős adóztatás elkerülése: a levonás
+            label: 'B) Gazdasági adatok. 6.- Kettős adóztatás elkerülése: a levonás
               összege'
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-total-base-de-la:
             help: '6.- Kettős adóztatás elkerülése: a levonás alapja összesen - B)
               gazdasági adatok'
-            label: 'B) Datos económicos. 6.- Kettős adóztatás elkerülése: a levonás
+            label: 'B) Gazdasági adatok. 6.- Kettős adóztatás elkerülése: a levonás
               alapja összesen'
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-total-importe-de:
             help: '6.- Kettős adóztatás elkerülése: a levonás összege összesen - B)
               gazdasági adatok'
-            label: 'B) Datos económicos. 6.- Kettős adóztatás elkerülése: a levonás
+            label: 'B) Gazdasági adatok. 6.- Kettős adóztatás elkerülése: a levonás
               összege összesen'
           is-agrupacion-interes-econo-base-de-la-bonificacion:
             help: A kedvezmény alapja - B) gazdasági adatok
@@ -8583,15 +8582,15 @@ modelo:
               és 19/1994. törvény DA 14.) - 2024 -Függőben lévő/keletkezett levonás
               [02445]
           is-deduccion-creacion-empleo-discapacidad:
-            help: Függőben lévő vagy keletkezett levonás - Deducción por creación
-              de empleo trabaj. con discapacidad (CE)
-            label: Deducción por creación de empleo trabaj. con discapacidad (CE).
-              Függőben lévő vagy keletkezett levonás
+            help: Függőben lévő vagy keletkezett levonás - Fogyatékossággal élő munkavállalók
+              foglalkoztatása utáni levonás (CE)
+            label: Fogyatékossággal élő munkavállalók foglalkoztatása utáni levonás
+              (CE). Függőben lévő vagy keletkezett levonás
           is-deduccion-creacion-empleo-discapacidad-pendiente-futuros:
-            help: Jövőbeli időszakokban alkalmazandó - Deducción por creación de empleo
-              trabaj. con discapacidad (CE)
-            label: Deducción por creación de empleo trabaj. con discapacidad (CE).
-              Jövőbeli időszakokban alkalmazandó
+            help: Jövőbeli időszakokban alkalmazandó - Fogyatékossággal élő munkavállalók
+              foglalkoztatása utáni levonás (CE)
+            label: Fogyatékossággal élő munkavállalók foglalkoztatása utáni levonás
+              (CE). Jövőbeli időszakokban alkalmazandó
           is-deduccion-di-interna-dt231-detalle:
             label: Belföldi kettős adóztatás levonásai (LIS 23.1 átmeneti rendelkezés)
               - Belföldi kettős adóztatás 2023 - Függőben lévő levonás [01270]
@@ -8753,61 +8752,56 @@ modelo:
             label: Kanári-szigeteki beruházási levonások - Összesen - Függőben lévő/keletkezett
               levonás [00886]
           is-deduccion-inversion-en-beneficios-aplicado-periodo:
-            help: Ebben az elszámolásban alkalmazva - Deducción por inversión en beneficios
-              (IB)
-            label: Deducción por inversión en beneficios (IB). Ebben az elszámolásban
+            help: Ebben az elszámolásban alkalmazva - Levonás a nyereség befektetése
+              után (IB)
+            label: Levonás a nyereség befektetése után (IB). Ebben az elszámolásban
               alkalmazva
           is-deduccion-inversion-en-beneficios-pendiente-futuros:
-            help: Jövőbeli időszakokban alkalmazandó - Deducción por inversión en
-              beneficios (IB)
-            label: Deducción por inversión en beneficios (IB). Jövőbeli időszakokban
+            help: Jövőbeli időszakokban alkalmazandó - Levonás a nyereség befektetése
+              után (IB)
+            label: Levonás a nyereség befektetése után (IB). Jövőbeli időszakokban
               alkalmazandó
           is-deduccion-inversiones-africa-canarias:
-            help: Függőben lévő vagy keletkezett levonás - Inversiones en territ.
-              África Occidental y gastos de propaganda y publicidad (art. 27 bis Ley
+            help: Függőben lévő vagy keletkezett levonás - Beruházások Nyugat-Afrika
+              területein, valamint reklám- és hirdetési kiadások (art. 27 bis Ley
               19/1994) (TAP)
-            label: Inversiones en territ. África Occidental y gastos de propaganda
-              y publicidad (art. 27 bis Ley 19/1994) (TAP). Függőben lévő vagy keletkezett
+            label: Beruházások Nyugat-Afrika területein, valamint reklám- és hirdetési
+              kiadások (art. 27 bis Ley 19/1994) (TAP). Függőben lévő vagy keletkezett
               levonás
           is-deduccion-inversiones-africa-canarias-pendiente:
-            help: Jövőbeli időszakokban alkalmazandó - Inversiones en territ. África
-              Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994)
-              (TAP)
-            label: Inversiones en territ. África Occidental y gastos de propaganda
-              y publicidad (art. 27 bis Ley 19/1994) (TAP). Jövőbeli időszakokban
-              alkalmazandó
+            help: Jövőbeli időszakokban alkalmazandó - Beruházások Nyugat-Afrika területein,
+              valamint reklám- és hirdetési kiadások (art. 27 bis Ley 19/1994) (TAP)
+            label: Beruházások Nyugat-Afrika területein, valamint reklám- és hirdetési
+              kiadások (art. 27 bis Ley 19/1994) (TAP). Jövőbeli időszakokban alkalmazandó
           is-deduccion-inversiones-africa-canarias-periodo:
-            help: Ebben az elszámolásban alkalmazva - Inversiones en territ. África
-              Occidental y gastos de propaganda y publicidad (art. 27 bis Ley 19/1994)
-              (TAP)
-            label: Inversiones en territ. África Occidental y gastos de propaganda
-              y publicidad (art. 27 bis Ley 19/1994) (TAP). Ebben az elszámolásban
-              alkalmazva
+            help: Ebben az elszámolásban alkalmazva - Beruházások Nyugat-Afrika területein,
+              valamint reklám- és hirdetési kiadások (art. 27 bis Ley 19/1994) (TAP)
+            label: Beruházások Nyugat-Afrika területein, valamint reklám- és hirdetési
+              kiadások (art. 27 bis Ley 19/1994) (TAP). Ebben az elszámolásban alkalmazva
           is-deduccion-produccion-cinematografica-espanola-financiador:
-            help: 'Függőben lévő vagy keletkezett levonás - Financiador: producciones
-              cinematográficas españolas (FPC)'
+            help: 'Függőben lévő vagy keletkezett levonás - Finanszírozó: spanyol
+              filmgyártások (FPC)'
             label: 'Finanszírozó: spanyol filmgyártási produkciók (FPC). Függőben
               lévő vagy keletkezett levonás'
           is-deduccion-produccion-cinematografica-espanola-financiador-aplicado-periodo:
-            help: 'Ebben az elszámolásban alkalmazva - Financiador: producciones cinematográficas
-              españolas (FPC)'
-            label: 'Financiador: producciones cinematográficas españolas (FPC). Ebben
-              az elszámolásban alkalmazva'
+            help: 'Ebben az elszámolásban alkalmazva - Finanszírozó: spanyol filmgyártások
+              (FPC)'
+            label: 'Finanszírozó: spanyol filmgyártások (FPC). Ebben az elszámolásban
+              alkalmazva'
           is-deduccion-produccion-cinematografica-espanola-financiador-pendiente-futuros:
-            help: 'Jövőbeli időszakokban alkalmazandó - Financiador: producciones
-              cinematográficas españolas (FPC)'
-            label: 'Financiador: producciones cinematográficas españolas (FPC). Jövőbeli
-              időszakokban alkalmazandó'
+            help: 'Jövőbeli időszakokban alkalmazandó - Finanszírozó: spanyol filmgyártások
+              (FPC)'
+            label: 'Finanszírozó: spanyol filmgyártások (FPC). Jövőbeli időszakokban
+              alkalmazandó'
           is-deduccion-produccion-cinematografica-espanola-productor:
             help: 'Függőben lévő vagy keletkezett levonás - Producer: spanyol filmprodukciók
               (PC)'
-            label: 'Productor: producciones cinematográficas españolas (PC). Függőben
-              lévő vagy keletkezett levonás'
+            label: 'Gyártó: spanyol filmgyártások (PC). Függőben lévő vagy keletkezett
+              levonás'
           is-deduccion-produccion-cinematografica-espanola-productor-aplicado-periodo:
             help: 'Ebben az elszámolásban alkalmazva - Producer: spanyol filmprodukciók
               (PC)'
-            label: 'Productor: producciones cinematográficas españolas (PC). Ebben
-              az elszámolásban alkalmazva'
+            label: 'Gyártó: spanyol filmgyártások (PC). Ebben az elszámolásban alkalmazva'
           is-deduccion-produccion-cinematografica-espanola-productor-pendiente-futuros:
             help: 'Jövőbeli időszakokban alkalmazandó - Producer: spanyol filmprodukciók
               (PC)'
@@ -8848,7 +8842,7 @@ modelo:
           is-deduccion-sociedades-forestales:
             help: Függőben lévő vagy keletkezett levonás - Erdőgazdálkodási társaságok
               kiadásai és beruházásai (SF)
-            label: Gastos e inversiones de sociedades forestales (SF). Függőben lévő
+            label: Erdészeti társaságok kiadásai és beruházásai (SF). Függőben lévő
               vagy keletkezett levonás
           is-deduccion-sociedades-forestales-aplicado-periodo:
             help: Ebben az elszámolásban alkalmazva - Erdőgazdálkodási társaságok
@@ -8858,7 +8852,7 @@ modelo:
           is-deduccion-sociedades-forestales-pendiente-futuros:
             help: Jövőbeli időszakokban alkalmazandó - Erdőgazdálkodási társaságok
               kiadásai és beruházásai (SF)
-            label: Gastos e inversiones de sociedades forestales (SF). Jövőbeli időszakokban
+            label: Erdészeti társaságok kiadásai és beruházásai (SF). Jövőbeli időszakokban
               alkalmazandó
           is-diocesis-provincia-religiosa-o-entidad-eclesiastica-que-integra-entidades-menores-de-ellas-dependientes:
             label: Egyházmegye, szerzetesi tartomány vagy egyházi szervezet, amely
@@ -9333,42 +9327,42 @@ modelo:
             label: B.1. A nyilatkozattevő részesedései más gazdálkodó egységekben.
               b) Értékpapírok értékvesztésének visszaírása (LIS 16. átmeneti rendelkezés)
           is-participaciones-directas-d-a-correccion-de-valor-incluida-en-perdidas-y-ganancias-ejerc:
-            help: A 200-as modelo éves társasági adóbevallásának 1504. rovata.
+            help: A 200-as nyomtatvány éves társasági adóbevallásának 1504. rovata.
             label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
               a) Az év eredménykimutatásában szereplő értékkorrekció
           is-participaciones-directas-d-c-eliminacion-del-deterioro-contable-incluido-en-p-y-g-art-1:
-            help: A 200-as modelo éves társasági adóbevallásának 1506. rovata.
+            help: A 200-as nyomtatvány éves társasági adóbevallásának 1506. rovata.
             label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
               c) Az eredménykimutatásban szereplő számviteli értékvesztés kiszűrése
               (LIS 13.2.b cikk)
           is-participaciones-directas-d-d-eliminacion-del-deterioro-de-valores-repr-de-partic-en-el:
-            help: A 200-as modelo éves társasági adóbevallásának 1809. rovata.
+            help: A 200-as nyomtatvány éves társasági adóbevallásának 1809. rovata.
             label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
               d) A tőkében vagy saját tőkében való részesedést megtestesítő értékpapírok
               értékvesztésének kiszűrése (LIS 15.k cikk)
           is-participaciones-directas-d-datos-de-la-declarante-ingresos-por-dividendos-recibidos-en:
-            help: A 200-as modelo éves társasági adóbevallásának 1503. rovata.
+            help: A 200-as nyomtatvány éves társasági adóbevallásának 1503. rovata.
             label: Közvetlen részesedések más szervezetekben. Értékhelyesbítések.
               A bevallott évben kapott osztalékból származó bevétel
           is-participaciones-directas-d-e-ajuste-por-la-disminucion-de-valor-originada-por-criterio:
-            help: A 200-as modelo éves társasági adóbevallásának 1810. rovata.
+            help: A 200-as nyomtatvány éves társasági adóbevallásának 1810. rovata.
             label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
               e) A valós értéken alapuló értékcsökkenés miatti kiigazítás (LIS 15.l
               cikk)
           is-participaciones-directas-d-f-efecto-correccion-valorativa-en-la-bi-del-ejercicio-a-b-c:
-            help: A 200-as modelo éves társasági adóbevallásának 1507. rovata.
+            help: A 200-as nyomtatvány éves társasági adóbevallásának 1507. rovata.
             label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
               f) Az értékelési korrekció hatása az év adóalapjára
           is-participaciones-directas-d-g-saldo-de-correcciones-fiscales-art-12-3-rdl-4-2004-pendien:
-            help: A 200-as modelo éves társasági adóbevallásának 1508. rovata.
+            help: A 200-as nyomtatvány éves társasági adóbevallásának 1508. rovata.
             label: Közvetlen részesedések más szervezetekben. Értékelési korrekciók.
               g) Az év végén fennálló adókorrekciók egyenlege (12.3 RDL 4/2004)
           is-participaciones-directas-d-valor-en-libros-en-el-activo-de-la-declarante-de-la-particip:
-            help: A 200-es modelo 1502. rovata, 2024. adóév.
+            help: A 200-es nyomtatvány 1502. rovata, 2024. adóév.
             label: A részesedés könyv szerinti értéke (a bevalló eszközei között)
               [1502]
           is-participaciones-directas-d-valor-nominal-total-de-la-participacion:
-            help: A 200-es modelo 1501. rovata, 2024. adóév.
+            help: A 200-es nyomtatvány 1501. rovata, 2024. adóév.
             label: A részesedés teljes névértéke [1501]
           is-participe-de-agrupacion-de-interes-economico-o-de-union-temporal-de-empresas:
             label: Gazdasági érdekcsoportosulás vagy vállalkozások ideiglenes társulásának
@@ -10282,8 +10276,8 @@ modelo:
       construct:
         modelo-200-foundation:
           field:
-            title: '200-as modelo: éves társasági adó elszámolás (2024-től), a részletfizetések
-              levonási lánca'
+            title: '200-as nyomtatvány: éves társasági adó elszámolás (2024-től),
+              a részletfizetések levonási lánca'
       field:
         official_name: Társasági adó. A külföldi illetőségűek jövedelemadója (állandó
           telephelyek, valamint külföldön alapított, spanyol területen jelenléttel
@@ -15031,20 +15025,20 @@ modelo:
                 korrekció (7/2024. törvény DF 9. cikk) - Növekedés - Évi korrekciók
                 - Végleges [03646]
             '03647':
-              help: A RIC-hez az időszak elején még hozzárendelendő összeg - Inversiones
-                anticipadas 2022
-              label: Inversiones anticipadas 2022. A RIC-hez az időszak elején még
-                hozzárendelendő összeg
+              help: A RIC-hez az időszak elején még hozzárendelendő összeg - Előzetes
+                beruházások 2022
+              label: Előzetes beruházások 2022. A RIC-hez az időszak elején még hozzárendelendő
+                összeg
             03648:
               help: A RIC-hez az időszak elején még hozzárendelendő összeg - Előzetes
                 beruházások 2023
-              label: Inversiones anticipadas 2023. A RIC-hez az időszak elején még
-                hozzárendelendő összeg
+              label: Előzetes beruházások 2023. A RIC-hez az időszak elején még hozzárendelendő
+                összeg
             03649:
               help: A RIC-hez az időszak végén még hozzárendelendő összeg - Előzetes
                 beruházások 2023
-              label: Inversiones anticipadas 2023. A RIC-hez az időszak végén még
-                hozzárendelendő összeg
+              label: Előzetes beruházások 2023. A RIC-hez az időszak végén még hozzárendelendő
+                összeg
             x-8h834c1g60o32ehg60o3gcg:
               label: Multinacionális csoport vagy nagy méretű belföldi csoport végső
                 anyavállalata [00082]

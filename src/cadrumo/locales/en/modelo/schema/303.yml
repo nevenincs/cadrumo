@@ -506,7 +506,7 @@ modelo:
           m303-exonerado-390-96:
             help: Box 96 of modelo 303, tax year 2022.
             label: Transactions carried out in the year - Transactions by taxable
-              persons under the recargo de equivalencia special regime
+              persons under the equivalence surcharge special regime
           m303-exonerado-390-97:
             help: Box 97 of modelo 303, tax year 2022.
             label: Transactions carried out in the year - Transactions under the special

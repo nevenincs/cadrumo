@@ -23,8 +23,8 @@ modelo:
           construct:
             modelo-369:
               field:
-                title: Modelo 369 - Esquema Exterior (különleges szabályozás a nem
-                  letelepedett szolgáltatók által nyújtott szolgáltatásokra)
+                title: 369-es nyomtatvány - Esquema Exterior (különleges szabályozás
+                  a nem letelepedett szolgáltatók által nyújtott szolgáltatásokra)
           field:
             label: 369-es modelo - Unión kívüli rendszer - a Közösségben nem letelepedett
               adóalanyok által nyújtott szolgáltatásokra vonatkozó különös szabályozás
@@ -45,7 +45,7 @@ modelo:
           construct:
             modelo-369:
               field:
-                title: Modelo 369 - Esquema Importacion (IOSS különleges szabályozás)
+                title: 369-es nyomtatvány - Esquema Importacion (IOSS különleges szabályozás)
           field:
             label: 369-es modelo - Importrendszer (IOSS) - importált áruk távértékesítésére
               vonatkozó különös szabályozás (LIVA 163. cikk quinvicies-octovicies).
@@ -71,7 +71,7 @@ modelo:
           construct:
             modelo-369:
               field:
-                title: Modelo 369 - Esquema Union (OSS Union különleges szabályozás)
+                title: 369-es nyomtatvány - Esquema Union (OSS Union különleges szabályozás)
           field:
             label: 369-es modelo - Uniós rendszer - a Közösségen belüli távértékesítésre,
               elektronikus felületekre és a Közösségben letelepedett szolgáltatásokra

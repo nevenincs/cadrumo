@@ -113,7 +113,7 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es modelo: negyedéves előlegfizetés az objektív becslés
+                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
                   rendszerében (2019-2023 közötti adóévek)'
           field:
             label: 2019-2023. adóévek
@@ -165,7 +165,7 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es modelo: negyedéves előlegfizetés az objektív becslés
+                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
                   rendszerében (2024. adóév)'
           field:
             label: Adóév 2024
@@ -222,7 +222,7 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es modelo: negyedéves előlegfizetés az objektív becslés
+                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
                   rendszerében (2025. adóév)'
           field:
             label: Adóév 2025
@@ -245,7 +245,7 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es modelo: negyedéves előlegfizetés az objektív becslés
+                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
                   rendszerében (2026. adóév)'
           field:
             label: Adóév 2026

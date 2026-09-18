@@ -300,7 +300,7 @@ modelo:
             label: Settlement (continued). Amounts to offset from periods before joining
               the group [66]
           m322-liquidacion-continuacion-diferencia-total-cuota-devengada-menos-total-a-deducir:
-            label: Liquidación (continued). Difference ([38] - [62]) . [63]
+            label: Settlement (continued). Difference ([38] - [62]) . [63]
           m322-liquidacion-continuacion-resultado-regularizacion-anual-administraciones-forales:
             label: Settlement (continued). Only for taxable persons taxed jointly
               by the State Administration and the Foral Treasuries. Result of the
@@ -406,11 +406,11 @@ modelo:
           m322-liquidacion-iva-devengado-operaciones-intragrupo-tipo:
             label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [02]
           m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias:
-            label: Settlement. IVA DEVENGADO. Other transactions under the reverse
-              charge (except intra-Community acquisitions) [23]
+            label: Settlement. VAT ACCRUED. Other transactions under the reverse charge
+              (except intra-Community acquisitions) [23]
           ? m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias-cuota
-          : label: Settlement. IVA DEVENGADO. Other transactions under the reverse
-              charge (except intra-Community acquisitions). Cuota [24]
+          : label: Settlement. VAT ACCRUED. Other transactions under the reverse charge
+              (except intra-Community acquisitions). Tax amount [24]
           m322-liquidacion-iva-devengado-recargo-de-equivalencia-base-imponible:
             label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base [27]
           m322-liquidacion-iva-devengado-recargo-de-equivalencia-cuota:
@@ -763,7 +763,7 @@ modelo:
               help: Box 67 of modelo 322, tax year 2008.
             '68':
               help: Box 68 of modelo 322, tax year 2008.
-              label: Liquidación (continued). Result ([65] - [66] + [67]) [68]
+              label: Settlement (continued). Result ([65] - [66] + [67]) [68]
             '70':
               help: Box 70 of modelo 322, tax year 2008.
               label: Result of the self-assessment ([68] - [69]) [70]

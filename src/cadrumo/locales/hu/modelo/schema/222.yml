@@ -355,7 +355,7 @@ modelo:
       construct:
         modelo-222-declaration-construct:
           field:
-            title: '222-es modelo: részletfizetés az adókonszolidációs rendszerben'
+            title: '222-es nyomtatvány: részletfizetés az adókonszolidációs rendszerben'
       field:
         official_name: Modelo 222. Társasági adó. Adókonszolidációs rendszer. Részletfizetés.
         title: IS részletfizetés adókonszolidációs rendszerben (cégcsoportok)
