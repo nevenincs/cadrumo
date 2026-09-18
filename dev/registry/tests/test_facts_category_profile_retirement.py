@@ -87,7 +87,14 @@ def test_authored_category_profile_fact_covers_every_category_with_evidence() ->
     }
     assert declared_categories == {category.value for category in categories}
     assert all(variant.ownership is FactOwnership.AUTHORED for variant in profile_fact.variants)
-    assert all(variant.source_citations for variant in profile_fact.variants)
+    # Every variant is grounded, and every variant that names a SOURCE quotes
+    # it. A variant grounded in law alone carries no citation and must not be
+    # made to invent one: the iva-deductibility-hint ordering is the live case,
+    # withdrawn from a reglamento that does not state the claim and re-grounded
+    # in LIVA arts. 94 and 95. Demanding a citation there would be satisfied
+    # only by citing a document that does not say it.
+    assert all(variant.legal_refs or variant.source_refs for variant in profile_fact.variants)
+    assert all(variant.source_citations for variant in profile_fact.variants if variant.source_refs)
 
     for category in categories:
         resolved = resolve_governed_fact(
@@ -104,16 +111,19 @@ def test_authored_category_profile_fact_covers_every_category_with_evidence() ->
         assert isinstance(resolved, ResolvedMappingFact)
         assert resolved.payload.entries
 
+    # A selector no variant declares. The DATE axis cannot carry this negative
+    # any more: the resolver projects to the nearest variant in both directions,
+    # so a date below a category's first variant resolves backwards and one
+    # above the horizon carries the newest forward. Only an unauthored
+    # coordinate is genuinely absent.
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
         resolve_governed_fact(
             catalogue,
             MappingFactQuery(
                 fact_id=CATEGORY_PROFILE_FACT_ID,
                 date_axis=DateAxis.FILING_PERIOD,
-                effective_date=date(2099, 12, 31),
-                selectors=(
-                    FactSelector(name="category", value=SpendingCategory.from_registry("mutualidad_alternativa").value),
-                ),
+                effective_date=date(2025, 12, 31),
+                selectors=(FactSelector(name="category", value="no-such-spending-category"),),
             ),
             authority_digest="a" * 64,
             support=committed_supported_filing_years(),

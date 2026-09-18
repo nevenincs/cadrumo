@@ -32,6 +32,20 @@ def registry_authority():
 
 
 @pytest.fixture(scope="session")
+def authored_history_registry_authority():
+    """The compiler's authority widened to the AUTHORED history, for older ejercicios.
+
+    The committed envelope gates what the product resolves, so a coordinate
+    below its floor is refused for being out of support. A worked example whose
+    subject IS an older ejercicio - a figure the manual printed for that year -
+    resolves against this instead.
+    """
+    from .profile_schema_support import authored_history_authority
+
+    return authored_history_authority()
+
+
+@pytest.fixture(scope="session")
 def registry_tree() -> tuple[tuple[ModeloDefinition, ...], RegistryCatalogues]:
     """Load mutable authored declarations for compiler-owned tests only."""
     return bundled_registry_tree()

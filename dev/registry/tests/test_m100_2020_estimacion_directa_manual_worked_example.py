@@ -178,6 +178,7 @@ from cadrumo.domain.calculations.registry.tests.scenarios import (
     run_registry_calculation_scenario,
 )
 from dev.registry.tests.manual_oracle_support import oracle_declared_figures
+from dev.registry.tests.profile_schema_support import authored_history_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -256,7 +257,10 @@ def test_0226_manual_worked_example_medico_radiologo_simplificada() -> None:
         expected_0226=Decimal("58100.00"),
         scenario_id="m100-2020-0226-manual-medico-radiologo-simplificada",
     )
-    report = run_registry_calculation_scenario(scenario)
+    # Resolved through the compiler's authored authority: the published span
+    # begins at the supported floor, so this ejercicio's coordinate cannot be
+    # reached there at all.
+    report = run_registry_calculation_scenario(scenario, authority=authored_history_authority())
     assert_registry_scenario_matches(report)
 
 
@@ -278,7 +282,7 @@ def test_0226_anti_tautology_modalidad_switch_changes_value() -> None:
         expected_0226=Decimal("58100.00"),
         scenario_id="m100-2020-0226-anti-tautology-simplificada",
     )
-    simplificada_report = run_registry_calculation_scenario(simplificada)
+    simplificada_report = run_registry_calculation_scenario(simplificada, authority=authored_history_authority())
     assert_registry_scenario_matches(simplificada_report)
 
     # The "normal" branch's expected value is never asserted against a
@@ -291,14 +295,14 @@ def test_0226_anti_tautology_modalidad_switch_changes_value() -> None:
         expected_0226=Decimal("0.00"),
         scenario_id="m100-2020-0226-anti-tautology-normal",
     )
-    normal_report = run_registry_calculation_scenario(normal)
+    normal_report = run_registry_calculation_scenario(normal, authority=authored_history_authority())
     assert simplificada_report.calculation.values[_CASILLA_0226] != normal_report.calculation.values[_CASILLA_0226], (
         "0226 must differ between modalidad simplificada and modalidad normal"
     )
 
 
 def test_0226_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
-    registry_authority: ValidatedRegistryAuthority,
+    authored_history_registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """The manual-oracle grounding of 0226 is enrolled, not just computed.
 
@@ -316,7 +320,7 @@ def test_0226_manual_grounding_is_enrolled_and_raises_independently_grounded_fra
     read from the registry's own declared+validated data, never hand-computed
     or asserted from a synthetic fixture.
     """
-    authority = registry_authority
+    authority = authored_history_registry_authority
     snapshot = authority.snapshot("100", filing_year=2020, period="0A")
     policy = snapshot.verification_policy()
 
