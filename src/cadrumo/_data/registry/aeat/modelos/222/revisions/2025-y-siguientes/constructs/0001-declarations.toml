@@ -3,7 +3,33 @@ id = "modelo-222-declaration-construct"
 legal_refs = ["orden-hfp-227-2017:art-2", "orden-hfp-227-2017:art-5", "ley-27-2014:art-40"]
 source_refs = ["aeat-modelo-202-instructions", "boe-modelo-202-base-order"]
 casilla_ids = ["decl.ejercicio", "decl.tipo-declaracion"]
-application_links = ["modelo-222-deadline", "modelo-222-filing", "modelo-222-workflow"]
+application_links = [
+    "modelo-222-approval",
+    "modelo-222-calculation",
+    "modelo-222-deadline",
+    "modelo-222-filing",
+    "modelo-222-reconciliation",
+    "modelo-222-review",
+    "modelo-222-workflow",
+]
+formulas = [
+    "modelo-222-suma-bases-imponibles-individuales",
+    "modelo-222-total-correcciones-aumentos",
+    "modelo-222-total-correcciones-disminuciones",
+    "modelo-222-base-imponible-previa",
+    "modelo-222-base-pago-fraccionado-b1",
+    "modelo-222-base-pago-fraccionado-b2",
+    "modelo-222-resultado-previo-b1",
+    "modelo-222-resultado-previo-b2",
+    "modelo-222-importe-pago-fraccionado-b2-tipo-1",
+    "modelo-222-importe-pago-fraccionado-b2-tipo-2",
+    "modelo-222-importe-pago-fraccionado-b2-tipo-3",
+    "modelo-222-importe-pago-fraccionado-b2-tipo-4",
+    "modelo-222-modalidad-40-2-a-ingresar",
+    "modelo-222-modalidad-40-3-resultado",
+    "modelo-222-cantidad-a-ingresar",
+]
+
 deadline_windows = [
     "modelo-222-2025-1p",
     "modelo-222-2025-2p",
