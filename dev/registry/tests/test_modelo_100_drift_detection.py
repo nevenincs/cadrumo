@@ -29,6 +29,7 @@ from cadrumo.domain.calculations.registry.runtime_graph import (
 )
 from cadrumo.tests.inventory import REPO_ROOT
 
+from ..compiler.modelo_projections import projected_parameter_ids
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -164,6 +165,7 @@ def test_no_orphan_parameters_in_any_revision() -> None:
         for formula in revision.formulas:
             referenced.update(expression_parameter_refs(formula.expression))
         referenced |= cross_module_refs
+        referenced |= projected_parameter_ids("100")
         referenced |= _PRE_STAGED_PARAMETERS
         orphans = declared - referenced
         for orphan in sorted(orphans):
@@ -216,6 +218,28 @@ def test_no_orphan_parameters_in_any_revision() -> None:
 #:   the 2024 cuota chain.
 _PRE_STAGED_PARAMETERS: frozenset[str] = frozenset(
     {
+        # Arrendamiento de vivienda (LIRPF art. 23.2, as amended by Ley 12/2023)
+        # and the mínimo/gasto details below. Their figures are authored and
+        # legally grounded, but the resolver that used to read them through
+        # read_parameter no longer exists in the tree, so nothing consumes them
+        # today. They stay on disk rather than being deleted: the values are
+        # official and re-entering them later would re-open the grounding work.
+        # Each entry leaves this list when its consuming formula or reader lands.
+        "renta-rental-reduccion-rate-tier-50",
+        "renta-rental-reduccion-rate-tier-60",
+        "renta-rental-reduccion-rate-tier-70",
+        "renta-rental-reduccion-rate-tier-90",
+        "renta-rental-amortizacion-rate",
+        "renta-rental-ejercicio-amendment-year",
+        "renta-rental-joven-tenant-age-max",
+        "renta-rental-joven-tenant-age-min",
+        "renta-rental-prior-rent-rebaja-threshold",
+        "renta-rental-rehab-lookback-years",
+        "renta-gastos-carry-forward-anos",
+        "renta-minimo-custodia-compartida-prorrata",
+        "renta-minimo-descendiente-edad-maxima",
+        "renta-minimo-descendientes-named-detail-limit",
+        "renta-minimo-menor-tres-edad-maxima",
         # Art. 81.2 guardería annual cap. Authored ahead of its consumer on
         # purpose: the figure previously existed only as an inline literal
         # inside the 0613 formula, which the application layer cannot read,
