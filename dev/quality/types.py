@@ -19,12 +19,12 @@ for the ``audit-types`` recipe.
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import subprocess
 import sys
 from collections import Counter
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 
 _CWD = os.getcwd().replace("\\", "/")
@@ -274,14 +274,20 @@ def collect_basedpyright(platform: TargetPlatform) -> list[Diagnostic]:
 def collect_all() -> list[Diagnostic]:
     """Run every checker against every supported platform and return the union.
 
-    The nine runs are independent subprocesses, so they overlap; the result is
-    sorted afterwards to keep the report order independent of who finished
-    first.
+    Sequentially, which costs about three minutes and is the point. Overlapping
+    the nine runs was tried first and made the gate NON-DETERMINISTIC: three
+    concurrent basedpyright processes contend for the same analysis cache, and
+    consecutive sweeps of an unchanged tree answered 64 and then 56, one of them
+    inventing a `reportMissingImports` cascade over `pydantic`. A gate whose
+    verdict depends on a race is the same defect as one whose verdict depends on
+    the host -- trading the fix for wall-clock would have been absurd.
     """
-    collectors = (collect_ty, collect_pyrefly, collect_basedpyright)
-    with ThreadPoolExecutor(max_workers=len(_PLATFORMS)) as pool:
-        futures = [pool.submit(collect, platform) for platform in _PLATFORMS for collect in collectors]
-        return [diagnostic for future in futures for diagnostic in future.result()]
+    return [
+        diagnostic
+        for platform in _PLATFORMS
+        for collect in (collect_ty, collect_pyrefly, collect_basedpyright)
+        for diagnostic in collect(platform)
+    ]
 
 
 def fold_platforms(diagnostics: list[Diagnostic]) -> list[tuple[Diagnostic, tuple[str, ...]]]:
@@ -367,7 +373,9 @@ def _make_output_host_independent() -> None:
     names its file and line.
     """
     for stream in (sys.stdout, sys.stderr):
-        if hasattr(stream, "reconfigure"):
+        # Narrowed on the type rather than on hasattr: `reconfigure` belongs to
+        # TextIOWrapper, and a redirected stream need not be one.
+        if isinstance(stream, io.TextIOWrapper):
             stream.reconfigure(encoding="utf-8", errors="replace")
 
 
