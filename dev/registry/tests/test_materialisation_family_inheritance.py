@@ -39,6 +39,14 @@ _MODELO_ID = "999"
 _LEGAL_REF = "ley-58-2003:art-29"
 _SOURCE_REF = "aeat-manual"
 
+#: A clearance is the strongest withdrawal an edition can declare, so it carries the same
+#: authored cause and reason a restatement does. A bare family name would empty the family
+#: with nothing recording why, which is the state the scoped refusal exists to prevent.
+_CLEARED_EXPORT_LAYOUTS = (
+    'cleared_families = [{ family = "export_layouts", cause = "not_authored_for_this_edition", '
+    'reason = "This edition authors no export layout of its own and adopts none from before it." }]\n'
+)
+
 
 def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str | None) -> str:
     lineage_line = f'continuidad_id = "{lineage}"\n' if lineage is not None else ""
@@ -214,7 +222,7 @@ def test_a_keyed_family_the_successor_does_not_restate_is_carried_from_its_prede
         modelo_dir,
         "2025",
         year=2025,
-        manifest_extra='predecessor = "2024"\ncleared_families = [{ family = "export_layouts", cause = "not_authored_for_this_edition", reason = "This edition authors no export layout and does not adopt the predecessor s." }]\n',
+        manifest_extra='predecessor = "2024"\n' + _CLEARED_EXPORT_LAYOUTS,
         casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
     )
 
@@ -267,7 +275,7 @@ def test_asserting_a_scoped_family_carries_it_and_declining_it_takes_none(tmp_pa
         declined_dir,
         "2025",
         year=2025,
-        manifest_extra='predecessor = "2024"\ncleared_families = [{ family = "export_layouts", cause = "not_authored_for_this_edition", reason = "This edition authors no export layout and does not adopt the predecessor s." }]\n',
+        manifest_extra='predecessor = "2024"\n' + _CLEARED_EXPORT_LAYOUTS,
         casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
     )
 

@@ -17,6 +17,8 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.reference_checker import IdReferenceChecker
+from cadrumo.domain.calculations.registry.reference_sections import CONSTRUCT_MEMBER_ID_AXES
 from cadrumo.domain.calculations.registry.schema_revision_members import ConstructDefinition
 
 from ..compiler.validate_constructs import CONSTRUCT_MEMBER_ATTRIBUTES, validate_construct_closure
@@ -153,3 +155,46 @@ def test_construct_member_attrs_keys_are_unique_diagnostic_labels() -> None:
     would make ``member_objects[kind]`` ambiguous or unreachable for the field it names.
     """
     assert len(CONSTRUCT_MEMBER_ATTRIBUTES) == len(set(CONSTRUCT_MEMBER_ATTRIBUTES.values()))
+
+
+def test_construct_member_id_axes_walks_every_member_section_against_a_real_id_set() -> None:
+    """``CONSTRUCT_MEMBER_ID_AXES`` must pair every member field with a live checker id set.
+
+    Two distinct silent failures, one per direction. A member field the axes do
+    not name is walked by nothing: its references are never resolved, so a
+    construct joining a member that does not exist passes the referential gate
+    with no finding. An axis naming an id set the checker does not carry would
+    raise on the first construct that reaches it, which is loud but only at
+    runtime, and only for a modelo that happens to declare that member kind.
+
+    Both sides are read live -- the fields from :class:`ConstructDefinition`,
+    the id sets from :class:`IdReferenceChecker` -- so this measures the models
+    themselves rather than a third copy that could drift with them.
+    """
+    construct_member_sections = frozenset(ConstructDefinition.model_fields) - _NON_MEMBER_CONSTRUCT_FIELDS
+    walked_sections = frozenset(attr for attr, _id_set in CONSTRUCT_MEMBER_ID_AXES)
+    named_id_sets = frozenset(id_set for _attr, id_set in CONSTRUCT_MEMBER_ID_AXES)
+
+    assert walked_sections <= construct_member_sections, (
+        f"CONSTRUCT_MEMBER_ID_AXES walks {sorted(walked_sections - construct_member_sections)!r}, which "
+        "ConstructDefinition no longer declares as a member-reference field"
+    )
+    assert construct_member_sections <= walked_sections, (
+        f"ConstructDefinition declares member-reference field(s) "
+        f"{sorted(construct_member_sections - walked_sections)!r} that CONSTRUCT_MEMBER_ID_AXES does not walk -- "
+        "references of this kind are never resolved and a dangling one raises no finding"
+    )
+    assert named_id_sets <= frozenset(IdReferenceChecker.__slots__), (
+        f"CONSTRUCT_MEMBER_ID_AXES names id set(s) {sorted(named_id_sets - frozenset(IdReferenceChecker.__slots__))!r} "
+        "that IdReferenceChecker does not carry"
+    )
+
+
+def test_each_member_section_resolves_against_its_own_id_set() -> None:
+    """The teeth of the pairing: a field walked against another kind's id set would
+    accept an id from the wrong family and reject its own. Every axis is one-to-one,
+    so no two member fields share a checker bucket.
+    """
+    named_id_sets = [id_set for _attr, id_set in CONSTRUCT_MEMBER_ID_AXES]
+
+    assert len(named_id_sets) == len(set(named_id_sets))
