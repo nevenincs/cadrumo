@@ -22,7 +22,12 @@ if TYPE_CHECKING:
     from .schema import ModeloRevision
 
 
-_CONSTRUCT_MEMBER_AXES: tuple[tuple[str, str], ...] = (
+#: Each ``ConstructDefinition`` member-reference field paired with the
+#: :class:`~.reference_checker.IdReferenceChecker` id set its values must resolve
+#: against. Public because the pairing is policy with a coverage gate of its own:
+#: a member axis missing here is walked by nothing, so its references are never
+#: checked and the gap is silent.
+CONSTRUCT_MEMBER_ID_AXES: tuple[tuple[str, str], ...] = (
     ("casilla_ids", "casilla_ids"),
     ("formulas", "formula_ids"),
     ("parameters", "parameter_ids"),
@@ -49,7 +54,7 @@ def check_construct_refs(checker: IdReferenceChecker, revision: ModeloRevision) 
     """
     for construct in revision.constructs:
         ctp = f"construct {construct.id}"
-        for attr, id_set_name in _CONSTRUCT_MEMBER_AXES:
+        for attr, id_set_name in CONSTRUCT_MEMBER_ID_AXES:
             checker.chk_tuple(f"{ctp}.{attr}", getattr(construct, attr), getattr(checker, id_set_name))
         checker.chk_legal_source_refs(ctp, construct.legal_refs, construct.source_refs)
 
