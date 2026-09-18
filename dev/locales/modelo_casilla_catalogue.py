@@ -163,6 +163,15 @@ _SPELLED_NUMBERS: Final[dict[str, int]] = {
     "nyolc": 8,
     "kilenc": 9,
     "tíz": 10,
+    "tizenegy": 11,
+    "tizenkettő": 12,
+    "tizenhárom": 13,
+    "tizennégy": 14,
+    "tizenöt": 15,
+    "tizenhat": 16,
+    "tizenhét": 17,
+    "tizennyolc": 18,
+    "tizenkilenc": 19,
 }
 _WORD_TOKEN: Final = re.compile(r"[^\W\d_]+")
 #: ">=" and "<=" write the comparison the Spanish sets with the symbol itself.
