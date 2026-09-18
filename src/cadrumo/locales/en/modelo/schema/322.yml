@@ -1516,18 +1516,18 @@ modelo:
             '164':
               help: Box 164 of Modelo 322, financial year 2008.
             '165':
-              help: 'Tax information about tax information in box 165 of Modelo 322
-                References: [165].'
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Taxable base [165]
             '166':
-              help: 'Tax information about tax information in box 166 of Modelo 322
-                References: [166].'
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Rate % [166]
             '167':
-              help: 'Tax information about tax information in box 167 of Modelo 322
-                References: [167].'
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Tax amount [167]
             '168':
@@ -1835,44 +1835,45 @@ modelo:
             '99':
               help: Box 99 of Modelo 322, financial year 2008.
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              help: Tax information for box of Modelo 322.
+              help: Completed only in the last period of the return.
               label: Activity code - Other 1st
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in box of Modelo 322.
+              help: Completed only in the last period of the return.
               label: IAE heading - Other 1st
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              help: Tax information for box of Modelo 322.
+              help: Completed only in the last period of the return.
               label: Activity code - Other 2nd
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in box of Modelo 322.
+              help: Completed only in the last period of the return.
               label: IAE heading - Other 2nd
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              help: Tax information for box of Modelo 322.
+              help: Completed only in the last period of the return.
               label: Activity code - Other 3rd
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in box of Modelo 322.
+              help: Completed only in the last period of the return.
               label: IAE heading - Other 3rd
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              help: Tax information for box of Modelo 322.
+              help: Completed only in the last period of the return.
               label: Activity code - Other 4th
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in box of Modelo 322.
+              help: Completed only in the last period of the return.
               label: IAE heading - Other 4th
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              help: Tax information for box of Modelo 322.
+              help: Completed only in the last period of the return.
               label: Activity code - Other 5th
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in box of Modelo 322.
+              help: Completed only in the last period of the return.
               label: IAE heading - Other 5th
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              help: Tax information for box of Modelo 322.
+              help: Completed only in the last period of the return.
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              help: Tax information for box of Modelo 322.
+              help: Completed only in the last period of the return.
             x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
               label: Entitled to deduct the advance payment on supplies of petrol,
                 diesel and biofuels
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: Tax information about tax information in box of Modelo 322.
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
               label: Recipient of cash-basis scheme transactions
             x-chim6r1ecll6asj3d5hmiro:
               help: The financial-year box of Modelo 322, financial year 2008.
@@ -1885,27 +1886,34 @@ modelo:
                 for the group of entities.
               label: Exempt from the annual summary return, form 390
             x-chim6r1ectp7as3f5ln7arb5e9ng:
-              help: Tax information for box of Modelo 322.
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
               label: Group number
             x-chim6r1ectp7as3f5lp6ur0:
-              help: Tax information about tax information in box of Modelo 322.
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
               label: Dominant or dependent entity
             x-chim6r1ee1in4qbfchng:
               help: The period box of Modelo 322, financial year 2008.
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: Tax information about tax information in box of Modelo 322.
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
               label: 'Special pro rata: election or revocation'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              help: Tax information for box of Modelo 322.
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
               label: Registered in the monthly refund register
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: Tax information about tax information in box of Modelo 322.
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
               label: Electing the regime under LIVA article 163 sexies.Five
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
-              help: Tax information for box of Modelo 322.
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
               label: Taxed exclusively under a regional (foral) administration
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: Tax information about tax information in box of Modelo 322.
+              help: Field declared on modelo 322, the group-of-entities individual
+                monthly self-assessment.
               label: Annual turnover other than zero
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: The iva.autorepercutido.intracomunitaria box of Modelo 322, financial

@@ -29,8 +29,8 @@ modelo:
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella del Modelo
-                185.
+              help: Exercici fiscal al qual es refereix la declaració, amb quatre
+                xifres.
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: Número identificatiu seqüencial d'aquesta declaració, de 13 posicions
                 numèriques.

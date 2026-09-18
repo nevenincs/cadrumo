@@ -626,12 +626,10 @@ modelo:
         '2023':
           casilla:
             '64':
-              help: 'Tax information about tax information in box 64 of Modelo 303
-                References: [46], [58], [76].'
+              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in box 66 of Modelo 303
-                References: [64], [65].'
+              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
@@ -645,12 +643,10 @@ modelo:
         2024-desde-09-y-3t:
           casilla:
             '64':
-              help: 'Tax information about tax information in box 64 of Modelo 303
-                References: [46], [58], [76].'
+              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in box 66 of Modelo 303
-                References: [64], [65].'
+              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
@@ -664,12 +660,10 @@ modelo:
         2024-hasta-08-y-2t:
           casilla:
             '64':
-              help: 'Tax information about tax information in box 64 of Modelo 303
-                References: [46], [58], [76].'
+              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in box 66 of Modelo 303
-                References: [64], [65].'
+              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
@@ -683,12 +677,10 @@ modelo:
         '2025':
           casilla:
             '64':
-              help: 'Tax information about tax information in box 64 of Modelo 303
-                References: [46], [58], [76].'
+              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in box 66 of Modelo 303
-                References: [64], [65].'
+              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
@@ -921,14 +913,12 @@ modelo:
               help: 'Box 63: amount of supplies accrued under the cash accounting
                 scheme pursuant to article 75 LIVA.'
             '64':
-              help: 'Tax information about tax information in box 64 of Modelo 303
-                References: [46], [58], [76].'
+              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Sum of results ([46]+[58]+[76])
             '65':
               help: 'Box 65: percentage of the result attributable to the State Administration.'
             '66':
-              help: 'Tax information about tax information in box 66 of Modelo 303
-                References: [64], [65].'
+              help: Field declared on modelo 303, taken from the official record design.
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '68':

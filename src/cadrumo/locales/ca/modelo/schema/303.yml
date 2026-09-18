@@ -617,80 +617,68 @@ modelo:
         '2023':
           casilla:
             '64':
-              help: 'Informació fiscal sobre informació fiscal de la casella 64 del
-                Modelo 303 Referències: [46], [58], [76].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat - Suma de resultats ([46]+[58]+[76])
             '66':
-              help: 'Informació fiscal sobre informació fiscal de la casella 66 del
-                Modelo 303 Referències: [64], [65].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat - Import atribuïble a l'Administració de l'Estat ([64]×[65]/100)
             '71':
               help: Dada declarada en el Model 303, presa del disseny de registre
                 oficial.
               label: Resultat final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Informació fiscal sobre informació fiscal de la casella 69 del
-                Modelo 303 Referències: [66], [77], [68], [78].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat de l'autoliquidació ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, exercici 2023
         2024-desde-09-y-3t:
           casilla:
             '64':
-              help: 'Informació fiscal sobre informació fiscal de la casella 64 del
-                Modelo 303 Referències: [46], [58], [76].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat - Suma de resultats ([46]+[58]+[76])
             '66':
-              help: 'Informació fiscal sobre informació fiscal de la casella 66 del
-                Modelo 303 Referències: [64], [65].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat - Import atribuïble a l'Administració de l'Estat ([64]×[65]/100)
             '71':
               help: Dada declarada en el Model 303, presa del disseny de registre
                 oficial.
               label: Resultat final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Informació fiscal sobre informació fiscal de la casella 69 del
-                Modelo 303 Referències: [66], [77], [68], [78].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat de l'autoliquidació ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, exercici 2024, a partir de períodos 09 i 3T i següents
         2024-hasta-08-y-2t:
           casilla:
             '64':
-              help: 'Informació fiscal sobre informació fiscal de la casella 64 del
-                Modelo 303 Referències: [46], [58], [76].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat - Suma de resultats ([46]+[58]+[76])
             '66':
-              help: 'Informació fiscal sobre informació fiscal de la casella 66 del
-                Modelo 303 Referències: [64], [65].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat - Import atribuïble a l'Administració de l'Estat ([64]×[65]/100)
             '71':
               help: Dada declarada en el Model 303, presa del disseny de registre
                 oficial.
               label: Resultat final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Informació fiscal sobre informació fiscal de la casella 69 del
-                Modelo 303 Referències: [66], [77], [68], [78].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat de l'autoliquidació ([66]+[77]+[68]-[78])
           field:
             label: Model 303, exercici 2024, fins als períodes 08 i 2T
         '2025':
           casilla:
             '64':
-              help: 'Informació fiscal sobre informació fiscal de la casella 64 del
-                Modelo 303 Referències: [46], [58], [76].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat - Suma de resultats ([46]+[58]+[76])
             '66':
-              help: 'Informació fiscal sobre informació fiscal de la casella 66 del
-                Modelo 303 Referències: [64], [65].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat - Import atribuïble a l'Administració de l'Estat ([64]×[65]/100)
             '71':
               help: Dada declarada en el Model 303, presa del disseny de registre
                 oficial.
               label: Resultat final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Informació fiscal sobre informació fiscal de la casella 69 del
-                Modelo 303 Referències: [66], [77], [68], [78].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat de l'autoliquidació ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, exercici 2025
@@ -928,15 +916,13 @@ modelo:
               help: 'Casella 63: quota de lliuraments de criteri de caixa meritades
                 segons l''article 75 LIVA.'
             '64':
-              help: 'Informació fiscal sobre informació fiscal de la casella 64 del
-                Modelo 303 Referències: [46], [58], [76].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat - Suma de resultats ([46]+[58]+[76])
             '65':
               help: 'Casella 65: percentatge del resultat atribuïble a l''Administració
                 de l''Estat.'
             '66':
-              help: 'Informació fiscal sobre informació fiscal de la casella 66 del
-                Modelo 303 Referències: [64], [65].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat - Import atribuïble a l'Administració de l'Estat ([64]×[65]/100)
             '68':
               help: 'Casella 68: resultat de regularització anual de tributació conjunta.'
@@ -1012,8 +998,7 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: Total d'IVA repercutit calculat al tipus superreduït del 4%.
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Informació fiscal sobre informació fiscal de la casella 69 del
-                Modelo 303 Referències: [66], [77], [68], [78].'
+              help: Dada declarada al model 303, presa del disseny de registre oficial.
               label: Resultat de l'autoliquidació ([66]+[77]+[68]-[78])
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: Resultat del règim general calculat com IVA meritat menys IVA

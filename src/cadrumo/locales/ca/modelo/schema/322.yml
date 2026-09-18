@@ -1511,23 +1511,23 @@ modelo:
             '164':
               help: Casella 164 del Model 322, exercici 2008.
             '165':
-              help: 'Informació fiscal sobre informació fiscal de la casella 165 del
-                Modelo 322 Referències: [165].'
+              help: Dada declarada al model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
                 Base imposable [165]
             '166':
-              help: 'Informació fiscal sobre informació fiscal de la casella 166 del
-                Modelo 322 Referències: [166].'
+              help: Dada declarada al model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
                 Tipus % [166]
             '167':
-              help: 'Informació fiscal sobre informació fiscal de la casella 167 del
-                Modelo 322 Referències: [167].'
+              help: Dada declarada al model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Liquidació. IVA MERITAT. Resta d'operacions en règim general.
                 Quota [167]
             '168':
-              help: 'Informació fiscal sobre informació fiscal de la casella 168 del
-                Modelo 322 Referències: [168].'
+              help: Dada declarada al model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
                 [168]
             '169':
@@ -1541,8 +1541,8 @@ modelo:
                 del grup d'entitats.
               label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [170]
             '171':
-              help: 'Informació fiscal sobre informació fiscal de la casella 171 del
-                Modelo 322 Referències: [171].'
+              help: Dada declarada al model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
                 [171]
             '172':
@@ -1832,36 +1832,31 @@ modelo:
               help: Informació fiscal de la casella del Modelo 322.
               label: Codi d'activitat - Altres 1a
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: Informació fiscal sobre informació fiscal de la casella del Modelo
-                322.
+              help: Es completa exclusivament en l'últim període de la declaració.
               label: Epígraf IAE - Altres 1a
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
               help: Informació fiscal de la casella del Modelo 322.
               label: Codi d'activitat - Altres 2a
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: Informació fiscal sobre informació fiscal de la casella del Modelo
-                322.
+              help: Es completa exclusivament en l'últim període de la declaració.
               label: Epígraf IAE - Altres 2a
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
               help: Informació fiscal de la casella del Modelo 322.
               label: Codi d'activitat - Altres 3a
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: Informació fiscal sobre informació fiscal de la casella del Modelo
-                322.
+              help: Es completa exclusivament en l'últim període de la declaració.
               label: Epígraf IAE - Altres 3a
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
               help: Informació fiscal de la casella del Modelo 322.
               label: Codi d'activitat - Altres 4a
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: Informació fiscal sobre informació fiscal de la casella del Modelo
-                322.
+              help: Es completa exclusivament en l'últim període de la declaració.
               label: Epígraf IAE - Altres 4a
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
               help: Informació fiscal de la casella del Modelo 322.
               label: Codi d'activitat - Altres 5a
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: Informació fiscal sobre informació fiscal de la casella del Modelo
-                322.
+              help: Es completa exclusivament en l'últim període de la declaració.
               label: Epígraf IAE - Altres 5a
             x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
               help: Informació fiscal de la casella del Modelo 322.
