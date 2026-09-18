@@ -30,6 +30,7 @@ from contextlib import asynccontextmanager
 from typing import TYPE_CHECKING, Final
 
 from .....core.config import Settings
+from .....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from .....core.i18n.render import tr
 from .....core.logging import get_logger
 from .....core.time.clock import now
@@ -312,7 +313,7 @@ def filed_register_ejercicio_options(html: str) -> tuple[int, ...]:
         for match in (_EJERCICIO_OPTION_RE.match(text),)
         if match is not None
     }
-    return tuple(sorted((year for year in years if 2000 <= year <= 2099), reverse=True))
+    return tuple(sorted((year for year in years if FILING_YEAR_MIN <= year <= FILING_YEAR_MAX), reverse=True))
 
 
 async def discover_filed_declaration_availability(
