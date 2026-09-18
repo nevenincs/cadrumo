@@ -81,13 +81,19 @@ def test_iva_rate_schedule_is_a_complete_authored_fact() -> None:
     for variant in fact.variants:
         assert isinstance(variant.payload, MappingFactPayload)
         assert variant.valid_from is not None
+        selectors = {item.name: item.value for item in variant.selectors}
+        if "member_state" not in selectors:
+            # The schedule also carries a vocabulary variant -- the rate-role
+            # catalogue, selected by ``scope`` -- which declares no member state
+            # and is not a rate row.
+            continue
         projected.add(
             (
                 # Projected, never constructed: an EU member-state token comes
                 # from the facts registry, and the type refuses a bare string so
                 # a schedule cannot name a state the registry does not carry.
-                require_eu_member_state(str({item.name: item.value for item in variant.selectors}["member_state"])),
-                IvaRateKind(str({item.name: item.value for item in variant.selectors}["kind"])),
+                require_eu_member_state(str(selectors["member_state"])),
+                IvaRateKind(str(selectors["kind"])),
                 variant.valid_from,
                 Decimal(str({str(item.key): item.value for item in variant.payload.entries}["pct"])),
                 bool({str(item.key): item.value for item in variant.payload.entries}["supersedes_tier_default"]),
