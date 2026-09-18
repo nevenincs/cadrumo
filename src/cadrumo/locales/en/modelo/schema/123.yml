@@ -40,7 +40,7 @@ modelo:
             '02':
               label: Withholding and advance payment tax base
             '03':
-              label: Withholdings and advance payments
+              label: Withholdings and payments on account
           construct:
             modelo-123-capital-withholding:
               field:

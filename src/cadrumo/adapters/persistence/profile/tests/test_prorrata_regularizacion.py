@@ -43,7 +43,7 @@ from .....domain.calculations.registry.casilla_membership import (
     casilla_noncanonical_reference_targets,
     declared_casilla_ids,
 )
-from .....domain.calculations.registry.errors import NoRevisionForPeriodError
+from .....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from .....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from .....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from .....domain.calculations.registry.prorrata_regularizacion_bindings import (
@@ -356,7 +356,7 @@ def test_modelo_303_registry_has_no_casilla_61_binding_or_compatibility_route(
 
 def test_modelo_303_period_below_the_support_floor_refuses() -> None:
     """A filing year below the registry support floor refuses instead of projecting."""
-    with pytest.raises(NoRevisionForPeriodError, match="year=2020"):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError, match="outside the registry support envelope"):
         published_authority_operation().snapshot(Modelo("303").value, filing_year=2020, period="4T")
 
 

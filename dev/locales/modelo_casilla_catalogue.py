@@ -163,6 +163,15 @@ _SPELLED_NUMBERS: Final[dict[str, int]] = {
     "nyolc": 8,
     "kilenc": 9,
     "tíz": 10,
+    "tizenegy": 11,
+    "tizenkettő": 12,
+    "tizenhárom": 13,
+    "tizennégy": 14,
+    "tizenöt": 15,
+    "tizenhat": 16,
+    "tizenhét": 17,
+    "tizennyolc": 18,
+    "tizenkilenc": 19,
 }
 _WORD_TOKEN: Final = re.compile(r"[^\W\d_]+")
 #: ">=" and "<=" write the comparison the Spanish sets with the symbol itself.
@@ -527,6 +536,45 @@ REVIEWED_SEGMENT_RENDERINGS: Final[dict[str, dict[str, str]]] = {
 
 
 REVIEWED_SHARED_TRANSLATIONS: Final[dict[tuple[str, str, str], str]] = {
+    (
+        "ca",
+        "100",
+        "IVA suportat (per exemple, recàrrec d'equivalència i/o compensació d'agricultura, ramaderia i pesca)",
+    ): "one edition misspells por ejemplo as por ejermplo",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a B.6. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók számára (ezt az "
+        "összeget vigye át a B.6. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók számára (ezt az "
+        "összeget vigye át a B.8. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek megszerzésébe "
+        "történő befektetés miatt (ezt az összeget vigye át a B.7. melléklet [1136] rovatába)",
+    ): "acciones o participaciones sociales, written with y in another edition",
+    (
+        "hu",
+        "100",
+        "Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek megszerzésébe "
+        "történő befektetés miatt (ezt az összeget vigye át a B.8. melléklet [1136] rovatába)",
+    ): "acciones o participaciones sociales, written with y in another edition",
     (
         "en",
         "100",
@@ -1123,6 +1171,7 @@ REVIEWED_EQUIVALENT_SPANISH: Final[dict[tuple[str, str, str], str]] = {
         )
     },
     ("en", "100", "irpf-ed-suministros"): "'Electricity' renders both 'luz' and 'electricidad'.",
+    ("ca", "100", "irpf-ed-iva-soportado"): "One edition misspells 'por ejemplo' as 'por ejermplo'.",
 }
 
 
@@ -1423,7 +1472,7 @@ class ModeloCasillaCatalogue:
     def dropped_source_content(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
         """Return, per serving key, the source tokens a translation lost.
 
-        A label's numbers, box references and comparison symbols are the legal
+        A label's or a help text's numbers, box references and comparison symbols are the legal
         content an operator acts on: a cap of 500 euros, the transitional
         provisions a deduction rests on, the box an amount is carried from. A
         translation that renders the prose but drops those states something the
@@ -1433,20 +1482,21 @@ class ModeloCasillaCatalogue:
         lookup = self.lookup_for(self.values if values is None else values)
         dropped: dict[str, tuple[str, ...]] = {}
         for index, occurrence in enumerate(self.occurrences):
-            spanish = self.resolve(index, "label", SOURCE_LOCALE, values)
-            if spanish is None:
-                continue
-            source = _content_tokens(spanish)
-            if not source:
-                continue
-            served = modelo_localization_source(occurrence.chain("label"), locale=locale, lookup=lookup)
-            if served is None or served[1] != locale:
-                continue
-            rendered = _content_tokens(self.resolve(index, "label", locale, values) or "", spelled=True)
-            # A reference repeated in one sentence states the same box once.
-            missing = Counter({token: 1 for token in source if token not in rendered})
-            if missing:
-                dropped[served[0]] = tuple(sorted(missing.elements()))
+            for field_name in _FIELDS:
+                spanish = self.resolve(index, field_name, SOURCE_LOCALE, values)
+                if spanish is None:
+                    continue
+                source = _content_tokens(spanish)
+                if not source:
+                    continue
+                served = modelo_localization_source(occurrence.chain(field_name), locale=locale, lookup=lookup)
+                if served is None or served[1] != locale:
+                    continue
+                rendered = _content_tokens(self.resolve(index, field_name, locale, values) or "", spelled=True)
+                # A reference repeated in one sentence states the same box once.
+                missing = Counter({token: 1 for token in source if token not in rendered})
+                if missing:
+                    dropped[served[0]] = tuple(sorted(missing.elements()))
         return dropped
 
     def shared_translations(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
@@ -1536,18 +1586,19 @@ class ModeloCasillaCatalogue:
         }
 
     def translation_drift(self, values: Values | None = None) -> dict[str, tuple[str, ...]]:
-        """Return, per locale, the lineages rendering one Spanish text more than one way.
+        """Return, per locale, the lineages rendering one Spanish label or help more than one way.
 
         A lineage is the continuity key when the casilla declares one, else the
         casilla identity within its modelo. Divergent Spanish text is a genuine
         edition difference and is not drift.
         """
-        groups: dict[tuple[str, str, str], list[int]] = defaultdict(list)
+        groups: dict[tuple[str, str, str, str], list[int]] = defaultdict(list)
         for index, occurrence in enumerate(self.occurrences):
             lineage = occurrence.continuidad_id or f"casilla:{occurrence.casilla}"
-            spanish = self.resolve(index, "label", SOURCE_LOCALE, values)
-            if spanish is not None:
-                groups[(occurrence.modelo, lineage, spanish)].append(index)
+            for field_name in _FIELDS:
+                spanish = self.resolve(index, field_name, SOURCE_LOCALE, values)
+                if spanish is not None:
+                    groups[(occurrence.modelo, lineage, field_name, spanish)].append(index)
         drift: dict[str, tuple[str, ...]] = {}
         for locale in self.locales:
             if locale == SOURCE_LOCALE:
@@ -1555,13 +1606,13 @@ class ModeloCasillaCatalogue:
             drift[locale] = tuple(
                 sorted(
                     f"{modelo}/{lineage}"
-                    for (modelo, lineage, _spanish), members in groups.items()
+                    for (modelo, lineage, field_name, _spanish), members in groups.items()
                     if len(
                         {
                             text
                             for index in members
-                            if _served_locale(self, index, "label", locale, values) == locale
-                            and (text := self.resolve(index, "label", locale, values)) is not None
+                            if _served_locale(self, index, field_name, locale, values) == locale
+                            and (text := self.resolve(index, field_name, locale, values)) is not None
                         }
                     )
                     > 1
@@ -2009,7 +2060,14 @@ def _content_tokens(text: str, *, spelled: bool = False) -> Counter[str]:
         found[cleaned.lstrip("0") or "0" if cleaned.isdigit() else cleaned] += 1
     if spelled:
         for word in _WORD_TOKEN.findall(text):
-            number = _SPELLED_NUMBERS.get(word.casefold())
+            plain_word = word.casefold()
+            number = _SPELLED_NUMBERS.get(plain_word)
+            if number is None:
+                # Hungarian builds a compound around the numeral: two children is kétgyermekes.
+                number = next(
+                    (value for numeral, value in _SPELLED_NUMBERS.items() if plain_word.startswith(numeral)),
+                    None,
+                )
             if number is not None:
                 found[str(number)] += 1
     return found

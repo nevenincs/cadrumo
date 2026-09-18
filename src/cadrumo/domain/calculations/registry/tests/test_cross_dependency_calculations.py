@@ -54,7 +54,7 @@ from ..binding_selector_utils import selector_as_dict
 from ..binding_temporal import BindingTemporalKind
 from ..bindings import RegistryModeloObservation, resolve_available_bound_inputs_by_casilla_id
 from ..bindings_previous_filing import resolve_previous_filing_binding_values
-from ..errors import NoRevisionForPeriodError
+from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relation_dependency import RelationDependencyRole, RelationKind
 from ..relations import (
@@ -1097,7 +1097,7 @@ def test_modelo_100_source_below_the_supported_floor_cannot_be_grounded_for_carr
     """The floor year's prior-year M100 source has no admissible revision to stamp."""
     support = published_supported_filing_years()
     assert support is not None
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         _grounded_observations(
             modelo="100",
             filing_year=support.floor - 1,

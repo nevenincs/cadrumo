@@ -4,7 +4,7 @@ modelo:
       construct:
         modelo-187-calculation-construct:
           field:
-            title: '187-es modelo: az önadózás számítása'
+            title: '187-es nyomtatvány: az önadózás számítása'
       field:
         official_name: Modelo 187. A kollektív befektetési formák jegyzett tőkéjét
           vagy vagyonát megtestesítő részvények és befektetési jegyek adatszolgáltatási

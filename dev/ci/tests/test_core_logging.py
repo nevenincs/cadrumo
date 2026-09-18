@@ -81,9 +81,7 @@ def _force_configure_logging() -> None:
         _logging_mod._configured = original_configured or True
 
 
-def test_default_logging_routes_warnings_to_file_not_stderr(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str]
-) -> None:
+def test_default_logging_routes_warnings_to_file_not_stderr(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
     """Warnings should be persisted for diagnostics without polluting CLI stderr.
 
     The log directory is this test's own. Read against the real one, the

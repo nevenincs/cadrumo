@@ -18,7 +18,7 @@ from .....core.aggregation import BindingAggregationOp
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..authority import PinnedAuthorityOperation
 from ..binding_aggregation import binding_aggregation_op
-from ..errors import NoRevisionForPeriodError
+from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from ..relations import (
     RegistryFoldRequirement,
@@ -105,7 +105,7 @@ def test_historical_pagos_fraccionados_relation_contract_and_fold(
     if year < supported_years.floor:
         revision = published_authored_revision("100", year=year)
         _assert_relation_contract(revision, year=year)
-        with pytest.raises(NoRevisionForPeriodError):
+        with pytest.raises(FilingYearOutsideSupportEnvelopeError):
             registry_authority.snapshot("100", filing_year=year, period="0A")
         return
 

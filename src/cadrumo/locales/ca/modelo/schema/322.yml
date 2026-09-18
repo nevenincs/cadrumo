@@ -251,7 +251,7 @@ modelo:
             help: Dada declarada al model 322, autoliquidació mensual individual del
               grup d'entitats.
             label: Adquisicions de béns i serveis afectades pel règim especial del
-              criteri de caixa. Base imposable
+              criteri de caixa. base imposable
           m322-informacion-adicional-criterio-caja-cuota-soportada:
             help: Dada declarada al model 322, autoliquidació mensual individual del
               grup d'entitats.
@@ -1096,7 +1096,7 @@ modelo:
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
               label: Liquidació. IVA meritat. Resta d'operacions en règim general.
-                Base imposable
+                base imposable
             '166':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
@@ -1106,11 +1106,11 @@ modelo:
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
               label: Liquidació. IVA meritat. Resta d'operacions en règim general.
-                Quota
+                quota
             '168':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
-              label: Liquidació. IVA meritat. Recàrrec d'equivalència. Base imposable
+              label: Liquidació. IVA meritat. Recàrrec d'equivalència. base imposable
             '169':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
@@ -1120,11 +1120,11 @@ modelo:
             '170':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
-              label: Liquidació. IVA meritat. Recàrrec d'equivalència. Quota
+              label: Liquidació. IVA meritat. Recàrrec d'equivalència. quota
             '171':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
-              label: Liquidació. IVA meritat. Operacions intragrup. Base imposable
+              label: Liquidació. IVA meritat. Operacions intragrup. base imposable
             '172':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
@@ -1132,7 +1132,7 @@ modelo:
             '173':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
-              label: Liquidació. IVA meritat. Operacions intragrup. Quota
+              label: Liquidació. IVA meritat. Operacions intragrup. quota
             '18':
               help: Casella 18 del model 322, exercici 2024.
             '19':
@@ -1427,129 +1427,89 @@ modelo:
         2026-y-siguientes:
           casilla:
             '01':
-              help: 'Informació fiscal sobre informació fiscal de la casella 01 del
-                Modelo 322 Referències: [01].'
+              help: Casella 01 del Model 322, exercici 2008.
             '02':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Tipus % [02].'
+              help: Casella 02 del Model 322, exercici 2008.
             '03':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Quota [03].'
+              help: Casella 03 del Model 322, exercici 2008.
             '04':
-              help: 'Informació fiscal sobre informació fiscal de la casella 04 del
-                Modelo 322 Referències: [04].'
+              help: Casella 04 del Model 322, exercici 2008.
             '05':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Tipus % [05].'
+              help: Casella 05 del Model 322, exercici 2008.
             '06':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Quota [06].'
+              help: Casella 06 del Model 322, exercici 2008.
             '07':
-              help: 'Informació fiscal sobre informació fiscal de la casella 07 del
-                Modelo 322 Referències: [07].'
+              help: Casella 07 del Model 322, exercici 2008.
             08:
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Tipus % [08].'
+              help: Casella 08 del Model 322, exercici 2008.
             09:
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Quota [09].'
+              help: Casella 09 del Model 322, exercici 2008.
             '10':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Modificación bases i quotes de operacions intragrupo [10].'
+              help: Casella 10 del Model 322, exercici 2008.
             '107':
-              help: 'Informació fiscal sobre informació fiscal de la casella 107 del
-                Modelo 322 Referències: [107].'
+              help: Casella 107 del Model 322, exercici 2008.
             '11':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Modificación bases i quotes de operacions intragrupo [11].'
+              help: Casella 11 del Model 322, exercici 2008.
             '112':
               label: Liquidació (continuació). Pagament a compte de lliuraments de
                 gasolines, gasoils i biocarburants posteriors a la ultimació del règim
                 de dipòsit diferent del duaner [112]
             '12':
-              help: 'Informació fiscal sobre informació fiscal de la casella 12 del
-                Modelo 322 Referències: [12].'
+              help: Casella 12 del Model 322, exercici 2008.
             '120':
-              help: 'Informació fiscal sobre informació fiscal de la casella 120 del
-                Modelo 322 Referències: [120].'
+              help: Casella 120 del Model 322, exercici 2008.
             '122':
-              help: 'Consulteu la informació de la casella: Operacions subjectes amb
-                inversió del subjecte passiu [122].'
+              help: Casella 122 del Model 322, exercici 2008.
             '123':
-              help: 'Informació fiscal sobre informació fiscal de la casella 123 del
-                Modelo 322 Referències: [123].'
+              help: Casella 123 del Model 322, exercici 2008.
             '124':
-              help: 'Informació fiscal sobre informació fiscal de la casella 124 del
-                Modelo 322 Referències: [124].'
+              help: Casella 124 del Model 322, exercici 2008.
             '125':
-              help: 'Consulteu la informació de la casella: Operacions subjectes amb
-                inversió del subjecte passiu [125].'
+              help: Casella 125 del Model 322, exercici 2008.
             '126':
-              help: 'Informació fiscal sobre informació fiscal de la casella 126 del
-                Modelo 322 Referències: [126].'
+              help: Casella 126 del Model 322, exercici 2008.
             '127':
-              help: 'Informació fiscal sobre informació fiscal de la casella 127 del
-                Modelo 322 Referències: [127].'
+              help: Casella 127 del Model 322, exercici 2008.
             '128':
-              help: 'Consulteu la informació de la casella: Operacions intragrup valorades
-                d''acord amb el que disposen els arts. 78 i 79 LIVA [128].'
+              help: Casella 128 del Model 322, exercici 2008.
             '13':
-              help: 'Informació fiscal sobre informació fiscal de la casella 13 del
-                Modelo 322 Referències: [13].'
+              help: Casella 13 del Model 322, exercici 2008.
             '14':
-              help: 'Informació fiscal sobre informació fiscal de la casella 14 del
-                Modelo 322 Referències: [14].'
+              help: Casella 14 del Model 322, exercici 2008.
             '15':
-              help: 'Informació fiscal sobre informació fiscal de la casella 15 del
-                Modelo 322 Referències: [15].'
+              help: Casella 15 del Model 322, exercici 2008.
             '150':
-              help: 'Informació fiscal sobre informació fiscal de la casella 150 del
-                Modelo 322 Referències: [150].'
+              help: Casella 150 del Model 322, exercici 2008.
             '151':
-              help: 'Informació fiscal sobre informació fiscal de la casella 151 del
-                Modelo 322 Referències: [151].'
+              help: Casella 151 del Model 322, exercici 2008.
             '152':
-              help: 'Informació fiscal sobre informació fiscal de la casella 152 del
-                Modelo 322 Referències: [152].'
+              help: Casella 152 del Model 322, exercici 2008.
             '153':
-              help: 'Informació fiscal sobre informació fiscal de la casella 153 del
-                Modelo 322 Referències: [153].'
+              help: Casella 153 del Model 322, exercici 2008.
             '154':
-              help: 'Informació fiscal sobre informació fiscal de la casella 154 del
-                Modelo 322 Referències: [154].'
+              help: Casella 154 del Model 322, exercici 2008.
             '155':
-              help: 'Informació fiscal sobre informació fiscal de la casella 155 del
-                Modelo 322 Referències: [155].'
+              help: Casella 155 del Model 322, exercici 2008.
             '156':
-              help: 'Informació fiscal sobre informació fiscal de la casella 156 del
-                Modelo 322 Referències: [156].'
+              help: Casella 156 del Model 322, exercici 2008.
             '157':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Recàrrec d''equivalència. Tipus % [157].'
+              help: Casella 157 del Model 322, exercici 2008.
             '158':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Recàrrec d''equivalència. Quota [158].'
+              help: Casella 158 del Model 322, exercici 2008.
             '159':
-              help: 'Informació fiscal sobre informació fiscal de la casella 159 del
-                Modelo 322 Referències: [159].'
+              help: Casella 159 del Model 322, exercici 2008.
             '16':
-              help: 'Informació fiscal sobre informació fiscal de la casella 16 del
-                Modelo 322 Referències: [16].'
+              help: Casella 16 del Model 322, exercici 2008.
             '160':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Tipus % [160].'
+              help: Casella 160 del Model 322, exercici 2008.
             '161':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Quota [161].'
+              help: Casella 161 del Model 322, exercici 2008.
             '162':
-              help: 'Informació fiscal sobre informació fiscal de la casella 162 del
-                Modelo 322 Referències: [162].'
+              help: Casella 162 del Model 322, exercici 2008.
             '163':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Tipus % [163].'
+              help: Casella 163 del Model 322, exercici 2008.
             '164':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Quota [164].'
+              help: Casella 164 del Model 322, exercici 2008.
             '165':
               help: 'Informació fiscal sobre informació fiscal de la casella 165 del
                 Modelo 322 Referències: [165].'
@@ -1571,15 +1531,14 @@ modelo:
               label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Base imposable
                 [168]
             '169':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Recàrrec d''equivalència. Tipus % [169].'
+              help: Dada declarada en el Model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Tipus % [169]
             '17':
-              help: 'Informació fiscal sobre informació fiscal de la casella 17 del
-                Modelo 322 Referències: [17].'
+              help: Casella 17 del Model 322, exercici 2008.
             '170':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Recàrrec d''equivalència. Quota [170].'
+              help: Dada declarada en el Model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Liquidació. IVA MERITAT. Recàrrec d'Equivalència. Quota [170]
             '171':
               help: 'Informació fiscal sobre informació fiscal de la casella 171 del
@@ -1587,431 +1546,288 @@ modelo:
               label: Liquidació. IVA MERITAT. Operacions intragrup. Base imposable
                 [171]
             '172':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Tipus % [172].'
+              help: Dada declarada en el Model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Liquidació. IVA MERITAT. Operacions intragrup. Tipus % [172]
             '173':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Operacions intragrupo. Quota [173].'
+              help: Dada declarada en el Model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Liquidació. IVA MERITAT. Operacions intragrup. Quota [173]
             '18':
-              help: 'Informació fiscal sobre informació fiscal de la casella 18 del
-                Modelo 322 Referències: [18].'
+              help: Casella 18 del Model 322, exercici 2008.
             '19':
-              help: 'Informació fiscal sobre informació fiscal de la casella 19 del
-                Modelo 322 Referències: [19].'
+              help: Casella 19 del Model 322, exercici 2008.
             '20':
-              help: 'Informació fiscal sobre informació fiscal de la casella 20 del
-                Modelo 322 Referències: [20].'
+              help: Casella 20 del Model 322, exercici 2008.
             '21':
-              help: 'Informació fiscal sobre informació fiscal de la casella 21 del
-                Modelo 322 Referències: [21].'
+              help: Casella 21 del Model 322, exercici 2008.
             '22':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Adquisicions intracomunitàries de béns i serveis. Quota [22].'
+              help: Casella 22 del Model 322, exercici 2008.
             '23':
-              help: 'Informació fiscal sobre informació fiscal de la casella 23 del
-                Modelo 322 Referències: [23].'
+              help: Casella 23 del Model 322, exercici 2008.
             '24':
-              help: 'Informació fiscal sobre informació fiscal de la casella 24 del
-                Modelo 322 Referències: [24].'
+              help: Casella 24 del Model 322, exercici 2008.
             '25':
-              help: 'Informació fiscal sobre informació fiscal de la casella 25 del
-                Modelo 322 Referències: [25].'
+              help: Casella 25 del Model 322, exercici 2008.
             '26':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Modificación bases i quotes en règim general. Quota [26].'
+              help: Casella 26 del Model 322, exercici 2008.
             '27':
-              help: 'Informació fiscal sobre informació fiscal de la casella 27 del
-                Modelo 322 Referències: [27].'
+              help: Casella 27 del Model 322, exercici 2008.
             '28':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Recàrrec d''equivalència. Tipus % [28].'
+              help: Casella 28 del Model 322, exercici 2008.
             '29':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Recàrrec d''equivalència. Quota [29].'
+              help: Casella 29 del Model 322, exercici 2008.
             '30':
-              help: 'Informació fiscal sobre informació fiscal de la casella 30 del
-                Modelo 322 Referències: [30].'
+              help: Casella 30 del Model 322, exercici 2008.
             '31':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Recàrrec d''equivalència. Tipus % [31].'
+              help: Casella 31 del Model 322, exercici 2008.
             '32':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Recàrrec d''equivalència. Quota [32].'
+              help: Casella 32 del Model 322, exercici 2008.
             '33':
-              help: 'Informació fiscal sobre informació fiscal de la casella 33 del
-                Modelo 322 Referències: [33].'
+              help: Casella 33 del Model 322, exercici 2008.
             '34':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Recàrrec d''equivalència. Tipus % [34].'
+              help: Casella 34 del Model 322, exercici 2008.
             '35':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Recàrrec d''equivalència. Quota [35].'
+              help: Casella 35 del Model 322, exercici 2008.
             '36':
-              help: 'Informació fiscal sobre informació fiscal de la casella 36 del
-                Modelo 322 Referències: [36].'
+              help: Casella 36 del Model 322, exercici 2008.
             '37':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Meritat.
-                Modificación bases i quotes del recàrrec d''equivalència. Quota [37].'
+              help: Casella 37 del Model 322, exercici 2008.
             '38':
-              help: 'Consulteu la informació de la casella: Total quota meritada ([161]+[173]+[03]+[164]+[06]+[09]+[152]+[167]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[170]+[32]+[35]+[37]).
-                [38].'
+              help: Casella 38 del Model 322, exercici 2008.
               label: Total quota meritada ([161]+[173]+[03]+[164]+[06]+[09]+[152]+[167]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[170]+[32]+[35]+[37]).
                 [38]
             '39':
-              help: 'Informació fiscal sobre informació fiscal de la casella 39 del
-                Modelo 322 Referències: [39].'
+              help: Casella 39 del Model 322, exercici 2008.
             '40':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                per quotes suportades en operacions intragrup corrents. Quota [40].'
+              help: Casella 40 del Model 322, exercici 2008.
             '41':
-              help: 'Informació fiscal sobre informació fiscal de la casella 41 del
-                Modelo 322 Referències: [41].'
+              help: Casella 41 del Model 322, exercici 2008.
             '42':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                per quotes suportades en operacions intragrupo amb béns de inversió.
-                Quota [42].'
+              help: Casella 42 del Model 322, exercici 2008.
             '43':
-              help: 'Informació fiscal sobre informació fiscal de la casella 43 del
-                Modelo 322 Referències: [43].'
+              help: Casella 43 del Model 322, exercici 2008.
             '44':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                Rectificació de deduccions per operacions intragrupo. Quota [44].'
+              help: Casella 44 del Model 322, exercici 2008.
             '45':
-              help: 'Informació fiscal sobre informació fiscal de la casella 45 del
-                Modelo 322 Referències: [45].'
+              help: Casella 45 del Model 322, exercici 2008.
             '46':
-              help: 'Informació fiscal sobre informació fiscal de la casella 46 del
-                Modelo 322 Referències: [46].'
+              help: Casella 46 del Model 322, exercici 2008.
             '47':
-              help: 'Informació fiscal sobre informació fiscal de la casella 47 del
-                Modelo 322 Referències: [47].'
+              help: Casella 47 del Model 322, exercici 2008.
             '48':
-              help: 'Informació fiscal sobre informació fiscal de la casella 48 del
-                Modelo 322 Referències: [48].'
+              help: Casella 48 del Model 322, exercici 2008.
             '49':
-              help: 'Informació fiscal sobre informació fiscal de la casella 49 del
-                Modelo 322 Referències: [49].'
+              help: Casella 49 del Model 322, exercici 2008.
             '50':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                per quotes suportades en les importacions de béns corrents. Quota
-                [50].'
+              help: Casella 50 del Model 322, exercici 2008.
             '500':
-              help: 'Consulteu la informació de la casella: Prorratas - 1 - Codi CNAE
-                [500].'
+              help: Casella 500 del Model 322, exercici 2008.
             '501':
-              help: 'Consulteu la informació de la casella: Prorratas - 1 - Import
-                de operacions [501].'
+              help: Casella 501 del Model 322, exercici 2008.
             '502':
-              help: 'Informació fiscal sobre informació fiscal de la casella 502 del
-                Modelo 322 Referències: [502].'
+              help: Casella 502 del Model 322, exercici 2008.
             '503':
-              help: 'Consulteu la informació de la casella: Prorratas - 1 - Tipus
-                de prorrata [503].'
+              help: Casella 503 del Model 322, exercici 2008.
             '504':
-              help: 'Consulteu la informació de la casella: Prorratas - 1 - % de prorrata
-                [504].'
+              help: Casella 504 del Model 322, exercici 2008.
             '505':
-              help: 'Consulteu la informació de la casella: Prorratas - 2 - Codi CNAE
-                [505].'
+              help: Casella 505 del Model 322, exercici 2008.
             '506':
-              help: 'Consulteu la informació de la casella: Prorratas - 2 - Import
-                de operacions [506].'
+              help: Casella 506 del Model 322, exercici 2008.
             '507':
-              help: 'Informació fiscal sobre informació fiscal de la casella 507 del
-                Modelo 322 Referències: [507].'
+              help: Casella 507 del Model 322, exercici 2008.
             '508':
-              help: 'Consulteu la informació de la casella: Prorratas - 2 - Tipus
-                de prorrata [508].'
+              help: Casella 508 del Model 322, exercici 2008.
             '509':
-              help: 'Consulteu la informació de la casella: Prorratas - 2 - % de prorrata
-                [509].'
+              help: Casella 509 del Model 322, exercici 2008.
             '51':
-              help: 'Informació fiscal sobre informació fiscal de la casella 51 del
-                Modelo 322 Referències: [51].'
+              help: Casella 51 del Model 322, exercici 2008.
             '510':
-              help: 'Consulteu la informació de la casella: Prorratas - 3 - Codi CNAE
-                [510].'
+              help: Casella 510 del Model 322, exercici 2008.
             '511':
-              help: 'Consulteu la informació de la casella: Prorratas - 3 - Import
-                de operacions [511].'
+              help: Casella 511 del Model 322, exercici 2008.
             '512':
-              help: 'Informació fiscal sobre informació fiscal de la casella 512 del
-                Modelo 322 Referències: [512].'
+              help: Casella 512 del Model 322, exercici 2008.
             '513':
-              help: 'Consulteu la informació de la casella: Prorratas - 3 - Tipus
-                de prorrata [513].'
+              help: Casella 513 del Model 322, exercici 2008.
             '514':
-              help: 'Consulteu la informació de la casella: Prorratas - 3 - % de prorrata
-                [514].'
+              help: Casella 514 del Model 322, exercici 2008.
             '515':
-              help: 'Consulteu la informació de la casella: Prorratas - 4 - Codi CNAE[515].'
+              help: Casella 515 del Model 322, exercici 2008.
             '516':
-              help: 'Consulteu la informació de la casella: Prorratas - 4 - Import
-                de operacions[516].'
+              help: Casella 516 del Model 322, exercici 2008.
             '517':
-              help: 'Informació fiscal sobre informació fiscal de la casella 517 del
-                Modelo 322 Referències: [517].'
+              help: Casella 517 del Model 322, exercici 2008.
             '518':
-              help: 'Consulteu la informació de la casella: Prorratas - 4 - Tipus
-                de prorrata[518].'
+              help: Casella 518 del Model 322, exercici 2008.
             '519':
-              help: 'Consulteu la informació de la casella: Prorratas - 4 - % de prorrata
-                [519].'
+              help: Casella 519 del Model 322, exercici 2008.
             '52':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                per quotes suportades en las importacions de béns de inversió. Quota
-                [52].'
+              help: Casella 52 del Model 322, exercici 2008.
             '520':
-              help: 'Consulteu la informació de la casella: Prorratas - 5 - Codi CNAE
-                [520].'
+              help: Casella 520 del Model 322, exercici 2008.
             '521':
-              help: 'Consulteu la informació de la casella: Prorratas - 5 - Import
-                de operacions[521].'
+              help: Casella 521 del Model 322, exercici 2008.
             '522':
-              help: 'Informació fiscal sobre informació fiscal de la casella 522 del
-                Modelo 322 Referències: [522].'
+              help: Casella 522 del Model 322, exercici 2008.
             '523':
-              help: 'Consulteu la informació de la casella: Prorratas - 5 - Tipus
-                de prorrata [523].'
+              help: Casella 523 del Model 322, exercici 2008.
             '524':
-              help: 'Consulteu la informació de la casella: Prorratas - 5 - % de prorrata
-                [524].'
+              help: Casella 524 del Model 322, exercici 2008.
             '53':
-              help: 'Informació fiscal sobre informació fiscal de la casella 53 del
-                Modelo 322 Referències: [53].'
+              help: Casella 53 del Model 322, exercici 2008.
             '54':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                En adquisicions intracomunitàries de béns i serveis corrents. Quota[54].'
+              help: Casella 54 del Model 322, exercici 2008.
             '55':
-              help: 'Informació fiscal sobre informació fiscal de la casella 55 del
-                Modelo 322 Referències: [55].'
+              help: Casella 55 del Model 322, exercici 2008.
             '56':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                En adquisicions intracomunitàries de béns de inversió. Quota [56].'
+              help: Casella 56 del Model 322, exercici 2008.
             '57':
-              help: 'Informació fiscal sobre informació fiscal de la casella 57 del
-                Modelo 322 Referències: [57].'
+              help: Casella 57 del Model 322, exercici 2008.
             '58':
-              help: 'Informació fiscal sobre informació fiscal de la casella 58 del
-                Modelo 322 Referències: [58].'
+              help: Casella 58 del Model 322, exercici 2008.
             '59':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.Compensació
-                règim especial A.G. i P. Quota [59].'
+              help: Casella 59 del Model 322, exercici 2008.
             '60':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                Regularització béns de inversió. Quota [60].'
+              help: Casella 60 del Model 322, exercici 2008.
             '61':
-              help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                Regularització per aplicació del percentatge definitiu de prorrata.
-                Quota [61].'
+              help: Casella 61 del Model 322, exercici 2008.
             '62':
-              help: 'Consulteu la informació de la casella: Total a deduir ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
-                [62].'
+              help: Casella 62 del Model 322, exercici 2008.
             '63':
-              help: 'Consulteu la informació de la casella: Liquidació (continuación).
-                Diferència ([38] - [62]) . [63].'
+              help: Casella 63 del Model 322, exercici 2008.
             '64':
-              help: 'Consulteu la informació de la casella: Liquidació (continuación).
-                Atribuïble a la Administració del Estat (%) . [64].'
+              help: Casella 64 del Model 322, exercici 2008.
             '65':
-              help: 'Consulteu la informació de la casella: Liquidació (continuación).
-                Atribuïble a la Administració del Estat. [65].'
+              help: Casella 65 del Model 322, exercici 2008.
             '66':
-              help: 'Consulteu la informació de la casella: Liquidació (continuació).
-                Quotes a compensar de períodes anteriors a la incorporació al grup.
-                [66].'
+              help: Casella 66 del Model 322, exercici 2008.
             '67':
-              help: 'Informació fiscal sobre informació fiscal de la casella 67 del
-                Modelo 322 Referències: [67].'
+              help: Casella 67 del Model 322, exercici 2008.
             '68':
-              help: 'Consulteu la informació de la casella: Liquidació (continuación).
-                Resultat ([65] + [77] - [66] + [67]) [68].'
+              help: Casella 68 del Model 322, exercici 2008.
               label: Liquidació (continuación). Resultat ([65] + [77] - [66] + [67])
                 [68]
             '70':
-              help: 'Informació fiscal sobre informació fiscal de la casella 70 del
-                Modelo 322 Referències: [68], [69], [112], [70].'
+              help: Casella 70 del Model 322, exercici 2008.
               label: Resultat de l'autoliquidació ([68] - [69] - [112]) [70]
             '700':
-              help: 'Informació fiscal sobre informació fiscal de la casella 700 del
-                Modelo 322 Referències: [700].'
+              help: Casella 700 del Model 322, exercici 2008.
             '701':
-              help: 'Informació fiscal sobre informació fiscal de la casella 701 del
-                Modelo 322 Referències: [701].'
+              help: Casella 701 del Model 322, exercici 2008.
             '702':
-              help: 'Informació fiscal sobre informació fiscal de la casella 702 del
-                Modelo 322 Referències: [702].'
+              help: Casella 702 del Model 322, exercici 2008.
             '703':
-              help: 'Informació fiscal sobre informació fiscal de la casella 703 del
-                Modelo 322 Referències: [703].'
+              help: Casella 703 del Model 322, exercici 2008.
             '704':
-              help: 'Informació fiscal sobre informació fiscal de la casella 704 del
-                Modelo 322 Referències: [704].'
+              help: Casella 704 del Model 322, exercici 2008.
             '705':
-              help: 'Informació fiscal sobre informació fiscal de la casella 705 del
-                Modelo 322 Referències: [705].'
+              help: Casella 705 del Model 322, exercici 2008.
             '706':
-              help: 'Informació fiscal sobre informació fiscal de la casella 706 del
-                Modelo 322 Referències: [706].'
+              help: Casella 706 del Model 322, exercici 2008.
             '707':
-              help: 'Informació fiscal sobre informació fiscal de la casella 707 del
-                Modelo 322 Referències: [707].'
+              help: Casella 707 del Model 322, exercici 2008.
             '708':
-              help: 'Informació fiscal sobre informació fiscal de la casella 708 del
-                Modelo 322 Referències: [708].'
+              help: Casella 708 del Model 322, exercici 2008.
             '709':
-              help: 'Informació fiscal sobre informació fiscal de la casella 709 del
-                Modelo 322 Referències: [709].'
+              help: Casella 709 del Model 322, exercici 2008.
             '71':
-              help: 'Consulteu la informació de la casella: Información addicional.
-                Lliuraments intracomunitarias de béns i serveis [71].'
+              help: Casella 71 del Model 322, exercici 2008.
             '710':
-              help: 'Informació fiscal sobre informació fiscal de la casella 710 del
-                Modelo 322 Referències: [710].'
+              help: Casella 710 del Model 322, exercici 2008.
             '711':
-              help: 'Informació fiscal sobre informació fiscal de la casella 711 del
-                Modelo 322 Referències: [711].'
+              help: Casella 711 del Model 322, exercici 2008.
             '712':
-              help: 'Informació fiscal sobre informació fiscal de la casella 712 del
-                Modelo 322 Referències: [712].'
+              help: Casella 712 del Model 322, exercici 2008.
             '713':
-              help: 'Informació fiscal sobre informació fiscal de la casella 713 del
-                Modelo 322 Referències: [713].'
+              help: Casella 713 del Model 322, exercici 2008.
             '714':
-              help: 'Informació fiscal sobre informació fiscal de la casella 714 del
-                Modelo 322 Referències: [714].'
+              help: Casella 714 del Model 322, exercici 2008.
             '715':
-              help: 'Informació fiscal sobre informació fiscal de la casella 715 del
-                Modelo 322 Referències: [715].'
+              help: Casella 715 del Model 322, exercici 2008.
             '716':
-              help: 'Informació fiscal sobre informació fiscal de la casella 716 del
-                Modelo 322 Referències: [716].'
+              help: Casella 716 del Model 322, exercici 2008.
             '717':
-              help: 'Informació fiscal sobre informació fiscal de la casella 717 del
-                Modelo 322 Referències: [717].'
+              help: Casella 717 del Model 322, exercici 2008.
             '718':
-              help: 'Informació fiscal sobre informació fiscal de la casella 718 del
-                Modelo 322 Referències: [718].'
+              help: Casella 718 del Model 322, exercici 2008.
             '719':
-              help: 'Informació fiscal sobre informació fiscal de la casella 719 del
-                Modelo 322 Referències: [719].'
+              help: Casella 719 del Model 322, exercici 2008.
             '72':
-              help: 'Consulteu la informació de la casella: Informació addicional.
-                Exportacions i operacions assimilades. [72].'
+              help: Casella 72 del Model 322, exercici 2008.
             '720':
-              help: 'Informació fiscal sobre informació fiscal de la casella 720 del
-                Modelo 322 Referències: [720].'
+              help: Casella 720 del Model 322, exercici 2008.
             '721':
-              help: 'Informació fiscal sobre informació fiscal de la casella 721 del
-                Modelo 322 Referències: [721].'
+              help: Casella 721 del Model 322, exercici 2008.
             '722':
-              help: 'Informació fiscal sobre informació fiscal de la casella 722 del
-                Modelo 322 Referències: [722].'
+              help: Casella 722 del Model 322, exercici 2008.
             '723':
-              help: 'Informació fiscal sobre informació fiscal de la casella 723 del
-                Modelo 322 Referències: [723].'
+              help: Casella 723 del Model 322, exercici 2008.
             '724':
-              help: 'Informació fiscal sobre informació fiscal de la casella 724 del
-                Modelo 322 Referències: [724].'
+              help: Casella 724 del Model 322, exercici 2008.
             '725':
-              help: 'Informació fiscal sobre informació fiscal de la casella 725 del
-                Modelo 322 Referències: [725].'
+              help: Casella 725 del Model 322, exercici 2008.
             '726':
-              help: 'Informació fiscal sobre informació fiscal de la casella 726 del
-                Modelo 322 Referències: [726].'
+              help: Casella 726 del Model 322, exercici 2008.
             '727':
-              help: 'Informació fiscal sobre informació fiscal de la casella 727 del
-                Modelo 322 Referències: [727].'
+              help: Casella 727 del Model 322, exercici 2008.
             '728':
-              help: 'Informació fiscal sobre informació fiscal de la casella 728 del
-                Modelo 322 Referències: [728].'
+              help: Casella 728 del Model 322, exercici 2008.
             '729':
-              help: 'Informació fiscal sobre informació fiscal de la casella 729 del
-                Modelo 322 Referències: [729].'
+              help: Casella 729 del Model 322, exercici 2008.
             '730':
-              help: 'Informació fiscal sobre informació fiscal de la casella 730 del
-                Modelo 322 Referències: [730].'
+              help: Casella 730 del Model 322, exercici 2008.
             '731':
-              help: 'Informació fiscal sobre informació fiscal de la casella 731 del
-                Modelo 322 Referències: [731].'
+              help: Casella 731 del Model 322, exercici 2008.
             '732':
-              help: 'Informació fiscal sobre informació fiscal de la casella 732 del
-                Modelo 322 Referències: [732].'
+              help: Casella 732 del Model 322, exercici 2008.
             '733':
-              help: 'Informació fiscal sobre informació fiscal de la casella 733 del
-                Modelo 322 Referències: [733].'
+              help: Casella 733 del Model 322, exercici 2008.
             '734':
-              help: 'Informació fiscal sobre informació fiscal de la casella 734 del
-                Modelo 322 Referències: [734].'
+              help: Casella 734 del Model 322, exercici 2008.
             '735':
-              help: 'Informació fiscal sobre informació fiscal de la casella 735 del
-                Modelo 322 Referències: [735].'
+              help: Casella 735 del Model 322, exercici 2008.
             '76':
-              help: 'Consulteu la informació de la casella: Regularització quotes
-                art. 80.Cinco.5ª LIVA [76].'
+              help: Casella 76 del Model 322, exercici 2008.
             '77':
-              help: 'Informació fiscal sobre informació fiscal de la casella 77 del
-                Modelo 322 Referències: [77].'
+              help: Casella 77 del Model 322, exercici 2008.
               label: Liquidació (continuació). IVA a la importació liquidat per la
                 Duana pendent d'ingrés [77]
             '79':
-              help: 'Informació fiscal sobre informació fiscal de la casella 79 del
-                Modelo 322 Referències: [79].'
+              help: Casella 79 del Model 322, exercici 2008.
             '80':
-              help: 'Consulteu la informació de la casella: Operacions realitzades
-                en el exercici. Operacions en règim general [80].'
+              help: Casella 80 del Model 322, exercici 2008.
             '83':
-              help: 'Informació fiscal sobre informació fiscal de la casella 83 del
-                Modelo 322 Referències: [83].'
+              help: Casella 83 del Model 322, exercici 2008.
             '84':
-              help: 'Informació fiscal sobre informació fiscal de la casella 84 del
-                Modelo 322 Referències: [84].'
+              help: Casella 84 del Model 322, exercici 2008.
             '86':
-              help: 'Consulteu la informació de la casella: Operacions realitzades
-                en el exercici. Operacions en règim simplificat [86].'
+              help: Casella 86 del Model 322, exercici 2008.
             '88':
-              help: 'Consulteu la informació de la casella: Operacions realitzades
-                en el exercici. Volum total d''operacions (Art. 121 Llei de l''IVA)
-                (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127 + 128 + 86 + 95 + 96
-                + 97 + 98 - 79 - 99) [88].'
+              help: Casella 88 del Model 322, exercici 2008.
             '89':
-              help: 'Informació fiscal sobre informació fiscal de la casella 89 del
-                Modelo 322 Referències: [89].'
+              help: Casella 89 del Model 322, exercici 2008.
             '90':
-              help: 'Informació fiscal sobre informació fiscal de la casella 90 del
-                Modelo 322 Referències: [90].'
+              help: Casella 90 del Model 322, exercici 2008.
             '91':
-              help: 'Informació fiscal sobre informació fiscal de la casella 91 del
-                Modelo 322 Referències: [91].'
+              help: Casella 91 del Model 322, exercici 2008.
             '92':
-              help: 'Informació fiscal sobre informació fiscal de la casella 92 del
-                Modelo 322 Referències: [92].'
+              help: Casella 92 del Model 322, exercici 2008.
             '93':
-              help: 'Consulteu la informació de la casella: Operacions realitzades
-                en el exercici. Lliuraments intracomunitarias de béns i serveis [93].'
+              help: Casella 93 del Model 322, exercici 2008.
             '94':
-              help: 'Informació fiscal sobre informació fiscal de la casella 94 del
-                Modelo 322 Referències: [94].'
+              help: Casella 94 del Model 322, exercici 2008.
             '95':
-              help: 'Consulteu la informació de la casella: Operacions realitzades
-                en el exercici. Operacions en règim especial de l''agricultura, ramaderia
-                i pesca [95].'
+              help: Casella 95 del Model 322, exercici 2008.
             '96':
-              help: 'Informació fiscal sobre informació fiscal de la casella 96 del
-                Modelo 322 Referències: [96].'
+              help: Casella 96 del Model 322, exercici 2008.
             '97':
-              help: 'Consulteu la informació de la casella: Operacions realitzades
-                en el exercici. Operacions en Règim especial de béns usats, objectes
-                d''art, antiguitats i objectes de col·lecció [97].'
+              help: Casella 97 del Model 322, exercici 2008.
             '98':
-              help: 'Consulteu la informació de la casella: Operacions realitzades
-                en el exercici. Operacions en règim especial de Agencias de Viajes
-                [98].'
+              help: Casella 98 del Model 322, exercici 2008.
             '99':
-              help: 'Consulteu la informació de la casella: Operacions realitzades
-                en el exercici. Lliuraments de béns de inversió [99].'
+              help: Casella 99 del Model 322, exercici 2008.
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
               help: Informació fiscal de la casella del Modelo 322.
               label: Codi d'activitat - Altres 1a
@@ -2055,65 +1871,60 @@ modelo:
               label: Dret a deduir el pagament a compte de lliuraments de gasolines,
                 gasolis i biocarburants
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: 'Consulteu la informació de la casella: Destinatari d''operacions
-                acollides al criteri de caixa.'
+              help: Dada declarada en el Model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Destinatari d'operacions acollides al criteri de caixa
             x-chim6r1ecll6asj3d5hmiro:
-              help: Informació fiscal sobre exercici fiscal de la casella del Modelo
-                322.
+              help: Casella ejercicio del Model 322, exercici 2008.
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
-              help: 'Consulteu la informació de la casella: NIF de la entitat dominant.'
+              help: Dada declarada en el Model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: NIF de l'entitat dominant
             x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
-              help: 'Consulteu la informació de la casella: Exonerado de la declaració-resumen
-                anual, modelo 390.'
+              help: Dada declarada en el Model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Exonerat de la declaració-resum anual, model 390
             x-chim6r1ectp7as3f5ln7arb5e9ng:
               help: Informació fiscal de la casella del Modelo 322.
               label: Número de grup
             x-chim6r1ectp7as3f5lp6ur0:
-              help: 'Consulteu la informació de la casella: Dominant o dependent.'
+              help: Dada declarada en el Model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Dominant o dependent
             x-chim6r1ee1in4qbfchng:
-              help: 'Consulteu la informació de la casella: Període (anual, 0A).'
+              help: Casella periodo del Model 322, exercici 2008.
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: 'Consulteu la informació de la casella: Aplicació de la prorrata
-                especial: opcion o revocacion.'
+              help: Dada declarada en el Model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: 'Aplicació de la prorrata especial: opció o revocació'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
               help: Informació fiscal de la casella del Modelo 322.
               label: Inscrit al Registre de devolució mensual
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: 'Consulteu la informació de la casella: Acogido a la modalitat
-                del articulo 163 sexies.Cinco LIVA.'
+              help: Dada declarada en el Model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Acollit a la modalitat de l'article 163 sexies.Cinc LIVA
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
               help: Informació fiscal de la casella del Modelo 322.
               label: Tributació exclusivament foral
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: 'Consulteu la informació de la casella: Volum anual d''operacions
-                diferent de zero.'
+              help: Dada declarada en el Model 322, autoliquidació mensual individual
+                del grup d'entitats.
               label: Volum anual d'operacions diferent de zero
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: 'Consulteu la informació de la casella: Quota IVA autorepercutida
-                en adquisicions intracomunitàries (LIVA art 84.Uno.2).'
+              help: Casella iva.autorepercutido.intracomunitaria del Model 322, exercici
+                2008.
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: 'Consulteu la informació de la casella: Total quota IVA deduïble
-                (suportat en operacions interiors + autorepercutido deduïble).'
-            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: 'Consulteu la informació de la casella: Total quota IVA meritada
-                (repercutit a los tres tipos + autorepercutido en adquisicions intracomunitàries).'
+              help: Casella iva.cuota-deducible-total del Model 322, exercici 2008.
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-                tipus reduït (10%).'
+              help: Casella iva.repercutido.reducido del Model 322, exercici 2008.
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: 'Consulteu la informació de la casella: Quota IVA repercutit al
-                tipus superreduït (4%).'
+              help: Casella iva.repercutido.super-reducido del Model 322, exercici
+                2008.
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: 'Consulteu la informació de la casella: Resultat del règim general
-                (quota meritada - quota deduïble).'
+              help: Casella iva.resultado-regimen-general del Model 322, exercici
+                2008.
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: 'Consulteu la informació de la casella: Quota IVA suportat en
-                operacions interiors corrents.'
+              help: Casella iva.soportado.interiores del Model 322, exercici 2008.
           field:
             label: Model 322, exercicis 2026 i següents

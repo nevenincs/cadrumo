@@ -23,8 +23,8 @@ modelo:
           construct:
             modelo-369:
               field:
-                title: Modelo 369 - Esquema Exterior (regime especial services prestados
-                  by no establecidos)
+                title: Modelo 369 - Esquema Exterior (special scheme for services
+                  provided by non-established suppliers)
           field:
             label: Modelo 369 - Non-Union scheme - special regime for services supplied
               by taxable persons not established in the Community (LIVA art. 163 octiesdecies
@@ -43,7 +43,7 @@ modelo:
           construct:
             modelo-369:
               field:
-                title: Modelo 369 - Esquema Importacion (regime especial IOSS)
+                title: Modelo 369 - Esquema Importación (special IOSS regime)
           field:
             label: Modelo 369 - Import scheme (IOSS) - special regime for distance
               sales of imported goods (LIVA art. 163 quinvicies to octovicies). Monthly
@@ -69,7 +69,7 @@ modelo:
           construct:
             modelo-369:
               field:
-                title: Modelo 369 - Esquema Union (regime especial OSS Union)
+                title: Modelo 369 - Esquema Unión (special OSS Union regime)
           field:
             label: Modelo 369 - Union scheme - special regime for intra-Community
               distance sales, electronic interfaces and services established in the

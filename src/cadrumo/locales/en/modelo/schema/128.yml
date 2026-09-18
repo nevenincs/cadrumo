@@ -19,7 +19,7 @@ modelo:
             '02':
               label: Withholding and advance-payment tax base
             '03':
-              label: Withholdings and advance payments
+              label: Withholdings and payments on account
             '04':
               label: Number of recipients (additional block)
             '05':

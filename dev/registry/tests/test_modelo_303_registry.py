@@ -7,7 +7,7 @@ from datetime import date, timedelta
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
@@ -193,7 +193,8 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
 
     # And the retirement is asserted, not merely worked around: the floor
     # refuses rather than silently resolving a 2021 filing under 2022's norms.
-    with pytest.raises(NoRevisionForPeriodError):
+    # The refusal names the floor, because that is what turned 2021 away.
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         build_snapshot(
             modelo,
             catalogues,

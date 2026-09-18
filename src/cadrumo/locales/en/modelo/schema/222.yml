@@ -80,26 +80,26 @@ modelo:
           is-pf-grupo-mod-40-2-lis-a-ingresar:
             help: Box 03 of the tax group's instalment payment settlement (Mod. 40.2
               LIS).
-            label: Mod. 40.2 LIS - To pay
+            label: Method under art. 40.2 LIS - To pay
           is-pf-grupo-mod-40-2-lis-base-del-pago-fraccionado:
             help: Box 01 of the tax group's instalment payment settlement (Mod. 40.2
               LIS).
-            label: Mod. 40.2 LIS - Base of the instalment payment
+            label: Method under art. 40.2 LIS - Instalment payment base
           is-pf-grupo-mod-40-2-lis-resultado-de-la-declaracion-anterior:
             help: Box 02 of the tax group's instalment payment settlement (Mod. 40.2
               LIS).
-            label: Mod. 40.2 LIS - Result of the previous return (only where that
-              return is supplementary)
+            label: Method under art. 40.2 LIS - Result of the previous return (only
+              where that return is supplementary)
           is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-disminuciones:
             help: Box 60 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Adjustments to determine the group's tax base (DA
-              19ª LIS) - Decreases
+            label: Method under art. 40.3 LIS - Adjustments to determine the group's
+              tax base (DA 19ª LIS) - Decreases
           is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-grup-aumentos:
             help: Box 59 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Adjustments to determine the group's tax base (DA
-              19ª LIS) - Increases
+            label: Method under art. 40.3 LIS - Adjustments to determine the group's
+              tax base (DA 19ª LIS) - Increases
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-base-del-pago-fraccionado:
             help: Box 16 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
@@ -257,94 +257,98 @@ modelo:
           is-pf-grupo-mod-40-3-lis-base-imponible-previa:
             help: Box 13 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Prior tax base
+            label: Method under art. 40.3 LIS - Preliminary taxable base
           is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-de-entidades-o-de-grupos:
             help: Box 15 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Offset of negative tax bases of entities or groups
-              prior to joining the group (art. 67 and 74.3 LIS)
+            label: Method under art. 40.3 LIS - Offset of negative tax bases of entities
+              or groups prior to joining the group (art. 67 and 74.3 LIS)
           is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-del-grupo-de-periodos-an:
             help: Box 14 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Offset of the group's negative tax bases from earlier
-              periods
+            label: Method under art. 40.3 LIS - Offset of the group's negative tax
+              bases from earlier periods
           is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-aumentos:
             help: Box 05 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Corporate income tax (IS) correction - Increases
+            label: Method under art. 40.3 LIS - Corporate income tax (IS) correction
+              - Increases
           is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-disminuciones:
             help: Box 06 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Corporate income tax (IS) correction - Decreases
+            label: Method under art. 40.3 LIS - Corporate income tax (IS) correction
+              - Decreases
           is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-corre-aumentos:
             help: Box 11 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Corrections for deferral of internal results and
-              other consolidation corrections - Increases
+            label: Method under art. 40.3 LIS - Corrections for deferral of internal
+              results and other consolidation corrections - Increases
           is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-disminuciones:
             help: Box 12 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Corrections for deferral of internal results and
-              other consolidation corrections - Decreases
+            label: Method under art. 40.3 LIS - Corrections for deferral of internal
+              results and other consolidation corrections - Decreases
           is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-del-grupo:
             help: Box 44 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Provisions under art. 11.12 LIS of the group
+            label: Method under art. 40.3 LIS - Provisions under art. 11.12 LIS of
+              the group
           is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-generados-a-nivel-individual-o-d:
             help: Box 45 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Provisions under art. 11.12 LIS generated individually
-              or by a group before joining the group (art. 67 and 74.3 LIS)
+            label: Method under art. 40.3 LIS - Provisions under art. 11.12 LIS generated
+              individually or by a group before joining the group (art. 67 and 74.3
+              LIS)
           is-pf-grupo-mod-40-3-lis-remanente-reserva-de-capitalizacion-no-aplicada-por-insuficiencia-d:
             help: Box 46 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Remainder of the capitalisation reserve not applied
-              for insufficient base
+            label: Method under art. 40.3 LIS - Remainder of the capitalisation reserve
+              not applied due to insufficient base
           is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-e-disminuciones:
             help: Box 48 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Levelling reserve (art. 105 LIS), only groups meeting
-              the requirements for reduced-size undertaking incentives (art. 101 LIS)
-              that apply the specific rate - Decreases
+            label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS),
+              only groups meeting the requirements for reduced-size undertaking incentives
+              (art. 101 LIS) that apply the specific rate - Decreases
           is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-especi-aumentos:
             help: Box 47 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Levelling reserve (art. 105 LIS), only groups meeting
-              the requirements for reduced-size undertaking incentives (art. 101 LIS)
-              that apply the specific rate
+            label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS),
+              only groups meeting the requirements for reduced-size undertaking incentives
+              (art. 101 LIS) that apply the specific rate. Increases
           is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-bi-ne-aumentos:
             help: Box 07 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Remaining corrections to the accounting result,
-              except offset of prior-year negative tax base - Increases
+            label: Method under art. 40.3 LIS - Remaining corrections to the accounting
+              result, except offset of prior-year negative tax base - Increases
           is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-disminuciones:
             help: Box 08 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Remaining corrections to the accounting result,
-              except offset of prior-year negative tax base - Decreases
+            label: Method under art. 40.3 LIS - Remaining corrections to the accounting
+              result, except offset of prior-year negative tax base - Decreases
           is-pf-grupo-mod-40-3-lis-reversion-del-30-del-importe-de-los-gastos-amortiz-disminuciones:
             help: Box 37 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Reversal of 30% of the depreciation expense (except
-              reduced-size undertakings) - Decreases
+            label: Method under art. 40.3 LIS - Reversal of 30% of the depreciation
+              expense (except reduced-size undertakings) - Decreases
           is-pf-grupo-mod-40-3-lis-suma-de-bases-imponibles-individuales-antes-de-compensar-bases-nega:
             help: Box 10 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Sum of individual tax bases before offsetting negative
-              bases from earlier periods
+            label: Method under art. 40.3 LIS - Sum of individual tax bases before
+              offsetting negative bases from earlier periods
           is-pf-grupo-mod-40-3-lis-suma-de-resultados-contables-individuales:
             help: Box 04 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Sum of individual accounting results (after IS
-              and IC)
+            label: Method under art. 40.3 LIS - Sum of individual accounting results
+              (after IS and IC)
           is-pf-grupo-mod-40-3-lis-total-aumentos:
             help: Box 38 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - TOTAL - Increases
+            label: Method under art. 40.3 LIS - TOTAL - Increases
           is-pf-grupo-mod-40-3-lis-total-disminuciones:
             help: Box 39 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - TOTAL - Decreases
+            label: Method under art. 40.3 LIS - TOTAL - Decreases
           tipo-declaracion:
             label: Instalment payment method (art. 40.2 gross tax liability / art.
               40.3 taxable base)
@@ -394,6 +398,7 @@ modelo:
             '67':
               help: Box 67 of the tax group's instalment payment settlement (Mod.
                 40.3 LIS).
-              label: Mod. 40.3 LIS - Complementary tax (IC) correction - Increases
+              label: Method under art. 40.3 LIS - Complementary tax (IC) correction
+                - Increases
           field:
             label: Order HFP/227/2017 (Modelo 222), tax years 2025 onwards

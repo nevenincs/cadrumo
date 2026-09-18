@@ -29,7 +29,7 @@ modelo:
         2025-y-siguientes:
           casilla:
             x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 185.
+              help: Tax information for box of Modelo 185.
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: Sequential identifying number of this return, 13 numeric positions.
               label: IDENTIFYING NUMBER OF THE RETURN
@@ -37,7 +37,7 @@ modelo:
               help: Natural month the return covers, from 01 January to 12 December.
               label: PERIOD
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for casilla of Modelo 185.
+              help: Tax information for box of Modelo 185.
             x-chim6r1eehnn8obc5lp6apr9edq74rrj:
               help: Total number of reported persons included for this declarant,
                 that is, of type 2 records.

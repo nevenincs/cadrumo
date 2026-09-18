@@ -32,6 +32,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.authority import ValidatedRegistryAuthority
 from ...domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
+    FilingYearOutsideSupportEnvelopeError,
     NoRevisionForPeriodError,
     RegistrySnapshotError,
     RegistryValidationError,
@@ -182,6 +183,23 @@ def annual_period_for_year(
             selector = select_revision_metadata_for_year(directory, filing_year=filing_year, on=as_of).period_selector
         else:
             return None
+    except FilingYearOutsideSupportEnvelopeError as exc:
+        # A year the product's filing envelope gates is NOT an authoring gap, and
+        # this helper must not report it as one. It still answers None, because
+        # its contract is that None means undetermined -- but the log says which
+        # of the two it was, which is the whole reason the selector separates
+        # them. Catching it explicitly is also load-bearing: the refusal is a
+        # sibling of the missing-revision one rather than a subclass, so a bare
+        # missing-revision handler would let it escape a read-only discovery
+        # surface as an operator-facing error.
+        _log.debug(
+            "binding-readiness: modelo=%s filing_year=%s lies outside the registry support "
+            "envelope; treating profile bindings as unresolved (%s)",
+            modelo,
+            filing_year,
+            exc,
+        )
+        return None
     except NoRevisionForPeriodError as exc:
         # Logged for the same reason the two sibling branches are: this helper
         # answers None for three distinct causes, and a developer asking why

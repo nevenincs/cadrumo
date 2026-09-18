@@ -24,7 +24,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 _COMMUNICATION_SURFACES = {"communication", "payer_delivery"}
 
 
-_SIMPLE_APPLICATION_LINK_RULES: tuple[tuple[str, str, str], ...] = (
+APPLICATION_LINK_SURFACE_RULES: tuple[tuple[str, str, str], ...] = (
     # (revision_attribute, required_application_surface, failure_message)
     # Each rule fires when the revision declares the listed records but
     # the application-link bundle does not declare the matching surface.
@@ -106,7 +106,7 @@ def _simple_application_link_failures(
     surfaces: AbstractSet[str],
 ) -> list[str]:
     failures: list[str] = []
-    for revision_attribute, required_surface, message in _SIMPLE_APPLICATION_LINK_RULES:
+    for revision_attribute, required_surface, message in APPLICATION_LINK_SURFACE_RULES:
         if getattr(revision, revision_attribute) and required_surface not in surfaces:
             failures.append(f"{scope}: {message}")
     return failures

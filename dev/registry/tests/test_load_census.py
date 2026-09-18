@@ -383,3 +383,59 @@ def test_the_clean_property_reads_every_field_it_claims_to() -> None:
     assert settled.clean, "a report with nothing outstanding must read clean"
 
     assert not dataclasses.replace(settled, dead_candidates=frozenset({_PLANTED})).clean
+
+
+def test_the_reference_map_is_built_once_per_set_of_roots(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """The scan is memoised on its roots, not on nothing.
+
+    Building the map reads and AST-parses every file under the roots, and the
+    census asks for it twice -- directly and again inside ``run_census`` -- so
+    an unchanged tree was walked twice per gate file, measured at 154s a walk.
+
+    Keyed on the roots because the redirected-roots tests above must still get
+    their own scan: a cache that ignored the roots would serve them the real
+    map and make every one of them vacuous while still passing.
+    """
+    from ..analysis import load_census
+
+    root = tmp_path / "cadrumo"
+    root.mkdir()
+    (root / "consumer.py").write_text(
+        "from cadrumo.domain.calculations.registry.module_a import Thing" + chr(10),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+    load_census._reference_map_for.cache_clear()
+
+    first = load_census.build_reference_map()
+    second = load_census.build_reference_map()
+
+    assert first is second, "one set of roots must be scanned once"
+    assert load_census._reference_map_for.cache_info().misses == 1
+
+
+def test_redirected_roots_are_scanned_separately(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Two root sets cannot share one answer, however similar their trees."""
+    from ..analysis import load_census
+
+    load_census._reference_map_for.cache_clear()
+    maps = []
+    for name, target in (("one", "module_a"), ("two", "module_b")):
+        root = tmp_path / name / "cadrumo"
+        root.mkdir(parents=True)
+        (root / "consumer.py").write_text(
+            f"from cadrumo.domain.calculations.registry.{target} import Thing" + chr(10),
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+        maps.append(load_census.build_reference_map())
+
+    assert "cadrumo.domain.calculations.registry.module_a" in maps[0].production
+    assert "cadrumo.domain.calculations.registry.module_a" not in maps[1].production
+    assert load_census._reference_map_for.cache_info().misses == 2

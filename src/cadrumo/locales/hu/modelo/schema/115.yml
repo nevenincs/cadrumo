@@ -4,7 +4,8 @@ modelo:
       construct:
         modelo-115-quarterly-rental-withholding:
           field:
-            title: '115-ös modelo: városi ingatlanok bérbeadásának negyedéves adóelőleg-levonása'
+            title: '115-ös nyomtatvány: városi ingatlanok bérbeadásának negyedéves
+              adóelőleg-levonása'
       field:
         official_name: Adóelőleg-levonások és -befizetések. Városi ingatlanok bérbeadásából
           vagy albérletbe adásából származó jövedelmek.
@@ -17,7 +18,7 @@ modelo:
             '02':
               label: Forrásadó és előlegfizetés alapja
             '03':
-              label: Forrásadó és előlegfizetés
+              label: Forrásadó és részletfizetés
             '04':
               label: Korábbi bevallások eredménye
             '05':

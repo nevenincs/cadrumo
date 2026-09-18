@@ -133,11 +133,11 @@ modelo:
             x-e1in4or5e1q6ushedpnmqojick:
               label: 1. Név - kedvezményezett
             x-e1in4or5e1q6ushee1p6irb5e8mm2s35dhm6ip3f:
-              label: 1. Primer apellido - kedvezményezett
+              label: 1. Első vezetéknév - kedvezményezett
             x-e1in4or5e1q6ushee1p6ur3fdpjm2or9dtn2qob3ehkncqb4c5i2qr31c9nn4obc:
               label: 1. A munkatevékenység meghosszabbítása
             x-e1in4or5e1q6usheedimetbechniqobgclm6oqb4ds:
-              label: 1. Segundo apellido - kedvezményezett
+              label: 1. Második vezetéknév - kedvezményezett
             x-e1in4or5e1q6usheedkn8tb1cdkmurhdcpgmqqbcd5gn4:
               label: 1. A kedvezményezett családi helyzete
             x-epkncqb5dpi62bb8c5h6it3lc5m2spj9dpgmsor9c5hmirre5lgmkpbec4:

@@ -88,20 +88,20 @@ modelo:
               label: Surname and given name or company name of the party bringing
                 it into Spain
             x-dhkn2bj15li6ap3lcdkn4:
-              label: Assessment. To be deducted
+              label: Settlement. To be deducted
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
-              label: Assessment. Taxable base
+              label: Settlement. Taxable base
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
-              label: Assessment. Reduced taxable base
+              label: Settlement. Reduced taxable base
             x-dhkn2bj3elnn8o8:
-              label: Assessment. Tax due
+              label: Settlement. Tax amount
             x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
-              label: Assessment. Tax payable
+              label: Settlement. Tax payable
             x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
-              label: Assessment. Flat-rate deduction
+              label: Settlement. Flat-rate deduction
             x-dhkn2bjiclpnar3kc5i6u:
-              label: Assessment. Assessment result
+              label: Settlement. Assessment result
             x-dhkn2bjkd5o6u:
-              label: Assessment. Rate %
+              label: Settlement. Rate %
           field:
             label: Order EHA/3851/2007, tax years 2008 onwards

@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
 from enum import StrEnum
 from typing import Self
 
@@ -134,6 +135,55 @@ class RegistryValidationError(RegistryError, CoreValidationError):
                 "filing_year": ejercicio,
                 "required_slot_first": 1,
                 "required_slot_last": 5,
+            },
+        )
+
+
+class GovernedFactNotApplicableError(RegistryValidationError):
+    """A registered governed fact authors no variant covering the query coordinate.
+
+    This is the governed-fact half of the invariant
+    :class:`FilingYearOutsideSupportEnvelopeError` holds for revision
+    selection: *absent* and *unresolvable* are different states, and a caller
+    that cannot tell them apart cannot choose a remedy.
+
+    Only this error means "the law authors nothing here". Every other refusal
+    the resolver raises -- an unregistered fact id, a family mismatch, a
+    coordinate the support envelope gates, an ambiguous variant set, a caller
+    with no facts authority in scope at all -- stays a plain
+    :class:`RegistryValidationError`, because each names a defect in the
+    caller or the corpus rather than a statement about applicability.
+
+    The distinction is not academic. A compiler boundary that decides whether
+    an observed source feature is legally expected resolves the fact and reads
+    its absence as "not expected this year". Catching the broad type there
+    converts a missing scope, a mistyped fact id, or a corrupted payload into
+    a confident claim about tax law -- the silent under-declaration failure
+    mode arriving from the opposite direction, where an unknown is promoted to
+    a declared finding instead of demoted to zero.
+
+    Structured attributes: ``fact_id``, ``effective_date``, ``date_axis``.
+    """
+
+    def __init__(self, *, fact_id: str, effective_date: date, date_axis: str) -> None:
+        """Construct the no-applicable-variant refusal.
+
+        Args:
+            fact_id: The registered fact whose variants were searched.
+            effective_date: The coordinate no variant window contained.
+            date_axis: The axis the query was posed on, carried because a fact
+                may author the coordinate on a different axis entirely and a
+                refusal that omits the axis sends the reader to the wrong rows.
+        """
+        self.fact_id: str = fact_id
+        self.effective_date: date = effective_date
+        self.date_axis: str = date_axis
+        super().__init__(
+            f"governed fact {fact_id!r} has no variant for the exact query context",
+            context={
+                "fact_id": fact_id,
+                "effective_date": effective_date.isoformat(),
+                "date_axis": date_axis,
             },
         )
 
@@ -275,6 +325,105 @@ class EjercicioOrdenNotYetPublishedError(NoRevisionForPeriodError):
             "rests_on": rests_on,
             "expected_publication_year": expected_publication_year,
         }
+
+
+class FilingYearOutsideSupportEnvelopeError(RegistrySnapshotError):
+    """The registry declines a coordinate its support envelope gates, not one it lacks.
+
+    A refused filing year has two unrelated causes, and conflating them costs
+    triage time out of all proportion to the fix. Either no revision was ever
+    authored for the coordinate -- an authoring gap, answered by
+    :class:`NoRevisionForPeriodError` -- or the corpus authors it perfectly well
+    and the product's declared filing envelope refuses to resolve it, which is a
+    scope decision no amount of authoring changes. The second is this error.
+
+    Keeping them apart is the same invariant the sibling governed-fact resolver
+    already holds: unsupported and absent are distinct states, and a consumer
+    that cannot tell them apart cannot choose a remedy. The remedy differs
+    completely -- a gap is closed by authoring the revision, an out-of-envelope
+    coordinate by resolving against the authority scoped to the authored
+    history instead of the filing envelope, or by moving the envelope floor.
+
+    ``covering_revision_ids`` is deliberately the revisions whose own period
+    selector DOES cover the requested coordinate. It is usually non-empty, and
+    that is the whole point: the previous refusal reported those same ids under
+    a message asserting nothing covered the year, so its own evidence
+    contradicted its own claim.
+
+    Subclasses :class:`RegistrySnapshotError`, not
+    :class:`NoRevisionForPeriodError`: every broad ``except
+    RegistrySnapshotError`` site keeps catching it, while a handler that means
+    "no revision was authored" no longer silently absorbs an envelope refusal.
+
+    Structured attributes: ``modelo_id``, ``filing_year``, ``period``,
+    ``floor``, ``horizon``, ``hard_ceiling``, ``covering_revision_ids``.
+    """
+
+    def __init__(
+        self,
+        *,
+        modelo_id: str,
+        filing_year: int,
+        period: str,
+        floor: int,
+        horizon: int,
+        hard_ceiling: int | None,
+        covering_revision_ids: Iterable[str],
+    ) -> None:
+        """Construct the outside-support-envelope refusal.
+
+        Args:
+            modelo_id: The modelo whose selection was refused.
+            filing_year: The requested AEAT filing year the envelope gates.
+            period: The requested period token, or ``"year"`` for the
+                year-only selectors, carried so the refusal names the exact
+                coordinate the caller asked for.
+            floor: The envelope's hard lower gate.
+            horizon: The envelope's last globally authored coordinate.
+            hard_ceiling: The envelope's hard upper gate, when it declares one.
+            covering_revision_ids: The revisions whose declared period selector
+                covers the requested coordinate. REQUIRED, and named as
+                "covering" rather than "available": a refusal that says the
+                envelope gated a year the corpus does author is actionable,
+                and one that merely lists revisions is the misleading form
+                this error exists to replace.
+        """
+        covering = tuple(sorted(covering_revision_ids))
+        self.modelo_id: str = modelo_id
+        self.filing_year: int = filing_year
+        self.period: str = period
+        self.floor: int = floor
+        self.horizon: int = horizon
+        self.hard_ceiling: int | None = hard_ceiling
+        self.covering_revision_ids: tuple[str, ...] = covering
+        ceiling = "open" if hard_ceiling is None else str(hard_ceiling)
+        detail = (
+            f"modelo {modelo_id}: filing year {filing_year} period {period!r} lies outside the "
+            f"registry support envelope [floor={floor}, horizon={horizon}, hard_ceiling={ceiling}]"
+        )
+        if covering:
+            detail = (
+                f"{detail}; the corpus DOES author this coordinate in modelo {modelo_id} "
+                f"revision(s) {', '.join(covering)}, so this is an envelope scope refusal, "
+                f"not a missing revision"
+            )
+        else:
+            # Both facts are true at once here, and saying only the first would
+            # send a reader to move the floor for a coordinate nothing authors.
+            detail = f"{detail}, and no modelo {modelo_id} revision covers it either"
+        super().__init__(
+            detail,
+            translated_message="errors.snapshot.filing_year_outside_support_envelope",
+            context={
+                "modelo_id": modelo_id,
+                "filing_year": filing_year,
+                "period": period,
+                "floor": floor,
+                "horizon": horizon,
+                "hard_ceiling": "" if hard_ceiling is None else hard_ceiling,
+                "covering_revision_ids": _csv(covering),
+            },
+        )
 
 
 class AmbiguousRevisionSelectionError(RegistrySnapshotError):

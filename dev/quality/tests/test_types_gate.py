@@ -21,15 +21,22 @@ from __future__ import annotations
 
 import subprocess
 import sys
+from dataclasses import replace
 
 import pytest
 
 from ..types import (
     _IRREDUCIBLE_EXTERNAL_GAPS,
+    _PLATFORMS,
     Diagnostic,
+    TargetPlatform,
     _ExternalGap,
     _is_irreducible_external_gap,
+    collect_all,
+    collect_basedpyright,
+    collect_pyrefly,
     collect_ty,
+    fold_platforms,
     main,
     require_report,
 )
@@ -78,8 +85,72 @@ def test_ty_uses_the_same_project_discovery_as_a_standalone_check(monkeypatch: p
 
     monkeypatch.setattr("dev.quality.types._run", run)
 
-    assert collect_ty() == []
-    assert seen == [["ty", "check", "--output-format", "gitlab", "--color", "never"]]
+    assert collect_ty(TargetPlatform(key="linux", basedpyright="Linux")) == []
+    assert seen == [["ty", "check", "--python-platform", "linux", "--output-format", "gitlab", "--color", "never"]]
+
+
+def test_every_checker_names_the_target_platform_it_analyses_for(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The defect this closes: an unset target platform is inherited from the HOST.
+
+    Left unpinned, the same tree is clean on Windows and carries dozens of
+    diagnostics on Linux, so the gate's verdict is a property of the runner
+    rather than of the code. Every invocation therefore declares the platform.
+    """
+    seen: list[list[str]] = []
+
+    def run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
+        seen.append(cmd)
+        return _completed(stdout='{"errors": []}' if cmd[0] == "pyrefly" else "[]")
+
+    monkeypatch.setattr("dev.quality.types._run", run)
+    target = TargetPlatform(key="darwin", basedpyright="Darwin")
+
+    collect_ty(target)
+    collect_pyrefly(target)
+    monkeypatch.setattr("dev.quality.types._run", lambda cmd: (seen.append(cmd), _completed(stdout="{}"))[1])
+    collect_basedpyright(target)
+
+    assert seen[0][2:4] == ["--python-platform", "darwin"]
+    assert seen[1][2:4] == ["--python-platform", "darwin"]
+    assert "--pythonplatform" in seen[2]
+    assert seen[2][seen[2].index("--pythonplatform") + 1] == "Darwin"
+
+
+def test_the_sweep_covers_every_supported_platform(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A single pinned platform would be deterministic and half-blind.
+
+    `sys.platform` narrowing means a Windows-only function body is analysed
+    ONLY by a Windows-targeted run, so pinning Linux alone would leave the
+    Windows branches permanently unchecked.
+    """
+    seen: list[tuple[str, str]] = []
+
+    monkeypatch.setattr("dev.quality.types.collect_ty", lambda p: seen.append(("ty", p.key)) or [])
+    monkeypatch.setattr("dev.quality.types.collect_pyrefly", lambda p: seen.append(("pyrefly", p.key)) or [])
+    monkeypatch.setattr("dev.quality.types.collect_basedpyright", lambda p: seen.append(("basedpyright", p.key)) or [])
+
+    assert collect_all() == []
+    assert {platform.key for platform in _PLATFORMS} == {"linux", "win32", "darwin"}
+    assert sorted(seen) == sorted(
+        (checker, platform.key) for platform in _PLATFORMS for checker in ("ty", "pyrefly", "basedpyright")
+    )
+
+
+def test_one_defect_seen_on_every_platform_counts_once() -> None:
+    """Three runs of the same tree must not treble a tree-wide finding."""
+    everywhere = [_diagnostic(platform=platform.key) for platform in _PLATFORMS]
+
+    folded = fold_platforms(everywhere)
+
+    assert len(folded) == 1
+    assert folded[0][1] == tuple(platform.key for platform in _PLATFORMS)
+
+
+def test_a_platform_specific_defect_keeps_the_platforms_that_reported_it() -> None:
+    """ "Only on Windows" is the most actionable thing this gate can say."""
+    folded = fold_platforms([_diagnostic(platform="win32")])
+
+    assert folded[0][1] == ("win32",)
 
 
 def test_the_suppression_list_is_empty() -> None:
@@ -92,8 +163,20 @@ def test_the_suppression_list_is_empty() -> None:
     assert _IRREDUCIBLE_EXTERNAL_GAPS == ()
 
 
-def _diagnostic(checker: str = "ty", rule: str = "unresolved-import", path: str = "src/cadrumo/x.py") -> Diagnostic:
-    return Diagnostic(checker=checker, rule=rule, path=path, line=1, message="Cannot resolve import `absent_pkg`")
+def _diagnostic(
+    checker: str = "ty",
+    rule: str = "unresolved-import",
+    path: str = "src/cadrumo/x.py",
+    platform: str = "linux",
+) -> Diagnostic:
+    return Diagnostic(
+        checker=checker,
+        rule=rule,
+        path=path,
+        line=1,
+        message="Cannot resolve import `absent_pkg`",
+        platform=platform,
+    )
 
 
 def test_a_matching_gap_suppresses_only_its_own_diagnostic() -> None:
@@ -172,9 +255,20 @@ def test_count_mode_emits_only_the_aggregate_integer(
         "pyrefly": [diagnostic for diagnostic in diagnostics if diagnostic.checker == "pyrefly"],
         "basedpyright": [diagnostic for diagnostic in diagnostics if diagnostic.checker == "basedpyright"],
     }
-    monkeypatch.setattr("dev.quality.types.collect_ty", lambda: by_checker["ty"])
-    monkeypatch.setattr("dev.quality.types.collect_pyrefly", lambda: by_checker["pyrefly"])
-    monkeypatch.setattr("dev.quality.types.collect_basedpyright", lambda: by_checker["basedpyright"])
+    # Each checker answers the same for every target platform here, so the
+    # integer also proves the fold: three sweeps of one defect are one defect.
+    monkeypatch.setattr(
+        "dev.quality.types.collect_ty",
+        lambda platform: [replace(d, platform=platform.key) for d in by_checker["ty"]],
+    )
+    monkeypatch.setattr(
+        "dev.quality.types.collect_pyrefly",
+        lambda platform: [replace(d, platform=platform.key) for d in by_checker["pyrefly"]],
+    )
+    monkeypatch.setattr(
+        "dev.quality.types.collect_basedpyright",
+        lambda platform: [replace(d, platform=platform.key) for d in by_checker["basedpyright"]],
+    )
     monkeypatch.setattr(sys, "argv", ["dev.quality.types", "--count"])
 
     assert main() == 0

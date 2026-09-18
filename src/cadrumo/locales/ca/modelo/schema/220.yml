@@ -442,7 +442,8 @@ modelo:
               (arts. 31 i 32 RDLeg 4/2004) (pàg. 12)
           t22009000-00575:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
-              positiva. Transparència fiscal internacional (art. 100.10 LIS)
+              positiva. Transparència fiscal internacional (art. 100.10 LIS) (pàg.
+              10)
           t22009000-00576:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. Bonificacions entitats dedicades a l'arrendament d'habitatges
@@ -967,28 +968,28 @@ modelo:
               acordada o compensada. Navarra'
           t22016001-02176:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
-              d''AID després de regularització: abonament. Araba'
+              d''AID després de regularització: Abonament. Araba'
           t22016001-02177:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
-              d''AID després de regularització: abonament. Gipuzkoa'
+              d''AID després de regularització: Abonament. Gipuzkoa'
           t22016001-02178:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
-              d''AID després de regularització: abonament. Bizkaia'
+              d''AID després de regularització: Abonament. Bizkaia'
           t22016001-02179:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
-              d''AID després de regularització: abonament. Navarra'
+              d''AID després de regularització: Abonament. Navarra'
           t22016001-02180:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
-              d''AID després de regularització: compensació. Araba'
+              d''AID després de regularització: Compensació. Araba'
           t22016001-02181:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
-              d''AID després de regularització: compensació. Gipuzkoa'
+              d''AID després de regularització: Compensació. Gipuzkoa'
           t22016001-02182:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
-              d''AID després de regularització: compensació. Bizkaia'
+              d''AID després de regularització: Compensació. Bizkaia'
           t22016001-02183:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
-              d''AID després de regularització: compensació. Navarra'
+              d''AID després de regularització: Compensació. Navarra'
           t22016001-02184:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
               d''AID després de regularització: a ingressar. Araba'
@@ -1006,10 +1007,10 @@ modelo:
               acordada o compensada. Total de territoris forals'
           t22016001-02807:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
-              d''AID després de regularització: abonament. Total de territoris forals'
+              d''AID després de regularització: Abonament. Total de territoris forals'
           t22016001-02810:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
-              d''AID després de regularització: compensació. Total de territoris forals'
+              d''AID després de regularització: Compensació. Total de territoris forals'
           t22016001-02813:
             label: 'Repartiment entre Administracions forals. Resultat de conversió
               d''AID després de regularització: a ingressar. Total de territoris forals'
@@ -1641,7 +1642,7 @@ modelo:
             x-agp34c1g6d130c1q60o3ed9i:
               label: Balanç consolidat. Patrimoni net i passiu. Reserva de capitalització
             x-agp34c1g6d130c1q60o3ed9j:
-              label: Balanç consolidat. Patrimoni net i passiu. Reserva de anivellació
+              label: Balanç consolidat. Patrimoni net i passiu. Reserva de nivellació
             x-agp34c1g6d130c1q60o3edhk:
               label: Balanç consolidat. Patrimoni net i passiu. Fons de reserva obligatori
                 de cooperatives
@@ -2203,7 +2204,7 @@ modelo:
                 Reserves. Reserva de capitalització
             x-agp34c1g6d230chq60o3ecpl:
               label: Balanç consolidat. Patrimoni net (pàg. 3D full 02). Fons propis.
-                Reserves. Reserva d'anivellació
+                Reserves. Reserva de nivellació
             x-agp34c1g6h130c1q60o30cpg6g:
               label: Compte de pèrdues i guanys consolidat (pàg. 4B full 00). Operacions
                 continuades (cont.). Ingressos financers. Imputació de subvencions,

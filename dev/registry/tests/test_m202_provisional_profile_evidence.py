@@ -7,11 +7,16 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.schema import (
+    ModeloDefinition,
+    ModeloRevision,
+    RegistryCatalogues,
+)
 from cadrumo.domain.calculations.registry.schema_extraction import (
     ExtractionProfileDefinition,
     ExtractionTargetDefinition,
 )
+from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkDefinition
 
 from ..conformance.registry_schema_support import committed_modelo as _committed_modelo
 from .profile_schema_support import committed_registry_validator
@@ -21,6 +26,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _M202_REVISION_ID = "2025-y-siguientes"
 _M202_PROFILE_ID = "9f8cdb06-8956-4a23-8db4-e7a51efa2ada"  # was 'modelo-202-declaracion-pdf'
 _M202_TARGET_CASILLAS = ("01", "03", "04", "34")
+_M202_EXTRACTOR_LINK_ID = "modelo-202-extractor"
+_M202_PARSER = "cadrumo.adapters.inbound.declaracion.parser.parse_declaracion"
 
 
 def _committed_modelo_202() -> tuple[ModeloDefinition, RegistryCatalogues]:
@@ -44,7 +51,7 @@ def _provisional_m202_profile(modelo: ModeloDefinition) -> ExtractionProfileDefi
         surface="declaracion_pdf",
         artefact_kind="declaration_pdf",
         accepted_artefact_kinds=("declaration_pdf",),
-        parser="cadrumo.adapters.inbound.declaracion.parser.parse_declaracion",
+        parser=_M202_PARSER,
         provisional_pending_specimen=True,
         target_casillas=tuple(
             ExtractionTargetDefinition(
@@ -64,14 +71,39 @@ def _provisional_m202_profile(modelo: ModeloDefinition) -> ExtractionProfileDefi
     )
 
 
+def _extractor_application_link(revision: ModeloRevision) -> ApplicationLinkDefinition:
+    """Build the extractor surface a revision declaring an extraction profile must carry.
+
+    An extraction profile names a parser; the extractor application link is the
+    declaration that the modelo has a consumer for what that parser produces.
+    The registry validator requires the pair, so a fixture enrolling a profile
+    alone would be asserting a revision the registry does not accept, and the
+    evidence invariants under test here would never be reached.
+    """
+    return ApplicationLinkDefinition(
+        id=_M202_EXTRACTOR_LINK_ID,
+        surface="extractor",
+        consumer=_M202_PARSER,
+        requires_snapshot=True,
+        legal_refs=revision.legal_refs,
+        source_refs=revision.source_refs,
+    )
+
+
 def _with_provisional_profile(
     modelo: ModeloDefinition,
     profile: ExtractionProfileDefinition,
 ) -> ModeloDefinition:
-    """Return M202 with the non-production provisional fixture enrolled."""
+    """Return M202 with the non-production provisional fixture and its extractor link enrolled."""
     revision = modelo.revisions[_M202_REVISION_ID]
     assert not revision.extraction_profiles
-    updated_revision = revision.model_copy(update={"extraction_profiles": (profile,)})
+    assert all(link.surface != "extractor" for link in revision.application_links)
+    updated_revision = revision.model_copy(
+        update={
+            "extraction_profiles": (profile,),
+            "application_links": (*revision.application_links, _extractor_application_link(revision)),
+        },
+    )
     return modelo.model_copy(update={"revisions": {**modelo.revisions, updated_revision.id: updated_revision}})
 
 

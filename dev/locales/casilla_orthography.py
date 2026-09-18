@@ -180,7 +180,7 @@ def unaccented_words(
 
 
 #: Spanish tax vocabulary every locale keeps untranslated, and registry identifier stems.
-_KEPT_SPANISH: Final = frozenset({"modelo", "modelos", "casilla", "casillas", "contraparte", "importe"})
+_KEPT_SPANISH: Final = frozenset({"modelo", "modelos", "contraparte", "importe"})
 #: Per locale, Spanish words a translation keeps on purpose: Latin ("inter vivos"), the
 #: names of official programmes and deductions, registry and form field identifiers, and
 #: terms the product states in Spanish everywhere ("perceptor", "recargo de equivalencia").
@@ -203,6 +203,7 @@ REVIEWED_SPANISH_TERMS: Final[dict[str, frozenset[str]]] = {
     "ca": frozenset(
         {
             "batea",
+            "cross",
             "deportivo",
             "ejercicio",
             "holding",
@@ -233,6 +234,29 @@ REVIEWED_SPANISH_TERMS: Final[dict[str, frozenset[str]]] = {
 _QUOTED: Final = re.compile(r"«[^»]*»|\"[^\"]*\"|“[^”]*”|„[^”]*”|\([^)]*\)")
 #: Code spans and interpolation the interface domains carry; the casilla surface has none.
 _CODE_SPAN: Final = re.compile(r"`[^`]*`|%\{[^}]*\}|\{[^}]*\}")
+#: What a parenthesis holds when it is not prose: a legal citation, a form or an acronym.
+_CITED: Final = re.compile(r"art|ley|lis|liva|rd|da|dt|mod|cap|tit|apartado|decreto", re.IGNORECASE)
+#: Two words of four letters or more make a parenthesis prose rather than a reference.
+_PARENTHESISED_PROSE: Final = re.compile(r"[^\W\d_]{4,}", re.UNICODE)
+
+
+def _blank_unless_prose(match: re.Match[str]) -> str:
+    """Keep a parenthesis or quotation for judgement only when it states prose.
+
+    A quotation carries an official name and a parenthesis usually carries a
+    citation, a form number or an acronym, none of which a locale translates.
+    A parenthesis that states words of its own is ordinary text and is read
+    like the rest of the label, so Spanish cannot hide inside it.
+    """
+    group = match.group()
+    if not group.startswith("("):
+        return " "
+    words = _PARENTHESISED_PROSE.findall(group)
+    if len(words) < 2 or _CITED.fullmatch(words[0]):
+        return " "
+    return group
+
+
 _TRANSLATED_LOCALES: Final = ("en", "ca", "hu")
 _MIN_LEFTOVERS: Final = 1
 _MIN_VERBATIM_RUN: Final = 3
@@ -293,7 +317,8 @@ def spanish_leftovers(
             if value is None:
                 continue
             leftovers: list[str] = []
-            prose = _verbatim_runs(_QUOTED.sub(" ", value), sources.get(locale, {}).get(key, frozenset()))
+            judged = _QUOTED.sub(_blank_unless_prose, value)
+            prose = _verbatim_runs(judged, sources.get(locale, {}).get(key, frozenset()))
             for word in _WORD.findall(_NOT_PROSE.sub(" ", prose)):
                 if len(word) < _MIN_LENGTH or not word.islower() or word in _KEPT_SPANISH or word in kept:
                     continue

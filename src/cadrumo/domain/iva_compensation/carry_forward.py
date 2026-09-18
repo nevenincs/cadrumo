@@ -20,7 +20,7 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.filing_year import FilingYear
+from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN, FilingYear
 from ...core.identity.aeat_expediente import AeatExpedienteId
 from ...core.identity.digest import ContentDigest
 from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
@@ -279,10 +279,10 @@ def build_iva_compensation_carry_forward_report(
 
 
 def _validate_carry_forward_as_of_year(as_of_year: int) -> None:
-    if not 2000 <= as_of_year <= 2099:
+    if not FILING_YEAR_MIN <= as_of_year <= FILING_YEAR_MAX:
         raise IvaCompensationYearRangeError(
             translated_message="errors.refused.refused_iva_compensation_year_range",
-            context={"as_of_year": as_of_year, "min_year": 2000, "max_year": 2099},
+            context={"as_of_year": as_of_year, "min_year": FILING_YEAR_MIN, "max_year": FILING_YEAR_MAX},
         )
 
 
@@ -438,10 +438,10 @@ def derive_iva_compensation_year_end_carry_partition(
 
     Returns an :class:`IvaCompensationYearEndCarryPartition`.
     """
-    if not 2000 <= filing_year <= 2099:
+    if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
         raise IvaCompensationYearRangeError(
             translated_message="errors.refused.refused_iva_compensation_year_range",
-            context={"filing_year": filing_year, "min_year": 2000, "max_year": 2099},
+            context={"filing_year": filing_year, "min_year": FILING_YEAR_MIN, "max_year": FILING_YEAR_MAX},
         )
     total_year_remaining = sum(
         (lot.remaining_amount for lot in report.lots if lot.source_filing_year == filing_year),

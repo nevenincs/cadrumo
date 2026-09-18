@@ -1145,6 +1145,9 @@ errors:
     ambiguous_revision_selection_year_only: 'More than one registry revision matches
       modelo %{modelo_id}: %{candidate_ids}. Supply the filing period, or an as-of
       date, to select one of them.'
+    filing_year_outside_support_envelope: 'Filing year %{filing_year} period %{period}
+      for modelo %{modelo_id} lies outside the supported filing years (floor %{floor},
+      horizon %{horizon}); revisions covering that coordinate: %{covering_revision_ids}.'
     modelo_not_registered: Model is not registered in the registry.
     no_revision_for_period: 'No registry revision covers modelo %{modelo_id} filing
       year %{filing_year} period %{period}; available revisions: %{available_revision_ids}.'

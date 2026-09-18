@@ -24,6 +24,7 @@ from cadrumo.core.corpus_text import (
     resolve_anchored_extracted_unit,
 )
 from cadrumo.core.hashing import blake2b_hex
+from cadrumo.core.paths import path_stat_fingerprint
 from cadrumo.core.resources.bundled_data import resolve_companion_binary
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
@@ -302,16 +303,46 @@ def _resolved_source_root(source_root: Path) -> Path:
     return source_root.resolve()
 
 
+@lru_cache(maxsize=1024)
+def _resolved_corpus_paths(root: Path, path_text: str) -> tuple[Path, Path, Path]:
+    """Resolve one corpus path and its two sidecars, once per distinct path.
+
+    ``Path.resolve`` is a syscall per call, and every reference citing a file
+    re-derived the same three answers: verifying the 1404-entry catalogue
+    issued 28,004 ``_getfinalpathname`` calls, 0.98s of its 6.5s, for 388
+    distinct files. Keyed on the resolved root and the authored path text, so a
+    different root still resolves separately.
+    """
+    path = (root / path_text).resolve()
+    return (
+        path,
+        path.with_name(path.name + ".annotation.json").resolve(),
+        path.with_name(path.name + ".extracted.json").resolve(),
+    )
+
+
+@lru_cache(maxsize=1024)
+def _corpus_file_digest(path: str, byte_count: int, modified_ns: int) -> str:
+    """Fingerprint one corpus file, once per observed identity in this process.
+
+    The corpus-text cache keys on this digest, so it had to be recomputed
+    before the cache could be consulted -- the hit path cost a full read and
+    hash of the sidecar. References share files, so 1404 of them hashed 1422
+    times what 388 files would answer. Keyed on the stat identity the
+    record-design and loader caches already use.
+    """
+    del byte_count, modified_ns
+    return blake2b_hex(Path(path).read_bytes())
+
+
 def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     path_text, _, anchor = reference.corpus_ref.partition("#")
     root = _resolved_source_root(source_root)
-    path = (root / path_text).resolve()
+    path, annotation, sidecar = _resolved_corpus_paths(root, path_text)
     if root not in path.parents and path != root:
         raise RegistryValidationError(f"legal reference {reference.id!r} escapes repository root")
     if path.suffix.casefold() == ".xml":
         return _legal_xml_corpus_text(root, path, anchor=anchor, reference=reference)
-    annotation = path.with_name(path.name + ".annotation.json").resolve()
-    sidecar = path.with_name(path.name + ".extracted.json").resolve()
     if any(root not in candidate.parents and candidate != root for candidate in (annotation, sidecar)):
         raise RegistryValidationError(f"legal reference {reference.id!r} corpus metadata escapes repository root")
     if not sidecar.is_file():
@@ -321,7 +352,7 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
     _assert_redactions_are_not_fused(path, sidecar, reference, path_text)
     stat = sidecar.stat()
     try:
-        digest = blake2b_hex(sidecar.read_bytes())
+        digest = _corpus_file_digest(str(sidecar), stat.st_size, stat.st_mtime_ns)
     except OSError as exc:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} extracted corpus sidecar could not be fingerprinted: {exc}"
@@ -337,8 +368,8 @@ def _legal_corpus_text(source_root: Path, reference: LegalReference) -> str:
                 f"legal reference {reference.id!r} missing annotated PDF source {path_text!r}"
             )
         try:
-            annotation_digest = blake2b_hex(annotation.read_bytes())
-            source_digest = blake2b_hex(source_path.read_bytes())
+            annotation_digest = _corpus_file_digest(*path_stat_fingerprint(annotation))
+            source_digest = _corpus_file_digest(*path_stat_fingerprint(source_path))
         except OSError as exc:
             raise RegistryValidationError(
                 f"legal reference {reference.id!r} PDF annotation could not be fingerprinted: {exc}"
@@ -406,16 +437,30 @@ def _legal_xml_corpus_text(root: Path, path: Path, *, anchor: str, reference: Le
     return normalise_corpus_text(rendered)
 
 
+@lru_cache(maxsize=1024)
+def _corpus_redaction_mark_count(path: str, byte_count: int, modified_ns: int) -> int:
+    """Count one corpus document's dated redactions, once per observed identity.
+
+    The count is decided by the document's bytes but was asked per REFERENCE,
+    and the check decodes the whole document: 1404 references re-read and
+    re-decoded 388 files, 1.88s of a 3.2s catalogue verification, with
+    ``ley-35-2006.html`` (1.9 MB) decoded 86 times. Only the count reaches the
+    caller, so only the count is held.
+    """
+    del byte_count, modified_ns
+    return len(corpus_redaction_marks(Path(path).read_text(encoding="utf-8", errors="replace")))
+
+
 def _assert_redactions_are_not_fused(document: Path, sidecar: Path, reference: LegalReference, path_text: str) -> None:
     if not document.is_file():
         return
     try:
-        marks = corpus_redaction_marks(document.read_text(encoding="utf-8", errors="replace"))
+        mark_count = _corpus_redaction_mark_count(*path_stat_fingerprint(document))
     except OSError as exc:
         raise RegistryValidationError(
             f"legal reference {reference.id!r} corpus document {path_text!r} could not be read: {exc}"
         ) from exc
-    if len(marks) < 2:
+    if mark_count < 2:
         return
     try:
         units = extracted_unit_count(sidecar)
@@ -424,7 +469,7 @@ def _assert_redactions_are_not_fused(document: Path, sidecar: Path, reference: L
             f"legal reference {reference.id!r} extracted corpus sidecar could not be counted: {exc}"
         ) from exc
     raise RegistryValidationError(
-        f"legal reference {reference.id!r} cites {path_text!r}, which declares {len(marks)} dated redactions "
+        f"legal reference {reference.id!r} cites {path_text!r}, which declares {mark_count} dated redactions "
         f"collapsed into {units} extracted unit(s)"
         "; cite a consolidated current-text document instead, or reduce the capture to the redaction in force"
     )

@@ -11,14 +11,20 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
 from ..compiler.legal_grounding import verify_legal_catalogue
+from ._gate_support import (
+    assert_deadline_window_for_filing_year,
+    assert_edition_opens_at_filing_year,
+    assert_sole_current_edition,
+)
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M280_LEGAL_REFS = {
     "orden-hap-2118-2015:art-1",
     "orden-hap-2118-2015:art-2",
     "orden-hap-2118-2015:art-4",
     "orden-hap-2118-2015:art-5",
+    "ley-35-2006:da-26",
     "orden-hfp-1822-2016:art-sexto",
     "orden-hac-1276-2019:art-quinto",
     "orden-hfp-1192-2022:art-cuarto",
@@ -38,13 +44,13 @@ def test_modelo_280_current_registry_uses_2025_sources_without_fake_calculation(
     modelo = authority.modelo("280")
     revision = modelo.revisions["2025"]
 
-    assert set(modelo.revisions) == {"2025"}
+    assert_sole_current_edition(modelo, "2025")
     assert modelo.calculation_class == "informative"
     assert set(modelo.legal_refs) == _M280_LEGAL_REFS
     assert set(modelo.source_refs) == _M280_SOURCE_REFS
 
     assert revision.valid_from == date(2025, 1, 1)
-    assert revision.period_selector.years == (2025,)
+    assert_edition_opens_at_filing_year(revision, 2025)
     assert set(revision.period_selector.periods) == {"0A"}
     assert set(revision.orden_aplicabilidad) == {
         "orden-hap-2118-2015:art-1",
@@ -61,7 +67,7 @@ def test_modelo_280_current_registry_uses_2025_sources_without_fake_calculation(
     assert {casilla.input_kind for casilla in revision.casillas} == {"manual"}
     assert not revision.formulas
     assert revision.completeness_manifest is None
-    assert {window.id for window in revision.deadline_windows} == {"modelo-280-2025-0a"}
+    assert_deadline_window_for_filing_year(revision, 2025, "modelo-280-2025-0a")
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {"aeat-dr-280-2022"}
     # "export" joined the surfaces when the modelo's export layout was authored;
     # the link set is a consequence of that, not a drift.

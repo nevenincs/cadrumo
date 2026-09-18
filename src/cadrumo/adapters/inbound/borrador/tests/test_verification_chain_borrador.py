@@ -69,7 +69,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from .....domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
+from .....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, RegistryValidationError
 from .....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from .....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
@@ -186,7 +186,7 @@ def test_verification_chain_m100_borrador_refuses_years_below_the_supported_floo
     """A borrador fixture year outside the support envelope resolves no filing snapshot."""
     assert (_BORRADOR_FIXTURES_DIR / f"modelo_100_{year}.pdf").is_file()
 
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         _registry_snapshot_m100(year)
 
 

@@ -4,7 +4,7 @@ modelo:
       construct:
         modelo-840-iae-declaration:
           field:
-            title: '840-es modelo: az IAE cenzusbejelentése (bejelentkezés, módosítás,
+            title: '840-es nyomtatvány: az IAE cenzusbejelentése (bejelentkezés, módosítás,
               kijelentkezés)'
       field:
         official_name: Modelo 840. A gazdasági tevékenységek adójának bevallása (bejelentkezés,

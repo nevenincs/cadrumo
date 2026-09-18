@@ -362,12 +362,14 @@ def test_calculate_works_when_cwd_is_not_the_repo_root(
 def test_work_unit_creation_refuses_unresolvable_registry_snapshot(repos: Repos) -> None:
     """An unsupported filing coordinate is rejected before calculation state exists."""
 
-    from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+    from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 
     wu_repo, _, _, _, _ = repos
-    # Modelo 130 at year 2010 predates the registry's earliest revision
-    # (``2019-y-siguientes``), so the sole registry resolver fails closed.
-    with pytest.raises(NoRevisionForPeriodError):
+    # Modelo 130 at year 2010 sits below the support floor, so the envelope
+    # turns the request away before the corpus is consulted -- which is also
+    # true of it: the earliest revision is ``2019-y-siguientes``. The refusal
+    # names the gate that actually fired, and reports the second fact too.
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         seed_work_unit(wu_repo, filing_year=2010)
 
 

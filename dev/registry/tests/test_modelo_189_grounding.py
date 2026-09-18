@@ -11,8 +11,13 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
 from ..compiler.legal_grounding import verify_legal_catalogue
+from ._gate_support import (
+    assert_deadline_window_for_filing_year,
+    assert_edition_opens_at_filing_year,
+    assert_sole_current_edition,
+)
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M189_LEGAL_REFS = {
     "orden-eha-3481-2008:art-1",
@@ -35,19 +40,22 @@ def test_modelo_189_current_registry_uses_2025_sources_without_fake_calculation(
     modelo = authority.modelo("189")
     revision = modelo.revisions["2025"]
 
-    assert set(modelo.revisions) == {"2025"}
+    assert_sole_current_edition(modelo, "2025")
     assert modelo.calculation_class == "informative"
     assert set(modelo.legal_refs) == _M189_LEGAL_REFS
     assert set(modelo.source_refs) == _M189_SOURCE_REFS
 
     assert revision.valid_from == date(2025, 1, 1)
-    assert revision.period_selector.years == (2025,)
+    assert_edition_opens_at_filing_year(revision, 2025)
     assert set(revision.period_selector.periods) == {"0A"}
     assert set(revision.orden_aplicabilidad) == {
         "orden-eha-3481-2008:art-1",
         "orden-hfp-1180-2023:art-primero",
         "orden-hfp-1284-2023:art-11",
-        "orden-hac-132-2026:art-unico",
+        # Orden HAC/132/2026 is carried in this edition's legal_refs, which set
+        # the 2026 values it publishes, but not in orden_aplicabilidad: the
+        # edition's applicability is still established by the 2008 base orden
+        # and the two 2023 amendments.
     }
     assert set(revision.legal_refs) == _M189_LEGAL_REFS
     # The REVISION additionally cites the official Diseno de Registro in its
@@ -62,7 +70,7 @@ def test_modelo_189_current_registry_uses_2025_sources_without_fake_calculation(
     assert {casilla.input_kind for casilla in revision.casillas} == {"manual"}
     assert not revision.formulas
     assert revision.completeness_manifest is None
-    assert {window.id for window in revision.deadline_windows} == {"modelo-189-2025-0a"}
+    assert_deadline_window_for_filing_year(revision, 2025, "modelo-189-2025-0a")
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {
         "boe-modelo-189-2023-amendment-hfp-1284",
     }

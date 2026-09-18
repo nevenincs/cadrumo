@@ -268,13 +268,13 @@ modelo:
           iva-cuota-repercutida-reducido-transitorio:
             help: Casella transitòria del RD-ley 4/2024 per al tipus reduït, que conviu
               amb el tipus reduït ordinari del 10%.
-            label: Quota d’IVA repercutit al tipus reduït transitori (5%/7,5%)
+            label: Quota d'IVA repercutit al tipus reduït transitori (5%/7,5%)
           iva-cuota-repercutida-super-reducido:
             label: Quota d'IVA repercutit al tipus superreduït (4%)
           iva-cuota-repercutida-super-reducido-transitorio:
             help: Casella transitòria del RD-ley 4/2024 per al tipus superreduït,
               que conviu amb el tipus superreduït ordinari del 4%.
-            label: Quota d’IVA repercutit al tipus superreduït transitori (2%)
+            label: Quota d'IVA repercutit al tipus superreduït transitori (2%)
           iva-cuota-soportada-importaciones:
             label: Quota d'IVA suportat deduïble en importacions de béns corrents
               (LIVA art. 17 + art. 92; casella oficial 33)
@@ -625,7 +625,8 @@ modelo:
                 Modelo 303 Referències: [64], [65].'
               label: Resultat - Import atribuïble a l'Administració de l'Estat ([64]×[65]/100)
             '71':
-              help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
+              help: Dada declarada en el Model 303, presa del disseny de registre
+                oficial.
               label: Resultat final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Informació fiscal sobre informació fiscal de la casella 69 del
@@ -644,7 +645,8 @@ modelo:
                 Modelo 303 Referències: [64], [65].'
               label: Resultat - Import atribuïble a l'Administració de l'Estat ([64]×[65]/100)
             '71':
-              help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
+              help: Dada declarada en el Model 303, presa del disseny de registre
+                oficial.
               label: Resultat final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Informació fiscal sobre informació fiscal de la casella 69 del
@@ -663,7 +665,8 @@ modelo:
                 Modelo 303 Referències: [64], [65].'
               label: Resultat - Import atribuïble a l'Administració de l'Estat ([64]×[65]/100)
             '71':
-              help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
+              help: Dada declarada en el Model 303, presa del disseny de registre
+                oficial.
               label: Resultat final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Informació fiscal sobre informació fiscal de la casella 69 del
@@ -682,7 +685,8 @@ modelo:
                 Modelo 303 Referències: [64], [65].'
               label: Resultat - Import atribuïble a l'Administració de l'Estat ([64]×[65]/100)
             '71':
-              help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
+              help: Dada declarada en el Model 303, presa del disseny de registre
+                oficial.
               label: Resultat final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Informació fiscal sobre informació fiscal de la casella 69 del
@@ -940,7 +944,8 @@ modelo:
               help: 'Casella 70: resultats a ingressar procedents d''autoliquidacions
                 anteriors del mateix exercici i període.'
             '71':
-              help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
+              help: Dada declarada en el Model 303, presa del disseny de registre
+                oficial.
               label: Resultat final ([69]-[70]+[109])
             '74':
               help: 'Casella 74: base imposable d''adquisicions en el règim de criteri

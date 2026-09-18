@@ -13,7 +13,11 @@ from urllib.parse import urlsplit
 from cadrumo.core.corpus_text import normalise_corpus_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.hashing import sha256_hex
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
+from cadrumo.domain.calculations.registry.errors import (
+    GovernedFactNotApplicableError,
+    RegistryLoadError,
+    RegistryValidationError,
+)
 from cadrumo.domain.calculations.registry.lorca_reduction import resolve_lorca_reduction
 from cadrumo.domain.calculations.registry.m303_orden_constants import (
     EXPECTED_ACTIVITY_COUNT,
@@ -268,16 +272,22 @@ def validate_m303_annual_orden_lorca_projection(
     applicable to the source exercise and whether its source evidence is the
     authored one.  A source may omit the reduction when no fact variant applies;
     an observed reduction without a matching fact is refused.
+
+    Only :class:`GovernedFactNotApplicableError` means "no variant applies".
+    The broad validation type is deliberately NOT caught here: a caller with no
+    governed-fact authority in scope, a corrupted payload, or a digest that no
+    longer parses would otherwise be reported as a finding about what the annual
+    Orden authors, which is a claim this function is in no position to make.
     """
     reduction = census.lorca_reduction
     try:
         declared = resolve_lorca_reduction(effective_date=date(int(census.ejercicio), 12, 31))
-    except RegistryValidationError:
+    except GovernedFactNotApplicableError as absent:
         if reduction is None:
             return
         raise RegistryValidationError(
             f"annual Orden source {source.id!r} exposes a municipal reduction without a matching facts projection",
-        ) from None
+        ) from absent
     if reduction is None:
         raise RegistryValidationError(
             f"annual Orden source {source.id!r} is missing the municipal reduction required by its facts projection",

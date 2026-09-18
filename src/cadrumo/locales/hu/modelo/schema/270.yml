@@ -135,7 +135,7 @@ modelo:
       construct:
         modelo-270-informative:
           field:
-            title: Modelo 270 bevallás tájékoztató
+            title: '270-es nyomtatvány: tájékoztató jellegű adatszolgáltatás'
       field:
         official_name: Modelo 270. Az adóelőleg-levonások és -befizetések éves összesítője.
           Egyes lottó- és fogadási nyeremények különadója.

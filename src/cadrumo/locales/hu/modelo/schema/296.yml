@@ -8,7 +8,7 @@ modelo:
             label: A levonások és előlegfizetések alapja
           irnr-resumen-retenciones:
             help: A kedvezményezetti rekordok levonásainak és előlegfizetéseinek összege.
-            label: Levonások és előlegfizetések
+            label: Forrásadó és részletfizetés
           irnr-resumen-retenciones-ingresadas:
             help: 'A ténylegesen befizetett levonások része: csak a 3-25 kulcsú kedvezményezettek,
               valamint az 1 vagy 2 kulcsúak, ahol a fizetés értéke 1. Alacsonyabb
@@ -24,7 +24,7 @@ modelo:
           construct:
             modelo-296-calculation-construct:
               field:
-                title: '296-os modelo: éves tájékoztató bevallás az állandó telephely
+                title: '296-os nyomtatvány: éves tájékoztató bevallás az állandó telephely
                   nélküli IRNR forrásadóról és előlegekről'
           field:
             label: 296-os modelo, 2023. adóév
@@ -32,6 +32,6 @@ modelo:
           construct:
             modelo-296-calculation-construct:
               field:
-                title: '296-os modelo: az IRNR forrásadójának éves összesítője'
+                title: '296-os nyomtatvány: az IRNR forrásadójának éves összesítője'
           field:
             label: HAC/56/2024 rendelet, 2024. adóévtől

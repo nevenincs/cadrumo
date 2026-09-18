@@ -475,9 +475,9 @@ def test_compute_general_rejects_year_out_of_range() -> None:
         operaciones_con_derecho_deduccion=Decimal("100"),
         operaciones_sin_derecho_deduccion=Decimal("0"),
     )
-    with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000..2100"):
+    with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000\.\.2099"):
         compute_prorrata_general(inputs, year=1999, kind=ProrrataKind.from_registry("definitiva"))
-    with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000..2100"):
+    with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000\.\.2099"):
         compute_prorrata_general(inputs, year=2101, kind=ProrrataKind.from_registry("definitiva"))
 
 

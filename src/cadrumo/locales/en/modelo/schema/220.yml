@@ -13,8 +13,7 @@ modelo:
             label: Payment or refund document. Credit/Offset. Credit from the conversion
               of deferred tax assets (art. 130 LIS)
           documento-ingreso-devolucion-apellidos-razon-social:
-            label: Payment or refund document. Identification. Surnames or company
-              name
+            label: Payment or refund document. Identification. Surnames or legal name
           documento-ingreso-devolucion-banco-extranjero:
             label: 'Payment or refund document. Refund. Rest of the world: name of
               the bank'
@@ -52,7 +51,7 @@ modelo:
           documento-ingreso-devolucion-modalidad-devolucion:
             label: Payment or refund document. Refund. Refund method
           documento-ingreso-devolucion-modalidad-ingreso:
-            label: Payment or refund document. Payment. Payment method
+            label: Payment or refund document. Payment. Payment type
           documento-ingreso-devolucion-nif:
             label: Payment or refund document. Identification. Tax identification
               number
@@ -66,7 +65,7 @@ modelo:
             label: Payment or refund document. Refund. SWIFT-BIC code (rest of the
               world / non-SEPA only)
           documento-ingreso-devolucion-tipo-ejercicio:
-            label: Payment or refund document. Accrual. Type of tax year
+            label: Payment or refund document. Accrual. Type of financial year
           extracooperativo-base-tramo-dos:
             label: Bracket 2 - Taxable base 2 (extra-cooperative results) | Note 3
           extracooperativo-base-tramo-uno:
@@ -484,21 +483,21 @@ modelo:
           t22009000-00592:
             label: Other deductions. Net tax liability. Net tax liability
           t22009000-00595:
-            label: Tax for the year, payable or refundable. Withholdings and payments
+            label: Tax due for the year, payable or refundable. Withholdings and payments
               on account, and payments on account for collective investment holdings
           t22009000-00596:
-            label: Tax for the year, payable or refundable. Withholdings and payments
+            label: Tax due for the year, payable or refundable. Withholdings and payments
               on account attributed by economic interest groupings and temporary business
               consortia
           t22009000-00597:
-            label: Tax for the year, payable or refundable. Withholdings on prizes
+            label: Tax due for the year, payable or refundable. Withholdings on prizes
               from certain lotteries and betting
           t22009000-00599:
-            label: Tax for the year, payable or refundable. Tax for the period, payable
-              or refundable. State
+            label: Tax due for the year, payable or refundable. Tax for the period,
+              payable or refundable. State
           t22009000-00600:
-            label: Tax for the year, payable or refundable. Tax for the period, payable
-              or refundable. Chartered provincial councils and Navarre
+            label: Tax due for the year, payable or refundable. Tax for the period,
+              payable or refundable. Chartered provincial councils and Navarre
           t22009000-00601:
             label: Instalment payments. Differential tax liability. First instalment
               payment. State
@@ -550,9 +549,9 @@ modelo:
               productions in the Canary Islands (art. 39.3 LIS and 14th additional
               provision, Law 19/1994), Chartered provincial councils and Navarre
           t22009000-01737:
-            label: Self-assessment result. Payment of deductions for foreign film
-              productions in the Canary Islands (art. 39.3 LIS and 14th additional
-              provision, Law 19/1994), total. Chartered provincial councils and Navarre
+            label: Self-assessment result. Credit of deductions for foreign film productions
+              in the Canary Islands (art. 39.3 LIS and 14th additional provision,
+              Law 19/1994), total. Chartered provincial councils and Navarre
           t22009000-01965:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Internal double taxation from prior periods applied in
@@ -973,56 +972,53 @@ modelo:
             label: 'Allocation between chartered tax administrations. Supplementary:
               refund granted or offset. Navarre'
           t22016001-02176:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payment. Araba'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: credit. Araba'
           t22016001-02177:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payment. Gipuzkoa'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: credit. Gipuzkoa'
           t22016001-02178:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payment. Bizkaia'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: credit. Bizkaia'
           t22016001-02179:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payment. Navarre'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: credit. Navarre'
           t22016001-02180:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: offset. Araba'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: offset. Araba'
           t22016001-02181:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: offset. Gipuzkoa'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: offset. Gipuzkoa'
           t22016001-02182:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: offset. Bizkaia'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: offset. Bizkaia'
           t22016001-02183:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: offset. Navarre'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: offset. Navarre'
           t22016001-02184:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payable. Araba'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: payable. Araba'
           t22016001-02185:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payable. Gipuzkoa'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: payable. Gipuzkoa'
           t22016001-02186:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payable. Bizkaia'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: payable. Bizkaia'
           t22016001-02187:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payable. Navarre'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: payable. Navarre'
           t22016001-02804:
             label: 'Allocation between chartered tax administrations. Supplementary:
               refund granted or offset. Total of the chartered territories'
           t22016001-02807:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payment. Total of the chartered
-              territories'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: credit. Total of the chartered territories'
           t22016001-02810:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: offset. Total of the chartered
-              territories'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: offset. Total of the chartered territories'
           t22016001-02813:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payable. Total of the chartered
-              territories'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: payable. Total of the chartered territories'
           t22016001-03325:
             label: 'Allocation between chartered tax administrations. Supplementary:
               refund granted or offset. Araba'
@@ -1091,7 +1087,7 @@ modelo:
       construct:
         modelo-220-declaration-construct:
           field:
-            title: Modelo 220 annual return of the tax group under the fiscal consolidation
+            title: Modelo 220 annual return of the tax group under the tax consolidation
               regime
       field:
         official_name: Modelo 220. Corporate Income Tax. Tax consolidation regime.
@@ -1170,7 +1166,7 @@ modelo:
                 and other receivables. Current tax assets
             x-agp34c1g6d0j0c1q60o32d9p:
               label: Consolidated balance sheet. Assets (page 3A sheet 00). Trade
-                and other receivables. Other receivables
+                and other receivables. Other debtors
             x-agp34c1g6d0j0c1q60o32dhg:
               label: Consolidated balance sheet. Assets (page 3A sheet 00). Short-term
                 investments in group and associated companies
@@ -1460,7 +1456,7 @@ modelo:
                 and receivables. Called-up capital
             x-agp34c1g6d0j0chq60o32cpi:
               label: Consolidated balance sheet. Assets (page 3A sheet 02). Loans
-                and receivables. Other receivables
+                and receivables. Other credits
             x-agp34c1g6d0j0chq60o32cpj:
               label: Consolidated balance sheet. Assets (page 3A sheet 02). Loans
                 and receivables. Receivables from public administrations
@@ -1575,8 +1571,8 @@ modelo:
               label: Consolidated balance sheet. Equity and liabilities. Other equity
                 instruments
             x-agp34c1g6d130c1q60o34c1i:
-              label: Consolidated balance sheet. Equity and liabilities. Valuation
-                adjustments
+              label: Consolidated balance sheet. Equity and liabilities. Adjustments
+                for changes in value
             x-agp34c1g6d130c1q60o34c1p:
               label: Consolidated balance sheet. Equity and liabilities. Grants, donations
                 and bequests received
@@ -2287,10 +2283,10 @@ modelo:
                 operations (cont.). Financial income
             x-agp34c1g6h130c1q60o34e9o:
               label: Consolidated profit and loss account (page 4B sheet 00). Continuing
-                operations (cont.). Financial income. From holdings in equity instruments
+                operations (cont.). Financial income. From equity instrument holdings
             x-agp34c1g6h130c1q60o36c1h:
               label: Consolidated profit and loss account (page 4B sheet 00). Continuing
-                operations (cont.). Financial income. From negotiable securities and
+                operations (cont.). Financial income. From marketable securities and
                 other financial instruments
             x-agp34c1g6h130c1q60o36c1l:
               label: Consolidated profit and loss account (page 4B sheet 00). Continuing
@@ -2349,7 +2345,7 @@ modelo:
             x-agp34c1g6h130c1q60o36c9p:
               label: Consolidated profit and loss account (page 4B sheet 00). Continuing
                 operations (cont.). Impairment and result on disposal of financial
-                instruments. Results on disposals and other
+                instruments. Results from disposals and others
             x-agp34c1g6h130c1q60o36chg:
               label: Consolidated profit and loss account (page 4B sheet 00). Continuing
                 operations (cont.). Results on disposals and other. Gains, group,
@@ -6667,8 +6663,8 @@ modelo:
               label: Reinvestment deductions. Total. Deduction applied in the tax
                 year
             x-agp34c1h6l0j0c1q60o3gd1h:
-              label: Reinvestment deductions. Result of the self-assessment. Total.
-                Deduction outstanding at the start of the tax year
+              label: Reinvestment deductions. Self-assessment result. Total. Deduction
+                outstanding at the start of the tax year
             x-agp34c1h6l0j0c1q60o3gd1j:
               label: Reinvestment deductions. Total. Deduction still outstanding
             x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e64r2qchk:
@@ -6826,7 +6822,7 @@ modelo:
             x-cdnmst31cdq6ubj5dlgmir0:
               label: Contact person for incidents. E-mail address
             x-cdnmst31cdq6ubjedtmm4sj5:
-              label: Contact person for incidents. Name
+              label: Contact person for incidents. Given name
             x-cdnmst31cdq6ubjkclm6apjfdpniqpj9d9ng:
               label: Contact person for incidents. Landline telephone
             x-cdnmst31cdq6ubjkclm6apjfdpniqrbfepkmo:
@@ -6834,7 +6830,7 @@ modelo:
             x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
               label: Parent entity. Surnames or legal name
             x-cln78qb4c5i2qp3fdlkmsobeehiisrjfdlh74p8:
-              label: Parent entity. Name
+              label: Parent entity. Given name
             x-cln78qb4c5i2qp3fdlkmsobeehiisrjldlin4rpdd5i6arjkd5j6ior1cdkmurg:
               label: Parent entity. Identification number
             x-cln78qb4c5i2qp3fdlkmsobeehiiss31d5piqt35e9p6it3fe9kmubb6dtp62r0:
@@ -6894,7 +6890,7 @@ modelo:
             x-d5i6arjkd5j6ior1cdkmurhedpkmc:
               label: Representative or parent entity. Tax identification number (NIF)
             x-d5i6arjkd5j6ior1cdkmurhedpnmqojick:
-              label: Representative or parent entity. Name
+              label: Representative or parent entity. Given name
             x-d5i6arjkd5j6ior1cdkmurhedpqmqpbidsmmesjle1ng:
               label: Representative or parent entity. Tax group number
             x-d5i6arjkd5j6ior1cdkmurhee1in4qbfchng:

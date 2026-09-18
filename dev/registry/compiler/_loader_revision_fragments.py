@@ -13,6 +13,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import get_origin
 
+from pydantic.fields import FieldInfo
+
 from cadrumo.core.toml import freeze_toml, read_toml
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.ids import RevisionId
@@ -22,6 +24,7 @@ from cadrumo.domain.calculations.registry.schema import (
     REVISION_MANIFEST_ONLY_FIELDS,
     ModeloRevision,
 )
+from cadrumo.domain.calculations.registry.schema_revision_members import ConstructDefinition
 
 from ._toml_helpers import as_toml_table as _as_toml_table
 from .loader_grammar import REVISION_SECTION_FIELDS
@@ -32,39 +35,37 @@ _REVISION_COMPLETENESS_MANIFEST = "completeness_manifest"
 _REVISION_SPECIAL_MERGE_FIELDS = frozenset({_REVISION_EXPORT_LAYOUTS, _REVISION_CONSTRUCTS})
 
 
-def _compute_revision_append_arrays() -> frozenset[str]:
-    names: set[str] = set()
-    for field_name, field in ModeloRevision.model_fields.items():
-        if (
-            field.default == ()
-            and get_origin(field.annotation) is tuple
-            and field_name not in _REVISION_SPECIAL_MERGE_FIELDS
-        ):
-            names.add(field_name)
-    return frozenset(names)
+def _compute_append_arrays(
+    fields: Mapping[str, FieldInfo],
+    *,
+    exclude: frozenset[str] = frozenset(),
+) -> frozenset[str]:
+    """Return a model's optional tuple-valued fields, which fragments append to.
+
+    A field that is an empty-defaulted tuple is a collection the edition builds
+    up across fragments; a required or scalar field is a single statement and a
+    second fragment restating it is a redeclaration.  Deriving the set from the
+    model's own fields keeps one answer: a member axis added to the schema is
+    appendable from that same change, rather than waiting for a hand-kept list
+    to be extended alongside it.
+    """
+    return frozenset(
+        name
+        for name, field in fields.items()
+        if field.default == () and get_origin(field.annotation) is tuple and name not in exclude
+    )
 
 
-_REVISION_APPEND_ARRAYS: frozenset[str] = _compute_revision_append_arrays()
-
-
-_COMPLETENESS_MANIFEST_APPEND_ARRAYS: frozenset[str] = frozenset({"casillas"})
-_CONSTRUCT_APPEND_ARRAYS: frozenset[str] = frozenset(
-    {
-        "casilla_ids",
-        "formulas",
-        "parameters",
-        "bindings",
-        "export_layouts",
-        "extraction_profiles",
-        "live_cross_references",
-        "workbook_parity_refs",
-        "verification_expectations",
-        "application_links",
-        "deadline_windows",
-        "filing_schedules",
-        "dependency_classifications",
-    },
+#: A revision's appendable sections, minus the two whose members merge by id
+#: rather than concatenating.
+_REVISION_APPEND_ARRAYS: frozenset[str] = _compute_append_arrays(
+    ModeloRevision.model_fields,
+    exclude=_REVISION_SPECIAL_MERGE_FIELDS,
 )
+#: A construct's member axes, appendable so one construct may be declared across
+#: the fragments of the sections it joins.
+_CONSTRUCT_APPEND_ARRAYS: frozenset[str] = _compute_append_arrays(ConstructDefinition.model_fields)
+_COMPLETENESS_MANIFEST_APPEND_ARRAYS: frozenset[str] = frozenset({"casillas"})
 
 
 def _toml_table_id(value: object) -> str | None:

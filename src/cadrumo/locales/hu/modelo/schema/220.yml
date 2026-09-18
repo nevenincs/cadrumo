@@ -214,10 +214,10 @@ modelo:
               adózási időszak korábbi önadózásaiból fizetendő összegek. Külön jogállású
               tartományi tanácsok és Navarra (Összesen).'
           liquidacion-complementaria-resultado-estado:
-            label: Elszámolás. Fizetendő vagy visszajáró adó. Állam
+            label: Elszámolás. Fizetendő vagy visszajáró nettó összeg. Állam
           liquidacion-complementaria-resultado-forales:
-            label: Elszámolás. Fizetendő vagy visszajáró adó. Külön jogállású tartományi
-              tanácsok és Navarra
+            label: Elszámolás. Fizetendő vagy visszajáró nettó összeg. Külön jogállású
+              tartományi tanácsok és Navarra
           liquidacion-complementaria-resultado-fraccionamiento-anterior-estado:
             label: 'Elszámolás. Fizetendő nettó összeg: Kiegészítő: Az önadózás eredménye
               a LIS 19,1. cikke szerinti 1. részletfizetéssel együtt, a 2025. adózási
@@ -428,11 +428,11 @@ modelo:
             label: Egyéb levonások. Nettó adótartozás. A helyi szabályok alá tartozó
               szervezetek egyedi levonásai
           t22009000-00436:
-            label: 'Az önadózás eredménye. Kifizetés: K+F+I levonások elégtelen adótartozás
-              miatt (LIS 39.2. cikk szerinti választás), összesen. Külön jogállású
-              tartományi tanácsok és Navarra (14. quinquies oldal)'
+            label: Az önadózás eredménye. K+F+i levonások jóváírása elégtelen adókötelezettség
+              miatt (LIS 39.2. cikk szerinti választás) (14 quinquies. oldal), összesen.
+              Külön jogállású tartományi tanácsok és Navarra
           t22009000-00562:
-            label: Teljes adótartozás
+            label: Bruttó adó
           t22009000-00563:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. A Kanári-szigeteken előállított tárgyi termékek
@@ -510,8 +510,8 @@ modelo:
             label: Az üzleti év fizetendő vagy visszajáró adója. Gazdasági érdekcsoportok
               és ideiglenes vállalati társulások által hozzárendelt levonások
           t22009000-00597:
-            label: Az üzleti év fizetendő vagy visszajáró adója. Egyes sorsjáték-
-              és fogadási nyeremények levonásai
+            label: Az üzleti év fizetendő vagy visszajáró adója. Egyes lottó- és fogadási
+              nyeremények forrásadója
           t22009000-00599:
             label: Az üzleti év fizetendő vagy visszajáró adója. Az időszak fizetendő
               vagy visszajáró adója. Állam
@@ -537,11 +537,9 @@ modelo:
             label: Részletfizetések. Különbözeti adótartozás. Harmadik részletfizetés.
               Külön jogállású tartományi tanácsok és Navarra
           t22009000-00611:
-            label: Részletfizetések. Különbözeti adótartozás. Különbözeti adótartozás.
-              Állam
+            label: Részletfizetések. Különbözeti adó. Különbözeti adó. Állam
           t22009000-00612:
-            label: Különbözeti adótartozás. Külön jogállású tartományi tanácsok és
-              Navarra
+            label: Különbözeti adó. Külön jogállású tartományi tanácsok és Navarra
           t22009000-00615:
             label: Az önadózás eredménye. Korábbi időszaki adókedvezmények elvesztése
               miatti növekmény. Állam
@@ -570,7 +568,7 @@ modelo:
               levonások (LIS 39.3. cikk és a 19/1994. törvény 14. kiegészítő rendelkezése),
               Külön jogállású tartományi tanácsok és Navarra'
           t22009000-01737:
-            label: 'Az önadózás eredménye. Kifizetés: kanári-szigeteki külföldi filmgyártási
+            label: 'Az önadózás eredménye. Jóváírás: kanári-szigeteki külföldi filmgyártási
               levonások (LIS 39.3. cikk és a 19/1994. törvény 14. kiegészítő rendelkezése),
               összesen. Külön jogállású tartományi tanácsok és Navarra'
           t22009000-01965:
@@ -578,8 +576,8 @@ modelo:
               teljes adótartozás. Korábbi időszakok belföldi kettős adóztatása az
               időszakban érvényesítve (LIS 23.1. átmeneti rendelkezés) (12. oldal)
           t22009000-02188:
-            label: Az időszak fizetendő vagy visszajáró adója. Levonások és számlára
-              történő befizetések összesen
+            label: Az időszak fizetendő vagy visszajáró adója. Forrásadó és részletfizetés
+              összesen
           t22009000-02353:
             label: Egyéb levonások. Nettó adótartozás. Kanári-szigeteki külföldi filmgyártási
               levonás (LIS 36.2. cikk és a 14/1994. törvény 14. kiegészítő rendelkezése)
@@ -607,15 +605,14 @@ modelo:
             label: Egyéb levonások. Nettó adótartozás. Az átmeneti intézkedések visszafordítása
               miatti levonás (LIS 37.2. átmeneti rendelkezés) (14. sexies oldal)
           t22009000-03358:
-            label: Teljes adótartozás. A kiegyenlítő tartalék korrekciója (LIS 105.6.
-              cikk)
+            label: Bruttó adó. A kiegyenlítő tartalék korrekciója (LIS 105.6. cikk)
           t22009000-03359:
             label: Egyéb levonások. Nettó adótartozás. Külföldi filmgyártási levonás
               (LIS 36.2. cikk) (14. ter oldal)
           t22009000-03360:
-            label: 'Az önadózás eredménye. Kifizetés: külföldi filmgyártási levonások
-              (LIS 39.3. cikk), összesen. Külön jogállású tartományi tanácsok és Navarra
-              (14. ter oldal)'
+            label: Az önadózás eredménye. Külföldi filmgyártási levonások jóváírása
+              (LIS 39.3. cikk) (14 ter. oldal), összesen. Külön jogállású tartományi
+              tanácsok és Navarra
           t22009000-03393:
             label: 'Az önadózás eredménye. Kifizetés: K+F+I levonások elégtelen adótartozás
               miatt (LIS 39.2. cikk szerinti választás), Külön jogállású tartományi
@@ -690,16 +687,16 @@ modelo:
             label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
               3. részletfizetés. Navarra
           t22016000-00474:
-            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adótartozás.
+            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adó.
               Araba
           t22016000-00475:
-            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adótartozás.
+            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adó.
               Gipuzkoa
           t22016000-00476:
-            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adótartozás.
+            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adó.
               Bizkaia
           t22016000-00477:
-            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adótartozás.
+            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adó.
               Navarra
           t22016000-00482:
             label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
@@ -750,7 +747,7 @@ modelo:
             label: Felosztás a külön jogállású adóhatóságok között. Részletfizetések.
               3. részletfizetés. A külön jogállású területek összesen
           t22016000-00612:
-            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adótartozás.
+            label: Felosztás a külön jogállású adóhatóságok között. Különbözeti adó.
               A külön jogállású területek összesen
           t22016000-00616:
             label: Felosztás a külön jogállású adóhatóságok között. Korábbi időszaki
@@ -1006,56 +1003,53 @@ modelo:
             label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: megítélt
               vagy beszámított visszatérítés. Navarra'
           t22016001-02176:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: kifizetés. Araba'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Jóváírás. Araba'
           t22016001-02177:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: kifizetés. Gipuzkoa'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Jóváírás. Gipuzkoa'
           t22016001-02178:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: kifizetés. Bizkaia'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Jóváírás. Bizkaia'
           t22016001-02179:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: kifizetés. Navarra'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Jóváírás. Navarra'
           t22016001-02180:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: beszámítás. Araba'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Beszámítás. Araba'
           t22016001-02181:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: beszámítás. Gipuzkoa'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Beszámítás. Gipuzkoa'
           t22016001-02182:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: beszámítás. Bizkaia'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Beszámítás. Bizkaia'
           t22016001-02183:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: beszámítás. Navarra'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Beszámítás. Navarra'
           t22016001-02184:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: fizetendő. Araba'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Fizetendő. Araba'
           t22016001-02185:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: fizetendő. Gipuzkoa'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Fizetendő. Gipuzkoa'
           t22016001-02186:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: fizetendő. Bizkaia'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Fizetendő. Bizkaia'
           t22016001-02187:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: fizetendő. Navarra'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Fizetendő. Navarra'
           t22016001-02804:
             label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: megítélt
               vagy beszámított visszatérítés. A külön jogállású területek összesen'
           t22016001-02807:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: kifizetés. A külön
-              jogállású területek összesen'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Jóváírás. A külön jogállású területek összesen'
           t22016001-02810:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: beszámítás. A külön
-              jogállású területek összesen'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Beszámítás. A külön jogállású területek összesen'
           t22016001-02813:
-            label: 'Felosztás a külön jogállású adóhatóságok között. A halasztott
-              adókövetelés átváltásának eredménye korrekció után: fizetendő. A külön
-              jogállású területek összesen'
+            label: 'Felosztás a külön jogállású adóhatóságok között. Az AID átalakításának
+              eredménye a rendezés után: Fizetendő. A külön jogállású területek összesen'
           t22016001-03325:
             label: 'Felosztás a külön jogállású adóhatóságok között. Kiegészítő: megítélt
               vagy beszámított visszatérítés. Araba'
@@ -1125,7 +1119,7 @@ modelo:
       construct:
         modelo-220-declaration-construct:
           field:
-            title: A 220-as modelo adócsoport éves bevallása a fiskális konszolidációs
+            title: A 220-as nyomtatvány adócsoport éves bevallása a fiskális konszolidációs
               rendszerben
       field:
         official_name: Modelo 220. Társasági adó. Adókonszolidációs rendszer. Bevallás.
@@ -1195,13 +1189,13 @@ modelo:
                 és egyéb követelések
             x-agp34c1g6d0j0c1q60o32d9g:
               label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Vevőkövetelések
-                és egyéb követelések. Vevők árbevételből és szolgáltatásnyújtásból
+                és egyéb követelések. Vevők értékesítésekből és szolgáltatásnyújtásból
             x-agp34c1g6d0j0c1q60o32d9m:
               label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Vevőkövetelések
                 és egyéb követelések. Tényleges adókövetelések
             x-agp34c1g6d0j0c1q60o32d9p:
               label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Vevőkövetelések
-                és egyéb követelések. Egyéb követelések
+                és egyéb követelések. Egyéb adósok
             x-agp34c1g6d0j0c1q60o32dhg:
               label: Konszolidált mérleg. Eszközök (3A. oldal, 00. lap). Rövid távú
                 befektetések csoporttagokban és társult vállalkozásokban
@@ -1511,7 +1505,7 @@ modelo:
                 részesedése a biztosítástechnikai tartalékokból
             x-agp34c1g6d0j0chq60o32cpo:
               label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). A viszontbiztosító
-                részesedése a biztosítástechnikai tartalékokból. Meg meg nem szolgált
+                részesedése a biztosítástechnikai tartalékokból. Meg nem szolgált
                 díjak tartaléka
             x-agp34c1g6d0j0chq60o32cpp:
               label: Konszolidált mérleg. Eszközök (3A. oldal, 02. lap). A viszontbiztosító
@@ -1582,14 +1576,13 @@ modelo:
             x-agp34c1g6d130c1q60o32e1m:
               label: Konszolidált mérleg. Saját tőke és kötelezettségek. Saját források
             x-agp34c1g6d130c1q60o32e1n:
-              label: Konszolidált mérleg. Saját tőke és kötelezettségek. Jegyzett
-                tőke
+              label: Konszolidált mérleg. Saját tőke és kötelezettségek. Tőke
             x-agp34c1g6d130c1q60o32e1o:
-              label: Konszolidált mérleg. Saját tőke és kötelezettségek. Jegyzett
-                tőke. Bejegyzett jegyzett tőke
+              label: Konszolidált mérleg. Saját tőke és kötelezettségek. Tőke. Bejegyzett
+                jegyzett tőke
             x-agp34c1g6d130c1q60o32e1p:
-              label: Konszolidált mérleg. Saját tőke és kötelezettségek. Jegyzett
-                tőke. Be nem fizetett jegyzett tőke
+              label: Konszolidált mérleg. Saját tőke és kötelezettségek. Tőke. Be
+                nem fizetett jegyzett tőke
             x-agp34c1g6d130c1q60o32e9g:
               label: Konszolidált mérleg. Saját tőke és kötelezettségek. Tőketartalék
             x-agp34c1g6d130c1q60o32e9h:
@@ -1608,8 +1601,8 @@ modelo:
             x-agp34c1g6d130c1q60o34c1h:
               label: Konszolidált mérleg. Saját tőke és kötelezettségek. Egyéb tőkeinstrumentumok
             x-agp34c1g6d130c1q60o34c1i:
-              label: Konszolidált mérleg. Saját tőke és kötelezettségek. Értékelési
-                korrekciók
+              label: Konszolidált mérleg. Saját tőke és kötelezettségek. Értékváltozások
+                miatti kiigazítások
             x-agp34c1g6d130c1q60o34c1p:
               label: Konszolidált mérleg. Saját tőke és kötelezettségek. Kapott támogatások,
                 adományok és hagyatékok
@@ -1689,7 +1682,7 @@ modelo:
                 és egyéb kötelezettségek. Tényleges adókötelezettségek
             x-agp34c1g6d130c1q60o34d1p:
               label: Konszolidált mérleg. Saját tőke és kötelezettségek. Szállítói
-                és egyéb kötelezettségek. Egyéb kötelezettségek
+                és egyéb kötelezettségek. Egyéb hitelezők
             x-agp34c1g6d130c1q60o34d9g:
               label: Konszolidált mérleg. Saját tőke és kötelezettségek. Rövid távú
                 időbeli elhatárolások
@@ -2317,8 +2310,8 @@ modelo:
                 tevékenységek (folyt.). Pénzügyi bevételek
             x-agp34c1g6h130c1q60o34e9o:
               label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
-                tevékenységek (folyt.). Pénzügyi bevételek. Tőkeinstrumentumokban
-                levő részesedésekből
+                tevékenységek (folyt.). Pénzügyi bevételek. Saját tőke instrumentumokban
+                lévő részesedésekből
             x-agp34c1g6h130c1q60o36c1h:
               label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
                 tevékenységek (folyt.). Pénzügyi bevételek. Forgalomképes értékpapírokból
@@ -2381,7 +2374,7 @@ modelo:
             x-agp34c1g6h130c1q60o36c9p:
               label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
                 tevékenységek (folyt.). Pénzügyi instrumentumok értékvesztése és elidegenítési
-                eredménye. Elidegenítési és egyéb eredmények
+                eredménye. Elidegenítések és egyebek eredménye
             x-agp34c1g6h130c1q60o36chg:
               label: Konszolidált eredménykimutatás (4B. oldal, 00. lap). Folytatódó
                 tevékenységek (folyt.). Elidegenítési és egyéb eredmények. Nyereségek,
@@ -6551,7 +6544,7 @@ modelo:
               label: Újrabefektetéshez kapcsolódó levonások. Az önadózás eredménye.
                 Összesen. Az adóév elején fennálló levonás
             x-agp34c1h6l0j0c1q60o3gd1j:
-              label: Újrabefektetéshez kapcsolódó levonások. Összesen. Meg érvényesíthető
+              label: Újrabefektetéshez kapcsolódó levonások. Összesen. Még érvényesíthető
                 levonás
             x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e64r2qchk:
               label: Újrabefektetéshez kapcsolódó levonások. Az eszköz átruházásából
@@ -6574,7 +6567,7 @@ modelo:
               label: Újrabefektetéshez kapcsolódó levonások. Az időszakban érvényesített
                 levonás
             x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e70s2qc9g6g:
-              label: Újrabefektetéshez kapcsolódó levonások. Meg érvényesíthető levonás
+              label: Újrabefektetéshez kapcsolódó levonások. Még érvényesíthető levonás
             x-agp34c1h6l130c1q60o38dhp:
               label: Nyereség befektetéséhez kapcsolódó levonás (LIS 24.5. átmeneti
                 rendelkezés és TRLIS 37. cikk). TRLIS 37. cikk. Összesen. Az adóév
@@ -6709,17 +6702,17 @@ modelo:
               label: Kiegészítő önadózás. Az eszközátalakítási vagyoni hozzájárulás
                 önadózásának bizonylatszáma
             x-cdnmst31cdq6ubj5dlgmir0:
-              label: Kapcsolattartó személy. E-mail cím
+              label: Kapcsolattartó személy incidensek esetén. E-mail cím
             x-cdnmst31cdq6ubjedtmm4sj5:
-              label: Kapcsolattartó személy. Név
+              label: Kapcsolattartó személy incidensek esetén. Utónév
             x-cdnmst31cdq6ubjkclm6apjfdpniqpj9d9ng:
-              label: Kapcsolattartó személy. Vezetékes telefon
+              label: Kapcsolattartó személy incidensek esetén. Vezetékes telefon
             x-cdnmst31cdq6ubjkclm6apjfdpniqrbfepkmo:
-              label: Kapcsolattartó személy. Mobiltelefon
+              label: Kapcsolattartó személy incidensek esetén. Mobiltelefon
             x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
               label: Anyavállalat. Vezetéknév vagy cégnév
             x-cln78qb4c5i2qp3fdlkmsobeehiisrjfdlh74p8:
-              label: Anyavállalat. Név
+              label: Anyavállalat. Utónév
             x-cln78qb4c5i2qp3fdlkmsobeehiisrjldlin4rpdd5i6arjkd5j6ior1cdkmurg:
               label: Anyavállalat. Azonosító szám
             x-cln78qb4c5i2qp3fdlkmsobeehiiss31d5piqt35e9p6it3fe9kmubb6dtp62r0:
@@ -6777,49 +6770,43 @@ modelo:
             x-d5i6arjkd5j6ior1cdkmurhedpkmc:
               label: Képviselő vagy anyavállalat. Adóazonosító szám (NIF)
             x-d5i6arjkd5j6ior1cdkmurhedpnmqojick:
-              label: Képviselő vagy anyavállalat. Név
+              label: Képviselő vagy anyavállalat. Utónév
             x-d5i6arjkd5j6ior1cdkmurhedpqmqpbidsmmesjle1ng:
               label: Képviselő vagy anyavállalat. Az adócsoport száma
             x-d5i6arjkd5j6ior1cdkmurhee1in4qbfchng:
               label: Képviselő vagy anyavállalat. Időszak
             x-d5i6arjkd5j6ior1cdkmurheehimopb6dtn6u:
-              label: Képviselő vagy anyavállalat. Telefonszám
+              label: Képviselő vagy anyavállalat. Telefon
             x-e1in4qbfchniqqbde1nn6qbkd5r6ubj6clhmgo9dcpkmsobc:
               label: Adózási időszak. Záró dátum
             x-e1in4qbfchniqqbde1nn6qbkd5r6ubj6clhmgo9dd5n6ior9ds:
               label: Adózási időszak. Kezdő dátum
             x-e1in4qbfchniqqbde1nn6qbkd5r6ubjkd5o6ubb5d9in4or9cdkmu:
-              label: Adózási időszak. Az üzleti év típusa
+              label: Adózási időszak. Adóév típusa
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmcpb3d1giqs3fchin4:
-              label: Törvényes képviselők. 1. törvényes képviselő. A meghatalmazás
-                dátuma
+              label: Törvényes képviselők. A meghatalmazás dátuma (1. törvényes képviselő)
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsqb6:
-              label: Törvényes képviselők. 1. törvényes képviselő. Adóazonosító szám
-                (NIF)
+              label: Törvényes képviselők. Adóazonosító szám (NIF) (1. törvényes képviselő)
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsrrdc9p6a:
-              label: Törvényes képviselők. 1. törvényes képviselő. Név és vezetéknév
+              label: Törvényes képviselők. Név és vezetéknév (1. törvényes képviselő)
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc64mmsrrkc5p6io8:
-              label: Törvényes képviselők. 1. törvényes képviselő. Közjegyzői iroda
+              label: Törvényes képviselők. Közjegyzői iroda (1. törvényes képviselő)
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmcpb3d1giqs3fchin4:
-              label: Törvényes képviselők. 2. törvényes képviselő. A meghatalmazás
-                dátuma
+              label: Törvényes képviselők. A meghatalmazás dátuma (2. törvényes képviselő)
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsqb6:
-              label: Törvényes képviselők. 2. törvényes képviselő. Adóazonosító szám
-                (NIF)
+              label: Törvényes képviselők. Adóazonosító szám (NIF) (2. törvényes képviselő)
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsrrdc9p6a:
-              label: Törvényes képviselők. 2. törvényes képviselő. Név és vezetéknév
+              label: Törvényes képviselők. Név és vezetéknév (2. törvényes képviselő)
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc68mmsrrkc5p6io8:
-              label: Törvényes képviselők. 2. törvényes képviselő. Közjegyzői iroda
+              label: Törvényes képviselők. Közjegyzői iroda (2. törvényes képviselő)
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmcpb3d1giqs3fchin4:
-              label: Törvényes képviselők. 3. törvényes képviselő. A meghatalmazás
-                dátuma
+              label: Törvényes képviselők. A meghatalmazás dátuma (3. törvényes képviselő)
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsqb6:
-              label: Törvényes képviselők. 3. törvényes képviselő. Adóazonosító szám
-                (NIF)
+              label: Törvényes képviselők. Adóazonosító szám (NIF) (3. törvényes képviselő)
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsrrdc9p6a:
-              label: Törvényes képviselők. 3. törvényes képviselő. Név és vezetéknév
+              label: Törvényes képviselők. Név és vezetéknév (3. törvényes képviselő)
             x-e9in0sj5edimst31dpq6aspddhimeobcclpissjc6cmmsrrkc5p6io8:
-              label: Törvényes képviselők. 3. törvényes képviselő. Közjegyzői iroda
+              label: Törvényes képviselők. Közjegyzői iroda (3. törvényes képviselő)
           field:
             label: Orden HAC/657/2025 (220-as modelo), 2024-es adóév
         '2025':

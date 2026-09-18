@@ -11,7 +11,7 @@ import pytest
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
-from ..errors import NoRevisionForPeriodError
+from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..export import resolve_export_layout
 from ..export_parse import parse_export_payload
 from ..formula_runtime import calculate_registry_snapshot
@@ -289,10 +289,13 @@ def test_committed_modelo_131_refuses_the_year_below_the_supported_floor(
     supported_years = published_supported_filing_years()
     assert supported_years is not None
     # The 2019-2023 revision is authored from 2019, so this refusal comes from the
-    # support floor rather than from a missing authored edition.
+    # support floor rather than from a missing authored edition -- and the refusal
+    # now SAYS so, rather than reporting an absence the corpus contradicts.
     assert published_authored_revision("131", year=supported_years.floor - 1).id == "2019-2023"
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
         registry_snapshot("131", supported_years.floor - 1, "1T", grade=RegistryAuthorityGrade.CALCULATION)
+    assert excinfo.value.floor == supported_years.floor
+    assert "2019-2023" in excinfo.value.covering_revision_ids
 
 
 def test_committed_modelo_180_registry_snapshot_calculates_annual_summary_from_modelo_115_relations_and_count_binding(

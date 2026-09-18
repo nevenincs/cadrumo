@@ -12,10 +12,10 @@ from cadrumo.core.revision_review import RevisionReviewStatus
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.export import derive_export_layouts_from_bindings
 from cadrumo.domain.calculations.registry.snapshot import check_snapshot_filing_capability
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_validated_snapshot
 
 from ..compiler.authority import compile_validated_authority
+from ..conformance.registry_schema_support import committed_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -135,8 +135,14 @@ def test_build_validated_snapshot_refuses_real_m182_non_operator_revision(
 
 
 def _committed_registry():
-    """Load the tree through the compiler, so this proof survives a red validation gate."""
-    return bundled_registry_tree()
+    """Load the tree through the COMPILER, so this proof survives a red validation gate.
+
+    Not the published view: that view lists the modelos a generation publishes
+    and the references they cite, and carries no governed facts at all by
+    design. A snapshot built from it reads an empty fact catalogue, which is
+    exactly the "thinner tree" the assertion below exists to rule out.
+    """
+    return committed_registry_tree()
 
 
 def test_filing_grade_snapshot_refuses_a_reviewed_revision_that_declares_no_export_layout() -> None:

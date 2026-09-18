@@ -314,7 +314,7 @@ modelo:
           ep-domicilio-fiscal-planta:
             label: Állandó telephely. Spanyolországi adóügyi lakcím. Emelet
           ep-domicilio-fiscal-portal:
-            label: Állandó telephely. Spanyolországi adóügyi lakcím. Lépcsőház bejárata
+            label: Állandó telephely. Spanyolországi adóügyi lakcím. Bejárat
           ep-domicilio-fiscal-puerta:
             label: Állandó telephely. Spanyolországi adóügyi lakcím. Ajtó
           ep-domicilio-fiscal-referencia-catastral:
@@ -668,7 +668,7 @@ modelo:
           pf-domicilio-fiscal-planta:
             label: Spanyolországi adóügyi lakcím. Emelet
           pf-domicilio-fiscal-portal:
-            label: Spanyolországi adóügyi lakcím. Lépcsőház bejárata
+            label: Spanyolországi adóügyi lakcím. Bejárat
           pf-domicilio-fiscal-puerta:
             label: Spanyolországi adóügyi lakcím. Ajtó
           pf-domicilio-fiscal-referencia-catastral:
@@ -702,7 +702,7 @@ modelo:
           pf-domicilio-gestion-administrativa-planta:
             label: Ügyintézési cím. Emelet
           pf-domicilio-gestion-administrativa-portal:
-            label: Ügyintézési cím. Lépcsőház bejárata
+            label: Ügyintézési cím. Bejárat
           pf-domicilio-gestion-administrativa-puerta:
             label: Ügyintézési cím. Ajtó
           pf-domicilio-gestion-administrativa-tipo-numero:
@@ -802,7 +802,7 @@ modelo:
             label: Azonosítás. Az illetőség szerinti állam adóazonosító kódja vagy
               közösségi adószám
           pf-identificacion-nombre:
-            label: Azonosítás. Keresztnév
+            label: Azonosítás. Utónév
           pf-identificacion-nombre-comercial:
             label: Azonosítás. Kereskedelmi név
           pj-aviso-email:
@@ -813,68 +813,68 @@ modelo:
           pj-aviso-telefono-movil:
             label: Jogi személy vagy szervezet. Értesítések. Mobiltelefon
           pj-dext-codigo-pais:
-            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli cím.
+            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli lakcím.
               Országkód
           pj-dext-codigo-postal:
-            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli cím.
+            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli lakcím.
               Irányítószám
           pj-dext-complemento-domicilio:
-            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli cím.
+            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli lakcím.
               Cím kiegészítése
           pj-dext-domicilio:
-            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli cím.
-              Cím
+            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli lakcím.
+              Lakcím
           pj-dext-pais:
-            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli cím.
+            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli lakcím.
               Ország
           pj-dext-poblacion:
-            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli cím.
+            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli lakcím.
               Település vagy város
           pj-dext-provincia-region:
-            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli cím.
+            label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli lakcím.
               Tartomány, régió vagy állam
           pj-dfisc-bloque:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Tömb
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Tömb
           pj-dfisc-calificador-numero:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Házszám
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Házszám
               kiegészítője
           pj-dfisc-codigo-postal:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Irányítószám
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Irányítószám
           pj-dfisc-codigo-provincia:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Tartománykód
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Tartománykód
           pj-dfisc-complemento-domicilio:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Cím kiegészítése
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Cím
+              kiegészítése
           pj-dfisc-escalera:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Lépcsőház
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Lépcsőház
           pj-dfisc-indicador-referencia-catastral:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Az adóügyi
-              cím ingatlan-nyilvántartási jelzője
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Az
+              adóügyi lakcím ingatlan-nyilvántartási jelzője
           pj-dfisc-localidad:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Helység
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Helység
               vagy település
           pj-dfisc-municipio:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Település
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Település
               neve
           pj-dfisc-nombre-via:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Közterület
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Közterület
               neve
           pj-dfisc-numero-casa:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Házszám
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Házszám
           pj-dfisc-planta:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Emelet
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Emelet
           pj-dfisc-portal:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Lépcsőház
-              bejárata
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Bejárat
           pj-dfisc-puerta:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Ajtó
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Ajtó
           pj-dfisc-referencia-catastral:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Ingatlan-nyilvántartási
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Ingatlan-nyilvántartási
               hivatkozás
           pj-dfisc-tipo-numero:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Házszám
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Házszám
               típusa
           pj-dfisc-tipo-via:
-            label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. Közterület
+            label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. Közterület
               jellege
           pj-dnoti-apartado-calidad:
             label: Jogi személy vagy szervezet. Értesítési cím. Minősége a postafiók
@@ -951,7 +951,7 @@ modelo:
           pj-dsoc-planta:
             label: Jogi személy vagy szervezet. Székhely. Emelet
           pj-dsoc-portal:
-            label: Jogi személy vagy szervezet. Székhely. Lépcsőház bejárata
+            label: Jogi személy vagy szervezet. Székhely. Bejárat
           pj-dsoc-puerta:
             label: Jogi személy vagy szervezet. Székhely. Ajtó
           pj-dsoc-tipo-numero:
@@ -1143,55 +1143,52 @@ modelo:
           ret-medioambientales-obligacion-declarar-fecha:
             label: Környezetvédelmi adók. A bevallásbenyújtási kötelezettség dátuma
           ret-retenciones-actividades-profesionales:
-            label: 'Levonások és számlára történő befizetések. Levonási vagy számlára
-              történő befizetési kötelezettség: szakmai tevékenységből származó jövedelem'
+            label: 'Forrásadó és részletfizetés. Levonási vagy számlára történő befizetési
+              kötelezettség: szakmai tevékenységből származó jövedelem'
           ret-retenciones-actividades-profesionales-fecha:
-            label: 'Levonások és számlára történő befizetések. A kötelezettség dátuma:
-              szakmai tevékenységből származó jövedelem'
+            label: 'Forrásadó és részletfizetés. A kötelezettség dátuma: szakmai tevékenységből
+              származó jövedelem'
           ret-retenciones-arrendamiento:
-            label: 'Levonások és számlára történő befizetések. Levonási vagy számlára
-              történő befizetési kötelezettség: bérbeadásból vagy albérletből származó
-              jövedelem'
+            label: 'Forrásadó és részletfizetés. Levonási vagy számlára történő befizetési
+              kötelezettség: bérbeadásból vagy albérletből származó jövedelem'
           ret-retenciones-arrendamiento-fecha:
-            label: 'Levonások és számlára történő befizetések. A kötelezettség dátuma:
-              bérbeadásból vagy albérletből származó jövedelem'
+            label: 'Forrásadó és részletfizetés. A kötelezettség dátuma: bérbeadásból
+              vagy albérletből származó jövedelem'
           ret-retenciones-capital-mobiliario-contraprestacion:
-            label: 'Levonások és számlára történő befizetések. Levonási vagy számlára
-              történő befizetési kötelezettség: ellenszolgáltatásból származó tőkejövedelem'
+            label: 'Forrásadó és részletfizetés. Levonási vagy számlára történő befizetési
+              kötelezettség: ellenszolgáltatásból származó tőkejövedelem'
           ret-retenciones-capital-mobiliario-contraprestacion-fecha:
-            label: 'Levonások és számlára történő befizetések. A kötelezettség dátuma:
-              ellenszolgáltatásból származó tőkejövedelem'
+            label: 'Forrásadó és részletfizetés. A kötelezettség dátuma: ellenszolgáltatásból
+              származó tőkejövedelem'
           ret-retenciones-capital-mobiliario-operaciones:
-            label: 'Levonások és számlára történő befizetések. Levonási vagy számlára
-              történő befizetési kötelezettség: ügyletekből származó tőkejövedelem'
+            label: 'Forrásadó és részletfizetés. Levonási vagy számlára történő befizetési
+              kötelezettség: ügyletekből származó tőkejövedelem'
           ret-retenciones-capital-mobiliario-operaciones-fecha:
-            label: 'Levonások és számlára történő befizetések. A kötelezettség dátuma:
-              ügyletekből származó tőkejövedelem'
+            label: 'Forrásadó és részletfizetés. A kötelezettség dátuma: ügyletekből
+              származó tőkejövedelem'
           ret-retenciones-capital-mobiliario-otros:
-            label: 'Levonások és számlára történő befizetések. Levonási vagy számlára
-              történő befizetési kötelezettség: egyéb tőkejövedelem'
+            label: 'Forrásadó és részletfizetés. Levonási vagy számlára történő befizetési
+              kötelezettség: egyéb tőkejövedelem'
           ret-retenciones-capital-mobiliario-otros-fecha:
-            label: 'Levonások és számlára történő befizetések. A kötelezettség dátuma:
-              egyéb tőkejövedelem'
+            label: 'Forrásadó és részletfizetés. A kötelezettség dátuma: egyéb tőkejövedelem'
           ret-retenciones-capital-mobiliario-transmision:
-            label: 'Levonások és számlára történő befizetések. Levonási vagy számlára
-              történő befizetési kötelezettség: átruházásból származó tőkejövedelem'
+            label: 'Forrásadó és részletfizetés. Levonási vagy számlára történő befizetési
+              kötelezettség: átruházásból származó tőkejövedelem'
           ret-retenciones-capital-mobiliario-transmision-fecha:
-            label: 'Levonások és számlára történő befizetések. A kötelezettség dátuma:
-              átruházásból származó tőkejövedelem'
+            label: 'Forrásadó és részletfizetés. A kötelezettség dátuma: átruházásból
+              származó tőkejövedelem'
           ret-retenciones-trabajo-personal:
-            label: 'Levonások és számlára történő befizetések. Levonási vagy számlára
-              történő befizetési kötelezettség: munkaviszonyból származó jövedelem'
+            label: 'Forrásadó és részletfizetés. Levonási vagy számlára történő befizetési
+              kötelezettség: munkaviszonyból származó jövedelem'
           ret-retenciones-trabajo-personal-fecha:
-            label: 'Levonások és számlára történő befizetések. A kötelezettség dátuma:
-              munkaviszonyból származó jövedelem'
+            label: 'Forrásadó és részletfizetés. A kötelezettség dátuma: munkaviszonyból
+              származó jövedelem'
           ret-retenciones-transmision-acciones:
-            label: 'Levonások és számlára történő befizetések. Levonási vagy számlára
-              történő befizetési kötelezettség: részvények vagy részesedések átruházása
-              vagy visszaváltása'
+            label: 'Forrásadó és részletfizetés. Levonási vagy számlára történő befizetési
+              kötelezettség: részvények vagy részesedések átruházása vagy visszaváltása'
           ret-retenciones-transmision-acciones-fecha:
-            label: 'Levonások és számlára történő befizetések. A kötelezettség dátuma:
-              részvények vagy részesedések átruházása vagy visszaváltása'
+            label: 'Forrásadó és részletfizetés. A kötelezettség dátuma: részvények
+              vagy részesedések átruházása vagy visszaváltása'
           ret-servicios-digitales-obligacion-autoliquidar:
             label: Egyes digitális szolgáltatások adója. Önadózás benyújtására köteles
           ret-servicios-digitales-obligacion-autoliquidar-fecha:
@@ -1241,7 +1238,7 @@ modelo:
       construct:
         modelo-036-censo-foundation:
           field:
-            title: '036-os modelo: alap cenzusadatok'
+            title: '036-os nyomtatvány: alap cenzusadatok'
       field:
         official_name: Modelo 036. Nyilvántartásba-vételi bevallás a vállalkozók,
           szakemberek és adólevonásra kötelezettek nyilvántartásába való bejelentkezésről,
@@ -1543,12 +1540,12 @@ modelo:
               label: Jogi személy vagy szervezet. Értesítések. TEA-értesítések törlése
             x-e1l2sp35f1q2qqbechkm6ob4dtp2qp3fdlkm6qbcd5niqpboehp62rjaclp6u:
               label: Jogi személy vagy szervezet. Az illetőség szerinti állambeli
-                cím. Külföldi adóügyi cím vagy székhely jelzője
+                lakcím. Külföldi adóügyi cím vagy székhely jelzője
             x-e1l2sp36d5pm6bb3dti6iprf5lmnarj9cdkn0qbf5lkmsp8:
-              label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. INE
+              label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. INE
                 településkód
             x-e1l2sp36d5pm6bb3dti6iprf5lr6io9dd5n6a:
-              label: Jogi személy vagy szervezet. Spanyolországi adóügyi cím. INE
+              label: Jogi személy vagy szervezet. Spanyolországi adóügyi lakcím. INE
                 közterület-kód
             x-e1l2sp3edtq6ibb2c5l62bb4dtmmior9dhkmu:
               label: Jogi személy vagy szervezet. Értesítési cím. Az értesítési cím

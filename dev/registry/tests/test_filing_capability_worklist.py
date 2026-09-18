@@ -642,10 +642,18 @@ def _casilla_surface_shortfall(
     )
 
 
-#: Open-ended designs are treated as covering to this horizon, matching
-#: :mod:`test_layout_design_applies_to_claimed_years`, which asks the same
-#: question about revisions that already declare a layout.
-_OPEN_ENDED_HORIZON = 2026
+def _open_ended_horizon() -> int:
+    """Return the upper bound an open-ended selector or window is read against.
+
+    DERIVED from the registry's own support envelope, never written down. The
+    literal this replaces carried a comment claiming it was derived from the
+    corpus; it was not, and a pinned horizon fails silently -- an open-ended
+    design simply stops being checked past the year somebody last typed, and
+    nothing in the tree notices. The envelope is the registry's single
+    declaration of the temporal ceiling, so consumers read it rather than
+    keeping a second copy.
+    """
+    return bundled_registry_tree()[1].require_supported_filing_years().horizon
 
 
 def _uncovered_design_owners(modelo: ModeloDefinition) -> tuple[_OwnerRoute, ...]:
@@ -699,7 +707,7 @@ def _uncovered_claimed_years(
     elif selector.year_from is None:
         return []
     else:
-        upper = selector.year_to if selector.year_to is not None else _OPEN_ENDED_HORIZON
+        upper = selector.year_to if selector.year_to is not None else _open_ended_horizon()
         claimed = list(range(selector.year_from, upper + 1))
 
     windows: list[tuple[int | None, int | None]] = []

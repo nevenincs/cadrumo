@@ -141,6 +141,7 @@ from cadrumo.domain.calculations.registry.tests.scenarios import (
     run_registry_calculation_scenario,
 )
 from dev.registry.tests.manual_oracle_support import oracle_declared_figures
+from dev.registry.tests.profile_schema_support import authored_history_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -251,7 +252,10 @@ def test_0025_manual_worked_example_despido_improcedente_discapacidad() -> None:
         expected_0025=Decimal("5837.50"),
         scenario_id="m100-2020-0025-manual-despido-improcedente-discapacidad",
     )
-    report = run_registry_calculation_scenario(scenario)
+    # Resolved through the compiler's authored authority: the published span
+    # begins at the supported floor, so this ejercicio's coordinate cannot be
+    # reached there at all.
+    report = run_registry_calculation_scenario(scenario, authority=authored_history_authority())
     assert_registry_scenario_matches(report)
 
 
@@ -272,7 +276,7 @@ def test_0025_anti_tautology_art20_reduccion_change_changes_value() -> None:
         expected_0025=Decimal("5837.50"),
         scenario_id="m100-2020-0025-anti-tautology-with-reduccion",
     )
-    with_reduccion_report = run_registry_calculation_scenario(with_reduccion)
+    with_reduccion_report = run_registry_calculation_scenario(with_reduccion, authority=authored_history_authority())
     assert_registry_scenario_matches(with_reduccion_report)
 
     # The zero-reducción scenario's expected 0025 value is never asserted
@@ -285,7 +289,9 @@ def test_0025_anti_tautology_art20_reduccion_change_changes_value() -> None:
         expected_0025=Decimal("0.00"),
         scenario_id="m100-2020-0025-anti-tautology-without-reduccion",
     )
-    without_reduccion_report = run_registry_calculation_scenario(without_reduccion)
+    without_reduccion_report = run_registry_calculation_scenario(
+        without_reduccion, authority=authored_history_authority()
+    )
     assert (
         with_reduccion_report.calculation.values[_CASILLA_0025]
         != without_reduccion_report.calculation.values[_CASILLA_0025]
@@ -293,7 +299,7 @@ def test_0025_anti_tautology_art20_reduccion_change_changes_value() -> None:
 
 
 def test_0025_manual_grounding_is_enrolled_and_raises_independently_grounded_fraction(
-    registry_authority: ValidatedRegistryAuthority,
+    authored_history_registry_authority: ValidatedRegistryAuthority,
 ) -> None:
     """The manual-oracle grounding of 0012/0017/0022/0025 is enrolled, not just computed.
 
@@ -313,7 +319,7 @@ def test_0025_manual_grounding_is_enrolled_and_raises_independently_grounded_fra
     the registry's own declared+validated data, never hand-computed or
     asserted from a synthetic fixture.
     """
-    authority = registry_authority
+    authority = authored_history_registry_authority
     snapshot = authority.snapshot("100", filing_year=2020, period="0A")
     policy = snapshot.verification_policy()
 

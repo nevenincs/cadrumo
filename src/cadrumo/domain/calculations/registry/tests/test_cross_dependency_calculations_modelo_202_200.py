@@ -7,7 +7,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
-from ..errors import NoRevisionForPeriodError
+from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import (
     relation_prefill_bindings_for_period,
@@ -140,8 +140,9 @@ def test_modelo_202_revision_selection_refuses_years_below_the_supported_floor(
     below_floor = supported_years.floor - 1
     # The 2019-2022 revision still authors this year; the refusal is the floor's.
     assert published_authored_revision("202", year=below_floor).id == "2019-2022"
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
         registry_snapshot("202", below_floor, "1P")
+    assert "2019-2022" in excinfo.value.covering_revision_ids
 
 
 def test_modelo_202_2023_2024_total_correcciones_aumentos_excludes_complementario_column(

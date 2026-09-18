@@ -148,3 +148,38 @@ def test_no_shipped_casilla_text_is_half_translated() -> None:
     ]
 
     assert not found, found[:5]
+
+
+@pytest.mark.integration
+@pytest.mark.external_tool
+def test_the_spanish_word_for_a_box_is_reported_in_a_translation() -> None:
+    """Every locale states the box in its own word, so `casilla` is a leftover."""
+    values: Values = {"en": {_KEY: "Transfer the amount to casilla [1142] of annex B.7"}}
+    sources = {"en": {_KEY: frozenset({"Traslade el importe a la casilla [1142] del anexo B.7"})}}
+
+    assert [item.words for item in spanish_leftovers(values, sources)] == [("casilla",)]
+
+
+@pytest.mark.integration
+@pytest.mark.external_tool
+@pytest.mark.parametrize(
+    ("english", "reported"),
+    [
+        ("Reduction for certain insurance contracts (art. 130 LIS)", False),
+        ("Deferred tax assets (AID) pending application", False),
+        ("Prior net income (estimación directa simplificada)", True),
+        ("Other capital gains (intereses indemnizatorios)", True),
+    ],
+)
+def test_spanish_prose_inside_a_parenthesis_is_read_like_the_rest(english: str, reported: bool) -> None:
+    """A parenthesis holding a citation or an acronym is skipped; one holding words is not."""
+    spanish = (
+        "Reducción aplicable a determinados contratos de seguro (art. 130 LIS) "
+        "Activos por impuesto diferido (AID) pendientes de aplicación "
+        "Rendimiento neto previo (estimación directa simplificada) "
+        "Otras ganancias patrimoniales (intereses indemnizatorios)"
+    )
+    values: Values = {"en": {_KEY: english}}
+    sources = {"en": {_KEY: frozenset({spanish})}}
+
+    assert bool(list(spanish_leftovers(values, sources))) is reported

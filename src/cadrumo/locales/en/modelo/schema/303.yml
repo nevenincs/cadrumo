@@ -4,26 +4,26 @@ modelo:
       casilla:
         continuidad:
           dr303-01:
-            label: Accrued VAT, general regime super-reduced 4% rate - Tax base
+            label: Accrued VAT, general regime super-reduced 4% rate - Taxable base
           dr303-02:
             label: Accrued VAT, general regime super-reduced 4% rate - Rate percentage
           dr303-03:
-            label: Accrued VAT, general regime super-reduced 4% rate - VAT amount
+            label: Accrued VAT, general regime super-reduced 4% rate - Tax amount
           dr303-04:
-            label: Accrued VAT, general regime reduced 10% rate - Tax base
+            label: Accrued VAT, general regime reduced 10% rate - Taxable base
           dr303-05:
             label: Accrued VAT, general regime reduced 10% rate - Rate percentage
           dr303-06:
-            label: Accrued VAT, general regime reduced 10% rate - VAT amount
+            label: Accrued VAT, general regime reduced 10% rate - Tax amount
           dr303-07:
-            label: Accrued VAT, general regime standard 21% rate - Tax base
+            label: Accrued VAT, general regime standard 21% rate - Taxable base
           dr303-08:
             label: Accrued VAT, general regime standard 21% rate - Rate percentage
           dr303-09:
-            label: Accrued VAT, general regime standard 21% rate - VAT amount
+            label: Accrued VAT, general regime standard 21% rate - Tax amount
           dr303-10:
             label: Accrued VAT on intra-Community acquisitions of goods and services
-              - base
+              - Tax base
           dr303-108:
             label: Corrective return - other adjustments in cases determined by discrepancy
               with administrative criterion
@@ -32,7 +32,7 @@ modelo:
               of the tax year and period
           dr303-11:
             label: Accrued VAT on intra-Community acquisitions of goods and services
-              - VAT amount
+              - Tax amount
           dr303-111:
             label: Corrective return - correction amount
           dr303-112:
@@ -56,108 +56,109 @@ modelo:
               One-Stop Shop schemes
           dr303-13:
             label: Accrued VAT on other reverse-charge transactions excluding intra-Community
-              acquisitions - VAT amount
+              acquisitions - Tax amount
           dr303-14:
-            label: Adjustment of taxable bases and amounts, accrued VAT - Tax base
+            label: Adjustment of taxable bases and amounts, accrued VAT - Taxable
+              base
           dr303-15:
-            label: Adjustment of taxable bases and amounts, accrued VAT - VAT amount
+            label: Adjustment of taxable bases and amounts, accrued VAT - Tax amount
           dr303-150:
-            label: Accrued VAT, general regime new rate tier 1 - Tax base
+            label: Accrued VAT, general regime new rate tier 1 - Taxable base
           dr303-151:
             label: Accrued VAT, general regime new rate tier 1 - Rate percentage
           dr303-152:
-            label: Accrued VAT, general regime new rate tier 1 - VAT amount
+            label: Accrued VAT, general regime new rate tier 1 - Tax amount
           dr303-153:
-            label: Accrued VAT, general regime new rate tier 2 - Tax base
+            label: Accrued VAT, general regime new rate tier 2 - Taxable base
           dr303-154:
             label: Accrued VAT, general regime new rate tier 2 - Rate percentage
           dr303-155:
-            label: Accrued VAT, general regime new rate tier 2 - VAT amount
+            label: Accrued VAT, general regime new rate tier 2 - Tax amount
           dr303-156:
-            label: Equivalence surcharge at 0.5% - Tax base
+            label: Equivalence surcharge at 0.5% - Taxable base
           dr303-157:
             label: Equivalence surcharge at 0.5% - Rate percentage
           dr303-158:
-            label: Equivalence surcharge at 0.5% - Surcharge amount
+            label: Equivalence surcharge at 0.5% - Tax amount
           dr303-16:
-            label: Equivalence surcharge at 1.0% - Tax base
+            label: Equivalence surcharge at 1.0% - Taxable base
           dr303-165:
-            label: Accrued VAT, general regime 2% rate from 2024 - taxable base
+            label: Accrued VAT, general regime 2% rate from 2024 - Taxable base
           dr303-166:
-            label: Accrued VAT, general regime 2% rate from 2024 - rate percentage
+            label: Accrued VAT, general regime 2% rate from 2024 - Rate percentage
           dr303-167:
-            label: Accrued VAT, general regime 2% rate from 2024 - VAT amount
+            label: Accrued VAT, general regime 2% rate from 2024 - Tax amount
           dr303-168:
-            label: New equivalence surcharge rate from 2024 - taxable base
+            label: New equivalence surcharge rate from 2024 - Taxable base
           dr303-169:
-            label: New equivalence surcharge rate from 2024 - rate percentage
+            label: New equivalence surcharge rate from 2024 - Rate percentage
           dr303-17:
             label: Equivalence surcharge at 1.0% - Rate percentage
           dr303-170:
-            label: New equivalence surcharge rate from 2024 - surcharge amount
+            label: New equivalence surcharge rate from 2024 - Tax amount
           dr303-18:
-            label: Equivalence surcharge at 1.0% - surcharge amount
+            label: Equivalence surcharge at 1.0% - Tax amount
           dr303-19:
-            label: Equivalence surcharge at 1.4% - Tax base
+            label: Equivalence surcharge at 1.4% - Taxable base
           dr303-20:
             label: Equivalence surcharge at 1.4% - Rate percentage
           dr303-21:
-            label: Equivalence surcharge at 1.4% - Surcharge amount
+            label: Equivalence surcharge at 1.4% - Tax amount
           dr303-22:
-            label: Equivalence surcharge at 5.2% - Tax base
+            label: Equivalence surcharge at 5.2% - Taxable base
           dr303-23:
             label: Equivalence surcharge at 5.2% - Rate percentage
           dr303-24:
-            label: Equivalence surcharge at 5.2% - Surcharge amount
+            label: Equivalence surcharge at 5.2% - Tax amount
           dr303-25:
             label: Adjustment of taxable bases and amounts, equivalence surcharge
-              - Tax base
+              - Taxable base
           dr303-26:
             label: Adjustment of taxable bases and amounts, equivalence surcharge
-              - Surcharge amount
+              - Tax amount
           dr303-27:
             label: Total accrued VAT amount
           dr303-28:
             label: Deductible VAT on domestic current transactions - Tax base
           dr303-29:
-            label: Deductible VAT on domestic current transactions - VAT amount
+            label: Deductible VAT on domestic current transactions - Tax amount
           dr303-30:
             label: Deductible VAT on domestic transactions involving capital goods
               - Tax base
           dr303-31:
             label: Deductible VAT on domestic transactions involving capital goods
-              - VAT amount
+              - Tax amount
           dr303-32:
             label: Deductible VAT on imports of current goods - Tax base
           dr303-33:
-            label: Deductible VAT on imports of current goods - VAT amount
+            label: Deductible VAT on imports of current goods - Tax amount
           dr303-34:
             label: Deductible VAT on imports of capital goods - Tax base
           dr303-35:
-            label: Deductible VAT on imports of capital goods - VAT amount
+            label: Deductible VAT on imports of capital goods - Tax amount
           dr303-36:
             label: Deductible VAT on intra-Community acquisitions of current goods
               - Tax base
           dr303-37:
             label: Deductible VAT on intra-Community acquisitions of current goods
-              - VAT amount
+              - Tax amount
           dr303-38:
             label: Deductible VAT on intra-Community acquisitions of capital goods
               - Tax base
           dr303-39:
             label: Deductible VAT on intra-Community acquisitions of capital goods
-              - VAT amount
+              - Tax amount
           dr303-40:
             label: Correction of deductions - Tax base
           dr303-41:
-            label: Correction of deductions - VAT amount
+            label: Correction of deductions - Tax amount
           dr303-42:
             label: Flat-rate compensation under the special scheme for agriculture,
-              livestock farming and fishing - Amount
+              livestock farming and fishing - Tax amount
           dr303-43:
-            label: Capital goods adjustment - Amount
+            label: Capital goods adjustment - Tax amount
           dr303-44:
-            label: Final pro-rata percentage adjustment - Amount
+            label: Pro rata regularisation using the final percentage - Tax amount
           dr303-45:
             label: Total deductible amount
           dr303-47:
@@ -197,10 +198,10 @@ modelo:
             label: Additional information - Exports and similar transactions
           dr303-62:
             label: Additional information - Supplies accrued under the cash accounting
-              scheme (Art. 75 LIVA) - Tax base
+              scheme (Art. 75 LIVA) - Taxable base
           dr303-63:
             label: Additional information - Supplies accrued under the cash accounting
-              scheme (Art. 75 LIVA) - VAT amount
+              scheme (Art. 75 LIVA) - Tax amount
           dr303-65:
             label: Result - percentage attributable to the State Tax Administration
           dr303-68:
@@ -210,10 +211,10 @@ modelo:
               tax year and period
           dr303-74:
             label: Additional information - Acquisitions under the cash accounting
-              scheme - Tax base
+              scheme - Taxable base
           dr303-75:
             label: Additional information - Acquisitions under the cash accounting
-              scheme - VAT amount
+              scheme - Tax amount
           dr303-76:
             label: Result - Adjustment of VAT amounts under Art. 80.Five.5a LIVA
           dr303-77:
@@ -458,8 +459,7 @@ modelo:
               immovable property, financial transactions and investment gold transactions
           m303-exonerado-390-80:
             help: Box 80 of modelo 303, tax year 2022.
-            label: Transactions carried out in the year - Transactions under the general
-              regime
+            label: Transactions carried out in the year - General-regime transactions
           m303-exonerado-390-81:
             help: Box 81 of modelo 303, tax year 2022.
             label: Transactions carried out in the year - Transactions under the special
@@ -506,7 +506,7 @@ modelo:
           m303-exonerado-390-96:
             help: Box 96 of modelo 303, tax year 2022.
             label: Transactions carried out in the year - Transactions by taxable
-              persons under the recargo de equivalencia special regime
+              persons under the equivalence surcharge special regime
           m303-exonerado-390-97:
             help: Box 97 of modelo 303, tax year 2022.
             label: Transactions carried out in the year - Transactions under the special
@@ -620,86 +620,82 @@ modelo:
               label: Result of the settlement
             x-d5r62bjiclpnar3kc5i6u:
               help: Field declared on modelo 303, taken from the official record design.
-              label: Result of the self-assessment
+              label: Self-assessment result
           field:
             label: Modelo 303, tax year 2022
         '2023':
           casilla:
             '64':
-              help: 'Tax information about tax information in casilla 64 of Modelo
-                303 References: [46], [58], [76].'
+              help: 'Tax information about tax information in box 64 of Modelo 303
+                References: [46], [58], [76].'
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in casilla 66 of Modelo
-                303 References: [64], [65].'
+              help: 'Tax information about tax information in box 66 of Modelo 303
+                References: [64], [65].'
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
+              help: Data declared in Modelo 303, taken from the official record design.
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Review the casilla information: Result of the self-assessment
-                ([66]+[77]+[68]-[78]).'
+              help: Data declared in Modelo 303, taken from the official record design.
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2023
         2024-desde-09-y-3t:
           casilla:
             '64':
-              help: 'Tax information about tax information in casilla 64 of Modelo
-                303 References: [46], [58], [76].'
+              help: 'Tax information about tax information in box 64 of Modelo 303
+                References: [46], [58], [76].'
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in casilla 66 of Modelo
-                303 References: [64], [65].'
+              help: 'Tax information about tax information in box 66 of Modelo 303
+                References: [64], [65].'
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
+              help: Data declared in Modelo 303, taken from the official record design.
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Review the casilla information: Result of the self-assessment
-                ([66]+[77]+[68]-[78]).'
+              help: Data declared in Modelo 303, taken from the official record design.
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2024, from periods 09 and Q3 onwards
         2024-hasta-08-y-2t:
           casilla:
             '64':
-              help: 'Tax information about tax information in casilla 64 of Modelo
-                303 References: [46], [58], [76].'
+              help: 'Tax information about tax information in box 64 of Modelo 303
+                References: [46], [58], [76].'
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in casilla 66 of Modelo
-                303 References: [64], [65].'
+              help: 'Tax information about tax information in box 66 of Modelo 303
+                References: [64], [65].'
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
+              help: Data declared in Modelo 303, taken from the official record design.
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Review the casilla information: Result of the self-assessment
-                ([66]+[77]+[68]-[78]).'
+              help: Data declared in Modelo 303, taken from the official record design.
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2024, up to periods 08 and Q2
         '2025':
           casilla:
             '64':
-              help: 'Tax information about tax information in casilla 64 of Modelo
-                303 References: [46], [58], [76].'
+              help: 'Tax information about tax information in box 64 of Modelo 303
+                References: [46], [58], [76].'
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in casilla 66 of Modelo
-                303 References: [64], [65].'
+              help: 'Tax information about tax information in box 66 of Modelo 303
+                References: [64], [65].'
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
+              help: Data declared in Modelo 303, taken from the official record design.
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Review the casilla information: Result of the self-assessment
-                ([66]+[77]+[68]-[78]).'
+              help: Data declared in Modelo 303, taken from the official record design.
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2025
@@ -925,14 +921,14 @@ modelo:
               help: 'Box 63: amount of supplies accrued under the cash accounting
                 scheme pursuant to article 75 LIVA.'
             '64':
-              help: 'Tax information about tax information in casilla 64 of Modelo
-                303 References: [46], [58], [76].'
+              help: 'Tax information about tax information in box 64 of Modelo 303
+                References: [46], [58], [76].'
               label: Result - Sum of results ([46]+[58]+[76])
             '65':
               help: 'Box 65: percentage of the result attributable to the State Administration.'
             '66':
-              help: 'Tax information about tax information in casilla 66 of Modelo
-                303 References: [64], [65].'
+              help: 'Tax information about tax information in box 66 of Modelo 303
+                References: [64], [65].'
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '68':
@@ -941,7 +937,7 @@ modelo:
               help: 'Box 70: amounts payable arising from previous self-assessments
                 for the same year and period.'
             '71':
-              help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
+              help: Data declared in Modelo 303, taken from the official record design.
               label: Result final ([69]-[70]+[109])
             '74':
               help: 'Box 74: taxable base of acquisitions under the cash accounting
@@ -1005,8 +1001,7 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: Total output VAT calculated at the super-reduced 4% rate.
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Review the casilla information: Result of the self-assessment
-                ([66]+[77]+[68]-[78]).'
+              help: Data declared in Modelo 303, taken from the official record design.
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: General regime result calculated as accrued VAT minus deductible

@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from ....core.aggregation import IntracomOperationType
 from ....core.errors.error_codes import get_registered_error_code, resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
-from ...calculations.registry.errors import NoRevisionForPeriodError
+from ...calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ...calculations.registry.tests.published_authority import published_supported_filing_years
 from ..row_models import (
     Modelo349CountryPrefixContextError,
@@ -386,7 +386,7 @@ class TestValidateM349CountryPrefixContext:
         """The 2021 GB goods transition sits below the supported floor and cannot be selected."""
         support = published_supported_filing_years()
         assert support is not None
-        with pytest.raises(NoRevisionForPeriodError):
+        with pytest.raises(FilingYearOutsideSupportEnvelopeError):
             validate_m349_country_prefix_context(
                 country_code="GB",
                 clave_operacion="E",

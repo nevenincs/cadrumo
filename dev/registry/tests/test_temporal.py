@@ -20,6 +20,7 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.errors import (
     AmbiguousRevisionSelectionError,
+    FilingYearOutsideSupportEnvelopeError,
     NoRevisionForPeriodError,
     RegistrySnapshotError,
 )
@@ -31,9 +32,11 @@ from cadrumo.domain.calculations.registry.schema_references import TemporalProje
 from cadrumo.domain.calculations.registry.temporal import (
     ModeloRevisionDirectory,
     revision_temporal_resolution,
+    select_authored_revision_metadata,
     select_revision,
     select_revision_for_year,
     select_revision_metadata,
+    select_revision_metadata_for_year,
 )
 from dev.registry.compiler.loader import load_modelo_directory
 
@@ -104,19 +107,92 @@ def test_equal_distance_projection_uses_the_earlier_authored_anchor() -> None:
 
 
 def test_projection_obeys_global_boundaries_and_reports_actual_no_source() -> None:
+    """The two gates and the authoring gap are separately typed refusals.
+
+    Below the floor and above a hard ceiling the ENVELOPE refused; inside the
+    envelope with an undeclared period the CORPUS has nothing. They are not the
+    same fact and no longer share an error type.
+    """
     modelo = _committed_modelo_100()
     support = _support()
 
     assert select_revision(modelo, filing_year=support.floor, period="0A", support=support).id == "2022"
     assert select_revision(modelo, filing_year=support.horizon, period="0A", support=support).id == "2025"
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         select_revision(modelo, filing_year=support.floor - 1, period="0A", support=support)
     assert select_revision(modelo, filing_year=support.horizon + 1, period="0A", support=support).id == "2025"
     closed = support.model_copy(update={"hard_ceiling": support.horizon})
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         select_revision(modelo, filing_year=closed.horizon + 1, period="0A", support=closed)
     with pytest.raises(NoRevisionForPeriodError):
         select_revision(modelo, filing_year=2024, period="3T", support=support)
+
+
+def test_an_envelope_refusal_names_the_envelope_and_the_revisions_that_do_cover_it() -> None:
+    """The committed floor sits above modelo 100's oldest authored ejercicio.
+
+    That coordinate IS authored, so the old shared refusal said "no revision for
+    year=2020" while listing 2020 among the revisions the modelo declares -- its
+    own evidence contradicting its own claim, and the single most expensive
+    triage trap in this resolver. The refusal now states the cause it actually
+    had, so a reader is sent to the envelope rather than to the corpus.
+    """
+    modelo = _committed_modelo_100()
+    support = _support()
+    assert modelo.revisions["2020"].period_selector.includes_year(2020)
+
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
+        select_revision(modelo, filing_year=2020, period="0A", support=support)
+
+    err = excinfo.value
+    assert isinstance(err, RegistrySnapshotError)
+    # Not a NoRevisionForPeriodError: a handler meaning "nothing was authored"
+    # must not absorb an envelope refusal, which is why it is a sibling type.
+    assert not isinstance(err, NoRevisionForPeriodError)
+    assert err.modelo_id == "100"
+    assert err.filing_year == 2020
+    assert err.period == "0A"
+    assert err.floor == support.floor
+    assert err.horizon == support.horizon
+    assert err.hard_ceiling is None
+    assert "2020" in err.covering_revision_ids
+    assert "outside the registry support envelope" in str(err)
+
+
+def test_every_envelope_gated_selector_refuses_with_the_envelope_error() -> None:
+    """One gate, so all four envelope-taking selectors report one cause."""
+    modelo = _committed_modelo_100()
+    support = _support()
+    directory = ModeloRevisionDirectory.from_modelo(modelo, support=support)
+
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
+        select_revision(modelo, filing_year=2020, period="0A", support=support)
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
+        select_revision_for_year(modelo, filing_year=2020, support=support)
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
+        select_revision_metadata(directory, filing_year=2020, period="0A")
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
+        select_revision_metadata_for_year(directory, filing_year=2020)
+
+    # The year-only selectors name the coordinate they were actually given.
+    assert excinfo.value.period == "year"
+
+
+def test_resolving_outside_the_filing_envelope_stays_available_to_its_owners() -> None:
+    """The gate refuses a FILING request, never a reading of authored history.
+
+    Both escapes from the envelope keep working: the selector that deliberately
+    takes no envelope, and a caller resolving against an authority whose
+    envelope reaches the authored history. Without them the new refusal would
+    have turned a diagnosis into a dead end.
+    """
+    modelo = _committed_modelo_100()
+    directory = ModeloRevisionDirectory.from_modelo(modelo, support=_support())
+
+    assert select_revision(modelo, filing_year=2020, period="0A", support=None).id == "2020"
+    assert select_authored_revision_metadata(directory, filing_year=2020, period="0A").id == "2020"
+    reaching = _support().model_copy(update={"floor": 2020})
+    assert select_revision(modelo, filing_year=2020, period="0A", support=reaching).id == "2020"
 
 
 def test_technical_root_does_not_disable_projection_or_invent_continuity() -> None:

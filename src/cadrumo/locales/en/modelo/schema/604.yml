@@ -18,7 +18,7 @@ modelo:
           domicilio-fiscal-espana-calificador-numero:
             label: Tax domicile in Spanish territory. Number qualifier
           domicilio-fiscal-espana-codigo-postal:
-            label: Tax domicile in Spanish territory. Postcode
+            label: Tax domicile in Spanish territory. Postal code
           domicilio-fiscal-espana-codigo-provincia:
             label: Tax domicile in Spanish territory. Province code
           domicilio-fiscal-espana-complemento:
@@ -90,8 +90,7 @@ modelo:
       construct:
         modelo-604-autoliquidacion:
           field:
-            title: Modelo 604 self-assessment of the Impuesto sobre las Transacciones
-              Financieras
+            title: Modelo 604 self-assessment of the Financial Transactions Tax
       field:
         official_name: Modelo 604. Financial Transactions Tax. Self-assessment.
         title: Financial Transactions Tax - self-assessment

@@ -2,55 +2,323 @@
 
 from __future__ import annotations
 
+import re
+import shutil
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Final
 
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.keyed_families import CASILLAS_FAMILY
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_ids
 
-from ..compiler.loader import load_registry_tree
+from ..compiler.loader import load_modelo_declarations, load_registry_tree
 from ..compiler.validator import _runtime_legal_reference_ids
 
+#: Catalogue directories a single-modelo scratch tree needs in order to
+#: compile. The modelo's own directory is copied separately; the rest of the
+#: registry is deliberately left out, because a whole-tree copy plus its
+#: fingerprint walk dominates the runtime of every mutation gate and none of
+#: the other modelos is read.
+_SCRATCH_CATALOGUE_DIRECTORIES: Final[tuple[str, ...]] = (
+    "apoderamientos",
+    "categories",
+    "iva",
+    "legal",
+    "topics",
+)
 
-def fragment_declaring(directory: Path, anchor: str) -> Path:
-    """The one fragment under *directory* whose text contains *anchor*.
+#: Sections whose fragments live under a directory spelled differently from
+#: the ``ModeloRevision`` field they carry.
+_SECTION_DIRECTORY_NAMES: Final[dict[str, tuple[str, ...]]] = {
+    "export_layouts": ("export", "export_layouts"),
+}
+
+_CASILLA_STORAGE_BASELINE: Final = "casilla_storage_baseline"
+_FAMILY_STORAGE_BASELINE: Final = "family_storage_baseline"
+_PREDECESSOR: Final = "predecessor"
+
+_BASIC_STRING: Final = re.compile(r'"([^"\\\n]*)"')
+
+
+def _literal_quoted(source: str) -> str:
+    """The same TOML source with basic strings respelled as literal strings.
+
+    Hand-authored declarations quote with ``"``; a generated section such as
+    the export tree is written by the TOML renderer, which quotes with ``'``.
+    Both spell the same declaration, so a gate anchored on meaning must not red
+    merely because the renderer owns the fragment it addresses.
+    """
+    return _BASIC_STRING.sub(lambda match: f"'{match.group(1)}'", source)
+
+
+def scratch_registry_tree(tmp_path: Path, *modelo_ids: str) -> Path:
+    """Copy the named modelos and the shared catalogues into an isolated tree.
+
+    A mutation gate re-introduces a defect in registry SOURCE to prove the
+    assertion above it has teeth. That mutation never touches the tracked tree,
+    and it never depends on a modelo the gate does not name.
+    """
+    if not modelo_ids:
+        msg = "a scratch registry tree needs at least one modelo"
+        raise AssertionError(msg)
+    bundled_root = bundled_path("registry", "aeat")
+    scratch_root = tmp_path / "registry-mutant" / "aeat"
+    (scratch_root / "modelos").mkdir(parents=True)
+    for modelo_id in modelo_ids:
+        shutil.copytree(bundled_root / "modelos" / modelo_id, scratch_root / "modelos" / modelo_id)
+    for catalogue_dir in _SCRATCH_CATALOGUE_DIRECTORIES:
+        source = bundled_root / catalogue_dir
+        if source.is_dir():
+            shutil.copytree(source, scratch_root / catalogue_dir)
+        elif source.exists():
+            shutil.copy2(source, scratch_root / catalogue_dir)
+    return scratch_root
+
+
+def _storage_chain(modelo_directory: Path, revision_id: str, section: str) -> tuple[str, ...]:
+    """The editions that can physically hold *section* for *revision_id*.
+
+    A delta edition states only what it changes and resolves the rest from its
+    storage baseline, so the fragment a gate wants to rewrite is frequently
+    authored several editions back. The chain starts at the edition under test
+    and follows the baseline declared for this family, falling back to the
+    declared predecessor where the family names no baseline of its own.
+    """
+    revisions = load_modelo_declarations(modelo_directory).get("revisions")
+    if not isinstance(revisions, dict):
+        msg = f"{modelo_directory}: modelo declares no revisions"
+        raise AssertionError(msg)
+    if revision_id not in revisions:
+        msg = f"{modelo_directory}: no edition {revision_id!r}; editions are {sorted(revisions)!r}"
+        raise AssertionError(msg)
+    baseline_field = _CASILLA_STORAGE_BASELINE if section == CASILLAS_FAMILY else _FAMILY_STORAGE_BASELINE
+    chain: list[str] = []
+    seen: set[str] = set()
+    current: str | None = revision_id
+    while isinstance(current, str) and current not in seen:
+        seen.add(current)
+        chain.append(current)
+        table = revisions.get(current)
+        declared = table.get(baseline_field) or table.get(_PREDECESSOR) if isinstance(table, dict) else None
+        current = declared if isinstance(declared, str) else None
+    return tuple(chain)
+
+
+def _section_directories(revision_root: Path, section: str) -> tuple[Path, ...]:
+    return tuple(revision_root / name for name in _SECTION_DIRECTORY_NAMES.get(section, (section,)))
+
+
+@dataclass(frozen=True, slots=True)
+class DeclaringFragment:
+    """The one fragment that physically declares a member of an edition's family.
+
+    ``edition`` is the edition under test only when that edition restates the
+    family; otherwise it is the storage baseline the edition resolves the
+    declaration from, which is where a mutation has to land for the edition
+    under test to see it.
+    """
+
+    path: Path
+    edition: str
+    revision_id: str
+    section: str
+
+
+def _rewrite(text: str, *, member: str | None, find: str, replace: str) -> str | None:
+    """The text with the first *find* at or after *member* rewritten, or ``None``.
+
+    Both spellings of TOML strings are tried, because the same declaration is
+    quoted one way by hand and the other by the renderer.
+    """
+    scoped = find if member is None else member
+    for scope, target, replacement in (
+        (scoped, find, replace),
+        (_literal_quoted(scoped), _literal_quoted(find), _literal_quoted(replace)),
+    ):
+        start = text.find(scope)
+        if start < 0 or target not in text[start:]:
+            continue
+        return text[:start] + text[start:].replace(target, replacement, 1)
+    return None
+
+
+def _edition_declaration_files(revision_root: Path, section: str) -> tuple[Path, ...]:
+    """Every file of one edition that may physically carry a *section* member.
+
+    An edition has two storage loci for one family, not one: the section
+    fragments, and the overrides its ``revision.toml`` states against a
+    baseline member. Modelo 303 authors box 10's projection formula as a
+    ``casilla_overrides`` entry, so a search restricted to ``casillas/``
+    concludes the declaration is gone when it is merely delta-authored.
+    """
+    files: list[Path] = []
+    for directory in _section_directories(revision_root, section):
+        if directory.is_dir():
+            files.extend(scan_directory(directory, pattern="*.toml"))
+    manifest = revision_root / "revision.toml"
+    if manifest.is_file():
+        files.append(manifest)
+    return tuple(files)
+
+
+def mutate_declaration(
+    modelo_directory: Path,
+    *,
+    revision_id: str,
+    section: str,
+    find: str,
+    replace: str,
+    member: str | None = None,
+) -> DeclaringFragment:
+    """Re-introduce a defect in the source an edition resolves a member from.
 
     A source-text mutation has to name the file it rewrites, and naming it by
-    FILENAME rots the moment a section is re-fragmented: two M390 mutation gates
-    addressed ``0001-export_layouts.toml`` and went stale when the layout split
-    into ``0002-export_layouts.part-00N.toml``, refusing with "the mutation
-    target string was not found" rather than passing vacuously. Resolving by
-    CONTENT survives the next split, and the exactly-one assertion keeps the
-    resolution honest in both directions.
+    FILENAME rots the moment a section is re-fragmented or collapsed: gates
+    addressing ``0001-export_layouts.toml`` went stale when the layout split,
+    and gates addressing ``<casilla-id>.toml`` went stale again when every
+    family collapsed into one aggregated fragment per edition. Addressing the
+    declaration by CONTENT survives both.
 
-    Zero matches means the anchor genuinely no longer exists, which is a real
-    staleness the caller must diagnose rather than paper over -- do NOT respond
-    by pointing the anchor at a nearby string, because a mutation retargeted at
-    a convenient neighbour mutates something the gate was never about. More than
-    one match means the caller's ``replace(..., 1)`` would silently pick the
+    Addressing it within ONE edition is not enough either. Under the delta
+    layout an edition carries only the families it changes -- modelo 303's 2025
+    edition has no ``casillas/`` or ``bindings/`` directory at all -- so the
+    rewrite is looked for along the edition's storage chain and the nearest
+    edition that states it wins. That is the source the loader itself resolves
+    the member's value from, which is exactly where a mutation must land for
+    the edition under test to see it.
+
+    *member* and *find* are resolved together rather than in two steps,
+    because the two loci split one member across two files: a successor's
+    ``revision.toml`` may carry an override naming the member while the field
+    under mutation stays in the baseline's fragment. Selecting the file on
+    *member* alone picks the override and then fails to find the field.
+
+    No file on the chain carrying both means the declaration or the field
+    genuinely changed, which is a real staleness the caller must diagnose
+    rather than paper over -- do NOT respond by pointing the mutation at a
+    nearby string, because a mutation retargeted at a convenient neighbour
+    mutates something the gate was never about. More than one such file within
+    one edition means a single-occurrence rewrite would silently pick the
     first, so the mutation would no longer be the one the test describes.
 
     Args:
-        directory: The section directory holding the fragments to search.
-        anchor: The exact source text the caller intends to rewrite.
+        modelo_directory: The modelo root holding ``revisions/``.
+        revision_id: The edition under test.
+        section: The revision family the declaration belongs to.
+        find: The exact source text to rewrite, at or after *member*.
+        replace: What to put in its place.
+        member: Source text identifying the declaration, typically its id, for
+            a family whose other members spell *find* the same way. Omit it
+            when *find* already names the member it belongs to; *member* must
+            then precede *find*, not follow it.
 
     Returns:
-        The single fragment containing *anchor*.
+        The fragment that was rewritten, and the edition holding it.
     """
-    matches = [
-        path for path in scan_directory(directory, pattern="*.toml") if anchor in path.read_text(encoding="utf-8")
-    ]
-    if not matches:
-        msg = (
-            f"no fragment under {directory.name} declares {anchor!r} -- the gate is stale, diagnose before re-anchoring"
-        )
-        raise AssertionError(msg)
-    if len(matches) > 1:
-        named = ", ".join(path.name for path in matches)
-        msg = f"{anchor!r} appears in {len(matches)} fragments ({named}); a single-occurrence mutation is ambiguous"
-        raise AssertionError(msg)
-    return matches[0]
+    chain = _storage_chain(modelo_directory, revision_id, section)
+    for edition in chain:
+        rewrites = [
+            (path, rewritten)
+            for path in _edition_declaration_files(modelo_directory / "revisions" / edition, section)
+            for rewritten in (_rewrite(path.read_text(encoding="utf-8"), member=member, find=find, replace=replace),)
+            if rewritten is not None
+        ]
+        if not rewrites:
+            continue
+        if len(rewrites) > 1:
+            named = ", ".join(path.name for path, _ in rewrites)
+            msg = (
+                f"{find!r} is rewritable in {len(rewrites)} files of edition {edition} "
+                f"({named}); a single-occurrence mutation is ambiguous"
+            )
+            raise AssertionError(msg)
+        path, rewritten = rewrites[0]
+        path.write_text(rewritten, encoding="utf-8")
+        return DeclaringFragment(path=path, edition=edition, revision_id=revision_id, section=section)
+    msg = (
+        f"no source rewritable at {find!r}"
+        + ("" if member is None else f" under {member!r}")
+        + f" for {section} of edition {revision_id!r} (storage chain {list(chain)!r}) "
+        "-- the gate is stale, diagnose before re-anchoring"
+    )
+    raise AssertionError(msg)
+
+
+def assert_sole_current_edition(modelo: ModeloDefinition, revision_id: str) -> None:
+    """*revision_id* is the modelo's current edition, with no rival in force beside it.
+
+    A grounding gate asks whether the registry files THIS year from THIS
+    year's authority rather than from something invented. It used to ask that
+    as ``set(modelo.revisions) == {revision_id}``, which was only ever a proxy:
+    it happened to hold while each of these modelos was authored as one
+    self-contained edition. Under the delta layout the current edition states
+    its differences against the editions before it, so those editions are the
+    modelo's own history and their presence says nothing about currency -- the
+    equality reds on a correctly migrated modelo and would keep reding however
+    well grounded it became.
+
+    What the claim actually needs, asserted directly: the named edition is the
+    LATEST in validity order, so nothing supersedes it, and no other edition
+    coexists with it -- no second edition is in force for one of its periods,
+    which is the fabricated-alternative shape the equality was guarding
+    against. The edition's own sources, legal references and rows are asserted
+    by the gate that calls this.
+    """
+    ordered = ordered_revisions(modelo)
+    assert ordered, f"modelo {modelo.id} declares no editions"
+    latest = str(ordered[-1].id)
+    assert latest == revision_id, f"modelo {modelo.id} edition {revision_id!r} is superseded by {latest!r}"
+    current = modelo.revisions[revision_id]
+    rivals = sorted(
+        str(revision.id)
+        for revision in ordered
+        if str(revision.id) != revision_id and revisions_coexist(current, revision)
+    )
+    assert not rivals, (
+        f"modelo {modelo.id} edition {revision_id!r} shares a live period with {rivals!r}; "
+        "two editions in force for one period is an authoring defect, not history"
+    )
+
+
+def assert_edition_opens_at_filing_year(revision: ModeloRevision, year: int) -> None:
+    """The edition serves *year* and nothing before it.
+
+    A grounding gate used to state this as ``period_selector.years == (year,)``,
+    which reads the explicit enumeration field. That field is empty whenever the
+    selector is authored as a range, and the current editions of these modelos
+    are open-ended ranges (``year_from`` with no ``year_to``) precisely because
+    the years before them are now authored as their own editions. Asking the
+    selector what it ADMITS keeps the claim -- this edition opens at *year* --
+    true of either authoring shape, and the lower bound is checked against the
+    year before, so an edition that silently reached back over its predecessor
+    still reds.
+    """
+    selector = revision.period_selector
+    assert selector.includes_year(year), f"edition {revision.id} does not serve filing year {year}"
+    assert not selector.includes_year(year - 1), (
+        f"edition {revision.id} also serves filing year {year - 1}, which belongs to its predecessor"
+    )
+
+
+def assert_deadline_window_for_filing_year(revision: ModeloRevision, year: int, window_id: str) -> None:
+    """The edition declares *window_id* for *year*, and no window outside its own span.
+
+    A gate used to freeze the edition's whole window set to the single year it
+    was checking. That held while each edition closed at its own year; an
+    open-ended edition legitimately carries the next year's window too, and the
+    frozen set turns that authoring into a failure. The identity that matters
+    is kept -- THIS year's window is THIS id -- and the rest is checked against
+    the edition's own selector, so a window for a year the edition does not
+    serve still reds.
+    """
+    windows = {window.filing_year: str(window.id) for window in revision.deadline_windows}
+    assert windows.get(year) == window_id, f"edition {revision.id} filing year {year} window is {windows.get(year)!r}"
+    stranded = sorted(declared for declared in windows if not revision.period_selector.includes_year(declared))
+    assert not stranded, f"edition {revision.id} declares deadline windows for unserved filing years {stranded!r}"
 
 
 def _m130_definition() -> ModeloDefinition:

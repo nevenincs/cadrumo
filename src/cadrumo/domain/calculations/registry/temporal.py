@@ -17,6 +17,7 @@ from pydantic import Field, ValidationError, model_validator
 from .errors import (
     AmbiguousRevisionSelectionError,
     EjercicioOrdenNotYetPublishedError,
+    FilingYearOutsideSupportEnvelopeError,
     NoRevisionForPeriodError,
     RegistryValidationError,
 )
@@ -241,14 +242,51 @@ class RevisionTemporalResolution[RevisionT: _SelectableRevision]:
     projection_direction: TemporalProjectionDirection
 
 
-def _supported_filing_year(
+def _require_supported_filing_year(
+    modelo_id: str,
+    revisions: Sequence[_SelectableRevision],
+    *,
     filing_year: int,
+    period: str | None,
     support: SupportedFilingYearsCatalogue | None,
-) -> int | None:
-    """Project an admitted year through the shared support-envelope mechanics."""
-    if support is None:
-        return filing_year
-    return filing_year if support.admits_filing_year(filing_year) else None
+) -> None:
+    """Refuse a coordinate the envelope gates, naming the envelope as the cause.
+
+    This is the ONE place a support-envelope refusal is decided, and it refuses
+    by raising rather than by returning a falsy selection year. The distinction
+    is the point: an envelope gate that answers "no candidates" is
+    indistinguishable downstream from an authoring gap, and the generic absence
+    refusal then reports the authored revisions as evidence for a claim that
+    nothing covers the coordinate -- evidence that contradicts its own message
+    whenever the corpus does author the year. Every selector that accepts an
+    envelope calls this before it searches, so the two states can never merge
+    again.
+
+    Callers deliberately resolving OUTSIDE the filing envelope -- reading the
+    design the law applied to a past period, or proving the authored source
+    itself -- pass ``support=None`` or an authority scoped to the authored
+    history, and this gate stands aside for them.
+    """
+    if support is None or support.admits_filing_year(filing_year):
+        return
+    raise FilingYearOutsideSupportEnvelopeError(
+        modelo_id=modelo_id,
+        filing_year=filing_year,
+        period="year" if period is None else period,
+        floor=support.floor,
+        horizon=support.horizon,
+        hard_ceiling=support.hard_ceiling,
+        covering_revision_ids=tuple(
+            str(revision.id)
+            for revision in revisions
+            if revision.period_selector.includes_year(filing_year)
+            and (
+                period is None
+                or selector_token_for_request(revision.period_selector.periods_for_year(filing_year), period)
+                is not None
+            )
+        ),
+    )
 
 
 def _eligible_authored_years(
@@ -529,8 +567,14 @@ def select_revision_for_year(
         support: Optional registry envelope that hard-gates the request and
             carries a year beyond its authored horizon back to that horizon.
     """
-    selection_year = _supported_filing_year(filing_year, support)
     revisions = tuple(modelo.revisions.values())
+    _require_supported_filing_year(
+        str(modelo.id),
+        revisions,
+        filing_year=filing_year,
+        period=None,
+        support=support,
+    )
     matching, authored_year = _nearest_authored_candidates(
         revisions,
         filing_year=filing_year,
@@ -542,9 +586,7 @@ def select_revision_for_year(
         str(modelo.id),
         revisions,
         modelo.pending_ejercicio_ordenes,
-        []
-        if selection_year is None
-        else _effective_candidates(
+        _effective_candidates(
             matching,
             on=_project_reference_date(on, requested_year=filing_year, selection_year=authored_year),
             filing_year=authored_year,
@@ -562,11 +604,14 @@ def select_revision_metadata_for_year(
     support: SupportedFilingYearsCatalogue | None = None,
 ) -> RevisionSelectionMetadata:
     """Select metadata with the exact canonical year-scoped rules."""
-    selection_year = _supported_filing_year(
-        filing_year,
-        directory.supported_filing_years if support is None else support,
-    )
     effective_support = directory.supported_filing_years if support is None else support
+    _require_supported_filing_year(
+        directory.modelo_id,
+        directory.revisions,
+        filing_year=filing_year,
+        period=None,
+        support=effective_support,
+    )
     matching, authored_year = _nearest_authored_candidates(
         directory.revisions,
         filing_year=filing_year,
@@ -578,9 +623,7 @@ def select_revision_metadata_for_year(
         directory.modelo_id,
         directory.revisions,
         directory.pending_ejercicio_ordenes,
-        []
-        if selection_year is None
-        else _effective_candidates(
+        _effective_candidates(
             matching,
             on=_project_reference_date(on, requested_year=filing_year, selection_year=authored_year),
             filing_year=authored_year,
@@ -615,8 +658,14 @@ def select_revision(
         support: Optional registry envelope that hard-gates the request and
             carries a year beyond its authored horizon back to that horizon.
     """
-    selection_year = _supported_filing_year(filing_year, support)
     revisions = tuple(modelo.revisions.values())
+    _require_supported_filing_year(
+        str(modelo.id),
+        revisions,
+        filing_year=filing_year,
+        period=period,
+        support=support,
+    )
     matching, authored_year = _nearest_authored_candidates(
         revisions,
         filing_year=filing_year,
@@ -624,14 +673,9 @@ def select_revision(
         revision_id=revision_id,
         support=support,
     )
-    selection_on = (
-        None
-        if selection_year is None
-        else _project_reference_date(on, requested_year=filing_year, selection_year=authored_year)
-    )
     candidates = _effective_candidates(
         matching,
-        on=selection_on,
+        on=_project_reference_date(on, requested_year=filing_year, selection_year=authored_year),
         filing_year=authored_year,
         period=period,
     )
@@ -656,11 +700,14 @@ def select_revision_metadata(
     support: SupportedFilingYearsCatalogue | None = None,
 ) -> RevisionSelectionMetadata:
     """Select complete revision metadata through the canonical period rules."""
-    selection_year = _supported_filing_year(
-        filing_year,
-        directory.supported_filing_years if support is None else support,
-    )
     effective_support = directory.supported_filing_years if support is None else support
+    _require_supported_filing_year(
+        directory.modelo_id,
+        directory.revisions,
+        filing_year=filing_year,
+        period=period,
+        support=effective_support,
+    )
     matching, authored_year = _nearest_authored_candidates(
         directory.revisions,
         filing_year=filing_year,
@@ -668,14 +715,9 @@ def select_revision_metadata(
         revision_id=revision_id,
         support=effective_support,
     )
-    selection_on = (
-        None
-        if selection_year is None
-        else _project_reference_date(on, requested_year=filing_year, selection_year=authored_year)
-    )
     candidates = _effective_candidates(
         matching,
-        on=selection_on,
+        on=_project_reference_date(on, requested_year=filing_year, selection_year=authored_year),
         filing_year=authored_year,
         period=period,
     )

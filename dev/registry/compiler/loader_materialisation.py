@@ -43,6 +43,10 @@ from cadrumo.domain.calculations.registry.keyed_families import (
 from cadrumo.domain.calculations.registry.keyed_families import (
     family_identity_value as _family_identity_value,
 )
+from cadrumo.domain.calculations.registry.keyed_families import (
+    family_source_default_fields,
+    inline_family_source_default,
+)
 from cadrumo.domain.calculations.registry.lineage_attestation import (
     LineageAttestation,
     validate_lineage_attestations,
@@ -54,7 +58,6 @@ from cadrumo.domain.calculations.registry.modelo_localization import (
     enroll_revision_localization,
     modelo_locale_key,
 )
-from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
 from cadrumo.domain.calculations.registry.revision_contracts import validate_predecessor_forest
 from cadrumo.domain.calculations.registry.runtime_graph import expression_casilla_refs
 from cadrumo.domain.calculations.registry.schema import (
@@ -331,16 +334,10 @@ def inherit_keyed_family(
 def _pin_family_source_default(member: object, predecessor: Mapping[str, object], family: _KeyedFamily) -> object:
     """Keep an inherited member bound to the source default effective at its origin."""
     table = _as_toml_table(member)
-    if table is None or family.source_default_key is None or "source_refs" in table:
+    if table is None:
         return member
-    default = predecessor.get(family.source_default_key)
-    if not isinstance(default, list | tuple) or not default:
-        return member
-    pinned = dict(table)
-    raw_additions = pinned.pop("additional_source_refs", ())
-    additions = raw_additions if isinstance(raw_additions, list | tuple) else ()
-    pinned["source_refs"] = tuple(dict.fromkeys((*default, *additions)))
-    return pinned
+    pinned = inline_family_source_default(table, predecessor, family.source_default_key)
+    return member if pinned is table else pinned
 
 
 def _patch_family_table(context: str, value: object, fields: Mapping[str, object], removed: tuple[str, ...]) -> object:
@@ -475,6 +472,40 @@ def _apply_family_storage_delta(
         frozenset(removed),
         tuple((item.id, item.position) for item in positions),
         frozenset(patched),
+    )
+
+
+def _refuse_undecided_scoped_family(
+    context: str,
+    *,
+    family: _KeyedFamily,
+    inherited: tuple[object, ...],
+    stated: tuple[object, ...],
+    declined: tuple[object, ...],
+) -> None:
+    """Refuse silence that would leave a scoped family empty on both sides of an edge.
+
+    A scoped family is asserted per edition, so an edition that does not name
+    it in ``scoped_families`` takes none of its predecessor's members. That is
+    the ordinary full-copy case and decides nothing while the edition states
+    the family itself, or while the predecessor carries none either.
+
+    The one case it does decide is a predecessor that carries members against
+    an edition that states none: the family goes empty, and it goes empty
+    through an absent word rather than a declaration. Every family paired with
+    it by a closure rule inherits as usual, so the edition keeps the
+    capability link - the ``export`` surface over no export layout - and loses
+    only what backs it. Declining is available and explicit: naming the family
+    in ``cleared_families`` says the edition takes nothing from its
+    predecessor, and says it where a reader looks.
+    """
+    if not inherited or stated or family.section in declined:
+        return
+    raise RegistryLoadError(
+        f"{context}: the predecessor declares {len(inherited)} {family.section} member(s), this edition states "
+        f"none, and it neither asserts {family.section!r} in scoped_families nor declines it in "
+        "cleared_families; a scoped family is asserted per edition, so silence here would leave the family "
+        "empty with nothing recording the decision",
     )
 
 
@@ -1130,10 +1161,19 @@ def _materialise_revision(
             family_predecessor = _materialise_revision(
                 source_path, raw_revisions, named, storage_named, family_storage_named, family_baseline_id, resolved
             )
+            asserted = as_toml_array(table.get("scoped_families", ())) or ()
+            declined = as_toml_array(table.get("cleared_families", ())) or ()
             for family in _KEYED_FAMILIES:
                 if family.section in restated:
                     continue
-                if family.scoped and family.section not in (as_toml_array(table.get("scoped_families", ())) or ()):
+                if family.scoped and family.section not in asserted:
+                    _refuse_undecided_scoped_family(
+                        f"{source_path}: revision {revision_id!r} inheriting from {family_baseline_id!r}",
+                        family=family,
+                        inherited=_raw_keyed_members(source_path, family_baseline_id, family_predecessor.table, family),
+                        stated=_raw_keyed_members(source_path, revision_id, table, family),
+                        declined=declined,
+                    )
                     continue
                 family_members = inherit_keyed_family(
                     f"{source_path}: revision {revision_id!r} inheriting from {family_baseline_id!r}",
@@ -1471,12 +1511,15 @@ def _apply_edition_reference_defaults(context: str, table: Mapping[str, object])
     empty array, which typed construction then refuses. A default is never
     merged into a stated value; only additions extend one.
 
-    It runs on the materialised edition, so an inherited row is defaulted from
-    the edition it now sits in: source references are declared per edition, and
-    a row the predecessor did not ground itself must not carry the
-    predecessor's grounding forward. Additions are the row's own and so extend
-    the default of the edition the row now sits in. This relies on inheritance
-    reading each predecessor's rows before its own defaults are applied.
+    It runs on the materialised edition, so an inherited CASILLA is defaulted
+    from the edition it now sits in: a casilla carries its own lineage and the
+    edition it lands in grounds it. Additions are the row's own and so extend
+    the default of the edition the row now sits in.
+
+    A keyed-family member is the other case, and :func:`_pin_family_source_default`
+    has already bound it to the default effective where it was stated, so it
+    arrives here carrying ``source_refs`` and is left alone. Re-grounding it
+    would make the successor's source attest a row that source never saw.
 
     Returns the identical table when it fills nothing, so an edition declaring
     no default and no additions reaches typed construction exactly as authored.
@@ -1501,7 +1544,7 @@ def _apply_edition_reference_defaults(context: str, table: Mapping[str, object])
         )
         if any(new is not old for new, old in zip(defaulted, rows, strict=True)):
             filled[_INHERITED_SECTION] = defaulted
-    for section, default_field in FAMILY_SOURCE_DEFAULT_FIELDS:
+    for section, default_field in family_source_default_fields():
         section_rows = as_toml_array(table.get(section, ()))
         if not section_rows:
             continue

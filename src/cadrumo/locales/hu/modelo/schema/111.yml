@@ -4,7 +4,7 @@ modelo:
       construct:
         modelo-111-withholding-workflow:
           field:
-            title: '111-es modelo: adóelőlegek és levonások'
+            title: '111-es nyomtatvány: adóelőlegek és levonások'
       field:
         official_name: Az IRPF adóelőleg-levonásai és -befizetései. Munkaviszonyból
           és gazdasági tevékenységből származó jövedelmek, nyeremények, valamint egyes
@@ -78,7 +78,7 @@ modelo:
             '27':
               label: Képmáshoz fűződő jogok átengedése - előlegfizetés összege
             '28':
-              label: Forrásadó és előlegfizetés összesen
+              label: Forrásadó és részletfizetés összesen
             '29':
               label: Korábbi önadózások eredménye
             '30':

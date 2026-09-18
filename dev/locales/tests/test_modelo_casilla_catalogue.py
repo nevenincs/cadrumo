@@ -400,3 +400,23 @@ def test_an_abbreviated_official_wording_may_share_one_rendering(spanish: str, a
     )
 
     assert catalogue.shared_segments("en") == {}
+
+
+@pytest.mark.parametrize("field_name", ["label", "help"])
+def test_a_dropped_box_reference_is_reported_in_either_field(field_name: str) -> None:
+    """Help states the same legal content a label does, so it is read the same way."""
+    other = "help" if field_name == "label" else "label"
+    catalogue = _catalogue(
+        {
+            "es": {
+                f"{_LINEAGE[: -len('label')]}{field_name}": "Traslade el importe de la casilla [0421]",
+                f"{_LINEAGE[: -len('label')]}{other}": "Base imponible",
+            },
+            "en": {
+                f"{_LINEAGE[: -len('label')]}{field_name}": "Transfer the amount",
+                f"{_LINEAGE[: -len('label')]}{other}": "Taxable base",
+            },
+        }
+    )
+
+    assert catalogue.dropped_source_content("en") == {f"{_LINEAGE[: -len('label')]}{field_name}": ("[0421]",)}

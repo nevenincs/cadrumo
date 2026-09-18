@@ -85,6 +85,7 @@ from pydantic import (
 from pydantic_core import core_schema
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _round_to_cents
 from ...core.percentage import Percentage
@@ -329,8 +330,16 @@ class EspecialMandatoryRule(_ProrrataStrictFrozen):
 
 
 def _validate_year(year: int) -> int:
-    if year < 2000 or year > 2100:
-        raise ProrrataInputError(f"year out of supported range 2000..2100: {year}")
+    """Refuse a year outside the one bound the filing-year axis declares.
+
+    The ceiling here read 2100 while every other carrier of this axis read
+    2099 -- the exact divergence ``cadrumo.core.filing_year`` exists to
+    prevent, arrived at by restating the window locally instead of importing
+    it. Nothing detected it, because a restated bound has nothing to disagree
+    with until someone reads both.
+    """
+    if year < FILING_YEAR_MIN or year > FILING_YEAR_MAX:
+        raise ProrrataInputError(f"year out of supported range {FILING_YEAR_MIN}..{FILING_YEAR_MAX}: {year}")
     return year
 
 

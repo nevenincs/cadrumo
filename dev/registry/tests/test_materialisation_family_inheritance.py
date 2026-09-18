@@ -1,17 +1,23 @@
-"""Predecessor materialisation inherits casillas only; every other family stays authored.
+"""Predecessor materialisation carries keyed families and refuses silence on scoped ones.
 
-A revision naming a predecessor resolves its casillas from the predecessor
-chain, but the completeness manifest, formulas, and export layouts are
-declared in full by every edition regardless of a predecessor declaration.
+An edition naming a predecessor resolves its casillas through the continuity
+merge and every other KEYED family through the identity union: a formula the
+edition does not restate is the predecessor's formula, which is what makes a
+delta edition able to state only its differences.
+
+A SCOPED family is the exception, and is scoped precisely because carrying it
+silently would be a claim nobody made: the completeness manifest and the
+export layouts describe the edition's OWN surface, so an edition that states
+none of them must say whether it means the predecessor's (``scoped_families``)
+or none at all (``cleared_families``). Silence is refused rather than resolved.
+
 The completeness manifest is the sharpest case: it is casilla-shaped and
 authored through the same per-section fragment mechanism as casillas, so a
 materialiser written against the raw revision mapping could pick it up by
 default -- and its casilla collection is an append array whose
 duplicate-identifier validator would then refuse the load with an error
 naming a duplicate casilla rather than naming inheritance. These tests drive
-the real directory loader over an on-disk TOML tree, with nothing mocked, to
-prove the exclusion holds and to show exactly what a materialiser that
-merged the manifest anyway would produce.
+the real directory loader over an on-disk TOML tree, with nothing mocked.
 """
 
 from __future__ import annotations
@@ -179,15 +185,8 @@ def test_a_successor_manifest_is_not_inherited_from_a_predecessor_with_manifest_
     assert {casilla.casilla_id for casilla in successor.completeness_manifest.casillas} == {"0002"}
 
 
-def test_formulas_and_export_layouts_are_not_inherited_across_a_delta_materialised_edition(tmp_path: Path) -> None:
-    """A successor omitting formulas and export layouts has none after materialisation.
-
-    The predecessor declares one of each; the successor states neither.
-    Only the casilla family resolves through the predecessor chain, so the
-    successor's formulas and export layouts stay exactly what it declared:
-    none.
-    """
-    modelo_dir = _modelo_root(tmp_path)
+def _predecessor_with_formula_and_layout(modelo_dir: Path) -> None:
+    """Author the 2024 edition every case below inherits from."""
     _write_edition(
         modelo_dir,
         "2024",
@@ -199,6 +198,45 @@ def test_formulas_and_export_layouts_are_not_inherited_across_a_delta_materialis
         formulas=_formula_toml("2024", formula_id="modelo-999-formula-2024", target_casilla_id="0002"),
         export_layouts=_export_layout_toml("2024", layout_id="modelo-999-layout-2024"),
     )
+
+
+def test_a_keyed_family_the_successor_does_not_restate_is_carried_from_its_predecessor(tmp_path: Path) -> None:
+    """A formula the successor omits resolves to the predecessor's, by identity union.
+
+    This is what lets a delta edition state only its differences: omission
+    inherits. The successor here states no formulas at all and still carries
+    the predecessor's, and it declines the scoped export layouts explicitly so
+    that this case is about the KEYED family alone.
+    """
+    modelo_dir = _modelo_root(tmp_path)
+    _predecessor_with_formula_and_layout(modelo_dir)
+    _write_edition(
+        modelo_dir,
+        "2025",
+        year=2025,
+        manifest_extra='predecessor = "2024"\ncleared_families = ["export_layouts"]\n',
+        casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
+    )
+
+    definition = load_modelo_directory(modelo_dir)
+    predecessor = definition.revisions["2024"]
+    successor = definition.revisions["2025"]
+
+    assert {formula.id for formula in predecessor.formulas} == {"modelo-999-formula-2024"}
+    assert {formula.id for formula in successor.formulas} == {"modelo-999-formula-2024"}
+    assert successor.export_layouts == ()
+
+
+def test_a_scoped_family_the_successor_leaves_undecided_is_refused(tmp_path: Path) -> None:
+    """Detector teeth: silence about the predecessor's export layouts fails closed.
+
+    The export layout describes the edition's own filing surface, so carrying
+    it over unasked would assert a design the successor never reviewed and
+    dropping it would withdraw one just as quietly. The loader refuses instead,
+    naming the family and both words that decide it.
+    """
+    modelo_dir = _modelo_root(tmp_path)
+    _predecessor_with_formula_and_layout(modelo_dir)
     _write_edition(
         modelo_dir,
         "2025",
@@ -207,14 +245,37 @@ def test_formulas_and_export_layouts_are_not_inherited_across_a_delta_materialis
         casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
     )
 
-    definition = load_modelo_directory(modelo_dir)
-    predecessor = definition.revisions["2024"]
-    successor = definition.revisions["2025"]
+    with pytest.raises(RegistryLoadError, match=r"neither asserts 'export_layouts' in scoped_families"):
+        load_modelo_directory(modelo_dir)
 
-    assert len(predecessor.formulas) == 1
-    assert len(predecessor.export_layouts) == 1
-    assert successor.formulas == ()
-    assert successor.export_layouts == ()
+
+def test_asserting_a_scoped_family_carries_it_and_declining_it_takes_none(tmp_path: Path) -> None:
+    """The two explicit answers resolve to the two different outcomes silence could not choose between."""
+    asserted_dir = _modelo_root(tmp_path / "asserted")
+    _predecessor_with_formula_and_layout(asserted_dir)
+    _write_edition(
+        asserted_dir,
+        "2025",
+        year=2025,
+        manifest_extra='predecessor = "2024"\nscoped_families = ["export_layouts"]\n',
+        casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
+    )
+
+    declined_dir = _modelo_root(tmp_path / "declined")
+    _predecessor_with_formula_and_layout(declined_dir)
+    _write_edition(
+        declined_dir,
+        "2025",
+        year=2025,
+        manifest_extra='predecessor = "2024"\ncleared_families = ["export_layouts"]\n',
+        casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
+    )
+
+    asserted = load_modelo_directory(asserted_dir).revisions["2025"]
+    declined = load_modelo_directory(declined_dir).revisions["2025"]
+
+    assert {layout.id for layout in asserted.export_layouts} == {"modelo-999-layout-2024"}
+    assert declined.export_layouts == ()
 
 
 def test_a_hand_merged_manifest_shape_is_refused_by_the_duplicate_casilla_id_check(tmp_path: Path) -> None:
