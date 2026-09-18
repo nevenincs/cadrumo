@@ -1500,7 +1500,7 @@ class ModeloCasillaCatalogue:
         return dropped
 
     def shared_translations(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
-        """Return translations one modelo renders for more than one Spanish wording.
+        """Return translations one modelo renders for more than one Spanish label or help wording.
 
         Two Spanish labels that differ only in case, accents or punctuation say
         one thing, so one translation serves both. A difference in wording may
@@ -1510,11 +1510,14 @@ class ModeloCasillaCatalogue:
         """
         grouped: dict[tuple[str, str], set[str]] = defaultdict(set)
         for index, occurrence in enumerate(self.occurrences):
-            spanish = self.resolve(index, "label", SOURCE_LOCALE, values)
-            text = self.resolve(index, "label", locale, values)
-            if spanish is None or text is None or _served_locale(self, index, "label", locale, values) != locale:
-                continue
-            grouped[(occurrence.modelo, text)].add(spanish)
+            for field_name in _FIELDS:
+                spanish = self.resolve(index, field_name, SOURCE_LOCALE, values)
+                text = self.resolve(index, field_name, locale, values)
+                if spanish is None or text is None:
+                    continue
+                if _served_locale(self, index, field_name, locale, values) != locale:
+                    continue
+                grouped[(occurrence.modelo, text)].add(spanish)
         shared: dict[str, tuple[str, ...]] = {}
         for (modelo, text), spanish_texts in grouped.items():
             if len({_plain_wording(spanish) for spanish in spanish_texts}) < 2:
