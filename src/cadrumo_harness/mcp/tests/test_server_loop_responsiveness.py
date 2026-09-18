@@ -60,6 +60,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.application.user_profile.login_session import close_profile_session_artefacts
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 from .._profile_secret_channel import clear_profile_secret, load_profile_secret_file
 from ..call_runtime import tier_for
@@ -110,7 +111,18 @@ def _assert_probe_stays_on_the_subprocess_transport() -> None:
 
 
 async def _list_mid_call_gap(tool_name: str, arguments: dict[str, object]) -> float:
-    """Return seconds between the mid-call tools/list completing and the call completing."""
+    """Return seconds between the mid-call tools/list completing and the call completing.
+
+    The caller composes the profile-persistence ports around this. The identity
+    read below is served warm in-process once the command surface is cached, and
+    that path resolves the custody port from the host rather than from a child
+    it spawns -- so an uncomposed host refused it with ``profile custody
+    infrastructure has not been composed``, but only on the SECOND such test in
+    a session, because the first ran cold and went out to a subprocess that
+    composes itself. The composition removes that ordering dependence; it does
+    not change which transport the probe verb takes, which the assertion above
+    still pins.
+    """
     _assert_probe_stays_on_the_subprocess_transport()
     server = build_server(build_tool_descriptors())
     async with connect(server) as session:
@@ -137,7 +149,8 @@ def test_execute_meta_tool_leaves_the_loop_serving_requests_mid_call() -> None:
     # The CORE-surface default dispatch path: most verbs reach the subprocess
     # through the execute meta-tool, so this path staying off-loop is what
     # keeps a default client session alive during real tax work.
-    gap = asyncio.run(_list_mid_call_gap("execute", {"command_key": _SUBPROCESS_PROBE_KEY, "arguments": {}}))
+    with composed_profile_persistence_ports():
+        gap = asyncio.run(_list_mid_call_gap("execute", {"command_key": _SUBPROCESS_PROBE_KEY, "arguments": {}}))
     assert gap > _MIN_CONCURRENCY_GAP_SECONDS, (
         "execute blocked the event loop: the mid-call tools/list was only "
         f"served once the subprocess call finished (gap {gap:.3f}s)"
@@ -147,7 +160,8 @@ def test_execute_meta_tool_leaves_the_loop_serving_requests_mid_call() -> None:
 def test_direct_verb_tool_leaves_the_loop_serving_requests_mid_call() -> None:
     # Parity guard for the direct per-verb path (already off-loop via the
     # shared wrapper); a regression on either path re-freezes the session.
-    gap = asyncio.run(_list_mid_call_gap(tool_name_for_command(_SUBPROCESS_PROBE_KEY), {}))
+    with composed_profile_persistence_ports():
+        gap = asyncio.run(_list_mid_call_gap(tool_name_for_command(_SUBPROCESS_PROBE_KEY), {}))
     assert gap > _MIN_CONCURRENCY_GAP_SECONDS, (
         "the direct verb path blocked the event loop: the mid-call tools/list "
         f"was only served once the subprocess call finished (gap {gap:.3f}s)"
@@ -199,16 +213,27 @@ def _provisioned_profile_env(tmp_path: Path) -> Generator[None]:
         profile is created through the canonical application registration door;
     the warm runtime then starts against that real encrypted state. Both resolve
     the same environment-backed storage and secret-store configuration.
+
+    The authority lease is entered BEFORE the contexts are taken, and that
+    ordering is the whole point. ``profile_authority_contexts`` returns the
+    leased operation's own contexts when a lease is open, and otherwise falls
+    back to a fake reader that publishes the profile schema and nothing else --
+    so outside a lease the registration reaches a governed-fact vocabulary
+    (fact 0124, the taxpayer entity types) that no scope can answer, and refuses
+    with an uncomposed-scope invariant far from the missing lease. Leasing a
+    real published generation is what a host owes this door, exactly as binding
+    the persistence ports is.
     """
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with (
         temporary_env(
             CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
             CADRUMO_SECRET_STORE_DIR=str(tmp_path / "fallback-store"),
             CADRUMO_SECRET_PASSPHRASE=DEV_TEST_DATABASE_PASSWORD,
         ),
+        bundled_indexed_authority().operation(),
         composed_profile_persistence_ports(),
     ):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         created = register_profile_with_credentials(
             label="operator",
             passphrase=PROFILE_PASSPHRASE,
