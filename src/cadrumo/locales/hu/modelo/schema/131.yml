@@ -95,7 +95,7 @@ modelo:
           pago-fraccionado-previo-agrario:
             label: Előzetes mezőgazdasági előlegfizetés
           pago-fraccionado-previo-datos-base:
-            label: Előzetes előlegfizetés alapadatok szerint (datos-base)
+            label: Előzetes előlegfizetés alapadatok szerint
           pago-fraccionado-previo-sin-datos-base:
             label: Előzetes előlegfizetés alapadatok nélkül
           prestamo-vivienda-habitual:

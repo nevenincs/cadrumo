@@ -183,8 +183,7 @@ modelo:
         2018-y-siguientes:
           casilla:
             vinculada-1-fjo:
-              help: 'Consulteu la informació de la casella: Operación vinculada 1:
-                F/J/O (física, jurídica u otra).'
+              help: Dada de l'operació vinculada número 1 declarada en el model 232.
               label: 'Part vinculada 1: F/J/O (física, jurídica o altra)'
             vinculada-1-importe:
               help: 'Consulteu la informació de la casella: Operación vinculada 1:
@@ -219,8 +218,7 @@ modelo:
                 tipus de vinculación.'
               label: 'Part vinculada 1: Tipus de vinculació'
             vinculada-2-fjo:
-              help: 'Consulteu la informació de la casella: Operación vinculada 2:
-                F/J/O (física, jurídica u otra).'
+              help: Dada de l'operació vinculada número 2 declarada en el model 232.
               label: 'Part vinculada 2: F/J/O (física, jurídica o altra)'
             vinculada-2-importe:
               help: 'Consulteu la informació de la casella: Operación vinculada 2:
@@ -255,8 +253,7 @@ modelo:
                 tipus de vinculación.'
               label: 'Part vinculada 2: Tipus de vinculació'
             vinculada-3-fjo:
-              help: 'Consulteu la informació de la casella: Operación vinculada 3:
-                F/J/O (física, jurídica u otra).'
+              help: Dada de l'operació vinculada número 3 declarada en el model 232.
               label: 'Part vinculada 3: F/J/O (física, jurídica o altra)'
             vinculada-3-importe:
               help: 'Consulteu la informació de la casella: Operación vinculada 3:
@@ -291,8 +288,7 @@ modelo:
                 tipus de vinculación.'
               label: 'Part vinculada 3: Tipus de vinculació'
             vinculada-4-fjo:
-              help: 'Consulteu la informació de la casella: Operación vinculada 4:
-                F/J/O (física, jurídica u otra).'
+              help: Dada de l'operació vinculada número 4 declarada en el model 232.
               label: 'Part vinculada 4: F/J/O (física, jurídica o altra)'
             vinculada-4-importe:
               help: 'Consulteu la informació de la casella: Operación vinculada 4:
@@ -327,8 +323,7 @@ modelo:
                 tipus de vinculación.'
               label: 'Part vinculada 4: Tipus de vinculació'
             vinculada-5-fjo:
-              help: 'Consulteu la informació de la casella: Operación vinculada 5:
-                F/J/O (física, jurídica u otra).'
+              help: Dada de l'operació vinculada número 5 declarada en el model 232.
               label: 'Part vinculada 5: F/J/O (física, jurídica o altra)'
             vinculada-5-importe:
               help: 'Consulteu la informació de la casella: Operación vinculada 5:

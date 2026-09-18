@@ -3879,8 +3879,8 @@ modelo:
             0194:
               label: Subministraments (llum, aigua, gas, telefonia i internet)
             '0205':
-              label: IVA suportat (per ejermplo, recargo de equivalencia i/o compensació
-                de agricultura, ganadería i pesca)
+              label: IVA suportat (per exemple, recàrrec d'equivalència i/o compensació
+                d'agricultura, ramaderia i pesca)
             0208:
               label: Dotacions de l'exercici per amortització d'immobilitzat material
             '0214':
@@ -4194,7 +4194,7 @@ modelo:
                 de dependència
             '0467':
               label: Imports amb dret a reducció ( [0463] + [0464] + [0465] + [0466]
-                ) (Límit máximo article 52 de la Llei del Impost)
+                ) (Límit màxim article 52 de la Llei de l'Impost)
             0468:
               label: Total amb dret a reducció (inclou els excessos pendents de reduir
                 procedents dels exercicis 2015 a 2019)
@@ -4780,8 +4780,8 @@ modelo:
               label: Per inversió en habitatge habitual que tingui la consideració
                 de protegida
             0887:
-              label: Per l'arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.6)
+              label: Per l'arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.6)
             0888:
               label: Per donació de finques rústiques a favor del Principat d'Astúries
             0898:
@@ -4795,9 +4795,8 @@ modelo:
               label: Per declarants amb discapacitat física, psíquica o sensorial
                 o amb descendents amb aquesta condició
             0907:
-              label: Per arrendament de habitatge habitual a favor de determinats
-                col·lectius (es trasllada este import a la casella [1130] del annex
-                B.6)
+              label: Per arrendament d'habitatge habitual a favor de determinats col·lectius
+                (es trasllada aquest import a la casella [1130] de l'annex B.6)
             0909:
               label: Per arrendament de béns immobles en el territori de les Illes
                 Balears destinats a habitatge
@@ -4812,8 +4811,8 @@ modelo:
             0924:
               label: Per despeses de llar d'infants
             0928:
-              label: Per lloguer de habitatge habitual (es trasllada este import a
-                la casella [1130] del annex B.6)
+              label: Per lloguer d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.6)
             0930:
               label: Si no teniu referència cadastral, marqueu aquesta casella
             0932:
@@ -4836,8 +4835,8 @@ modelo:
                 de l'arrendador) (trasllade l'import de la casella [1186] de l'annex
                 B.8)
             0946:
-              label: Per arrendament de habitatge habitual per joves, majors i amb
-                discapacitat (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a joves, majors i amb
+                discapacitat (es trasllada aquest import a la casella [1130] de l'annex
                 B.6)
             0948:
               label: 'Per obres de millora: imports generats el 2017 i/o el 2018 pendents
@@ -4855,16 +4854,17 @@ modelo:
               label: Per despeses en l'adquisició de llibres de text i en l'ensenyament
                 d'idiomes
             0968:
-              label: Per arrendament de habitatge habitual per a contribuents menors
-                de 36 anys (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a contribuents menors
+                de 36 anys (es trasllada aquest import a la casella [1130] de l'annex
                 B.6)
             0970:
               label: Per a contribuents afectats per discapacitat
             0971:
               label: Per adquisició d'habitatges per joves en nuclis rurals
             0975:
-              label: Per lloguer de habitatge habitual per a contribuents menors de
-                36 anys (es trasllada este import a la casella [1130] del annex B.6)
+              label: Per lloguer d'habitatge habitual per a contribuents menors de
+                36 anys (es trasllada aquest import a la casella [1130] de l'annex
+                B.6)
             0976:
               label: Per inversió en instal·lacions mediambientals i d'adaptació a
                 persones amb discapacitat a l'habitatge habitual
@@ -4899,8 +4899,8 @@ modelo:
             '1000':
               label: Per naixement o adopció d'un fill
             '1003':
-              label: Per lloguer de la habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.6)
+              label: Per lloguer de l'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.6)
             '1005':
               label: Per als contribuents que queden viudos
             '1008':
@@ -4913,8 +4913,8 @@ modelo:
                 en societats mercantils (aquest import es trasllada a la casella [1136]
                 de l'annex B.7)
             '1019':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.6)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.6)
             '1026':
               label: Per lloguer dhabitatge habitual per contribuents dedat igual
                 o inferior a 35 anys (es trasllada aquest import a la casella [1130]
@@ -4945,16 +4945,16 @@ modelo:
             '1039':
               label: Per naixement o adopció de fills
             '1043':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.6)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.6)
             '1046':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.7)
             '1048':
-              label: Per inversions realitzades en entitatés cotitzades en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.7)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.7)
             '1049':
               label: Per donatius a fundacions
             '1050':
@@ -4972,9 +4972,9 @@ modelo:
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.7)
             '1058':
-              label: Per inversions realitzades en entitatés cotitzades en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.7)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.7)
             '1069':
               label: Import de la deducció
             '1070':
@@ -4988,7 +4988,7 @@ modelo:
               label: Per adquisició de vehicles elèctrics nous
             '1078':
               label: Import satisfet en 2019 pendent d'aplicació (per a inversions
-                en cualquier tipus de habitatge o edifici on es estigui situat)
+                en qualsevol tipus d'habitatge o edifici on estigui situat)
             '1082':
               label: Altres deduccions
             '1083':
@@ -5024,8 +5024,8 @@ modelo:
                 o per a aprofitament de fonts d'energia renovable a l'habitatge o
                 edifici on se situï
             '1115':
-              label: Import satisfet en 2017 i/o 2018 pendent d'aplicació (sólo per
-                a inversions en la habitatge habitual o edifici on es estigui situat)
+              label: Import satisfet en 2017 i/o 2018 pendent d'aplicació (només per
+                a inversions en l'habitatge habitual o edifici on estigui situat)
             '1116':
               label: Import que s'aplica en l'exercici
             '1117':
@@ -5582,7 +5582,7 @@ modelo:
             renta-dependent-modelos:
               field:
                 title: Modelo 100 2020 retencions, pagaments fraccionats i retencions
-                  d'altres modelos relacionats
+                  d'altres models relacionats
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2020 estimació directa aggregators
@@ -5876,7 +5876,7 @@ modelo:
               label: Contribucions a assegurances col·lectius de dependència
             '0467':
               label: Imports amb dret a reducció ( [0463] + [0426] + [0464] + [0465]
-                + [0427] + [0466] ) (Límit máximo article 52 de la Llei del Impost)
+                + [0427] + [0466] ) (Límit màxim article 52 de la Llei de l'Impost)
             0468:
               label: Excessos pendents de reduir procedents dels exercicis 2016 a
                 2020
@@ -6164,9 +6164,9 @@ modelo:
               label: Per quantitats invertides en el lloguer d'habitatge habitual
                 (es trasllada aquest import a la casella [1130] de l'annex B.8)
             0872:
-              label: Per inversió en accions de entitatés que cotitzen en el segmento
-                de empreses en expansió del Mercat Alternativo Bursátil (es trasllada
-                este import a la casella [1142] del annex B.8)
+              label: Per inversió en accions d'entitats que cotitzen en el segment
+                d'empreses en expansió del Mercat Alternatiu Borsari (es trasllada
+                aquest import a la casella [1142] de l'annex B.8)
             0873:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
@@ -6181,19 +6181,18 @@ modelo:
             0886:
               label: Import de la deducció
             0887:
-              label: Per l'arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per l'arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0903:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             0907:
-              label: Per arrendament de habitatge habitual a favor de determinats
-                col·lectius (es trasllada este import a la casella [1130] del annex
-                B.8)
+              label: Per arrendament d'habitatge habitual a favor de determinats col·lectius
+                (es trasllada aquest import a la casella [1130] de l'annex B.8)
             0928:
-              label: Per lloguer de habitatge habitual (es trasllada este import a
-                la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0930:
               label: Si no té referència cadastral, marqui amb una 'X' aquesta casella
             0932:
@@ -6209,8 +6208,8 @@ modelo:
                 impagaments de rendes de arrendaments de habitatge (deducció del arrendador)
                 (traslladeu l'import de la casella [1203] del annex B.9)
             0946:
-              label: Per arrendament de habitatge habitual per joves, majors i amb
-                discapacitat (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a joves, majors i amb
+                discapacitat (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0948:
               label: 'Per obres de millora: imports generats el 2019 i/o el 2020 pendents
@@ -6223,12 +6222,13 @@ modelo:
               label: Per obres de millora generada el 2021 a deduir en els 2 anys
                 següents
             0968:
-              label: Per arrendament de habitatge habitual per a contribuents menors
-                de 36 anys (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a contribuents menors
+                de 36 anys (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0975:
-              label: Per lloguer de habitatge habitual per a contribuents menors de
-                36 anys (es trasllada este import a la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual per a contribuents menors de
+                36 anys (es trasllada aquest import a la casella [1130] de l'annex
+                B.8)
             0979:
               label: Per al foment d'emprenedoria (trasllade l'import de la casella
                 [1136] de l'annex B.8)
@@ -6253,15 +6253,15 @@ modelo:
             0999:
               label: Import generat el 2021 pendent d'aplicació
             '1003':
-              label: Per lloguer de la habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per lloguer de l'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1008':
               label: Per inversió per un àngel inversor per l'adquisició d'accions
                 o participacions socials d'entitats noves o de creació recent (es
                 trasllada aquest import a la casella [1136] de l'annex B.8)
             '1019':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1026':
               label: Per lloguer dhabitatge habitual per contribuents dedat igual
                 o inferior a 35 anys (es trasllada aquest import a la casella [1130]
@@ -6282,24 +6282,24 @@ modelo:
               label: Per inversió en empreses que desenvolupin activitats agràries
                 (traslladeu l'import de la casella [1154] del annex B.8)
             '1043':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1046':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1048':
-              label: Per inversions realitzades en entitatés cotitzades en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1057':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1058':
-              label: Per inversions realitzades en entitatés cotitzades en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1078':
               label: Import satisfet en 2019 i/o 2020 pendent d'aplicació (per a inversions
                 en qualsevol tipus d'habitatge o edifici on estigui situat)
@@ -6829,7 +6829,7 @@ modelo:
             renta-dependent-modelos:
               field:
                 title: Modelo 100 2021 retencions, pagaments fraccionats i retencions
-                  d'altres modelos relacionats
+                  d'altres models relacionats
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2021 estimació directa aggregators
@@ -7445,9 +7445,9 @@ modelo:
               label: Per quantitats invertides en el lloguer d'habitatge habitual
                 (es trasllada aquest import a la casella [1130] de l'annex B.8)
             0872:
-              label: Per inversió en accions de entitatés que cotitzen en el segmento
-                de empreses en expansió del Mercat Alternativo Bursátil (es trasllada
-                este import a la casella [1142] del annex B.8)
+              label: Per inversió en accions d'entitats que cotitzen en el segment
+                d'empreses en expansió del Mercat Alternatiu Borsari (es trasllada
+                aquest import a la casella [1142] de l'annex B.8)
             0873:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
@@ -7462,19 +7462,18 @@ modelo:
             0886:
               label: Import de la deducció
             0887:
-              label: Per l'arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per l'arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0903:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             0907:
-              label: Per arrendament de habitatge habitual a favor de determinats
-                col·lectius (es trasllada este import a la casella [1130] del annex
-                B.8)
+              label: Per arrendament d'habitatge habitual a favor de determinats col·lectius
+                (es trasllada aquest import a la casella [1130] de l'annex B.8)
             0928:
-              label: Per lloguer de habitatge habitual (es trasllada este import a
-                la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0939:
               label: Per obres de rehabilitació energètica de la habitatge habitual
             0942:
@@ -7486,8 +7485,8 @@ modelo:
                 impagaments de rendes de arrendaments de habitatge (deducció del arrendador)
                 (traslladeu l'import de la casella [1203] del annex B.9)
             0946:
-              label: Per arrendament de habitatge habitual per joves, majors i amb
-                discapacitat (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a joves, majors i amb
+                discapacitat (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0948:
               label: 'Per obres de millora: imports generats el 2020 i/o el 2021 pendents
@@ -7500,12 +7499,13 @@ modelo:
               label: Per obres de millora generada el 2022 a deduir en els 2 anys
                 següents
             0968:
-              label: Per arrendament de habitatge habitual per a contribuents menors
-                de 36 anys (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a contribuents menors
+                de 36 anys (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0975:
-              label: Per lloguer de habitatge habitual per a contribuents menors de
-                36 anys (es trasllada este import a la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual per a contribuents menors de
+                36 anys (es trasllada aquest import a la casella [1130] de l'annex
+                B.8)
             0979:
               label: Per al foment d'emprenedoria (import de la casella [1136] de
                 l'annex B.8)
@@ -7533,15 +7533,15 @@ modelo:
             0999:
               label: Import generat el 2022 pendent d'aplicació
             '1003':
-              label: Per lloguer de la habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per lloguer de l'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1008':
               label: Per inversió per un àngel inversor per l'adquisició d'accions
                 o participacions socials d'entitats noves o de creació recent (es
                 trasllada aquest import a la casella [1136] de l'annex B.8)
             '1019':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1026':
               label: Per lloguer dhabitatge habitual per contribuents dedat igual
                 o inferior a 35 anys (es trasllada aquest import a la casella [1130]
@@ -7562,30 +7562,30 @@ modelo:
               label: Per inversió en empreses que desenvolupin activitats agràries
                 (traslladeu l'import de la casella [1154] del annex B.8)
             '1043':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1046':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1048':
-              label: Per inversions realitzades en entitatés cotitzades en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1057':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1058':
-              label: Per inversions realitzades en entitatés cotitzades en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1078':
               label: Import satisfet en 2019 i/o 2020 pendent d'aplicació (per a inversions
                 en qualsevol tipus d'habitatge o edifici on estigui situat)
             '1095':
-              label: Per arrendament de la habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament de l'habitatge habitual (es trasllada aquest
+                import a la casella [1130] de l'annex B.8)
             '1110':
               label: Import de la deducció
             '1114':
@@ -7593,8 +7593,8 @@ modelo:
                 o d'aprofitament de fonts d'energia renovable a l'habitatge o edifici
                 on se situen, segons la casella ([1114]) de l'annex B.9
             '1115':
-              label: Import satisfet en 2018 pendent d'aplicació (sólo per a inversions
-                en la habitatge habitual o edifici on es estigui situat)
+              label: Import satisfet en 2018 pendent d'aplicació (només per a inversions
+                en l'habitatge habitual o edifici on estigui situat)
             '1116':
               label: Import satisfet en 2018 que s'aplica en l'exercici
             '1117':
@@ -8149,7 +8149,7 @@ modelo:
             renta-dependent-modelos:
               field:
                 title: Modelo 100 2022 retencions, pagaments fraccionats i retencions
-                  d'altres modelos relacionats
+                  d'altres models relacionats
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2022 estimació directa aggregators
@@ -8774,9 +8774,9 @@ modelo:
               label: Per quantitats invertides en el lloguer d'habitatge habitual
                 (es trasllada aquest import a la casella [1130] de l'annex B.8)
             0872:
-              label: Per inversió en accions de entitatés que cotitzen en el segmento
-                de empreses en expansió del Mercat Alternativo Bursátil (es trasllada
-                este import a la casella [1142] del annex B.8)
+              label: Per inversió en accions d'entitats que cotitzen en el segment
+                d'empreses en expansió del Mercat Alternatiu Borsari (es trasllada
+                aquest import a la casella [1142] de l'annex B.8)
             0873:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
@@ -8789,8 +8789,8 @@ modelo:
               label: Per inversió en entitats de l'economia social (trasllade l'import
                 de la casella [1179] de l'annex B.8
             0887:
-              label: Per l'arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per l'arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0903:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
@@ -8799,8 +8799,8 @@ modelo:
               label: Per arrendament de habitatge habitual (import de la casella [1130]
                 del annex B.8)
             0928:
-              label: Per lloguer de habitatge habitual (es trasllada este import a
-                la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0939:
               label: Per obres de rehabilitació energètica de la habitatge habitual
             0942:
@@ -8812,8 +8812,8 @@ modelo:
                 impagaments de rendes de arrendaments de habitatge (deducció del arrendador)
                 (traslladeu l'import de la casella [1203] del annex B.9)
             0946:
-              label: Per arrendament de habitatge habitual per joves, majors i amb
-                discapacitat (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a joves, majors i amb
+                discapacitat (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0948:
               label: 'Per obres de millora: imports generats el 2021 i/o el 2022 pendents
@@ -8826,12 +8826,13 @@ modelo:
               label: Per obres de millora generada el 2023 a deduir en els 2 anys
                 següents
             0968:
-              label: Per arrendament de habitatge habitual per a contribuents menors
-                de 36 anys (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a contribuents menors
+                de 36 anys (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0975:
-              label: Per lloguer de habitatge habitual per a contribuents menors de
-                36 anys (es trasllada este import a la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual per a contribuents menors de
+                36 anys (es trasllada aquest import a la casella [1130] de l'annex
+                B.8)
             0979:
               label: Per al foment d'emprenedoria (import de la casella [1136] de
                 l'annex B.8)
@@ -8852,8 +8853,8 @@ modelo:
             0999:
               label: Import generat el 2022 pendent d'aplicació
             '1003':
-              label: Per lloguer de la habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per lloguer de l'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1005':
               label: Per a contribuents que queden viudos en els exercicis 2021, 2022
                 i 2023
@@ -8862,8 +8863,8 @@ modelo:
                 o participacions socials d'entitats noves o de creació recent (es
                 trasllada aquest import a la casella [1136] de l'annex B.8)
             '1019':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1026':
               label: Per lloguer dhabitatge habitual per contribuents dedat igual
                 o inferior a 35 anys (es trasllada aquest import a la casella [1130]
@@ -8884,16 +8885,16 @@ modelo:
               label: Per inversió en empreses que desenvolupin activitats agràries
                 (traslladeu l'import de la casella [1154] del annex B.8)
             '1043':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1046':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1048':
-              label: Per inversions realitzades en entitatés cotitzades en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1050':
               label: Per cura de fills menors de 3 anys, grans dependents i persones
                 amb discapacitat
@@ -8902,9 +8903,9 @@ modelo:
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1058':
-              label: Per inversions realitzades en entitatés cotitzades en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1078':
               label: Import satisfet en 2019 i/o 2020 pendent d'aplicació
             '1095':
@@ -9459,7 +9460,7 @@ modelo:
             renta-dependent-modelos:
               field:
                 title: Modelo 100 2023 retencions, pagaments fraccionats i retencions
-                  d'altres modelos relacionats
+                  d'altres models relacionats
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2023 estimació directa aggregators
@@ -15736,7 +15737,7 @@ modelo:
             renta-dependent-modelos:
               field:
                 title: Modelo 100 2024 retencions, pagaments fraccionats i retencions
-                  d'altres modelos relacionats
+                  d'altres models relacionats
             renta-final-settlement:
               field:
                 title: Model 100 2024 resultat final de la liquidació

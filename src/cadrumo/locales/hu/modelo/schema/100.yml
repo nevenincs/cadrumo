@@ -5577,8 +5577,9 @@ modelo:
               label: Alkalmazandó csökkentések (az adótörvény 23.3. cikke és D.T.
                 25.ª rendelkezése)
             '1577':
-              label: Nettó jövedelem (estimación directa normal és estimación objetiva)/
-                Előzetes nettó jövedelem (estimación directa simplificada)
+              label: Nettó jövedelem (normál közvetlen megállapítási módszer és objektív
+                megállapítási módszer)/ Előzetes nettó jövedelem (egyszerűsített közvetlen
+                megállapítási módszer)
             '1579':
               label: Levonható tartalékok és nehezen igazolható kiadások (csak egyszerűsített
                 közvetlen becslés esetén)(*)
@@ -5924,7 +5925,7 @@ modelo:
                 [0447], [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454],
                 [0455], [0448])
             '0463':
-              label: Hozzájárulások indiviudales (Cumplimente a anexo C.2)
+              label: Egyéni hozzájárulások (Töltse ki a C.2. mellékletet)
             '0464':
               label: A csoportos gondozási-szükségleti biztosításokhoz fizetett vállalati
                 hozzájárulásokból eredő túllépések (Töltse ki a C.3 mellékletet)

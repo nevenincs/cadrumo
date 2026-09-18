@@ -45,22 +45,22 @@ modelo:
           hecho-imponible:
             label: 'Adóköteles tényállás (6):'
           hecho-imponible-adquisicion-intracomunitaria:
-            help: A 309-es modell 94-94. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 94-94. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: termékek Közösségen belüli beszerzése'
           hecho-imponible-entrega-inversion-inmobiliaria:
-            help: A 309-es modell 97-97. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 97-97. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: ingatlan jellegű beruházási javak értékesítése'
           hecho-imponible-inversion-sujeto-pasivo:
-            help: A 309-es modell 96-96. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 96-96. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: fordított adózás'
           hecho-imponible-medios-transporte-nuevos:
-            help: A 309-es modell 95-95. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 95-95. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: új közlekedési eszközök Közösségen belüli beszerzése'
           hecho-imponible-otros:
-            help: A 309-es modell 99-99. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 99-99. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: egyéb, nem szabályozott esetek'
           hecho-imponible-procedimiento-administrativo-judicial:
-            help: A 309-es modell 98-98. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 98-98. mezője, 2004-2015. adóév.
             label: 'Adóköteles ügylet: termékértékesítések és szolgáltatásnyújtások
               közigazgatási és bírósági eljárásokban'
           iva-cuota-autorepercutida-intracomunitaria:
@@ -75,7 +75,7 @@ modelo:
           justificante-anterior:
             label: Az előző bevallás igazolószáma (9)
           letras-etiqueta-persona-fisica:
-            help: A 309-es modell 15-18. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 15-18. mezője, 2004-2015. adóév.
             label: Az azonosító címke betűi
           motivo-declaracion-no-periodica:
             label: Kiváltó esemény típusa (új közlekedési eszközök / mezőgazdasági
@@ -84,7 +84,7 @@ modelo:
             label: Jellemzők és műszaki adatok (7) - Vízi járművek - Azonosítás (építési
               szám)
           observaciones-presentacion:
-            help: A 309-es modell 951-1300. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 951-1300. mezője, 2004-2015. adóév.
             label: Megjegyzések
           re-base-10:
             label: Elszámolás (8) - Egyenértékűségi felár - Adóalap [10]
@@ -119,7 +119,7 @@ modelo:
           rg-base-07:
             label: Elszámolás (8) - Általános szabályozás - Adóalap [07]
           rg-base-25:
-            help: A 309-es modell 692-708. mezője, 2023 y siguientes. adóév.
+            help: A 309-es modelo 692-708. mezője, 2023. és az azt követő adóévek.
             label: Elszámolás (8) - Általános szabályozás - Adóalap [25]
           rg-cuota-03:
             label: Elszámolás (8) - Általános szabályozás - Adóösszeg [03]
@@ -128,7 +128,7 @@ modelo:
           rg-cuota-09:
             label: Elszámolás (8) - Általános szabályozás - Adóösszeg [09]
           rg-cuota-27:
-            help: A 309-es modell 714-730. mezője, 2023 y siguientes. adóév.
+            help: A 309-es modelo 714-730. mezője, 2023. és az azt követő adóévek.
             label: Elszámolás (8) - Általános szabályozás - Adóösszeg [27]
           rg-tipo-02:
             label: Elszámolás (8) - Általános szabályozás - Adókulcs % [02]
@@ -137,31 +137,31 @@ modelo:
           rg-tipo-08:
             label: Elszámolás (8) - Általános szabályozás - Adókulcs % [08]
           rg-tipo-26:
-            help: A 309-es modell 709-713. mezője, 2023 y siguientes. adóév.
+            help: A 309-es modelo 709-713. mezője, 2023. és az azt követő adóévek.
             label: Elszámolás (8) - Általános szabályozás - Adókulcs % [26]
           situacion-tributaria:
             label: 'Adójogi helyzet (5):'
           situacion-tributaria-agricola:
-            help: A 309-es modell 88-88. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 88-88. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: a mezőgazdasági, állattenyésztési és halászati
               különös rendszer alanya'
           situacion-tributaria-otras:
-            help: A 309-es modell 93-93. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 93-93. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: egyéb, nem szabályozott esetek'
           situacion-tributaria-persona-fisica-no-empresario:
-            help: A 309-es modell 92-92. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 92-92. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: nem vállalkozó vagy szakmai tevékenységet nem
               végző természetes személy'
           situacion-tributaria-persona-juridica-no-empresario:
-            help: A 309-es modell 91-91. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 91-91. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: nem vállalkozó vagy szakmai tevékenységet nem
               végző jogi személy'
           situacion-tributaria-recargo-equivalencia:
-            help: A 309-es modell 89-89. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 89-89. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: az egyenértékűségi felár különös rendszerének
               alanya'
           situacion-tributaria-sin-derecho-deduccion:
-            help: A 309-es modell 90-90. mezője, 2004-2015. adóév.
+            help: A 309-es modelo 90-90. mezője, 2004-2015. adóév.
             label: 'Adójogi helyzet: levonási jog nélküli adóalany'
           transmitente-apellidos:
             label: Átruházó (3) - Vezetéknév vagy cégnév
@@ -174,7 +174,7 @@ modelo:
           transmitente-nombre:
             label: Átruházó (3) - Utónév
           transmitente-pais:
-            help: A 309-es modell 198-199. mezője, 2016-2017. adóév.
+            help: A 309-es modelo 198-199. mezője, 2016-2017. adóév.
             label: Átruházó (3) - Ország
           vehiculo-bastidor:
             label: Jellemzők és műszaki adatok (7) - Járművek - Azonosító szám (alvázszám)
@@ -194,193 +194,193 @@ modelo:
         2004-2015:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es modell 792-804. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 792-804. mezője, 2004-2015. adóév.
             x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es modell 546-549. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 546-549. mezője, 2004-2015. adóév.
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es modell 426-465. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 426-465. mezője, 2004-2015. adóév.
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es modell 466-505. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 466-505. mezője, 2004-2015. adóév.
             x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es modell 550-561. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 550-561. mezője, 2004-2015. adóév.
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es modell 506-545. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 506-545. mezője, 2004-2015. adóév.
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es modell 779-791. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 779-791. mezője, 2004-2015. adóév.
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es modell 420-425. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 420-425. mezője, 2004-2015. adóév.
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es modell 300-339. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 300-339. mezője, 2004-2015. adóév.
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es modell 380-419. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 380-419. mezője, 2004-2015. adóév.
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es modell 340-379. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 340-379. mezője, 2004-2015. adóév.
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es modell 818-830. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 818-830. mezője, 2004-2015. adóév.
             x-chim6r1ee1in4qbfchng:
-              help: A 309-es modell 23-24. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 23-24. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es modell 655-667. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 655-667. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es modell 686-698. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 686-698. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es modell 717-729. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 717-729. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es modell 748-760. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 748-760. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es modell 673-685. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 673-685. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es modell 704-716. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 704-716. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es modell 735-747. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 735-747. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es modell 766-778. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 766-778. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es modell 668-672. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 668-672. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es modell 699-703. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 699-703. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es modell 730-734. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 730-734. mezője, 2004-2015. adóév.
             x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es modell 761-765. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 761-765. mezője, 2004-2015. adóév.
             x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es modell 805-817. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 805-817. mezője, 2004-2015. adóév.
             x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es modell 562-574. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 562-574. mezője, 2004-2015. adóév.
             x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es modell 593-605. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 593-605. mezője, 2004-2015. adóév.
             x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es modell 624-636. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 624-636. mezője, 2004-2015. adóév.
             x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es modell 580-592. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 580-592. mezője, 2004-2015. adóév.
             x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es modell 611-623. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 611-623. mezője, 2004-2015. adóév.
             x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es modell 642-654. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 642-654. mezője, 2004-2015. adóév.
             x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es modell 575-579. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 575-579. mezője, 2004-2015. adóév.
             x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es modell 606-610. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 606-610. mezője, 2004-2015. adóév.
             x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es modell 637-641. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 637-641. mezője, 2004-2015. adóév.
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es modell 25-33. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 25-33. mezője, 2004-2015. adóév.
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es modell 220-259. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 220-259. mezője, 2004-2015. adóév.
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es modell 260-299. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 260-299. mezője, 2004-2015. adóév.
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es modell 100-139. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 100-139. mezője, 2004-2015. adóév.
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es modell 180-219. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 180-219. mezője, 2004-2015. adóév.
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es modell 140-179. mezője, 2004-2015. adóév.
+              help: A 309-es modelo 140-179. mezője, 2004-2015. adóév.
           construct:
             modelo-309-iva-no-periodica:
               field:
-                title: 'Történeti 309-es modell: nem időszakos önadóbevallás (2004-2015)'
+                title: 'Történeti 309-es modelo: nem időszakos önadóbevallás (2004-2015)'
           field:
             label: 309-es modelo, 2004-2015. adóévek
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es modell 943-959. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 943-959. mezője, 2016-2017. adóév.
             x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es modell 639-642. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 639-642. mezője, 2016-2017. adóév.
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es modell 497-536. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 497-536. mezője, 2016-2017. adóév.
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es modell 537-616. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 537-616. mezője, 2016-2017. adóév.
             x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es modell 643-652. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 643-652. mezője, 2016-2017. adóév.
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es modell 617-638. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 617-638. mezője, 2016-2017. adóév.
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: A 309-es modell 977-977. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 977-977. mezője, 2016-2017. adóév.
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es modell 926-942. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 926-942. mezője, 2016-2017. adóév.
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es modell 492-496. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 492-496. mezője, 2016-2017. adóév.
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es modell 350-389. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 350-389. mezője, 2016-2017. adóév.
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es modell 470-491. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 470-491. mezője, 2016-2017. adóév.
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es modell 390-469. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 390-469. mezője, 2016-2017. adóév.
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
-              help: A 309-es modell 201-201. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 201-201. mezője, 2016-2017. adóév.
             x-chim6r1ed5h62rg:
-              help: A 309-es modell 991-1024. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 991-1024. mezője, 2016-2017. adóév.
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es modell 978-990. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 978-990. mezője, 2016-2017. adóév.
             x-chim6r1edpnmqojick:
-              help: A 309-es modell 83-102. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 83-102. mezője, 2016-2017. adóév.
             x-chim6r1ee1in4qbfchng:
-              help: A 309-es modell 107-108. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 107-108. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es modell 770-786. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 770-786. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es modell 809-825. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 809-825. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es modell 848-864. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 848-864. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es modell 887-903. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 887-903. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es modell 792-808. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 792-808. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es modell 831-847. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 831-847. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es modell 870-886. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 870-886. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es modell 909-925. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 909-925. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es modell 787-791. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 787-791. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es modell 826-830. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 826-830. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es modell 865-869. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 865-869. mezője, 2016-2017. adóév.
             x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es modell 904-908. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 904-908. mezője, 2016-2017. adóév.
             x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es modell 960-976. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 960-976. mezője, 2016-2017. adóév.
             x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es modell 653-669. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 653-669. mezője, 2016-2017. adóév.
             x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es modell 692-708. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 692-708. mezője, 2016-2017. adóév.
             x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es modell 731-747. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 731-747. mezője, 2016-2017. adóév.
             x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es modell 675-691. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 675-691. mezője, 2016-2017. adóév.
             x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es modell 714-730. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 714-730. mezője, 2016-2017. adóév.
             x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es modell 753-769. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 753-769. mezője, 2016-2017. adóév.
             x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es modell 670-674. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 670-674. mezője, 2016-2017. adóév.
             x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es modell 709-713. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 709-713. mezője, 2016-2017. adóév.
             x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es modell 748-752. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 748-752. mezője, 2016-2017. adóév.
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
-              help: A 309-es modell 200-200. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 200-200. mezője, 2016-2017. adóév.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 309-es modell 13-13. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 13-13. mezője, 2016-2017. adóév.
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
-              help: A 309-es modell 118-177. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 118-177. mezője, 2016-2017. adóév.
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es modell 109-117. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 109-117. mezője, 2016-2017. adóév.
             x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
-              help: A 309-es modell 178-197. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 178-197. mezője, 2016-2017. adóév.
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es modell 322-343. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 322-343. mezője, 2016-2017. adóév.
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es modell 344-349. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 344-349. mezője, 2016-2017. adóév.
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es modell 202-241. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 202-241. mezője, 2016-2017. adóév.
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es modell 282-321. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 282-321. mezője, 2016-2017. adóév.
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es modell 242-281. mezője, 2016-2017. adóév.
+              help: A 309-es modelo 242-281. mezője, 2016-2017. adóév.
           construct:
             modelo-309-iva-no-periodica:
               field:
@@ -390,113 +390,113 @@ modelo:
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es modell 943-959. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 943-959. mezője, 2018-2022. adóév.
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
-              help: A 309-es modell 1049-1108. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 1049-1108. mezője, 2018-2022. adóév.
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
-              help: A 309-es modell 1040-1048. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 1040-1048. mezője, 2018-2022. adóév.
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
-              help: A 309-es modell 1109-1128. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 1109-1128. mezője, 2018-2022. adóév.
             x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es modell 639-642. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 639-642. mezője, 2018-2022. adóév.
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es modell 497-536. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 497-536. mezője, 2018-2022. adóév.
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es modell 537-616. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 537-616. mezője, 2018-2022. adóév.
             x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es modell 643-652. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 643-652. mezője, 2018-2022. adóév.
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es modell 617-638. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 617-638. mezője, 2018-2022. adóév.
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: A 309-es modell 977-977. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 977-977. mezője, 2018-2022. adóév.
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es modell 926-942. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 926-942. mezője, 2018-2022. adóév.
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es modell 492-496. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 492-496. mezője, 2018-2022. adóév.
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es modell 350-389. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 350-389. mezője, 2018-2022. adóév.
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es modell 470-491. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 470-491. mezője, 2018-2022. adóév.
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es modell 390-469. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 390-469. mezője, 2018-2022. adóév.
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
-              help: A 309-es modell 201-201. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 201-201. mezője, 2018-2022. adóév.
             x-chim6r1ed5h62rg:
-              help: A 309-es modell 991-1024. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 991-1024. mezője, 2018-2022. adóév.
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es modell 978-990. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 978-990. mezője, 2018-2022. adóév.
             x-chim6r1edpnmqojick:
-              help: A 309-es modell 83-102. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 83-102. mezője, 2018-2022. adóév.
             x-chim6r1ee1in4qbfchng:
-              help: A 309-es modell 107-108. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 107-108. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es modell 770-786. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 770-786. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es modell 809-825. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 809-825. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es modell 848-864. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 848-864. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es modell 887-903. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 887-903. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es modell 792-808. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 792-808. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es modell 831-847. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 831-847. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es modell 870-886. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 870-886. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es modell 909-925. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 909-925. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es modell 787-791. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 787-791. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es modell 826-830. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 826-830. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es modell 865-869. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 865-869. mezője, 2018-2022. adóév.
             x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es modell 904-908. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 904-908. mezője, 2018-2022. adóév.
             x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es modell 960-976. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 960-976. mezője, 2018-2022. adóév.
             x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es modell 653-669. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 653-669. mezője, 2018-2022. adóév.
             x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es modell 692-708. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 692-708. mezője, 2018-2022. adóév.
             x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es modell 731-747. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 731-747. mezője, 2018-2022. adóév.
             x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es modell 675-691. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 675-691. mezője, 2018-2022. adóév.
             x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es modell 714-730. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 714-730. mezője, 2018-2022. adóév.
             x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es modell 753-769. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 753-769. mezője, 2018-2022. adóév.
             x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es modell 670-674. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 670-674. mezője, 2018-2022. adóév.
             x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es modell 709-713. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 709-713. mezője, 2018-2022. adóév.
             x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es modell 748-752. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 748-752. mezője, 2018-2022. adóév.
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
-              help: A 309-es modell 200-200. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 200-200. mezője, 2018-2022. adóév.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 309-es modell 13-13. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 13-13. mezője, 2018-2022. adóév.
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
-              help: A 309-es modell 118-177. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 118-177. mezője, 2018-2022. adóév.
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es modell 109-117. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 109-117. mezője, 2018-2022. adóév.
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
-              help: A 309-es modell 1025-1039. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 1025-1039. mezője, 2018-2022. adóév.
             x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
-              help: A 309-es modell 178-197. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 178-197. mezője, 2018-2022. adóév.
             x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
-              help: A 309-es modell 198-199. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 198-199. mezője, 2018-2022. adóév.
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es modell 322-343. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 322-343. mezője, 2018-2022. adóév.
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es modell 344-349. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 344-349. mezője, 2018-2022. adóév.
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es modell 202-241. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 202-241. mezője, 2018-2022. adóév.
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es modell 282-321. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 282-321. mezője, 2018-2022. adóév.
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es modell 242-281. mezője, 2018-2022. adóév.
+              help: A 309-es modelo 242-281. mezője, 2018-2022. adóév.
           construct:
             modelo-309-iva-no-periodica:
               field:
@@ -506,113 +506,113 @@ modelo:
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
-              help: A 309-es modell 982-998. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 982-998. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubb1e1imor39chnn6:
-              help: A 309-es modell 1088-1147. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 1088-1147. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbed5j0:
-              help: A 309-es modell 1079-1087. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 1079-1087. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ec5i6ktb4d5hm2t31e9kmubbedtmm4sj5:
-              help: A 309-es modell 1148-1167. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 1148-1167. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ec5in4rrec5r6abb1dpng:
-              help: A 309-es modell 639-642. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 639-642. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ec5in4rrec5r6abb6c5h74qb3c5n78p8:
-              help: A 309-es modell 497-536. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 497-536. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ec5in4rrec5r6abbdc5p66o8:
-              help: A 309-es modell 537-616. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 537-616. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ec5in4rrec5r6abbgclpmu:
-              help: A 309-es modell 643-652. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 643-652. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ec5in4rrec5r6abbjclp6ip8:
-              help: A 309-es modell 617-638. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 617-638. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
-              help: A 309-es modell 1016-1016. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 1016-1016. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ecdqmut315li6atj5dpjm2p315kp34:
-              help: A 309-es modell 965-981. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 965-981. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eclmm4obicdgm6qbfdommasrcdtp62:
-              help: A 309-es modell 492-496. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 492-496. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eclmm4obicdgm6qbfdommcob2e9km6obeehig:
-              help: A 309-es modell 350-389. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 350-389. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eclmm4obicdgm6qbfdommip35dpq6ipj9cdgm6qbfdo:
-              help: A 309-es modell 470-491. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 470-491. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eclmm4obicdgm6qbfdomn8qbgds:
-              help: A 309-es modell 390-469. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 390-469. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ed1im6q3f5lkmqs3fdpkm4r35:
-              help: A 309-es modell 201-201. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 201-201. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ed5h62rg:
-              help: A 309-es modell 1030-1063. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 1030-1063. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ed9qn6t39cpkm6obeehiiqobeehin4qbfe8:
-              help: A 309-es modell 1017-1029. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 1017-1029. mezője, 2023. és az azt követő adóévek.
             x-chim6r1edpnmqojick:
-              help: A 309-es modell 83-102. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 83-102. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee1in4qbfchng:
-              help: A 309-es modell 107-108. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 107-108. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqoj1ediiqc9g:
-              help: A 309-es modell 809-825. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 809-825. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqoj1ediiqc9j:
-              help: A 309-es modell 848-864. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 848-864. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqoj1ediiqc9m:
-              help: A 309-es modell 887-903. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 887-903. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqoj1ediiqc9p:
-              help: A 309-es modell 926-942. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 926-942. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqorldtq62b9h68:
-              help: A 309-es modell 831-847. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 831-847. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqorldtq62b9h6k:
-              help: A 309-es modell 870-886. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 870-886. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqorldtq62b9h70:
-              help: A 309-es modell 909-925. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 909-925. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqorldtq62b9i64:
-              help: A 309-es modell 948-964. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 948-964. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqt39e1niqc9h:
-              help: A 309-es modell 826-830. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 826-830. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqt39e1niqc9k:
-              help: A 309-es modell 865-869. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 865-869. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqt39e1niqc9n:
-              help: A 309-es modell 904-908. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 904-908. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9iiqt39e1niqchg:
-              help: A 309-es modell 943-947. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 943-947. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9in6tbcehgm8rpd68q0:
-              help: A 309-es modell 999-1015. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 999-1015. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9jiqoj1ediiqc1h:
-              help: A 309-es modell 653-669. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 653-669. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9jiqoj1ediiqc1k:
-              help: A 309-es modell 731-747. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 731-747. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9jiqoj1ediiqc1n:
-              help: A 309-es modell 770-786. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 770-786. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9jiqorldtq62b9g6c:
-              help: A 309-es modell 675-691. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 675-691. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9jiqorldtq62b9g6o:
-              help: A 309-es modell 753-769. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 753-769. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9jiqorldtq62b9g74:
-              help: A 309-es modell 792-808. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 792-808. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9jiqt39e1niqc1i:
-              help: A 309-es modell 670-674. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 670-674. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9jiqt39e1niqc1l:
-              help: A 309-es modell 748-752. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 748-752. mezője, 2023. és az azt követő adóévek.
             x-chim6r1ee9jiqt39e1niqc1o:
-              help: A 309-es modell 787-791. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 787-791. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eedkn8tb1cdkmurhdehp6iojlehgn4qb1:
-              help: A 309-es modell 200-200. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 200-200. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 309-es modell 13-13. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 13-13. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eehp62rjjdlkn8pbeehiiqobgclm6oqb4dtpg:
-              help: A 309-es modell 118-177. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 118-177. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9co:
-              help: A 309-es modell 109-117. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 109-117. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eehp62rjjdlkn8pbeehiiqrj9commitj1:
-              help: A 309-es modell 1064-1078. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 1064-1078. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eehp62rjjdlkn8pbeehiiqrjfdlh74p8:
-              help: A 309-es modell 178-197. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 178-197. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eehp62rjjdlkn8pbeehiiqs31d5pg:
-              help: A 309-es modell 198-199. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 198-199. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eepimgqb3elm6ubb2c5pn8qb4dtp0:
-              help: A 309-es modell 322-343. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 322-343. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eepimgqb3elm6ubb3dhgn6qb6d5hm2or9dtn0:
-              help: A 309-es modell 344-349. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 344-349. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eepimgqb3elm6ubbdc5p66o8:
-              help: A 309-es modell 202-241. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 202-241. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eepimgqb3elm6ubbddti6ar3f:
-              help: A 309-es modell 282-321. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 282-321. mezője, 2023. és az azt követő adóévek.
             x-chim6r1eepimgqb3elm6ubbkd5o6u:
-              help: A 309-es modell 242-281. mezője, 2023 y siguientes. adóév.
+              help: A 309-es modelo 242-281. mezője, 2023. és az azt követő adóévek.
           construct:
             modelo-309-iva-no-periodica:
               field:

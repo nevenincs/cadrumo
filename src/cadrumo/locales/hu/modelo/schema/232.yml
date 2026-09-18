@@ -208,8 +208,7 @@ modelo:
         2018-y-siguientes:
           casilla:
             vinculada-1-fjo:
-              help: 'Tekintse át a rovat adatait: Operación vinculada 1: F/J/O (física,
-                jurídica u otra).'
+              help: A 232-es modelón bevallott 1. kapcsolt ügylet adata.
               label: 'Kapcsolt vállalkozás 1: F/J/O (természetes személy, jogi személy
                 vagy egyéb)'
             vinculada-1-importe:
@@ -238,8 +237,7 @@ modelo:
               help: 'A Modelo 232 . rovat adóügyi adatai: adóügyi információ.'
               label: 'Kapcsolt vállalkozás 1: Kapcsolat típusa'
             vinculada-2-fjo:
-              help: 'Tekintse át a rovat adatait: Operación vinculada 2: F/J/O (física,
-                jurídica u otra).'
+              help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
               label: 'Kapcsolt vállalkozás 2: F/J/O (természetes személy, jogi személy
                 vagy egyéb)'
             vinculada-2-importe:
@@ -268,8 +266,7 @@ modelo:
               help: 'A Modelo 232 . rovat adóügyi adatai: adóügyi információ.'
               label: 'Kapcsolt vállalkozás 2: Kapcsolat típusa'
             vinculada-3-fjo:
-              help: 'Tekintse át a rovat adatait: Operación vinculada 3: F/J/O (física,
-                jurídica u otra).'
+              help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
               label: 'Kapcsolt vállalkozás 3: F/J/O (természetes személy, jogi személy
                 vagy egyéb)'
             vinculada-3-importe:
@@ -298,8 +295,7 @@ modelo:
               help: 'A Modelo 232 . rovat adóügyi adatai: adóügyi információ.'
               label: 'Kapcsolt vállalkozás 3: Kapcsolat típusa'
             vinculada-4-fjo:
-              help: 'Tekintse át a rovat adatait: Operación vinculada 4: F/J/O (física,
-                jurídica u otra).'
+              help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
               label: 'Kapcsolt vállalkozás 4: F/J/O (természetes személy, jogi személy
                 vagy egyéb)'
             vinculada-4-importe:
@@ -328,8 +324,7 @@ modelo:
               help: 'A Modelo 232 . rovat adóügyi adatai: adóügyi információ.'
               label: 'Kapcsolt vállalkozás 4: Kapcsolat típusa'
             vinculada-5-fjo:
-              help: 'Tekintse át a rovat adatait: Operación vinculada 5: F/J/O (física,
-                jurídica u otra).'
+              help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
               label: 'Kapcsolt vállalkozás 5: F/J/O (természetes személy, jogi személy
                 vagy egyéb)'
             vinculada-5-importe:

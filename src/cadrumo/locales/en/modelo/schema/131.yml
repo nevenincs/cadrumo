@@ -59,13 +59,13 @@ modelo:
               special corrective index (Order HAC/1425/2025 Annex II, instruction
               2.3.a/b.1).'
           irpf-pf-modulos-rendimiento-neto-actividad:
-            label: 'Net income from the activity (Phase 4: módulos − general 5 percent
+            label: 'Net income from the activity (Phase 4: modules − general 5 percent
               reduction)'
           irpf-pf-modulos-rendimiento-neto-minorado:
             label: 'Reduced net income (Phase 2: preliminary − employment-incentive
               reduction − investment-incentive reduction)'
           irpf-pf-modulos-rendimiento-neto-previo:
-            label: 'Preliminary net income (Phase 1: Σ módulo units × annual yield
+            label: 'Preliminary net income (Phase 1: Σ module units × annual yield
               per unit)'
           irpf-pf-modulos-resultado-declaracion:
             label: Result of the return
@@ -92,7 +92,7 @@ modelo:
           pago-fraccionado-previo-agrario:
             label: Preliminary agricultural instalment payment
           pago-fraccionado-previo-datos-base:
-            label: Preliminary instalment payment using base data (datos-base)
+            label: Preliminary instalment payment based on actual data
           pago-fraccionado-previo-sin-datos-base:
             label: Preliminary instalment payment without base data
           prestamo-vivienda-habitual:

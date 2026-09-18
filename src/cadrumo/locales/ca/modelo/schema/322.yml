@@ -2101,8 +2101,7 @@ modelo:
               help: 'Consulteu la informació de la casella: Total quota IVA deduïble
                 (suportat en operacions interiors + autorepercutido deduïble).'
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: 'Consulteu la informació de la casella: Total quota IVA meritada
-                (repercutit a los tres tipos + autorepercutido en adquisicions intracomunitàries).'
+              help: Casella iva.cuota-devengada-total del model 322, exercici 2008.
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: 'Consulteu la informació de la casella: Quota IVA repercutit al
                 tipus reduït (10%).'

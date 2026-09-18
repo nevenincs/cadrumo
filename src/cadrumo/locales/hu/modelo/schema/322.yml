@@ -2098,12 +2098,9 @@ modelo:
               help: 'Tekintse át a rovat adatait: Adóösszeg IVA autorepercutida en
                 Közösségen belüli beszerzések (LIVA art 84.Uno.2).'
             x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: 'Tekintse át a rovat adatait: Total adóösszeg IVA levonható (viselt
-                en ügyletek interiores + autorepercutido levonható).'
+              help: A 322-es modelo iva.cuota-deducible-total. rovata, 2008. adóév.
             x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: 'Tekintse át a rovat adatait: Total adóösszeg Felszámított áfa
-                (felszámított a los tres tipos + autorepercutido en Közösségen belüli
-                beszerzések).'
+              help: A 322-es modelo iva.cuota-devengada-total. rovata, 2008. adóév.
             x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
               help: 'Tekintse át a rovat adatait: Adóösszeg Felszámított áfa al kulcs
                 csökkentett (10%).'
