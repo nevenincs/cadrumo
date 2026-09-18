@@ -10,7 +10,7 @@ from cadrumo.application.filing.producer_snapshot import (
     Modelo296ProfileFacts,
 )
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..compiler.loader import modelo_fact_scope
@@ -53,7 +53,7 @@ def test_enrollment_scenarios_select_their_supported_edition() -> None:
 
 def test_the_retired_below_floor_period_still_refuses() -> None:
     modelo, catalogues = committed_modelo("123")
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         select_revision(modelo, filing_year=2019, period="1T", support=catalogues.supported_filing_years)
 
 

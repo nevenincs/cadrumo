@@ -3,7 +3,7 @@
 An edition declares each keyed family's shared source grounding once on its
 manifest -- ``application_link_source_refs`` for ``application_links``,
 ``applicability_source_refs`` for ``applicability``, and so on for every pair in
-``FAMILY_SOURCE_DEFAULT_FIELDS``. The loader fills each into the rows of its OWN
+``CANONICAL_FAMILY_SPECS``. The loader fills each into the rows of its OWN
 family that state no ``source_refs``, which is the same member-side rule the
 binding and formula families already carry.
 
@@ -27,7 +27,13 @@ from typing import Final
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
+from cadrumo.domain.calculations.registry.keyed_families import (
+    CANONICAL_FAMILY_SPECS,
+    CASILLAS_FAMILY,
+    family_source_default_fields,
+    inline_family_source_default,
+)
+from cadrumo.domain.calculations.registry.schema import REVISION_MANIFEST_ONLY_FIELDS, ModeloRevision
 
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
@@ -43,7 +49,7 @@ _CASILLA_SOURCE: Final = "aeat-dr-999"
 #: another family's default is a visibly wrong value rather than a pass.
 _DECLARED: Final[dict[str, tuple[str, ...]]] = {
     default_field: (f"aeat-{default_field.replace('_', '-')}",)
-    for _family, default_field in FAMILY_SOURCE_DEFAULT_FIELDS
+    for _family, default_field in family_source_default_fields()
 }
 _APPLICATION_LINK_DEFAULT: Final = "application_link_source_refs"
 
@@ -223,3 +229,73 @@ def test_a_member_no_edition_ever_grounded_is_refused(tmp_path: Path) -> None:
     # edition that inherits it: the defect is the statement, not the inheritance.
     with pytest.raises(RegistryLoadError, match=r"(?s)invalid revision '2024'.*application_links\.0\.source_refs"):
         load_modelo_directory(modelo_dir)
+
+
+def test_the_enrolment_is_the_family_table_and_names_real_manifest_fields() -> None:
+    """The pairing has one home, so a family's default cannot drift from its policy.
+
+    Each pair comes from the family's own ``source_default_key``, and each key
+    must be a field an edition can actually declare on its manifest. A pair
+    naming a field the schema does not carry would be an enrolment the loader
+    fills from and the author can never state.
+    """
+    pairs = family_source_default_fields()
+
+    assert pairs == tuple(
+        (spec.section, spec.source_default_key)
+        for spec in CANONICAL_FAMILY_SPECS
+        if spec.source_default_key is not None and spec.section != CASILLAS_FAMILY
+    )
+    for section, default_field in pairs:
+        assert default_field in ModeloRevision.model_fields, default_field
+        assert default_field in REVISION_MANIFEST_ONLY_FIELDS, default_field
+        assert section in ModeloRevision.model_fields, section
+
+
+def test_no_two_families_are_grounded_from_one_declared_default() -> None:
+    """A family's grounding is its own document, so one key can never serve two.
+
+    The teeth of the pairing: bindings cite a record design and formulas the
+    approving orden's instructions, so a shared key would let one family attest
+    from a source that describes the other.
+    """
+    default_fields = [default_field for _section, default_field in family_source_default_fields()]
+    sections = [section for section, _default_field in family_source_default_fields()]
+
+    assert len(set(default_fields)) == len(default_fields)
+    assert len(set(sections)) == len(sections)
+    assert CASILLAS_FAMILY not in sections
+
+
+def test_a_member_stating_its_own_grounding_keeps_it_whole() -> None:
+    """A stated ``source_refs`` replaces the edition default rather than merging with it."""
+    member = {"id": "enlace", "source_refs": ("aeat-row-own",)}
+    edition = {_APPLICATION_LINK_DEFAULT: ("aeat-edition",)}
+
+    bound = inline_family_source_default(member, edition, _APPLICATION_LINK_DEFAULT)
+
+    assert bound is member
+
+
+def test_a_member_stating_additions_takes_the_default_first_then_its_own() -> None:
+    """Additions extend the edition's grounding; the default leads and each reference appears once."""
+    member = {"id": "enlace", "additional_source_refs": ("aeat-extra", "aeat-edition")}
+    edition = {_APPLICATION_LINK_DEFAULT: ("aeat-edition",)}
+
+    bound = inline_family_source_default(member, edition, _APPLICATION_LINK_DEFAULT)
+
+    assert bound["source_refs"] == ("aeat-edition", "aeat-extra")
+    assert "additional_source_refs" not in bound
+
+
+def test_an_edition_declaring_no_default_binds_nothing() -> None:
+    """Nothing to bind leaves the member exactly as authored, for typed construction to judge.
+
+    Identity, not equality: the loader tells whether an edition changed a row by
+    whether the row it gets back is the row it passed in.
+    """
+    member = {"id": "enlace"}
+
+    assert inline_family_source_default(member, {}, _APPLICATION_LINK_DEFAULT) is member
+    assert inline_family_source_default(member, {_APPLICATION_LINK_DEFAULT: ()}, _APPLICATION_LINK_DEFAULT) is member
+    assert inline_family_source_default(member, {_APPLICATION_LINK_DEFAULT: ("aeat-edition",)}, None) is member

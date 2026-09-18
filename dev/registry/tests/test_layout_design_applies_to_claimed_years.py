@@ -102,9 +102,17 @@ from ..compiler.authority import compile_validated_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
-#: Upper bound for an open-ended window or selector. Derived from the newest bundled
-#: record design rather than written as a literal, so it moves with the corpus.
-_OPEN_ENDED_HORIZON = 2026
+
+def _open_ended_horizon() -> int:
+    """Return the upper bound an open-ended window or selector is read against.
+
+    Now actually derived, which the literal this replaces only claimed to be:
+    its comment said it moved with the corpus while it sat pinned at a year
+    somebody typed. The support envelope is the registry's single declaration
+    of the temporal ceiling, and a claimed year past a stale local copy is
+    simply never checked -- a silent shortfall, not a loud one.
+    """
+    return _authority().catalogues.require_supported_filing_years().horizon
 
 
 def _authority() -> ValidatedRegistryAuthority:
@@ -173,7 +181,7 @@ def _claimed_years(revision: ModeloRevision) -> list[int]:
         return sorted(selector.years)
     if selector.year_from is None:
         return []
-    upper = selector.year_to if selector.year_to is not None else _OPEN_ENDED_HORIZON
+    upper = selector.year_to if selector.year_to is not None else _open_ended_horizon()
     return list(range(selector.year_from, upper + 1))
 
 

@@ -44,7 +44,7 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 from ..compiler.loader import load_registry_tree
-from ._gate_support import declaring_fragment, scratch_registry_tree
+from ._gate_support import mutate_declaration, scratch_registry_tree
 from .ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -205,16 +205,13 @@ def test_zero_rate_aic_base_reaches_its_own_official_box_layer() -> None:
 def test_mutation_removing_zero_from_m390_aic_base_selector_reds_the_gate(tmp_path: Path) -> None:
     """Removing zero on a scratch registry makes the AIC base assertion fail."""
     scratch_root = scratch_registry_tree(tmp_path, "390")
-    bindings = declaring_fragment(
+    mutate_declaration(
         scratch_root / "modelos" / "390",
         revision_id=_REVISION_ID,
         section="bindings",
-        anchor=f'id = "{_AIC_ZERO_BASE_BINDING}"',
-    )
-    bindings.mutate(
-        'rate_kinds = ["zero"], applied_rates = ["0.00"]',
-        'rate_kinds = ["general"], applied_rates = ["0.00"]',
-        after=f'id = "{_AIC_ZERO_BASE_BINDING}"',
+        member=f'id = "{_AIC_ZERO_BASE_BINDING}"',
+        find='rate_kinds = ["zero"], applied_rates = ["0.00"]',
+        replace='rate_kinds = ["general"], applied_rates = ["0.00"]',
     )
 
     aic_row = IvaLedgerObservation(
@@ -244,16 +241,13 @@ def test_mutation_repointing_box_28_to_the_aic_blind_casilla_reds_the_gate(tmp_p
     above would have caught it.
     """
     scratch_root = scratch_registry_tree(tmp_path, "390")
-    export_layout = declaring_fragment(
+    mutate_declaration(
         scratch_root / "modelos" / "390",
         revision_id=_REVISION_ID,
         section="export_layouts",
-        anchor=f'id = "{_EXPORT_FIELD_BOX_28}"',
-    )
-    export_layout.mutate(
-        f'casilla_id = "{_CASILLA_BOX_28}"',
-        f'casilla_id = "{_CASILLA_AIC_BLIND}"',
-        after=f'id = "{_EXPORT_FIELD_BOX_28}"',
+        member=f'id = "{_EXPORT_FIELD_BOX_28}"',
+        find=f'casilla_id = "{_CASILLA_BOX_28}"',
+        replace=f'casilla_id = "{_CASILLA_AIC_BLIND}"',
     )
 
     mutated_revision = _m390_revision(scratch_root)

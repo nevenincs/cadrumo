@@ -11,6 +11,7 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import (
     ModeloDefinition,
+    ModeloRevision,
     RegistryCatalogues,
     SupportedFilingYearsCatalogue,
 )
@@ -26,8 +27,47 @@ def committed_supported_filing_years() -> SupportedFilingYearsCatalogue:
     return load_shared_catalogues(bundled_path("registry", "aeat")).require_supported_filing_years()
 
 
-AUTHORED_HISTORY_FLOOR = 1972
-"""The earliest year any stored governed-fact variant is authored for."""
+@cache
+def authored_history_floor() -> int:
+    """Return the earliest coordinate the committed corpus authors anything for.
+
+    DERIVED, never pinned. A hand-written year here is a second, unverified
+    declaration of the corpus's own reach: it is correct only until someone
+    authors an older variant or retires the oldest one, and nothing fails when
+    it stops being correct -- the escape hatch simply stops reaching the source
+    it exists to reach, silently. Reading the floor off the compiled corpus
+    makes it true by construction.
+
+    Both authored axes count. A governed-fact variant opens on a date, a modelo
+    revision on a filing year, and the authored history is the earlier of the
+    two.
+    """
+    from ..compiler.authority import compiled_bundled_authority
+
+    authority = compiled_bundled_authority()
+    years = {
+        variant.valid_from.year
+        for fact in authority.catalogues.facts.facts.values()
+        for variant in fact.variants
+        if variant.valid_from is not None
+    }
+    years.update(
+        year
+        for modelo in authority.modelos
+        for revision in modelo.revisions.values()
+        for year in _authored_selector_years(revision)
+    )
+    if not years:
+        raise AssertionError("the committed corpus authors no temporal coordinate at all")
+    return min(years)
+
+
+def _authored_selector_years(revision: ModeloRevision) -> tuple[int, ...]:
+    """Return the explicitly authored lower coordinates of one revision selector."""
+    selector = revision.period_selector
+    if selector.years:
+        return selector.years
+    return () if selector.year_from is None else (selector.year_from,)
 
 
 @cache
@@ -43,7 +83,7 @@ def authored_history_supported_filing_years() -> SupportedFilingYearsCatalogue:
     """
     committed = committed_supported_filing_years()
     return SupportedFilingYearsCatalogue.model_construct(
-        floor=AUTHORED_HISTORY_FLOOR,
+        floor=authored_history_floor(),
         horizon=committed.horizon,
         hard_ceiling=committed.hard_ceiling,
     )

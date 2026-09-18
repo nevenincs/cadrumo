@@ -23,6 +23,29 @@ THIS GATE IS EXPECTED TO LAND RED. Per the standing project directive, a red
 signal over a genuine unregistered-file population is the correct report --
 scoping this gate to only the currently-registered set would make it pass
 vacuously and remove the exact visibility it exists to provide.
+
+WHICH CATALOGUE COUNTS AS "REGISTERED" is the whole question, and this module
+previously read the wrong one. ``registry_tree`` is the PUBLISHED view, and it
+carries only the source references that published modelos cite -- the sibling
+``authored_catalogues`` docstring states exactly that, and exists for checks
+about the committed tree's own integrity. But "does a sources entry exist for
+this file" is an authoring-tree fact, and the published projection cannot
+answer it: a source that is authored, hash-pinned and correct, but not cited by
+any published modelo, is simply absent there.
+
+Read against the published view this gate reported 91 of 219 files
+unregistered. Read against the authored tree it reports 2. The difference was
+not corpus debt; every one of those files has a committed sources entry
+(``aeat-dr-200-2010`` in ``legal/is.toml`` names
+``modelo_200/files/02-200-ejercicio-2010-472-kb-pdf.pdf``, which the published
+reading called unregistered). A worklist that is overwhelmingly false positives
+buries the real entries inside it, which is the same loss of visibility this
+gate exists to prevent, arriving through a measurement error instead of a
+narrowing.
+
+The corpus enumeration below is UNCHANGED and still independent. What changed
+is only which catalogue it is compared against, and it changed towards the one
+that can answer the question.
 """
 
 from __future__ import annotations
@@ -34,7 +57,7 @@ import pytest
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 
-from .catalogue_verification_support import _catalogues
+from .catalogue_verification_support import authored_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -56,7 +79,7 @@ def _bundled_design_files() -> tuple[Path, ...]:
 
 
 def _registered_corpus_paths() -> frozenset[str]:
-    return frozenset(source.corpus_path for source in _catalogues().sources.values())
+    return frozenset(source.corpus_path for source in authored_catalogues().sources.values())
 
 
 def test_the_corpus_enumeration_reaches_designs_across_many_modelos() -> None:

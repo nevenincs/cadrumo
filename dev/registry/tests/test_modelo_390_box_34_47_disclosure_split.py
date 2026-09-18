@@ -38,7 +38,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.loader import load_registry_tree
-from ._gate_support import declaring_fragment, scratch_registry_tree
+from ._gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -190,18 +190,15 @@ def test_mutation_repointing_offset_1628_to_the_recargo_inclusive_total_reds_the
         for revision_id, revision in sorted(_m390_revisions(_bundled_registry_root()).items())
         if _FORMULA_BOX_34 in {formula.id for formula in revision.formulas}
     )
-    formulas = declaring_fragment(
+    # The fragment declares several formulas, so the mutation is scoped to the
+    # box-34 declaration rather than the file's first matching term.
+    mutate_declaration(
         scratch_root / "modelos" / "390",
         revision_id=target_revision_id,
         section="formulas",
-        anchor=f'id = "{_FORMULA_BOX_34}"',
-    )
-    # The fragment declares several formulas, so the mutation is scoped to the
-    # box-34 declaration rather than the file's first matching term.
-    formulas.mutate(
-        '{ casilla_id = "iva.anual.repercutido.general" }',
-        '{ casilla_id = "iva.anual.recargo-equivalencia.general" }',
-        after=f'id = "{_FORMULA_BOX_34}"',
+        member=f'id = "{_FORMULA_BOX_34}"',
+        find='{ casilla_id = "iva.anual.repercutido.general" }',
+        replace='{ casilla_id = "iva.anual.recargo-equivalencia.general" }',
     )
 
     mutated_revision = _m390_revisions(scratch_root)[target_revision_id]

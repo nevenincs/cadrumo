@@ -11,7 +11,17 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.facts.schema import GovernedFactCatalogue
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    CandidateFactAuthority,
+    validating_governed_facts,
+)
+
 from ..analysis.m303_orden_anual import main
+from ..compiler._m303_orden_source import extract_m303_annual_orden_source
+from ..compiler.loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -45,3 +55,70 @@ def test_the_check_flag_is_what_refuses_rather_than_the_default() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--check", action="store_true")
     assert parser.parse_args([]).check is False, "an absent flag must not read as a check"
+
+
+def test_extraction_outside_a_facts_scope_names_the_missing_authority() -> None:
+    """An absent facts authority must not be reported as an absent legal fact.
+
+    This is the divergence that made the gate above fail while every test of
+    the same extraction passed: the owning test module scopes governed facts
+    for its whole body, so the compiler's municipal-reduction cross-check
+    always had an authority there and never had one here. The cross-check
+    caught the broad validation type, so "nothing supplied the facts" arrived
+    as "the annual Orden exposes a reduction the facts do not author" -- a
+    confident statement about tax law standing in for a wiring defect.
+
+    Both halves are asserted. The refusal must name the missing authority, and
+    it must NOT be the coverage claim, because a regression that re-broadens
+    the catch reinstates exactly that sentence.
+    """
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    source = catalogues.sources["boe-orden-hfp-1335-2021-iva-authority"]
+
+    with pytest.raises(RegistryValidationError) as refusal:
+        extract_m303_annual_orden_source(
+            ejercicio=2022,
+            source=source,
+            source_root=bundled_path(),
+        )
+
+    message = str(refusal.value)
+    assert "requires an explicit authority operation or scope" in message
+    assert "without a matching facts projection" not in message
+
+
+def test_an_unauthored_reduction_year_still_reports_the_coverage_gap() -> None:
+    """Narrowing the catch must not blind the check to the finding it exists for.
+
+    The 2022 source states the Lorca reduction in its own text. With that
+    year's variant removed from the facts catalogue -- an authority in scope,
+    resolving normally, authoring nothing for the coordinate -- the observed
+    reduction is genuinely unaccounted for, and the coverage refusal is the
+    correct report. Built by removing one variant rather than by editing the
+    corpus, so the source bytes stay the pinned ones.
+    """
+    _, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
+    source = catalogues.sources["boe-orden-hfp-1335-2021-iva-authority"]
+    lorca = catalogues.facts.facts["liva-orden-lorca-reduction"]
+    without_2022 = GovernedFactCatalogue(
+        facts={
+            **catalogues.facts.facts,
+            lorca.fact_id: lorca.model_copy(
+                update={
+                    "variants": tuple(
+                        variant for variant in lorca.variants if not variant.variant_id.endswith(":2022-01-01")
+                    )
+                }
+            ),
+        }
+    )
+
+    with (
+        validating_governed_facts(CandidateFactAuthority(without_2022, catalogues.require_supported_filing_years())),
+        pytest.raises(RegistryValidationError, match="without a matching facts projection"),
+    ):
+        extract_m303_annual_orden_source(
+            ejercicio=2022,
+            source=source,
+            source_root=bundled_path(),
+        )

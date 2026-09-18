@@ -42,7 +42,7 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 from ..compiler.loader import load_registry_tree
-from ._gate_support import declaring_fragment, scratch_registry_tree
+from ._gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -155,16 +155,13 @@ def test_zero_rate_aic_row_reaches_box_10_base_and_every_aic_binding_admits_it()
 def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(tmp_path: Path) -> None:
     """Removing zero on a scratch registry makes the real base assertion fail."""
     scratch_root = scratch_registry_tree(tmp_path, "303")
-    bindings = declaring_fragment(
+    mutate_declaration(
         scratch_root / "modelos" / "303",
         revision_id=_REVISION_ID,
         section="bindings",
-        anchor=f'id = "{_BINDING_BASE}"',
-    )
-    bindings.mutate(
-        'rate_kinds = ["zero", "general", "reduced", "super_reduced"]',
-        'rate_kinds = ["general", "reduced", "super_reduced"]',
-        after=f'id = "{_BINDING_BASE}"',
+        member=f'id = "{_BINDING_BASE}"',
+        find='rate_kinds = ["zero", "general", "reduced", "super_reduced"]',
+        replace='rate_kinds = ["general", "reduced", "super_reduced"]',
     )
 
     aic_row = IvaLedgerObservation(
@@ -195,17 +192,14 @@ def test_mutation_reverting_box_10_to_manual_reds_the_gate(tmp_path: Path) -> No
     above would have caught it.
     """
     scratch_root = scratch_registry_tree(tmp_path, "303")
-    casillas = declaring_fragment(
+    # Box 10's derivation is delta-authored as a casilla override, so the
+    # revert drops the formula from that override rather than from a row.
+    mutate_declaration(
         scratch_root / "modelos" / "303",
         revision_id=_REVISION_ID,
         section="casillas",
-        anchor=f'formula = "{_FORMULA_BOX_10}"',
-    )
-    # Box 10's derivation is delta-authored as a casilla override, so the
-    # revert drops the formula from that override rather than from a row.
-    casillas.mutate(
-        f'formula = "{_FORMULA_BOX_10}", input_kind = "computed"',
-        'input_kind = "manual"',
+        find=f'formula = "{_FORMULA_BOX_10}", input_kind = "computed"',
+        replace='input_kind = "manual"',
     )
 
     mutated_revision = _m303_revision(scratch_root)

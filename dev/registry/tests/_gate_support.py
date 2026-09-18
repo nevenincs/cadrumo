@@ -11,7 +11,8 @@ from typing import Final
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.keyed_families import CASILLAS_FAMILY
-from cadrumo.domain.calculations.registry.schema import ModeloDefinition, RegistryCatalogues
+from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_ids
 
 from ..compiler.loader import load_modelo_declarations, load_registry_tree
@@ -126,21 +127,17 @@ class DeclaringFragment:
     revision_id: str
     section: str
 
-    path: Path
-    edition: str
-    revision_id: str
-    section: str
 
-
-def _rewrite(text: str, *, member: str, find: str, replace: str) -> str | None:
+def _rewrite(text: str, *, member: str | None, find: str, replace: str) -> str | None:
     """The text with the first *find* at or after *member* rewritten, or ``None``.
 
     Both spellings of TOML strings are tried, because the same declaration is
     quoted one way by hand and the other by the renderer.
     """
+    scoped = find if member is None else member
     for scope, target, replacement in (
-        (member, find, replace),
-        (_literal_quoted(member), _literal_quoted(find), _literal_quoted(replace)),
+        (scoped, find, replace),
+        (_literal_quoted(scoped), _literal_quoted(find), _literal_quoted(replace)),
     ):
         start = text.find(scope)
         if start < 0 or target not in text[start:]:
@@ -173,9 +170,9 @@ def mutate_declaration(
     *,
     revision_id: str,
     section: str,
-    member: str,
     find: str,
     replace: str,
+    member: str | None = None,
 ) -> DeclaringFragment:
     """Re-introduce a defect in the source an edition resolves a member from.
 
@@ -212,9 +209,12 @@ def mutate_declaration(
         modelo_directory: The modelo root holding ``revisions/``.
         revision_id: The edition under test.
         section: The revision family the declaration belongs to.
-        member: Source text identifying the declaration, typically its id.
         find: The exact source text to rewrite, at or after *member*.
         replace: What to put in its place.
+        member: Source text identifying the declaration, typically its id, for
+            a family whose other members spell *find* the same way. Omit it
+            when *find* already names the member it belongs to; *member* must
+            then precede *find*, not follow it.
 
     Returns:
         The fragment that was rewritten, and the edition holding it.
@@ -240,10 +240,85 @@ def mutate_declaration(
         path.write_text(rewritten, encoding="utf-8")
         return DeclaringFragment(path=path, edition=edition, revision_id=revision_id, section=section)
     msg = (
-        f"no source declares {member!r} with {find!r} for {section} of edition {revision_id!r} "
-        f"(storage chain {list(chain)!r}) -- the gate is stale, diagnose before re-anchoring"
+        f"no source rewritable at {find!r}"
+        + ("" if member is None else f" under {member!r}")
+        + f" for {section} of edition {revision_id!r} (storage chain {list(chain)!r}) "
+        "-- the gate is stale, diagnose before re-anchoring"
     )
     raise AssertionError(msg)
+
+
+def assert_sole_current_edition(modelo: ModeloDefinition, revision_id: str) -> None:
+    """*revision_id* is the modelo's current edition, with no rival in force beside it.
+
+    A grounding gate asks whether the registry files THIS year from THIS
+    year's authority rather than from something invented. It used to ask that
+    as ``set(modelo.revisions) == {revision_id}``, which was only ever a proxy:
+    it happened to hold while each of these modelos was authored as one
+    self-contained edition. Under the delta layout the current edition states
+    its differences against the editions before it, so those editions are the
+    modelo's own history and their presence says nothing about currency -- the
+    equality reds on a correctly migrated modelo and would keep reding however
+    well grounded it became.
+
+    What the claim actually needs, asserted directly: the named edition is the
+    LATEST in validity order, so nothing supersedes it, and no other edition
+    coexists with it -- no second edition is in force for one of its periods,
+    which is the fabricated-alternative shape the equality was guarding
+    against. The edition's own sources, legal references and rows are asserted
+    by the gate that calls this.
+    """
+    ordered = ordered_revisions(modelo)
+    assert ordered, f"modelo {modelo.id} declares no editions"
+    latest = str(ordered[-1].id)
+    assert latest == revision_id, f"modelo {modelo.id} edition {revision_id!r} is superseded by {latest!r}"
+    current = modelo.revisions[revision_id]
+    rivals = sorted(
+        str(revision.id)
+        for revision in ordered
+        if str(revision.id) != revision_id and revisions_coexist(current, revision)
+    )
+    assert not rivals, (
+        f"modelo {modelo.id} edition {revision_id!r} shares a live period with {rivals!r}; "
+        "two editions in force for one period is an authoring defect, not history"
+    )
+
+
+def assert_edition_opens_at_filing_year(revision: ModeloRevision, year: int) -> None:
+    """The edition serves *year* and nothing before it.
+
+    A grounding gate used to state this as ``period_selector.years == (year,)``,
+    which reads the explicit enumeration field. That field is empty whenever the
+    selector is authored as a range, and the current editions of these modelos
+    are open-ended ranges (``year_from`` with no ``year_to``) precisely because
+    the years before them are now authored as their own editions. Asking the
+    selector what it ADMITS keeps the claim -- this edition opens at *year* --
+    true of either authoring shape, and the lower bound is checked against the
+    year before, so an edition that silently reached back over its predecessor
+    still reds.
+    """
+    selector = revision.period_selector
+    assert selector.includes_year(year), f"edition {revision.id} does not serve filing year {year}"
+    assert not selector.includes_year(year - 1), (
+        f"edition {revision.id} also serves filing year {year - 1}, which belongs to its predecessor"
+    )
+
+
+def assert_deadline_window_for_filing_year(revision: ModeloRevision, year: int, window_id: str) -> None:
+    """The edition declares *window_id* for *year*, and no window outside its own span.
+
+    A gate used to freeze the edition's whole window set to the single year it
+    was checking. That held while each edition closed at its own year; an
+    open-ended edition legitimately carries the next year's window too, and the
+    frozen set turns that authoring into a failure. The identity that matters
+    is kept -- THIS year's window is THIS id -- and the rest is checked against
+    the edition's own selector, so a window for a year the edition does not
+    serve still reds.
+    """
+    windows = {window.filing_year: str(window.id) for window in revision.deadline_windows}
+    assert windows.get(year) == window_id, f"edition {revision.id} filing year {year} window is {windows.get(year)!r}"
+    stranded = sorted(declared for declared in windows if not revision.period_selector.includes_year(declared))
+    assert not stranded, f"edition {revision.id} declares deadline windows for unserved filing years {stranded!r}"
 
 
 def _m130_definition() -> ModeloDefinition:

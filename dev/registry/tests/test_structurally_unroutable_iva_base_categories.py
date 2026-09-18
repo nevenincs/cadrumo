@@ -13,7 +13,7 @@ from cadrumo.domain.iva.schema import IvaCategory
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.loader import load_registry_tree
-from ._gate_support import declaring_fragment, scratch_registry_tree
+from ._gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -27,16 +27,13 @@ def test_mutation_stripping_the_intra_community_supply_binding_reds_the_negative
     # The binding is addressed by its declared id, never by a fragment
     # filename: the edition under test carries no bindings directory of its
     # own, and the baseline holding it states every binding in one fragment.
-    fragment = declaring_fragment(
+    mutate_declaration(
         scratch_root / "modelos" / "303",
         revision_id=revision_id,
         section="bindings",
-        anchor=f'id = "{_INTRA_COMMUNITY_SUPPLY_BASE_BINDING}"',
-    )
-    fragment.mutate(
-        'categories = ["intra_community_supply"]',
-        'categories = ["domestic_general"]',
-        after=f'id = "{_INTRA_COMMUNITY_SUPPLY_BASE_BINDING}"',
+        member=f'id = "{_INTRA_COMMUNITY_SUPPLY_BASE_BINDING}"',
+        find='categories = ["intra_community_supply"]',
+        replace='categories = ["domestic_general"]',
     )
 
     modelos, _catalogues = load_registry_tree(scratch_root)

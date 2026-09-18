@@ -7,7 +7,7 @@ from datetime import date
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.tests.aeat_literal_fixtures import aeat_host
@@ -88,10 +88,23 @@ def test_the_pre_2011_ejercicios_resolve_to_no_revision(filing_year: int) -> Non
     Asserted rather than dropped from the parametrisation above, because a year
     that silently resolves to a NEIGHBOURING revision is the exact failure the
     narrowing exists to prevent: it would build cleanly and file wrong bytes.
+
+    Both halves are asserted separately. The narrowing itself is read off the
+    revisions' own period selectors, because the resolver never reaches them:
+    these years sit below the registry support floor, so the envelope turns the
+    request away first and a refusal alone would no longer prove the selectors
+    were narrowed at all.
     """
     modelo, catalogues = _load_modelo_347()
 
-    with pytest.raises(NoRevisionForPeriodError) as caught:
+    claiming = sorted(
+        str(revision.id)
+        for revision in modelo.revisions.values()
+        if revision.period_selector.includes_year(filing_year)
+    )
+    assert not claiming, f"{filing_year} is still claimed by {claiming!r}"
+
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError) as caught:
         build_snapshot(
             modelo,
             catalogues,
