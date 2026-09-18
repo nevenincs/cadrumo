@@ -988,6 +988,15 @@ indent-style = "space"
 # ── ty ───────────────────────────────────────────────────────────────────────
 [tool.ty.environment]
 python-version = "3.13"
+# Pinned, not inherited. An unset target platform makes every checker assume the
+# HOST, so the same tree reports zero diagnostics on Windows and 49 on Linux and
+# macOS -- the gate's verdict becomes a function of the runner, the same defect
+# class as the `pyrightconfig.json` that used to win discovery and the phantom
+# `reportMissingImports` cascade `--pythonpath` closes. `linux` is the baseline
+# because it is what the CI fleet runs; `dev/quality/types.py` overrides this
+# per run and sweeps EVERY supported platform, so a Windows-only branch is
+# still checked rather than traded away for determinism.
+python-platform = "linux"
 extra-paths = ["stubs"]
 
 [tool.ty.rules]
@@ -1009,6 +1018,7 @@ allowed-unresolved-imports = []
 # this project picks up the same stub set.
 [tool.mypy]
 python_version = "3.13"
+platform = "linux"
 mypy_path = ["src", "stubs"]
 explicit_package_bases = true
 namespace_packages = true
@@ -1038,6 +1048,9 @@ ignore_missing_imports = true
 # directions would silently re-admit everything this excludes.
 [tool.pyrefly]
 python_version = "3.13"
+# Same pin, same reason as `[tool.ty.environment]`: the target platform is a
+# declared input, never the host it happens to run on.
+python_platform = "linux"
 search_path = ["src", ".", "stubs"]
 project_includes = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", "src/cadrumo/adapters/outbound/llm"]
 # Tests are excluded from this checker, not overlooked. pyright reported zero
@@ -1060,6 +1073,8 @@ include = ["src/cadrumo/domain", "src/cadrumo/application", "src/cadrumo/core", 
 exclude = ["**/tests"]
 extraPaths = ["src", "stubs"]
 pythonVersion = "3.13"
+# Same pin, same reason as `[tool.ty.environment]`.
+pythonPlatform = "Linux"
 typeCheckingMode = "strict"
 # A suppression that no longer suppresses anything is indistinguishable from one
 # that does, and it silently widens as the code under it changes. Reporting the
