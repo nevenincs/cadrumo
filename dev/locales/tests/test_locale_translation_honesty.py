@@ -323,10 +323,7 @@ _LEGITIMATE_IDENTICAL_TRANSLATIONS: dict[tuple[str, str], IdenticalTranslation] 
     ),
     ("ca", "Indicador de gran empresa [00023]."): IdenticalTranslation(
         IdenticalTranslationClass.SHARED_WORD,
-        (
-            "“Indicador de gran empresa” is spelled identically in Catalan; the box reference is "
-            "kept as in the Spanish."
-        ),
+        ("“Indicador de gran empresa” is spelled identically in Catalan; the box reference is kept as in the Spanish."),
     ),
     ("ca", "1. Divisa"): IdenticalTranslation(
         IdenticalTranslationClass.SHARED_WORD,
@@ -426,6 +423,12 @@ _LEGITIMATE_IDENTICAL_TRANSLATIONS: dict[tuple[str, str], IdenticalTranslation] 
         IdenticalTranslationClass.SHARED_WORD, "“Matrícula” is spelled identically in Catalan and Spanish."
     ),
     ("ca", "NIF"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM, "NIF is a universal AEAT acronym, unchanged across languages."
+    ),
+    ("en", "NIF"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM, "NIF is a universal AEAT acronym, unchanged across languages."
+    ),
+    ("hu", "NIF"): IdenticalTranslation(
         IdenticalTranslationClass.ACRONYM, "NIF is a universal AEAT acronym, unchanged across languages."
     ),
     ("ca", "NIF DEL PAGADOR ANTERIOR"): IdenticalTranslation(

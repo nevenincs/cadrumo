@@ -91,6 +91,33 @@ def test_no_translation_renders_two_spanish_wordings() -> None:
     assert not shared, shared
 
 
+def test_no_composed_segment_is_rendered_two_ways() -> None:
+    """A Spanish segment repeated across labels keeps one rendering in each locale.
+
+    AEAT composes a label from segments; the registry stores one text per
+    meaning, and a translation states that meaning the same way wherever the
+    segment recurs. Repair with ``python -m dev.locales casilla-author``, or
+    record a genuinely context-dependent segment in
+    ``REVIEWED_SEGMENT_RENDERINGS`` with the reason its context forces two.
+    """
+    drift = {locale: keys[:5] for locale, keys in _findings().segment_drift.items() if keys}
+
+    assert not drift, drift
+
+
+def test_no_rendering_stands_for_two_composed_segments() -> None:
+    """One rendering per Spanish segment, unless a reviewer recorded the wordings as one.
+
+    The Basque ``Concierto económico`` and the Navarrese ``Convenio económico``
+    once shared one English rendering, hiding two regimes behind one name.
+    Record an official typo, abbreviation or second spelling in
+    ``REVIEWED_SHARED_SEGMENTS``; repair anything else.
+    """
+    shared = {locale: keys[:5] for locale, keys in _findings().shared_segments.items() if keys}
+
+    assert not shared, shared
+
+
 def test_every_source_truncation_is_still_stored() -> None:
     """An exemption for a cut official text must name Spanish the catalogue still stores."""
     stored = {text for text in ModeloCasillaCatalogue.published(LOCALES_DIR).values["es"].values() if text}
@@ -121,3 +148,47 @@ def test_every_reviewed_equivalence_still_excuses_a_shared_translation() -> None
 def test_no_lineage_keeps_a_translation_the_spanish_outgrew() -> None:
     findings = _findings()
     assert not any(findings.stale_translations.values()), findings.stale_translations
+
+
+def test_the_product_reads_every_collapsed_value_the_catalogue_resolves() -> None:
+    """The product's own reader returns what the delta-keyed catalogue resolves.
+
+    Two readers stand behind one stored text: the registry surfaces load the
+    shipped shards through the product's catalogue, and this module reads the
+    authoring tree directly. Collapse moves a text from an edition key to the
+    key its lineage shares, so the two must still agree on every casilla in
+    every locale, or an operator is served something the collapse did not
+    prove.
+    """
+    from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+
+    catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
+    resolved = {
+        (occurrence.modelo, occurrence.revision, occurrence.casilla, locale): (
+            catalogue.resolve(index, "label", locale),
+            catalogue.resolve(index, "help", locale),
+        )
+        for index, occurrence in enumerate(catalogue.occurrences)
+        for locale in catalogue.locales
+    }
+
+    disagreements: list[str] = []
+    unknown: list[str] = []
+    read = 0
+    for modelo in bundled_registry_tree()[0]:
+        for revision_id, revision in modelo.revisions.items():
+            for casilla in revision.casillas:
+                for locale in catalogue.locales:
+                    coordinate = (modelo.id, revision_id, casilla.id, locale)
+                    if coordinate not in resolved:
+                        unknown.append(f"{modelo.id}/{revision_id}/{casilla.id} {locale}")
+                        continue
+                    served = resolved[coordinate]
+                    read += 1
+                    product = (casilla.get_label(locale), casilla.get_help(locale))
+                    if product != served:
+                        disagreements.append(f"{modelo.id}/{revision_id}/{casilla.id} {locale}: {product} != {served}")
+
+    assert read, "no casilla was read through the product; the comparison below would be vacuous"
+    assert not unknown, unknown[:5]
+    assert not disagreements, disagreements[:5]

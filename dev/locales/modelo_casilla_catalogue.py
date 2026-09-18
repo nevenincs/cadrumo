@@ -173,6 +173,36 @@ _THOUSANDS: Final = re.compile(r"\b\d{1,3}(?:[.,\u00a0 ]\d{3})+\b")
 _CONTENT_TOKEN: Final = re.compile(r"\[[0-9][^\]]{0,11}\]|\d+|[≤≥]")
 #: Repeated spaces, or whitespace opening or closing a value; line breaks are authored.
 _IRREGULAR_WHITESPACE: Final = re.compile(r"[ \t]{2,}|^\s|\s$")
+#: The words an official label loses when AEAT shortens it, which carry no legal meaning.
+_SPANISH_FUNCTION_WORDS: Final[frozenset[str]] = frozenset(
+    [
+        "a",
+        "al",
+        "con",
+        "de",
+        "del",
+        "el",
+        "en",
+        "la",
+        "las",
+        "los",
+        "para",
+        "por",
+        "que",
+        "se",
+        "su",
+        "sus",
+        "un",
+        "una",
+        "y",
+    ]
+)
+#: The separators AEAT composes a long label from: heading, regime, year, state of the amount.
+#: A dash also subtracts one box from another, which :func:`_segments` keeps whole, and a full
+#: stop also abbreviates a word, so a sentence break is read only between a word and a capital.
+_SEGMENT: Final = re.compile(r"\s+-\s+|(?<=[^\W\dA-Z_])\.\s+(?=[A-ZÁÀÂÄÉÈÊËÍÏÎÓÒÔÖŐÚÙÛÜŰÑÇ])")
+#: What tells a composed segment from an operand: a segment states words, an operand a box.
+_SEGMENT_PROSE: Final = re.compile(r"[^\W\d_]{3,}")
 #: Spanish texts whose official record design is itself cut short with an ellipsis;
 #: the catalogue mirrors the source, and a translation of them may end the same way.
 SOURCE_TRUNCATED_SPANISH: Final[frozenset[str]] = frozenset(
@@ -340,6 +370,162 @@ def _edition_labels(locales_dir: Path) -> dict[str, dict[str, str | None]]:
 #: Per (locale, modelo, translation), Spanish wordings a reviewer found equivalent, so one
 #: translation is correct for all of them: an abbreviation, a typo, punctuation or a synonym.
 #: Never widened by modelo or prefix; each entry names the difference the reviewer saw.
+#: Per locale, composed segments a reviewer found to need more than one rendering, with the
+#: reason the context forces it. Each entry names one segment; never a modelo or a prefix.
+#: Per locale, renderings a reviewer found to state two Spanish segments correctly, with the
+#: difference seen: an official typo, an abbreviation, or two spellings of one province.
+REVIEWED_SHARED_SEGMENTS: Final[dict[str, dict[str, str]]] = {
+    "en": {
+        "Acquirer": ("Adquirente and the official misspelling Adquiriente"),
+        "Address": ("Domicilio, and the bilingual Domicilio / Address of the same box"),
+        "Adjustments for the tax year": ("Correcciones and the official misspelling Correciones"),
+        (
+            "Amortization of intangible fixed assets and goodwill (art. 12.2 LIS) and amortization "
+            "under Transitional Provision 13.1 LIS"
+        ): ("one edition cites the transitional provision as art. DT 13a.1, the other as DT 13a.1"),
+        (
+            "Amount excluded for capital or equity increases by set-off of claims not integrated into "
+            "the tax base (art. 17.2 LIS)"
+        ): ("no integrado en la base imponible, restated as que no se integren por aplicacion del art. 17.2"),
+        "Amount payable": ("A ingresar states what the box holds and Importe a ingresar names its amount, for one box"),
+        "Bizkaia": ("the Basque and Castilian spellings of one province"),
+        "Chartered provincial councils and Navarre": ("D. Forales abbreviates Diputaciones Forales"),
+        "Country code": ("Codigo de pais, abbreviated in one edition and given with its English gloss in another"),
+        "Credit of R&D&I deductions due to insufficient tax liability": (
+            "insuf. cuota abbreviates por insuficiencia de cuota"
+        ),
+        "Decreases": ("Disminuciones and the official misspellings Diminuciones and Disminuciones with a stray accent"),
+        "Deductible VAT on intra-Community acquisitions of current goods": (
+            "adquisiciones intracomunitarias corrientes abbreviates the same box"
+        ),
+        "Deduction still outstanding": (
+            "pendiente de aplicacion and pendiente de aplicar state one thing, a deduction not yet taken"
+        ),
+        "Gipuzkoa": ("the Basque and Castilian spellings of one province"),
+        "Income and expenses recognized in equity": (
+            "imputados al patrimonio neto, restated as reconocidos en patrimonio neto"
+        ),
+        "Legal name": ("razon social and denominacion social name one thing, the registered name of a company"),
+        (
+            "Part integrated into the tax base at liability level for debt-relief or deferral "
+            "arrangements (cooperatives only)"
+        ): ("op. abbreviates operaciones"),
+        "Postcode": ("C. Postal abbreviates Codigo postal, which one edition also capitalises"),
+        "Postcode (ZIP)": ("C. Postal abbreviates Codigo postal, whose ZIP note one edition brackets"),
+        "Province, region or state": (
+            "the same wording, its parts separated by slashes in one edition and by words in the other"
+        ),
+        "Reduction of income from certain intangible assets (art. 23 LIS)": (
+            "ingresos, restated as rentas for the same art. 23 LIS reduction"
+        ),
+        "Result of the previous return (supplementary)": ("complementaria and the official plural complementarias"),
+        "Street name": ("Nombre de la via, written out as via publica and capitalised in other editions"),
+        "Surnames and first name or company name": (
+            "razon social and denominacion social name one thing, the registered name of a company"
+        ),
+        "Surnames or company name": (
+            "Denominacion Social and Razon social, with the official o accented in one edition"
+        ),
+        "Taxation by territory": ("por razon de territorio, shortened to por territorio"),
+    },
+    "ca": {
+        "1r fraccionament": ("1er and 1o spell the same first instalment"),
+        "Adquirent": ("Adquirente and the official misspelling Adquiriente"),
+        "Altres 1a": ("1a and the ordinal 1a written with a superscript"),
+        "Altres 2a": ("2a and the ordinal 2a written with a superscript"),
+        "Altres 3a": ("3a and the ordinal 3a written with a superscript"),
+        "Altres 4a": ("4a and the ordinal 4a written with a superscript"),
+        "Altres 5a": ("5a and the ordinal 5a written with a superscript"),
+        "Altres diferències d'imputació temporal d'ingressos i despeses (art. 11 LIS)": (
+            "imputac. abbreviates imputacion"
+        ),
+        "Codi de país": ("Codigo de pais, abbreviated in one edition and given with its English gloss in another"),
+        "Correccions de l'exercici": ("Correcciones and the official misspelling Correciones"),
+        "Correu electrònic": ("E-mail and Email spell one word"),
+        "Diputacions Forals i Navarra": ("D. Forales abbreviates Diputaciones Forales"),
+        "Disminucions": (
+            "Disminuciones and the official misspellings Diminuciones and Disminuciones with a stray accent"
+        ),
+        "Domicili": ("Domicilio, and the bilingual Domicilio / Address of the same box"),
+        "IVA deduïble en operacions interiors de béns d'inversió": ("ops abbreviates operaciones"),
+        (
+            "Import exclòs per operacions d'augment de capital o fons propis per compensació de crèdits "
+            "no integrat en la base imposable (art. 17.2 LIS)"
+        ): ("no integrado en la base imponible, restated as que no se integren por aplicacion del art. 17.2"),
+        (
+            "Part integrada en la base imposable a nivell de quota per operacions de quitament o espera "
+            "(només cooperatives)"
+        ): ("op. abbreviates operaciones"),
+    },
+    "hu": {
+        "1. részletfizetés": ("1er fraccionamiento and 1er. pago fraccionado name the same first instalment"),
+        "A korábbi bevallás eredménye (kiegészítő)": ("complementaria and the official plural complementarias"),
+        "Adóalap": ("Base is the column heading for the Base imponible the row states"),
+        "Az adóalapba adóösszeg szintjén beszámított rész adósságelengedési ügyletek után (csak szövetkezetek)": (
+            "op. abbreviates operaciones"
+        ),
+        "Bizkaia": ("the Basque and Castilian spellings of one province"),
+        "Csökkentett adóalap": (
+            "base liquidable is the base imponible after its reductions, which the other names directly"
+        ),
+        "Csökkenések": (
+            "Disminuciones and the official misspellings Diminuciones and Disminuciones with a stray accent"
+        ),
+        "Cégnév": ("razon social and denominacion social name one thing, the registered name of a company"),
+        "Cím": ("Domicilio, and the bilingual Domicilio / Address of the same box"),
+        "E-mail": ("E-mail and Email spell one word"),
+        "E-mail cím": ("Correo electronico, given as Direccion de correo electronico in another edition"),
+        "Egyéb 1.": ("1a and the ordinal 1a written with a superscript"),
+        "Egyéb 2.": ("2a and the ordinal 2a written with a superscript"),
+        "Egyéb 3.": ("3a and the ordinal 3a written with a superscript"),
+        "Egyéb 4.": ("4a and the ordinal 4a written with a superscript"),
+        "Egyéb 5.": ("5a and the ordinal 5a written with a superscript"),
+        "Fizetendő összeg": (
+            "A ingresar states what the box holds and Importe a ingresar names its amount, for one box"
+        ),
+        "Gipuzkoa": ("the Basque and Castilian spellings of one province"),
+        "Helység": ("Localidad, written Localidad/Poblacion in another edition"),
+        "Irányítószám": ("C. Postal abbreviates Codigo postal, which one edition also capitalises"),
+        "Irányítószám (ZIP)": ("C. Postal abbreviates Codigo postal, whose ZIP note one edition brackets"),
+        "K+F+i levonások jóváírása elégtelen adókötelezettség miatt": (
+            "insuf. cuota abbreviates por insuficiencia de cuota"
+        ),
+        (
+            "Követelés-beszámítással történő tőke- vagy sajáttőke-emelés miatt kizárt, az adóalapba be "
+            "nem számított összeg (LIS 17.2. cikk)"
+        ): ("no integrado en la base imponible, restated as que no se integren por aplicacion del art. 17.2"),
+        "Közterület neve": ("Nombre de la via, written out as via publica and capitalised in other editions"),
+        "Külföldi cím": ("Direccion en el extranjero and Domicilio extranjero name one address"),
+        "Külön jogállású tartományi tanácsok és Navarra": ("D. Forales abbreviates Diputaciones Forales"),
+        "Még érvényesíthető levonás": (
+            "pendiente de aplicacion and pendiente de aplicar state one thing, a deduction not yet taken"
+        ),
+        "Országkód": ("Codigo de pais, abbreviated in one edition and given with its English gloss in another"),
+        "Saját tőkében elszámolt bevételek és ráfordítások": (
+            "imputados al patrimonio neto, restated as reconocidos en patrimonio neto"
+        ),
+        "Tartomány, régió vagy állam": (
+            "the same wording, its parts separated by slashes in one edition and by words in the other"
+        ),
+        "Vezetéknév vagy cégnév": ("Denominacion Social and Razon social, with the official o accented in one edition"),
+        "Vezetéknév és utónév vagy cégnév": (
+            "razon social and denominacion social name one thing, the registered name of a company"
+        ),
+        "Évi korrekciók": ("Correcciones and the official misspelling Correciones"),
+    },
+}
+
+
+REVIEWED_SEGMENT_RENDERINGS: Final[dict[str, dict[str, str]]] = {
+    "en": {
+        "Cuota": "the amount of the IVA, of the recargo or of a fee, named by the label it sits in",
+    },
+    "ca": {
+        "NIF": "the acronym as a field tag, and the number named in full where the label stands alone",
+    },
+}
+
+
 REVIEWED_SHARED_TRANSLATIONS: Final[dict[tuple[str, str, str], str]] = {
     (
         "en",
@@ -962,11 +1148,15 @@ class CatalogueFindings:
     truncated_text: dict[str, tuple[str, ...]] = field(default_factory=dict)
     """Per locale, values cut short and closed with an ellipsis."""
     irregular_whitespace: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, values with repeated spaces or surrounding whitespace copied from a source."""
     dropped_source_content: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, translations that lost a box reference, amount or comparison the Spanish states."""
     shared_translations: dict[str, tuple[str, ...]] = field(default_factory=dict)
     """Per locale, one translation rendering more than one Spanish wording of a modelo."""
-    """Per locale, translations that lost a box reference, amount or comparison the Spanish states."""
-    """Per locale, values with repeated spaces or surrounding whitespace copied from a source."""
+    segment_drift: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, composed segments whose one Spanish wording is rendered more than one way."""
+    shared_segments: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, one rendering standing for more than one Spanish segment."""
     unresolved_spanish: tuple[str, ...] = ()
     untranslated: dict[str, int] = field(default_factory=dict)
     translation_drift: dict[str, tuple[str, ...]] = field(default_factory=dict)
@@ -995,6 +1185,8 @@ class CatalogueFindings:
             "irregular_whitespace": total(self.irregular_whitespace),
             "dropped_source_content": total(self.dropped_source_content),
             "shared_translations": total(self.shared_translations),
+            "segment_drift": total(self.segment_drift),
+            "shared_segments": total(self.shared_segments),
             "unresolved_spanish": len(self.unresolved_spanish),
             "untranslated": dict(sorted(self.untranslated.items())),
             "translation_drift": total(self.translation_drift),
@@ -1033,6 +1225,8 @@ class CatalogueFindings:
                 any(self.irregular_whitespace.values()),
                 any(self.dropped_source_content.values()),
                 any(self.shared_translations.values()),
+                any(self.segment_drift.values()),
+                any(self.shared_segments.values()),
                 any(self.translation_drift.values()),
                 any(self.stranded_translations.values()),
                 any(self.stale_translations.values()),
@@ -1211,6 +1405,12 @@ class ModeloCasillaCatalogue:
             for locale in self.locales
             if locale != SOURCE_LOCALE
         }
+        found.segment_drift = {
+            locale: tuple(sorted(self.segment_drift(locale))) for locale in self.locales if locale != SOURCE_LOCALE
+        }
+        found.shared_segments = {
+            locale: tuple(sorted(self.shared_segments(locale))) for locale in self.locales if locale != SOURCE_LOCALE
+        }
         found.translation_drift = self.translation_drift()
         found.stale_translations = {
             locale: self.stale_translations(locale) for locale in self.locales if locale != SOURCE_LOCALE
@@ -1273,6 +1473,67 @@ class ModeloCasillaCatalogue:
                 continue
             shared[text] = tuple(sorted(spanish_texts))
         return shared
+
+    def segment_drift(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
+        """Return the composed segments this locale renders more than one way.
+
+        AEAT composes a long label from segments joined by ``" - "``: a heading,
+        a regime, a year, the state of the amount. A segment repeated across
+        labels states the same thing each time, so its translation repeats too,
+        the way the registry's delta keying stores one text for one meaning.
+        Two renderings of one segment are a defect of a kind whole-value drift
+        cannot see, since the surrounding labels differ: the meaning may even
+        invert, as ``Sin reiteración`` rendered as a repeated donation.
+        A reviewer records a segment whose context genuinely forces two
+        renderings in :data:`REVIEWED_SEGMENT_RENDERINGS` with its reason.
+        """
+        view = self.values if values is None else values
+        rendered: dict[str, set[str]] = defaultdict(set)
+        for key, spanish_texts in self.served_sources(locale).items():
+            translation = view.get(locale, {}).get(key)
+            if translation is None or len(spanish_texts) != 1:
+                continue
+            spanish = _segments(next(iter(spanish_texts)))
+            parts = _segments(translation)
+            if len(spanish) != len(parts) or len(spanish) < 2:
+                continue
+            for source_part, rendering in zip(spanish, parts, strict=True):
+                rendered[source_part.strip()].add(rendering.strip())
+        return {
+            segment: tuple(sorted(renderings))
+            for segment, renderings in rendered.items()
+            if len(renderings) > 1 and segment not in REVIEWED_SEGMENT_RENDERINGS.get(locale, {})
+        }
+
+    def shared_segments(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
+        """Return the renderings this locale gives to more than one Spanish segment.
+
+        The mirror of :meth:`segment_drift`: one rendering standing for two
+        segments hides a distinction the Spanish draws, as the Basque
+        ``Concierto económico`` and the Navarrese ``Convenio económico`` once
+        shared one English rendering. AEAT states one segment several ways
+        across editions, abbreviating it or dropping its prepositions, and
+        those wordings share one rendering correctly; a reviewer records each
+        such pair in :data:`REVIEWED_SHARED_SEGMENTS` with the difference seen.
+        """
+        view = self.values if values is None else values
+        rendered: dict[str, set[str]] = defaultdict(set)
+        for key, spanish_texts in self.served_sources(locale).items():
+            translation = view.get(locale, {}).get(key)
+            if translation is None or len(spanish_texts) != 1:
+                continue
+            spanish = _segments(next(iter(spanish_texts)))
+            parts = _segments(translation)
+            if len(spanish) != len(parts) or len(spanish) < 2:
+                continue
+            for source_part, rendering in zip(spanish, parts, strict=True):
+                rendered[rendering.strip()].add(source_part.strip())
+        reviewed = REVIEWED_SHARED_SEGMENTS.get(locale, {})
+        return {
+            rendering: tuple(sorted(sources))
+            for rendering, sources in rendered.items()
+            if len({_abbreviated_wording(source) for source in sources}) > 1 and rendering not in reviewed
+        }
 
     def translation_drift(self, values: Values | None = None) -> dict[str, tuple[str, ...]]:
         """Return, per locale, the lineages rendering one Spanish text more than one way.
@@ -1754,10 +2015,50 @@ def _content_tokens(text: str, *, spelled: bool = False) -> Counter[str]:
     return found
 
 
+def _segments(text: str) -> tuple[str, ...]:
+    """Split a composed label into its segments, leaving arithmetic whole.
+
+    ``" - "`` both joins the segments of a label and subtracts one box from
+    another. A subtraction is written inside its parentheses and its operands
+    are box references rather than prose, so a split is read only outside
+    brackets and only when every segment states words.
+    """
+    depth = 0
+    parts: list[str] = []
+    start = 0
+    for match in re.finditer(rf"[()\[\]]|{_SEGMENT.pattern}", text):
+        bracket = match.group()
+        if bracket in "([":
+            depth += 1
+        elif bracket in ")]":
+            depth = max(0, depth - 1)
+        elif depth == 0:
+            parts.append(text[start : match.start()])
+            start = match.end()
+    parts.append(text[start:])
+    if len(parts) < 2 or not all(_SEGMENT_PROSE.search(part) for part in parts):
+        return (text,)
+    return tuple(parts)
+
+
 def _plain_wording(text: str) -> str:
     """Return text stripped to its letters and digits, so case and punctuation do not distinguish it."""
     unmarked = "".join(ch for ch in unicodedata.normalize("NFD", text) if not unicodedata.combining(ch))
     return re.sub(r"[^a-z0-9]", "", unmarked.casefold())
+
+
+def _abbreviated_wording(text: str) -> str:
+    """Return a wording without the words AEAT drops when it shortens a label.
+
+    An official label is written out in one edition and abbreviated in the
+    next, losing its prepositions and articles: ``IVA deducible en
+    importaciones de bienes corrientes`` becomes ``IVA deducible importaciones
+    bienes corrientes``. The two state one thing, so they may share one
+    rendering; a difference in the remaining words may not.
+    """
+    unmarked = "".join(ch for ch in unicodedata.normalize("NFD", text) if not unicodedata.combining(ch))
+    words = (match.group() for match in re.finditer(r"[a-z0-9+]+", unmarked.casefold()))
+    return " ".join(word for word in words if word not in _SPANISH_FUNCTION_WORDS)
 
 
 def _is_derived_help(key: str, value: str) -> bool:

@@ -15,6 +15,7 @@ from ..modelo_casilla_catalogue import (
     CasillaOccurrence,
     CollapseVerificationError,
     ModeloCasillaCatalogue,
+    _segments,
     load_casilla_values,
     resume_install,
 )
@@ -319,3 +320,83 @@ def test_a_translation_that_ignored_a_spanish_change_is_stale() -> None:
 
     assert catalogue.stale_translations("en") == ("999/base",)
     assert faithful.stale_translations("en") == ()
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        (
+            "Deducciones - Ejercicio 2024 - Pendiente",
+            ("Deducciones", "Ejercicio 2024", "Pendiente"),
+        ),
+        ("Rendimiento neto ( [1577] - [1578] - [1579])", ("Rendimiento neto ( [1577] - [1578] - [1579])",)),
+        ("Si la diferencia ([0418] - [0419]) es negativa", ("Si la diferencia ([0418] - [0419]) es negativa",)),
+        ("Base imponible", ("Base imponible",)),
+        ("Resultado - [0670]", ("Resultado - [0670]",)),
+    ],
+)
+def test_a_label_splits_into_segments_only_where_it_composes_them(text: str, expected: tuple[str, ...]) -> None:
+    """Subtraction of one box from another is arithmetic, not a composed segment."""
+    assert _segments(text) == expected
+
+
+def test_one_spanish_segment_rendered_two_ways_is_reported() -> None:
+    """A segment repeated across labels keeps one rendering, as one meaning keeps one key."""
+    catalogue = _catalogue(
+        {
+            "es": {
+                _OCC_2023: "Resultado de conversión: Abono - Navarra",
+                _OCC_2024: "Resultado de conversión: Abono - Estado",
+                _LINEAGE: "Base imponible",
+            },
+            "en": {
+                _OCC_2023: "Conversion result: Credit - Navarre",
+                _OCC_2024: "Conversion result: Payment - State",
+                _LINEAGE: "Tax base",
+            },
+        }
+    )
+
+    drift = catalogue.segment_drift("en")
+
+    assert drift == {"Resultado de conversión: Abono": ("Conversion result: Credit", "Conversion result: Payment")}
+    assert catalogue.findings().segment_drift["en"] == ("Resultado de conversión: Abono",)
+
+
+def test_one_rendering_standing_for_two_spanish_segments_is_reported() -> None:
+    """A rendering may cover two wordings of one segment, but not two segments."""
+    catalogue = _catalogue(
+        {
+            "es": {
+                _OCC_2023: "Tributación conjunta - Concierto económico - Bizkaia",
+                _OCC_2024: "Tributación conjunta - Convenio económico - Navarra",
+                _LINEAGE: "Base imponible",
+            },
+            "en": {
+                _OCC_2023: "Joint taxation - Economic Agreement - Bizkaia",
+                _OCC_2024: "Joint taxation - Economic Agreement - Navarre",
+                _LINEAGE: "Taxable base",
+            },
+        }
+    )
+
+    assert catalogue.shared_segments("en") == {"Economic Agreement": ("Concierto económico", "Convenio económico")}
+
+
+@pytest.mark.parametrize(
+    ("spanish", "abbreviated"),
+    [
+        ("IVA deducible en importaciones de bienes corrientes", "IVA deducible importaciones bienes corrientes"),
+        ("Resultado de la cuenta de pérdidas y ganancias", "Resultado cuenta pérdidas y ganancias"),
+    ],
+)
+def test_an_abbreviated_official_wording_may_share_one_rendering(spanish: str, abbreviated: str) -> None:
+    """AEAT shortens a label by dropping its prepositions, which states the same thing."""
+    catalogue = _catalogue(
+        {
+            "es": {_OCC_2023: f"Casilla - {spanish}", _OCC_2024: f"Casilla - {abbreviated}"},
+            "en": {_OCC_2023: "Box - Deductible VAT", _OCC_2024: "Box - Deductible VAT"},
+        }
+    )
+
+    assert catalogue.shared_segments("en") == {}
