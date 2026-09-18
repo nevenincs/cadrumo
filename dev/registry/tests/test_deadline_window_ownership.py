@@ -17,8 +17,8 @@ from ..compiler.validate_revision_rules import (
     validate_deadline_window_ownership,
     validate_periodic_deadline_completeness,
 )
-from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import minimal_catalogues, minimal_modelo, minimal_revision
+from .profile_schema_support import committed_registry_validator
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -86,7 +86,7 @@ def test_registry_build_routes_ownership_through_canonical_validation_pass() -> 
         RegistryValidationError,
         match=r"deadline window 'quarterly-window' belongs to canonically selected revision 'quarterly'",
     ):
-        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+        committed_registry_validator(minimal_catalogues()).validate_modelo(modelo)
 
 
 def test_registry_build_rejects_deadline_cadence_that_contradicts_canonical_period() -> None:
@@ -104,7 +104,7 @@ def test_registry_build_rejects_deadline_cadence_that_contradicts_canonical_peri
         "period_kind 'quarterly' contradicts period '01'",
     ]
     with pytest.raises(RegistryValidationError, match=r"period_kind 'quarterly' contradicts period '01'"):
-        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+        committed_registry_validator(minimal_catalogues()).validate_modelo(modelo)
 
 
 def test_registry_build_accumulates_missing_and_ambiguous_canonical_owners() -> None:
@@ -129,7 +129,7 @@ def test_registry_build_accumulates_missing_and_ambiguous_canonical_owners() -> 
     )
 
     with pytest.raises(RegistryValidationError) as excinfo:
-        RegistryValidator(minimal_catalogues()).validate_modelo(modelo)
+        committed_registry_validator(minimal_catalogues()).validate_modelo(modelo)
 
     message = str(excinfo.value)
     assert "deadline window 'ambiguous-window' has no unique canonical owner" in message
@@ -164,4 +164,4 @@ def test_periodic_deadline_completeness_bites_on_one_planted_missing_cell() -> N
         update={"supported_filing_years": SupportedFilingYearsCatalogue(floor=2024, horizon=2024)},
     )
     with pytest.raises(RegistryValidationError, match=r"coordinate \(2024, '02'\) has no deadline window"):
-        RegistryValidator(catalogues).validate_modelo(modelo)
+        committed_registry_validator(catalogues).validate_modelo(modelo)

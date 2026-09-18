@@ -45,7 +45,7 @@ import struct
 import sys
 import time
 import typing
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from functools import cache
 from pathlib import Path
 from typing import Final, NamedTuple, TypeGuard, override
@@ -557,8 +557,15 @@ def _has_current_pydantic_shape(values: Iterable[object]) -> bool:
             if not set(type(value).model_fields).issubset(value.__dict__):
                 return False
             pending.extend(value.__dict__.values())
-        elif isinstance(value, dict):
-            typed_dict = _OBJECT_DICT_ADAPTER.validate_python(value)
+        elif isinstance(value, Mapping):
+            # Any mapping, not only ``dict``: a registry model holds its
+            # revisions in an immutable mapping, and a walk that recognised
+            # ``dict`` alone stopped there and never reached the rows nested
+            # below it, which is exactly where a stale object hides.
+            # Narrowing an object to Mapping yields no key or value type, so the
+            # adapter is what gives the pairs a type rather than the annotation.
+            opaque_mapping = typing.cast("Mapping[object, object]", value)
+            typed_dict = _OBJECT_DICT_ADAPTER.validate_python(dict(opaque_mapping))
             pending.extend(typed_dict.keys())
             pending.extend(typed_dict.values())
         elif isinstance(value, (tuple, list, set, frozenset)):

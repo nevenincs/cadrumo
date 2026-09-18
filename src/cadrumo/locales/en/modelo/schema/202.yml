@@ -43,7 +43,7 @@ modelo:
             label: Additional information (5) - Amount corresponding to the Canary
               Islands investment reserve
           is-pf-mod-40-2-a-ingresar:
-            label: Method under art. 40.2 LIS - Payable
+            label: Method under art. 40.2 LIS - Amount payable
           is-pf-mod-40-2-base-pago-fraccionado:
             label: Method under art. 40.2 LIS - Instalment payment base
           is-pf-mod-40-2-resultado-declaracion-anterior:
@@ -120,8 +120,8 @@ modelo:
             label: Method under art. 40.3 LIS - Instalment payments from prior periods
               in Common Territory
           is-pf-mod-40-3-remanente-reserva-capitalizacion:
-            label: Method under art. 40.3 LIS - Capitalisation reserve remainder not
-              applied due to insufficient base
+            label: Method under art. 40.3 LIS - Remainder of the capitalisation reserve
+              not applied due to insufficient base
           is-pf-mod-40-3-reserva-nivelacion-aumentos:
             label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS) -
               Increases
@@ -129,9 +129,9 @@ modelo:
             label: Method under art. 40.3 LIS - Levelling reserve (art. 105 LIS) -
               Decreases
           is-pf-mod-40-3-resto-correcciones-aumentos:
-            label: Method under art. 40.3 LIS - Other adjustments - Increases
+            label: Method under art. 40.3 LIS - Remaining corrections - Increases
           is-pf-mod-40-3-resto-correcciones-disminuciones:
-            label: Method under art. 40.3 LIS - Other adjustments - Decreases
+            label: Method under art. 40.3 LIS - Remaining corrections - Decreases
           is-pf-mod-40-3-resultado:
             label: Method under art. 40.3 LIS - Result
           is-pf-mod-40-3-resultado-contable:

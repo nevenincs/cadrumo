@@ -887,10 +887,10 @@ application:
       cross_period_clean_state_incomplete: A keresztidőszaki tiszta állapot igazolása
         hiányos a(z) {modelo} {filing_year} {period} modellhez; {finding_count} megállapítás
         maradt.
-      deductible_iva_evidence_missing: 'A levonhato afat tartalmazo konyvelesi sorokhoz
-        kapcsolt bejovo szamla szukseges. Kapcsold a szamlat a sorhoz, majd futtasd
-        ujra a work verify parancsot: az ellenorzes nem fejezodik be, amig egy levonhato
-        sorhoz nincs szamla, igy a piszkozat nyitva marad es atveszi a bizonylatot.'
+      deductible_iva_evidence_missing: 'A levonható áfát tartalmazó könyvelési sorokhoz
+        kapcsolt bejövő számla szükséges. Kapcsold a számlát a sorhoz, majd futtasd
+        újra a work verify parancsot: az ellenőrzés nem fejeződik be, amíg egy levonható
+        sorhoz nincs számla, igy a piszkozat nyitva marad es átveszi a bizonylatot.'
       export_cross_bucket_refused: A megcímzett revízió nem az aktív profil bucketjéhez
         tartozik. Exportálás előtt váltson profilt.
       export_draft_approval_failed: Nem sikerült jóváhagyni a(z) %{calculation_revision_id}
@@ -1083,16 +1083,16 @@ application:
         meg külön: --year %{year}, és használjon időszak-tokent, például 0A, Q1, 1T
         vagy 01.'
       work_unit_already_discarded: A munkakérés már el van vetve.
-      work_unit_create_discarded: Ezt a bevallasi celt elvetettek. Az ismetelt letrehozas
-        ugyanazt az elvetett munkaegyseget adja vissza, igy nem folytathato.
+      work_unit_create_discarded: Ezt a bevallási célt elvetettek. Az ismételt létrehozás
+        ugyanazt az elvetett munkaegységét adja vissza, igy nem folytatható.
       work_unit_discarded_cannot_calculate: A(z) %{work_unit_id} munkaegység állapota
         %{work_unit_state}, ezért nem számítható.
       work_unit_discarded_cannot_import: A(z) %{work_unit_id} munkaegység állapota
         %{work_unit_state}, ezért nem importálható.
       work_unit_filing_year_period_mismatch: A(z) %{filing_year} adóév nem egyezik
         a(z) %{period} időszak %{period_year} adóévével.
-      work_unit_mutation_refused: A munkaegyseg el van vetve, es ugyanannak a bevallasi
-        celnak az ujboli letrehozasa elutasitasra kerul uj egyseg helyett.
+      work_unit_mutation_refused: A munkaegység el van vetve, es ugyanannak a bevallási
+        célnak az újbóli létrehozása elutasításra kerül uj egység helyett.
       work_unit_not_found: 'Nem található modell munkaegység ezzel az azonosítóval:
         %{work_unit_id}.'
       work_unit_revision_divergence: A(z) %{work_unit_id} munkaegység a(z) %{work_unit_revision}

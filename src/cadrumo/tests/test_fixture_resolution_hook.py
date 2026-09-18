@@ -77,6 +77,7 @@ from cadrumo.tests import fixture_resolution_hook, marker_hook
 def pytest_configure(config):
     marker_hook.reset_held_serials()
     fixture_resolution_hook.reset_refused_requests()
+    config.pluginmanager.register(marker_hook.SerialHoldPlugin(), "cadrumo-serial-hold")
     config.addinivalue_line("markers", "serial: isolation-sensitive")
     for name in ("unit", "hex_core"):
         config.addinivalue_line("markers", name + ": taxonomy marker")

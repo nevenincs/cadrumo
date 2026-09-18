@@ -122,7 +122,14 @@ def test_modelo_721_selects_only_its_two_hash_pinned_boe_form_spec_eras() -> Non
         assert select_revision(modelo, filing_year=filing_year, period="0A", on=date(filing_year, 12, 31)) == revision
 
         assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {source_ref}
-        assert {window.filing_year for window in revision.deadline_windows} == {filing_year}
+        # The open era covers every later supported year and declares one window
+        # per year, so a closed era holds exactly its own and an open one holds
+        # its own among them, never two windows for one year.
+        window_years = [window.filing_year for window in revision.deadline_windows]
+        assert filing_year in window_years
+        assert len(set(window_years)) == len(window_years)
+        if not is_open:
+            assert set(window_years) == {filing_year}
         assert all(casilla.source_refs == (source_ref,) for casilla in revision.casillas)
 
     revision_2023 = modelo.revisions["2023"]

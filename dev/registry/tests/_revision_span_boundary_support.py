@@ -500,6 +500,18 @@ def _page_length_evidence(before: tuple[str, ...], after: tuple[str, ...]) -> st
 
 
 def _compare_design_pair(earlier: Path, later: Path) -> list[str]:
+    """Return one fresh evidence list per call, over a memoized comparison.
+
+    The comparison is pure over the two designs, and the whole-corpus gates ask
+    for the same adjacent pair from several angles, so it is memoized. The list
+    itself is rebuilt per call, because a caller is free to mutate what it was
+    handed and a shared list would carry that edit into the next question.
+    """
+    return list(_design_pair_evidence(earlier, later))
+
+
+@cache
+def _design_pair_evidence(earlier: Path, later: Path) -> tuple[str, ...]:
     """Every signal's evidence that two designs diverge; empty when they agree.
 
     THE ONE INSTRUMENT this module compares designs with, extracted so it has
@@ -563,7 +575,7 @@ def _compare_design_pair(earlier: Path, later: Path) -> list[str]:
     if straddle:
         evidence.append(straddle)
 
-    return evidence
+    return tuple(evidence)
 
 
 def _straddling_fields(

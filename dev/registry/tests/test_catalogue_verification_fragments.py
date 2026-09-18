@@ -8,9 +8,11 @@ import pytest
 
 from cadrumo.core.corpus_text import normalise_corpus_text, resolve_anchored_extracted_unit
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.legal_grounding import verify_legal_catalogue
-from .catalogue_verification_support import _catalogues
+from .catalogue_verification_support import authored_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -66,10 +68,14 @@ def _resolved_text(corpus_ref: str) -> str:
 
 
 def test_annual_order_instruction_refs_resolve_only_atomic_derived_units() -> None:
-    catalogues = _catalogues()
+    catalogues = authored_catalogues()
     references = {ref_id: catalogues.legal[ref_id] for ref_id in _ANNUAL_ORDER_FRAGMENT_IDS}
 
-    verify_legal_catalogue(references, source_root=bundled_path())
+    # Grounding resolves governed facts, which are scoped to an authority: the
+    # setup mapping refuses to answer outside one rather than guessing which
+    # generation asked.
+    with validating_governed_facts(compiled_bundled_authority()):
+        verify_legal_catalogue(references, source_root=bundled_path())
     for ref_id, reference in references.items():
         text = normalise_corpus_text(_resolved_text(reference.corpus_ref))
         assert reference.required_text, ref_id
@@ -77,9 +83,10 @@ def test_annual_order_instruction_refs_resolve_only_atomic_derived_units() -> No
 
 
 def test_existing_atomic_provisions_use_unambiguous_structural_anchors() -> None:
-    catalogues = _catalogues()
+    catalogues = authored_catalogues()
     references = {ref_id: catalogues.legal[ref_id] for ref_id in _DIRECT_FRAGMENT_REFS}
 
     for ref_id, expected_anchor in _DIRECT_FRAGMENT_REFS.items():
         assert references[ref_id].corpus_ref.endswith(expected_anchor), ref_id
-    verify_legal_catalogue(references, source_root=bundled_path())
+    with validating_governed_facts(compiled_bundled_authority()):
+        verify_legal_catalogue(references, source_root=bundled_path())

@@ -365,7 +365,7 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
           field:
-            label: Modelo 190 adóév 2024 és következő
+            label: 190-es modelo, 2024. adóév
         2025-y-siguientes:
           casilla:
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
@@ -523,4 +523,4 @@ modelo:
               help: A 190-es modelo 2-es típusú rekordjában bevallott kedvezményezetti
                 adat.
           field:
-            label: Modelo 190 adóév 2024 és következő
+            label: 190-es modelo, 2025. adóévtől

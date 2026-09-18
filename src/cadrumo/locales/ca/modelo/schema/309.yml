@@ -50,7 +50,7 @@ modelo:
             label: 'Fet imposable: adquisició intracomunitària de béns'
           hecho-imponible-entrega-inversion-inmobiliaria:
             help: Casella 97-97 del model 309, exercicis 2004-2015.
-            label: 'Fet imposable: lliurament de béns d’inversió de naturalesa immobiliària'
+            label: 'Fet imposable: lliurament de béns d''inversió de naturalesa immobiliària'
           hecho-imponible-inversion-sujeto-pasivo:
             help: Casella 96-96 del model 309, exercicis 2004-2015.
             label: 'Fet imposable: inversió del subjecte passiu'
@@ -77,7 +77,7 @@ modelo:
             label: Número de justificant de la declaració anterior (9)
           letras-etiqueta-persona-fisica:
             help: Casella 15-18 del model 309, exercicis 2004-2015.
-            label: Lletres de l’etiqueta identificativa
+            label: Lletres de l'etiqueta identificativa
           motivo-declaracion-no-periodica:
             label: Tipus de desencadenant (mitjans de transport nous / règim agrícola
               / recàrrec d'equivalència / execució forçosa)
@@ -144,7 +144,7 @@ modelo:
             label: 'Situació tributària (5):'
           situacion-tributaria-agricola:
             help: Casella 88-88 del model 309, exercicis 2004-2015.
-            label: 'Situació tributària: subjecte acollit al règim especial d’agricultura,
+            label: 'Situació tributària: subjecte acollit al règim especial d''agricultura,
               ramaderia i pesca'
           situacion-tributaria-otras:
             help: Casella 93-93 del model 309, exercicis 2004-2015.
@@ -160,14 +160,14 @@ modelo:
           situacion-tributaria-recargo-equivalencia:
             help: Casella 89-89 del model 309, exercicis 2004-2015.
             label: 'Situació tributària: subjecte acollit al règim especial del recàrrec
-              d’equivalència'
+              d''equivalència'
           situacion-tributaria-sin-derecho-deduccion:
             help: Casella 90-90 del model 309, exercicis 2004-2015.
             label: 'Situació tributària: subjecte passiu sense dret a deducció'
           transmitente-apellidos:
             label: Transmitent (3) - Cognoms o Denominació Social
           transmitente-apellidos-nombre-razon-social:
-            label: Transmitent - Cognoms i nom o denominació social
+            label: Transmitent - Cognoms i nom o raó social
           transmitente-nif:
             label: Transmitent (3) - NIF
           transmitente-nif-iva:
@@ -283,8 +283,7 @@ modelo:
               field:
                 title: 'Model 309 històric: autoliquidació no periòdica (2004-2015)'
           field:
-            label: Model 309, exercicis 2004 i següents (Ordre HAC/3625/2003, apartats
-              primer i tercer). Ad hoc, desencadenat per una obligació no periòdica.
+            label: Model 309, exercicis 2004 a 2015
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -390,8 +389,7 @@ modelo:
               field:
                 title: 'Model 309: declaració-liquidació d''IVA no periòdica'
           field:
-            label: Model 309, exercicis 2004 i següents (Ordre HAC/3625/2003, apartats
-              primer i tercer). Ad hoc, desencadenat per una obligació no periòdica.
+            label: Model 309, exercicis 2016 a 2017
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -507,8 +505,7 @@ modelo:
               field:
                 title: 'Model 309: declaració-liquidació d''IVA no periòdica'
           field:
-            label: Model 309, exercicis 2004 i següents (Ordre HAC/3625/2003, apartats
-              primer i tercer). Ad hoc, desencadenat per una obligació no periòdica.
+            label: Model 309, exercicis 2018 a 2022
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -624,5 +621,4 @@ modelo:
               field:
                 title: 'Model 309: declaració-liquidació d''IVA no periòdica'
           field:
-            label: Model 309, exercicis 2004 i següents (Ordre HAC/3625/2003, apartats
-              primer i tercer). Ad hoc, desencadenat per una obligació no periòdica.
+            label: Model 309, exercicis 2023 i següents

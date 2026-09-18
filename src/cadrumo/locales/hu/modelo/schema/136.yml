@@ -8,9 +8,9 @@ modelo:
           m136-autoliquidacion-complementaria:
             label: Kiegészítő önadózás
           m136-base-imponible-gravamen:
-            label: Adóalap
+            label: adóalap
           m136-codigo-iban:
-            label: IBAN-kód
+            label: IBAN kód
           m136-cuantia-exenta-gravamen:
             label: A különadó alól mentes összeg
           m136-cuota-gravamen-especial:

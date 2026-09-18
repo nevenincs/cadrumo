@@ -33,7 +33,8 @@ modelo:
             label: '"50 aniversario del Hospital Sant Joan de Deu": applied in this
               return'
           irpf-aeip-60-aniversario-del-festival-porta-ferrada-aplicado:
-            label: '"60 aniversario del Festival Porta Ferrada": Applied in this return'
+            label: '"60th anniversary of the Festival Porta Ferrada": Applied in this
+              return'
           irpf-aeip-75-aniversario-de-la-opera-en-oviedo-aplicado:
             label: '"75 aniversario de la Ópera en Oviedo": applied in this return'
           irpf-aeip-750-aniversario-del-consolat-del-mar-aplicado:
@@ -324,8 +325,9 @@ modelo:
               jointly (*)
           irpf-anexo-a-residente-ue-cuota-familiar-irpf:
             label: State and regional net tax liabilities of family-unit members subject
-              to personal income tax, based on boxes ([0545], [0546], [0547], [0548],
-              [0549], [0550], [0551], [0552], [0553])
+              to personal income tax, based on boxes [0545], [0546], [0547], [0548],
+              [0549], [0550], [0551], [0552], [0553], [0554], [0555], [0556], [0557],
+              [0558], [0559], [0560], [0561], [0562], [0563], [0564]
           irpf-anexo-a-residente-ue-deduccion-importe:
             label: Deduction corresponding to the taxpayer (**)
           irpf-anexo-a-residente-ue-diferencia:
@@ -755,7 +757,7 @@ modelo:
             label: 'Child 5 (*): If they do not have a Tax ID (NIF or NIE), mark with
               an "X"'
           irpf-anualidades-alimentos-otro-progenitor-nif-pnifop2cl14:
-            label: Tax ID (NIF) of the otro progenitor 2
+            label: Tax ID (NIF) of the other parent 2
           irpf-anualidades-alimentos-total:
             label: Amount of child-support annuities paid under a court decision ([1741]
               + [1744] + [1749] + [1754] + [1759])
@@ -797,7 +799,7 @@ modelo:
           irpf-ascendiente-discapacidad-fecha-inicio:
             label: Start date of the disability
           irpf-ascendiente-discapacidad-nombre:
-            label: Name
+            label: Given name
           irpf-ascendiente-nif-nif2r:
             label: Tax ID (NIF) of the ascendant whose deduction is being regularised
           irpf-ascendiente-nif-nifdafas2:
@@ -817,7 +819,7 @@ modelo:
           irpf-base-liquidable-general:
             label: General net taxable base
           irpf-base-liquidable-general-gravamen:
-            label: General liquidable base subject to tax
+            label: General net taxable base subject to tax
           irpf-capital-mobiliario-ahorro-contribuyente-titular:
             label: Taxpayer who obtains the income
           irpf-capital-mobiliario-dt4-contribuyente-titular:
@@ -893,23 +895,23 @@ modelo:
           irpf-conyuge-discapacidad-nif:
             label: Spouse's tax identification number
           irpf-conyuge-discapacidad-nombre:
-            label: Name
+            label: Given name
           irpf-conyuge-discapacidad-otro-contribuyente-flag:
             label: Mark with an "X" if another taxpayer is entitled, in respect of
               the spouse with a disability, to the deduction for a dependent descendant
               or ascendant with a disability
           irpf-cuota-base-liquidable-ahorro-autonomico:
-            label: 'Tax amounts corresponding to the savings liquidable base: Autonomous-community
+            label: 'Tax amounts corresponding to the savings net taxable base: Autonomous-community
               part'
           irpf-cuota-base-liquidable-ahorro-estatal:
-            label: 'Tax amounts corresponding to the savings liquidable base: State
+            label: 'Tax amounts corresponding to the savings net taxable base: State
               part'
           irpf-cuota-base-liquidable-general-autonomico:
-            label: 'Tax amounts corresponding to the general liquidable base: ( [0532]
+            label: 'Tax amounts corresponding to the general net taxable base: ( [0532]
               = [0528] - [0530] ); ( [0533] = [0529] - [0531] ): Autonomous-community
               part'
           irpf-cuota-base-liquidable-general-estatal:
-            label: 'Tax amounts corresponding to the general liquidable base: ( [0532]
+            label: 'Tax amounts corresponding to the general net taxable base: ( [0532]
               = [0528] - [0530] ); ( [0533] = [0529] - [0531] ): State part'
           irpf-cuota-ccaa-residencia:
             label: Amount of Personal Income Tax corresponding to the taxpayer's autonomous
@@ -953,9 +955,9 @@ modelo:
           irpf-deduccion-andalucia-empleada-hogar-ccc-2:
             label: 'Social Security contribution account code:'
           irpf-deduccion-andalucia-empleada-hogar-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-andalucia-empleada-hogar-importe-1:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-andalucia-familia-monoparental:
             label: For a single parent and, where applicable, with ascendants over
               75 years old
@@ -1062,7 +1064,7 @@ modelo:
             label: For taxpayers who move their tax domicile to the Principality of
               Asturias for employment reasons
           irpf-deduccion-asturias-vehiculo-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-asturias-vehiculo-matricula:
             label: 'Vehicle registration number:'
           irpf-deduccion-asturias-vivienda-discapacitados:
@@ -1532,20 +1534,20 @@ modelo:
           irpf-deduccion-castilla-y-leon-gastos-adopcion:
             label: For adoption expenses
           irpf-deduccion-castilla-y-leon-importe-general:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-castilla-y-leon-importe-pendiente-aplicacion-cl11ea14:
             label: Amount generated in 2022 pending application
           irpf-deduccion-castilla-y-leon-nacimiento-adopcion:
             label: For the birth or adoption of children
           irpf-deduccion-castilla-y-leon-otro-progenitor-1-nif:
-            label: Tax ID (NIF) of the otro progenitor 1
+            label: Tax ID (NIF) of the other parent 1
           irpf-deduccion-castilla-y-leon-partos-multiples-cl13:
             label: For multiple births or simultaneous adoptions
           irpf-deduccion-castilla-y-leon-patrimonio-historico:
             label: For amounts invested in the recovery of historical, cultural, and
               natural heritage
           irpf-deduccion-castilla-y-leon-rehabilitacion-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-castilla-y-leon-rehabilitacion-rural:
             help: Enter the deduction for rehabilitation of dwellings in rural areas
               intended for rental.
@@ -1582,7 +1584,7 @@ modelo:
             label: 'For employer contributions to social-welfare schemes (third additional
               provision of Royal Decree-Law 13/2022): Applied in this return'
           irpf-deduccion-cuota-general-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-cuotas-afiliacion-partidos:
             label: 'Amount qualifying for the deduction (maximum limit EUR 600) (**):
               membership fees and contributions to political parties, federations,
@@ -1646,7 +1648,7 @@ modelo:
             label: Cadastral reference
           irpf-deduccion-eficiencia-energetica-vivienda-referencia-catastral-prccepnr:
             help: Enter the cadastral reference for dwelling 1.
-            label: Cadastral reference (property 1)
+            label: Cadastral reference (dwelling 1)
           irpf-deduccion-eficiencia-energetica-vivienda-referencia-catastral-prcedif:
             help: Enter the cadastral reference for dwelling 1.
             label: Cadastral reference (property 1)
@@ -1762,14 +1764,14 @@ modelo:
             label: For each minor under a temporary or permanent emergency foster-care
               arrangement, or guardianship for adoption purposes
           irpf-deduccion-la-rioja-adecuacion-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-la-rioja-adecuacion-municipio-codigo:
             label: 'Municipality code:'
           irpf-deduccion-la-rioja-adecuacion-vivienda-discapacidad:
             label: For amounts invested in adaptation works to the primary residence
               for persons with a disability
           irpf-deduccion-la-rioja-arrendamiento-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-la-rioja-arrendamiento-municipio-codigo:
             label: Municipality code
           irpf-deduccion-la-rioja-bicicletas:
@@ -1826,7 +1828,7 @@ modelo:
           irpf-deduccion-la-rioja-vivienda-jovenes:
             label: For the primary-residence investment by young people under 36
           irpf-deduccion-la-rioja-vivienda-municipio-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-madrid-acogimiento-mayores:
             label: For unpaid fostering of persons over 65 and/or with a disability
           irpf-deduccion-madrid-acogimiento-menores:
@@ -1839,7 +1841,7 @@ modelo:
             label: For care of ascendants
           irpf-deduccion-madrid-cuidado-hijos-dependientes:
             help: Enter the amount of the deduction.
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-madrid-donativos-fundaciones-deportivos:
             label: For donations to foundations and sports clubs
           irpf-deduccion-madrid-dos-mas-descendientes-ingresos-reducidos:
@@ -1884,7 +1886,7 @@ modelo:
             label: Year of acquisition
           irpf-deduccion-madrid-vivienda-nacimiento-adopcion-importe:
             help: Enter the amount of the deduction.
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-madrid-vivienda-nacimiento-adopcion-m20:
             label: For acquisition of the habitual residence due to the birth or adoption
               of children
@@ -2014,7 +2016,7 @@ modelo:
           irpf-descendiente-discapacidad-fecha-inicio:
             label: Start date of the disability
           irpf-descendiente-discapacidad-nombre:
-            label: Name
+            label: Given name
           irpf-descendiente-num-contribuyentes-derecho:
             label: State the number of persons entitled to the minimum for descendants
           irpf-discrepancia-criterio-administrativo:
@@ -2090,7 +2092,7 @@ modelo:
           irpf-ed-sueldos-salarios:
             label: Wages and salaries
           irpf-empleador-nif:
-            label: Tax ID (NIF) of the empleador
+            label: Tax ID (NIF) of the employer
           irpf-eo-actividad-iae-code:
             label: IAE classification (group or heading)
           irpf-eo-agr-clave-actividad:
@@ -2259,7 +2261,7 @@ modelo:
           irpf-eo-otras-percepciones:
             label: Other business receipts
           irpf-eo-rdto-neto-minorado:
-            label: Reduced net income
+            label: Net income after allowances
           irpf-eo-rdto-neto-modulos:
             label: Net income under modules
           irpf-eo-rdto-neto-previo:
@@ -2339,10 +2341,6 @@ modelo:
             label: Identification number of the large-family certificate
           irpf-feac-elemento-descripcion:
             label: Description
-          irpf-feac-entidad-nif-c2nifafeac:
-            label: Tax ID (NIF)
-          irpf-feac-entidad-nif-c2nifefeac:
-            label: Tax ID (NIF)
           irpf-feac-entidad-receptora-denominacion:
             label: Company name
           irpf-feac-entidad-receptora-sin-nif-flag:
@@ -2397,8 +2395,8 @@ modelo:
             label: Reduced capital gains ([0408] - [0410])
           irpf-g4-re-transmision-intervivos-flag:
             label: If this is a taxpayer who has transferred the shares or holdings
-              inter vivos, tick this casilla (only taxpayers who have changed their
-              residence to another Member State of the European Union)
+              inter vivos, tick this box (only taxpayers who have changed their residence
+              to another Member State of the European Union)
           irpf-g4-re-valor-adquisicion-acciones:
             label: Acquisition value of the shares or units
           irpf-g4-re-valor-mercado-acciones:
@@ -3468,7 +3466,7 @@ modelo:
           irpf-reduccion-tributacion-conjunta-importe:
             help: This computed field records the amount of the reduction for family
               units that opt for joint taxation.
-            label: Reduction for family units opting for joint filing. Amount
+            label: Reduction for family units opting for joint taxation. Amount
           irpf-reestructuracion-empresarial-feac-contribuyente-titular:
             label: Taxpayer holder of the asset transferred
           irpf-regularizacion-autoliquidaciones-anteriores-ingresar:
@@ -3622,7 +3620,7 @@ modelo:
       construct:
         renta-anexo-c-base-liquidable-negativa-general:
           field:
-            title: Modelo 100 Anexo C general net taxable base negativa carry-forward
+            title: Modelo 100 Anexo C general net taxable base negative carry-forward
         renta-cuota-chain:
           field:
             title: 'Modelo 100: IRPF tax-quota calculation chain'
@@ -3677,18 +3675,20 @@ modelo:
                 allocated to the taxpayer
             '0010':
               label: Contributions to protected assets of persons with disabilities
-                owned by the taxpayer - computable amount
+                owned by the taxpayer - Computable amount
             '0011':
-              label: Reductions under article 18 and transitional provisions of the
-                Income Tax Law
+              label: Reductions under article 18, subsections 2 and 3, and the 11th,
+                12th, and 25th transitional provisions of the Income Tax Law
             '0012':
-              label: Total computable gross income
+              label: Total countable gross income
             '0013':
               label: Social Security and similar mandatory contributions
             '0015':
-              label: Professional association dues paid
+              label: Professional association dues paid (if membership is mandatory,
+                maximum 500 euros per year)
             '0016':
-              label: Legal defense expenses from disputes with the employer
+              label: Legal defense expenses from disputes with the employer (maximum
+                300 euros per year)
             '0017':
               label: Prior net income
             0018:
@@ -3804,16 +3804,16 @@ modelo:
             '0115':
               label: Taxes, surcharges and fees
             '0121':
-              label: Date of transfer, in su case, in the tax year 2020, of the inmueble
-                (día, mes and year)
+              label: Date of transfer, if applicable, in the 2020 tax year, of the
+                property (day, month and year)
             0129:
               label: Amount of improvements made in 2020 (breakdown in Annex D, voluntary
                 completion)
             '0134':
               label: For consideration (sale, exchange, etc.)
             '0136':
-              label: Date of transfer, in su case, in the tax year 2020, of the inmueble
-                (día, mes and year)
+              label: Date of transfer, if applicable, in the 2020 tax year, of the
+                property (day, month and year)
             '0144':
               label: Amount of improvements made in 2020 to the accessory property
                 (breakdown in Annex D, voluntary completion)
@@ -3834,8 +3834,8 @@ modelo:
                 in a manifestly irregular manner (article 23.3 and transitional provision
                 25 of the Personal Income Tax Law)
             '0152':
-              label: Minimum computable income in cases of kinship (article 24 of
-                the Personal Income Tax Law)
+              label: Minimum countable income in cases of kinship (article 24 of the
+                Personal Income Tax Law)
             '0153':
               label: Withholdings and payments on account
             '0154':
@@ -3858,7 +3858,7 @@ modelo:
                 depreciation deducted over deductible depreciation (thirtieth additional
                 provision of the Personal Income Tax Law)'
             0180:
-              label: Total computable income (sum of [0171] to [0179])
+              label: Total countable income (sum of [0171] to [0179])
             0182:
               label: Change in inventories (decrease in closing inventories)
             0186:
@@ -3873,8 +3873,8 @@ modelo:
             0194:
               label: Utilities (electricity, water, gas, telephone and internet)
             '0205':
-              label: IVA soportado (for ejermplo, recargo of equivalencia and/or offset
-                of agricultura, ganadería and pesca)
+              label: Input VAT (e.g., equivalence surcharge and/or compensation for
+                agriculture, livestock and fishing)
             0208:
               label: Current-year allowances for depreciation of tangible fixed assets
             '0214':
@@ -3904,7 +3904,7 @@ modelo:
                 in a markedly irregular manner (artículo 32.1 y D.T 25ª de la Ley
                 del Impuesto)
             '0226':
-              label: Rendimiento net reducido ( [0224] - [0225] )
+              label: Reduced net income ( [0224] - [0225] )
             '0227':
               label: Current-year allowances for depreciation of intangible fixed
                 assets
@@ -3924,13 +3924,13 @@ modelo:
               label: Total reduced net income from economic activities under direct
                 assessment ([0231] - [0232] - [0233] - [0234])
             '0245':
-              label: If the marriage was in effect throughout 2020, tick this casilla
+              label: If the marriage was in effect throughout 2020, tick this box
             '0246':
               label: First month in which the marriage was in effect in 2020
             '0247':
               label: Last full month of 2020 in which the marriage was in effect
             0248:
-              label: Amount of the deduction
+              label: Deduction amount
             0249:
               label: Amount of the advance payment of the deduction for 2020 (*)
             0268:
@@ -3941,7 +3941,7 @@ modelo:
               label: 'Sum of income imputations under the international tax-transparency
                 regime: (sum of boxes [0269])'
             0286:
-              label: Amount computable ([0283] + [0284] - [0285])
+              label: Countable amount ([0283] + [0284] - [0285])
             0288:
               label: Sum of capital gains derived from these games (sum of boxes [0282]
                 + [0286])
@@ -3952,26 +3952,26 @@ modelo:
               label: Grants for the purchase of officially protected housing or price-capped
                 housing. Amount attributable to 2020
             '0300':
-              label: Other grants or aid for the purchase or renovation of a primary
-                residence or the repair of structural defects in it. Amount attributable
-                to 2020
+              label: Other subsidies or aid intended for acquiring or rehabilitating
+                the habitual residence or repairing structural defects in it. Amount
+                attributable to 2020
             '0301':
-              label: Demás capital gains derived of aid públicas. Amount attributable
+              label: Other capital gains arising from public aid. Amount attributable
                 to 2020
             '0303':
               label: Basic emancipation income
             '0306':
               label: Sum of other gains not arising from the transfer of assets (sum
-                of casillas [0299] + [0300] + [0301] + [0302] + [0303] + [0304])
+                of boxes [0299] + [0300] + [0301] + [0302] + [0303] + [0304])
             0309:
               label: Total accumulated transfer value to which the 9th Transitional
                 Provision (DT 9.ª) has been applied in tax years 2015, 2016, 2017,
                 2018 and 2019
             '0314':
-              label: Value of transfer to the that resulta applicable the D.T. 9.ª
+              label: Value of transfer to which D.T. 9.ª applies
             0318:
-              label: Parte of the capital gains susceptibles of reduction (D.T. 9.ª
-                of the Law of the Impuesto)
+              label: Part of the capital gains susceptible of reduction (D.T. 9.ª
+                of the Personal Income Tax Law)
             0319:
               label: Reduction applicable (D.T. 9.ª)
             '0324':
@@ -3979,27 +3979,27 @@ modelo:
                 shares or units in collective investment institutions or SOCIMIs (sum
                 of boxes [0320])
             '0330':
-              label: Value of transfer to the that resulta applicable the D.T. 9.ª
+              label: Value of transfer to which D.T. 9.ª applies
             '0334':
-              label: Parte of the capital gains susceptibles of reduction (D.T. 9.ª)
+              label: Part of the capital gains susceptible of reduction (D.T. 9.ª)
             '0335':
               label: Reduction applicable (D.T. 9.ª)
             0339:
-              label: Sum of capital gains derived of transfers of shares negociadas<br/>(sum
+              label: Sum of capital gains arising from transfers of traded shares<br/>(sum
                 of the boxes [0336])
             '0340':
-              label: Sum of capital losses derived of transfers of shares negociadas<br/>(sum
+              label: Sum of capital losses arising from transfers of traded shares<br/>(sum
                 of the boxes [0338])
             '0345':
-              label: Value of transfer to the that resulta applicable the D.T. 9.ª
+              label: Value of transfer to which D.T. 9.ª applies
             0349:
-              label: Parte of the capital gains susceptibles of reduction (D.T. 9.ª)
+              label: Part of the capital gains susceptible of reduction (D.T. 9.ª)
             '0350':
               label: Reduction applicable (D.T. 9.ª)
             '0356':
               label: Sequence number of the item
             0358:
-              label: Nº total years of cobro
+              label: Total number of years of collection
             '0360':
               label: Cadastral reference 1
             '0361':
@@ -4016,24 +4016,24 @@ modelo:
               label: Otras capital gains to include in the savings tax base (intereses
                 indemnizatorios)
             0393:
-              label: Sum of the capital gains derived of transfers efectuadas in tax
-                years previous attributable to 2020 (sum of the boxes [0392] )
+              label: Sum of the capital gains arising from transfers made in prior
+                tax years attributable to 2020 (sum of the boxes [0392])
             0396:
-              label: Sum of the capital losses derived of transfers efectuadas in
-                tax years previous attributable to 2020 (sum of the boxes [0395] )
+              label: Sum of the capital losses arising from transfers made in prior
+                tax years attributable to 2020 (sum of the boxes [0395])
             '0400':
-              label: Sum of imputación to 2020 of capital gains covered to deferral
-                for reinvestment(sum of the boxes [0399] )
+              label: Sum of amounts attributed to 2020 for capital gains covered by
+                deferral for reinvestment (sum of the boxes [0399])
             '0406':
-              label: Value to the that resulta applicable the D.T. 9.ª
+              label: Value to which D.T. 9.ª applies
             0409:
-              label: Parte of the capital gains susceptibles of reduction (D.T. 9.ª)
+              label: Part of the capital gains susceptible of reduction (D.T. 9.ª)
             '0410':
               label: Reduction applicable (D.T. 9.ª)
             '0414':
-              label: 'DECLARANTE: Nº of operaciones'
+              label: 'DECLARANT: No. of transactions'
             '0416':
-              label: 'CONYUGE: Nº of operaciones'
+              label: 'SPOUSE: No. of transactions'
             '0417':
               label: If the non-resident entities have not applied a similar tax regime
                 to this one, tick the box
@@ -4053,7 +4053,8 @@ modelo:
                 to be included in the general taxable base (Complete annex C.2)
             '0433':
               label: Negative net balance of 2020 capital gains and losses included
-                in the general taxable base, limited to 25% of the amount in box ([0432])
+                in the general taxable base, limited to 25% of the amount in box [0432]
+                (transfer the amount from box [0421] if applicable)
             '0434':
               label: Remaining negative net balances of capital gains and losses from
                 2016 to 2019 not derived from transfers, pending offset at 1 January
@@ -4099,7 +4100,8 @@ modelo:
                 not offset in box [0451]) (Complete Annex C.2)
             '0446':
               label: Negative net balances of capital gains and losses attributable
-                to 2020, included in the savings taxable base, limited to 25% of ([0429])
+                to 2020, included in the savings taxable base, limited to 25% of [0429]
+                (transfer the amount from box [0425] if applicable)
             '0447':
               label: Remaining negative net balances of movable-capital income from
                 2019, pending offset at 1 January 2020, to be included in the savings
@@ -4142,17 +4144,17 @@ modelo:
                 taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
                 not offset in box [0441]) (Complete Annex C.2)
             '0456':
-              label: NIF/NIE of the hijo 1(*)
+              label: NIF/NIE of child 1(*)
             '0457':
-              label: If you do not have a NIF or NIE, mark this casilla with an "X"
+              label: If you do not have a NIF or NIE, mark this box with an "X"
             0458:
-              label: NIF/NIE of the hijo 2(*)
+              label: NIF/NIE of child 2(*)
             0459:
-              label: If you do not have a NIF or NIE, mark this casilla with an "X"
+              label: If you do not have a NIF or NIE, mark this box with an "X"
             '0460':
-              label: Savings taxable base calculated from boxes ([0424], [0436], [0439],
+              label: Savings taxable base calculated from boxes [0424], [0436], [0439],
                 [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446],
-                [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0449], [0450], [0451], [0452], [0453], [0454], [0455], [0448]
             '0461':
               label: 'Reduction for family units opting for joint taxation: amount'
             '0463':
@@ -4192,8 +4194,8 @@ modelo:
               label: Tax ID number (NIF) of the person with the disability holding
                 the protected estate
             0479:
-              label: Excesos pending of reduce procedentes of the tax years 2016 to
-                2019 (Vea the anexo C.3)
+              label: Excess amounts pending reduction from tax years 2016 to 2019
+                (see Annex C.3)
             0483:
               label: Tax ID number (NIF) of the person who receives each pension or
                 annuity
@@ -4203,8 +4205,8 @@ modelo:
             0485:
               label: Amount of the pension or annuity paid in 2020 under a court decision
             0488:
-              label: Excesos pending of reduce procedentes of the tax years 2015 to
-                2019 (Vea the anexo C.3)
+              label: Excess amounts pending reduction from tax years 2015 to 2019
+                (see Annex C.3)
             0493:
               label: For contributions to social-welfare schemes in which the spouse
                 is a participant, member, or holder. Amount from box [0469] applied
@@ -4222,8 +4224,9 @@ modelo:
                 savings net taxable base for the State-tax calculation: the lower
                 of the difference ([0519] - [0521]) and box [0510]'
             '0523':
-              label: Personal and family minimum included in the general net taxable
-                base for calculating regional tax, based on boxes ([0505])
+              label: 'Personal and family minimum included in the general net taxable
+                base for calculating regional tax: the lower of boxes [0505] and [0520]
+                (if box [0505] is negative or zero, enter zero in box [0523])'
             '0524':
               label: 'Amount of the personal and family minimum forming part of the
                 savings net taxable base for the regional-tax calculation: the lower
@@ -4247,9 +4250,8 @@ modelo:
                 the amounts from these same boxes in Annex A.1): Autonomous-community
                 part'
             0549:
-              label: 'Investment deduction in companies of new or recent creation:
-                (traslade the amounts of estas mismas boxes of the anexo To.1): Parte
-                estatal'
+              label: 'Deduction for investment in new or recently created companies:
+                (transfer the amounts of these same boxes from Annex A.1): State part'
             '0550':
               label: 'For investments or expenses of cultural interest (transfer the
                 amounts from these same boxes in Annex A.2): State part'
@@ -4259,10 +4261,10 @@ modelo:
                 part'
             '0552':
               label: 'For donations and other contributions (transfer the amounts
-                from these same casillas in annex A.2): National part'
+                from these same boxes in annex A.2): National part'
             '0553':
               label: 'For donations and other contributions (transfer the amounts
-                from these same casillas in annex A.2): Regional part'
+                from these same boxes in annex A.2): Regional part'
             '0554':
               label: 'For incentives to promote business investment (transfer the
                 amounts from these same boxes in Annex A.4): State part'
@@ -4284,7 +4286,7 @@ modelo:
                 part'
             '0564':
               label: Sum of regional deductions (transfer the amount from this same
-                casilla in annex B.1, B.2, B.3, B.4, B.5 or B.6, as applicable)
+                box in annex B.1, B.2, B.3, B.4, B.5 or B.6, as applicable)
             '0565':
               label: 'Deduction applicable to family units made up of tax residents
                 of Member States of the European Union or the European Economic Area
@@ -4362,7 +4364,7 @@ modelo:
             0599:
               label: For income from economic activities (*)
             '0600':
-              label: Sum of withholdings and payments on account atribuidos of capital
+              label: Sum of withholdings and payments on account attributed to capital
                 gains and losses attributable to 2020 (sum of the boxes [1600])
             '0601':
               label: Sum of imputed withholdings and payments on account (sum of boxes
@@ -4381,7 +4383,7 @@ modelo:
               label: Total payments on account (sum of boxes [0592] + [0593] + [0594]
                 + [0596] to [0606])
             '0611':
-              label: Amount of the deduction
+              label: Deduction amount
             '0612':
               label: Amount of the advance payment of the deduction for 2020
             '0613':
@@ -4390,11 +4392,11 @@ modelo:
             '0614':
               label: Tax ID (NIF) of the dependent descendant
             '0623':
-              label: Amount of the deduction
+              label: Deduction amount
             '0624':
               label: Amount of the advance payment of the deduction for 2020
             '0636':
-              label: Amount of the deduction
+              label: Deduction amount
             '0637':
               label: Amount of the advance payment of the deduction for 2020
             0638:
@@ -4402,11 +4404,11 @@ modelo:
             '0641':
               label: Tax ID (NIF) of landlord 2
             '0660':
-              label: Amount of the deduction
+              label: Deduction amount
             '0661':
               label: Amount of the advance payment of the deduction for 2020
             '0662':
-              label: Amount of the deduction
+              label: Deduction amount
             '0663':
               label: Amount of the advance payment of the deduction for 2020 (*)
             '0664':
@@ -4461,7 +4463,7 @@ modelo:
               label: 'Amount of payments made in the tax year to the developer or
                 builder:'
             '0707':
-              label: 'NIF of the promotor or constructor:'
+              label: 'NIF of the developer or builder:'
             0708:
               label: Date of acquisition of the property for which the deduction is
                 claimed
@@ -4479,7 +4481,8 @@ modelo:
             '0733':
               label: 'Reserva for Investments in Canarias 2016: Amount of the allocations'
             '0734':
-              label: 'Reserva for Investments in Canarias 2016: Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2016: Year of
+                the allocation'
             '0735':
               label: 'Reserva for Investments in Canarias 2017: Amount of the allocations'
             '0736':
@@ -4489,7 +4492,8 @@ modelo:
               label: 'Canary Islands Investment Reserve 2017: investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             0738:
-              label: 'Reserva for Investments in Canarias 2018: Amount of the allocations'
+              label: 'Reserve for Investments in the Canary Islands 2018: Amount of
+                the allocations'
             0739:
               label: 'Canary Islands Investment Reserve 2018: investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -4497,10 +4501,11 @@ modelo:
               label: 'Canary Islands Investment Reserve 2018: investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             '0741':
-              label: 'Reserva for Investments in Canarias 2018: Pendiente of materializar
-                (**)'
+              label: 'Reserve for Investments in the Canary Islands 2018: Pending
+                investment (**)'
             '0742':
-              label: 'Reserva for Investments in Canarias 2019: Amount of the allocations'
+              label: 'Reserve for Investments in the Canary Islands 2019: Amount of
+                the allocations'
             '0743':
               label: 'Canary Islands Investment Reserve 2019: investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -4508,8 +4513,8 @@ modelo:
               label: 'Canary Islands Investment Reserve 2019: investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             '0745':
-              label: 'Reserva for Investments in Canarias 2019: Pendiente of materializar
-                (**)'
+              label: 'Reserve for Investments in the Canary Islands 2019: Pending
+                investment (**)'
             '0746':
               label: 'Reserve for Investments in the Canary Islands 2020: amount of
                 allocations'
@@ -4520,8 +4525,8 @@ modelo:
               label: 'Canary Islands Investment Reserve 2020: investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             0749:
-              label: 'Reserva for Investments in Canarias 2020: Pendiente of materializar
-                (**)'
+              label: 'Reserve for Investments in the Canary Islands 2020: Pending
+                investment (**)'
             '0750':
               label: 'Advance investments of future allocations to the Canary Islands
                 Investment Reserve (RIC), made in 2020: investments provided for in
@@ -4548,8 +4553,8 @@ modelo:
                 (only if there is a special investment plan approved by the Administration
                 allowing investment in this tax year): applied in this return'
             0759:
-              label: 'Deduction for investments in territories of West Africa (art.º
-                27.1.a) bis de la Ley 19/1994): applied in this return'
+              label: 'Deduction for investments in territories of West Africa (art.
+                27.1.a) bis of Law 19/1994): applied in this return'
             '0760':
               label: '"VIII Centenario de la Universidad de Salamanca": applied in
                 this return'
@@ -4584,14 +4589,17 @@ modelo:
             0787:
               label: '"Ceuta y la Legión, 100 años de unión": applied in this return'
             0789:
-              label: 'Reserva for Investments in Canarias 2017: Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2017: Year of
+                the allocation'
             0790:
               label: 'Canary Islands Investment Reserve 2017: investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             0792:
-              label: 'Reserva for Investments in Canarias 2018: Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2018: Year of
+                the allocation'
             0794:
-              label: 'Reserva for Investments in Canarias 2019: Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2019: Year of
+                the allocation'
             0802:
               label: 'Reserve for Investments in the Canary Islands 2020: allocation
                 year'
@@ -4698,8 +4706,12 @@ modelo:
                 applied in this return'
             0845:
               label: Total amount of deductions for incentives to business investment
-                applied in this return, based on boxes ([0752], [0759], [0843], [0760],
-                [0761], [0766])
+                applied in this return (sum of boxes [0752] to [0759], [0843], [0760],
+                [0761], [0766], [0767], [0776], [0779] to [0788], [0791], [0793],
+                [0795] to [0798], [0800], [0801], [0804] to [0809], [0762], [0810]
+                to [0816], [0763], [0764], [0817], [0765], [0818] to [0820], [0768],
+                [0821] to [0823], [0769], [0770], [0825] to [0829], [0836], [0837]
+                to [0841], [0844])
             0849:
               label: For amounts donated to the Andalusian Health Service to fight
                 the spread of COVID-19
@@ -4741,8 +4753,8 @@ modelo:
             0886:
               label: For investment in a protected habitual residence
             0887:
-              label: For the arrendamiento of primary residence (is traslada este
-                amount to the box [1130] of the anexo B.6)
+              label: For the renting of a primary residence (this amount is transferred
+                to box [1130] of Annex B.6)
             0888:
               label: For the donation of rural estates in favour of the Principality
                 of Asturias
@@ -4765,7 +4777,7 @@ modelo:
             0911:
               label: Tax ID (NIF/NIE) of landlord 1
             0919:
-              label: For expenses of estudios
+              label: For study expenses
             0921:
               label: For cash donations to descendants or adopted persons under 35
                 for the acquisition or rehabilitation of their first habitual residence
@@ -4775,9 +4787,9 @@ modelo:
               label: For renting of primary residence (is traslada este amount to
                 the box [1130] of the anexo B.6)
             0930:
-              label: If you do not have a cadastral reference, tick this casilla
+              label: If you do not have a cadastral reference, tick this box
             0932:
-              label: If you do not have a cadastral reference, tick this casilla
+              label: If you do not have a cadastral reference, tick this box
             0936:
               label: For study expenses in early years education, primary education,
                 compulsory secondary education, upper secondary school and intermediate
@@ -4785,7 +4797,7 @@ modelo:
             0939:
               label: For energy renovation and refurbishment works on a primary residence
             0940:
-              label: For expense of enfermedad
+              label: For illness expenses
             0942:
               label: For renting a primary residence linked to certain debt-for-asset
                 transactions (transfer the amount from box [1170] of Annex B.7)
@@ -4800,7 +4812,7 @@ modelo:
               label: 'For improvement works: amounts generated in 2017 and/or 2018
                 pending application'
             0950:
-              label: Amount of the deduction
+              label: Deduction amount
             0953:
               label: For investment in the purchase of shares or equity interests
                 in new or recently created entities (this amount is transferred to
@@ -4818,8 +4830,8 @@ modelo:
             0971:
               label: For the purchase of housing by young people in rural areas
             0975:
-              label: For renting of primary residence for taxpayers menores of 36
-                years (is traslada este amount to the box [1130] of the anexo B.6)
+              label: For renting a primary residence for taxpayers under 36 years
+                of age (this amount is transferred to box [1130] of Annex B.6)
             0976:
               label: For investment in environmental installations and adaptations
                 for people with a disability in a primary residence
@@ -4841,9 +4853,9 @@ modelo:
               label: For multiple births or simultaneous adoptions occurring in 2018
                 and/or 2019
             0991:
-              label: For paternidad
+              label: For paternity
             0995:
-              label: Total amount aplicado on the sum of the boxes [0985] to [0988]
+              label: Total amount applied to the sum of the boxes [0985] to [0988]
                 + [0990] to [0992] + [0994]
             0997:
               label: Amount generated in 2018 pending application
@@ -4852,7 +4864,7 @@ modelo:
             0999:
               label: Amount generated in 2020 pending application
             '1000':
-              label: For birth or adoption of a hijo
+              label: For the birth or adoption of a child
             '1003':
               label: For renting of the primary residence (is traslada este amount
                 to the box [1130] of the anexo B.6)
@@ -4867,8 +4879,8 @@ modelo:
                 as a result of agreements to incorporate or increase capital in commercial
                 companies (this amount is transferred to box [1136] of Annex B.7)
             '1019':
-              label: For arrendamiento of primary residence (is traslada este amount
-                to the box [1130] of the anexo B.6)
+              label: For renting a primary residence (this amount is transferred to
+                box [1130] of Annex B.6)
             '1026':
               label: For renting a primary residence by taxpayers aged 35 or under
                 (this amount is transferred to box [1130] of Annex B.6)
@@ -4897,8 +4909,8 @@ modelo:
             '1039':
               label: For the birth or adoption of children
             '1043':
-              label: For arrendamiento of primary residence (is traslada este amount
-                to the box [1130] of the anexo B.6)
+              label: For renting a primary residence (this amount is transferred to
+                box [1130] of Annex B.6)
             '1046':
               label: For investment in the purchase of shares and equity interests
                 in new or recently created entities (this amount is transferred to
@@ -4907,7 +4919,7 @@ modelo:
               label: For investments made in entities listed on the Alternative Stock
                 Market (this amount is transferred to box [1142] of Annex B.7)
             '1049':
-              label: For donations to fundaciones
+              label: For donations to foundations
             '1050':
               label: For the care of children under 3 years old
             '1052':
@@ -4926,11 +4938,11 @@ modelo:
               label: For investments made in entities listed on the Alternative Stock
                 Market (this amount is transferred to box [1142] of Annex B.7)
             '1069':
-              label: Amount of the deduction
+              label: Deduction amount
             '1070':
               label: 'Municipality code:'
             '1071':
-              label: Amount of the deduction
+              label: Deduction amount
             '1072':
               label: For amounts invested in adaptation works to the primary residence
                 for persons with a disability
@@ -4964,7 +4976,7 @@ modelo:
               label: For amounts from public aid granted by the Generalitat under
                 Law 6/2009, of 30 June, of the Generalitat, on maternity protection.
             '1108':
-              label: Amount of the deduction
+              label: Deduction amount
             '1110':
               label: For obtaining income from the lease of a dwelling whose rent
                 does not exceed the reference price for private rentals
@@ -4976,7 +4988,7 @@ modelo:
               label: Amount paid in 2017 and/or 2018 pending application (sólo for
                 investments in the primary residence or edificio dónde is ubique)
             '1116':
-              label: Amount that is aplica in the tax year
+              label: Amount applied in the tax year
             '1117':
               label: Amount paid in 2017, 2018 and/or 2019 pending application in
                 future tax years
@@ -4995,8 +5007,8 @@ modelo:
             '1128':
               label: Total amount paid
             '1135':
-              label: Total amount of the amountis invertidas with right to a deduction
-                (sum of the boxes [1132] + [1134])
+              label: Total amount of the sums invested with right to a deduction (sum
+                of the boxes [1132] + [1134])
             '1136':
               label: Total amount of the deduction for investments in companies of
                 new or recent creation
@@ -5004,15 +5016,15 @@ modelo:
               label: Total amount of the amountis with right to a deduction (sum of
                 the boxes [1138] + [1140] )
             '1147':
-              label: Total amount of the amountis invertidas with right to a deduction
-                (sum of the boxes [1144] + [1146])
+              label: Total amount of the sums invested with right to a deduction (sum
+                of the boxes [1144] + [1146])
             '1153':
-              label: Total amount of the amountis invertidas with right to a deduction
-                (sum of the boxes [1150] + [1152])
+              label: Total amount of the sums invested with right to a deduction (sum
+                of the boxes [1150] + [1152])
             '1155':
               label: Tax ID (NIF/NIE) of the landlord
             '1158':
-              label: For conciliación
+              label: For work-life balance
             '1164':
               label: Municipality code
             '1165':
@@ -5027,8 +5039,8 @@ modelo:
                 under Orden 5/2020, de 8 de junio, for the purchase or electrification
                 of urban bicycles and personal mobility electric vehicles
             '1178':
-              label: Total amount of the amountis invertidas with right to a deduction
-                (sum of the boxes [1150] + [1152])
+              label: Total amount of the sums invested with right to a deduction (sum
+                of the boxes [1150] + [1152])
             '1202':
               label: Premiums paid
             '1203':
@@ -5075,8 +5087,8 @@ modelo:
               label: Capital gain obtained as a result of the transfer of the primary
                 residence
             '1228':
-              label: Amount reinvertido hasta the 31-12-2020 in the acquisition of
-                a new primary residence
+              label: Amount reinvested up to 31-12-2020 in the acquisition of a new
+                primary residence
             '1229':
               label: Amount that the taxpayer undertakes to reinvest, in the two years
                 following the transfer, in acquiring a new habitual residence
@@ -5159,7 +5171,7 @@ modelo:
             '1283':
               label: Negative balance of movable-capital income attributable to 2020,
                 included in the savings taxable base and pending offset in the next
-                four tax years, based on boxes ([0430])
+                four tax years, based on boxes [0430] and [0436]
             '1284':
               label: Taxpayer entitled to reduction
             '1285':
@@ -5395,67 +5407,67 @@ modelo:
             '1463':
               label: Number of units
             '1475':
-              label: General reduction (20% or 35% of the amount in casilla [1474],
-                if it is greater than 0)
+              label: General reduction (20% or 35% of the amount in box [1474], if
+                it is greater than 0)
             '1476':
               label: Reduction for economic activities carried out in the municipality
                 of Lorca (Murcia)
             '1479':
-              label: Rendimiento net of the actividad
+              label: Net income from the activity
             '1480':
               label: Reductions for income generated over more than 2 years or obtained
                 in a markedly irregular manner (Artículo 32.1 y D.T 25ª de la Ley
                 del Impuesto)
             '1488':
-              label: Income íntegros
+              label: Gross income
             '1491':
-              label: Income íntegros
+              label: Gross income
             '1494':
-              label: Income íntegros
+              label: Gross income
             '1497':
-              label: Income íntegros
+              label: Gross income
             '1500':
-              label: Income íntegros
+              label: Gross income
             '1503':
-              label: Income íntegros
+              label: Gross income
             '1506':
-              label: Income íntegros
+              label: Gross income
             '1509':
-              label: Income íntegros
+              label: Gross income
             '1512':
-              label: Income íntegros
+              label: Gross income
             '1515':
-              label: Income íntegros
+              label: Gross income
             '1518':
-              label: Income íntegros
+              label: Gross income
             '1521':
-              label: Income íntegros
+              label: Gross income
             '1524':
-              label: Income íntegros
+              label: Gross income
             '1527':
-              label: Income íntegros
+              label: Gross income
             '1530':
-              label: Income íntegros
+              label: Gross income
             '1531':
               label: Index
             '1532':
               label: Base product income
             '1533':
-              label: Income íntegros
+              label: Gross income
             '1538':
               label: Depreciation of tangible and intangible fixed assets
             '1539':
-              label: Reduced net income
+              label: Net income after allowances
             '1549':
-              label: Reduction of carácter general (20 for 100 of the amount of the
-                box [1548], if ésta is > 0)
+              label: General reduction (20% of the amount in box [1548], if this is
+                > 0)
             '1550':
               label: Difference ([1548 - [1549])
             '1551':
               label: Reduction for young farmers (sixth additional provision of the
                 Tax Law)
             '1553':
-              label: Rendimiento net of the actividad
+              label: Net income from the activity
             '1554':
               label: Reductions for income generated over more than 2 years or obtained
                 in a markedly irregular manner (artículo 32.1 y D.T 25ª de la Ley
@@ -5472,21 +5484,21 @@ modelo:
               label: Reductions applicable (artículos 23.3 and D.T. 25.ª of the Law
                 of the Impuesto)
             '1577':
-              label: Rendimiento net (estimación directa normal and estimación objetiva)/
-                Rendimiento net previo (estimación directa simplificada)
+              label: Net income (estimación directa normal and estimación objetiva)/
+                Prior net income (estimación directa simplificada)
             '1579':
               label: Deductible provisions and expenses that are difficult to justify
                 (simplified direct estimation only)(*)
             '1580':
-              label: Reduction applicable (article 32.1 and D.T. 25.ª of the Law of
-                the Impuesto)
+              label: Reduction applicable (article 32.1 and Transitional Provision
+                25.a of the Personal Income Tax Law)
             '1583':
               label: Computable net return ([1577] - [1578] - [1579] - [1580] - [1581]
                 - [1582])
             '1588':
-              label: Value of transfer to the that resulta applicable the D.T 9ª
+              label: Value of transfer to which D.T 9ª applies
             '1592':
-              label: Parte of the capital gains susceptibles of reduction (D.T 9ª)
+              label: Part of the capital gains susceptible of reduction (D.T 9ª)
             '1593':
               label: Reductions applicable (D.T. 9ª)
             '1622':
@@ -5516,8 +5528,7 @@ modelo:
               label: Non-exempt gain ( [1640] - [1641] - [1642] - [1643] - [1644]
                 )
             '1646':
-              label: Parte of the ganancia patrimonial susceptible of reduction (D.T.
-                9.ª)
+              label: Part of the capital gain susceptible of reduction (D.T. 9.ª)
             '1648':
               label: Reduction applicable (D.T. 9.ª of the Law of the Impuesto)
           construct:
@@ -5562,8 +5573,8 @@ modelo:
             '0076':
               label: Number of days the property was your primary residence in 2021
             '0103':
-              label: Amount pending of deducir of the tax years 2017, 2018, 2019 and
-                2020 (Cumplimente the anexo C.1)
+              label: Amount pending deduction from tax years 2017, 2018, 2019 and
+                2020 (complete Annex C.1)
             '0105':
               label: Interest on capital invested in the purchase or improvement of
                 the property and other financing expenses in 2021
@@ -5577,16 +5588,16 @@ modelo:
               label: Amount of 2021 pending deduction in the 4 years following (Cumplimente
                 the anexo C.1)
             '0121':
-              label: Date of transfer, in su case, in the tax year 2021, of the inmueble
-                (día, mes and year)
+              label: Date of transfer, if applicable, in the 2021 tax year, of the
+                property (day, month and year)
             0129:
               label: Amount of improvements made in 2021 (breakdown in Annex D, voluntary
                 completion)
             '0134':
               label: Gratuitous (inheritance, legacy, donation, etc.)
             '0136':
-              label: Date of transfer, in su case, in the tax year 2021, of the inmueble
-                (día, mes and year)
+              label: Date of transfer, if applicable, in the 2021 tax year, of the
+                property (day, month and year)
             '0144':
               label: Amount of improvements made in 2021 to the accessory property
                 (breakdown in Annex D, voluntary completion)
@@ -5599,7 +5610,7 @@ modelo:
                 in January, February and March 2021 (Royal Decree-Law 35/2020, of
                 22 December)
             0158:
-              label: NIF of the arrendatario
+              label: NIF of the tenant
             '0207':
               label: For habitual residence in rural areas
             '0210':
@@ -5616,7 +5627,7 @@ modelo:
             0229:
               label: For the birth or adoption of children
             '0245':
-              label: If the marriage was in effect throughout 2021, tick this casilla
+              label: If the marriage was in effect throughout 2021, tick this box
             '0246':
               label: First month in which the marriage was in effect in 2021
             '0247':
@@ -5626,13 +5637,13 @@ modelo:
             '0253':
               label: For donations promoting and encouraging patronage-fostering activities
             '0266':
-              label: Public aid to holders of assets forming part of Spain's Historical
-                Heritage for conservation or restoration purposes. Amount attributable
+              label: Public aid to holders of assets forming part of Spanish Historical
+                Heritage for their conservation or rehabilitation. Amount attributable
                 to 2021 (complete Annex C.1)
             0279:
               label: Public aid for the first establishment of young farmers provided
                 for in the National Rural Development Framework, intended for the
-                acquisition of a shareholding in the capital of agricultural companies.
+                acquisition of a shareholding in the capital of agricultural businesses.
                 Amount attributable to 2021 (complete Annex C.1) (*)
             0299:
               label: Grants for the purchase of officially protected housing or price-capped
@@ -5640,9 +5651,9 @@ modelo:
             '0300':
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2021 (complete Annex C.1) (*)
+                attributable to 2021 (complete Annex C.1) (*)
             '0301':
-              label: Demás capital gains derived of aid públicas. (*)
+              label: Other capital gains arising from public aid. (*)
             '0302':
               label: Capital gains obtained by local residents in 2021 from forestry
                 use of public woodlands
@@ -5651,30 +5662,30 @@ modelo:
                 amount'
             '0306':
               label: Sum of other gains not arising from the transfer of assets (sum
-                of casillas [0299] to [0304] + [0266] + [0279])
+                of boxes [0299] to [0304] + [0266] + [0279])
             0309:
               label: Total accumulated transfer value to which the 9th Transitional
                 Provision (DT 9.ª) has been applied in tax years 2015, 2016, 2017,
                 2018, 2019 and 2020
             '0312':
-              label: Amount global of the transfers efectuadas in 2021
+              label: Total amount of the transfers made in 2021
             '0322':
               label: Capital losses attributable to 2021
             0392:
               label: Amount of the capital gain to be allocated to 2021
             0393:
-              label: Sum of the capital gains derived of transfers efectuadas in tax
-                years previous attributable to 2021 (sum of the boxes [0392] )
+              label: Sum of the capital gains arising from transfers made in prior
+                tax years attributable to 2021 (sum of the boxes [0392])
             0395:
               label: Amount of the capital loss to be allocated to 2021
             0396:
-              label: Sum of the capital losses derived of transfers efectuadas in
-                tax years previous attributable to 2021 (sum of the boxes [0395] )
+              label: Sum of the capital losses arising from transfers made in prior
+                tax years attributable to 2021 (sum of the boxes [0395])
             0399:
               label: Amount of the capital gain to be allocated to 2021
             '0400':
-              label: Sum of imputación to 2021 of capital gains covered to deferral
-                for reinvestment(sum of the boxes [0399] )
+              label: Sum of amounts attributed to 2021 for capital gains covered by
+                deferral for reinvestment (sum of the boxes [0399])
             '0426':
               label: Employer contributions (except those arising from employer contributions
                 to collective dependency insurance) (complete annex C.3)
@@ -5695,7 +5706,8 @@ modelo:
                 to be included in the general taxable base (Complete annex C.2)
             '0433':
               label: Negative net balance of 2021 capital gains and losses included
-                in the general taxable base, limited to 25% of the amount in box ([0432])
+                in the general taxable base, limited to 25% of the amount in box [0432]
+                (transfer the amount from box [0421] if applicable)
             '0434':
               label: Remaining negative net balances of capital gains and losses from
                 2017 to 2020 not derived from transfers, pending offset at 1 January
@@ -5707,8 +5719,7 @@ modelo:
                 to 2021, included in the savings taxable base, limited to 25% of ([0424],
                 [0430])
             '0437':
-              label: Excesos pending of reduce procedentes of the tax years 2016 to
-                2020
+              label: Excess amounts pending reduction from tax years 2016 to 2020
             0439:
               label: Net negative balances of capital gains and losses from 2017,
                 pending offset as at 1 January 2021, to be included in the savings
@@ -5742,7 +5753,8 @@ modelo:
                 not offset in box [0451]) (Complete Annex C.2)
             '0446':
               label: Negative net balances of capital gains and losses attributable
-                to 2021, included in the savings taxable base, limited to 25% of ([0429])
+                to 2021, included in the savings taxable base, limited to 25% of [0429]
+                (transfer the amount from box [0425] if applicable)
             '0447':
               label: Remaining negative net balances of movable-capital income from
                 2020, pending offset at 1 January 2021, to be included in the savings
@@ -5785,9 +5797,9 @@ modelo:
                 taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
                 not offset in box [0441]) (Complete Annex C.2)
             '0460':
-              label: Savings taxable base calculated from boxes ([0424], [0436], [0439],
+              label: Savings taxable base calculated from boxes [0424], [0436], [0439],
                 [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446],
-                [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0449], [0450], [0451], [0452], [0453], [0454], [0455], [0448]
             '0463':
               label: Contributions indiviudales (Cumplimente the anexo C.2)
             '0464':
@@ -5802,8 +5814,7 @@ modelo:
                 [0465] + [0427] + [0466] ) (Límite máximo article 52 of the Law of
                 the Impuesto)
             0468:
-              label: Excesos pending of reduce procedentes of the tax years 2016 to
-                2020
+              label: Excess amounts pending reduction from tax years 2016 to 2020
             '0472':
               label: Excess amounts pending reduction carried over from tax years
                 2016 to 2020 for contributions made by the person with a disability
@@ -5818,17 +5829,16 @@ modelo:
               label: Contributions made in 2021 by relatives or guardians in favour
                 of the person with a disability
             0479:
-              label: Excesos pending of reduce procedentes of the tax years 2017 to
-                2020 (Vea the anexo C.4)
+              label: Excess amounts pending reduction from tax years 2017 to 2020
+                (see Annex C.4)
             0480:
               label: Contributions made in 2021 to the protected estate of the person
                 with a disability
             0485:
               label: Amount of the pension or annuity paid in 2021 under a court decision
             0493:
-              label: For contributions to social welfare schemes in which the spouse
-                is a member, mutual-fund holder or policyholder. Amount from box [0437]
-                applied
+              label: For contributions to social-welfare schemes in which the spouse
+                is a participant, member, or holder. Amount from box [0437] applied
             '0501':
               label: 'Offset (if box [0500] is positive and up to the maximum limit
                 of its amount): General negative net taxable bases from 2017 to 2020
@@ -5843,11 +5853,13 @@ modelo:
                 the savings net taxable base for the purposes of calculating state
                 tax:: the lower of the difference ( [0519] - [0521] ) and box [0510]'
             '0523':
-              label: Personal and family minimum included in the general net taxable
-                base for calculating regional tax, based on boxes ([0505])
+              label: 'Personal and family minimum included in the general net taxable
+                base for calculating regional tax: the lower of boxes [0505] and [0520]
+                (if box [0505] is negative or zero, enter zero in box [0523])'
             '0524':
               label: Personal and family minimum included in the general net taxable
-                base for calculating regional tax, based on boxes ([0520], [0523])
+                base for calculating regional tax, based on boxes [0520], [0523],
+                and [0510]
             '0552':
               label: 'For donations and other contributions (transfer the amounts
                 from these same boxes in Annex A.1): State part'
@@ -5891,7 +5903,7 @@ modelo:
               label: 'Amount of regional deductions to which entitlement was lost
                 in 2021: Regional part'
             '0600':
-              label: Sum of withholdings and payments on account atribuidos of capital
+              label: Sum of withholdings and payments on account attributed to capital
                 gains and losses attributable to 2021 (sum of the boxes [1600])
             '0606':
               label: Withholdings under article 11 of Council Directive 2003/48/EC
@@ -5932,11 +5944,11 @@ modelo:
                 in Spain in 2021 by the other members of the family unit resident
                 in a Member State of the European Union or the European Economic Area
             '0733':
-              label: 'Reserva for Investments in Canarias 2017 (2)(3): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2017 (2)(3): Amount
+                of the allocations'
             '0734':
-              label: 'Reserva for Investments in Canarias 2017 (2)(3): Year of the
-                dotación'
+              label: 'Reserve for Investments in the Canary Islands 2017 (2)(3): Year
+                of the allocation'
             '0735':
               label: 'Reserva for Investments in Canarias 2018 (4): Amount of the
                 allocations'
@@ -5947,7 +5959,8 @@ modelo:
               label: 'Canary Islands Investment Reserve 2018 (4): investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             0738:
-              label: 'Reserva for Investments in Canarias 2019: Amount of the allocations'
+              label: 'Reserve for Investments in the Canary Islands 2019: Amount of
+                the allocations'
             0739:
               label: 'Canary Islands Investment Reserve 2019: investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -5955,7 +5968,8 @@ modelo:
               label: 'Canary Islands Investment Reserve 2019: investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             '0741':
-              label: 'Reserva for Investments in Canarias 2019: Pendiente of materializar'
+              label: 'Reserve for Investments in the Canary Islands 2019: Pending
+                investment'
             '0742':
               label: 'Reserve for Investments in the Canary Islands 2020: amount of
                 allocations'
@@ -5966,7 +5980,8 @@ modelo:
               label: 'Canary Islands Investment Reserve 2020: investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             '0745':
-              label: 'Reserva for Investments in Canarias 2020: Pendiente of materializar'
+              label: 'Reserve for Investments in the Canary Islands 2020: Pending
+                investment'
             '0746':
               label: 'Reserve for Investments in the Canary Islands 2021: amount of
                 allocations'
@@ -5990,18 +6005,20 @@ modelo:
               label: 'For investments in Spanish film productions and audiovisual
                 series (art. 36.1 de la LIS): applied in this return'
             '0777':
-              label: 'Reserva for Investments in Canarias 2017 (2)(3): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2017 (2)(3): Amount
+                of the allocations'
             0778:
-              label: 'Reserva for Investments in Canarias 2017 (2)(3): Amount of the
-                allocations'
+              label: 'Reserve for Investments in the Canary Islands 2017 (2)(3): Amount
+                of the allocations'
             0789:
-              label: 'Reserva for Investments in Canarias 2018 (4): Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2018 (4): Year
+                of the allocation'
             0790:
               label: 'Canary Islands Investment Reserve 2018 (4): investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             0792:
-              label: 'Reserva for Investments in Canarias 2019: Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2019: Year of
+                the allocation'
             0794:
               label: 'Reserve for Investments in the Canary Islands 2020: allocation
                 year'
@@ -6058,8 +6075,11 @@ modelo:
                 applied in this return'
             0845:
               label: Total amount of deductions for incentives to business investment
-                applied in this return, based on boxes ([0752], [0759], [0764], [0767],
-                [0776], [0780])
+                applied in this return (sum of boxes [0752] to [0759], [0764] to [0767],
+                [0776], [0780], [0783], [0784], [0788], [0791], [0793], [0795] to
+                [0798], [0800], [0801], [0804], [0808], [0809], [0810], [0815], [0817],
+                [1686] to [1721], [0836], [0837] to [0841], [0843], [0844], [1727]
+                to [1729])
             0846:
               label: For displacement caused by the volcanic eruption on the island
                 of La Palma
@@ -6067,7 +6087,7 @@ modelo:
               label: For the temporary and free assignment of use of properties located
                 on the island of La Palma
             0848:
-              label: For expenses of enfermedad for residents in the Isla of the Palma
+              label: For illness expenses for residents of the Island of La Palma
             0853:
               label: For amounts invested in renting a primary residence (this amount
                 is transferred to box [1130] of Annex B.8)
@@ -6086,10 +6106,10 @@ modelo:
               label: For investment in social economy entities (transfer the amount
                 from box [1179] of Annex B.8
             0886:
-              label: Amount of the deduction
+              label: Deduction amount
             0887:
-              label: For the arrendamiento of primary residence (is traslada este
-                amount to the box [1130] of the anexo B.8)
+              label: For the renting of a primary residence (this amount is transferred
+                to box [1130] of Annex B.8)
             0903:
               label: For investment in the purchase of shares or equity interests
                 in new or recently created entities (this amount is transferred to
@@ -6133,8 +6153,8 @@ modelo:
               label: For renting a primary residence for taxpayers under 36 years
                 old (this amount is transferred to box [1130] of Annex B.8)
             0975:
-              label: For renting of primary residence for taxpayers menores of 36
-                years (is traslada este amount to the box [1130] of the anexo B.8)
+              label: For renting a primary residence for taxpayers under 36 years
+                of age (this amount is transferred to box [1130] of Annex B.8)
             0979:
               label: For promoting entrepreneurship (transfer the amount from box
                 [1136] of Annex B.8)
@@ -6166,8 +6186,8 @@ modelo:
                 or equity interests in new or recently created entities (this amount
                 is transferred to box [1136] of Annex B.8)
             '1019':
-              label: For arrendamiento of primary residence (is traslada este amount
-                to the box [1130] of the anexo B.8)
+              label: For renting a primary residence (this amount is transferred to
+                box [1130] of Annex B.8)
             '1026':
               label: For renting a primary residence by taxpayers aged 35 or under
                 (this amount is transferred to box [1130] of Annex B.8)
@@ -6187,8 +6207,8 @@ modelo:
               label: For investment in businesses carrying out agricultural activities
                 (transfer the amount from box [1154] of Annex B.8)
             '1043':
-              label: For arrendamiento of primary residence (is traslada este amount
-                to the box [1130] of the anexo B.8)
+              label: For renting a primary residence (this amount is transferred to
+                box [1130] of Annex B.8)
             '1046':
               label: For investment in the purchase of shares and equity interests
                 in new or recently created entities (this amount is transferred to
@@ -6205,14 +6225,14 @@ modelo:
                 Market (this amount is transferred to box [1142] of Annex B.8)
             '1078':
               label: Amount paid in 2019 and/or 2020 pending application (for investments
-                in cualquier type of vivienda or edificio dónde is ubique)
+                in any type of housing or the building where it is located)
             '1095':
               label: For amounts invested in renting a primary residence (this amount
                 is transferred to box [1130] of Annex B.8)
             '1114':
               label: Total amount of the deduction ([1116] + [1119] + [1185] + [1207])
             '1116':
-              label: Amount paid in 2017 and/or 2018 that is aplica in the tax year
+              label: Amount paid in 2017 and/or 2018 that is applied in the tax year
             '1117':
               label: Amount paid in 2018 pending application in future tax years
             '1118':
@@ -6225,16 +6245,16 @@ modelo:
               label: For renting a primary residence for taxpayers under 36 years
                 old (transfer the amount from box [1130] of Annex B.8
             '1178':
-              label: Total amount of the amountis invertidas with right to a deduction
-                (sum of the boxes [1175] + [1177])
+              label: Total amount of the sums invested with right to a deduction (sum
+                of the boxes [1175] + [1177])
             '1182':
               label: Amount generated in 2021
             '1183':
-              label: Amount of the deduction
+              label: Deduction amount
             '1184':
               label: Amount generated in 2021 pending application
             '1185':
-              label: Amount paid in 2019 and/or 2020 that is aplica in the tax year
+              label: Amount paid in 2019 and/or 2020 that applies in the tax year
             '1186':
               label: Amount paid in 2019 and/or 2020 pending application in future
                 tax years
@@ -6245,7 +6265,7 @@ modelo:
             '1208':
               label: Amount paid in 2021 pending application in future tax years
             '1209':
-              label: Tax ID (NIF) of the otro progenitor 1
+              label: Tax ID (NIF) of the other parent 1
             '1213':
               label: 'Tax year 2017: pending application to the start of the period'
             '1214':
@@ -6273,11 +6293,11 @@ modelo:
                 improvement of the property and repair and maintenance expenses (transfer
                 the amount from box [0108] )
             '1228':
-              label: Amount reinvertido hasta the 31-12-2021 in the acquisition of
-                a new primary residence
+              label: Amount reinvested up to 31-12-2021 in the acquisition of a new
+                primary residence
             '1234':
-              label: Amount reinvertido hasta the 31-12-2021 in the acquisition of
-                shares or holdings of a entity new or of recent creation
+              label: Amount reinvested up to 31-12-2021 in the acquisition of shares
+                or holdings in a new or recently created entity
             '1235':
               label: Amount that the taxpayer is undertakes to reinvertir in 2022,
                 in the year following to the transfer, in shares or holdings of a
@@ -6367,7 +6387,7 @@ modelo:
             '1283':
               label: Negative balance of movable-capital income attributable to 2021,
                 included in the savings taxable base and pending offset in the next
-                four tax years, based on boxes ([0430])
+                four tax years, based on boxes [0430] and [0436]
             '1285':
               label: 'Tax year 2016: pending application to the start of the period'
             '1286':
@@ -6578,7 +6598,7 @@ modelo:
                 areas at risk of depopulation, for taxpayers up to 35 years old, large
                 families and single-parent families
             '1595':
-              label: Capital gains reducidas not exempt attributable to 2021
+              label: Reduced capital gains not exempt attributable to 2021
             '1600':
               label: Atribución of withholdings of capital gains and losses attributable
                 to 2021
@@ -6620,7 +6640,8 @@ modelo:
               label: 'Reserva for Investments in Canarias 2016 (1): Amount of the
                 allocations'
             '1682':
-              label: 'Reserva for Investments in Canarias 2016 (1): Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2016 (1): Year
+                of the allocation'
             '1683':
               label: 'Canary Islands Investment Reserve 2018 (4): investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
@@ -6698,8 +6719,8 @@ modelo:
             '1758':
               label: 'Tax year 2021: personal contributions applied in this return'
             '1759':
-              label: 'Tax year 2021: Contributions personales pending of application
-                in future tax years'
+              label: 'Tax year 2021: Personal contributions pending application in
+                future tax years'
             '1760':
               label: Taxpayer entitled to reduction
             '1761':
@@ -6707,8 +6728,8 @@ modelo:
             '1762':
               label: 'Tax year 2021: employer contributions applied in this return'
             '1763':
-              label: 'Tax year 2021: Contributions empresariales pending of application
-                in future tax years'
+              label: 'Tax year 2021: Employer contributions pending application in
+                future tax years'
             '1780':
               label: IBAN (amendment)
             '1781':
@@ -6781,8 +6802,8 @@ modelo:
             '0076':
               label: Number of days the property was your primary residence in 2022
             '0103':
-              label: Amount pending of deducir of the tax years 2018, 2019, 2020 and
-                2021 (Cumplimente the anexo C.1)
+              label: Amount pending deduction from tax years 2018, 2019, 2020 and
+                2021 (complete Annex C.1)
             '0105':
               label: Interest on capital invested in the purchase or improvement of
                 the property and other financing expenses in 2022
@@ -6796,16 +6817,16 @@ modelo:
               label: Amount of 2022 pending deduction in the 4 years following (Cumplimente
                 the anexo C.1)
             '0121':
-              label: Date of transfer, in su case, in the tax year 2022, of the inmueble
-                (día, mes and year)
+              label: Date of transfer, if applicable, in the 2022 tax year, of the
+                property (day, month and year)
             0129:
               label: Amount of improvements made in 2022 (breakdown in Annex D, voluntary
                 completion)
             '0134':
               label: Gratuitous (inheritance, legacy, donation, etc.)
             '0136':
-              label: Date of transfer, in su case, in the tax year 2022, of the inmueble
-                (día, mes and year)
+              label: Date of transfer, if applicable, in the 2022 tax year, of the
+                property (day, month and year)
             '0144':
               label: Amount of improvements made in 2022 to the accessory property
                 (breakdown in Annex D, voluntary completion)
@@ -6823,10 +6844,10 @@ modelo:
               label: Input VAT (for example, equivalence surcharge and/or compensation
                 for agriculture, livestock and fishing)
             0229:
-              label: For arrendamiento of primary residence for persons with disabilities
-                (traslade the amount of the box [1130] of the anexo B.8)
+              label: For renting a primary residence by persons with disabilities
+                (transfer the amount from box [1130] of Annex B.8)
             '0245':
-              label: If the marriage was in effect throughout 2022, tick this casilla
+              label: If the marriage was in effect throughout 2022, tick this box
             '0246':
               label: First month in which the marriage was in effect in 2022
             '0247':
@@ -6834,8 +6855,8 @@ modelo:
             0249:
               label: Amount of the advance payment of the deduction for 2022 (*)
             '0266':
-              label: Public aid to holders of assets forming part of Spain's Historical
-                Heritage for conservation or restoration purposes. Amount attributable
+              label: Public aid to holders of assets forming part of Spanish Historical
+                Heritage for their conservation or rehabilitation. Amount attributable
                 to 2022 (complete Annex C.1)
             0279:
               label: Public aid for the first establishment of young farmers provided
@@ -6850,7 +6871,7 @@ modelo:
             '0300':
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2022 (complete Annex C.1) (*)
+                attributable to 2022 (complete Annex C.1) (*)
             '0302':
               label: Capital gains obtained by local residents in 2022 from forestry
                 use of public woodlands
@@ -6865,7 +6886,7 @@ modelo:
                 Provision (DT 9.ª) has been applied in tax years 2015, 2016, 2017,
                 2018, 2019, 2020 and 2021
             '0312':
-              label: Amount global of the transfers efectuadas in 2022
+              label: Total amount of the transfers made in 2022
             '0322':
               label: Capital losses attributable to 2022
             '0356':
@@ -6874,20 +6895,20 @@ modelo:
             0392:
               label: Amount of the capital gain to be allocated to 2022
             0393:
-              label: Sum of the capital gains derived of transfers efectuadas in tax
-                years previous attributable to 2022 (sum of the boxes [0392] )
+              label: Sum of the capital gains arising from transfers made in prior
+                tax years attributable to 2022 (sum of the boxes [0392])
             0395:
               label: Amount of the capital loss to be allocated to 2022
             0396:
-              label: Sum of the capital losses derived of transfers efectuadas in
-                tax years previous attributable to 2022 (sum of the boxes [0395] )
+              label: Sum of the capital losses arising from transfers made in prior
+                tax years attributable to 2022 (sum of the boxes [0395])
             0397:
               label: NIF of the employment-based pension plan
             0399:
               label: Amount of the capital gain to be allocated to 2022
             '0400':
-              label: Sum of imputación to 2022 of capital gains covered to deferral
-                for reinvestment(sum of the boxes [0399] )
+              label: Sum of amounts attributed to 2022 for capital gains covered by
+                deferral for reinvestment (sum of the boxes [0399])
             '0422':
               label: Sum of capital gains ([1608] + [0324] + [0339] + [0354] + [1814]
                 + [1845] + [1846] + [0386] + [0387] + [0390] + [0393] + [0412])
@@ -6916,7 +6937,8 @@ modelo:
                 to be included in the general taxable base (Complete annex C.2)
             '0433':
               label: Negative net balance of 2022 capital gains and losses included
-                in the general taxable base, limited to 25% of the amount in box ([0432])
+                in the general taxable base, limited to 25% of the amount in box [0432]
+                (transfer the amount from box [0421] if applicable)
             '0434':
               label: Remaining negative net balances of capital gains and losses from
                 2018 to 2021 not derived from transfers, pending offset at 1 January
@@ -6928,8 +6950,7 @@ modelo:
                 to 2022, included in the savings taxable base, limited to 25% of ([0424],
                 [0430])
             '0437':
-              label: Excesos pending of reduce procedentes of the tax years 2017 to
-                2021
+              label: Excess amounts pending reduction from tax years 2017 to 2021
             0438:
               label: Contributions made by the company deriving from a worker decision
             0439:
@@ -6965,7 +6986,8 @@ modelo:
                 not offset in box [0451]) (Complete Annex C.2)
             '0446':
               label: Negative net balances of capital gains and losses attributable
-                to 2022, included in the savings taxable base, limited to 25% of ([0429])
+                to 2022, included in the savings taxable base, limited to 25% of [0429]
+                (transfer the amount from box [0425] if applicable)
             '0447':
               label: Remaining negative net balances of movable-capital income from
                 2021, pending offset at 1 January 2022, to be included in the savings
@@ -7008,9 +7030,9 @@ modelo:
                 taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
                 not offset in box [0441]) (Complete Annex C.2)
             '0460':
-              label: Savings taxable base calculated from boxes ([0424], [0436], [0439],
+              label: Savings taxable base calculated from boxes [0424], [0436], [0439],
                 [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446],
-                [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0449], [0450], [0451], [0452], [0453], [0454], [0455], [0448]
             '0461':
               label: Reduction for family units opting for joint taxation. Amount
             '0463':
@@ -7044,19 +7066,18 @@ modelo:
               label: Contributions made in 2022 by relatives or guardians in favour
                 of the person with a disability
             0479:
-              label: Excesos pending of reduce procedentes of the tax years 2018 to
-                2021 (Vea the anexo C.3)
+              label: Excess amounts pending reduction from tax years 2018 to 2021
+                (see Annex C.3)
             0480:
               label: Contributions made in 2022 to the protected estate of the person
                 with a disability
             0485:
               label: Amount of the pension or annuity paid in 2022 under a court decision
             0488:
-              label: Excesos pending of reduce procedentes of the tax years 2017 to
-                2021 (Vea the anexo C.4)
+              label: Excesses pending reduction from the 2017 to 2021 tax years (see
+                Annex C.4)
             0489:
-              label: Contributions and contributions realizadas in 2022 with right
-                to reduction
+              label: Contributions and payments made in 2022 with right to reduction
             0499:
               label: Contributions from sole traders to occupational pension schemes
                 or social welfare mutual funds, of which they are both promoter and
@@ -7084,7 +7105,7 @@ modelo:
                 amounts from these same boxes in Annex A.5): Regional part'
             '0564':
               label: 'Sum of regional deductions (transfer the amount from this same
-                casilla in annex B.1, B.2, B.3, B.4, B.5 or B.6, as applicable): Regional
+                box in annex B.1, B.2, B.3, B.4, B.5 or B.6, as applicable): Regional
                 part'
             '0565':
               label: 'Deduction applicable to family units made up of tax residents
@@ -7135,7 +7156,7 @@ modelo:
               label: 'Increased regional net tax liability ( [0586] = [0571] + [0569]
                 + [0583] + [0577] + [0578] + [0579] + [0581] ): Regional part'
             '0600':
-              label: Sum of withholdings and payments on account atribuidos of capital
+              label: Sum of withholdings and payments on account attributed to capital
                 gains and losses attributable to 2022 (sum of the boxes [1600])
             '0601':
               label: Sum of imputed withholdings and payments on account (sum of boxes
@@ -7151,9 +7172,9 @@ modelo:
             '0663':
               label: Amount of the advance payment of the deduction for 2022 (*)
             '0670':
-              label: Return result calculated from boxes ([0610], [0611], [0612],
-                [0613], [1912], [1913], [1915], [1916], [0623], [0624], [0636], [0637],
-                [0248], [0249], [0660], [0661], [0662], [0663])
+              label: Return result calculated from boxes [0610], [0611], [0612], [0613],
+                [1912], [1913], [1915], [1916], [0623], [0624], [0636], [0637], [0248],
+                [0249], [0660], [0661], [0662], [0663], [0664], [0666]
             '0676':
               label: Amounts payable from the previous self-assessments or administrative
                 assessments for tax year 2022
@@ -7174,7 +7195,8 @@ modelo:
               label: 'Reserva for Investments in Canarias 2018 (2): Amount of the
                 allocations'
             '0734':
-              label: 'Reserva for Investments in Canarias 2018 (2): Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2018 (2): Year
+                of the allocation'
             '0735':
               label: 'Reserva for Investments in Canarias 2019 (2): Amount of the
                 allocations'
@@ -7194,7 +7216,8 @@ modelo:
               label: 'Canary Islands Investment Reserve 2020 (2): investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             '0741':
-              label: 'Reserva for Investments in Canarias 2020 (2): Pendiente of materializar'
+              label: 'Reserve for Investments in the Canary Islands 2020 (2): Pending
+                investment'
             '0742':
               label: 'Reserve for Investments in the Canary Islands 2021: amount of
                 allocations'
@@ -7207,7 +7230,8 @@ modelo:
             '0745':
               label: 'Canary Islands Investment Reserve 2021: pending materialization'
             '0746':
-              label: 'Reserva for Investments in Canarias 2022 : Amount of the allocations'
+              label: 'Reserve for Investments in the Canary Islands 2022: Amount of
+                the allocations'
             '0747':
               label: 'Canary Islands Investment Reserve 2022: investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -7215,7 +7239,8 @@ modelo:
               label: 'Canary Islands Investment Reserve 2022: investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             0749:
-              label: 'Reserva for Investments in Canarias 2022 : Pendiente of materializar'
+              label: 'Reserve for Investments in the Canary Islands 2022: Pending
+                materialization'
             '0750':
               label: 'Advance investments of future allocations to the Canary Islands
                 Investment Reserve (RIC), made in 2022: investments provided for in
@@ -7239,17 +7264,21 @@ modelo:
               label: 'Canary Islands Investment Reserve 2018 (2): investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             0789:
-              label: 'Reserva for Investments in Canarias 2019 (2): Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2019 (2): Year
+                of the allocation'
             0790:
-              label: 'Reserva for Investments in Canarias 2019 (2): Pendiente of materializar'
+              label: 'Reserve for Investments in the Canary Islands 2019 (2): Pending
+                investment'
             0792:
-              label: 'Reserva for Investments in Canarias 2020 (2): Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2020 (2): Year
+                of the allocation'
             0794:
               label: 'Canary Islands Investment Reserve 2021: year of allocation'
             0800:
               label: Amount generated in 2021 pending application
             0802:
-              label: 'Reserva for Investments in Canarias 2022 : Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2022: Year of
+                the allocation'
             0803:
               label: For the birth or adoption of second and subsequent children in
                 municipalities at risk of depopulation
@@ -7278,7 +7307,8 @@ modelo:
               label: For investments or donations to Social Economy entities established
                 in Cantabria (transfer the amount from box [1179] of Annex B.8)
             0829:
-              label: 'Reserva for Investments in Canarias 2018 (2): Pendiente of materializar'
+              label: 'Reserve for Investments in the Canary Islands 2018 (2): Pending
+                investment'
             0830:
               label: Amount of net income from economic activities obtained in 2021
                 that is invested in new assets assigned to the activity
@@ -7306,8 +7336,11 @@ modelo:
                 applied in this return'
             0845:
               label: Total amount of deductions for incentives to business investment
-                applied in this return, based on boxes ([0752], [0768], [0776], [0780],
-                [0788], [0791])
+                applied in this return (sum of boxes [0752] to [0768], [0776], [0780]
+                to [0788], [0791], [0793], [0796] to [0798], [0809], [0815], [0817],
+                [0843], [1686] to [1691], [1693] to [1695], [1697], [1708], [1710]
+                to [1721], [0706], [0707], [0773], [0779], [1623], [1627] to [1630],
+                [0836], [0837] to [0841], [0844], [1727] to [1729])
             0853:
               label: For amounts invested in renting a primary residence (this amount
                 is transferred to box [1130] of Annex B.8)
@@ -7326,10 +7359,10 @@ modelo:
               label: For investment in social economy entities (transfer the amount
                 from box [1179] of Annex B.8
             0886:
-              label: Amount of the deduction
+              label: Deduction amount
             0887:
-              label: For the arrendamiento of primary residence (is traslada este
-                amount to the box [1130] of the anexo B.8)
+              label: For the renting of a primary residence (this amount is transferred
+                to box [1130] of Annex B.8)
             0903:
               label: For investment in the purchase of shares or equity interests
                 in new or recently created entities (this amount is transferred to
@@ -7367,8 +7400,8 @@ modelo:
               label: For renting a primary residence for taxpayers under 36 years
                 old (this amount is transferred to box [1130] of Annex B.8)
             0975:
-              label: For renting of primary residence for taxpayers menores of 36
-                years (is traslada este amount to the box [1130] of the anexo B.8)
+              label: For renting a primary residence for taxpayers under 36 years
+                of age (this amount is transferred to box [1130] of Annex B.8)
             0979:
               label: For promoting entrepreneurship (amount from box [1136] of Annex
                 B.8)
@@ -7387,8 +7420,8 @@ modelo:
               label: For multiple births or simultaneous adoptions occurring in 2020
                 and/or 2021
             0991:
-              label: For arrendamiento of primary residence (amount of the box [1130]
-                of the anexo B.8)
+              label: For renting a primary residence (amount from box [1130] of Annex
+                B.8)
             0997:
               label: Amount generated in 2020 pending application
             0998:
@@ -7403,8 +7436,8 @@ modelo:
                 or equity interests in new or recently created entities (this amount
                 is transferred to box [1136] of Annex B.8)
             '1019':
-              label: For arrendamiento of primary residence (is traslada este amount
-                to the box [1130] of the anexo B.8)
+              label: For renting a primary residence (this amount is transferred to
+                box [1130] of Annex B.8)
             '1026':
               label: For renting a primary residence by taxpayers aged 35 or under
                 (this amount is transferred to box [1130] of Annex B.8)
@@ -7424,8 +7457,8 @@ modelo:
               label: For investment in businesses carrying out agricultural activities
                 (transfer the amount from box [1154] of Annex B.8)
             '1043':
-              label: For arrendamiento of primary residence (is traslada este amount
-                to the box [1130] of the anexo B.8)
+              label: For renting a primary residence (this amount is transferred to
+                box [1130] of Annex B.8)
             '1046':
               label: For investment in the purchase of shares and equity interests
                 in new or recently created entities (this amount is transferred to
@@ -7442,21 +7475,21 @@ modelo:
                 Market (this amount is transferred to box [1142] of Annex B.8)
             '1078':
               label: Amount paid in 2019 and/or 2020 pending application (for investments
-                in cualquier type of vivienda or edificio dónde is ubique)
+                in any type of housing or the building where it is located)
             '1095':
-              label: For arrendamiento of the primary residence (is traslada este
-                amount to the box [1130] of the anexo B.8)
+              label: For renting the primary residence (this amount is transferred
+                to box [1130] of Annex B.8)
             '1110':
-              label: Amount of the deduction
+              label: Deduction amount
             '1114':
               label: For investment in electricity self-consumption or renewable-energy
-                installations at the dwelling or building where they are located,
-                based on box ([1114])
+                installations at the dwelling or building where they are located (amount
+                from box [1114] of Annex B.9)
             '1115':
               label: Amount paid in 2018 pending application (sólo for investments
                 in the primary residence or edificio dónde is ubique)
             '1116':
-              label: Amount paid in 2018 that is aplica in the tax year
+              label: Amount paid in 2018 that is applied in the tax year
             '1117':
               label: Amount applied in the tax year
             '1118':
@@ -7469,11 +7502,10 @@ modelo:
               label: For renting a primary residence for taxpayers under 36 years
                 old (transfer the amount from box [1130] of Annex B.8
             '1178':
-              label: Total amount of the amountis invertidas with right to a deduction
-                (sum of the boxes [1175] + [1177])
+              label: Total amount of the sums invested with right to a deduction (sum
+                of the boxes [1175] + [1177])
             '1182':
-              label: Amount generated in 2022(amount of the box [1136] of the anexo
-                B.8 )
+              label: Amount generated in 2022 (amount of box [1136] of Annex B.8)
             '1183':
               label: For investment in the purchase of shares or equity interests
                 in new or recently created entities (sum of boxes [0808] + [1117])
@@ -7512,11 +7544,11 @@ modelo:
                 improvement of the property and repair and maintenance expenses (transfer
                 the amount from box [0108] )
             '1228':
-              label: Amount reinvertido hasta the 31-12-2022 in the acquisition of
-                a new primary residence
+              label: Amount reinvested up to 31-12-2022 in the acquisition of a new
+                primary residence
             '1234':
-              label: Amount reinvertido hasta the 31-12-2022 in the acquisition of
-                shares or holdings of a entity new or of recent creation
+              label: Amount reinvested up to 31-12-2022 in the acquisition of shares
+                or holdings in a new or recently created entity
             '1235':
               label: Amount that the taxpayer is undertakes to reinvertir in 2023,
                 in the year following to the transfer, in shares or holdings of a
@@ -7606,7 +7638,7 @@ modelo:
             '1283':
               label: Negative balance of movable-capital income attributable to 2022,
                 included in the savings taxable base and pending offset in the next
-                four tax years, based on boxes ([0430])
+                four tax years, based on boxes [0430] and [0436]
             '1285':
               label: 'Tax year 2017: pending application to the start of the period'
             '1286':
@@ -7872,7 +7904,7 @@ modelo:
               label: For the purchase or renovation of a primary residence in municipalities
                 at risk of depopulation
             '1595':
-              label: Capital gains reducidas not exempt attributable to 2022
+              label: Reduced capital gains not exempt attributable to 2022
             '1600':
               label: Atribución of withholdings of capital gains and losses attributable
                 to 2022
@@ -7886,7 +7918,7 @@ modelo:
             '1628':
               label: '"Global Mobility Call": applied in this return'
             '1635':
-              label: Amount paid in 2021 that is aplica in the tax year
+              label: Amount paid in 2021 that is applied in the tax year
             '1639':
               label: Capital loss imputable to 2022
             '1643':
@@ -7897,9 +7929,9 @@ modelo:
             '1654':
               label: Reduced non-exempt capital gain attributable to 2022
             '1660':
-              label: Amountis paid in 2022 (respecto of cada inmueble) (*) (**)
+              label: Amounts paid in 2022 (in respect of each property) (*) (**)
             '1668':
-              label: Amountis paid in 2022 (respecto of cada inmueble) (*) (**)
+              label: Amounts paid in 2022 (in respect of each property) (*) (**)
             '1677':
               label: Amountis paid in 2022 (respecto of cada inmueble) (*)
             '1680':
@@ -7910,10 +7942,11 @@ modelo:
               label: 'Reserva for Investments in Canarias 2017 (1)(2)(3): Amount of
                 the allocations'
             '1682':
-              label: 'Reserva for Investments in Canarias 2017 (1)(2)(3): Year of
-                the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2017 (1)(2)(3):
+                Year of the allocation'
             '1683':
-              label: 'Reserva for Investments in Canarias 2016 (1): Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2016 (1): Year
+                of the allocation'
             '1684':
               label: 'Canary Islands Investment Reserve 2017 (1)(2)(3): investments
                 provided for in points A, B, B bis and D (1st) of Article 27.4'
@@ -7934,7 +7967,7 @@ modelo:
               label: To mitigate the impact of inflation on the purchase of basic
                 goods in 2022
             '1777':
-              label: Base of the deduction aplicada in 2021
+              label: Base of the deduction applied in 2021
             '1778':
               label: Excess amounts pending deduction carried over from tax year 2021
             '1779':
@@ -7951,8 +7984,7 @@ modelo:
             '1836':
               label: Non-exempt gain ( [1826] - [1830] - [1834] - [1835] )
             '1837':
-              label: Parte of the ganancia patrimonial susceptible of reduction (D.T.
-                9.ª)
+              label: Part of the capital gain susceptible of reduction (D.T. 9.ª)
             '1839':
               label: Reduction applicable (D.T. 9.ª of the Law of the Impuesto)
             '1841':
@@ -7974,14 +8006,14 @@ modelo:
             '1856':
               label: 'Tax year 2021: pending application in future tax years'
             '1859':
-              label: Nº total years of cobro
+              label: Total number of years of collection
             '1881':
-              label: Nº total years of cobro
+              label: Total number of years of collection
             '1907':
               label: To offset the effects of inflation
             '1909':
-              label: For investment in entityis of the economía social (amount of
-                the box [1179] of the anexo B.8)
+              label: For investment in entities of the social economy (amount from
+                box [1179] of Annex B.8)
             '1911':
               label: Number of children giving entitlement to the maternity deduction
             '1912':
@@ -7993,8 +8025,8 @@ modelo:
             '1914':
               label: Number of children giving entitlement to the maternity deduction
             '1915':
-              label: Incremento of the deduction (amountis no aplicadas in the tax
-                year 2021)
+              label: Increase in the deduction (amounts not applied in the 2021 tax
+                year)
             '1916':
               label: Increase for expenses in authorised nurseries or early years
                 education centres (amounts not applied in tax year 2021)
@@ -8053,14 +8085,15 @@ modelo:
                 received in 2023, whose yield is subject to D.T.4.ª
             '0057':
               label: Reduction for income under the XXXVII America's Cup Barcelona
-                tax regime
+                tax regime (Thirty-sixth final provision of Law 31/2022 on the 2023
+                General State Budget)
             '0070':
               label: Primary residence in 2023
             '0076':
               label: Number of days the property was your primary residence in 2023
             '0103':
-              label: Amount pending of deducir of the tax years 2019, 2020, 2021 and
-                2022 (Cumplimente the anexo C.1)
+              label: Amount pending deduction from tax years 2019, 2020, 2021 and
+                2022 (complete Annex C.1)
             '0105':
               label: Interest on capital invested in the purchase or improvement of
                 the property and other financing expenses in 2023
@@ -8076,16 +8109,16 @@ modelo:
             '0113':
               label: Services and supplies (electricity, water, internet, gas...)
             '0121':
-              label: Date of transfer, in su case, in the tax year 2023, of the inmueble
-                (día, mes and year)
+              label: Date of transfer, if applicable, in the 2023 tax year, of the
+                property (day, month and year)
             0129:
               label: Amount of improvements made in 2023 (breakdown in Annex D, voluntary
                 completion)
             '0134':
               label: Gratuitous (inheritance, legacy, donation, etc.)
             '0136':
-              label: Date of transfer, in su case, in the tax year 2023, of the inmueble
-                (día, mes and year)
+              label: Date of transfer, if applicable, in the 2023 tax year, of the
+                property (day, month and year)
             '0144':
               label: Amount of improvements made in 2023 to the accessory property
                 (breakdown in Annex D, voluntary completion)
@@ -8108,14 +8141,14 @@ modelo:
             '0226':
               label: Reduced net income ([0224] - [0225] - [0236])
             0229:
-              label: For arrendamiento of primary residence for persons with disabilities
-                (traslade the amount of the box [1130] of the anexo B.8)
+              label: For renting a primary residence by persons with disabilities
+                (transfer the amount from box [1130] of Annex B.8)
             '0236':
               label: Reduction of income covered by the tax regime for the "XXXVII
                 America's Cup Barcelona" event (thirty-sixth final provision of Law
                 31/2022 on the 2023 State Budget)
             '0245':
-              label: If the marriage was in effect throughout 2023, tick this casilla
+              label: If the marriage was in effect throughout 2023, tick this box
             '0246':
               label: First month in which the marriage was in effect in 2023
             '0247':
@@ -8123,8 +8156,8 @@ modelo:
             0249:
               label: Amount of the advance payment of the deduction for 2023 (*)
             '0266':
-              label: Public aid to holders of assets forming part of Spain's Historical
-                Heritage for conservation or restoration purposes. Amount attributable
+              label: Public aid to holders of assets forming part of Spanish Historical
+                Heritage for their conservation or rehabilitation. Amount attributable
                 to 2023 (complete Annex C.1)
             0279:
               label: Public aid for the first establishment of young farmers provided
@@ -8139,7 +8172,7 @@ modelo:
             '0300':
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2023 (complete Annex C.1) (*)
+                attributable to 2023 (complete Annex C.1) (*)
             '0302':
               label: Capital gains obtained by local residents in 2023 from forestry
                 use of public woodlands
@@ -8154,11 +8187,11 @@ modelo:
                 Provision (DT 9.ª) has been applied in tax years 2015, 2016, 2017,
                 2018, 2019, 2020 and 2021
             '0312':
-              label: Amount global of the transfers efectuadas in 2023
+              label: Total amount of the transfers made in 2023
             '0322':
               label: Capital losses attributable to 2023
             0328:
-              label: Amount global of the transfers efectuadas in 2023
+              label: Total amount of the transfers made in 2023
             0339:
               label: Sum of capital gains arising from transfers of traded shares
                 (sum of boxes [0336])
@@ -8173,18 +8206,18 @@ modelo:
             0392:
               label: Amount of the capital gain to be allocated to 2023
             0393:
-              label: Sum of the capital gains derived of transfers efectuadas in tax
-                years previous attributable to 2023 (sum of the boxes [0392] )
+              label: Sum of the capital gains arising from transfers made in prior
+                tax years attributable to 2023 (sum of the boxes [0392])
             0395:
               label: Amount of the capital loss to be allocated to 2023
             0396:
-              label: Sum of the capital losses derived of transfers efectuadas in
-                tax years previous attributable to 2023 (sum of the boxes [0395] )
+              label: Sum of the capital losses arising from transfers made in prior
+                tax years attributable to 2023 (sum of the boxes [0395])
             0399:
               label: Amount of the capital gain to be allocated to 2023
             '0400':
-              label: Sum of imputación to 2023 of capital gains covered to deferral
-                for reinvestment(sum of the boxes [0399] )
+              label: Sum of the 2023 allocation of capital gains subject to deferral
+                for reinvestment (sum of boxes [0399])
             '0416':
               label: If the taxpayers, members of entities not resident in Spain,
                 were affected in 2023 by merger, spin-off or securities-exchange operations
@@ -8217,7 +8250,8 @@ modelo:
                 to be included in the general taxable base (Complete annex C.3)
             '0433':
               label: Negative net balance of 2023 capital gains and losses included
-                in the general taxable base, limited to 25% of the amount in box ([0432])
+                in the general taxable base, limited to 25% of the amount in box [0432]
+                (transfer the amount from box [0421] if applicable)
             '0434':
               label: Remaining negative net balances of capital gains and losses from
                 2019 to 2022 not derived from transfers, pending offset at 1 January
@@ -8229,8 +8263,7 @@ modelo:
                 to 2023, included in the savings taxable base, limited to 25% of ([0424],
                 [0430])
             '0437':
-              label: Excesos pending of reduce procedentes of the tax years 2018 to
-                2022
+              label: Excess amounts pending reduction from tax years 2018 to 2022
             0439:
               label: Net negative balances of capital gains and losses from 2019,
                 pending offset as at 1 January 2023, to be included in the savings
@@ -8264,7 +8297,8 @@ modelo:
                 not offset in box [0451]) (Complete Annex C.3)
             '0446':
               label: Negative net balances of capital gains and losses attributable
-                to 2023, included in the savings taxable base, limited to 25% of ([0429])
+                to 2023, included in the savings taxable base, limited to 25% of [0429]
+                (transfer the amount from box [0425] if applicable)
             '0447':
               label: Remaining negative net balances of movable-capital income from
                 2022, pending offset at 1 January 2023, to be included in the savings
@@ -8307,9 +8341,9 @@ modelo:
                 taxable base, limited to 25 per cent of [0429] (*) (outstanding balance
                 not offset in box [0441]) (Complete Annex C.3)
             '0460':
-              label: Savings taxable base calculated from boxes ([0424], [0436], [0439],
+              label: Savings taxable base calculated from boxes [0424], [0436], [0439],
                 [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446],
-                [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0449], [0450], [0451], [0452], [0453], [0454], [0455], [0448]
             '0461':
               label: Reduction for family units opting for joint taxation. Amount
             0468:
@@ -8328,19 +8362,18 @@ modelo:
               label: Contributions made in 2023 by relatives or guardians in favour
                 of the person with a disability
             0479:
-              label: Excesos pending of reduce procedentes of the tax years 2019 to
-                2022 (cumplimente the anexo C.4)
+              label: Excess amounts pending reduction from tax years 2019 to 2022
+                (complete Annex C.4)
             0480:
               label: Contributions made in 2023 to the protected estate of the person
                 with a disability
             0485:
               label: Amount of the pension or annuity paid in 2023 under a court decision
             0488:
-              label: Excesos pending of reduce procedentes of the tax years 2018 to
-                2022 (Vea the anexo C.4)
+              label: Excess amounts pending reduction from tax years 2018 to 2022
+                (see Annex C.4)
             0489:
-              label: Contributions and contributions realizadas in 2023 with right
-                to reduction
+              label: Contributions and payments made in 2023 with right to reduction
             '0501':
               label: 'Offset (if box [0500] is positive and up to the maximum limit
                 of its amount): General negative net taxable bases from 2019 to 2022
@@ -8366,7 +8399,7 @@ modelo:
                 part'
             '0564':
               label: 'Sum of regional deductions (transfer the amount from this same
-                casilla in annex B.1, B.2, B.3, B.4, B.5, B.6, or B7, as applicable):
+                box in annex B.1, B.2, B.3, B.4, B.5, B.6, or B7, as applicable):
                 Regional part'
             '0565':
               label: 'Deduction applicable to family units made up of tax residents
@@ -8410,7 +8443,7 @@ modelo:
                 + [0569] + [0583] + [0577] + [0578] + [0579] + [0581] + [0504]): Autonomous-community
                 part'
             '0600':
-              label: Sum of withholdings and payments on account atribuidos of capital
+              label: Sum of withholdings and payments on account attributed to capital
                 gains and losses attributable to 2023 (sum of the boxes [1600])
             '0607':
               label: 'For the acquisition of plug-in electric vehicles and fuel-cell
@@ -8515,9 +8548,11 @@ modelo:
               label: 'Canary Islands Investment Reserve 2019 (1): investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             0789:
-              label: 'Reserva for Investments in Canarias 2020 (1): Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2020 (1): Year
+                of the allocation'
             0790:
-              label: 'Reserva for Investments in Canarias 2020 (1): Pendiente of materializar'
+              label: 'Reserve for Investments in the Canary Islands 2020 (1): Pending
+                investment'
             0792:
               label: 'Canary Islands Investment Reserve 2021: year of allocation'
             0794:
@@ -8562,7 +8597,8 @@ modelo:
               label: For investments or donations to Social Economy entities established
                 in Cantabria (transfer the amount from box [1179] of Annex B.8)
             0829:
-              label: 'Reserva for Investments in Canarias 2019 (1): Pendiente of materializar'
+              label: 'Reserve for Investments in the Canary Islands 2019 (1): Pending
+                investment'
             0830:
               label: Amount of net income from economic activities obtained in 2022
                 that is invested in new assets assigned to the activity
@@ -8590,8 +8626,12 @@ modelo:
                 applied in this return'
             0845:
               label: Total amount of deductions for incentives to business investment
-                applied in this return, based on boxes ([0706], [0707], [0752], [0762],
-                [0764], [0768])
+                applied in this return (sum of boxes [0706], [0707], [0752] to [0762],
+                [0764] to [0768], [0773], [0779] to [0788], [0791], [0793], [0796],
+                [0797], [0815], [0817], [0836] to [0844], [1623], [1627], [1629],
+                [1630], [1686] to [1691], [1693], [1694], [1698] to [1703], [1705]
+                to [1708], [1710] to [1717], [1720], [1722], [1723], [1727] to [1731],
+                [1944] to [1958])
             0853:
               label: For amounts invested in renting a primary residence (this amount
                 is transferred to box [1130] of Annex B.8)
@@ -8610,15 +8650,15 @@ modelo:
               label: For investment in social economy entities (transfer the amount
                 from box [1179] of Annex B.8
             0887:
-              label: For the arrendamiento of primary residence (is traslada este
-                amount to the box [1130] of the anexo B.8)
+              label: For the renting of a primary residence (this amount is transferred
+                to box [1130] of Annex B.8)
             0903:
               label: For investment in the purchase of shares or equity interests
                 in new or recently created entities (this amount is transferred to
                 box [1136] of Annex B.8)
             0907:
-              label: For arrendamiento of primary residence (amount of the box [1130]
-                of the anexo B.8)
+              label: For renting a primary residence (amount from box [1130] of Annex
+                B.8)
             0928:
               label: For renting of primary residence (is traslada este amount to
                 the box [1130] of the anexo B.8)
@@ -8649,8 +8689,8 @@ modelo:
               label: For renting a primary residence for taxpayers under 36 years
                 old (this amount is transferred to box [1130] of Annex B.8)
             0975:
-              label: For renting of primary residence for taxpayers menores of 36
-                years (is traslada este amount to the box [1130] of the anexo B.8)
+              label: For renting a primary residence for taxpayers under 36 years
+                of age (this amount is transferred to box [1130] of Annex B.8)
             0979:
               label: For promoting entrepreneurship (amount from box [1136] of Annex
                 B.8)
@@ -8681,8 +8721,8 @@ modelo:
                 or equity interests in new or recently created entities (this amount
                 is transferred to box [1136] of Annex B.8)
             '1019':
-              label: For arrendamiento of primary residence (is traslada este amount
-                to the box [1130] of the anexo B.8)
+              label: For renting a primary residence (this amount is transferred to
+                box [1130] of Annex B.8)
             '1026':
               label: For renting a primary residence by taxpayers aged 35 or under
                 (this amount is transferred to box [1130] of Annex B.8)
@@ -8702,8 +8742,8 @@ modelo:
               label: For investment in businesses carrying out agricultural activities
                 (transfer the amount from box [1154] of Annex B.8)
             '1043':
-              label: For arrendamiento of primary residence (is traslada este amount
-                to the box [1130] of the anexo B.8)
+              label: For renting a primary residence (this amount is transferred to
+                box [1130] of Annex B.8)
             '1046':
               label: For investment in the purchase of shares and equity interests
                 in new or recently created entities (this amount is transferred to
@@ -8740,8 +8780,8 @@ modelo:
             '1168':
               label: To promote physical exercise and sports activity
             '1178':
-              label: Total amount of the amountis invertidas with right to a deduction
-                (sum of the boxes [1175] + [1177])
+              label: Total amount of the sums invested with right to a deduction (sum
+                of the boxes [1175] + [1177])
             '1182':
               label: Amount generated in 2023 pending application (amount of the box
                 [1136] of the anexo B.8 )
@@ -8776,15 +8816,15 @@ modelo:
                 improvement of the property and repair and maintenance expenses (transfer
                 the amount from box [0108] )
             '1228':
-              label: Amount reinvertido hasta the 31-12-2023 in the acquisition of
-                a new primary residence
+              label: Amount reinvested up to 31-12-2023 in the acquisition of a new
+                primary residence
             '1234':
-              label: Amount reinvertido hasta the 31-12-2023 in the acquisition of
-                shares or holdings of a entity new or of recent creation
+              label: Amount reinvested up to 31-12-2023 in the acquisition of shares
+                or holdings in a new or recently created entity
             '1235':
-              label: Amount that the taxpayer is undertakes to reinvertir in 2024,
-                in the year following to the transfer, in shares or holdings of a
-                entity new or of recent creation
+              label: Amount that the taxpayer undertakes to reinvest in 2024, in the
+                year following the transfer, in shares or holdings of a new or recently
+                created entity
             '1240':
               label: Amount reinvested by 31-12-2023 in life annuities
             '1241':
@@ -8870,7 +8910,7 @@ modelo:
             '1283':
               label: Negative balance of movable-capital income attributable to 2023,
                 included in the savings taxable base and pending offset in the next
-                four tax years, based on boxes ([0430])
+                four tax years, based on boxes [0430] and [0436]
             '1285':
               label: 'Tax year 2018: pending application to the start of the period'
             '1286':
@@ -9133,7 +9173,7 @@ modelo:
               label: For the purchase or renovation of a primary residence in municipalities
                 at risk of depopulation
             '1595':
-              label: Capital gains reducidas not exempt attributable to 2023
+              label: Reduced capital gains not exempt attributable to 2023
             '1600':
               label: Atribución of withholdings of capital gains and losses attributable
                 to 2023
@@ -9168,7 +9208,8 @@ modelo:
               label: 'Reserva for Investments in Canarias 2018 (1): Amount of the
                 allocations'
             '1682':
-              label: 'Reserva for Investments in Canarias 2018 (1): Year of the dotación'
+              label: 'Reserve for Investments in the Canary Islands 2018 (1): Year
+                of the allocation'
             '1684':
               label: 'Canary Islands Investment Reserve 2018 (1): investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -9185,13 +9226,13 @@ modelo:
               label: Amount paid in 2021 and/or 2022 pending application in future
                 tax years
             '1718':
-              label: For nacimiento (amount of the box [1990] of the anexo B.10)
+              label: For birth (amount from box [1990] of Annex B.10)
             '1721':
-              label: For adopción (amount of the box [1994] of the anexo B.10)
+              label: For adoption (amount from box [1994] of Annex B.10)
             '1762':
               label: For the rise in prices
             '1777':
-              label: Base of the deduction aplicada in 2021 and 2022
+              label: Base of the deduction applied in 2021 and 2022
             '1778':
               label: Excess amounts pending deduction carried over from tax years
                 2021 and 2022
@@ -9219,8 +9260,8 @@ modelo:
             '1856':
               label: 'Tax year 2022: pending application in future tax years'
             '1857':
-              label: Amountis paid in the tax year 2023 pending of deducir in the
-                4 following tax years
+              label: Amounts paid in the 2023 tax year pending deduction in the following
+                4 tax years
             '1937':
               label: 'Reserve for Investments in the Balearic Islands 2023: Amount
                 of allocations'
@@ -9300,37 +9341,250 @@ modelo:
           casilla:
             '0001':
               help: Selector for the taxpayer obtaining the business yield.
+            '0002':
+              help: 'Box 0002: use this when you choose to allocate advance payments
+                of copyright royalties as the rights accrue.'
             '0003':
+              help: 'Box 0003: gross amount of monetary remuneration, including compensatory
+                pensions and non-exempt maintenance annuities.'
               label: Cash remuneration, including non-exempt compensatory pensions
                 and maintenance annuities - gross amount
+            '0004':
+              help: 'Box 0004: valuation of income from work in kind.'
+            '0005':
+              help: 'Box 0005: payments on account corresponding to income from work
+                in kind.'
+            '0006':
+              help: 'Box 0006: payments on account passed on to the taxpayer.'
+            0008:
+              help: 'Box 0008: employer contributions to pension plans, corporate
+                social welfare plans and social welfare mutual funds, except collective
+                dependency insurance, allocated to the taxpayer.'
             0009:
+              help: 'Box 0009: employer contributions to collective dependency insurance
+                allocated to the taxpayer, including amounts arising from an employee''s
+                decision.'
               label: Employer contributions to collective dependency insurance
+            '0010':
+              help: 'Box 0010: countable amount of contributions to the protected
+                estate of persons with disabilities of which the taxpayer is the holder.'
+            '0011':
+              help: 'Box 0011: reductions under article 18.2 and 18.3, and transitional
+                provisions 11ª, 12ª and 25ª of the Tax Act.'
             '0012':
-              label: Total computable gross income ([0003] + [0007] + [0008] + [0024]
+              label: Total countable gross income ([0003] + [0007] + [0008] + [0024]
                 + [0009] + [0010] - [0011])
+            '0013':
+              help: 'Box 0013: Social Security contributions, general compulsory mutual
+                funds for civil servants, deductions for passive rights and contributions
+                to orphans'' colleges or similar bodies.'
+            '0014':
+              help: 'Box 0014: union membership fees paid.'
+            '0015':
+              help: 'Box 0015: fees paid to professional associations when membership
+                is compulsory, up to the applicable annual limit.'
+            '0016':
+              help: 'Box 0016: legal defence costs arising directly from disputes
+                with the employer, up to the applicable annual limit.'
             '0017':
               label: Preliminary net income ([0012] - [0013] - [0014] - [0015] - [0016])
+            0019:
+              help: 'Box 0019: other deductible expenses from employment income.'
+            '0020':
+              help: 'Box 0020: increase for unemployed taxpayers who accept a job
+                that requires moving their residence to a new municipality.'
+            '0021':
+              help: 'Box 0021: increase for active workers who are persons with disabilities.'
+            '0022':
+              help: 'Box 0022: net employment income.'
+            '0023':
+              help: 'Box 0023: amount generally applicable to the reduction of employment
+                income.'
+            '0024':
+              help: 'Box 0024: amounts contributed by the employer to pension plans,
+                corporate social welfare plans and social welfare mutual funds, except
+                collective dependency insurance, arising from an employee''s decision.'
             '0025':
               label: Reduced net income ([0022] - [0057] - [0023])
+            '0026':
+              help: 'Box 0026: taxpayer who obtains the employment income.'
+            '0027':
+              help: 'Box 0027: interest on accounts, deposits and financial assets
+                in general.'
+            0028:
+              help: 'Box 0028: interest on financial assets entitled to the reduction
+                provided for in the 6ª transitional provision of the Corporate Tax
+                Act.'
+            0029:
+              help: 'Box 0029: dividends and other income from holdings in the equity
+                of entities.'
+            '0030':
+              help: 'Box 0030: income from the transfer or redemption of Treasury
+                Bills.'
+            '0032':
+              help: 'Box 0032: income from life or disability insurance contracts
+                and capitalisation transactions.'
+            '0033':
+              help: 'Box 0033: income from returns arising from the investment of
+                capital and other income from movable capital to be included in the
+                savings tax base.'
+            '0034':
+              help: 'Box 0034: income from movable capital arising from subordinated
+                debt securities or preferred shares.'
+            '0035':
+              help: 'Box 0035: income from life insurance policies, deposits and financial
+                contracts that implement long-term savings plans.'
+            '0036':
+              help: 'Box 0036: total gross income from the movable capital income
+                (savings) section.'
             '0037':
+              help: 'Box 0037: tax-deductible expenses for the administration and
+                safekeeping of negotiable securities, exclusively.'
               label: 'Tax-deductible expenses: administration and custody expenses
                 for marketable securities only'
+            0038:
+              help: 'Box 0038: net income from the movable capital income (savings)
+                section.'
+            0039:
+              help: 'Box 0039: reduction applicable to income from certain insurance
+                contracts under the 4ª transitional provision of the Tax Act.'
+            '0040':
+              help: 'Box 0040: net income reduced after applying the corresponding
+                reduction.'
+            '0041':
+              help: 'Box 0041: sum of the reduced movable capital income to be included
+                in the savings tax base.'
+            '0042':
+              help: 'Box 0042: taxpayer to whom the movable capital income corresponds.'
             '0043':
+              help: 'Box 0043: total accumulated amount of deferred capital received
+                in 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2023 and 2024 whose income
+                was reduced under the 4ª transitional provision.'
               label: Total accumulated amount of deferred capital received in 2015,
                 2016, 2017, 2018, 2019, 2020, 2021, 2023, and 2024 whose income was
                 subject to Transitional Provision 4
             '0044':
+              help: 'Box 0044: total amount of deferred capital from life insurance
+                received in 2024 whose income is reduced under the 4ª transitional
+                provision.'
               label: Total amount of deferred capital from life-insurance policies
                 received in 2024 whose income is subject to Transitional Provision
                 4
+            '0045':
+              help: 'Box 0045: taxpayer who obtains the movable capital income.'
+            '0046':
+              help: 'Box 0046: income from the leasing of movable property, businesses
+                or mines, or from subleases.'
+            '0047':
+              help: 'Box 0047: income from the provision of technical assistance,
+                except when carried out within an economic activity.'
+            0048:
+              help: 'Box 0048: income from intellectual property when the taxpayer
+                is not the author.'
+            0049:
+              help: 'Box 0049: use this when you choose to allocate advance payments
+                of copyright royalties as the rights accrue.'
+            '0050':
+              help: 'Box 0050: income from industrial property not used in an economic
+                activity.'
+            '0051':
+              help: 'Box 0051: other movable capital income to be included in the
+                general tax base.'
+            '0052':
+              help: 'Box 0052: total gross income from the movable capital income
+                section of the general base.'
+            '0053':
+              help: 'Box 0053: tax-deductible expenses from the movable capital income
+                section of the general base.'
+            '0054':
+              help: 'Box 0054: net income from the movable capital income section
+                of the general base.'
             '0055':
+              help: 'Box 0055: reductions for income generated over more than two
+                years or obtained in a notably irregular manner under article 26.2
+                and the 25ª transitional provision of the Tax Act.'
               label: Reductions for income generated over more than two years or obtained
-                in a clearly irregular manner
+                in a clearly irregular manner (article 26.2 and the 25th transitional
+                provision of the Income Tax Law)
+            '0056':
+              help: 'Box 0056: net income reduced from the movable capital income
+                section of the general base.'
+            '0057':
+              help: 'Box 0057: reduction for income covered by the tax regime for
+                the XXXVII America''s Cup Barcelona event.'
+            '0062':
+              help: 'Box 0062: taxpayer holding the property or the right.'
+            '0063':
+              help: 'Box 0063: percentage of ownership held by the taxpayer.'
+            '0064':
+              help: 'Box 0064: percentage of usufruct held by the taxpayer.'
+            '0065':
+              help: 'Box 0065: situation code of the property.'
+            '0066':
+              help: 'Box 0066: cadastral reference of the property.'
+            '0067':
+              help: 'Box 0067: indicates that the property is urban.'
+            0068:
+              help: 'Box 0068: indicates that the property is rural.'
+            0069:
+              help: 'Box 0069: address of the property.'
             '0070':
+              help: 'Box 0070: indicates that the property was the taxpayer''s habitual
+                residence in 2024.'
               label: Main residence in 2024
+            '0071':
+              help: 'Box 0071: dwelling where, in cases of separation or divorce,
+                the children and/or the former spouse reside.'
+            '0072':
+              help: 'Box 0072: indicates that the property is used in economic activities.'
+            '0073':
+              help: 'Box 0073: indicates that the property is at the disposal of its
+                owners.'
+            '0074':
+              help: 'Box 0074: indicates that the property is leased as an ancillary
+                property.'
+            '0075':
+              help: 'Box 0075: indicates that the property is leased.'
             '0076':
+              help: 'Box 0076: number of days on which the property was the taxpayer''s
+                habitual residence in 2024.'
               label: Number of days the property was the taxpayer's main residence
                 in 2024
+            '0077':
+              help: 'Box 0077: tax identification number of the former spouse.'
+            0079:
+              help: 'Box 0079: number of days the dwelling had this use.'
+            0080:
+              help: 'Box 0080: number of days the property was used in economic activities.'
+            0081:
+              help: 'Box 0081: taxpayer carrying out the economic activity for a property
+                used in economic activities.'
+            0082:
+              help: 'Box 0082: indicates that the property is subject to a business
+                lease.'
+            0083:
+              help: 'Box 0083: cadastral value of the property.'
+            0084:
+              help: 'Box 0084: indicates whether the cadastral value has been reviewed,
+                modified or determined through a general collective valuation procedure
+                with effect in the current year or in prior years.'
+            0085:
+              help: 'Box 0085: number of days the property was at the taxpayer''s
+                disposal.'
+            0086:
+              help: 'Box 0086: mark with an X in the exceptional case where, on the
+                same days, part of the property was at the taxpayer''s disposal and
+                another part was used for other purposes.'
+            0087:
+              help: 'Box 0087: percentage of the property at the taxpayer''s disposal.'
+            0088:
+              help: 'Box 0088: number of days corresponding to the indicated property
+                use.'
+            0089:
+              help: 'Box 0089: imputed property income from the property.'
+            0090:
+              help: 'Box 0090: cadastral reference of the main property to which this
+                property is linked.'
             0091:
               help: Enter the tax identification number of the first tenant for the
                 leased property.
@@ -9358,7 +9612,7 @@ modelo:
               help: Enter the number of days during the tax year when the property
                 was rented.
             '0102':
-              help: Report the computable gross income obtained from renting the property.
+              help: Report the countable gross income obtained from renting the property.
             '0103':
               help: Enter the amount still pending deduction from tax years 2020,
                 2021, 2022 and 2023, and complete Annex C.1 where required.
@@ -9518,14 +9772,14 @@ modelo:
                 article 23.3 and transitional provision 25 of the Personal Income
                 Tax Law.
             '0152':
-              help: Report the minimum computable income required in kinship cases
+              help: Report the minimum countable income required in kinship cases
                 under article 24 of the Personal Income Tax Law.
             '0153':
               help: Report withholdings and payments on account linked to the real
                 estate capital income.
             '0154':
               help: This field takes the greater amount between net income after reductions
-                [0149] - [0150] - [0151] and the minimum computable kinship income
+                [0149] - [0150] - [0151] and the minimum countable kinship income
                 in [0152].
             '0155':
               help: Report the total imputed real estate income by summing the amounts
@@ -9603,13 +9857,13 @@ modelo:
               help: Report increases in closing inventories as the change in inventories
                 for the activity.
             0178:
-              help: Report any other computable income from the economic activity.
+              help: Report any other countable income from the economic activity.
             0179:
               help: Report the excess depreciation deducted over deductible depreciation
                 for transferred assets that benefited from free depreciation under
                 the thirtieth additional provision of the Personal Income Tax Law.
             0180:
-              help: This field totals computable income by summing boxes [0171] through
+              help: This field totals countable income by summing boxes [0171] through
                 [0179].
             0181:
               help: Report purchases of inventories used in the economic activity.
@@ -9724,8 +9978,8 @@ modelo:
               help: This field totals deductible expenses by adding boxes [0218] and
                 [0219].
             '0221':
-              help: This field calculates the difference between total computable
-                income in [0180] and the deductible expense sum in [0218].
+              help: This field calculates the difference between total countable income
+                in [0180] and the deductible expense sum in [0218].
             '0222':
               help: Report the combined amount of deductible provisions and hard-to-justify
                 expenses where applicable.
@@ -9919,7 +10173,7 @@ modelo:
             0285:
               help: Report payments on account that have been passed on to the taxpayer.
             0286:
-              help: This field calculates the computable amount by adding [0283] and
+              help: This field calculates the countable amount by adding [0283] and
                 [0284], then subtracting [0285].
               label: Computable amount ([0283] + [0284] - [0285])
             0287:
@@ -9945,7 +10199,7 @@ modelo:
             0295:
               help: Report payments on account that have been passed on to the taxpayer.
             0296:
-              help: This field calculates the computable amount by adding [0293] and
+              help: This field calculates the countable amount by adding [0293] and
                 [0294], then subtracting [0295].
             0297:
               help: This field totals capital gains derived from prizes by adding
@@ -9957,15 +10211,15 @@ modelo:
               help: Report subsidies for acquiring officially protected or price-limited
                 housing, with the amount imputable to 2024, and complete Annex C.1
                 where required.
-              label: Subsidies for acquiring officially protected or price-limited
-                housing. Amount imputable to 2024 (complete Annex C.1) (*)
+              label: Grants for the purchase of officially protected housing or price-capped
+                housing. Amount attributable to 2024 (complete Annex C.1) (*)
             '0300':
               help: Report other subsidies or aid for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it, for
                 the amount attributable to 2024 (complete Annex C.1).
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2024 (complete Annex C.1) (*)
+                attributable to 2024 (complete Annex C.1) (*)
             '0301':
               help: Report other capital gains derived from public aid.
               label: Other capital gains arising from public aid.
@@ -10080,7 +10334,7 @@ modelo:
               help: Report the amount obtained for the capital losses on transferred
                 traded shares.
             0338:
-              help: Report the computable amount of the capital losses on transferred
+              help: Report the countable amount of the capital losses on transferred
                 traded shares.
             0339:
               help: This field totals capital gains from transfers of traded shares
@@ -10129,8 +10383,8 @@ modelo:
               help: Report the amount obtained for capital losses on transferred subscription
                 rights.
             '0353':
-              help: Report the computable amount of capital losses on transferred
-                subscription rights.
+              help: Report the countable amount of capital losses on transferred subscription
+                rights.
             '0354':
               help: This field totals capital gains from transfers of subscription
                 rights by summing box [0351].
@@ -10546,9 +10800,9 @@ modelo:
             '0460':
               help: This computed field determines the savings taxable base using
                 the referenced boxes and carry-forward adjustments.
-              label: Savings taxable base calculated from boxes ([0424], [0436], [0439],
+              label: Savings taxable base calculated from boxes [0424], [0436], [0439],
                 [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446],
-                [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0449], [0450], [0451], [0452], [0453], [0454], [0455], [0448]
             '0462':
               help: Identify the taxpayer who makes, or to whom are attributed, the
                 pension and social-welfare payments and contributions.
@@ -10680,14 +10934,14 @@ modelo:
               help: Enter contributions made by self-employed workers, individual
                 entrepreneurs, or professionals.
             '0500':
-              help: This computed field determines the general liquidable base after
+              help: This computed field determines the general net taxable base after
                 the applicable reductions.
             '0501':
-              help: Enter the offset for negative general liquidable bases from 2020
+              help: Enter the offset for negative general net taxable bases from 2020
                 to 2023 when box [0500] is positive, limited to the amount of that
                 box; complete Annex C.4 where applicable.
               label: 'Offset (if box [0500] is positive and up to its maximum amount):
-                Negative general liquidable bases from 2020 to 2023 (complete Annex
+                Negative general net taxable bases from 2020 to 2023 (complete Annex
                 C.4)'
             '0502':
               help: Enter the state part of the deduction or adjustment for allocations
@@ -10702,7 +10956,7 @@ modelo:
                 of the right to the birth deduction and repayment of the advance payment
                 under article 6 ter of Legislative Decree 1/2014.
             '0505':
-              help: This computed field determines the general liquidable base subject
+              help: This computed field determines the general net taxable base subject
                 to tax after the applicable compensation.
             '0506':
               help: Enter the remainder from box [0461] that is applied as a joint-taxation
@@ -10719,7 +10973,7 @@ modelo:
                 sale of tangible goods produced in the Balearic Islands under the
                 seventieth additional provision of Law 31/2022.
             '0510':
-              help: This computed field determines the savings liquidable base after
+              help: This computed field determines the savings net taxable base after
                 the applicable reductions and remainders.
             '0511':
               help: This computed field records the state part of the taxpayer minimum
@@ -10753,10 +11007,10 @@ modelo:
               help: Indicate or review “Tax information in the box” to complete this
                 self-assessment.
             '0525':
-              help: Enter exempt income amounts corresponding to the general liquidable
+              help: Enter exempt income amounts corresponding to the general net taxable
                 base.
             '0526':
-              help: Enter exempt income amounts corresponding to the savings liquidable
+              help: Enter exempt income amounts corresponding to the savings net taxable
                 base.
             '0527':
               help: This computed field totals maintenance annuities in favor of children
@@ -10788,10 +11042,10 @@ modelo:
                 to the amount in box [0524].
             '0540':
               help: This computed field determines the state tax amount corresponding
-                to the savings liquidable base.
+                to the savings net taxable base.
             '0541':
               help: This computed field determines the autonomous-community tax amount
-                corresponding to the savings liquidable base.
+                corresponding to the savings net taxable base.
             '0544':
               help: Enter the state-part amount for habitual and effective residence
                 on the island of La Palma, transferred from Annex A.7.
@@ -13840,10 +14094,10 @@ modelo:
               label: Applicable reductions (article 26.2 and Transitional Provision
                 25 of the Tax Law)
             '1568':
-              help: Enter the computable net return, calculated as [1565] minus [1566]
+              help: Enter the countable net return, calculated as [1565] minus [1566]
                 minus [1567].
             '1569':
-              help: Enter the computable amount of the net return attributed by the
+              help: Enter the countable amount of the net return attributed by the
                 entity, except the amount entered in box [1570].
             '1570':
               help: Enter the return from subordinated debt securities or preference
@@ -13860,7 +14114,7 @@ modelo:
               label: Applicable reductions (articles 23.3 and Transitional Provision
                 25 of the Tax Law)
             '1575':
-              help: Enter the computable net return, calculated as [1571] minus [1572]
+              help: Enter the countable net return, calculated as [1571] minus [1572]
                 minus [1573] minus [1574].
             '1576':
               help: Enter an "X" if, for the timing of income allocation, you opt
@@ -13885,7 +14139,7 @@ modelo:
             '1582':
               help: Enter the applicable reduction under Article 32.3 of the Tax Law.
             '1583':
-              help: Enter the computable net return, calculated as [1577] minus [1578]
+              help: Enter the countable net return, calculated as [1577] minus [1578]
                 minus [1579] minus [1580] minus [1581] minus [1582].
             '1584':
               help: Enter the capital gains not derived from transfers that are attributed
@@ -15180,7 +15434,7 @@ modelo:
             '0011':
               label: Reductions of employment income
             '0012':
-              label: Total gross computable employment income
+              label: Total countable gross employment income
             '0013':
               label: Social Security contributions or compulsory mutual-insurance
                 dues
@@ -15327,7 +15581,7 @@ modelo:
             '0151':
               label: Reduction for irregular real-estate-capital income
             '0152':
-              label: Minimum computable income in the case of kinship
+              label: Minimum countable income in the case of kinship
             '0153':
               label: Withholdings and payments on account on real-estate-capital income
             '0154':
@@ -15362,7 +15616,7 @@ modelo:
             0179:
               label: Excess depreciation on the transfer of assets with free depreciation
             0180:
-              label: Total computable income
+              label: Total countable income
             0182:
               label: Change in inventory due to a decrease in closing stock
             0189:
@@ -15450,9 +15704,9 @@ modelo:
             '0255':
               label: For the purchase of new electric vehicles
             '0266':
-              label: Public aid to owners of assets forming part of the Spanish Historical
-                Heritage for their conservation or restoration. Amount imputable to
-                2025 (complete Annex C.1) (*)
+              label: Public aid to holders of assets forming part of Spanish Historical
+                Heritage for their conservation or rehabilitation. Amount imputable
+                to 2025 (complete Annex C.1) (*)
             0279:
               label: Public aid for the first establishment of young farmers provided
                 for in the National Rural Development Framework, intended for the
@@ -15467,12 +15721,12 @@ modelo:
               label: 'Sum of capital gains arising from prizes: (sum of boxes [0292]
                 + [0296] + [0361])'
             0299:
-              label: Grants for the acquisition of publicly subsidised or price-capped
-                housing. Amount imputable to 2025 (complete Annex C.1) (*)
+              label: Grants for the purchase of officially protected housing or price-capped
+                housing. Amount attributable to 2025 (complete Annex C.1) (*)
             '0300':
-              label: Other grants or aid for the acquisition or renovation of the
-                primary residence, or for repairing structural defects in it. Amount
-                imputable to 2025 (complete Annex C.1) (*)
+              label: Other subsidies or aid intended for acquiring or rehabilitating
+                the habitual residence or repairing structural defects in it. Amount
+                attributable to 2025 (complete Annex C.1) (*)
             '0301':
               label: Other capital gains arising from public aid.
             '0302':
@@ -15685,9 +15939,9 @@ modelo:
                 taxable base, limited to 25% of [0429] (*) (outstanding balance not
                 offset in box [0441]) (Complete Annex C.3)
             '0460':
-              label: Savings taxable base calculated from boxes ([0424], [0436], [0439],
+              label: Savings taxable base calculated from boxes [0424], [0436], [0439],
                 [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446],
-                [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0449], [0450], [0451], [0452], [0453], [0454], [0455], [0448]
             '0472':
               label: Excesses pending reduction from tax years 2020 to 2024 for contributions
                 made by the person with the disability (complete Annex C.4)
@@ -15755,11 +16009,11 @@ modelo:
               label: 'For income obtained in Ceuta or Melilla (amounts from these
                 boxes of Annex A.2): Regional portion'
             '0562':
-              label: 'For the rental of the primary residence. Transitional regime
-                (amounts from these boxes of Annex A.1): State portion'
+              label: 'For rental of the habitual residence. Transitional regime (amounts
+                from these boxes of Annex A.1): State portion'
             '0563':
-              label: 'For the rental of the primary residence. Transitional regime
-                (amounts from these boxes of Annex A.1): Regional portion'
+              label: 'For rental of the habitual residence. Transitional regime (amounts
+                from these boxes of Annex A.1): Regional portion'
             '0564':
               label: 'Sum of regional deductions (amount from the applicable box of
                 Annex B.1, B.2, B.3, B.4, B.5, B.6, B.7, B.8, B.9, or B.10): Regional
@@ -15854,7 +16108,7 @@ modelo:
             0609:
               label: Total payments on account
             '0611':
-              label: Maternity deduction. Amount of the deduction
+              label: Maternity deduction. Deduction amount
             '0612':
               label: Maternity deduction. Advance payment
             '0613':
@@ -17120,7 +17374,7 @@ modelo:
             '2154':
               label: 'Vehicle registration number:'
             '2155':
-              label: Amount of the deduction
+              label: Deduction amount
             '2156':
               label: Amount generated in 2025
             '2157':

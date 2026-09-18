@@ -990,6 +990,28 @@ class FilingRecordLocalObservationResult(OutputSchema):
     filing_record_created: Literal[False] = False
     aeat_accepted: Literal[False] = False
 
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_action_shape(self) -> FilingRecordLocalObservationResult:
+        """Check the projected halves agree, reading which outcome carries detail from the application.
+
+        Whether an outcome carries the observation's own detail is the
+        application's statement, taken from
+        ``LOCAL_OBSERVATION_ACTION_CARRIES_DETAIL``; this only asks that the
+        wire row agrees with it, and that the count matches the values it sends.
+        """
+        from ...application.modelo.local_observation_actions import LOCAL_OBSERVATION_ACTION_CARRIES_DETAIL
+
+        carries_detail = LOCAL_OBSERVATION_ACTION_CARRIES_DETAIL[self.action]
+        stated = (self.revision_id is not None, self.source_kind is not None, bool(self.casilla_values))
+        if any(state is not carries_detail for state in stated):
+            raise ValueError(
+                "a local observation states its revision, source kind and values exactly when it records them"
+            )
+        if self.casilla_count != len(self.casilla_values):
+            raise ValueError("casilla_count must equal the number of casilla values")
+        return self
+
 
 class ModeloCasillaResult(OutputSchema):
     """Single-casilla semantic detail returned by ``aeat app modelo casilla``.

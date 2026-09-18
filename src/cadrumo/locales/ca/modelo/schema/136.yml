@@ -8,7 +8,7 @@ modelo:
           m136-autoliquidacion-complementaria:
             label: Autoliquidació complementària
           m136-base-imponible-gravamen:
-            label: Base imposable
+            label: base imposable
           m136-codigo-iban:
             label: Codi IBAN
           m136-cuantia-exenta-gravamen:

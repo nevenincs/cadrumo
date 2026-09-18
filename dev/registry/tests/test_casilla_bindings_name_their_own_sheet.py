@@ -29,7 +29,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 #: Wrong-sheet bindings whose own-sheet casilla has not been declared, per
 #: revision. Each is waiting on an authored casilla, not on a rebinding.
-_UNREBINDABLE_PER_REVISION: dict[str, int] = {"200/2025-y-siguientes": 63}
+_UNREBINDABLE_PER_REVISION: dict[str, int] = {"200/2025-y-siguientes": 62}
 
 
 def wrong_sheet_bindings(

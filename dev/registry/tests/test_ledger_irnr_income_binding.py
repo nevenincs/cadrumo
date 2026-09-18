@@ -73,6 +73,10 @@ def test_committed_m210_rendimientos_binding_reads_gross_income_sum_fact() -> No
         "modelo": "210",
         "target_casilla_id": _M210_RENDIMIENTOS_CASILLA,
         "fact": "gross_income_sum",
+        # The committed declaration scopes the sum to Spanish-source income;
+        # IRNR taxes exactly that, so the selector is part of what the binding
+        # means rather than an incidental extra.
+        "source_jurisdictions": ("ES",),
     }
     validate_ledger_irnr_income_aggregation_binding_definition(binding)
 

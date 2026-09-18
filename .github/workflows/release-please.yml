@@ -32,7 +32,7 @@ jobs:
       # merge gate. An App token makes release-please's writes trigger CI.
       - name: Mint the release App token
         id: app-token
-        uses: actions/create-github-app-token@67018539274d69449ef7c02e8e71183d1719ab42 # v2.1.4
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
         with:
           app-id: ${{ vars.RELEASE_APP_ID }}
           private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
@@ -46,7 +46,7 @@ jobs:
 
       - name: Run release-please
         id: release
-        uses: googleapis/release-please-action@8b8fd2cc23b2e18957157a9d923d75aa0c6f6ad5 # v4
+        uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
         with:
           token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
@@ -54,14 +54,14 @@ jobs:
 
       - name: Check out the release branch
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
           persist-credentials: false
 
       - name: Set up uv for the release branch
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
-        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           version: "0.11.29"
           enable-cache: false
@@ -104,14 +104,14 @@ jobs:
       # assuming the window was missed.
       - name: Check out main to verify the released lockfile
         if: steps.release.outputs.release_created == 'true'
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: main
           persist-credentials: false
 
       - name: Set up uv for the lockfile verification
         if: steps.release.outputs.release_created == 'true'
-        uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5.4.2
+        uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
         with:
           version: "0.11.29"
           enable-cache: false

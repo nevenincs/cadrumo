@@ -3,8 +3,22 @@ modelo:
     '165':
       casilla:
         continuidad:
+          declaracion-complementaria-sustitutiva:
+            label: Declaració complementària o substitutiva
+          declarante-razon-social:
+            label: Denominació o raó social del declarant
+          fecha-adquisicion:
+            label: Data d'adquisició de les accions o participacions
+          fecha-constitucion:
+            label: Data de constitució
           filing-year:
             label: Exercici a què es refereix la declaració
+          importe-fondos-propios:
+            label: Import dels fons propis
+          importe-suscripcion:
+            label: Import de la subscripció o adquisició
+          importe-total-suscripciones:
+            label: Import total de les subscripcions o adquisicions
           m165-declaracion-complementaria-sustitutiva:
             label: Declaració complementària o substitutiva
           m165-declarante-razon-social:
@@ -35,6 +49,22 @@ modelo:
             label: NIF del soci o partícip
           m165-socio-nombre:
             label: Cognoms i nom del soci o partícip
+          numero-identificativo-anterior:
+            label: Número identificatiu de la declaració anterior
+          numero-identificativo-declaracion:
+            label: Número identificatiu de la declaració
+          numero-total-declarados:
+            label: Nombre total de declarats
+          persona-relacion:
+            label: Persona amb qui relacionar-se
+          porcentaje-participacion:
+            label: Percentatge de participació
+          representante-legal-nif:
+            label: NIF del representant legal
+          socio-nif:
+            label: NIF del soci o partícip
+          socio-nombre:
+            label: Cognoms i nom del soci o partícip
           tipo-declaracion:
             label: Tipus de declaració (originària / substitutiva / complementària)
       construct:
@@ -49,46 +79,16 @@ modelo:
       revision:
         2013-2015:
           field:
-            label: Model 165 (Ordre HAP/2455/2013), exercicis 2013 i següents
+            label: Model 165, exercicis 2013 a 2015
         2016-2022:
           field:
-            label: Model 165 (Ordre HAP/2455/2013), exercicis 2013 i següents
+            label: Model 165, exercicis 2016 a 2022
         2023-2025:
           field:
-            label: Model 165 (Ordre HAP/2455/2013), exercicis 2013 i següents
+            label: Model 165, exercicis 2023 a 2025
         2026-y-siguientes:
           casilla:
-            declaracion-complementaria-sustitutiva:
-              label: Declaració complementària o substitutiva
-            declarante-razon-social:
-              label: Denominació o raó social del declarant
             empresa-emergente:
               label: Empresa emergent
-            fecha-adquisicion:
-              label: Data d'adquisició de les accions o participacions
-            fecha-constitucion:
-              label: Data de constitució
-            importe-fondos-propios:
-              label: Import dels fons propis
-            importe-suscripcion:
-              label: Import de la subscripció o adquisició
-            importe-total-suscripciones:
-              label: Import total de les subscripcions o adquisicions
-            numero-identificativo-anterior:
-              label: Número identificatiu de la declaració anterior
-            numero-identificativo-declaracion:
-              label: Número identificatiu de la declaració
-            numero-total-declarados:
-              label: Nombre total de declarats
-            persona-relacion:
-              label: Persona amb qui relacionar-se
-            porcentaje-participacion:
-              label: Percentatge de participació
-            representante-legal-nif:
-              label: NIF del representant legal
-            socio-nif:
-              label: NIF del soci o partícip
-            socio-nombre:
-              label: Cognoms i nom del soci o partícip
           field:
-            label: Model 165 (Ordre HAP/2455/2013), exercicis 2013 i següents
+            label: Model 165, exercicis 2026 i següents

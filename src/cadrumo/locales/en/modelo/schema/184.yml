@@ -129,7 +129,7 @@ modelo:
               and a decimal part.
             label: Expenses / excess negative income
           importe-atribuido-miembro:
-            label: AMOUNT (RETURN / WITHHOLDING / DEDUCTION)
+            label: AMOUNT (INCOME / WITHHOLDING / DEDUCTION)
           importe-neto-cifra-negocios:
             help: Amount declared on modelo 184. The design splits it into an integer
               and a decimal part.

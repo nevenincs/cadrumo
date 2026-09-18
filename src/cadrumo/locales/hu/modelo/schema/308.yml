@@ -22,16 +22,13 @@ modelo:
       revision:
         2009-2011-junio:
           field:
-            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
-              szerinti eseti szabályozás)
+            label: 308-es modelo, 2009-2011. adóévek, 2011. júniusáig
         2011-julio-2015:
           field:
-            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
-              szerinti eseti szabályozás)
+            label: 308-es modelo, 2011-2015. adóévek, 2011. júliusától
         2016-2018:
           field:
-            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
-              szerinti eseti szabályozás)
+            label: 308-es modelo, 2016-2018. adóévek
         2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
@@ -48,7 +45,7 @@ modelo:
               label: Új közlekedési eszközök (ÚKE) - Beszerző - NIF
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
               help: A 308-es modelo 179-198. rovata, 2009. adóév.
-              label: ÚKE - Beszerző - Név
+              label: ÚKE - Beszerző - Utónév
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
               help: A 308-es modelo 199-200. rovata, 2009. adóév.
               label: ÚKE - Beszerző - Ország
@@ -130,7 +127,7 @@ modelo:
               label: ÚKE - Járművek - Típus
             x-chim6r1edpnmqojick:
               help: A 308-es modelo 83-102. rovata, 2009. adóév.
-              label: Azonosítás - Név
+              label: Azonosítás - Utónév
             x-chim6r1ee9in2bb2c5pmab9g70:
               help: A 308-es modelo 798-814. rovata, 2009. adóév.
               label: Különleges egyenértékűségi felár rendszer (KEF) - Elszámolás
@@ -172,5 +169,4 @@ modelo:
               help: A 308-es modelo 109. rovata, 2009. adóév.
               label: Adózás típusa az adóalany szerint
           field:
-            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
-              szerinti eseti szabályozás)
+            label: 308-es modelo, 2019. adóévtől

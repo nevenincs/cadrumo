@@ -7,13 +7,18 @@ tests pin the corrected answers and the property that produces them.
 
 from __future__ import annotations
 
+import datetime
+from dataclasses import dataclass
+
 import pytest
 
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
 
 from ..analysis.revision_selection_probe import declared_period_codes, probe_modelo
 from ..compiler.authority import admitted_revision_id, compiled_bundled_authority
+from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -21,6 +26,78 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(scope="module")
 def authority() -> ValidatedRegistryAuthority:
     return compiled_bundled_authority()
+
+
+@dataclass(frozen=True, slots=True)
+class MidYearSplit:
+    """One live coordinate where two revisions divide a single supported year."""
+
+    modelo: str
+    year: int
+    opens_on: datetime.date
+    earlier: str
+    later: str
+    shared_periods: tuple[str, ...]
+
+
+def _discovered_mid_year_split(authority: ValidatedRegistryAuthority) -> MidYearSplit | None:
+    """Find a revision pair splitting inside one year the support envelope covers.
+
+    Discovered rather than named. The pair this file first used was modelo 308's
+    2011 change, which the envelope no longer reaches: every coordinate below the
+    floor is refused for being out of support, so the pin proved nothing about
+    the ambiguity it was written for. A split is only ambiguous to a year-only
+    question when both windows accept the same period code, so a shared code is
+    part of what is discovered rather than assumed.
+    """
+    floor = coverage_assessment_floor(authority.catalogues)
+    horizon = coverage_assessment_horizon(authority.catalogues)
+    for definition in authority.modelos:
+        for later_id, later in definition.revisions.items():
+            opens = later.valid_from
+            if opens.month == 1 and opens.day == 1:
+                continue
+            if not floor <= opens.year <= horizon:
+                continue
+            day_before = opens - datetime.timedelta(days=1)
+            for earlier_id, earlier in definition.revisions.items():
+                if earlier_id == later_id:
+                    continue
+                if earlier.valid_from > day_before:
+                    continue
+                if earlier.valid_to is not None and earlier.valid_to < day_before:
+                    continue
+                shared = tuple(
+                    code for code in declared_period_codes(later) if code in set(declared_period_codes(earlier))
+                )
+                if not shared:
+                    continue
+                return MidYearSplit(
+                    modelo=str(definition.id),
+                    year=opens.year,
+                    opens_on=opens,
+                    earlier=str(earlier_id),
+                    later=str(later_id),
+                    shared_periods=shared,
+                )
+    return None
+
+
+@pytest.fixture(scope="module")
+def mid_year_split(authority: ValidatedRegistryAuthority) -> MidYearSplit:
+    """The live split the ambiguity tests below exercise.
+
+    A corpus with no such pair leaves the probe's ambiguity retry unexercised,
+    which is a gap in the evidence rather than a passing test, so its absence
+    fails here and says what to author instead.
+    """
+    split = _discovered_mid_year_split(authority)
+    if split is None:
+        raise AssertionError(
+            "no revision pair splits inside a supported year sharing a period code, so the probe's "
+            "ambiguity retry is unproven; author a pair on an isolated tree rather than dropping these tests"
+        )
+    return split
 
 
 def test_the_three_one_stop_shop_schemes_each_resolve_to_themselves(
@@ -110,24 +187,25 @@ def test_a_year_outside_the_declared_window_is_reported_as_a_named_refusal(
 
 
 def test_a_mid_year_split_resolves_rather_than_reporting_the_probes_own_ambiguity(
-    authority: ValidatedRegistryAuthority,
+    authority: ValidatedRegistryAuthority, mid_year_split: MidYearSplit
 ) -> None:
-    """Modelo 308 changes revision at the end of June 2011 and every probe still resolves.
+    """Every probe of a modelo whose revisions divide one year still resolves to itself.
 
-    Asked for filing year 2011 alone, the registry refuses as ambiguous, and it
-    is right to: two revisions cover parts of that year and the year does not
-    say which. Reporting that refusal would have been this module doing exactly
-    what it exists to prevent - reading an under-specified question as a
-    registry defect.
+    Asked for that filing year alone, the registry refuses as ambiguous, and it
+    is right to: two revisions cover parts of the year and the year does not say
+    which. Reporting that refusal would have been this module doing exactly what
+    it exists to prevent - reading an under-specified question as a registry
+    defect.
     """
-    probes = probe_modelo(authority, "308")
+    probes = probe_modelo(authority, mid_year_split.modelo)
 
-    assert len(probes) == 4
+    assert probes, f"modelo {mid_year_split.modelo} produced no probes, so the claim below is vacuous"
+    assert {probe.revision for probe in probes} >= {mid_year_split.earlier, mid_year_split.later}
     assert [probe for probe in probes if not probe.resolves_to_itself] == []
 
 
 def test_the_registry_still_refuses_a_genuinely_ambiguous_coordinate(
-    authority: ValidatedRegistryAuthority,
+    authority: ValidatedRegistryAuthority, mid_year_split: MidYearSplit
 ) -> None:
     """The retry must not hide the refusal that a caller asking by year gets.
 
@@ -136,60 +214,59 @@ def test_the_registry_still_refuses_a_genuinely_ambiguous_coordinate(
     no-silent-under-declaration rule requires. This pins that the refusal is
     still there for anyone who asks the ambiguous question.
     """
-    import datetime
-
-    from cadrumo.core.authority_grade import RegistryAuthorityGrade
+    period = mid_year_split.shared_periods[0]
 
     # `Exception` accepted any error at all - a TypeError from a changed
     # signature would have satisfied it while the ambiguity check never ran.
     with pytest.raises(AmbiguousRevisionSelectionError, match=r"[Aa]mbiguous"):
         admitted_revision_id(
-            authority, "308", filing_year=2011, period="AD-HOC", grade=RegistryAuthorityGrade.APPLICABILITY
+            authority,
+            mid_year_split.modelo,
+            filing_year=mid_year_split.year,
+            period=period,
+            grade=RegistryAuthorityGrade.APPLICABILITY,
         )
 
     before = admitted_revision_id(
         authority,
-        "308",
-        filing_year=2011,
-        period="AD-HOC",
-        on=datetime.date(2011, 3, 1),
+        mid_year_split.modelo,
+        filing_year=mid_year_split.year,
+        period=period,
+        on=mid_year_split.opens_on - datetime.timedelta(days=1),
         grade=RegistryAuthorityGrade.APPLICABILITY,
     )
     after = admitted_revision_id(
         authority,
-        "308",
-        filing_year=2011,
-        period="AD-HOC",
-        on=datetime.date(2011, 9, 1),
+        mid_year_split.modelo,
+        filing_year=mid_year_split.year,
+        period=period,
+        on=mid_year_split.opens_on,
         grade=RegistryAuthorityGrade.APPLICABILITY,
     )
-    assert str(before) == "2009-2011-junio"
-    assert str(after) == "2011-julio-2015"
+    assert str(before) == mid_year_split.earlier
+    assert str(after) == mid_year_split.later
 
 
 def test_a_year_that_cannot_choose_between_split_windows_is_recorded_not_erased(
-    authority: ValidatedRegistryAuthority,
+    authority: ValidatedRegistryAuthority, mid_year_split: MidYearSplit
 ) -> None:
     """The retry that rescues the answer must not hide that the year alone failed.
 
-    Modelo 308 changes at the end of June 2011, so both revisions cover filing
-    year 2011 and the year alone cannot choose. The probe asks again with a date
-    inside the revision's own window, which answers correctly - and that retry
-    used to clear the refusal and leave the row indistinguishable from one the
-    year decided outright. The single coordinate this screen was built to show
-    was therefore invisible in its own output.
+    Both windows of the discovered split cover the same filing year and share a
+    period code, so the year alone cannot choose. The probe asks again with a
+    date inside the revision's own window, which answers correctly - and that
+    retry used to clear the refusal and leave the row indistinguishable from one
+    the year decided outright. The single coordinate this screen was built to
+    show was therefore invisible in its own output.
 
-    Pinned to a live registry state, and this note is what the pin owes. If the
-    modelo 308 windows are ever restated so the year decides on its own, this
-    test fails and that failure is the correction. Replace the coordinate with
-    another revision pair splitting inside one year; if the corpus holds none,
-    the flag should still be proven against a constructed pair rather than
-    dropped, because the erasure it guards against returns silently.
+    The flag is asserted where the split is, not where a previous corpus state
+    put it: every flagged row must name the later window at the split year, and
+    no other row may carry the flag.
     """
-    probes = probe_modelo(authority, "308")
+    probes = probe_modelo(authority, mid_year_split.modelo)
     ambiguous = [probe for probe in probes if probe.year_alone_ambiguous]
 
-    assert [(probe.revision, probe.filing_year) for probe in ambiguous] == [("2011-julio-2015", 2011)]
-    assert ambiguous[0].resolved == "2011-julio-2015", "the date retry must still answer"
-    assert ambiguous[0].refusal is None, "a rescued coordinate is not a refusal"
-    assert all(not probe.year_alone_ambiguous for probe in probes if probe.revision != "2011-julio-2015")
+    assert ambiguous, "the split year must reach the probe as an ambiguity, or the flag is never exercised"
+    assert {(probe.revision, probe.filing_year) for probe in ambiguous} == {(mid_year_split.later, mid_year_split.year)}
+    assert all(probe.resolved == mid_year_split.later for probe in ambiguous), "the date retry must still answer"
+    assert all(probe.refusal is None for probe in ambiguous), "a rescued coordinate is not a refusal"

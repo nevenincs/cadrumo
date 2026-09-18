@@ -85,9 +85,8 @@ modelo:
                 self-assessments.
               label: Final result
             saldo-negativo-fin-periodo:
-              help: Computed carry-forward seed when casilla 17 is negative, used
-                as deductible casilla 15 in a later quarter.
-              label: Negative balance transferable to later periods (max 0, -casilla
-                17)
+              help: Computed carry-forward seed when box 17 is negative, used as deductible
+                box 15 in a later quarter.
+              label: Negative balance transferable to later periods (max 0, -box 17)
           field:
             label: Order HAP/258/2015, tax years 2019 onwards

@@ -12,15 +12,15 @@ modelo:
           patrimonio-arte-antiguedades:
             label: Vagyontárgyak és jogok - L. Műtárgyak és régiségek - Összesen
           patrimonio-base-ahorro-excluida:
-            label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
+            label: Elszámolás - A bruttó adó felső korlátja - A személyi jövedelemadó
               megtakarítási adóalapjának része
           patrimonio-base-imponible:
             label: 'Nettó vagyon összesítése: csökkentett adóalap - Adóalap'
           patrimonio-base-liquidable:
             label: 'Nettó vagyon összesítése: csökkentett adóalap - Csökkentett adóalap'
           patrimonio-base-liquidable-gravada-extranjero:
-            label: Adómegállapítás - Külföldön megfizetett adók levonása - Az adóalap
-              külföldön adóztatott része
+            label: Elszámolás - Külföldön megfizetett adók levonása - Az adóalap külföldön
+              adóztatott része
           patrimonio-bienes-afectos-exentos:
             label: Vagyontárgyak és jogok - D. Üzleti és szakmai tevékenységhez kötött,
               mentes vagyontárgyak és jogok - Összesen (tartozásokkal csökkentve)
@@ -31,15 +31,14 @@ modelo:
             label: Vagyontárgyak és jogok - C1. Üzleti és szakmai tevékenységhez kötött,
               nem mentes vagyontárgyak (ingatlanok nélkül) - Összesen
           patrimonio-bonificacion-autonomica-aplicada:
-            label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények -
-              Autonóm közösségi kedvezmény - Érvényesített összeg
+            label: Elszámolás - Autonóm közösségi levonások és kedvezmények - Autonóm
+              közösségi kedvezmény - Érvényesített összeg
           patrimonio-bonificacion-ceuta-melilla:
-            label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A kedvezmény
-              összege
+            label: Elszámolás - Ceuta és Melilla adókedvezménye - A kedvezmény összege
           patrimonio-clase-discapacidad:
             label: Adóalany - Fogyatékosság - A fogyatékosság típusa
           patrimonio-complementaria-cuotas-anteriores:
-            label: Önellenőrzési bevallás - Korábbi önadózásból vagy hatósági megállapításból
+            label: Kiegészítő bevallás - Korábbi önadózásból vagy hatósági megállapításból
               befizetendő összegek
           patrimonio-comunidad-mayor-valor-bienes:
             label: Különleges adózási módok - Az az autonóm közösség, ahol a legnagyobb
@@ -47,16 +46,16 @@ modelo:
           patrimonio-concesiones-administrativas:
             label: Vagyontárgyak és jogok - N. Hatósági koncessziók - Összesen
           patrimonio-cuota-a-ingresar:
-            label: Adómegállapítás - Fizetendő adó - Fizetendő adó
+            label: Elszámolás - Fizetendő adó - Fizetendő adó
           patrimonio-cuota-integra:
-            label: Adómegállapítás - Bruttó adó - Bruttó adó
+            label: Elszámolás - Bruttó adó - Bruttó adó
           patrimonio-cuota-integra-susceptible-limitacion:
-            label: Adómegállapítás - A bruttó adó felső korlátja - A korlátozás alá
-              eshető bruttó vagyonadó-rész
+            label: Elszámolás - A bruttó adó felső korlátja - A korlátozás alá eshető
+              bruttó vagyonadó-rész
           patrimonio-cuota-minorada:
-            label: Adómegállapítás - Csökkentett adó - Csökkentett adó
+            label: Elszámolás - Csökkentett adó - Csökkentett adó
           patrimonio-cuota-proporcional-bienes-ceuta-melilla:
-            label: Adómegállapítás - Ceuta és Melilla adókedvezménye - Az e vagyontárgyakra
+            label: Elszámolás - Ceuta és Melilla adókedvezménye - Az e vagyontárgyakra
               és jogokra eső arányos adórész
           patrimonio-cuotas-previas-complementaria:
             label: Kiegészítő bevallás rendezése - Korábbi önadózások vagy adómegállapítások
@@ -66,14 +65,14 @@ modelo:
           patrimonio-declaracion-negativa:
             label: Nemleges bevallás
           patrimonio-deduccion-impuestos-extranjero:
-            label: Adómegállapítás - Külföldön megfizetett adó beszámítása - A beszámítás
+            label: Elszámolás - Külföldön megfizetett adó beszámítása - A levonás
               összege
           patrimonio-deducciones-autonomicas-aplicadas:
-            label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények -
-              Autonóm közösségi levonások - Érvényesített összeg
+            label: Elszámolás - Autonóm közösségi levonások és kedvezmények - Autonóm
+              közösségi levonások - Érvényesített összeg
           patrimonio-deducciones-autonomicas-derecho:
-            label: Adómegállapítás - Autonóm közösségi levonások és kedvezmények -
-              Autonóm közösségi levonások - A levonásra jogosító teljes összeg
+            label: Elszámolás - Autonóm közösségi levonások és kedvezmények - Autonóm
+              közösségi levonások - A levonásra jogosító teljes összeg
           patrimonio-demas-bienes-derechos:
             label: Vagyontárgyak és jogok - R. Egyéb gazdasági értékű vagyontárgyak
               és jogok - Összesen
@@ -91,7 +90,7 @@ modelo:
             label: Kiegészítő bevallás rendezése - A kiegészítő bevallás eredményeként
               fizetendő különbözet
           patrimonio-dividendos-no-irpf:
-            label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadóba
+            label: Elszámolás - A bruttó adó felső korlátja - A személyi jövedelemadóba
               nem beszámított osztalékok és nyereségrészesedések
           patrimonio-domicilio-extranjero-codigo-pais:
             label: Adóalany - Külföldi cím - Országkód
@@ -104,26 +103,26 @@ modelo:
           patrimonio-domicilio-extranjero-pais:
             label: Adóalany - Külföldi cím - Ország
           patrimonio-domicilio-extranjero-poblacion:
-            label: Adóalany - Külföldi cím - Település vagy város
+            label: Adóalany - Külföldi cím - Település / Város
           patrimonio-domicilio-extranjero-provincia-region-estado:
             label: Adóalany - Külföldi cím - Tartomány, régió vagy állam
           patrimonio-domicilio-habitual-bloque:
-            label: Adóalany - Állandó lakcím - Épülettömb
+            label: Adóalany - Állandó lakcím - Tömb
           patrimonio-domicilio-habitual-calificador-numero:
-            label: Adóalany - Állandó lakcím - Házszám kiegészítése
+            label: Adóalany - Állandó lakcím - Házszám kiegészítője
           patrimonio-domicilio-habitual-codigo-postal:
             label: Adóalany - Állandó lakcím - Irányítószám
           patrimonio-domicilio-habitual-codigo-provincia:
-            label: Adóalany - Állandó lakóhely - Tartománykód
+            label: Adóalany - Állandó lakcím - Tartománykód
           patrimonio-domicilio-habitual-datos-complementarios:
             label: Adóalany - Állandó lakcím - További címadatok
           patrimonio-domicilio-habitual-escalera:
-            label: Adóalany - Állandó lakcím - Lépcső
+            label: Adóalany - Állandó lakcím - Lépcsőház
           patrimonio-domicilio-habitual-localidad:
             label: Adóalany - Állandó lakcím - Helység vagy településrész (ha eltér
               az önkormányzattól)
           patrimonio-domicilio-habitual-municipio:
-            label: Adóalany - Állandó lakcím - Önkormányzat neve
+            label: Adóalany - Állandó lakcím - Település neve
           patrimonio-domicilio-habitual-nombre-via:
             label: Adóalany - Állandó lakcím - Közterület neve
           patrimonio-domicilio-habitual-numero-casa:
@@ -131,7 +130,7 @@ modelo:
           patrimonio-domicilio-habitual-planta:
             label: Adóalany - Állandó lakcím - Emelet
           patrimonio-domicilio-habitual-portal:
-            label: Adóalany - Állandó lakcím - Lépcsőház
+            label: Adóalany - Állandó lakcím - Bejárat
           patrimonio-domicilio-habitual-provincia:
             label: Adóalany - Állandó lakcím - Tartomány
           patrimonio-domicilio-habitual-puerta:
@@ -143,7 +142,7 @@ modelo:
           patrimonio-estado-civil:
             label: Adóalany - Családi állapota
           patrimonio-exceso-limite-conjunto:
-            label: Adómegállapítás - A bruttó adó felső korlátja - a) Túllépés
+            label: Elszámolás - A bruttó adó felső korlátja - a) Túllépés
           patrimonio-exento-progresividad:
             label: Progresszivitás szempontjából figyelembe vett mentes vagyon - Mentes
               vagyontárgyak és jogok, a fennmaradó részre alkalmazandó adókulcsot
@@ -157,8 +156,8 @@ modelo:
           patrimonio-importe-ingreso:
             label: Befizetés - A befizetés összege
           patrimonio-impuestos-satisfechos-extranjero:
-            label: Adómegállapítás - Külföldön megfizetett adók levonása - Külföldön
-              ténylegesen megfizetett adók
+            label: Elszámolás - Külföldön megfizetett adók levonása - Külföldön ténylegesen
+              megfizetett adók
           patrimonio-inmuebles-afectos-no-exentos:
             label: Vagyontárgyak és jogok - C2. Üzleti és szakmai tevékenységhez kötött,
               nem mentes ingatlanok - Összesen
@@ -176,17 +175,17 @@ modelo:
               befektetési intézmények nem forgalmazott részvényei és befektetési jegyei
               - összesen
           patrimonio-irpf-bases-imponibles:
-            label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
+            label: Elszámolás - A bruttó adó felső korlátja - A személyi jövedelemadó
               adóalapjainak összege
           patrimonio-irpf-cuotas-excluidas-base-ahorro:
-            label: Adómegállapítás - A bruttó adó felső korlátja - A tőkenyereségek
-              és -veszteségek pozitív egyenlegére eső bruttó személyijövedelemadó-rész
+            label: Elszámolás - A bruttó adó felső korlátja - A tőkenyereségek és
+              -veszteségek pozitív egyenlegére eső bruttó személyijövedelemadó-rész
           patrimonio-irpf-cuotas-integras:
-            label: Adómegállapítás - A bruttó adó felső korlátja - A személyi jövedelemadó
+            label: Elszámolás - A bruttó adó felső korlátja - A személyi jövedelemadó
               bruttó adója
           patrimonio-limite-conjunto:
-            label: Adómegállapítás - A bruttó adó felső korlátja - A vagyonadó és
-              a személyi jövedelemadó együttes felső korlátja
+            label: Elszámolás - A bruttó adó felső korlátja - A vagyonadó és a személyi
+              jövedelemadó együttes felső korlátja
           patrimonio-localidad-declaracion:
             label: A bevallás kelte - Helység
           patrimonio-mes-declaracion:
@@ -225,7 +224,7 @@ modelo:
             label: Vagyontárgyak és jogok - O. Szellemi vagy ipari tulajdonból eredő
               jogok - Összesen
           patrimonio-reduccion-limite-ochenta:
-            label: Adómegállapítás - A bruttó adó felső korlátja - b) A bruttó vagyonadó
+            label: Elszámolás - A bruttó adó felső korlátja - b) A bruttó vagyonadó
               80%-a
           patrimonio-regimen-economico-matrimonio:
             label: Házassági vagyonjogi rendszer
@@ -233,26 +232,26 @@ modelo:
             label: Vagyontárgyak és jogok - J. Határozott idejű és életjáradékok -
               Összesen
           patrimonio-representante-nif:
-            label: Képviselő - Adóazonosító szám
+            label: Képviselő - NIF
           patrimonio-representante-nombre:
-            label: Képviselő - Vezeték- és utóneve vagy cégneve
+            label: Képviselő - Vezetéknév és utónév vagy cégnév
           patrimonio-seguros-vida:
             label: Vagyontárgyak és jogok - I. Életbiztosítások - Összesen
           patrimonio-sexo-contribuyente:
             label: Adóalany - Neme
           patrimonio-suma-cuotas-limite:
-            label: Adómegállapítás - A bruttó adó felső korlátja - Az együttes korlát
-              céljából figyelembe vett adók összege
+            label: Elszámolás - A bruttó adó felső korlátja - Az együttes korlát céljából
+              figyelembe vett adók összege
           patrimonio-tipo-declaracion:
             label: A bevallás típusa
           patrimonio-total-bienes-derechos-no-exentos:
             label: 'Nettó vagyon összesítése: csökkentett adóalap - Nem mentes vagyontárgyak
               és jogok összesen'
           patrimonio-total-cuota-integra:
-            label: Adómegállapítás - Bruttó adó összesen - Bruttó adó összesen
+            label: Elszámolás - Bruttó adó összesen - Bruttó adó összesen
           patrimonio-valor-neto-bienes-ceuta-melilla:
-            label: Adómegállapítás - Ceuta és Melilla adókedvezménye - A Ceutában
-              és Melillában lévő vagyontárgyak és jogok nettó értéke
+            label: Elszámolás - Ceuta és Melilla adókedvezménye - A Ceutában és Melillában
+              lévő vagyontárgyak és jogok nettó értéke
           patrimonio-valores-cesion-capitales-negociados:
             label: Vagyontárgyak és jogok - F1. Harmadik félnek átengedett tőkét megtestesítő
               értékpapírok - Államadósság, kötvények, obligációk és egyéb forgalmazott

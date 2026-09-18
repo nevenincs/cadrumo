@@ -84,6 +84,7 @@ Submodules
    cadrumo.application.modelo.filed_revision_observation
    cadrumo.application.modelo.filing_action_ports
    cadrumo.application.modelo.filing_actions
+   cadrumo.application.modelo.filing_chain_reconciliation
    cadrumo.application.modelo.filing_repository
    cadrumo.application.modelo.history
    cadrumo.application.modelo.history_ports

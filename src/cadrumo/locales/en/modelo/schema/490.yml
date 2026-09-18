@@ -11,9 +11,9 @@ modelo:
             label: Adjustment to gross tax for the adjusted periods attributable to
               the State [19]
           base-imponible-total-periodo:
-            label: Assessment. Total taxable base for the period [13]
+            label: Settlement. Total taxable base for the period [13]
           cuota-integra:
-            label: Assessment. Gross tax [16]
+            label: Settlement. Gross tax [16]
           cuota-integra-estado:
             label: Gross tax attributable to the State Administration [17]
           declaracion-complementaria:
@@ -42,7 +42,7 @@ modelo:
           ingreso-devolucion-bic-swift:
             label: Payment or refund. BIC/SWIFT code
           ingreso-devolucion-iban:
-            label: Payment or refund. IBAN
+            label: Payment or refund. IBAN code
           intermediacion-subyacente-base-imponible:
             label: Assessment. 2.A. Online intermediation services with underlying
               supply of goods or services. Taxable base [05]
@@ -218,9 +218,9 @@ modelo:
           regularizacion-base-declarada-territorio-comun-4t:
             label: Taxable base declared in the period being adjusted (a). Q4 [174]
           regularizacion-base-imponible-indicador:
-            label: Assessment. Adjustment indicator (art. 10.3 Law 4/2020) [A]
+            label: Settlement. Adjustment indicator (art. 10.3 Law 4/2020) [A]
           regularizacion-base-imponible-periodos-anteriores:
-            label: Assessment. Amount of the taxable base adjustment for earlier periods
+            label: Settlement. Amount of the taxable base adjustment for earlier periods
               (art. 10.3 Law 4/2020) [14]
           regularizacion-cuota-estado-territorio-comun-2t:
             label: Adjustment to tax attributable to the State (i = h × m). Q2 [140]
@@ -543,7 +543,7 @@ modelo:
           tipo-de-declaracion:
             label: Return type
           tipo-impositivo:
-            label: Assessment. Tax rate [15]
+            label: Settlement. Tax rate [15]
           total-regularizacion-cuota-estado:
             label: Total adjustment attributable to the State Administration [364]
           transmision-datos-base-imponible:
@@ -640,7 +640,7 @@ modelo:
             490-02-regularizacion-ejercicio-861:
               label: Adjustment (art. 10.3 Law). Tax year
             liq21-ajuste-cuota-integra-17:
-              label: Assessment. Gross tax adjustment for the adjusted period [17]
+              label: Settlement. Gross tax adjustment for the adjusted period [17]
             liq21-resultado-19:
               label: Assessment result [19]
             reg-total-cuota-101:

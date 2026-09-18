@@ -24,6 +24,7 @@ Submodules
    cadrumo.entrypoints.adapter_composition
    cadrumo.entrypoints.censal_review
    cadrumo.entrypoints.diagnostics_run_health_composition
+   cadrumo.entrypoints.exchange_rate_composition
    cadrumo.entrypoints.ledger_action_composition
    cadrumo.entrypoints.ledger_evidence_extraction_composition
    cadrumo.entrypoints.ledger_llm_diagnostics_composition

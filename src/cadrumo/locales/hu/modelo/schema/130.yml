@@ -33,7 +33,7 @@ modelo:
             '06':
               help: Az időszakban elszenvedett levonások és előlegbefizetések közvetlen
                 becslésű tevékenységekre.
-              label: Levonások és előlegbefizetések
+              label: Forrásadó és részletfizetés
             '07':
               help: Az I. rész részeredménye a korábbi befizetések és levonások levonása
                 után.
@@ -49,7 +49,7 @@ modelo:
             '10':
               help: Az időszakban elszenvedett levonások és előlegbefizetések mezőgazdasági,
                 állattenyésztési, erdészeti vagy halászati tevékenységekre.
-              label: Levonások és előlegbefizetések
+              label: Forrásadó és részletfizetés
             '11':
               help: A II. rész részeredménye a levonások mezőgazdasági, állattenyésztési,
                 erdészeti vagy halászati részletfizetésből való levonása után.

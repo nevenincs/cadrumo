@@ -10,6 +10,7 @@ from cadrumo.tests.inventory import REPO_ROOT
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
 from ..compiler.legal_grounding import verify_legal_catalogue_grounding
+from ..conformance.registry_schema_support import committed_registry_tree
 from .catalogue_verification_support import registry_tree
 from .profile_schema_support import committed_registry_validator
 
@@ -50,8 +51,15 @@ _PRE_BLOCKLIST_HISTORICAL_REFERENCE_IDS = (
 
 
 def test_historical_references_remain_grounded_before_filing_review_fact_coverage() -> None:
-    """Corpus integrity applies to historical law outside the filing-review fact horizon."""
-    _modelos, catalogues = registry_tree()
+    """Corpus integrity applies to historical law outside the filing-review fact horizon.
+
+    Read from the AUTHORED catalogue rather than the published view. The view
+    carries only the references published modelos cite - 555 of the committed
+    1404 - and these are historical law no current modelo cites, which is the
+    very reason their grounding needs its own check. Asking the view for them
+    raised KeyError instead.
+    """
+    _modelos, catalogues = committed_registry_tree()
     historical = {ref_id: catalogues.legal[ref_id] for ref_id in _PRE_BLOCKLIST_HISTORICAL_REFERENCE_IDS}
 
     verify_legal_catalogue_grounding(historical, source_root=bundled_path())
@@ -130,17 +138,24 @@ def test_the_derived_artefact_gate_still_admits_the_pdf_manual_exception() -> No
     ``corpus/manuals/**/*.pdf.extracted.md`` refs still exist in the committed
     catalogue and are exactly the ones the gate's ``corpus/normatives/`` scope
     exempts, not references that happen not to exist at all.
-    """
-    _modelos, catalogues = registry_tree()
 
-    manual_extracted_md_refs = [
+    The COMMITTED catalogue, so read from the authored tree: the published view
+    lists only what published modelos cite, and these autonomic-deduction
+    manuals are cited by declarations outside it.
+    """
+    _modelos, catalogues = committed_registry_tree()
+
+    # The manual refs now name the PDF itself; the extracted markdown is
+    # resolved from it rather than cited. Matching the old
+    # ``.pdf.extracted.md`` spelling found nothing, which made this
+    # anti-vacuity proof vacuous in its own right.
+    manual_refs = [
         ref_id
         for ref_id, reference in catalogues.legal.items()
         if reference.corpus_ref.partition("#")[0].startswith("corpus/manuals/")
-        and reference.corpus_ref.partition("#")[0].endswith(".pdf.extracted.md")
+        and reference.corpus_ref.partition("#")[0].endswith(".pdf")
     ]
 
-    assert len(manual_extracted_md_refs) >= 3, (
-        f"expected the committed Madrid autonomic-deduction manual refs to still be present, "
-        f"found {manual_extracted_md_refs}"
+    assert len(manual_refs) >= 3, (
+        f"expected the committed autonomic-deduction manual refs to still be present, found {manual_refs}"
     )

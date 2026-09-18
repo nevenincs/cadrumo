@@ -97,9 +97,10 @@ def _row_binding(revision_id: str) -> str:
     return (
         f'[[revisions."{revision_id}".bindings]]\n'
         f'id = "{_ROW_BINDING}"\n'
-        'source = "m347_third_party_operation"\n'
-        f'selector = {{ fact = "row_field", row_field = "{_ROW_SLOT}", grouping = "contraparte_clave", '
-        'claves = [], rectification_scope = "any" }\n'
+        'provider = { kind = "m347_third_party_operation", fact = "row_field", '
+        f'row_field = "{_ROW_SLOT}", grouping = "contraparte_clave", claves = [], '
+        'rectification_scope = "any", data_type = "text" }\n'
+        'value = { data_type = "text", channel = "row_set", row_grouping = "related_party" }\n'
         'aggregation = { op = "rows" }\n'
         f'legal_refs = ["{_ARTICLE}"]\n'
         f'source_refs = ["{_SOURCE}"]\n\n'

@@ -140,7 +140,7 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
     # A window belongs to the revision covering its PERIOD year, not its
     # filing_year: "2025 0A" is filed in January 2026 and is still the 2025
     # ejercicio.
-    assert construct.deadline_windows == ("modelo-193-2025-0a",)
+    assert "modelo-193-2025-0a" in construct.deadline_windows
     assert construct.filing_schedules == ("modelo-193-anual",)
     assert schedule.period_kind == "annual"
     assert schedule.periods == ("0A",)
@@ -161,7 +161,11 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
         # both halves are asserted.
         "modelo-193-2025-0a": (2025, "2025 0A", date(2026, 1, 1), date(2026, 1, 31)),
     }
-    assert set(windows) == set(expected_windows)
+    # The edition spans 2025 onward and declares one window per year, so the
+    # 2025 window is asserted among them rather than as the only one, and no
+    # two windows may claim the same year.
+    assert set(expected_windows) <= set(windows)
+    assert len({window.filing_year for window in windows.values()}) == len(windows)
     for window_id, (filing_year, period, opens_on, closes_on) in expected_windows.items():
         window = windows[window_id]
         assert window.filing_year == filing_year
@@ -175,7 +179,7 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
         # which approves the modelo.
         assert window.legal_refs == ("orden-eha-3377-2011:art-5",)
         with (
-            pytest.raises(DeadlineValidationError, match="no variant for the exact query context"),
+            pytest.raises(DeadlineValidationError, match="holiday calendar publication for 2026 could not be resolved"),
             bundled_indexed_authority().operation() as operation,
         ):
             shift_deadline(window.closes_on, modelo="193", ccaa_code=None, operation=operation)
@@ -196,7 +200,11 @@ def test_modelo_193_deadline_identity_is_the_tax_year(
 ) -> None:
     authority = compiled_bundled_authority()
     modelo = authority.modelo("193")
-    (window,) = modelo.revisions[revision_id].deadline_windows
+    window = next(
+        candidate
+        for candidate in modelo.revisions[revision_id].deadline_windows
+        if candidate.filing_year == filing_year
+    )
 
     assert window.filing_year == window.period.filing_year == filing_year
     assert str(window.period) == f"{filing_year} 0A"

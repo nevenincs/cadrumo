@@ -4,7 +4,7 @@ modelo:
       casilla:
         continuidad:
           irnr-base-imponible:
-            label: Base imposable
+            label: base imposable
           irnr-base-imponible-directa-g:
             label: Base imposable (210 G)
           irnr-base-imponible-directa-i:

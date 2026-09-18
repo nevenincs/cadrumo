@@ -12,6 +12,7 @@ from pydantic import ValidationError
 from cadrumo.core.modelo import Modelo
 
 from ...compiler.authority import compiled_bundled_authority
+from ...compiler.authority_state import register_authoring_authority, source_root_for
 from ..closure import load_registry_closure_report
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -75,6 +76,10 @@ def test_real_loader_reports_stale_layout_bytes_from_a_live_catalogue_mutation()
         update={"sources": {**authority.catalogues.sources, source_id: source.model_copy(update={"sha256": "0" * 64})}}
     )
     mutated = replace(authority, catalogues=catalogues, _snapshots={})
+    # A replaced authority is a new object, and the evidence root is registered
+    # per compilation result by identity, so the copy has to declare the root it
+    # inherits or every layout-byte read refuses before the mutation is reached.
+    register_authoring_authority(mutated, source_root=source_root_for(authority))
     report = load_registry_closure_report(as_of=_AS_OF, registry_authority=mutated)
     row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo("100"), "2025"))
     assert row.filing_export is not None
@@ -88,11 +93,19 @@ def test_real_loader_reports_cross_limb_disagreement_from_divergent_authority_ca
     modelo = authority.modelo(Modelo("303"))
     selected = modelo.revisions["2025"]
     selector = selected.period_selector.model_copy(update={"years": (2026,), "year_from": None, "year_to": None})
-    divergent_revision = selected.model_copy(update={"period_selector": selector})
+    # The planted revision stands alone in its modelo, so selection has exactly
+    # one candidate for 2026 and answers with it rather than refusing the year
+    # as ambiguous. Its references to siblings go with them: a predecessor and a
+    # reviewed-against naming revisions this copy does not carry both dangle,
+    # and construction refuses for a reason this test is not about.
+    divergent_revision = selected.model_copy(
+        update={"period_selector": selector, "reviewed_against": None, "predecessor": None}
+    )
     divergent_modelo = modelo.model_copy(update={"revisions": {divergent_revision.id: divergent_revision}})
     mutated = replace(
         authority, _modelos_by_id={**authority._modelos_by_id, divergent_modelo.id: divergent_modelo}, _snapshots={}
     )
+    register_authoring_authority(mutated, source_root=source_root_for(authority))
     report = load_registry_closure_report(as_of=_AS_OF, registry_authority=mutated)
     row = next(item for item in report.rows if (item.modelo, item.revision) == (Modelo("303"), "2026-y-siguientes"))
     assert row.temporal_coverage.failure_code == "selected_revision_mismatch"

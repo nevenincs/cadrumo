@@ -69,6 +69,7 @@ from cadrumo.domain.deadlines.models import (
     RefundAccount,
     TaxpayerProfile,
 )
+from cadrumo.domain.filing.errors import FilingExportValidationError
 from cadrumo.domain.filing.schema import ModeloDraft
 from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.domain.filing_evidence import FilingEvidenceReference
@@ -912,7 +913,7 @@ def test_export_draft_routes_m303_only_through_the_full_envelope_and_refuses_ope
     assert receipt.byte_size == len(rendered.payload)
     assert receipt.file_sha256 == sha256(rendered.payload).hexdigest()
 
-    with pytest.raises(ValueError, match="prior-domiciliation election"):
+    with pytest.raises(FilingExportValidationError, match="prior-domiciliation election"):
         export_draft(
             draft,
             output_path=tmp_path / "missing-election.boe",
@@ -920,7 +921,7 @@ def test_export_draft_routes_m303_only_through_the_full_envelope_and_refuses_ope
             product_software_identity=product_identity,
             schema_provider=provider,
         )
-    with pytest.raises(ValueError, match="product/software identity"):
+    with pytest.raises(FilingExportValidationError, match="product/software identity"):
         export_draft(
             draft,
             output_path=tmp_path / "missing-product.boe",

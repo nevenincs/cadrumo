@@ -10,8 +10,6 @@ import pytest
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import load_toml
 
-from ..conformance.registry_schema_support import committed_registry_tree as _committed_registry_tree
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
@@ -37,23 +35,27 @@ def _completeness_manifest_fragments(modelos_root: Path) -> tuple[tuple[Path, st
 
 
 def test_completeness_manifests_use_the_canonical_fragment_anchor() -> None:
-    """Every loaded manifest is authored below one stable section path."""
-    modelos, _catalogues = _committed_registry_tree()
-    expected = {
-        (modelo.id, revision_id)
-        for modelo in modelos
-        for revision_id, revision in modelo.revisions.items()
-        if revision.completeness_manifest is not None
-    }
+    """Every AUTHORED manifest sits below one stable section path.
+
+    Authored, not loaded. ``completeness_manifest`` is an inherited keyed
+    family, so a revision can carry a manifest its predecessor states and
+    author no fragment of its own - modelo 390's 2023 and 2024 editions do.
+    Comparing the anchor against every revision that CARRIES a manifest
+    therefore demands a file from editions that correctly have none, which is
+    a claim about inheritance rather than about where a fragment is authored.
+    """
     modelos_root = bundled_path("registry", "aeat", "modelos")
+    expected = {(modelo, revision_id) for _path, modelo, revision_id in _completeness_manifest_fragments(modelos_root)}
     anchors = {
         (path.parents[3].name, path.parents[1].name)
         for path in modelos_root.glob(
-            # The committed anchor is hyphenated -- all 69 of them. This glob named it
-            # with an underscore, matched nothing, and left `anchors` empty, so the
-            # equality below failed for every modelo at once and the gate could never
-            # pass. A gate that cannot pass asserts nothing.
-            "*/revisions/*/completeness_manifest/0001-completeness-manifest.toml",
+            # The anchor is the DIRECTORY, and the fragment inside it is named by
+            # the tree's own file convention, which is `0001-declarations.toml`
+            # across every family. Naming a fragment file here pinned a spelling
+            # this gate does not own: it matched nothing after the rename, left
+            # `anchors` empty, and failed for every modelo at once. A gate that
+            # cannot pass asserts nothing.
+            "*/revisions/*/completeness_manifest/*.toml",
         )
     }
 

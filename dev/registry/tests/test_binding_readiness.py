@@ -4,16 +4,20 @@ from __future__ import annotations
 
 import json
 import logging
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
+from typing import Final
 
 import pytest
 
 from cadrumo.application.modelo.binding_readiness import annual_period_for_year
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.queries import RegistryQueryService
 
-from ..compiler.authority import compile_validated_authority
+from ..compiler.authority import compiled_bundled_authority
+from ..compiler.loader import load_modelo_directory, load_shared_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -117,13 +121,18 @@ source_refs = ["test-source-001"]
 """
 
 
+#: Two revisions that both claim filing year 2025 through different period
+#: tokens, which is the shape a year-only readiness query cannot decide.
+_DEFAULT_REVISIONS: Final[tuple[tuple[str, str, str, str | None], ...]] = (
+    ("2025-1t", "1T", "2025-01-01", None),
+    ("2025-2t", "2T", "2025-01-01", None),
+)
+
+
 def _write_year_ambiguous_registry(
     tmp_path: Path,
     *,
-    revisions: tuple[tuple[str, str, str, str | None], ...] = (
-        ("2025-1t", "1T", "2025-01-01", None),
-        ("2025-2t", "2T", "2025-01-01", None),
-    ),
+    revisions: tuple[tuple[str, str, str, str | None], ...] = _DEFAULT_REVISIONS,
 ) -> Path:
     registry_root = tmp_path / "registry" / "aeat"
     legal_dir = registry_root / "legal"
@@ -209,6 +218,42 @@ def _write_year_ambiguous_registry(
     return registry_root
 
 
+def _authority_carrying_the_planted_modelo(
+    tmp_path: Path,
+    revisions: tuple[tuple[str, str, str, str | None], ...] | None = None,
+) -> ValidatedRegistryAuthority:
+    """Return the real bundled authority carrying one planted modelo besides its own.
+
+    The planted modelo is loaded on its own through the directory loader and
+    added to a copy of the compiled authority, rather than compiled as a tree
+    of its own. A compilation validates a COMPLETE tree - the profile schema,
+    the governed facts resolved by name, the runtime catalogues under ``legal``
+    and ``iva``, and the legal references every one of those cites - so a
+    narrow tree cannot be compiled at all, and completing it would mean
+    carrying the bundled registry. Selection, which is what these cases are
+    about, reads the definitions and needs none of that.
+    """
+    registry_root = _write_year_ambiguous_registry(tmp_path, revisions=revisions or _DEFAULT_REVISIONS)
+    planted = load_modelo_directory(registry_root / "modelos" / "999")
+    # The planted modelo's own legal entries and sources travel with it: a
+    # snapshot validates the applicability of every legal reference its revision
+    # cites, and the bundled catalogue has never heard of this fixture's.
+    staged = load_shared_catalogues(registry_root)
+    authority = compiled_bundled_authority()
+    catalogues = authority.catalogues.model_copy(
+        update={
+            "legal": {**authority.catalogues.legal, **staged.legal},
+            "sources": {**authority.catalogues.sources, **staged.sources},
+        }
+    )
+    return replace(
+        authority,
+        catalogues=catalogues,
+        _modelos_by_id={**authority._modelos_by_id, planted.id: planted},
+        _snapshots={},
+    )
+
+
 def test_year_only_binding_readiness_refuses_multiple_covering_revisions(
     tmp_path: Path,
     caplog: pytest.LogCaptureFixture,
@@ -223,8 +268,7 @@ def test_year_only_binding_readiness_refuses_multiple_covering_revisions(
     """
     caplog.set_level(logging.DEBUG, logger="cadrumo.application.modelo.binding_readiness")
 
-    registry_root = _write_year_ambiguous_registry(tmp_path)
-    authority = compile_validated_authority(registry_root, tmp_path)
+    authority = _authority_carrying_the_planted_modelo(tmp_path)
 
     assert annual_period_for_year(authority, modelo="999", filing_year=2025) is None
     assert any(
@@ -235,14 +279,13 @@ def test_year_only_binding_readiness_refuses_multiple_covering_revisions(
 
 def test_year_only_report_and_readiness_share_effective_revision_selection(tmp_path: Path) -> None:
     """Same-year revisions select the effective window before readiness materialises its snapshot."""
-    registry_root = _write_year_ambiguous_registry(
+    authority = _authority_carrying_the_planted_modelo(
         tmp_path,
         revisions=(
             ("2025-early", "1T", "2025-01-01", "2025-06-30"),
             ("2025-late", "2T", "2025-07-01", None),
         ),
     )
-    authority = compile_validated_authority(registry_root, tmp_path)
     service = RegistryQueryService(authority)
 
     early_as_of = date(2025, 3, 31)
