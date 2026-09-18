@@ -74,7 +74,7 @@ def cleared_family_names(declarations: object) -> frozenset[str]:
     error rather than a consumer's.
     """
     if isinstance(declarations, str) or not isinstance(declarations, Iterable):
-        return frozenset()
+        return frozenset[str]()
     entries = cast("Iterable[object]", declarations)
     names: set[str] = set()
     for declaration in entries:
