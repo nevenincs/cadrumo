@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import tempfile
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import IO, Any
+from typing import IO, Any, Final
 from uuid import uuid4
 
 import pytest
@@ -274,3 +275,31 @@ def restate(config: pytest.Config) -> None:
         f"test run log: {run_log.path} (exit={run_log.exit_status}, metadata={run_log.metadata_path})",
         flush=True,
     )
+
+
+#: The collect-only summary this module prints, read back by the gates that
+#: boot a nested collection. The writer is
+#: :func:`pytest_unconfigure` above; keeping the reader beside it is what stops
+#: a caller from re-deriving the spelling and silently reading nothing.
+_COLLECT_ONLY_LISTING: Final = re.compile(r"^collect-only: (?P<summary>.*); listing in (?P<path>.+?) \(exit=", re.M)
+
+
+def collect_only_listing(stdout: str) -> tuple[Path | None, str | None]:
+    """Return the listing file and summary a nested collect-only run reported.
+
+    A collect-only run writes its node ids to the run log rather than to
+    stdout, and prints one line naming the file. A caller that parses stdout
+    alone therefore sees a collection with no tests in it, which is
+    indistinguishable from a selection that genuinely matched nothing.
+
+    Args:
+        stdout: The captured standard output of the nested run.
+
+    Returns:
+        The listing path and the summary text, each ``None`` when the run
+        printed no collect-only line.
+    """
+    match = _COLLECT_ONLY_LISTING.search(stdout)
+    if match is None:
+        return None, None
+    return Path(match.group("path").strip()), match.group("summary").strip()
