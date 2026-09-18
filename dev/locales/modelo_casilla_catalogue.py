@@ -539,6 +539,37 @@ REVIEWED_SHARED_TRANSLATIONS: Final[dict[tuple[str, str, str], str]] = {
     (
         "ca",
         "100",
+        "Introduïu el nombre d'anys de permanència fins al 31-12-1994, si escau.",
+    ): "the later edition drops del elemento patrimonial from the same sentence",
+    (
+        "hu",
+        "100",
+        "Adja meg a 2022-ben keletkezett, még alkalmazásra váró összeget.",
+    ): "pendiente de aplicacion, written y pendiente de aplicacion in another edition",
+    (
+        "hu",
+        "100",
+        "Adja meg a 2023-ban keletkezett, még alkalmazásra váró összeget.",
+    ): "pendiente de aplicacion, written y pendiente de aplicacion in another edition",
+    (
+        "hu",
+        "100",
+        "Adja meg a 2024-ben keletkezett, még alkalmazásra váró összeget.",
+    ): "pendiente de aplicacion, written y pendiente de aplicacion in another edition",
+    (
+        "hu",
+        "100",
+        "Adja meg a 65 év feletti és/vagy fogyatékossággal élő személyek nem díjazott befogadása utáni levonást.",
+    ): "the editions differ only in how they join the two conditions",
+    ("hu", "100", "Adja meg a jármű rendszámát."): "el numero de matricula del vehiculo, shortened to la matricula",
+    (
+        "hu",
+        "100",
+        "Tüntesse fel annak az adózónak a NIF azonosítóját, aki átruházta a levonáshoz való jogot.",
+    ): "un contribuyente and el contribuyente name the same person",
+    (
+        "ca",
+        "100",
         "IVA suportat (per exemple, recàrrec d'equivalència i/o compensació d'agricultura, ramaderia i pesca)",
     ): "one edition misspells por ejemplo as por ejermplo",
     (
