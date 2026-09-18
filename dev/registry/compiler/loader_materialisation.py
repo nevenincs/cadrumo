@@ -140,12 +140,15 @@ _ROW_LABEL_IDENTITY_FIELDS: Final = frozenset({"id", "number", "continuidad_id"}
 #: Enrolment is explicit rather than derived from ``collection_shaped_fields``,
 #: because carrying a collection has nothing to do with whether inheriting it is
 #: TRUE. A family is inheritable only when a member restated unchanged by a
-#: successor means the same thing as the predecessor's member; a family whose
+#: successor means the same thing as the predecessor's member. A family whose
 #: members are per-edition assertions about the edition that states them - the
 #: completeness manifest's graded closure claim is the worked example - would
-#: attest for the successor something nobody established, so it stays full copy
-#: however stable its ids are. Adding a family here is that judgement, made once
-#: and reviewed on its own, not a consequence of the field existing.  The
+#: otherwise attest for the successor something nobody established, which is
+#: what ``scoped`` answers: the successor carries such a family only when it
+#: names the family in its own ``scoped_families``, so the claim is adopted by
+#: the edition rather than arriving with it. Adding a family here, and choosing
+#: whether it is scoped, is that judgement, made once and reviewed on its own,
+#: not a consequence of the field existing.  The
 #: immutable domain-owned table is the only family enrolment source so the
 #: status and migration consumers cannot drift from this merge.
 _KEYED_FAMILIES: Final[tuple[_KeyedFamily, ...]] = _CANONICAL_KEYED_FAMILY_SPECS

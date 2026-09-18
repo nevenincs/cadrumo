@@ -17,13 +17,15 @@ from pathlib import Path
 
 #: The one section whose fragment directory is not spelled like its field.
 #: ``export/`` holds the generator-owned tree and carries
-#: :data:`GENERATED_EXPORT_PROVENANCE_FILENAME`; ``export_layouts/`` holds a
+#: :data:`EXPORT_FRAGMENT_PROVENANCE_FILENAME`; ``export_layouts/`` holds a
 #: hand-authored one and never does. Both merge into the ``export_layouts``
 #: section, so the alias lives here once rather than being re-derived at every
 #: boundary that walks a revision directory.
 EXPORT_SECTION_DIRECTORY_NAMES: frozenset[str] = frozenset({"export", "export_layouts"})
 GENERATED_EXPORT_DIRECTORY_NAME: str = "export"
-GENERATED_EXPORT_PROVENANCE_FILENAME: str = "_generation.provenance.json"
+#: The generator's manifest, and the one non-TOML member a revision fragment
+#: tree may carry: the TOML-only loader skips it rather than refusing it.
+EXPORT_FRAGMENT_PROVENANCE_FILENAME: str = "_generation.provenance.json"
 
 
 def revision_section_for_directory(directory_name: str) -> str:
@@ -47,15 +49,15 @@ def is_generated_export_provenance(entry: Path, revision_root: Path) -> bool:
     ``export_layouts/`` tree has no generation to attest.
     """
     return (
-        entry.name == GENERATED_EXPORT_PROVENANCE_FILENAME
+        entry.name == EXPORT_FRAGMENT_PROVENANCE_FILENAME
         and entry.parent == revision_root / GENERATED_EXPORT_DIRECTORY_NAME
     )
 
 
 __all__ = [
+    "EXPORT_FRAGMENT_PROVENANCE_FILENAME",
     "EXPORT_SECTION_DIRECTORY_NAMES",
     "GENERATED_EXPORT_DIRECTORY_NAME",
-    "GENERATED_EXPORT_PROVENANCE_FILENAME",
     "is_generated_export_provenance",
     "revision_section_for_directory",
 ]

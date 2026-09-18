@@ -77,6 +77,7 @@ from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 
 from .compiler.authority import compile_validated_authority
+from .compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .diagnostic_classification import (
     RegistryDiagnosticFilingRevision,
     UnvalidatedRegistryClassification,
@@ -753,7 +754,7 @@ def _pinned_vector_manifest(
         / "revisions"
         / document.coordinate.revision
         / "export"
-        / "_generation.provenance.json"
+        / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     )
     try:
         manifest_raw = manifest_path.read_bytes()
@@ -1094,7 +1095,7 @@ def _verify_static_generated_provenance(
         / "revisions"
         / str(selected.revision)
         / "export"
-        / "_generation.provenance.json"
+        / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     )
     if not manifest_path.is_file():
         raise FileNotFoundError("the selected generated export tree has no canonical provenance manifest")
@@ -1662,7 +1663,7 @@ def _verify_generated_revision(
         / str(entry.revision)
         / "export"
     )
-    manifest_path = export_root / "_generation.provenance.json"
+    manifest_path = export_root / EXPORT_FRAGMENT_PROVENANCE_FILENAME
     manifest = load_export_fragment_provenance_manifest(manifest_path.read_bytes())
     if (
         manifest.modelo != entry.modelo

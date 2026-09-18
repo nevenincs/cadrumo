@@ -706,8 +706,23 @@ def _prune_redundant_override_leaves(modelo_dir: Path) -> int:
     return removed
 
 
-def _technical_root(raw: Mapping[str, object]) -> bool:
-    """Whether a no-predecessor declaration records a converter limitation."""
+def technical_root(raw: Mapping[str, object]) -> bool:
+    """Whether a no-predecessor declaration records a converter limitation.
+
+    Only the structured ``cause`` answers this. A root naming one of this
+    converter's own causes is temporary and eligible for another attempt; a
+    legal or topology root such as ``official_structure_differs`` stays a root,
+    and a root stating no cause at all is not classified -- it is left alone
+    rather than guessed at.
+
+    The ``reason`` prose is deliberately not consulted. Matching cause tokens
+    and the words "migration" and "lineage" inside free text made an author's
+    wording decide whether an edition would be re-converted: a root whose prose
+    happened to explain the lineage it could not chain read as a converter
+    limitation, and one that said the same thing in other words did not. The
+    declaration's own typed field is the claim; the sentence beside it is not a
+    second, weaker spelling of it.
+    """
     declaration = raw.get("predecessor")
     if not isinstance(declaration, Mapping):
         return False
@@ -715,13 +730,7 @@ def _technical_root(raw: Mapping[str, object]) -> bool:
     if not isinstance(none, Mapping):
         return False
     cause = none.get("cause")
-    if isinstance(cause, str):
-        # A structured cause is authoritative.  Only causes emitted by this
-        # converter are temporary and eligible for another attempt; legal or
-        # topology roots such as ``official_structure_differs`` remain roots.
-        return cause in {item.value for item in BlockedCause}
-    reason = str(none.get("reason", "")).lower()
-    return any(cause.value in reason for cause in BlockedCause) or "migration" in reason or "lineage" in reason
+    return isinstance(cause, str) and cause in {item.value for item in BlockedCause}
 
 
 def _members(
@@ -857,7 +866,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                 else None
             )
             explicit_root = isinstance(declared_predecessor, Mapping)
-            candidate_id = baseline_id or (previous if not explicit_root or _technical_root(raw) else None)
+            candidate_id = baseline_id or (previous if not explicit_root or technical_root(raw) else None)
             storage_support_missing = previous is not None and baseline_id is None and spec.inherited
             authored = _members(raw, spec.section, singleton=spec.singleton)
             row = Counter[str]()
@@ -2112,7 +2121,7 @@ def _choose_predecessor(
     declared = source.manifest.get("predecessor")
     if isinstance(declared, str):
         return declared, PredecessorBasis.DECLARED, []
-    if isinstance(declared, dict) and not (reconsider_technical_roots and _technical_root(source.manifest)):
+    if isinstance(declared, dict) and not (reconsider_technical_roots and technical_root(source.manifest)):
         return None, PredecessorBasis.DECLARED_ROOT, []
     if position == 0:
         return None, PredecessorBasis.FIRST, []

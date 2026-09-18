@@ -29,6 +29,11 @@ from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
 
+from ..compiler.export_fragment_grammar import (
+    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    GENERATED_EXPORT_DIRECTORY_NAME,
+)
+
 
 class DerivationAttestation(StrEnum):
     """Whether a revision's export fields can be checked against their cited design."""
@@ -69,7 +74,7 @@ def shipped_export_attestation(modelos_root: Path | None = None) -> Iterator[Rev
     for revision_root in sorted(root.glob("*/revisions/*")):
         modelo = revision_root.parts[-3]
         revision = revision_root.name
-        manifest = revision_root / "export" / "_generation.provenance.json"
+        manifest = revision_root / GENERATED_EXPORT_DIRECTORY_NAME / EXPORT_FRAGMENT_PROVENANCE_FILENAME
         if manifest.is_file():
             derivations = json.loads(manifest.read_text(encoding="utf-8")).get("field_derivations") or []
             yield RevisionAttestation(modelo, revision, DerivationAttestation.ATTESTED, len(derivations))
