@@ -7,6 +7,7 @@
 # completa, sin anagrama."
 [[revisions."2026-y-siguientes".casillas]]
 id = "declarante-razon-social"
+continuidad_id = "declarante-razon-social"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 1, 18-57, razon social; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo1.18-57"
@@ -20,6 +21,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # ONE top-level campo of 49 bytes.
 [[revisions."2026-y-siguientes".casillas]]
 id = "persona-relacion"
+continuidad_id = "persona-relacion"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 1, 59-107, persona con quien relacionarse; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo1.59-107"
@@ -32,6 +34,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # cuyos tres primeros digitos se corresponderan con el codigo 165."
 [[revisions."2026-y-siguientes".casillas]]
 id = "numero-identificativo-declaracion"
+continuidad_id = "numero-identificativo-declaracion"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 1, 108-120, numero identificativo de declaracion; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo1.108-120"
@@ -44,6 +47,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # 122 declaracion sustitutiva ("S").
 [[revisions."2026-y-siguientes".casillas]]
 id = "declaracion-complementaria-sustitutiva"
+continuidad_id = "declaracion-complementaria-sustitutiva"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 1, 121-122, complementaria o sustitutiva; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo1.121-122"
@@ -58,6 +62,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # caso debera rellenarse a CEROS."
 [[revisions."2026-y-siguientes".casillas]]
 id = "numero-identificativo-anterior"
+continuidad_id = "numero-identificativo-anterior"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 1, 123-135, identificativo anterior; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo1.123-135"
@@ -70,6 +75,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # registros de socios o participes (Registro de tipo 2) declarados".
 [[revisions."2026-y-siguientes".casillas]]
 id = "numero-total-declarados"
+continuidad_id = "numero-total-declarados"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 1, 136-144, numero total de declarados; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo1.136-144"
@@ -84,6 +90,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # an unsigned amount with two implied decimals filling the whole 15-byte slot.
 [[revisions."2026-y-siguientes".casillas]]
 id = "importe-total-suscripciones"
+continuidad_id = "importe-total-suscripciones"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 1, 145-159, total de suscripciones; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo1.145-159"
@@ -95,6 +102,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # reciente creacion, subdivided 160-163 ANO, 164-165 MES, 166-167 DIA.
 [[revisions."2026-y-siguientes".casillas]]
 id = "fecha-constitucion"
+continuidad_id = "fecha-constitucion"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 1, 160-167, fecha de constitucion; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo1.160-167"
@@ -112,6 +120,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # campo numerico de 15 posiciones", itself 169-181 entera and 182-183 decimal.
 [[revisions."2026-y-siguientes".casillas]]
 id = "importe-fondos-propios"
+continuidad_id = "importe-fondos-propios"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 1, 168-183, fondos propios; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo1.168-183"
@@ -137,6 +146,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # o reciente creacion.
 [[revisions."2026-y-siguientes".casillas]]
 id = "socio-nif"
+continuidad_id = "socio-nif"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 2, 18-26, NIF del socio; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo2.18-26"
@@ -150,6 +160,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # (padre, madre o tutor). En cualquier otro caso ... se rellenara a espacios."
 [[revisions."2026-y-siguientes".casillas]]
 id = "representante-legal-nif"
+continuidad_id = "representante-legal-nif"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 2, 27-35, NIF del representante; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo2.27-35"
@@ -162,6 +173,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # apellido, un espacio, el segundo apellido, un espacio y el nombre completo".
 [[revisions."2026-y-siguientes".casillas]]
 id = "socio-nombre"
+continuidad_id = "socio-nombre"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 2, 36-75, nombre del socio; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo2.36-75"
@@ -174,6 +186,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # y sin coma decimal", subdivided 76-86 parte entera and 87-88 parte decimal.
 [[revisions."2026-y-siguientes".casillas]]
 id = "importe-suscripcion"
+continuidad_id = "importe-suscripcion"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 2, 76-88, importe de suscripcion; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo2.76-88"
@@ -185,6 +198,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # subdivided 89-92 ANO, 93-94 MES, 95-96 DIA.
 [[revisions."2026-y-siguientes".casillas]]
 id = "fecha-adquisicion"
+continuidad_id = "fecha-adquisicion"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 2, 89-96, fecha de adquisicion; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo2.89-96"
@@ -198,6 +212,7 @@ legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 # decimales", subdivided 97-99 parte entera and 100-101 parte decimal.
 [[revisions."2026-y-siguientes".casillas]]
 id = "porcentaje-participacion"
+continuidad_id = "porcentaje-participacion"
 continuidad_origin = "predecessor_edition_silent"
 continuidad_evidence = "El anexo de Orden HAP/2455/2013, reflejado por aeat-dr-165-2016-2022, ya declara tipo 2, 97-101, porcentaje de participacion; aeat-dr-165-2026 conserva ese campo. Orden HFP/1284/2023 articulo 13 (BOE-A-2023-24412) modifica para el ejercicio 2023 la posicion 184 y los blancos posteriores, no este dato. La revision de registro 2023-2025 solo declara ejercicio y tipo de declaracion: el dato previo esta omitido en esa declaracion de alcance limitado, no introducido en 2026."
 number = "tipo2.97-101"
