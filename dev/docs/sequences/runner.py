@@ -79,13 +79,13 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     publish_test_profile_capsule,
     upsert_test_profile_facts,
 )
-from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import UserProfileFact
+from cadrumo.entrypoints.adapter_composition import composed_profile_persistence_ports
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from dev._paths import REPO_ROOT
 
