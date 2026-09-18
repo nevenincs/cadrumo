@@ -37,7 +37,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any
+from typing import Any, Final
 
 from pydantic import SecretStr
 from pydantic_settings import SettingsConfigDict
@@ -91,6 +91,7 @@ __all__ = [
     "release_settings_storage_directories",
     "scoped_cwd",
     "scoped_env_var",
+    "scoped_product_storage_environment",
     "scoped_sys_argv",
     "settings_without_env_file",
 ]
@@ -370,6 +371,47 @@ def scoped_env_var(name: str, value: str | None) -> Generator[None]:
             os.environ.pop(name, None)
         else:
             os.environ[name] = prior
+
+
+#: The env slots a host pins when it re-points product storage at its own
+#: scratch directory, and therefore the slots a test harness must hand back.
+_PRODUCT_STORAGE_ENV_VARS: Final = ("CADRUMO_LOCAL_STORAGE_ROOT", "CADRUMO_LOG_DIR")
+
+
+@contextmanager
+def scoped_product_storage_environment() -> Generator[None]:
+    """Hand back the product storage env slots, and the logging bound to them.
+
+    For a test that runs an in-process HOST which legitimately pins product
+    storage for its own lifetime - the documentation engine does exactly this,
+    so a build never touches the workstation's real store or its shared log
+    file. In a real build process that pin is correct and permanent. Inside a
+    pytest worker the process outlives the test, so the pin becomes every later
+    test's environment: ``CADRUMO_LOG_DIR`` in particular then reads as an
+    explicit override, and a settings rebuild stops deriving that field from
+    the storage root at all.
+
+    Logging is rebuilt on exit as well as the variables restored, because the
+    host also rebinds the rotating file handler; leaving it pointed at a torn
+    down scratch directory sends every later diagnostic nowhere.
+    """
+    prior = {name: os.environ.get(name) for name in _PRODUCT_STORAGE_ENV_VARS}
+    try:
+        yield
+    finally:
+        changed = any(os.environ.get(name) != value for name, value in prior.items())
+        for name, value in prior.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+        if changed:
+            from cadrumo.core import logging as _logging_mod
+            from cadrumo.core.config import reset_settings_cache
+
+            reset_settings_cache()
+            _logging_mod._configured = False
+            _logging_mod.configure_logging()
 
 
 @contextmanager

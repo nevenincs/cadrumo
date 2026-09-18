@@ -196,6 +196,10 @@ UNENUMERATED_PATH_FRAGMENTS: dict[str, str] = {
     "/.state/": "local application state recorded while exercising a harness against a demo profile",
     "/.vault/data/": "generated search and dependency-graph indexes for the development harness",
     "/.logs/": "per-run test and audit scratch output, rewritten by every local test run",
+    "/.cache/": (
+        "local build caches, rebuilt from the sources beside them; the corpus-text cache alone "
+        "reaches several gigabytes, so reading it stalls the sweep on machine-local bytes"
+    ),
 }
 
 #: Top-level directory-name PREFIXES never enumerated in the ignored sweep.
