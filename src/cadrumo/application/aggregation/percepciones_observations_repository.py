@@ -19,6 +19,7 @@ from typing import Protocol
 from ...core.aggregation import AggregationCaptureKind
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import UTF_8_ENCODING
+from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.hashing import sha256_hex
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.tax_id import tax_id_identity_token
@@ -68,10 +69,14 @@ def percepcion_observation_key(
     ``subclave`` remain explicit because they are non-identifying AEAT codes
     and distinguish the separate registro-tipo-2 observations.
     """
-    if not 2000 <= filing_year <= 2099:
+    if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
         raise AggregationValidationError(
             tr("aggregation.retenciones.errors.filing_year_out_of_range"),
-            context={"filing_year": str(filing_year), "min_year": "2000", "max_year": "2099"},
+            context={
+                "filing_year": str(filing_year),
+                "min_year": str(FILING_YEAR_MIN),
+                "max_year": str(FILING_YEAR_MAX),
+            },
         )
     _validate_key_component(modelo, context="modelo")
     period_token = period.registry_token

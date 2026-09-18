@@ -27,6 +27,7 @@ from typing import Protocol
 
 from ...core.aggregation import AggregationCaptureKind, RetencionScheme
 from ...core.errors.hierarchy import CadrumoError
+from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.i18n.translatable import Translatable as tr
 from ...core.period import Period
 from .errors import AggregationValidationError
@@ -49,10 +50,14 @@ def retencion_observation_key(
     paid under more than one scheme is preserved while the distinct-NIF count stays
     correct.
     """
-    if not 2000 <= filing_year <= 2099:
+    if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
         raise AggregationValidationError(
             tr("aggregation.retenciones.errors.filing_year_out_of_range"),
-            context={"filing_year": str(filing_year), "min_year": "2000", "max_year": "2099"},
+            context={
+                "filing_year": str(filing_year),
+                "min_year": str(FILING_YEAR_MIN),
+                "max_year": str(FILING_YEAR_MAX),
+            },
         )
     _validate_key_component(modelo, context="modelo")
     period_token = period.registry_token
