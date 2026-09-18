@@ -1523,9 +1523,9 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
     from ..adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ..adapters.outbound.aeat.auth.session_store import build_session_store
-    from ..adapters.persistence.storage.profile_custody import build_profile_custody_port
-    from ..adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-    from ..adapters.persistence.workflow import build_workflow_persistence_port
+    from ..adapters.persistence.storage.profile_persistence_composition import (
+        composed_profile_persistence_ports,
+    )
     from ..application.auth.protocols import bind_session_store
     from ..application.auth.providers import bind_auth_provider_selector
     from ..application.bucket_event_repository import bind_bucket_event_history_repository_factory
@@ -1545,19 +1545,12 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..application.modelo.reconciliation_parsing import bind_reconciliation_evidence_parser
     from ..application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
     from ..application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
-    from ..application.user_profile.custody_ports import bind_profile_custody_port
-    from ..application.user_profile.language_resolver import register_language_resolver
-    from ..application.user_profile.login_session_port import bind_profile_login_session_port
-    from ..application.workflow.persistence import bind_workflow_persistence_port
     from ..core.redaction.tax_identity_admission import bind_tax_identity_admission
     from ..domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
 
     with ExitStack() as composition:
         composition.enter_context(bind_tax_identity_admission(RegistryTaxIdentityAdmission()))
-        profile_custody = build_profile_custody_port()
-        composition.enter_context(bind_profile_custody_port(profile_custody))
-        composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
-        composition.enter_context(bind_workflow_persistence_port(build_workflow_persistence_port()))
+        profile_custody = composition.enter_context(composed_profile_persistence_ports())
         composition.enter_context(bind_bucket_event_history_repository_factory(_bucket_event_history_repository))
         composition.enter_context(bind_confirmation_record_repository_factory(_confirmation_record_repository))
         composition.enter_context(bind_column_role_mapping_resolver(_resolve_column_roles))
@@ -1583,5 +1576,4 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
         composition.enter_context(bind_modelo_reconciliation_persistence_factory(_modelo_reconciliation_persistence))
         composition.enter_context(bind_auth_provider_selector(select_outbound_auth_provider))
         composition.enter_context(bind_session_store(build_session_store()))
-        register_language_resolver()
         yield ProfileAdapterComposition(profile_custody=profile_custody)

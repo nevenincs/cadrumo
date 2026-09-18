@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.schema_exports import (
     ExportRecordDefinition,
 )
 
+from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .._export_tree import ExportTreeTransportProfile
 from .._tree_check import (
     GeneratedExportTreeCheckContext,
@@ -33,7 +34,6 @@ from .._tree_check import (
     refuse_repeat_the_candidate_would_drop,
 )
 from ..export_fragment_provenance import (
-    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,
     normalised_loader_semantics,

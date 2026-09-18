@@ -14,6 +14,7 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
+from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .._export_tree import render_complete_export_tree
 from .._tree_publication import (
     GeneratedExportTreePublicationContext,
@@ -35,7 +36,7 @@ from ..cli import (
     require_republication_eligibility,
     reviewed_bootstrap_target,
 )
-from ..export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
+from ..export_fragment_provenance import ExportFragmentTarget
 from ..generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from ..render_check import (
     GeneratedExportBootstrapTransport,

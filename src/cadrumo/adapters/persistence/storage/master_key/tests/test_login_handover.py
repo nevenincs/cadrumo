@@ -47,21 +47,18 @@ from cadrumo.adapters.persistence.storage.master_key.login_handover_journal impo
     save_handover_journal,
 )
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import evaluate_login_throttle
-from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
-from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.user_profile.authentication import ProfileAuthenticationRefusedError
-from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
 from cadrumo.application.user_profile.login_handover import (
     HANDOVER_JOURNAL_MAX_BYTES,
     HandoverPhase,
     ProfileLoginHandoverJournal,
 )
 from cadrumo.application.user_profile.login_session import login_profile
-from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
 from cadrumo.application.user_profile.profile_pointer import ActiveProfilePointerTransactionError
 from cadrumo.application.user_profile.profile_record_repository import (
     close_active_profile_record_session,
@@ -161,8 +158,7 @@ def _child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None
         cadrumo_profile_kdf_measure_calibration=False,
     )
     composition = ExitStack()
-    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+    composition.enter_context(composed_profile_persistence_ports())
     return settings, config_module.settings_override.set(settings), composition
 
 

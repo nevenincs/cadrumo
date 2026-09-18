@@ -159,8 +159,8 @@ errors:
       mielőtt AEAT-bizonyítékot adott volna vissza.
     error_application_registry: A modellnyilvántartás vezénylése meghiúsult vagy el
       lett utasítva.
-    error_borrador_artefact_not_recognised: A PDF nem egyezik egyetlen ismert Modelo
-      100 tervezet-sémával sem.
+    error_borrador_artefact_not_recognised: A PDF nem egyezik egyetlen ismert 100-as
+      nyomtatvány tervezet-sémával sem.
     error_cadrumo_async_resource_cleanup: Az aszinkron erőforrás-tisztítás meghiúsult;
       a folytatás előtt próbálja meg újra a tisztítást.
     error_cadrumo_core: Belső alkalmazáshiba történt.
@@ -256,8 +256,8 @@ errors:
     error_modelo_external_filing_import: Az importált külső bevallás nem menthető.
       Ellenőrizze a mező értékeit és az igazolás hivatkozást.
     error_modelo_filing_record_not_found: A kért benyújtási rekord nem található.
-    error_modelo_iva_wallet_reconciliation_blocked: 'A 303-as Modelo számítása blokkolva:
-      az IVA tárca egyeztetése szükséges'
+    error_modelo_iva_wallet_reconciliation_blocked: 'A 303-es nyomtatvány számítása
+      blokkolva: az IVA tárca egyeztetése szükséges'
     error_modelo_verification_report_not_found: A kért ellenőrzési jelentés nem található.
     error_modelo_work_unit_already_discarded: A munkajegység már el van vetve.
     error_modelo_work_unit_mutation_refused: Egy elvetett munkajegység nem módosítható.
@@ -319,10 +319,10 @@ errors:
     error_wizard_compile: A varázsló-katalógus hibás formátumú és nem fordítható le.
     error_workflow: Munkafolyamat hiba történt.
     error_workflow_component: Egy munkafolyamat-komponens váratlan kivételt dobott.
-    m145_communication_record_not_found: Nincs olyan Modelo 145 helyi kommunikációs
+    m145_communication_record_not_found: Nincs olyan 145-ös nyomtatvány helyi kommunikációs
       rekord, amely megfelelne a kért azonosítónak.
-    m145_communication_service: A Modelo 145 helyi kommunikációs szolgáltatás egyik
-      művelete meghiúsult.
+    m145_communication_service: A 145-ös nyomtatvány helyi kommunikációs szolgáltatás
+      egyik művelete meghiúsult.
     modelo_calculation_revision_selector: A számítási revízió kiválasztása sikertelen.
     modelo_calculation_revision_selector_not_found: Nincs a megadott választónak megfelelő
       számítási revízió.
@@ -330,8 +330,9 @@ errors:
     modelo_compare_no_usable_revisions: Vannak összehasonlítható revíziók, de egyik
       sem használható ehhez az összehasonlításhoz.
     modelo_compare_no_work_units: Nem találhatók összehasonlítható nyomtatvány-munkaegységek.
-    modelo_project_no_m130_revisions: Nincs Modelo 130 számítási revízió a kért évhez.
-    modelo_project_no_m130_units: Nincs Modelo 130 munkaegység a kért évhez.
+    modelo_project_no_m130_revisions: Nincs 130-as nyomtatvány számítási revízió a
+      kért évhez.
+    modelo_project_no_m130_units: Nincs 130-as nyomtatvány munkaegység a kért évhez.
     modelo_projection: A nyomtatvány-előrejelzés sikertelen.
     modelo_work_address_not_found: Nincs aktív nyomtatvány-munkaegység a kért nyomtatványhoz,
       évhez és időszakhoz.
@@ -355,11 +356,12 @@ errors:
       nem érhető el.
     canonical_invoice_source_persistence: A számlaforrás-katalógust nem sikerült beolvasni.
     canonical_llm_diagnostics_read: A nyelvimodell-diagnosztikát nem sikerült beolvasni.
-    canonical_m036_declaration_persistence: A Modelo 036-bevallást nem sikerült menteni.
-    canonical_m145_communication_record_persistence: A Modelo 145 kommunikációs rekordját
+    canonical_m036_declaration_persistence: A 036-os nyomtatvány-bevallást nem sikerült
+      menteni.
+    canonical_m145_communication_record_persistence: A 145-ös nyomtatvány kommunikációs
+      rekordját nem sikerült menteni.
+    canonical_modelo_edit_receipt_persistence: A nyomtatvány szerkesztési bizonylatát
       nem sikerült menteni.
-    canonical_modelo_edit_receipt_persistence: A Modelo szerkesztési bizonylatát nem
-      sikerült menteni.
     canonical_operator_scope_session: Az operátor aktív őrzési munkamenetét nem sikerült
       beolvasni.
     canonical_operator_scope_storage: Az operátori hitelesítés tárolási művelete meghiúsult.
@@ -375,14 +377,15 @@ errors:
     canonical_tui_account_session_expired: A TUI-fiók munkamenete lejárt; a folytatáshoz
       jelentkezzen be újra.
     canonical_workflow_gate_persistence: A munkafolyamat-kaput nem sikerült menteni.
-    censo_sync: A Modelo 036 censo-szinkronizáció meghiúsult.
+    censo_sync: A 036-os nyomtatvány censo-szinkronizáció meghiúsult.
     currency_error: A devizanormalizáció meghiúsult.
     declaration_parse: A benyújtott bevallás exportját nem sikerült egyeztetési célból
       elemezni.
     exchange_rate_provider: Az árfolyam-szolgáltató nem válaszolt.
     fail_acceleration_receipt_revocation: A profil tárolt bejelentkezési gyorsítója
       nem távolítható el; továbbra is a lemezen van.
-    fail_borrador_parse: A Modelo 100 tervezet PDF-et nem sikerült bevallássá elemezni.
+    fail_borrador_parse: A 100-as nyomtatvány tervezet PDF-et nem sikerült bevallássá
+      elemezni.
     fail_browser_evasion: A böngésző-kijátszás beállítása nem alkalmazható.
     fail_browser_session_browser: A böngésző-munkamenet böngészőjét nem sikerült elindítani.
     fail_browser_validation: A böngésző-munkamenet paraméterei nem mentek át az érvényesítésen.
@@ -472,7 +475,7 @@ errors:
     ledger_check: Egy főkönyv-konzisztencia-ellenőrzés blokkoló eredményt talált.
     ledger_link: Egy főkönyvi tranzakciót nem sikerült modell-kötéshez kapcsolni.
     missing_exchange_rate: Hiányzó árfolyam a megadott dátumhoz és devizához.
-    modelo_036_lifecycle: Hiba történt a Modelo 036 életciklusában (regisztrálás,
+    modelo_036_lifecycle: Hiba történt a 036-os nyomtatvány életciklusában (regisztrálás,
       módosítás vagy törlés).
     modelo_export: Hiba történt a modellrevízió exportálása során.
     modelo_export_manifest: A modellexport manifesztet nem sikerült létrehozni vagy
@@ -733,10 +736,10 @@ errors:
       elutasított a jelenlegi hozzáférési hatókörben.
     canonical_inventory_closing_authority_conflict: Már rögzítve van egy másik, megváltoztathatatlan
       készletzárási hatóság.
-    canonical_m036_declaration_ambiguous: A Modelo 036-bevallás azonosítójának előtagja
-      több rekordra illeszkedik.
-    canonical_m036_declaration_not_found: A kért azonosítónak megfelelő Modelo 036-
-      bevallás nem található.
+    canonical_m036_declaration_ambiguous: A 036-os nyomtatvány-bevallás azonosítójának
+      előtagja több rekordra illeszkedik.
+    canonical_m036_declaration_not_found: A kért azonosítónak megfelelő 036-os nyomtatvány-bevallás
+      nem található.
     canonical_modelo_workspace_stale_cursor: A rögzített kurzor már nem egyezik az
       aktuális alappal; indítsa újra a lekérdezést.
     canonical_modelo_workspace_unresolved_work: A munkaterület olvasása feloldatlan
@@ -754,9 +757,9 @@ errors:
       létrehozni.
     canonical_tui_destination_unavailable: A kért TUI-célállomás jelenleg nem érhető
       el.
-    canonical_tui_modelo_workspace_declaration_admission: A Modelo munkaterület-deklarációja
+    canonical_tui_modelo_workspace_declaration_admission: A nyomtatvány munkaterület-deklarációja
       nem engedélyezhető a jelenlegi munkaterület-generációban.
-    canonical_tui_modelo_workspace_session_admission: A Modelo munkaterület-munkamenete
+    canonical_tui_modelo_workspace_session_admission: A nyomtatvány munkaterület-munkamenete
       nem engedélyezhető a megadott vetítés alapján.
     canonical_tui_module_argument: A TUI-modul csak a támogatott argumentumokat fogadja
       el.
@@ -774,33 +777,34 @@ errors:
     ledger_preflight: A főkönyvi előzetes ellenőrzés elutasította a modellfuttatást,
       mert az még nem nyújtható be.
     locale_catalogue_capture_not_current: Ez a nyelvi katalógus rögzítés már nem érvényes.
-    m145_communication_record_ambiguous: A Modelo 145 kommunikációs rekord azonosítójának
-      előtagja több rekorddal egyezik.
-    m145_communication_record_export: A Modelo 145 helyi kommunikációs rekordot nem
-      sikerült exportálni.
-    m145_communication_record_transition: A Modelo 145 helyi kommunikációs rekord
-      nem engedélyezi ezt az állapotátmenetet.
-    m145_communication_record_validation: A Modelo 145 helyi kommunikációs műveletet
-      az ellenőrzés blokkolja.
-    modelo_036_prior_alta_required: Modelo 036 módosítás vagy törlés nem kérhető előzetes
-      bejegyzés nélkül.
-    modelo_036_terminal_state: A Modelo 036 rekord már törölve van, és nem fogad el
-      további műveleteket.
-    modelo_184_share_sum: A Modelo 184 tagi részesedési százalékainak pontosan 100%-ot
-      kell kitenniük.
+    m145_communication_record_ambiguous: A 145-ös nyomtatvány kommunikációs rekord
+      azonosítójának előtagja több rekorddal egyezik.
+    m145_communication_record_export: A 145-ös nyomtatvány helyi kommunikációs rekordot
+      nem sikerült exportálni.
+    m145_communication_record_transition: A 145-ös nyomtatvány helyi kommunikációs
+      rekord nem engedélyezi ezt az állapotátmenetet.
+    m145_communication_record_validation: A 145-ös nyomtatvány helyi kommunikációs
+      műveletet az ellenőrzés blokkolja.
+    modelo_036_prior_alta_required: A 036-os nyomtatvány módosítás vagy törlés nem
+      kérhető előzetes bejegyzés nélkül.
+    modelo_036_terminal_state: A 036-os nyomtatvány rekord már törölve van, és nem
+      fogad el további műveleteket.
+    modelo_184_share_sum: A 184-es nyomtatvány tagi részesedési százalékainak pontosan
+      100%-ot kell kitenniük.
     modelo_210_agrupacion_renta_rows: A 210-es nyomtatvány éves csoportosított jövedelem-sorainak
       egyetlen jogszerű csoportot kell alkotniuk (egy kód, egy kulcs, egy azonosított
       ingatlan, és egy kifizető, kivéve a több kifizetős kivételt).
-    modelo_347_threshold: A Modelo 347 jelentési küszöb feletti ügyleteihez kifejezett
-      bevallási lefedettség szükséges.
-    modelo_349_country_prefix_context: 'A 349-es Modelo elutasítja a(z) {country_code}
+    modelo_347_threshold: A 347-es nyomtatvány jelentési küszöb feletti ügyleteihez
+      kifejezett bevallási lefedettség szükséges.
+    modelo_349_country_prefix_context: 'A 349-es nyomtatvány elutasítja a(z) {country_code}
       országprefixet a(z) {clave_operacion} műveletkulcshoz {filing_year}/{period}
-      időszakban: {reason}. Jogalap: AEAT Brexit IVA NIF-IVA / Modelo 349 útmutató.'
-    modelo_ambiguous_semantic_role_casilla: Több casilla használja a(z) %{semantic_role}
+      időszakban: {reason}. Jogalap: AEAT Brexit IVA NIF-IVA / 349-es nyomtatvány
+      útmutató.'
+    modelo_ambiguous_semantic_role_casilla: Több rovat használja a(z) %{semantic_role}
       szemantikus szerepet; használja a pontos kanonikus casilla.id értékét.
     modelo_calculate_binding_input: A megadott --binding felülírás nem oldható fel
       az aktív revízióra.
-    modelo_calculate_casilla_input: A megadott casilla felülírás nem oldható fel az
+    modelo_calculate_casilla_input: A megadott rovat felülírás nem oldható fel az
       aktív revízióra.
     modelo_calculate_decimal_input: A megadott számítási felülírási érték nem decimális
       alakú.
@@ -986,7 +990,7 @@ errors:
       válaszolt, amelyet ez a parancs nem tudott értelmezni, ezért semmi sem került
       átvételre a dokumentumból. Semmi sem lett mentve; futtassa újra a parancsot,
       és ha továbbra is előfordul, az olvasómodellt kell megváltoztatni.
-    refused_live_borrador_snapshot_not_found: Nem létezik Modelo 100 tervezet-pillanatkép
+    refused_live_borrador_snapshot_not_found: Nem létezik 100-as nyomtatvány tervezet-pillanatkép
       a megadott azonosítóval.
     refused_live_expedientes_snapshot_not_found: Nem létezik expediente-pillanatkép
       a megadott azonosítóval.
@@ -1005,8 +1009,8 @@ errors:
     refused_llm_contention: Ezen a gépen jelenleg nincs mért szabad memória a nyelvi
       modell betöltéséhez.
     refused_llm_validation: Egy nyelvi modell objektum nem ment át az érvényesítésen.
-    refused_modelo_100_borrador_binding: A Modelo 100 tervezet értékei nem vehetők
-      fel a számításhoz.
+    refused_modelo_100_borrador_binding: A 100-as nyomtatvány tervezet értékei nem
+      vehetők fel a számításhoz.
     refused_modelo_amendment_complementaria_liability_decrease: A kiegészítő bevallás
       (complementaria) az autoliquidación rectificativa egységesítése előtt jogszerűen
       nem csökkentheti az adózó bevallott tartozását. Használja a helyesbítési kérelem

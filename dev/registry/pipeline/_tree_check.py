@@ -20,6 +20,7 @@ from cadrumo.domain.calculations.registry.errors import (
 )
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition
 
+from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..compiler.loader import load_modelo_directory
 from ._export_tree import ExportTreeTransportProfile, RenderedExportTree, render_complete_export_tree
 from ._tree_validation import (
@@ -28,7 +29,6 @@ from ._tree_validation import (
     validate_generated_export_tree,
 )
 from .export_fragment_provenance import (
-    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentProvenanceManifest,
     ExportFragmentTarget,
     normalised_loader_semantics,

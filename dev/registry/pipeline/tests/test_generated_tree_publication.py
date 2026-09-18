@@ -14,6 +14,7 @@ import pytest
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
+from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
 from .._export_tree import RenderedExportTree
 from .._tree_publication import (
@@ -36,7 +37,6 @@ from .._tree_validation import (
     validate_generated_export_tree,
 )
 from ..export_fragment_provenance import (
-    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
     export_fragment_provenance_manifest_json_bytes,
     load_export_fragment_provenance_manifest,

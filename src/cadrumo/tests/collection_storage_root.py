@@ -181,30 +181,38 @@ def _windows_process_is_live(pid: int) -> bool:
     ``os.kill(pid, 0)`` is NOT usable here: on Windows CPython routes any
     signal other than the console-control events to ``TerminateProcess``, so
     the POSIX liveness idiom would kill the very process it asks about.
+
+    The ``sys.platform == "win32"`` block, rather than the caller's guard, is
+    what establishes the platform for the ``ctypes`` Windows API below: it is
+    the only guard shape every checker this project runs narrows on.
     """
-    try:
-        import ctypes
-        from ctypes import wintypes
-
-        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-        kernel32.OpenProcess.restype = wintypes.HANDLE
-        kernel32.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
-        kernel32.GetExitCodeProcess.argtypes = (wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD))
-        kernel32.CloseHandle.argtypes = (wintypes.HANDLE,)
-
-        query_limited_information = 0x1000
-        handle = kernel32.OpenProcess(query_limited_information, False, pid)
-        if not handle:
-            return ctypes.get_last_error() != _ERROR_INVALID_PARAMETER
+    if sys.platform == "win32":
         try:
-            exit_code = wintypes.DWORD()
-            if not kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
-                return True
-            return exit_code.value == _STILL_ACTIVE
-        finally:
-            kernel32.CloseHandle(handle)
-    except (ImportError, OSError, AttributeError, ValueError):
-        return True
+            import ctypes
+            from ctypes import wintypes
+
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            kernel32.OpenProcess.restype = wintypes.HANDLE
+            kernel32.OpenProcess.argtypes = (wintypes.DWORD, wintypes.BOOL, wintypes.DWORD)
+            kernel32.GetExitCodeProcess.argtypes = (wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD))
+            kernel32.CloseHandle.argtypes = (wintypes.HANDLE,)
+
+            query_limited_information = 0x1000
+            handle = kernel32.OpenProcess(query_limited_information, False, pid)
+            if not handle:
+                return ctypes.get_last_error() != _ERROR_INVALID_PARAMETER
+            try:
+                exit_code = wintypes.DWORD()
+                if not kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+                    return True
+                return exit_code.value == _STILL_ACTIVE
+            finally:
+                kernel32.CloseHandle(handle)
+        except (ImportError, OSError, AttributeError, ValueError):
+            return True
+    # Unreachable: the sole caller dispatches here only on Windows. Erring
+    # towards "live" is this module's stance for every unprovable probe.
+    return True
 
 
 def _owning_pid(sibling: Path, stem: str) -> int | None:

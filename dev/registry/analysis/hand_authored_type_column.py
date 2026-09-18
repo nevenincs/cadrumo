@@ -45,6 +45,10 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 from ..compiler.authority import compiled_bundled_authority
+from ..compiler.export_fragment_grammar import (
+    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    GENERATED_EXPORT_DIRECTORY_NAME,
+)
 from ..compiler.record_design import extract_record_design
 
 __all__ = [
@@ -58,7 +62,6 @@ __all__ = [
 
 _SIGNED_TYPE = "N"
 _RECORD_DESIGN_KIND = "record_design"
-_GENERATION_MANIFEST = "_generation.provenance.json"
 
 
 class Alignment(StrEnum):
@@ -117,7 +120,8 @@ def hand_authored_revisions(authority: ValidatedRegistryAuthority) -> Iterator[t
     for modelo in sorted(authority.modelos, key=lambda item: str(item.id)):
         for revision in sorted(modelo.revisions.values(), key=lambda item: str(item.id)):
             root = bundled_path("registry", "aeat", "modelos", str(modelo.id), "revisions", str(revision.id))
-            if (root / "export" / _GENERATION_MANIFEST).is_file() or not (root / "export_layouts").is_dir():
+            generated = root / GENERATED_EXPORT_DIRECTORY_NAME / EXPORT_FRAGMENT_PROVENANCE_FILENAME
+            if generated.is_file() or not (root / "export_layouts").is_dir():
                 continue
             yield str(modelo.id), str(revision.id), root
 

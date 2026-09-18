@@ -56,9 +56,10 @@ __all__ = (
 #: projected from the domain-owned policy table so the authored claim and the
 #: merge are closed on one vocabulary.
 #:
-#: A family absent here is not inherited today -- ``bindings``,
-#: ``export_layouts`` and the other per-edition claims are full copy -- so it
-#: has nothing to decline. Adding one is an inheritance judgement, not a
+#: A family absent here is not inherited, so it has nothing to decline; whether
+#: a family is inherited is read from the policy table and never restated here,
+#: because a second list of examples goes stale the moment one is enrolled.
+#: Enrolling a family is an inheritance judgement made on that table, not a
 #: consequence of wanting to restate it.
 INHERITED_FAMILIES: Final[frozenset[str]] = CANONICAL_INHERITED_FAMILIES
 RESTATABLE_FAMILIES: Final[frozenset[str]] = CANONICAL_RESTATABLE_FAMILIES

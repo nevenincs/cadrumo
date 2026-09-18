@@ -21,6 +21,7 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 
 from ..compiler.edition_materialisation import MaterialisedEdition, materialise_edition
+from ..compiler.export_fragment_grammar import EXPORT_SECTION_DIRECTORY_NAMES
 from ..compiler.loader import load_modelo_directory
 from ..compiler.loader_grammar import REVISION_SECTION_FIELDS
 from ._export_tree import render_toml_bytes
@@ -38,7 +39,6 @@ __all__ = [
 ]
 
 
-_EXPORT_AUTHORITY_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset({"export", "export_layouts"})
 _BOOTSTRAP_TARGETS_PATH: Final[Path] = Path(__file__).with_name("generated_export_bootstrap_targets.toml")
 _CONTINUITY_SECTIONS: Final[tuple[str, ...]] = ("casillas", "casilla_continuidad_evolutions")
 _PREDECESSOR_DECLARATION: Final = "predecessor"
@@ -64,7 +64,6 @@ _RESOLVED_STORAGE_DECLARATIONS: Final[frozenset[str]] = frozenset(
 )
 _CASILLA_SECTION: Final = "casillas"
 _COMPLETE_EDITION_FRAGMENT: Final = "complete-edition.toml"
-_EXPORT_AUTHORITY_MEMBERS: Final[frozenset[str]] = frozenset({"export", "export_layouts"})
 _SOURCE_NATIVE_SECTIONS: Final[frozenset[str]] = frozenset({"casillas", "casilla_continuidad_evolutions"})
 
 
@@ -129,7 +128,7 @@ def generated_export_bootstrap_target(
 
 def ignore_export_authority_directories(_directory: str, names: Collection[str]) -> set[str]:
     """Return every loader-recognized export-authority directory in ``names``."""
-    return set(_EXPORT_AUTHORITY_DIRECTORY_NAMES.intersection(names))
+    return set(EXPORT_SECTION_DIRECTORY_NAMES.intersection(names))
 
 
 def stage_supplementary_orden_authority(
@@ -355,7 +354,7 @@ def write_complete_edition(revision_root: Path, edition: MaterialisedEdition) ->
     )
     _write_complete_edition_section(revision_root, edition, _CASILLA_SECTION, staged_rows)
     for member, value in edition.table.items():
-        if member in _EXPORT_AUTHORITY_MEMBERS or member == _CASILLA_SECTION:
+        if member in EXPORT_SECTION_DIRECTORY_NAMES or member == _CASILLA_SECTION:
             continue
         if member not in REVISION_SECTION_FIELDS:
             continue

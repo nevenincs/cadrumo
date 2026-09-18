@@ -105,7 +105,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 from ..compiler.authority import compiled_bundled_authority
-from ..pipeline.export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
+from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .corpus import bundled_modelo_ids
 from .temporal_site_agreement import undated_window_years
 

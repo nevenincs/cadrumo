@@ -38,19 +38,6 @@ modelo:
           field:
             label: Model 188, exercici 2022
         2023-y-siguientes:
-          casilla:
-            '01':
-              help: Nombre de perceptors (registres) la base de retencions dels quals
-                és positiva.
-            '02':
-              help: Suma de les bases de retenció reflectides en els registres de
-                perceptor amb base positiva.
-            '04':
-              help: Nombre de perceptors (registres) la base de retencions dels quals
-                és negativa.
-            '05':
-              help: Suma de les bases de retenció reflectides en els registres de
-                perceptor amb base negativa.
           construct:
             modelo-188-calculation-construct:
               field:

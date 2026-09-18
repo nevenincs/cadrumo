@@ -158,3 +158,8 @@ reason = """Reads the authored casilla section headers of an edition it is conve
 module = "dev/registry/pipeline/render_profile.py"
 corpus = "AEAT diseños de registro (Contenido cells and cell references)"
 reason = """Reads the exact official Contenido cell a reviewed render profile may name, and the composite definitions that cell spells out. A profile is a reviewed input: this reads what it points at and infers nothing."""
+
+[[parser]]
+module = "dev/registry/analysis/record_design_enrollment.py"
+corpus = "AEAT diseños de registro (ingest capture titles and authored sources rows)"
+reason = """Reads the AEAT listing title a capture record stored beside an unregistered design, and the ``[sources."..."]`` headers already authored in the tree, to propose the source rows those designs are owed. The title's ejercicio names an identifier only; the candidate leaves applies_from/applies_to and record_design_epoch undeclared because a listing title states no legal window. It prints a candidate and installs nothing."""

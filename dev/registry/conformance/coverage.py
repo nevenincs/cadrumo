@@ -183,6 +183,20 @@ absence as a defect.
 """
 
 
+def ledger_is_filing_eligible(authority_scope: CoverageAuthorityScope) -> bool:
+    """Whether a coverage ledger built at this scope carries filing-grade gaps.
+
+    The one definition of that judgement. It was previously restated on every
+    ledger that needed it -- twice here, byte for byte, and once more in the
+    conformance profile -- and the third copy had already drifted: it compared
+    with ``==`` where these compared with ``is``, which for a ``StrEnum`` also
+    admits the bare string ``"filing"``. Two spellings of one predicate with
+    different acceptance is the failure this function exists to prevent, so
+    callers delegate here rather than repeating the comparison.
+    """
+    return authority_scope is CoverageAuthorityScope.FILING
+
+
 class EvidenceTierCoverageGate(CoverageModel):
     """Coverage state for one evidence tier."""
 
@@ -238,7 +252,7 @@ class ModelLawCoverageLedger(CoverageModel):
     @property
     def filing_eligible(self) -> bool:
         """Whether this ledger was built from filing-grade snapshot authority."""
-        return self.authority_scope is CoverageAuthorityScope.FILING
+        return ledger_is_filing_eligible(self.authority_scope)
 
     @property
     def gaps(self) -> tuple[EvidenceTierCoverageGate, ...]:
@@ -292,6 +306,17 @@ governed by the forbidding checks instead.
 
 _AUTHORITY_CHECKED_STATUSES: frozenset[ConstructEvidenceStatus] = frozenset({"grounded", "inherited"})
 """Statuses that may only be reached through the validated audit fold."""
+
+_INCOMPLETE_EVIDENCE_STATUSES: frozenset[ConstructEvidenceStatus] = frozenset(
+    {"unresolved", "unmeasured", "unvalidated"}
+)
+"""Statuses that make a construct row a gap: the complement of the set above.
+
+Named rather than written inline at the one place it was used, because what
+counts as a gap is the load-bearing half of this vocabulary and its complement
+already had a name. An inline literal beside a named sibling is how the two
+drift apart when a sixth status is added and only one of them is updated.
+"""
 
 
 class _AuthorityCheckProof:
@@ -403,7 +428,7 @@ class ConstructEvidenceLedger(CoverageModel):
     @property
     def filing_eligible(self) -> bool:
         """Whether this ledger was built from filing-grade snapshot authority."""
-        return self.authority_scope is CoverageAuthorityScope.FILING
+        return ledger_is_filing_eligible(self.authority_scope)
 
     @property
     def reviewed_but_not_filing_capable(self) -> bool:
@@ -426,7 +451,7 @@ class ConstructEvidenceLedger(CoverageModel):
     @property
     def gaps(self) -> tuple[ConstructEvidenceRow, ...]:
         """Return construct rows whose own or inherited evidence is incomplete."""
-        return tuple(row for row in self.rows if row.status in {"unresolved", "unmeasured", "unvalidated"})
+        return tuple(row for row in self.rows if row.status in _INCOMPLETE_EVIDENCE_STATUSES)
 
     @property
     def filing_gaps(self) -> tuple[ConstructEvidenceRow, ...]:

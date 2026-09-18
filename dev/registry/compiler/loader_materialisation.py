@@ -23,6 +23,7 @@ from cadrumo.core.directory_scan import (
     scan_directory,
 )
 from cadrumo.core.toml import freeze_toml, read_toml
+from cadrumo.domain.calculations.registry.cleared_families import cleared_family_names
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
     RegistryFailureCondition,
@@ -115,6 +116,7 @@ _PREDECESSOR_FIELD: Final = "predecessor"
 _CASILLA_STORAGE_BASELINE_FIELD: Final = "casilla_storage_baseline"
 _FAMILY_STORAGE_BASELINE_FIELD: Final = "family_storage_baseline"
 _RESTATED_FAMILIES_FIELD: Final = "restated_families"
+_CLEARED_FAMILIES_FIELD: Final = "cleared_families"
 _NO_PREDECESSOR_TABLE_KEY: Final = "none"
 _INHERITED_SECTION: Final = "casillas"
 _RETIREMENT_SECTION: Final = "casilla_continuidad_evolutions"
@@ -138,12 +140,15 @@ _ROW_LABEL_IDENTITY_FIELDS: Final = frozenset({"id", "number", "continuidad_id"}
 #: Enrolment is explicit rather than derived from ``collection_shaped_fields``,
 #: because carrying a collection has nothing to do with whether inheriting it is
 #: TRUE. A family is inheritable only when a member restated unchanged by a
-#: successor means the same thing as the predecessor's member; a family whose
+#: successor means the same thing as the predecessor's member. A family whose
 #: members are per-edition assertions about the edition that states them - the
 #: completeness manifest's graded closure claim is the worked example - would
-#: attest for the successor something nobody established, so it stays full copy
-#: however stable its ids are. Adding a family here is that judgement, made once
-#: and reviewed on its own, not a consequence of the field existing.  The
+#: otherwise attest for the successor something nobody established, which is
+#: what ``scoped`` answers: the successor carries such a family only when it
+#: names the family in its own ``scoped_families``, so the claim is adopted by
+#: the edition rather than arriving with it. Adding a family here, and choosing
+#: whether it is scoped, is that judgement, made once and reviewed on its own,
+#: not a consequence of the field existing.  The
 #: immutable domain-owned table is the only family enrolment source so the
 #: status and migration consumers cannot drift from this merge.
 _KEYED_FAMILIES: Final[tuple[_KeyedFamily, ...]] = _CANONICAL_KEYED_FAMILY_SPECS
@@ -227,8 +232,7 @@ def inherit_keyed_family(
     supersedes; and a stated member carrying an identity the same edition
     retires.
     """
-    cleared = as_toml_array(successor.get("cleared_families", ())) or ()
-    if family.section in cleared:
+    if family.section in cleared_family_names(successor.get(_CLEARED_FAMILIES_FIELD, ())):
         if successor.get(family.section):
             raise RegistryLoadError(f"{context}: cleared family {family.section!r} also states members")
         return ()
@@ -412,7 +416,7 @@ def _apply_family_storage_delta(
     successor: Mapping[str, object],
 ) -> tuple[tuple[object, ...], frozenset[str], tuple[tuple[str, int], ...], frozenset[str]]:
     """Apply the canonical field/removal/order delta to one keyed family."""
-    if family.section in (as_toml_array(successor.get("cleared_families", ())) or ()):
+    if family.section in cleared_family_names(successor.get(_CLEARED_FAMILIES_FIELD, ())):
         return tuple(), frozenset[str](), tuple(), frozenset[str]()
     try:
         overrides = tuple(
@@ -481,7 +485,7 @@ def _refuse_undecided_scoped_family(
     family: _KeyedFamily,
     inherited: tuple[object, ...],
     stated: tuple[object, ...],
-    declined: tuple[object, ...],
+    declined: frozenset[str],
 ) -> None:
     """Refuse silence that would leave a scoped family empty on both sides of an edge.
 
@@ -1162,7 +1166,7 @@ def _materialise_revision(
                 source_path, raw_revisions, named, storage_named, family_storage_named, family_baseline_id, resolved
             )
             asserted = as_toml_array(table.get("scoped_families", ())) or ()
-            declined = as_toml_array(table.get("cleared_families", ())) or ()
+            declined = cleared_family_names(table.get(_CLEARED_FAMILIES_FIELD, ()))
             for family in _KEYED_FAMILIES:
                 if family.section in restated:
                     continue

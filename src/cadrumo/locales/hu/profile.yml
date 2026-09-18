@@ -70,7 +70,7 @@ profile:
         előlegek levonására?
       intracommunity_operations_exceed_50000_eur: Intraközösségi ügyletek meghaladják
         az 50 000 EUR-t
-      m303_regime_composition: Melyik Modelo 303 rendszerösszetétel alkalmazandó?
+      m303_regime_composition: Melyik 303-as nyomtatvány rendszerösszetétel alkalmazandó?
       oss_enrolled: OSS-be bejelentkezett
       redeme_enrolled: REDEME-ben bejegyzett (havi IVA visszaigénylési nyilvántartás)
       regime: Melyik IVA-rendszer alkalmazandó?
@@ -78,11 +78,12 @@ profile:
       sii_enrolled: SII-be bejelentkezett (azonnali információszolgáltatás)
       voluntary_sii_enrolled: Önkéntesen bejelentkezett az SII-be?
     obligations:
-      bienes_extranjero_above_threshold: Külföldi vagyon meghaladja a Modelo 720 küszöbértékét
+      bienes_extranjero_above_threshold: Külföldi vagyon meghaladja a 720-as nyomtatvány
+        küszöbértékét
       monedas_virtuales_extranjero_above_threshold: Külföldi virtuális valuták meghaladják
-        a Modelo 721 küszöbértékét
+        a 721-es nyomtatvány küszöbértékét
       third_party_transactions_above_347_threshold: Harmadik féllel folytatott ügyletek
-        meghaladják a Modelo 347 küszöbértékét
+        meghaladják a 347-es nyomtatvány küszöbértékét
     preferences:
       output_language: CLI kimeneti nyelv ehhez a profilhoz
     renta_family:
@@ -112,7 +113,7 @@ profile:
       id: Adóazonosító (NIF/CIF/DNI/NIE)
     tax_residence:
       ccaa: Adóügyi illetőség szerinti autonóm közösség
-      jurisdiction_scope: Melyik adóterület alkalmazandó erre a Modelo 303-ra?
+      jurisdiction_scope: Melyik adóterület alkalmazandó erre a 303-es nyomtatványra?
     taxpayer_type:
       country_of_fiscal_residence: Adóügyi illetőség szerinti ország (ISO 3166-1 alfa-2
         kód, pl. GB, DE, FR)
@@ -140,7 +141,7 @@ profile:
       representante_fiscal_nombre: A spanyolországi adóügyi képviselő neve
     withholding:
       has_employees: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
-      modelo_111_no_retenciones_periods: Modelo 111 forrásadó nélküli időszakok
+      modelo_111_no_retenciones_periods: 111-es nyomtatvány forrásadó nélküli időszakok
       pays_capital_income_with_retencion: Forrásadóval terhelt tőkejövedelmet fizet
       pays_professionals_with_retencion: Forrásadóval terhelt díjazást fizet szakembereknek
       pays_rent_with_retencion: Forrásadóval terhelt helyi bérleti díjat fizet
@@ -333,7 +334,7 @@ profile:
         intracommunity_operations_exceed_50000_eur:
           label: Közösségen belüli ügyletek 50.000 EUR felett
         m303_regime_composition:
-          label: A Modelo 303 rendszerösszetétele
+          label: A 303-es nyomtatvány rendszerösszetétele
         oss_enrolled:
           label: OSS/IOSS-regisztráció
         redeme_enrolled:
@@ -371,11 +372,11 @@ profile:
           label: Trabajador del mar (besorolás)
       obligations:
         bienes_extranjero_above_threshold:
-          label: Modelo 720 küszöbérték túllépve
+          label: 720-as nyomtatvány küszöbérték túllépve
         monedas_virtuales_extranjero_above_threshold:
-          label: Modelo 721 küszöbérték túllépve
+          label: 721-es nyomtatvány küszöbérték túllépve
         third_party_transactions_above_347_threshold:
-          label: Modelo 347 küszöbérték túllépve
+          label: 347-es nyomtatvány küszöbérték túllépve
       preferences:
         output_language:
           label: Kimeneti nyelv
@@ -516,7 +517,7 @@ profile:
         has_employees:
           label: Van alkalmazottja
         modelo_111_no_retenciones_periods:
-          label: Modelo 111 forrásadó nélküli időszakok
+          label: 111-es nyomtatvány forrásadó nélküli időszakok
         pays_capital_income_with_retencion:
           label: Tőkejövedelmet forrásadóval fizet
         pays_professionals_with_retencion:
@@ -586,7 +587,8 @@ profile:
     invalid_date_value: Érvénytelen dátumérték
     invalid_email_value: Érvénytelen e-mail-érték
     invalid_enum_value: Érvénytelen felsorolási érték
-    modelo_work_profile_baseline_missing: Hiányzik a Modelo-munkához szükséges profil-alapmező
+    modelo_work_profile_baseline_missing: Hiányzik a nyomtatvány-munkához szükséges
+      profil-alapmező
     numeric_field_invalid: Érvénytelen numerikus mező
     required_field_missing: Hiányzik egy kötelező profilmező.
     unknown_field: Ismeretlen mező

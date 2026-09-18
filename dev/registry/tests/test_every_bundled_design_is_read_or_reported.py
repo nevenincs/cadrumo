@@ -92,14 +92,35 @@ _CAUSE_CLASSES: tuple[tuple[str, str], ...] = (
     ("missing type", "a field row declares no type"),
     ("missing description", "a field row declares no description"),
     ("misordered", "envelope composition markers out of order"),
-    # Modelo 184's five BOE orden PDFs refuse here. They are the orden that
-    # approves the modelo, carrying its design as an annex, so the parse lands
-    # partway down the document and the first field it finds sits at position
-    # 160 rather than 1. Their AEAT diseño counterparts, which open at position
-    # 1, parse cleanly -- measured on both. The label names the shape without
-    # settling the fix, because either the parser learns to find the annex or
-    # those sources are not layout authorities, and that is a grounding call.
+    # A sheet the read RETURNS opens somewhere other than wire position 1.
+    #
+    # This class used to hold modelo 184's five BOE ordenes, for a reason that
+    # turned out not to be theirs: an orden approving a modelo carries its
+    # design as an annex, so the parse first crosses the orden's own articles,
+    # whose prose cites wire positions. Those lines opened an unheaded body at
+    # position 160, and it was validated at construction -- before the pass that
+    # was already going to route it to unread. The document itself was fine;
+    # 184's 2015 orden now reads three annex records that each tile 1..500.
+    #
+    # NO BUNDLED DESIGN CURRENTLY REFUSES THIS WAY -- swept across the corpus,
+    # the refusing population is five documents and all five are the class
+    # below. The entry stays because the invariant it names is real for any body
+    # the read does return, and a classifier holding no members today is how the
+    # next one gets grouped instead of arriving UNCLASSIFIED. It is not a record
+    # of outstanding debt, and nothing should read it as one.
     ("first field starts at position", "design does not open at wire position 1"),
+    # The annex records themselves were never recognised: every identified body
+    # was routed to unread, so the document yielded no record at all.
+    #
+    # This is what remains of the BOE-orden shape once the judgement-moment
+    # defect above is separated from it, and the distinction is the finding.
+    # Modelo 184's 2015 orden and its 2016/2019/2022/2023 siblings were one
+    # undifferentiated class; only 2015's records are actually reachable. The
+    # rest, with modelo 345's 2022 orden, fail earlier -- the heading recogniser
+    # does not see their annex record headings, so nothing is identified to
+    # return. The fix is heading recognition for the annex shape, not geometry,
+    # which is why it earns its own class rather than sharing one above.
+    ("yielded no readable record sheet", "an orden's annex records were never recognised"),
 )
 
 

@@ -27,6 +27,7 @@ from cadrumo.domain.calculations.registry.schema import (
 from cadrumo.domain.calculations.registry.schema_revision_members import ConstructDefinition
 
 from ._toml_helpers import as_toml_table as _as_toml_table
+from .export_fragment_grammar import revision_section_for_directory
 from .loader_grammar import REVISION_SECTION_FIELDS
 
 _REVISION_EXPORT_LAYOUTS = "export_layouts"
@@ -126,7 +127,7 @@ def merge_revision_fragment(path: Path, expected_revision_id: RevisionId, merged
     if not raw_revision_table:
         raise RegistryLoadError(f"{path}: revision fragment declares no section fields")
     fragment_directory = path.relative_to(path.parents[1]).parts[0]
-    section_name = "export_layouts" if fragment_directory == "export" else fragment_directory
+    section_name = revision_section_for_directory(fragment_directory)
     for key, value in raw_revision_table.items():
         _reject_revision_fragment_field(path, key)
         if key != section_name:

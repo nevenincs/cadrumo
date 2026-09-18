@@ -4,8 +4,11 @@ modelo:
       casilla:
         continuidad:
           filing-year:
+            help: Az az adóév, amelyre a bevallás vonatkozik, négy számjeggyel.
             label: Az adóbevallás vonatkozási éve
           tipo-declaracion:
+            help: 'A bevallás jellege: eredeti, egy korábban benyújtottat helyettesítő,
+              vagy kihagyott adatokat pótló kiegészítő.'
             label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
       construct:
         modelo-185-informative:
@@ -17,26 +20,16 @@ modelo:
         title: Tagok és önsegélyező-tagok járulékainak havi adatszolgáltatási bevallása
       revision:
         2003-2025:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Az az adóév, amelyre a bevallás vonatkozik, négy számjeggyel.
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: 'A bevallás jellege: eredeti, egy korábban benyújtottat helyettesítő,
-                vagy kihagyott adatokat pótló kiegészítő.'
           field:
             label: 185-ös modelo (orden-hac-96-2003), 2003-2025. adóévek
         2025-y-siguientes:
           casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: 'A 185-ös nyomtatvány rovatának adóügyi adatai: adóév.'
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: E bevallás sorszámos azonosító száma, 13 számjegyű.
               label: A BEVALLÁS AZONOSÍTÓ SZÁMA
             x-chim6r1ee1in4qbfchng:
               help: A bevallással érintett naptári hónap, 01 januártól 12 decemberig.
               label: IDŐSZAK
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: A 185-ös nyomtatvány rovatának adóügyi adatai.
             x-chim6r1eehnn8obc5lp6apr9edq74rrj:
               help: Az e bevallóhoz tartozó bejelentett személyek, azaz a 2-es típusú
                 rekordok teljes száma.

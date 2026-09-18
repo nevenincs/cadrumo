@@ -20,7 +20,7 @@ modelo:
               on account is positive.
             label: Total number of recipients with a positive base
           capitalizacion-seguros-resumen-retenciones:
-            help: Sum of the withholdings and payments on account made on the declared
+            help: Sum of the withholdings and payments on account applied to the declared
               income.
             label: Withholdings and payments on account
       field:
@@ -39,20 +39,6 @@ modelo:
           field:
             label: Modelo 188, tax year 2022
         2023-y-siguientes:
-          casilla:
-            '01':
-              help: Number of recipients (records) whose withholding base is positive.
-            '02':
-              help: Sum of the withholding bases reported in recipient records with
-                a positive base.
-            '03':
-              help: Sum of the withholdings and payments on account applied to the
-                declared income.
-            '04':
-              help: Number of recipients (records) whose withholding base is negative.
-            '05':
-              help: Sum of the withholding bases reported in recipient records with
-                a negative base.
           construct:
             modelo-188-calculation-construct:
               field:

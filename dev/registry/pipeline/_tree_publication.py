@@ -31,6 +31,7 @@ from cadrumo.core.link_safety import is_link_like
 from cadrumo.core.locks import exclusive_file_lock
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
+from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..compiler.loader import load_modelo_directory
 from ..conformance.manager import reset_conformance_cache
 from ._export_tree import RenderedExportTree
@@ -40,7 +41,6 @@ from ._tree_validation import (
     validate_generated_export_tree,
 )
 from .export_fragment_provenance import (
-    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     SHA256_PATTERN,
     ExportFragmentOutputDigest,

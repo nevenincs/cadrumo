@@ -40,6 +40,7 @@ the second converted gate inherits this convention instead of inventing its own.
 from __future__ import annotations
 
 import asyncio
+import ctypes
 import subprocess
 import sys
 import time
@@ -137,6 +138,9 @@ class ProcessCpuMeasurementError(RuntimeError):
     """Raised when a child process's CPU time cannot be measured."""
 
 
+_JOB_ACCOUNTING_UNAVAILABLE = "Job Object CPU accounting is only available on Windows"
+
+
 class WindowsJobCpuAccounting:
     """Total CPU seconds of a child AND its descendants via a Job Object.
 
@@ -148,56 +152,72 @@ class WindowsJobCpuAccounting:
     units) queryable after every member exits.
     """
 
-    def __init__(self) -> None:
-        """Create the job object every measured child will be assigned to."""
-        import ctypes
+    #: ``WinDLL`` is a ``CDLL`` subclass, and only ``CDLL`` is nameable in an
+    #: annotation on every platform -- an annotation is not a runtime branch,
+    #: so no guard can narrow it.
+    _kernel32: ctypes.CDLL
+    _job: Any
 
-        self._ctypes = ctypes
-        self._kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-        self._job = self._kernel32.CreateJobObjectW(None, None)
-        if not self._job:
-            raise ProcessCpuMeasurementError(f"CreateJobObject failed (error {ctypes.get_last_error()})")
+    def __init__(self) -> None:
+        """Create the job object every measured child will be assigned to.
+
+        Every method here opens with ``if sys.platform == "win32"`` rather than
+        relying on the caller's dispatch: that positive block is the only guard
+        shape each checker this project runs narrows on, so the ``ctypes``
+        Windows API resolves when the tree is analysed for Linux or macOS.
+        """
+        if sys.platform == "win32":
+            self._kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            self._job = self._kernel32.CreateJobObjectW(None, None)
+            if not self._job:
+                raise ProcessCpuMeasurementError(f"CreateJobObject failed (error {ctypes.get_last_error()})")
+            return
+        raise ProcessCpuMeasurementError(_JOB_ACCOUNTING_UNAVAILABLE)
 
     def assign(self, process: Any) -> None:
         """Enrol a live child (and, by inheritance, its descendants) in the job."""
-        # The private Popen handle is the point: assignment must target the
-        # live child before it spawns the interpreter grandchild.
-        if not self._kernel32.AssignProcessToJobObject(self._job, int(process._handle)):
-            raise ProcessCpuMeasurementError(
-                f"AssignProcessToJobObject failed for pid {process.pid} (error {self._ctypes.get_last_error()})",
-            )
+        if sys.platform == "win32":
+            # The private Popen handle is the point: assignment must target the
+            # live child before it spawns the interpreter grandchild.
+            if not self._kernel32.AssignProcessToJobObject(self._job, int(process._handle)):
+                raise ProcessCpuMeasurementError(
+                    f"AssignProcessToJobObject failed for pid {process.pid} (error {ctypes.get_last_error()})",
+                )
+            return
+        raise ProcessCpuMeasurementError(_JOB_ACCOUNTING_UNAVAILABLE)
 
     def cpu_seconds(self) -> float:
         """Return the job's total user + kernel CPU seconds across every member."""
-        ctypes = self._ctypes
+        if sys.platform == "win32":
 
-        class _JobBasicAccounting(ctypes.Structure):
-            _fields_ = (
-                ("TotalUserTime", ctypes.c_longlong),
-                ("TotalKernelTime", ctypes.c_longlong),
-                ("ThisPeriodTotalUserTime", ctypes.c_longlong),
-                ("ThisPeriodTotalKernelTime", ctypes.c_longlong),
-                ("TotalPageFaultCount", ctypes.c_uint32),
-                ("TotalProcesses", ctypes.c_uint32),
-                ("ActiveProcesses", ctypes.c_uint32),
-                ("TotalTerminatedProcesses", ctypes.c_uint32),
-            )
+            class _JobBasicAccounting(ctypes.Structure):
+                _fields_ = (
+                    ("TotalUserTime", ctypes.c_longlong),
+                    ("TotalKernelTime", ctypes.c_longlong),
+                    ("ThisPeriodTotalUserTime", ctypes.c_longlong),
+                    ("ThisPeriodTotalKernelTime", ctypes.c_longlong),
+                    ("TotalPageFaultCount", ctypes.c_uint32),
+                    ("TotalProcesses", ctypes.c_uint32),
+                    ("ActiveProcesses", ctypes.c_uint32),
+                    ("TotalTerminatedProcesses", ctypes.c_uint32),
+                )
 
-        accounting = _JobBasicAccounting()
-        job_object_basic_accounting_information = 1
-        ok = self._kernel32.QueryInformationJobObject(
-            self._job,
-            job_object_basic_accounting_information,
-            ctypes.byref(accounting),
-            ctypes.sizeof(accounting),
-            None,
-        )
-        if not ok:
-            raise ProcessCpuMeasurementError(
-                f"QueryInformationJobObject failed (error {ctypes.get_last_error()})",
+            accounting = _JobBasicAccounting()
+            job_object_basic_accounting_information = 1
+            ok = self._kernel32.QueryInformationJobObject(
+                self._job,
+                job_object_basic_accounting_information,
+                ctypes.byref(accounting),
+                ctypes.sizeof(accounting),
+                None,
             )
-        total_100ns = int(accounting.TotalUserTime) + int(accounting.TotalKernelTime)
-        return total_100ns / 10_000_000
+            if not ok:
+                raise ProcessCpuMeasurementError(
+                    f"QueryInformationJobObject failed (error {ctypes.get_last_error()})",
+                )
+            total_100ns = int(accounting.TotalUserTime) + int(accounting.TotalKernelTime)
+            return total_100ns / 10_000_000
+        raise ProcessCpuMeasurementError(_JOB_ACCOUNTING_UNAVAILABLE)
 
     def close(self) -> None:
         """Release the job handle."""
@@ -282,7 +302,7 @@ def timed_subprocess(
     run_env = None if env is None else dict(env)
     run_cwd = None if cwd is None else str(cwd)
 
-    if sys.platform.startswith("win"):
+    if sys.platform == "win32":
         accounting = WindowsJobCpuAccounting()
         try:
             started = time.monotonic()

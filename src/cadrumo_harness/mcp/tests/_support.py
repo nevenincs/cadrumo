@@ -1,10 +1,17 @@
-"""Harness-local integration support with no repository test-package dependency."""
+"""Harness-local integration support with no repository test-package dependency.
+
+The profile-persistence composition these tests enter is NOT here: it is the
+one shipped definition in ``cadrumo.entrypoints.adapter_composition``, which
+the tests import directly. A harness-local copy is what this module exists to
+avoid for test PACKAGE dependencies, and it was never a reason to restate
+product wiring -- the copy that used to live here had already drifted from
+the set the shipped frontend binds."""
 
 from __future__ import annotations
 
 import os
 from collections.abc import Generator
-from contextlib import ExitStack, contextmanager
+from contextlib import contextmanager
 from pathlib import Path
 from uuid import UUID
 
@@ -16,25 +23,6 @@ from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.storage_taxonomy_locations import STORAGE_TAXONOMY
-
-
-@contextmanager
-def composed_profile_persistence_ports() -> Generator[None]:
-    """Bind the production custody and login-session adapters for one harness test."""
-    from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
-    from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-    from cadrumo.adapters.persistence.workflow import build_workflow_persistence_port
-    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-    from cadrumo.application.user_profile.language_resolver import register_language_resolver
-    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
-    from cadrumo.application.workflow.persistence import bind_workflow_persistence_port
-
-    with ExitStack() as composition:
-        composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-        composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
-        composition.enter_context(bind_workflow_persistence_port(build_workflow_persistence_port()))
-        register_language_resolver()
-        yield
 
 
 @contextmanager
@@ -92,4 +80,4 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
             dispose_engine(settings)
 
 
-__all__ = ["composed_profile_persistence_ports", "isolated_profile_storage_root", "temporary_env"]
+__all__ = ["isolated_profile_storage_root", "temporary_env"]

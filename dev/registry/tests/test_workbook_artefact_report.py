@@ -15,7 +15,8 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
-from pydantic import ValidationError
+
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ..parity.workbook_parity_models import WorkbookArtefactReport
 from ..parity.workbook_parity_types import WorkbookKind, WorkbookScanStatus
@@ -27,7 +28,7 @@ _HASH_64 = "a" * 64
 
 def test_workbook_report_rejects_scanned_unreadable_kind() -> None:
     """A successful workbook scan cannot report an unreadable artefact kind."""
-    with pytest.raises(ValidationError, match="scanned workbook cannot be unreadable"):
+    with pytest.raises(RegistryValidationError, match="scanned workbook cannot be unreadable"):
         WorkbookArtefactReport(
             path="modelo_303/files/bad.xlsx",
             modelo="303",
@@ -44,7 +45,7 @@ def test_workbook_report_rejects_scanned_unreadable_kind() -> None:
 
 def test_workbook_report_requires_error_for_non_scanned_status() -> None:
     """A failed workbook scan must carry an operator-visible diagnostic."""
-    with pytest.raises(ValidationError, match="non-scanned workbook report must include an error"):
+    with pytest.raises(RegistryValidationError, match="non-scanned workbook report must include an error"):
         WorkbookArtefactReport(
             path="modelo_303/files/bad.xlsx",
             modelo="303",

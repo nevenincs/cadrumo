@@ -3,6 +3,11 @@
 The MCP distribution is an outer process root in its own right.  It binds the
 same inward application ports as the CLI and TUI, but it must not import either
 entrypoint or any repository-only test composition.
+
+The profile-persistence ports are the exception that proves the boundary: they
+come from ``cadrumo.adapters.persistence.storage.profile_persistence_composition``,
+which is shipped adapter code rather than an entrypoint or a test package, and
+which every host shares precisely so this root cannot drift from them.
 """
 
 from __future__ import annotations
@@ -41,9 +46,9 @@ def profile_adapter_composition() -> Generator[OperatorProbePorts]:
         save_usage_ratios,
     )
     from cadrumo.adapters.persistence.storage.master_key.active_session import ActiveProfileSessionPresenceAdapter
-    from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
-    from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-    from cadrumo.adapters.persistence.workflow import build_workflow_persistence_port
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
+        composed_profile_persistence_ports,
+    )
     from cadrumo.application.auth.operator_probe_ports import OperatorProbePorts
     from cadrumo.application.auth.protocols import bind_session_store
     from cadrumo.application.auth.providers import bind_auth_provider_selector
@@ -64,15 +69,9 @@ def profile_adapter_composition() -> Generator[OperatorProbePorts]:
     from cadrumo.application.modelo.reconciliation_parsing import bind_reconciliation_evidence_parser
     from cadrumo.application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
     from cadrumo.application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
-    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-    from cadrumo.application.user_profile.language_resolver import register_language_resolver
-    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
-    from cadrumo.application.workflow.persistence import bind_workflow_persistence_port
 
     with ExitStack() as composition:
-        composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-        composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
-        composition.enter_context(bind_workflow_persistence_port(build_workflow_persistence_port()))
+        composition.enter_context(composed_profile_persistence_ports())
         composition.enter_context(bind_bucket_event_history_repository_factory(build_bucket_event_history_repository))
         composition.enter_context(bind_confirmation_record_repository_factory(ConfirmationRecordRepository))
         composition.enter_context(bind_column_role_mapping_resolver(resolve_outbound_column_roles))
@@ -100,7 +99,6 @@ def profile_adapter_composition() -> Generator[OperatorProbePorts]:
         )
         composition.enter_context(bind_auth_provider_selector(select_outbound_auth_provider))
         composition.enter_context(bind_session_store(build_session_store()))
-        register_language_resolver()
         yield OperatorProbePorts(
             active_profile_session=ActiveProfileSessionPresenceAdapter(),
             certificate_health=CertificateHealthProbeAdapter(),

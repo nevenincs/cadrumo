@@ -14,7 +14,7 @@ from textwrap import dedent
 from typing import Any
 from uuid import UUID
 
-from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 
 from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
@@ -82,10 +82,7 @@ _HARNESS = (
     import sys
     from contextlib import ExitStack
 
-    from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
-    from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
@@ -97,8 +94,7 @@ _HARNESS = (
     payload = json.loads(sys.argv[1])
     settings = Settings(_env_file=None, **payload["settings"])
     composition = ExitStack()
-    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+    composition.enter_context(composed_profile_persistence_ports())
     token = config_module.settings_override.set(settings)
     exit_code = 0
     try:
@@ -175,10 +171,7 @@ _WINDOWS_HANDLE_HARNESS = (
     import sys
     from contextlib import ExitStack
 
-    from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
-    from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
     from cadrumo.core import config as config_module
     from cadrumo.core.config import Settings
     from cadrumo.core.logging import defer_logging_configuration, resume_logging_configuration
@@ -191,8 +184,7 @@ _WINDOWS_HANDLE_HARNESS = (
     payload = json.loads(sys.argv[1])
     settings = Settings(_env_file=None, **payload["settings"])
     composition = ExitStack()
-    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+    composition.enter_context(composed_profile_persistence_ports())
     argv = bootstrap_argv(
         profile_handle=payload.get("profile_handle"),
         secrets_handle=payload.get("secrets_handle"),
@@ -328,38 +320,47 @@ def _windows_command_and_handles(
     args: Sequence[str],
     readers: Sequence[int],
 ) -> tuple[list[str], list[int], int | None, int | None]:
-    """Translate secret descriptor placeholders into the Windows HANDLE allowlist."""
-    import msvcrt
+    """Translate secret descriptor placeholders into the Windows HANDLE allowlist.
 
-    command: list[str] = []
-    profile_handle: int | None = None
-    secrets_handle: int | None = None
-    index = 0
-    while index < len(args):
-        value = args[index]
-        if value in {"--profile-secrets-fd", "--secrets-fd"}:
-            placeholder = args[index + 1]
-            descriptor_index = int(placeholder[4:-1])
-            handle = msvcrt.get_osfhandle(readers[descriptor_index])
-            if value == "--profile-secrets-fd":
-                profile_handle = handle
-            else:
-                secrets_handle = handle
-            index += 2
-            continue
-        command.append(value)
-        index += 1
-    handles = [msvcrt.get_osfhandle(reader) for reader in readers]
-    return command, handles, profile_handle, secrets_handle
+    The ``sys.platform == "win32"`` block, rather than the caller's guard, is
+    what establishes the platform for :mod:`msvcrt` below: it is the only guard
+    shape every checker this project runs narrows on.
+    """
+    if sys.platform == "win32":
+        import msvcrt
+
+        command: list[str] = []
+        profile_handle: int | None = None
+        secrets_handle: int | None = None
+        index = 0
+        while index < len(args):
+            value = args[index]
+            if value in {"--profile-secrets-fd", "--secrets-fd"}:
+                placeholder = args[index + 1]
+                descriptor_index = int(placeholder[4:-1])
+                handle = msvcrt.get_osfhandle(readers[descriptor_index])
+                if value == "--profile-secrets-fd":
+                    profile_handle = handle
+                else:
+                    secrets_handle = handle
+                index += 2
+                continue
+            command.append(value)
+            index += 1
+        handles = [msvcrt.get_osfhandle(reader) for reader in readers]
+        return command, handles, profile_handle, secrets_handle
+    raise RuntimeError("Windows HANDLE transport requested on a non-Windows host")
 
 
-def _windows_startup(handles: Sequence[int]) -> subprocess.STARTUPINFO:
+def _windows_startup(handles: Sequence[int]) -> WindowsStartupInfo:
     """Make each payload HANDLE inheritable through an explicit startup allowlist."""
-    for handle in handles:
-        os.set_handle_inheritable(handle, True)
-    startup = subprocess.STARTUPINFO()
-    startup.lpAttributeList = {"handle_list": list(handles)}
-    return startup
+    if sys.platform == "win32":
+        for handle in handles:
+            os.set_handle_inheritable(handle, True)
+        startup = subprocess.STARTUPINFO()
+        startup.lpAttributeList = {"handle_list": list(handles)}
+        return startup
+    raise RuntimeError("Windows HANDLE transport requested on a non-Windows host")
 
 
 def _run(

@@ -57,6 +57,13 @@ def _binding_values(year: int) -> dict[str, Decimal]:
         # facts; neutral zero when the chain under test is unrelated.
         values["renta-profile-madrid-nacimiento-adopcion-eligible-count"] = Decimal("0")
         values["renta-profile-unidad-familiar-otros-miembros-base"] = Decimal("0")
+        # The Canarias maritime-registry exemption's three numeric facts, whose
+        # boolean predicate is answered False beside them: a taxpayer claiming
+        # nothing there still has to supply the facts, because an unsupplied
+        # binding is a refusal rather than a zero.
+        values["renta-maritime-gross-navigation-income"] = Decimal("0")
+        values["renta-maritime-annual-salary"] = Decimal("0")
+        values["renta-maritime-qualifying-days"] = Decimal("0")
     if year == 2024:
         values.update(
             {
@@ -73,6 +80,20 @@ def _binding_values(year: int) -> dict[str, Decimal]:
             },
         )
     return values
+
+
+def _boolean_binding_values(year: int) -> dict[str, bool]:
+    """Boolean profile predicates this scenario answers in the negative.
+
+    The taxpayer in the Renta manual example is an ordinary resident with an
+    imputed real-estate income, so the Canarias maritime-registry exemption path
+    does not apply. It is supplied rather than left absent because an unsupplied
+    binding is a refusal, not a false: the registry keeps "not claimed" and "no
+    answer" apart, and this scenario is claiming nothing.
+    """
+    if year < 2025:
+        return {}
+    return {"renta-maritime-path-rebeca": False}
 
 
 def _calculate(
@@ -93,6 +114,7 @@ def _calculate(
             "renta-modelo-131-pagos-fraccionados": Decimal("0.00"),
         },
         date_binding_values={"renta-profile-taxpayer-birth-date": date(1985, 6, 15)},
+        boolean_binding_values=_boolean_binding_values(year),
     )
 
 

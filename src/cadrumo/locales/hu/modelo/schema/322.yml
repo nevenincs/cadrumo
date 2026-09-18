@@ -82,6 +82,12 @@ modelo:
           '164':
             label: Elszámolás. FELSZÁMÍTOTT ÁFA. Csoporton belüli ügyletek. Adóösszeg
               [164]
+          '166':
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
+          '167':
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
           '168':
             help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
               bevallott adat.
@@ -216,9 +222,31 @@ modelo:
             label: Levonható ÁFA összeg belföldi folyó ügyletek után
           iva-resultado-regimen-general:
             label: Általános rendszer eredménye
+          m322-actividad-otras-1-codigo:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
+          m322-actividad-otras-1-epigrafe-iae:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
+          m322-actividad-otras-2-codigo:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
+          m322-actividad-otras-2-epigrafe-iae:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
+          m322-actividad-otras-3-codigo:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
+          m322-actividad-otras-3-epigrafe-iae:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
+          m322-actividad-otras-4-codigo:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
+          m322-actividad-otras-4-epigrafe-iae:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
+          m322-actividad-otras-5-codigo:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
+          m322-actividad-otras-5-epigrafe-iae:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
           m322-actividad-principal-codigo:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
             label: Tevékenységi kód - Fő
           m322-actividad-principal-epigrafe-iae:
+            help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
             label: IAE besorolás - Fő
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-compensaciones-en-regimen-especial-de-la:
             label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 1. csoport.
@@ -282,10 +310,34 @@ modelo:
           m322-actividades-deduccion-diferenciadas-grupo-2-regularizacion-bienes-inversion-cuota:
             label: Eltérő levonási rendszerű tevékenységek. Levonható áfa. 2. csoport.
               Tárgyi eszközök korrekciója. Levonható adóösszeg [734]
+          m322-identificacion-aplicacion-prorrata-especial-opcion-revocacion:
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
+          m322-identificacion-destinatario-criterio-caja:
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
           m322-identificacion-exonerado-declaracion-resumen-anual-modelo-390:
             help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
               bevallott adat.
+          m322-identificacion-grupo-rol:
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
           m322-identificacion-nif-entidad-dominante:
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
+          m322-identificacion-numero-grupo:
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
+          m322-identificacion-redeme-inscrito:
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
+          m322-identificacion-regimen-163-sexies-cinco:
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
+          m322-identificacion-tributacion-exclusivamente-foral:
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
+          m322-identificacion-volumen-anual-no-cero:
             help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
               bevallott adat.
           m322-informacion-adicional-criterio-caja-base-imponible:
@@ -458,6 +510,9 @@ modelo:
           m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general:
             label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
               szerint [12]
+          m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-base-imponible:
+            help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
+              bevallott adat.
           m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-cuota:
             label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
               szerint. Adóösszeg [14]
@@ -917,42 +972,26 @@ modelo:
             '99':
               help: A 322-es nyomtatvány 99. rovata, 2008. adóév.
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: Tevékenységi kód - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: IAE besorolás - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: Tevékenységi kód - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: IAE besorolás - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: Tevékenységi kód - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: IAE besorolás - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: Tevékenységi kód - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: IAE besorolás - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: Tevékenységi kód - Egyéb 5.
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
               label: IAE besorolás - Egyéb 5.
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              help: Kizárólag a bevallás utolsó időszakában kell kitölteni.
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
-                bevallott adat.
               label: Azonosítás. Ön a pénzforgalmi különös rendszer alá tartozó ügyletek
                 címzettje?
             x-chim6r1ecll6asj3d5hmiro:
@@ -963,38 +1002,24 @@ modelo:
               label: Azonosítás. Mentesül a 390-es nyomtatvány éves IVA-összesítő
                 bevallás alól?
             x-chim6r1ectp7as3f5ln7arb5e9ng:
-              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
-                bevallott adat.
               label: Azonosítás. Csoportszám
             x-chim6r1ectp7as3f5lp6ur0:
-              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
-                bevallott adat.
               label: Azonosítás. Uralkodó / függő
             x-chim6r1ee1in4qbfchng:
               help: A 322-es nyomtatvány periodo. rovata, 2008. adóév.
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
-                bevallott adat.
               label: 'Azonosítás. A különös arányosítás alkalmazása (LIVA 103.Dos.1º
                 cikk): választás vagy a választás visszavonása'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
-                bevallott adat.
               label: Azonosítás. Szerepel a havi visszatérítési nyilvántartásban (RIVA
                 30. cikk)?
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
-                bevallott adat.
               label: 'Azonosítás. Alkalmazandó különös rendszer: LIVA 163 sexies.Cinco
                 cikk'
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
-              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
-                bevallott adat.
               label: Kizárólag foral adóhatóság alá tartozó adóalany, a Vámhatóság
                 által megállapított, még befizetetlen import-IVA-val
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
-                bevallott adat.
               label: Azonosítás. Van ügyleti forgalom (LIVA 121. cikk)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: A 322-es nyomtatvány iva.autorepercutido.intracomunitaria. rovata,
@@ -1134,18 +1159,12 @@ modelo:
             '164':
               help: A 322-es nyomtatvány 164. rovata, 2024. adóév.
             '165':
-              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
-                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
                 Adóalap
             '166':
-              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
-                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
                 Kulcs %
             '167':
-              help: A 322-es nyomtatványon, a szervezetcsoport egyedi havi önadózásán
-                bevallott adat.
               label: Elszámolás. Fizetendő IVA. Egyéb ügyletek az általános rendszerben.
                 Adóösszeg
             '168':
@@ -1461,23 +1480,13 @@ modelo:
               label: Elszámolás (folytatás). Benzin, gázolaj és bioüzemanyag értékesítése
                 utáni előlegfizetés a nem vámjellegű raktározási eljárás lezárását
                 követően [112]
-            '122':
-              help: 122. rovat, 322. nyomtatvány, 2008. adóév.
-            '125':
-              help: 125. rovat, 322. nyomtatvány, 2008. adóév.
             '165':
-              help: 'A 322-es nyomtatvány 165. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [165].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóalap [165]
             '166':
-              help: 'A 322-es nyomtatvány 166. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [166].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adókulcs % [166]
             '167':
-              help: 'A 322-es nyomtatvány 167. rovatának adóügyi adatai: adóügyi információ
-                Hivatkozások: [167].'
               label: Elszámolás. FELSZÁMÍTOTT ÁFA. A többi ügylet az általános szabályozás
                 szerint. Adóösszeg [167]
             '168':
@@ -1510,69 +1519,47 @@ modelo:
               label: Elszámolás (folytatás). A vámhatóság által megállapított, még
                 be nem fizetett import áfa [77]
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Tevékenységi kód - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 1.
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Tevékenységi kód - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 2.
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Tevékenységi kód - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 3.
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Tevékenységi kód - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 4.
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Tevékenységi kód - Egyéb 5.
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: IAE besorolás - Egyéb 5.
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              help: A 322-es nyomtatvány rovatának adóügyi adatai.
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              help: A 322-es nyomtatvány rovatának adóügyi adatai.
             x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
               label: Jogosult a benzin, gázolaj és bioüzemanyag értékesítése utáni
                 előleg levonására
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: Pénzforgalmi elszámolású ügyletek címzettje
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
               label: Az anyavállalat adószáma
             x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
               label: Mentesül a 390-es éves összesítő bevallás alól
             x-chim6r1ectp7as3f5ln7arb5e9ng:
-              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Csoportszám
             x-chim6r1ectp7as3f5lp6ur0:
-              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: Anyavállalat vagy leányvállalat
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: 'Különleges arányosítás: választás vagy visszavonás'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: A havi visszatérítési nyilvántartásban szerepel
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: A LIVA 163 sexies.Ötödik cikke szerinti rendszer választása
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
-              help: A 322-es nyomtatvány rovatának adóügyi adatai.
               label: Kizárólag tartományi adóztatás
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: 'A 322-es nyomtatvány rovatának adóügyi adatai: adóügyi információ.'
               label: Az éves forgalom nem nulla
           field:
             label: 322-es modelo, 2026. adóévtől

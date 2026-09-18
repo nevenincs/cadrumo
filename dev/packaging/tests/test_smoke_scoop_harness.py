@@ -43,7 +43,7 @@ def _interpreter() -> str | None:
     i.e. the exact regression environment of the container child. pwsh 7.2+
     no longer promotes native stderr, so it only proves the happy path.
     """
-    if sys.platform.startswith("win"):
+    if sys.platform == "win32":
         resolved = shutil.which("powershell") or shutil.which("pwsh")
         assert resolved is not None, "a Windows host must expose powershell or pwsh"
         return resolved
@@ -198,7 +198,7 @@ raise SystemExit(1)
 """,
         encoding="utf-8",
     )
-    if sys.platform.startswith("win"):
+    if sys.platform == "win32":
         launcher = scoop_bin_dir / "scoop.cmd"
         launcher.write_text(
             f'@echo off\r\n"{sys.executable}" "{script}" %*\r\nexit /b %errorlevel%\r\n',
@@ -225,7 +225,7 @@ def test_process_reap_is_separator_anchored_to_the_app_root(tmp_path: Path) -> N
         return  # structural contract asserted above; no interpreter on this host
     root = tmp_path / "apps" / "python"
     sibling = tmp_path / "apps" / "python-foo"
-    if sys.platform.startswith("win"):
+    if sys.platform == "win32":
         source = Path(os.environ["COMSPEC"])
         holder_name = "hold.exe"
         hold_arguments = "@('/c', 'ping', '-n', '60', '127.0.0.1')"
@@ -242,7 +242,7 @@ def test_process_reap_is_separator_anchored_to_the_app_root(tmp_path: Path) -> N
         # set on the copy. The mode bits copy carries are all this needs -- the
         # chmod below adds the execute bit either way.
         shutil.copy(source, target)
-        if not sys.platform.startswith("win"):
+        if not sys.platform == "win32":
             target.chmod(target.stat().st_mode | stat.S_IEXEC)
     driver = f"""
 $source = Get-Content -Raw -LiteralPath '{_SCRIPT}'

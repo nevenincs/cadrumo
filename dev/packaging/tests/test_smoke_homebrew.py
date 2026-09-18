@@ -78,7 +78,7 @@ else:
 """,
         encoding="utf-8",
     )
-    if sys.platform.startswith("win"):
+    if sys.platform == "win32":
         launcher = bin_dir / "brew.bat"
         launcher.write_text(
             f'@echo off\r\n"{sys.executable}" "{script}" %*\r\nexit /b %errorlevel%\r\n',

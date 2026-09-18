@@ -86,7 +86,7 @@ def test_explicit_root_is_classified_instead_of_becoming_a_minimality_blind_spot
     manifest.write_text(
         manifest.read_text(encoding="utf-8").replace(
             'predecessor = "2024"',
-            'predecessor = { none = { reason = "migration predecessor_row_without_lineage" } }',
+            'predecessor = { none = { cause = "predecessor_row_without_lineage", reason = "migration" } }',
         ),
         encoding="utf-8",
         newline="\n",

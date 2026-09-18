@@ -36,6 +36,7 @@ from cadrumo.domain.calculations.registry.ids import (
 )
 from cadrumo.domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportLayoutDefinition
 
+from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .joined_record_design import JoinedRecordDesign
 from .pydantic_error_detail import validation_error_detail
 from .record_design_intermediate import (
@@ -66,7 +67,6 @@ def _publish_once_bytes(path: Path, payload: bytes, *, mode: int = 0o600) -> Non
 
 __all__ = [
     "EXPORT_FRAGMENT_GENERATOR_SCHEMA_VERSION",
-    "EXPORT_FRAGMENT_PROVENANCE_FILENAME",
     "EXPORT_FRAGMENT_PROVENANCE_SCHEMA_VERSION",
     "EXPORT_RENDER_NORMALIZATION_SCHEMA_VERSION",
     "LEGACY_EXPORT_FRAGMENT_PROVENANCE_FILENAME",
@@ -107,8 +107,6 @@ _LOADER_SEMANTIC_SCHEMA_VERSION: Final[int] = 6
 #: separately what a digest looks like is one relaxation away from one of
 #: them accepting a value the other refuses.
 SHA256_PATTERN: Final[str] = r"^[0-9a-f]{64}$"
-EXPORT_FRAGMENT_PROVENANCE_FILENAME: Final[str] = "_generation.provenance.json"
-"""Internal JSON member ignored by the TOML-only registry loader."""
 
 #: The pre-rename filename, kept so both the reader that skips it and the
 #: publisher that removes it name the same string. It was declared twice

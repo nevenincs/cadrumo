@@ -20,6 +20,8 @@ from typing import Final
 
 import pytest
 
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+
 from ..compiler.loader import load_modelo_directory
 from ..compiler.validate_inherited_family_pairing import inherited_family_pairing_failures
 from ..conformance.loader_directory_mode_support import write_standard_manifest as _write_standard_manifest
@@ -61,6 +63,13 @@ _CROSS_REFERENCE: Final = (
     "requires_aeat_authorization = false\n"
     f'legal_refs = ["{_ARTICLE}"]\n'
     f'source_refs = ["{_SOURCE}"]\n'
+)
+
+#: Withdrawing a family is the strongest thing an edition can say about it, so the
+#: declaration carries a cause and an authored reason rather than a bare family name.
+_CLEARED_CROSS_REFERENCES: Final = (
+    'cleared_families = [{ family = "live_cross_references", cause = "not_authored_for_this_edition", '
+    'reason = "This edition authors no live cross-reference and adopts none from the edition before it." }]\n'
 )
 
 _DISPOSITION: Final = (
@@ -151,7 +160,7 @@ def test_a_cleared_family_under_a_surviving_surface_is_refused(tmp_path: Path) -
     its family.
     """
     definition = load_modelo_directory(
-        _modelo(tmp_path, successor_extra='cleared_families = ["live_cross_references"]\n'),
+        _modelo(tmp_path, successor_extra=_CLEARED_CROSS_REFERENCES),
     )
 
     successor = definition.revisions["2025"]
@@ -160,6 +169,36 @@ def test_a_cleared_family_under_a_surviving_surface_is_refused(tmp_path: Path) -
     (failure,) = inherited_family_pairing_failures(definition)
     assert "live_cross_references" in failure
     assert "'portal'" in failure
+
+
+@pytest.mark.parametrize(
+    "declaration",
+    [
+        pytest.param(
+            'cleared_families = [{ family = "live_cross_references", cause = "not_authored_for_this_edition" }]',
+            id="no-reason",
+        ),
+        pytest.param(
+            'cleared_families = [{ family = "live_cross_references", reason = "Nothing here." }]',
+            id="no-cause",
+        ),
+        pytest.param('cleared_families = ["live_cross_references"]', id="bare-family-name"),
+    ],
+)
+def test_a_clearance_without_its_authored_grounds_is_refused(tmp_path: Path, declaration: str) -> None:
+    """Detector teeth: emptying a family is the strongest withdrawal, so it cannot be a bare name.
+
+    A clearance takes every member of a family out of an edition. Before it was
+    typed it needed nothing behind it, while a restatement -- which withdraws
+    strictly less, since the edition states the family itself -- has always
+    needed a cause and an authored reason. Each case here removes one of those
+    grounds, including the bare string the field used to accept, and each must
+    fail closed rather than empty the family anyway.
+    """
+    modelo_dir = _modelo(tmp_path, successor_extra=declaration + "\n")
+
+    with pytest.raises(RegistryLoadError, match="cleared_families"):
+        load_modelo_directory(modelo_dir)
 
 
 def test_an_inapplicability_claim_its_predecessor_contradicts_is_refused(tmp_path: Path) -> None:
@@ -175,7 +214,7 @@ def test_an_inapplicability_claim_its_predecessor_contradicts_is_refused(tmp_pat
     definition = load_modelo_directory(
         _modelo(
             tmp_path,
-            successor_extra='cleared_families = ["live_cross_references"]\n\n' + _DISPOSITION,
+            successor_extra=_CLEARED_CROSS_REFERENCES + "\n" + _DISPOSITION,
         ),
     )
 

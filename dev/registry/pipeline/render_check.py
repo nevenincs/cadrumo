@@ -57,8 +57,8 @@ from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncodin
 from cadrumo.domain.calculations.registry.ids import RevisionId, SourceRefId
 from cadrumo.domain.calculations.registry.static_inspection import GeneratedArtifactSource, RegistryRevisionInspection
 
+from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ._export_tree import SERIALIZER_CONVENTION, ExportTreeTransportProfile, render_complete_export_tree
-from .export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .joined_record_design import JoinedRecordDesign, join_record_design_semantics
 from .record_design_intermediate import load_record_design_intermediate
 from .render_profile import (

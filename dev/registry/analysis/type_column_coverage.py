@@ -38,19 +38,18 @@ from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPred
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
 from ..compiler.authority import compiled_bundled_authority
+from ..compiler.export_fragment_grammar import (
+    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    GENERATED_EXPORT_DIRECTORY_NAME,
+)
 
 __all__ = [
-    "GENERATION_MANIFEST_NAME",
     "RevisionTypeColumnCoverage",
     "TypeColumnCoverage",
     "classify_revision",
     "type_column_coverage",
 ]
 
-GENERATION_MANIFEST_NAME: Final[str] = "_generation.provenance.json"
-"""The generated tree's manifest, which the generated-tree gate reads derivations from."""
-
-_GENERATED_TREE: Final[str] = "export"
 _HAND_AUTHORED_TREE: Final[str] = "export_layouts"
 
 
@@ -99,7 +98,7 @@ def classify_revision(revision: ModeloRevision, revision_root: Path) -> tuple[Ty
         The coverage state, and a reason for every state other than a clean single instrument.
     """
     declares_export = bool(revision.export_layouts)
-    has_manifest = (revision_root / _GENERATED_TREE / GENERATION_MANIFEST_NAME).is_file()
+    has_manifest = (revision_root / GENERATED_EXPORT_DIRECTORY_NAME / EXPORT_FRAGMENT_PROVENANCE_FILENAME).is_file()
     has_layouts = (revision_root / _HAND_AUTHORED_TREE).is_dir()
     if not declares_export:
         if has_manifest or has_layouts:

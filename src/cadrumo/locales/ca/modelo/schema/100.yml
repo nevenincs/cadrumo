@@ -3098,6 +3098,8 @@ modelo:
             label: 'Interessos de demora corresponents a les deduccions anteriors:
               Part autonòmica'
           irpf-intereses-demora-perdida-deducciones-autonomicas:
+            help: Indiqueu els interessos de demora autonòmics corresponents a les
+              deduccions anteriors en aquest bloc de regularització.
             label: 'Interessos de demora corresponents a les deduccions anteriors:
               Part autonòmica'
           irpf-intereses-demora-perdida-transitoria-estatal:
@@ -4345,9 +4347,6 @@ modelo:
               label: 'Si la regularització està motivada per haver-se produït les
                 circumstàncies previstes en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de
                 la Llei de l''Impost, marqui amb una ''X'' aquesta casella: Part estatal'
-            0581:
-              help: 'Interessos de demora corresponents a les deduccions anteriors:
-                Part autonòmica'
             0585:
               label: 'Quota líquida estatal incrementada: Part estatal'
             0586:
@@ -7242,9 +7241,6 @@ modelo:
               label: 'Si la regularització està motivada per haver-se produït les
                 circumstàncies previstes en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de
                 la Llei de l''Impost, marqui amb una ''X'' aquesta casella: Part autonòmica'
-            0581:
-              help: 'Indiqueu o reviseu «Interessos de demora corresponents a les
-                deduccions anteriors: Part autonòmica» per completar aquesta autoliquidació.'
             0584:
               label: 'Per rendes obtingudes a l''illa de la Palma (imports d''aquestes
                 caselles de l''annex A.6): Part autonòmica'
@@ -8566,9 +8562,6 @@ modelo:
               label: 'Si la regularització està motivada per haver-se produït les
                 circumstàncies previstes en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de
                 la Llei de l''Impost, marqui amb una ''X'' aquesta casella: Part autonòmica'
-            0581:
-              help: 'Indiqueu o reviseu «Interessos de demora corresponents a les
-                deduccions anteriors: Part autonòmica» per completar aquesta autoliquidació.'
             0584:
               label: 'Per residència habitual i efectiva a l''illa de La Palma (imports
                 d''aquestes caselles de l''annex A.7): Part autonòmica'
@@ -11411,9 +11404,6 @@ modelo:
                 el dret el 2024.
               label: 'Import de les deduccions autonòmiques de les quals s''ha perdut
                 el dret el 2024: Part autonòmica'
-            0581:
-              help: Indiqueu els interessos de demora autonòmics corresponents a les
-                deduccions anteriors en aquest bloc de regularització.
             0582:
               help: Indiqueu la part estatal dels interessos de demora corresponents
                 a la regularització anterior.
@@ -16430,9 +16420,6 @@ modelo:
             0579:
               label: 'Import de les deduccions autonòmiques a les que es ha perdut
                 el dret en 2025: Part autonòmica'
-            0581:
-              help: 'Indiqueu o reviseu «Interessos de demora corresponents a les
-                deduccions anteriors: Part autonòmica» per completar aquesta autoliquidació.'
             0584:
               label: 'Per residència habitual i efectiva en l''illa de La Palma (import
                 d''aquestes caselles de l''annex A.6): Part autonòmica'

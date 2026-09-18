@@ -18,11 +18,11 @@ from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..analysis.hand_authored_type_column import hand_authored_revisions
 from ..analysis.type_column_coverage import (
-    GENERATION_MANIFEST_NAME,
     TypeColumnCoverage,
     type_column_coverage,
 )
 from ..compiler.authority import compiled_bundled_authority
+from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -56,7 +56,9 @@ def test_the_partition_agrees_with_what_each_gate_actually_reads(shipped) -> Non
     """Coverage is only true if each gate's real input is exactly the revisions credited to it."""
     authority, rows = shipped
     by_state = {state: {row.subject for row in rows if row.coverage is state} for state in TypeColumnCoverage}
-    manifests = bundled_path("registry", "aeat", "modelos").glob(f"*/revisions/*/export/{GENERATION_MANIFEST_NAME}")
+    manifests = bundled_path("registry", "aeat", "modelos").glob(
+        f"*/revisions/*/export/{EXPORT_FRAGMENT_PROVENANCE_FILENAME}"
+    )
     generated_gate_input = {f"{path.parts[-5]}/{path.parts[-3]}" for path in manifests}
     hand_gate_input = {f"{modelo}/{revision}" for modelo, revision, _root in hand_authored_revisions(authority)}
 
@@ -81,7 +83,7 @@ def test_a_revision_without_its_generation_manifest_is_named_unchecked(tmp_path:
     modelos_root = _copied_modelo(tmp_path)
     assert _coverage(modelos_root)[_DELTA] == (TypeColumnCoverage.GENERATED_MANIFEST, None)
 
-    (modelos_root / _MODELO / "revisions" / _DELTA / "export" / GENERATION_MANIFEST_NAME).unlink()
+    (modelos_root / _MODELO / "revisions" / _DELTA / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).unlink()
     coverage = _coverage(modelos_root)
 
     state, reason = coverage[_DELTA]
@@ -96,10 +98,12 @@ def test_a_migrated_manifest_less_edition_is_named_unchecked_as_a_delta(tmp_path
     modelos_root = _copied_modelo(tmp_path)
     revision_dir = modelos_root / _MODELO / "revisions" / _DELTA
     manifest = revision_dir / "revision.toml"
-    header = f'[revisions."{_DELTA}"]\n'
-    text = manifest.read_bytes().decode("utf-8")
-    manifest.write_bytes(text.replace(header, f'{header}predecessor = "{_BASE}"\n', 1).encode("utf-8"))
-    (revision_dir / "export" / GENERATION_MANIFEST_NAME).unlink()
+    # The edition states its own predecessor, so the delta this test needs is
+    # the authored one. Asserting it rather than injecting a second declaration
+    # keeps the test honest if the edition is ever re-rooted: injecting made a
+    # duplicate TOML key the moment the edition gained a predecessor of its own.
+    assert f'predecessor = "{_BASE}"' in manifest.read_text(encoding="utf-8")
+    (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).unlink()
 
     state, reason = _coverage(modelos_root)[_DELTA]
 

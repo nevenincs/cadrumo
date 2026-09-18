@@ -33,6 +33,9 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
 )
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
+    composed_profile_persistence_ports,
+)
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -59,7 +62,7 @@ from ..harness_tools import (
 )
 from ..tools import build_tool_descriptors
 from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS
-from ._support import composed_profile_persistence_ports, isolated_profile_storage_root
+from ._support import isolated_profile_storage_root
 from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

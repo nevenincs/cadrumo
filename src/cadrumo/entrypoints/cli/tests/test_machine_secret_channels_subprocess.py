@@ -20,7 +20,7 @@ from cadrumo.adapters.persistence.storage.recovery_key import (
     RECOVERY_CODE_GROUP_LENGTH,
     RECOVERY_CODE_SEPARATOR,
 )
-from cadrumo.tests.audited_process import run_audited_process
+from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 
 from ....tests.inventory import SRC_CADRUMO
 from ..config.tests.isolated_storage_fixture import COMPLETE_NATURAL_PERSON_FLAGS
@@ -416,22 +416,46 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
 
 
+def _windows_recovery_handle_allowlist(
+    *,
+    handoff_reader: int,
+    handoff_writer: int,
+    verification_reader: int,
+    verification_writer: int,
+) -> tuple[int, int, WindowsStartupInfo]:
+    """Return the inheritable handoff/verification HANDLEs and their startup allowlist.
+
+    The ``sys.platform == "win32"`` block, rather than the caller's guard, is
+    what establishes the platform for :mod:`msvcrt` and ``STARTUPINFO``: it is
+    the only guard shape every checker this project runs narrows on.
+    """
+    if sys.platform == "win32":
+        import msvcrt
+
+        handoff_handle = msvcrt.get_osfhandle(handoff_writer)
+        verification_handle = msvcrt.get_osfhandle(verification_reader)
+        os.set_handle_inheritable(msvcrt.get_osfhandle(handoff_reader), False)
+        os.set_handle_inheritable(msvcrt.get_osfhandle(verification_writer), False)
+        os.set_handle_inheritable(handoff_handle, True)
+        os.set_handle_inheritable(verification_handle, True)
+        startup = subprocess.STARTUPINFO()
+        startup.lpAttributeList = {"handle_list": [handoff_handle, verification_handle]}
+        return handoff_handle, verification_handle, startup
+    raise RuntimeError("Windows HANDLE transport requested on a non-Windows host")
+
+
 def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: Path) -> None:
     """Writable handoff and readable proof HANDLEs survive a real process boundary."""
-    import msvcrt
-
     root = tmp_path / "windows-recovery-enable"
     _register(root, label="windows-recovery")
     handoff_reader, handoff_writer = os.pipe()
     verification_reader, verification_writer = os.pipe()
-    handoff_handle = msvcrt.get_osfhandle(handoff_writer)
-    verification_handle = msvcrt.get_osfhandle(verification_reader)
-    os.set_handle_inheritable(msvcrt.get_osfhandle(handoff_reader), False)
-    os.set_handle_inheritable(msvcrt.get_osfhandle(verification_writer), False)
-    os.set_handle_inheritable(handoff_handle, True)
-    os.set_handle_inheritable(verification_handle, True)
-    startup = subprocess.STARTUPINFO()
-    startup.lpAttributeList = {"handle_list": [handoff_handle, verification_handle]}
+    handoff_handle, verification_handle, startup = _windows_recovery_handle_allowlist(
+        handoff_reader=handoff_reader,
+        handoff_writer=handoff_writer,
+        verification_reader=verification_reader,
+        verification_writer=verification_writer,
+    )
     env = subprocess_cli_env(
         strip_prefixes=("AEAT_", "CADRUMO_", "PYTEST_"),
         extra={

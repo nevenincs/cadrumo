@@ -4,8 +4,11 @@ modelo:
       casilla:
         continuidad:
           filing-year:
+            help: Tax year to which the return refers, in four digits.
             label: Filing year to which the return relates
           tipo-declaracion:
+            help: 'Character of the return: original, a substitute replacing one filed
+              earlier, or supplementary adding data that was omitted.'
             label: Return type (original / substitute / supplementary)
       construct:
         modelo-185-informative:
@@ -18,26 +21,16 @@ modelo:
           members
       revision:
         2003-2025:
-          casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax year to which the return refers, in four digits.
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: 'Character of the return: original, a substitute replacing one
-                filed earlier, or supplementary adding data that was omitted.'
           field:
             label: Modelo 185 (orden-hac-96-2003), tax years 2003 to 2025
         2025-y-siguientes:
           casilla:
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for box of Modelo 185.
             x-chim6r1edpqmqpbidsmmktbjehkmcqb3c5n78p8:
               help: Sequential identifying number of this return, 13 numeric positions.
               label: IDENTIFYING NUMBER OF THE RETURN
             x-chim6r1ee1in4qbfchng:
               help: Natural month the return covers, from 01 January to 12 December.
               label: PERIOD
-            x-chim6r1eehkn0rpdchim6r31e9gm6qbfdo:
-              help: Tax information for box of Modelo 185.
             x-chim6r1eehnn8obc5lp6apr9edq74rrj:
               help: Total number of reported persons included for this declarant,
                 that is, of type 2 records.

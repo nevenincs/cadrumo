@@ -56,6 +56,7 @@ from dev.registry.edition_delta_migration import (
     MigrationAssessment,
     assess_migration_state,
     migrate_modelo,
+    technical_root,
 )
 from dev.registry.edition_round_trip import copy_registry_tree
 from dev.registry.pipeline.authority_publication import publish_sqlite_authority_candidate
@@ -105,17 +106,6 @@ _FACT_QUERY_TYPES: Final = {
 }
 _EXPECTED_ASSESSMENT_FAMILIES: Final = REVISION_SCHEMA_FAMILY_FIELDS | frozenset(
     spec.section for spec in CANONICAL_FAMILY_SPECS if spec.singleton
-)
-_TECHNICAL_ROOT_CAUSES: Final = frozenset(
-    {
-        "overlapping_predecessor",
-        "row_order",
-        "unretired_withdrawal",
-        "predecessor_row_without_lineage",
-        "ambiguous_lineage",
-        "undeclared_repurpose",
-        "transformation_failed",
-    }
 )
 
 
@@ -573,7 +563,7 @@ def root_eligibility(modelo_dir: Path) -> tuple[Mapping[str, object], ...]:
             elif named is not None:
                 status, candidate = RootEligibility.EXISTING_INHERITANCE, named
             elif (
-                (explicit_root and not _technical_root_declaration(cast(Mapping[str, object], raw)))
+                (explicit_root and not technical_root(cast(Mapping[str, object], raw)))
                 or revisions_coexist(cast("ModeloRevision", previous), cast("ModeloRevision", revision))
                 or not spec.inherited
             ):
@@ -605,20 +595,6 @@ def root_eligibility(modelo_dir: Path) -> tuple[Mapping[str, object], ...]:
             for spec in CANONICAL_FAMILY_SPECS
         )
     return tuple(rows)
-
-
-def _technical_root_declaration(raw_revision: Mapping[str, object]) -> bool:
-    """Return whether an explicit root records a converter limitation, not law/topology."""
-    predecessor = raw_revision.get("predecessor")
-    none = cast(Mapping[str, object], predecessor).get("none") if isinstance(predecessor, Mapping) else None
-    if not isinstance(none, Mapping):
-        return False
-    declaration = cast(Mapping[str, object], none)
-    cause = declaration.get("cause")
-    if isinstance(cause, str):
-        return cause in _TECHNICAL_ROOT_CAUSES
-    reason = str(declaration.get("reason", "")).lower()
-    return any(cause in reason for cause in _TECHNICAL_ROOT_CAUSES) or "migration" in reason or "lineage" in reason
 
 
 def _raw_members(value: object, *, singleton: bool) -> tuple[Mapping[str, object], ...]:
