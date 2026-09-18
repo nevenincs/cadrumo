@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:04565bd499a8a8b5b12bde1caa6fcf7db643e99011b8f255ebe3dff2b2a33c64'
+body_hash: 'sha256:1c627d82474b86b83b312e194ab2029100b7cc36806c1f64fde82c07c6b52e0f'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -144,6 +144,7 @@ related:
 - `S17` `M` `dev/locales/tests/test_casilla_orthography.py`
 - `S17` `verify:` `python -m dev.locales casilla-audit` -> `pass`
 - `S17` `verify:` `pytest dev/locales/tests/test_shipped_casilla_catalogue.py` -> `pass`
+- `S17` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
 
 ## Notes
 
@@ -170,4 +171,5 @@ related:
 - `S18` Two readers stand behind every stored text: the registry surfaces load the shipped shards through the product's own catalogue, and the dev module reads the authoring tree. The gate requires the same label and help from both for every casilla the product exposes in every locale, and treats a casilla the catalogue does not know as a finding rather than a skipped row, so the comparison cannot go quiet
 - `S17` The fourth blind sample measured en 2.33, ca 2.33 and hu 3.67 per cent on labels the earlier rounds never touched, and named a class worth more than the sample: the Spanish word for a form box sat on the kept-Spanish list although the catalogue renders it as box, casella and rovat elsewhere, so 672 leaks were excused. All forms including the Hungarian suffixed ones were swept, 898 values installed, and a unit test proves the leftover is now reported. Auditing the kept list the same way showed ejercicio and tipo-declaracion are field identifiers of modelo 184 and correctly kept, while Innovacion tecnologica, Investigacion y desarrollo and the Catalan modelos were genuine leaks
 - `S17` The half-translation check no longer blanks parentheses: one holding prose is read like the rest of the label, and only citations, form numbers and acronyms are skipped. That exposed 111 texts rewritten whole and six English rows that half-translated a spelled-out citation. Three further classes were swept catalogue-wide: the Spanish word for a form box (898 values), the revision phrase y siguientes (332), and the Hungarian form name, which the user settled as the legal term nyomtatvany (1,546). A collapse then folded 18 values back onto lineage keys, and the Catalan typo pair por ejemplo against por ejermplo is recorded in both families that see it
+- `S17` A generic detector - a Spanish word the catalogue translates in the large majority of rows but keeps in a few - found 1,224 rows, of which 765 values were genuine leaks and the rest were proper names, citations and registry identifiers correctly kept. Widening the dropped-content check from labels to help then exposed a broken generator: 728 help rows across three locales stated no transaction number, read tax information about tax information, or had lost their LIVA citations. Repair peels, because collapsing a repaired value uncovers the edition keys beneath it, so the audit was re-run after every collapse until it read zero. Five checks were corrected rather than the data: parentheses are read by the half-translation check, help by the dropped-content check, Hungarian numerals inside compounds and as teen words, and one Hungarian label now composes the segments its Spanish composes
 
