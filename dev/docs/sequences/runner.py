@@ -72,6 +72,9 @@ from click.testing import Result
 from pydantic import BaseModel, Field, JsonValue
 
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
+    composed_profile_persistence_ports,
+)
 from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     bound_test_profile_record,
@@ -85,7 +88,6 @@ from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import UserProfileFact
-from cadrumo.entrypoints.adapter_composition import composed_profile_persistence_ports
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
 from dev._paths import REPO_ROOT
 
