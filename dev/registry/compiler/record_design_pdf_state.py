@@ -243,14 +243,12 @@ class _PdfSheetDraft:
         self.fill_declared_desglose_gaps()
         self.fields = fold_untagged_desglose_components(self.fields)
         total_positions = max((field.offset + field.length - 1 for field in self.fields), default=None)
-        sheet = RecordDesignSheet(
+        return RecordDesignSheet(
             name=self.name,
             fields=tuple(self.fields),
             total_positions=total_positions,
             corrections=tuple(self.applied_corrections),
         )
-        validate_pdf_sheet(sheet, source_label=source_label)
-        return sheet
 
 
 def _candidates_by_offset(candidates: list[PdfRow]) -> dict[int, list[PdfRow]]:
@@ -383,6 +381,22 @@ def _finalise_extraction(
     read = _identified_sheets(results)
     if not read:
         raise RegistryValidationError("record-design PDF did not contain parseable field rows")
+    # Only a body the read RETURNS is held to a record's geometry. A body that
+    # is about to be reported unread is not a malformed record; it is text the
+    # parser could not attribute to one, and judging it by a record's standard
+    # refuses the whole document over rows that were never going to be returned.
+    #
+    # Modelo 184's five BOE ordenes are the worked case. They approve the modelo
+    # and carry its design as an annex, so the parse first crosses the Orden's
+    # own articles, whose prose cites wire positions ("157-170 Alfanumerico.
+    # Resultado de la operacion:"). Those lines opened an unheaded body starting
+    # at position 160, and validating it AT CONSTRUCTION raised before the
+    # classification that would have sent it to `skipped` ever ran -- so a
+    # document whose three annex records each tile 1..500 cleanly was refused as
+    # though it opened at 160. The bodies themselves are unchanged; only the
+    # moment they are judged moved, from draft-finish to read-classification.
+    for sheet in read:
+        validate_pdf_sheet(sheet, source_label=source_label)
     read = _recover_inline_constants(read)
     read = _apply_range_start_corrections(read, corrections)
     broken = _contiguity_failures(read)
