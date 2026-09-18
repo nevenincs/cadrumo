@@ -2,7 +2,7 @@
 casilla_storage_baseline = "2024"
 binding_source_refs = ["aeat-modelo-200-manual-2025"]
 formula_source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-27-2014:art-40"], source_refs = ["aeat-dr-200-2025"] } }
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", cause = "predecessor_row_without_lineage", legal_refs = ["ley-27-2014:art-40"], source_refs = ["aeat-dr-200-2025"] } }
 casilla_source_refs = ["aeat-dr-200-2025", "aeat-modelo-200-manual-2025"]
 parameter_source_refs = ["aeat-modelo-200-manual-2025"]
 live_cross_reference_source_refs = ["aeat-modelo-200-manual-2025"]

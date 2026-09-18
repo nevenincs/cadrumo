@@ -196,6 +196,22 @@ review_status = "pending_review"
 # evidence. Their titles establish publication/version dates, but not a
 # non-overlapping filing-selection window against the active editions below;
 # do not make an epoch or applicability claim until that authority is reviewed.
+[sources."aeat-dr-036-v42"]
+evidence_tier = "layout_authority"
+authority = "aeat"
+kind = "record_design"
+# AEAT titles this "(03-02-2025 y siguientes). PROVISIONAL", and it is DR036v42
+# -- the draft of the window aeat-dr-036-2025 (DR036v43) carries definitively.
+# A provisional edition superseded by the final one for its own window is
+# exactly this group's case: the bytes are real and pinned, and no applicability
+# claim follows from them.
+corpus_path = "corpus/aeat_official/disenos_registro/modelo_036/files/02-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-provisional-107-kb-xlsx.xlsx"
+sha256 = "d0a52e57b23236cd2e8566aeca19a3c9012e24e34f49e179e520f9d5e606c251"
+bytes = 120743
+retrieved_at = 2026-05-03
+source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_01_99/archivos/DR036v42.xlsx"
+review_status = "pending_review"
+
 [sources."aeat-dr-036-v40"]
 evidence_tier = "layout_authority"
 authority = "aeat"

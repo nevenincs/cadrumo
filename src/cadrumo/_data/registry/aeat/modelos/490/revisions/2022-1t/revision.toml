@@ -1,6 +1,6 @@
 [revisions."2022-1t"]
 casilla_storage_baseline = "2021"
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-hac-590-2021:art-1"], source_refs = ["enrolled-modelo-490-procedure"] } }
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", cause = "predecessor_row_without_lineage", legal_refs = ["orden-hac-590-2021:art-1"], source_refs = ["enrolled-modelo-490-procedure"] } }
 casilla_source_refs = ["aeat-dr-490-2021"]
 authority_grade = "applicability"
 # Modelo 490 autoliquidacion del Impuesto sobre Determinados Servicios

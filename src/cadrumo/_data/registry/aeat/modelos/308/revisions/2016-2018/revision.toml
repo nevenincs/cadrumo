@@ -1,6 +1,6 @@
 [revisions."2016-2018"]
 casilla_storage_baseline = "2011-julio-2015"
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2016"] } }
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", cause = "predecessor_row_without_lineage", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2016"] } }
 casilla_source_refs = ["aeat-dr-308-2016"]
 application_link_source_refs = ["aeat-modelo-308-procedure"]
 authority_grade = "applicability"
