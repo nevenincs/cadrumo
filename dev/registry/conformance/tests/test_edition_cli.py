@@ -1,20 +1,22 @@
 """Live CLI proof for the registry ``edition`` development verb.
 
-Two temporary registries hold modelo 303: one exactly as shipped, where every
-edition states all of its rows, and one where edition 2025 is re-authored as a
-delta on 2024-desde-09-y-3t by deleting every row it states identically to
-that predecessor. The reader must print the delta as the edition its full-copy
-files declared.
+One modelo is authored twice by this module: a tree where edition 2025 states
+every row it stands for, and a tree where the same edition is authored as a
+delta on 2024, stating only the row it changes and the row it adds. The reader
+must print the delta as the edition its full-copy files declare.
 
 The expected values are read from the full-copy source files themselves, one
-casilla fragment block at a time, never from the reader or the loader.
+casilla fragment block at a time, never from the reader or the loader. The
+modelo is authored here rather than copied from the bundled registry because
+the bundled modelos are themselves delta-authored: a copied tree has no
+full-copy edition left to compare against, and the fixture cannot re-derive
+one without borrowing the materialiser this gate exists to judge.
 
 Excluded from equality, and only these:
 
-- ``predecessor`` and the review claim keys (every governance stamp field but
-  ``engineered_by``, and ``reviewed_against``): the migration adds the first,
-  and a delta's review covers only the rows it states, so the complete edition
-  carries no review claim of its own. The review scope is asserted separately.
+- ``predecessor`` and ``reviewed_against``: the delta tree declares the first,
+  which materialisation removes, and the second, whose review scope is
+  asserted separately.
 - ``export_refs`` on casilla rows, which the registry derives from export
   layouts, so a rendering may carry it whether or not the files state it.
 - the ``#`` provenance comments the reader adds, which a TOML parser drops;
@@ -27,28 +29,109 @@ from __future__ import annotations
 
 import json
 import re
-import shutil
 from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner, Result
 
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import parse_toml
-from cadrumo.domain.calculations.registry.schema import REVISION_GOVERNANCE_FIELDS
 
 from ..cli import app
+from ..loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
 
-_M303 = "303"
-_PREDECESSOR = "2024-desde-09-y-3t"
+_MODELO = "999"
+_PREDECESSOR = "2024"
 _SUCCESSOR = "2025"
 _REFUSED_EXIT_CODE = 2
-_EXCLUDED_EDITION_KEYS = (REVISION_GOVERNANCE_FIELDS - {"engineered_by"}) | {"predecessor", "reviewed_against"}
+_REVIEW_STATUS = "agent_reviewed"
+_EXCLUDED_EDITION_KEYS = frozenset({"predecessor", "reviewed_against"})
 _EXCLUDED_ROW_KEYS = frozenset({"export_refs"})
+_LEGAL_REF = "ley-58-2003:art-29"
+_SOURCE_REF = "aeat-manual"
 _CASILLA_ROW_HEADER = re.compile(r'^\[\[revisions\.(?:"[^"\n]+"|[^".\]\n]+)\.casillas\]\]$', re.MULTILINE)
+
+#: The governance stamp both trees declare on every edition. A reviewed
+#: edition is what makes the review-scope reporting observable at all.
+_STAMP = (
+    'engineered_by = "agent:author"\n'
+    f'review_status = "{_REVIEW_STATUS}"\n'
+    'reviewed_by = "agent:reviewer"\n'
+    "reviewed_at = 2026-09-10\n"
+)
+
+
+def _casilla(revision_id: str, casilla_id: str, *, number: str, lineage: str) -> str:
+    return (
+        f'[[revisions."{revision_id}".casillas]]\n'
+        f'id = "{casilla_id}"\n'
+        f'number = "{number}"\n'
+        'section = ["liquidacion"]\n'
+        f'continuidad_id = "{lineage}"\n'
+        f'legal_refs = ["{_LEGAL_REF}"]\n'
+        f'source_refs = ["{_SOURCE_REF}"]\n\n'
+    )
+
+
+def _write_edition(modelo_dir: Path, revision_id: str, *, year: int, fragments: Mapping[str, str], extra: str) -> None:
+    revision_dir = modelo_dir / "revisions" / revision_id
+    (revision_dir / "casillas").mkdir(parents=True)
+    (revision_dir / "revision.toml").write_text(
+        f'[revisions."{revision_id}"]\n'
+        f"valid_from = {year}-01-01\n"
+        f"valid_to = {year}-12-31\n"
+        f'period_selector = {{ years = [{year}], periods = ["0A"] }}\n'
+        f'legal_refs = ["{_LEGAL_REF}"]\n'
+        f'source_refs = ["{_SOURCE_REF}"]\n'
+        f"{_STAMP}{extra}",
+        encoding="utf-8",
+        newline="\n",
+    )
+    for name, text in fragments.items():
+        (revision_dir / "casillas" / name).write_text(text, encoding="utf-8", newline="\n")
+
+
+def _predecessor_fragments() -> dict[str, str]:
+    return {
+        "c0001__c0002.toml": _casilla(_PREDECESSOR, "1", number="1", lineage="base")
+        + _casilla(_PREDECESSOR, "2", number="2", lineage="cuota"),
+        "c0003.toml": _casilla(_PREDECESSOR, "3", number="3", lineage="deduccion"),
+    }
+
+
+def _full_copy_fragments() -> dict[str, str]:
+    """The successor stated in full: two rows restated verbatim, one changed, one new."""
+    return {
+        "c0001__c0002__c0003.toml": _casilla(_SUCCESSOR, "1", number="1", lineage="base")
+        + _casilla(_SUCCESSOR, "2", number="22", lineage="cuota")
+        + _casilla(_SUCCESSOR, "3", number="3", lineage="deduccion"),
+        "c0005.toml": _casilla(_SUCCESSOR, "5", number="5", lineage="recargo"),
+    }
+
+
+def _delta_fragments() -> dict[str, str]:
+    """The same edition as a delta: only the changed row and the new one."""
+    return {
+        "c0002__c0005.toml": _casilla(_SUCCESSOR, "2", number="22", lineage="cuota")
+        + _casilla(_SUCCESSOR, "5", number="5", lineage="recargo"),
+    }
+
+
+def _write_registry(root: Path, *, delta: bool) -> Path:
+    modelo_dir = root / "modelos" / _MODELO
+    modelo_dir.mkdir(parents=True)
+    write_standard_manifest(modelo_dir, "Test")
+    _write_edition(modelo_dir, _PREDECESSOR, year=2024, fragments=_predecessor_fragments(), extra="")
+    _write_edition(
+        modelo_dir,
+        _SUCCESSOR,
+        year=2025,
+        fragments=_delta_fragments() if delta else _full_copy_fragments(),
+        extra=f'predecessor = "{_PREDECESSOR}"\nreviewed_against = "{_PREDECESSOR}"\n' if delta else "",
+    )
+    return root
 
 
 def _split_casilla_rows(text: str) -> tuple[str, list[str]]:
@@ -80,75 +163,24 @@ def _manifest(edition_dir: Path) -> dict[str, object]:
 
 
 def _edition_dir(registry_root: Path, revision_id: str) -> Path:
-    return registry_root / "modelos" / _M303 / "revisions" / revision_id
-
-
-def _declare(edition_dir: Path, declaration: str) -> None:
-    manifest = edition_dir / "revision.toml"
-    text = manifest.read_text(encoding="utf-8")
-    name = re.escape(edition_dir.name)
-    match = re.compile(rf'^\[revisions\.(?:"{name}"|{name})\]\n', re.MULTILINE).search(text)
-    assert match is not None, manifest
-    manifest.write_text(text[: match.end()] + declaration + text[match.end() :], encoding="utf-8", newline="\n")
-
-
-def _migrate(registry_root: Path) -> frozenset[str]:
-    """Re-author the successor as a delta: drop every row it states identically to the predecessor."""
-    predecessor_rows = {
-        row["continuidad_id"]: row
-        for row in _file_rows(_edition_dir(registry_root, _PREDECESSOR))
-        if row.get("continuidad_id") is not None
-    }
-    successor_dir = _edition_dir(registry_root, _SUCCESSOR)
-    inherited = frozenset(
-        str(row["id"])
-        for row in _file_rows(successor_dir)
-        if row.get("continuidad_id") is not None and predecessor_rows.get(row["continuidad_id"]) == row
-    )
-    editions = sorted(
-        (path for path in (registry_root / "modelos" / _M303 / "revisions").iterdir()),
-        key=lambda path: str(_manifest(path)["valid_from"]),
-    )
-    for edition_dir in editions[1:]:
-        manifest = _manifest(edition_dir)
-        if edition_dir.name == _SUCCESSOR:
-            reviewed = manifest.get("review_status", "pending_review") != "pending_review"
-            scope = f'reviewed_against = "{_PREDECESSOR}"\n' if reviewed else ""
-            _declare(edition_dir, f'predecessor = "{_PREDECESSOR}"\n{scope}')
-            continue
-        legal_refs, source_refs = manifest["legal_refs"], manifest["source_refs"]
-        assert isinstance(legal_refs, list) and isinstance(source_refs, list)
-        _declare(
-            edition_dir,
-            'predecessor = { none = { reason = "Authored as its own full copy; it inherits from no sibling edition.", '
-            f'legal_refs = ["{legal_refs[0]}"], source_refs = ["{source_refs[0]}"] }} }}\n',
-        )
-    for fragment in sorted((successor_dir / "casillas").glob("*.toml")):
-        preamble, blocks = _split_casilla_rows(fragment.read_text(encoding="utf-8"))
-        kept = [block for block in blocks if str(_row_of(block)["id"]) not in inherited]
-        if len(kept) == len(blocks):
-            continue
-        if kept:
-            fragment.write_text(preamble + "".join(kept), encoding="utf-8", newline="\n")
-        else:
-            fragment.unlink()
-    return inherited
+    return registry_root / "modelos" / _MODELO / "revisions" / revision_id
 
 
 @pytest.fixture(scope="module")
 def full_copy_registry(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    root = tmp_path_factory.mktemp("full-copy") / "registry"
-    shutil.copytree(bundled_path("registry", "aeat", "modelos", _M303), root / "modelos" / _M303)
-    return root
+    return _write_registry(tmp_path_factory.mktemp("full-copy") / "registry", delta=False)
 
 
 @pytest.fixture(scope="module")
-def migrated_registry(
-    full_copy_registry: Path, tmp_path_factory: pytest.TempPathFactory
-) -> tuple[Path, frozenset[str]]:
-    root = tmp_path_factory.mktemp("migrated") / "registry"
-    shutil.copytree(full_copy_registry, root)
-    return root, _migrate(root)
+def delta_registry(tmp_path_factory: pytest.TempPathFactory) -> Path:
+    return _write_registry(tmp_path_factory.mktemp("delta") / "registry", delta=True)
+
+
+@pytest.fixture(scope="module")
+def inherited_rows(full_copy_registry: Path, delta_registry: Path) -> frozenset[str]:
+    """The rows the delta drops, which can only come back by inheritance."""
+    stated = {str(row["id"]) for row in _file_rows(_edition_dir(delta_registry, _SUCCESSOR))}
+    return frozenset(str(row["id"]) for row in _file_rows(_edition_dir(full_copy_registry, _SUCCESSOR))) - stated
 
 
 def _view(registry_root: Path, modelo: str, revision: str, *, output_format: str = "text") -> Result:
@@ -204,16 +236,15 @@ def _row_markers(stdout: str) -> list[str]:
     return [line.removeprefix("# ") for line in stdout.splitlines() if line.startswith("# row: ")]
 
 
-def test_a_migrated_edition_renders_identically_to_its_pre_migration_files(
-    full_copy_registry: Path, migrated_registry: tuple[Path, frozenset[str]]
+def test_a_delta_edition_renders_identically_to_its_full_copy_files(
+    full_copy_registry: Path, delta_registry: Path, inherited_rows: frozenset[str]
 ) -> None:
-    migrated_root, inherited = migrated_registry
     full_copy_dir = _edition_dir(full_copy_registry, _SUCCESSOR)
-    # Non-vacuity: rows really left the delta's files and can only come back by inheritance.
-    assert inherited
-    assert not inherited & {str(row["id"]) for row in _file_rows(_edition_dir(migrated_root, _SUCCESSOR))}
+    # Non-vacuity: rows really are absent from the delta's files and can only come back by inheritance.
+    assert inherited_rows
+    assert not inherited_rows & {str(row["id"]) for row in _file_rows(_edition_dir(delta_registry, _SUCCESSOR))}
 
-    result = _view(migrated_root, _M303, _SUCCESSOR)
+    result = _view(delta_registry, _MODELO, _SUCCESSOR)
     rendered = _rendered_edition(result, _SUCCESSOR)
 
     assert (
@@ -227,28 +258,28 @@ def test_a_migrated_edition_renders_identically_to_its_pre_migration_files(
     )
     # Every family beyond the casillas is declared in full by both trees, so
     # the whole table matches the full copy's own rendering.
-    full_copy_rendered = _rendered_edition(_view(full_copy_registry, _M303, _SUCCESSOR), _SUCCESSOR)
+    full_copy_rendered = _rendered_edition(_view(full_copy_registry, _MODELO, _SUCCESSOR), _SUCCESSOR)
     excluded = _EXCLUDED_EDITION_KEYS | {"casillas"}
     assert _without(rendered, excluded) == _without(full_copy_rendered, excluded)
     assert "predecessor" not in rendered
-    assert rendered["review_status"] == "pending_review"
+    # Materialisation removes the inheritance edge, never the review it records.
+    assert rendered["review_status"] == _REVIEW_STATUS
     rendered_rows = rendered["casillas"]
     assert isinstance(rendered_rows, list)
     assert _row_markers(result.stdout) == [
         f"row: casilla={row['id']} source=inherited inherited_from={_PREDECESSOR}"
-        if row["id"] in inherited
+        if row["id"] in inherited_rows
         else f"row: casilla={row['id']} source=stated"
         for row in rendered_rows
     ]
 
 
 def test_the_json_form_reports_row_provenance_and_the_review_scope(
-    full_copy_registry: Path, migrated_registry: tuple[Path, frozenset[str]]
+    delta_registry: Path, inherited_rows: frozenset[str]
 ) -> None:
-    migrated_root, inherited = migrated_registry
-    text = _view(migrated_root, _M303, _SUCCESSOR)
+    text = _view(delta_registry, _MODELO, _SUCCESSOR)
 
-    result = _view(migrated_root, _M303, _SUCCESSOR, output_format="json")
+    result = _view(delta_registry, _MODELO, _SUCCESSOR, output_format="json")
 
     assert result.exit_code == 0, result.stderr
     assert result.stderr == ""
@@ -256,33 +287,27 @@ def test_the_json_form_reports_row_provenance_and_the_review_scope(
     assert payload["document"] == text.stdout
     assert payload["inherits_from"] == _PREDECESSOR
     rows = payload["rows"]
-    assert {row["casilla_id"] for row in rows if row["source"] == "inherited"} == inherited
+    assert {row["casilla_id"] for row in rows if row["source"] == "inherited"} == inherited_rows
     assert {row["inherited_from"] for row in rows if row["source"] == "inherited"} == {_PREDECESSOR}
     assert {row["casilla_id"] for row in rows if row["source"] == "stated"} == {
-        str(row["id"]) for row in _file_rows(_edition_dir(migrated_root, _SUCCESSOR))
+        str(row["id"]) for row in _file_rows(_edition_dir(delta_registry, _SUCCESSOR))
     }
-    declared_status = _manifest(_edition_dir(full_copy_registry, _SUCCESSOR))["review_status"]
-    assert declared_status != "pending_review"
     assert payload["review_scope"] == {
-        "declared_review_status": declared_status,
+        "declared_review_status": _REVIEW_STATUS,
         "coverage": "stated_rows",
         "reviewed_against": _PREDECESSOR,
-        "rendered_review_status": "pending_review",
+        "rendered_review_status": _REVIEW_STATUS,
         "inherited_attestations": [
-            {
-                "revision_id": _PREDECESSOR,
-                "row_count": len(inherited),
-                "review_status": _manifest(_edition_dir(full_copy_registry, _PREDECESSOR))["review_status"],
-            },
+            {"revision_id": _PREDECESSOR, "row_count": len(inherited_rows), "review_status": _REVIEW_STATUS},
         ],
     }
-    assert f"# review: declared_status={declared_status} coverage=stated_rows" in text.stdout
+    assert f"# review: declared_status={_REVIEW_STATUS} coverage=stated_rows" in text.stdout
 
 
-def test_an_unmigrated_edition_renders_identically_to_its_files(full_copy_registry: Path) -> None:
+def test_a_full_copy_edition_renders_identically_to_its_files(full_copy_registry: Path) -> None:
     edition_dir = _edition_dir(full_copy_registry, _SUCCESSOR)
 
-    result = _view(full_copy_registry, _M303, _SUCCESSOR)
+    result = _view(full_copy_registry, _MODELO, _SUCCESSOR)
     rendered = _rendered_edition(result, _SUCCESSOR)
 
     # Nothing is excluded but derived export references: an edition stating
@@ -300,12 +325,11 @@ def test_an_unmigrated_edition_renders_identically_to_its_files(full_copy_regist
 
 
 def test_rendering_only_the_rows_a_delta_declares_is_detected(
-    full_copy_registry: Path, migrated_registry: tuple[Path, frozenset[str]]
+    full_copy_registry: Path, delta_registry: Path, inherited_rows: frozenset[str]
 ) -> None:
-    migrated_root, inherited = migrated_registry
     full_copy_dir = _edition_dir(full_copy_registry, _SUCCESSOR)
-    rendered = _rendered_edition(_view(migrated_root, _M303, _SUCCESSOR), _SUCCESSOR)
-    declared_only = {**rendered, "casillas": _file_rows(_edition_dir(migrated_root, _SUCCESSOR))}
+    rendered = _rendered_edition(_view(delta_registry, _MODELO, _SUCCESSOR), _SUCCESSOR)
+    declared_only = {**rendered, "casillas": _file_rows(_edition_dir(delta_registry, _SUCCESSOR))}
 
     differences = _edition_differences(
         declared_only,
@@ -314,14 +338,14 @@ def test_rendering_only_the_rows_a_delta_declares_is_detected(
         excluded_keys=_EXCLUDED_EDITION_KEYS,
     )
 
-    assert differences == [f"missing row {row_id}" for row_id in sorted(inherited)]
+    assert differences == [f"missing row {row_id}" for row_id in sorted(inherited_rows)]
 
 
 @pytest.mark.parametrize(
     ("modelo", "revision", "condition_id", "refused_context"),
     [
         ("998", _SUCCESSOR, "registry.edition.modelo.declared", {"modelo": "998"}),
-        (_M303, "1999", "registry.edition.revision.declared", {"modelo": _M303, "revision": "1999"}),
+        (_MODELO, "1999", "registry.edition.revision.declared", {"modelo": _MODELO, "revision": "1999"}),
     ],
 )
 def test_an_unknown_modelo_or_edition_is_refused_on_the_error_channel(
