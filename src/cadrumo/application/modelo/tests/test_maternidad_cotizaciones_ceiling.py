@@ -31,7 +31,7 @@ from datetime import UTC, date, datetime
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....domain.calculations.registry.tests.published_authority import (
@@ -122,7 +122,7 @@ class TestCotizacionesCeilingYears:
     ) -> None:
         """A ceilinged year the product does not support is refused, never granted."""
         for filing_year in _UNSUPPORTED_CEILINGED_YEARS:
-            with pytest.raises(NoRevisionForPeriodError):
+            with pytest.raises(FilingYearOutsideSupportEnvelopeError):
                 _resolution(filing_year, operation=operation)
 
     def test_the_withholding_is_disclosed_rather_than_silent(self, *, operation: PinnedAuthorityOperation) -> None:
