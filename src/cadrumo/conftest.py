@@ -221,8 +221,6 @@ def compose_runtime_ports() -> Iterator[None]:
         load_usage_ratios_with_censo_guard,
         save_usage_ratios,
     )
-    from .adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
-    from .adapters.persistence.workflow import build_workflow_persistence_port
     from .application.auth.protocols import bind_session_store
     from .application.auth.providers import bind_auth_provider_selector
     from .application.bucket_event_repository import bind_bucket_event_history_repository_factory
@@ -242,15 +240,14 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.reconciliation_parsing import bind_reconciliation_evidence_parser
     from .application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
-    from .application.workflow.persistence import bind_workflow_persistence_port
     from .core.redaction.tax_identity_admission import bind_tax_identity_admission
+    from .entrypoints.adapter_composition import composed_profile_persistence_ports
     from .domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
     from .tests.recorded_ecb_rates import recorded_ecb_rate_provider
 
     with (
         bind_tax_identity_admission(RegistryTaxIdentityAdmission()),
         composed_profile_persistence_ports(),
-        bind_workflow_persistence_port(build_workflow_persistence_port()),
         bind_bucket_event_history_repository_factory(build_bucket_event_history_repository),
         bind_confirmation_record_repository_factory(ConfirmationRecordRepository),
         bind_extraction_draft_repository_factory(ExtractionDraftRepository),
