@@ -211,18 +211,19 @@ def read_system_memory() -> SystemMemoryReading:
     """
     if sys.platform == "win32":
         # The positive block, rather than an early return off Windows, is what
-        # establishes the platform for both directions of this branch: it is
-        # the only guard shape every checker this project runs narrows on, so
-        # `os.sysconf` -- absent from the Windows stubs entirely -- resolves
-        # below without a getattr probe no checker can follow.
+        # establishes the platform for each direction of this branch: it is the
+        # only guard shape every checker this project runs narrows on, so the
+        # Windows reader above and the POSIX `os.sysconf` calls below each
+        # resolve on the platform that ships them.
         measured = _windows_memory_status()
         if measured is None:
             return SystemMemoryReading()
         return SystemMemoryReading(total_bytes=measured[0], free_bytes=measured[1])
-    # The inner membership checks stay for POSIX variants that omit the
-    # constants themselves; SC_AVPHYS_PAGES is the more commonly absent of the
-    # three, so a total may be readable where a free figure is not.
-    names = os.sysconf_names
+    # The getattr and the inner membership checks stay for POSIX variants that
+    # omit the constants themselves; SC_AVPHYS_PAGES is the more commonly
+    # absent of the three, so a total may be readable where a free figure is
+    # not.
+    names = getattr(os, "sysconf_names", {})
     if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
         try:
             page_size = int(os.sysconf("SC_PAGE_SIZE"))
