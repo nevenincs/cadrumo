@@ -1,9 +1,11 @@
 """Runtime schema projection holds at every bundled modelo x revision coordinate.
 
-The sweep requests each authored revision at the rung it declares, including
-coordinates below the published supported-year floor, so it reads the
-development compiler's validated authority rather than the published
-generation.
+The sweep requests each authored revision at the rung it declares, so it reads
+the development compiler's validated authority rather than the published
+generation. It stays inside the registry's own supported-year envelope: the
+floor is a hard gate that refuses a request below it however completely the
+corpus authors that year, so a coordinate the product will not answer is not a
+coordinate this sweep can project.
 """
 
 from __future__ import annotations
@@ -53,6 +55,7 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
     at its declared rung cannot be mistaken for a filing capability claim.
     """
     authority = compiled_bundled_authority()
+    support = authority.supported_filing_years()
     expected: list[str] = []
     projected: list[str] = []
     offences: list[str] = []
@@ -65,6 +68,11 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
             # the applicability floor, so a bundled revision must declare one.
             assert declared_grade is not None, f"bundled revision {modelo.id}/{revision.id} declares no authority grade"
             for filing_year in _revision_validation_years(revision):
+                if not support.admits_filing_year(filing_year):
+                    # Outside the product's hard gates, so every request below
+                    # is refused by the envelope rather than answered; the
+                    # revision is still authored and remains a storage baseline.
+                    continue
                 for period in revision.period_selector.periods:
                     context = f"{modelo.id}/{revision.id}/{filing_year}/{period}"
                     expected.append(context)
@@ -126,9 +134,10 @@ def test_runtime_projection_rejects_ambiguous_casilla_refs_for_every_bundled_sch
                             f"{context}: dangling formula input casilla ids {dangling_formula_input_casilla_ids!r}",
                         )
                     projected.append(context)
-            assert revision_contexts, (
-                f"bundled revision produced no runtime projection contexts: {modelo.id}/{revision.id}"
-            )
+            assert revision_contexts or not any(
+                support.admits_filing_year(year) for year in _revision_validation_years(revision)
+            ), f"bundled revision produced no runtime projection contexts: {modelo.id}/{revision.id}"
 
+    assert expected, "the envelope admitted no bundled coordinate at all, so this sweep proves nothing"
     assert projected == expected, f"bundled runtime projection coverage lost contexts: {expected!r} -> {projected!r}"
     assert not offences, "ambiguous runtime casilla schema projection:\n  " + "\n  ".join(offences)

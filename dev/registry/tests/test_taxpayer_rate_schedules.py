@@ -125,7 +125,7 @@ def test_legal_entity_route_has_is_rate_schedule_by_entity_form() -> None:
     assert binding.source == "profile"
     assert selector["profile_model"] == "taxpayer"
     assert selector["field"] == "legal_entity_form"
-    assert binding.typed_enum == "LegalEntityForm"
+    assert binding.value.typed_enum == "LegalEntityForm"
     assert "ley-27-2014:art-29" in binding.legal_refs
 
     dispatch_formula = next(

@@ -46,7 +46,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _MODELOS_ROOT = Path(__file__).resolve().parents[3] / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos"
 
 _M303_REVISION = "2025"
-_M303_BINDINGS = f"revisions/{_M303_REVISION}/bindings/0001-bindings.toml"
 _M303_PRORRATA_ID = "modelo-303-prorrata-regularizacion-casilla-44"
 _M303_PRORRATA_BLOCK = f'''
 [[revisions.{_M303_REVISION}.bindings]]
@@ -65,7 +64,6 @@ required_text = ["modelo 303"]
 '''
 
 _M720_REVISION = "2013-y-siguientes"
-_M720_BINDINGS = f"revisions/{_M720_REVISION}/bindings/0002-bindings.toml"
 _M720_ROW_FIELD = "asset_class_code"
 _M720_RECORD = "bien"
 _M720_ROW_BLOCK = f'''
@@ -91,10 +89,23 @@ def _copy_modelo(tmp_path: Path, modelo_id: str) -> Path:
     return destination
 
 
-def _append(tree: Path, relative: str, block: str) -> None:
-    """Append one planted binding declaration to a copied fragment."""
-    path = tree / relative
-    path.write_text(path.read_text(encoding="utf-8").rstrip("\n") + "\n" + block, encoding="utf-8")
+def _plant_binding(tree: Path, revision_id: str, block: str) -> None:
+    """Plant one binding declaration in the copied revision's ``bindings`` family.
+
+    The fragment filenames are the authoring tree's own, and an edition that
+    inherits its bindings states no fragment at all, so the target is resolved
+    from the copy rather than named here: a renamed fragment or a revision that
+    becomes delta-authored would otherwise silently stop planting anything and
+    leave the refusal proven by nothing.
+    """
+    directory = tree / "revisions" / revision_id / "bindings"
+    fragments = sorted(directory.glob("*.toml")) if directory.is_dir() else []
+    if fragments:
+        target = fragments[-1]
+        target.write_text(target.read_text(encoding="utf-8").rstrip("\n") + "\n" + block, encoding="utf-8")
+        return
+    directory.mkdir(parents=True, exist_ok=True)
+    (directory / "0001-bindings.toml").write_text(block.lstrip("\n"), encoding="utf-8")
 
 
 def _revision(tree: Path, revision_id: str) -> ModeloRevision:
@@ -116,7 +127,7 @@ def test_the_live_modelo_303_revision_passes_the_order_refusals(tmp_path: Path) 
 def test_a_second_prorrata_regularizacion_binding_is_refused(tmp_path: Path) -> None:
     """Two prorrata bindings make the positional source roles merge-order dependent."""
     tree = _copy_modelo(tmp_path, "303")
-    _append(tree, _M303_BINDINGS, _M303_PRORRATA_BLOCK)
+    _plant_binding(tree, _M303_REVISION, _M303_PRORRATA_BLOCK)
 
     failures = _failures(tree, _M303_REVISION)
 
@@ -141,7 +152,7 @@ def test_the_live_modelo_720_revision_passes_the_order_refusals(tmp_path: Path) 
 def test_two_row_bindings_claiming_one_row_field_are_refused(tmp_path: Path) -> None:
     """Only the first claimant of a row slot contributes a derived export field."""
     tree = _copy_modelo(tmp_path, "720")
-    _append(tree, _M720_BINDINGS, _M720_ROW_BLOCK)
+    _plant_binding(tree, _M720_REVISION, _M720_ROW_BLOCK)
 
     failures = _failures(tree, _M720_REVISION)
 

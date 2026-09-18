@@ -16,19 +16,22 @@ _TEST_ROOT = Path(__file__).parent
 
 
 def _modelo_registry_test_ids() -> set[str]:
-    """Return every modelo id token named by a ``test_modelo_*_registry.py`` file.
+    """Return every modelo id token named by a ``test_modelo_*.py`` file.
 
-    A model-specific registry test file may cover a single modelo
-    (``test_modelo_100_registry.py``) or a batch of modelos consolidated
-    into one file (``test_modelo_117_126_128_136_registry.py``,
-    ``test_modelo_187_188_194_registry.py``). The ``_``-separated segments
-    between the ``test_modelo_`` prefix and the ``_registry`` suffix are
-    each a modelo id when the file follows the consolidated-batch
-    convention; a non-numeric batch name (``test_modelo_informativas_
-    batch2_registry.py``) contributes no id token and is harmless to
-    include here since no real modelo id ever collides with one.
+    A model-specific test file may cover a single modelo
+    (``test_modelo_303_registry.py``) or a batch of modelos consolidated into
+    one file (``test_modelo_490_604_763_registry.py``). The modelo's own tests
+    are also routinely split by subject rather than kept in one
+    ``_registry``-suffixed file -- Modelo 100 alone carries a couple of dozen
+    ``test_modelo_100_*.py`` modules -- so the census reads the whole
+    ``test_modelo_`` family rather than the suffix, which would report a
+    thoroughly covered modelo as covered by nothing.
+
+    Every ``_``-separated segment of the name contributes a token. A
+    non-numeric one (``informativas``, ``batch2``, ``tarifa``) is harmless
+    because no real modelo id collides with it.
     """
-    scanned = scan_directory(_TEST_ROOT, pattern="test_modelo_*_registry.py", require_root=True)
+    scanned = scan_directory(_TEST_ROOT, pattern="test_modelo_*.py", require_root=True)
     # Measured: with `_TEST_ROOT` pointed at a directory that does not exist this
     # returned 0 ids silently, against 51 healthy, so the parity comparison held
     # over an empty set -- a modelo with no registry test would look covered.
@@ -40,8 +43,7 @@ def _modelo_registry_test_ids() -> set[str]:
         raise AssertionError(message)
     ids: set[str] = set()
     for path in scanned:
-        stem = path.stem.removeprefix("test_modelo_").removesuffix("_registry")
-        ids.update(stem.split("_"))
+        ids.update(path.stem.removeprefix("test_modelo_").split("_"))
     return ids
 
 

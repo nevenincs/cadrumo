@@ -49,6 +49,10 @@ from ..compiler.verdict_cache import (
     registry_validation_is_certified,
     verdict_cache_path,
 )
+from ..conformance.loader_directory_mode_support import (
+    write_fragmented_revision,
+    write_minimal_shared_catalogues,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -66,6 +70,7 @@ _CASILLA_NUMBER_SENTINEL = "@@CASILLA_NUMBER@@"
 _SUBPROCESS_TIMEOUT_SECONDS = 300
 _CHILD_REGISTRY_ROOT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_ROOT"
 _CHILD_EDITED_TEXT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_EDITED_TEXT"
+_CHILD_CASILLA_FRAGMENT_ENV_VAR = "CADRUMO_TEST_MUTABLE_TREE_CASILLA_FRAGMENT"
 
 # The child's coordinates ride the environment rather than argv so the spawned
 # command line stays a fixed literal.
@@ -73,11 +78,12 @@ _CHILD_PROGRAM = """
 import os
 from pathlib import Path
 
-from ..compiler.loader import load_registry_tree
-from ..compiler.loader_cache import registry_disk_cache_dir
+from dev.registry.compiler.loader import load_registry_tree
+from dev.registry.compiler.loader_cache import registry_disk_cache_dir
 
 root = Path(os.environ["CADRUMO_TEST_MUTABLE_TREE_ROOT"])
 edited = Path(os.environ["CADRUMO_TEST_MUTABLE_TREE_EDITED_TEXT"])
+fragment = Path(os.environ["CADRUMO_TEST_MUTABLE_TREE_CASILLA_FRAGMENT"])
 
 
 def observed() -> str:
@@ -88,11 +94,11 @@ def observed() -> str:
 
 print("before=" + observed())
 print("pickles=" + str(len(list(registry_disk_cache_dir().glob("cadrumo_registry_*.pkl")))))
-(root / "modelos" / "999.toml").write_text(edited.read_text(encoding="utf-8"), encoding="utf-8", newline="\\n")
+fragment.write_text(edited.read_text(encoding="utf-8"), encoding="utf-8", newline="\\n")
 print("after=" + observed())
 """
 
-_MODELO_TEXT = """
+_MANIFEST_TEXT = """
 [modelo]
 id = "999"
 tax_domain = "iva"
@@ -100,7 +106,9 @@ cadence = "annual"
 jurisdiction = "ES-AEAT"
 legal_refs = ["ley-58-2003:art-29"]
 source_refs = ["aeat-manual"]
+""".lstrip()
 
+_REVISION_TEXT = """
 [revisions."2025"]
 valid_from = 2025-01-01
 period_selector = { years = [2025], periods = ["0A"] }
@@ -118,36 +126,37 @@ source_refs = ["aeat-manual"]
 """.lstrip()
 
 
-def _modelo_text(number: str) -> str:
-    return _MODELO_TEXT.replace(_CASILLA_NUMBER_SENTINEL, number)
+def _revision_text(number: str) -> str:
+    return _REVISION_TEXT.replace(_CASILLA_NUMBER_SENTINEL, number)
 
 
-#: The one registry-wide declaration the loader requires of any tree.
-_SUPPORTED_FILING_YEARS_TEXT = (
-    "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n\n"
-    "[sociedades_annual_manual_coverage]\n"
-    'dispositions = [{ year = 2025, status = "unpublished", '
-    'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
-    'acquisition_condition_key = "application.registry.manuals.coverage.recheck_aeat_publication" }]\n'
-)
+def _casilla_fragment_path(registry_root: Path) -> Path:
+    """The one file an edit moves: the revision's casillas fragment."""
+    return registry_root / "modelos" / "999" / "revisions" / "2025" / "casillas" / "0001-casillas.toml"
+
+
+def _rendered_casilla_fragment(scratch_dir: Path, *, number: str) -> Path:
+    """Render the casillas fragment for ``number`` outside the tree under test.
+
+    The child interpreter rewrites one fragment file, and the replacement has to
+    be the exact text the fragment writer would have produced, so it is rendered
+    through that same writer rather than hand-assembled here.
+    """
+    write_fragmented_revision(scratch_dir / "revisions" / "2025", _revision_text(number))
+    return scratch_dir / "revisions" / "2025" / "casillas" / "0001-casillas.toml"
 
 
 def _write_registry_tree(tmp_path: Path, *, number: str) -> Path:
     """Materialise (or rewrite) the synthetic authoring tree and return its root."""
     registry_root = tmp_path / "registry" / "aeat"
-    legal_dir = registry_root / "legal"
-    legal_dir.mkdir(parents=True, exist_ok=True)
     # The loader requires every authoring tree to declare its supported
     # filing years, so a synthetic tree omitting it fails to load before
     # this test can observe anything about fingerprint caching.
-    (legal_dir / "supported-filing-years.toml").write_text(
-        _SUPPORTED_FILING_YEARS_TEXT,
-        encoding="utf-8",
-        newline="\n",
-    )
-    modelos_dir = registry_root / "modelos"
-    modelos_dir.mkdir(parents=True, exist_ok=True)
-    (modelos_dir / "999.toml").write_text(_modelo_text(number), encoding="utf-8", newline="\n")
+    write_minimal_shared_catalogues(registry_root / "legal", floor=2025, horizon=2025)
+    modelo_dir = registry_root / "modelos" / "999"
+    modelo_dir.mkdir(parents=True, exist_ok=True)
+    (modelo_dir / "manifest.toml").write_text(_MANIFEST_TEXT, encoding="utf-8", newline="\n")
+    write_fragmented_revision(modelo_dir / "revisions" / "2025", _revision_text(number))
     return registry_root
 
 
@@ -238,19 +247,21 @@ def test_a_mutable_tree_edit_is_seen_under_a_warm_verdict_and_warm_compiled_cach
         ), "the verdict persisted for the pre-edit tree must not certify the edited tree"
 
 
-def test_a_mutable_tree_edit_is_seen_in_the_production_disk_cache_regime(tmp_path: Path) -> None:
-    """The same invariant holds where the cross-process compiled pickle is live.
+def test_a_mutable_tree_is_never_disk_cached_outside_pytest_and_still_serves_the_edit(tmp_path: Path) -> None:
+    """The same invariant holds outside pytest, where nothing about the run is special.
 
-    Under pytest the disk pickle is deliberately gated off for a mutable root,
-    so this half is proven in a child interpreter with the pytest markers
-    removed -- the production regime, where ``load_registry_tree`` really does
-    write and read the compiled pickle. The child asserts a pickle was written
-    for the pre-edit tree before it edits, so the warm artefact is confirmed
-    present rather than assumed.
+    The cross-process compiled pickle is written for the package-bundled,
+    immutable tree and for nothing else, so a mutable authoring root is served
+    from a fresh compile in every process. That is proven in a child
+    interpreter with the pytest markers removed, because a gate that happened to
+    be pytest-shaped would let a mutable root be disk-cached in production while
+    every in-process test still passed. The child reports the pickle count it
+    observes, so re-enabling the pickle for a mutable root fails here rather
+    than silently handing production a key for a tree state that no longer
+    exists.
     """
     registry_root = _write_registry_tree(tmp_path, number="01")
-    edited_text_path = tmp_path / "edited-999.toml"
-    edited_text_path.write_text(_modelo_text("02"), encoding="utf-8", newline="\n")
+    edited_text_path = _rendered_casilla_fragment(tmp_path / "edited", number="02")
     isolated_cache_dir = tmp_path / "registry-disk-cache"
     isolated_cache_dir.mkdir()
 
@@ -259,6 +270,7 @@ def test_a_mutable_tree_edit_is_seen_in_the_production_disk_cache_regime(tmp_pat
         REGISTRY_DISK_CACHE_DIR_ENV: str(isolated_cache_dir),
         _CHILD_REGISTRY_ROOT_ENV_VAR: str(registry_root),
         _CHILD_EDITED_TEXT_ENV_VAR: str(edited_text_path),
+        _CHILD_CASILLA_FRAGMENT_ENV_VAR: str(_casilla_fragment_path(registry_root)),
     }
     for marker in ("PYTEST_CURRENT_TEST", "PYTEST_XDIST_WORKER", "PYTEST_VERSION"):
         env.pop(marker, None)
@@ -272,9 +284,9 @@ def test_a_mutable_tree_edit_is_seen_in_the_production_disk_cache_regime(tmp_pat
     assert completed.returncode == 0, completed.stderr
     reported = dict(line.split("=", 1) for line in completed.stdout.splitlines() if "=" in line)
     assert reported["before"] == "01", f"child did not compile the pre-edit tree: {completed.stdout}"
-    assert int(reported["pickles"]) == 1, (
-        f"the production regime must have written a compiled pickle before the edit: {completed.stdout}"
+    assert int(reported["pickles"]) == 0, (
+        f"a mutable authoring root was disk-cached across processes: {completed.stdout}"
     )
     assert reported["after"] == "02", (
-        f"the production-regime load served compiled output that predates the edit: {completed.stdout}"
+        f"the non-pytest load served compiled output that predates the edit: {completed.stdout}"
     )

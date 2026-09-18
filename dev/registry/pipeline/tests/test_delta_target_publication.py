@@ -110,6 +110,36 @@ def _cite_successor_design_on_inherited_rows(registry_root: Path, *, inherited_s
         )
 
 
+def _withdraw_export_layouts(modelo_root: Path, *, revision: str) -> None:
+    """Put the edition into the state a first render is published from.
+
+    ``export_layouts`` is a scoped family carried in the generated ``export``
+    tree, so an edition awaiting its first render holds none. On a delta that is
+    not silence the loader can resolve: the predecessor declares layouts, and an
+    edition that states none while saying nothing would empty the family through
+    an absent word. The edition therefore declares the withdrawal, which is what
+    an author staging a first render writes.
+
+    The clearance is left standing after publication. Once the tree is on disk
+    the edition states the family itself and the merge never consults the
+    declaration, so it decides nothing; retiring it would mean the publication
+    path writing outside ``revisions/<id>/export/``, which is not its boundary.
+    """
+    revision_dir = modelo_root / "revisions" / revision
+    shutil.rmtree(revision_dir / "export")
+    manifest = revision_dir / "revision.toml"
+    lines = manifest.read_text("utf-8").splitlines(keepends=True)
+    header = next(index for index, line in enumerate(lines) if line.startswith(f'[revisions."{revision}"]'))
+    clearance = (
+        'cleared_families = [{ family = "export_layouts", cause = "not_authored_for_this_edition", '
+        'reason = "No export tree has been rendered for this edition yet, and it adopts none from '
+        'its predecessor." }]\n'
+    )
+    # Inserted directly under the revision header: appended at the end of the
+    # file the key would land in whichever sub-table happens to be last.
+    manifest.write_text("".join([*lines[: header + 1], clearance, *lines[header + 1 :]]), encoding="utf-8", newline="")
+
+
 def _prepared(work: Path, target_root: Path) -> PreparedGeneratedTreeInvocation:
     modelo_root = target_root / "modelos" / _MODELO
     inputs = revision_render_inputs(
@@ -247,7 +277,7 @@ def test_an_absent_tree_on_a_delta_target_publishes_and_derives_the_full_copys_r
     root_revision = _root_edition(modelo_root)
     root_design = load_modelo_directory(modelo_root).revisions[root_revision].casillas[0].source_refs[0]
     _cite_successor_design_on_inherited_rows(target_root, inherited_source_ref=str(root_design))
-    shutil.rmtree(modelo_root / "revisions" / _REVISION / "export")
+    _withdraw_export_layouts(modelo_root, revision=_REVISION)
     declarations_before = _tree_bytes(modelo_root)
 
     checked = _prepared(tmp_path / "check", target_root)

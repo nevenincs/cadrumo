@@ -172,7 +172,10 @@ def test_modelo_100_eo_agricultural_product_indices_are_decimal() -> None:
 
         assert set(casillas_by_id) == ids_for_year
         for casilla in casillas_by_id.values():
-            assert casilla.label == "Índice"
+            # Each index names the product it applies to, so the label carries a
+            # per-casilla suffix; what every one of them must still say is which
+            # official concept it is.
+            assert casilla.label.startswith("Índice"), casilla.id
             assert tuple(casilla.section) == (
                 "toma_datos_ampliada",
                 "reg_estima_obj_agricola",
