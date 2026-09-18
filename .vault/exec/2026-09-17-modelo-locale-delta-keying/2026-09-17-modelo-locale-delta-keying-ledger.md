@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb8fc81747e6ada3134bc1187d8a35d605a0d029272e8ba2bfd8e1e60a22514f'
+body_hash: 'sha256:c62d59f24a9aa5c7b93d099722b36430d7fab96860836bb246d3ef2645d93b6c'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -145,6 +145,8 @@ related:
 - `S17` `verify:` `python -m dev.locales casilla-audit` -> `pass`
 - `S17` `verify:` `pytest dev/locales/tests/test_shipped_casilla_catalogue.py` -> `pass`
 - `S17` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
+- `S17` `M` `src/cadrumo/locales/hu.yml`
+- `S17` `verify:` `python -m dev.locales status` -> `pass`
 
 ## Notes
 
@@ -173,4 +175,5 @@ related:
 - `S17` The half-translation check no longer blanks parentheses: one holding prose is read like the rest of the label, and only citations, form numbers and acronyms are skipped. That exposed 111 texts rewritten whole and six English rows that half-translated a spelled-out citation. Three further classes were swept catalogue-wide: the Spanish word for a form box (898 values), the revision phrase y siguientes (332), and the Hungarian form name, which the user settled as the legal term nyomtatvany (1,546). A collapse then folded 18 values back onto lineage keys, and the Catalan typo pair por ejemplo against por ejermplo is recorded in both families that see it
 - `S17` A generic detector - a Spanish word the catalogue translates in the large majority of rows but keeps in a few - found 1,224 rows, of which 765 values were genuine leaks and the rest were proper names, citations and registry identifiers correctly kept. Widening the dropped-content check from labels to help then exposed a broken generator: 728 help rows across three locales stated no transaction number, read tax information about tax information, or had lost their LIVA citations. Repair peels, because collapsing a repaired value uncovers the edition keys beneath it, so the audit was re-run after every collapse until it read zero. Five checks were corrected rather than the data: parentheses are read by the half-translation check, help by the dropped-content check, Hungarian numerals inside compounds and as teen words, and one Hungarian label now composes the segments its Spanish composes
 - `S17` Help is now judged by every check that judges a label. Widening translation drift to help exposed 600 lineages storing one meaning twice - 61 were the old template surviving beside correct text, 183 were one Catalan case split, and 356 were reviewer judgements - after which the collapse folded 1,019 values onto lineage keys. Widening copied, stale, stranded and shared translations then reported only eight further cases: seven equivalent Spanish wordings now recorded with the difference seen, and one genuine defect no earlier check could see, a Modelo 303 label carrying its own help text in all three locales and so losing the result line, the winding up of the non-customs warehousing regime and the State Administration share
+- `S17` The Hungarian interface now uses the same legal terms as the casilla catalogue: 258 of 269 strings say rovat and nyomtatvany where they said casilla and modelo. Machine tokens were left exactly as they were - every brace placeholder, percent key and option name survives byte for byte across all 269 rows, and the Spanish words remain only where a user types them, in the aeat app modelo command examples, the modelo command group name in help, and a relation id. Placeholder parity and cross-surface coverage were re-verified after the install
 
