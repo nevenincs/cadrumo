@@ -180,6 +180,13 @@ def verify_legal_catalogue(legal: Mapping[str, LegalReference], *, source_root: 
 
 
 def _verify_catalogue(legal: Mapping[str, LegalReference], *, source_root: Path, include_review: bool) -> None:
+    # The corpus digest memo is keyed on stat identity, which is exactly what a
+    # metadata-preserving rewrite forges, so a memo that outlived a verification
+    # pass would answer the next one with the superseded digest and the text
+    # cache behind it would hand back the superseded evidence. Dropping it here
+    # bounds the memo to one pass: references still share the hash of a file
+    # they cite in common, and no pass inherits another's answer.
+    _corpus_file_digest.cache_clear()
     failures: list[str] = []
     for ref_id, reference in legal.items():
         if ref_id != reference.id:
