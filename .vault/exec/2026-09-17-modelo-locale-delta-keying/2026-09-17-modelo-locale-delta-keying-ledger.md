@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#modelo-locale-delta-keying'
 date: '2026-09-17'
-modified: '2026-09-17'
+modified: '2026-09-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:07037e86679c2adfa5101d0cb4418fa625f67ccda46430a523983d4a0ba34e39'
+body_hash: 'sha256:3814cc763283bd1b409f506288c2134d77797cf47bba5971239079f44ebd8e00'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -106,6 +106,24 @@ related:
 - `S12` `verify:` `python -m dev.registry.pipeline publish-authority` -> `pass`
 - `S12` `M` `dev/locales/tests/test_shipped_casilla_catalogue.py`
 - `S12` `verify:` `pytest dev/locales/tests/test_locale_translation_honesty.py` -> `pass`
+- `S16` `M` `src/cadrumo/locales`
+- `S16` `M` `dev/locales/tests/test_locale_translation_honesty.py`
+- `S16` `M` `dev/locales/modelo_casilla_catalogue.py`
+- `S16` `verify:` `pytest dev/locales/tests/test_shipped_casilla_catalogue.py` -> `pass`
+- `S13` `M` `dev/locales/modelo_casilla_catalogue.py`
+- `S13` `M` `dev/locales/tests/test_shipped_casilla_catalogue.py`
+- `S13` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
+- `S13` `M` `src/cadrumo/locales`
+- `S13` `M` `src/cadrumo/_data/registry/authority`
+- `S13` `verify:` `python -m dev.registry.pipeline publish-authority` -> `pass`
+- `S14` `M` `dev/locales/casilla_orthography.py`
+- `S14` `M` `dev/locales/cli.py`
+- `S14` `M` `dev/locales/tests/test_casilla_orthography.py`
+- `S14` `M` `src/cadrumo/locales`
+- `S14` `verify:` `pytest dev/locales/tests/test_casilla_orthography.py` -> `pass`
+- `S16` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
+- `S16` `M` `dev/locales/tests/test_shipped_casilla_catalogue.py`
+- `S16` `verify:` `pytest dev/locales/tests/test_locale_translation_honesty.py` -> `pass`
 
 ## Notes
 
@@ -116,4 +134,9 @@ related:
 - `S12` Serving no translation where Spanish resolves nowhere removed ~2300 genuine en help texts (ca/hu likewise) that lacked a Spanish source; Spanish help is being authored and the translations restored from 1b7a46e4cb^
 - `S12` Edition-specific Spanish restored from official designs for Modelo 100 casillas 0002/0758/0854/1016 broke registry strict continuity; reverted to shared text, casilla-author now refuses such splits until the registry declares a continuity evolution
 - `S12` Modelo 100 casilla 1908 stays shared and cut short: its official label names annex B.8/B.9/B.11 per edition, which needs a registry casilla continuity evolution before the locale text can diverge
+- `S16` Casilla help was untranslated for 177 Spanish texts because the untranslated finding and the honesty gate read labels only; both now read help as well
+- `S13` Revision labels are edition text: 19 per locale repeated one modelo's text across editions and were re-authored per period; the scaffold emits no per-edition key family beyond them
+- `S14` The interface domains lost diacritics like the casilla surface did: 125 texts repaired across es/ca/hu, the check now reads every shipped surface with reviewed-word exemptions, and a gate covers it; placeholder and glossary patterns stay casilla-only because progress ellipses and the Hungarian -kent suffix are correct there
+- `S16` A 300-label sample measured meaning-defect rates of en 5.0/ca 2.7/hu 4.0 per cent; the dominant class, translations dropping a box reference, amount or comparison the Spanish states, is now a check with cross-language equivalences, 268 repairs installed, one wrong year caught in Modelo 131, and a gate at zero
+- `S16` One translation may render only one Spanish wording of a modelo: 72 keys carried another casilla's text, including a reused box number in Modelo 200 and the minorado/reducido pair, with 100 reviewer-recorded equivalences for abbreviations, typos, punctuation and synonyms
 
