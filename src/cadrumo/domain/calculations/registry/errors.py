@@ -277,6 +277,101 @@ class EjercicioOrdenNotYetPublishedError(NoRevisionForPeriodError):
         }
 
 
+class FilingYearOutsideSupportEnvelopeError(RegistrySnapshotError):
+    """The registry declines a coordinate its support envelope gates, not one it lacks.
+
+    A refused filing year has two unrelated causes, and conflating them costs
+    triage time out of all proportion to the fix. Either no revision was ever
+    authored for the coordinate -- an authoring gap, answered by
+    :class:`NoRevisionForPeriodError` -- or the corpus authors it perfectly well
+    and the product's declared filing envelope refuses to resolve it, which is a
+    scope decision no amount of authoring changes. The second is this error.
+
+    Keeping them apart is the same invariant the sibling governed-fact resolver
+    already holds: unsupported and absent are distinct states, and a consumer
+    that cannot tell them apart cannot choose a remedy. The remedy differs
+    completely -- a gap is closed by authoring the revision, an out-of-envelope
+    coordinate by resolving against the authority scoped to the authored
+    history instead of the filing envelope, or by moving the envelope floor.
+
+    ``covering_revision_ids`` is deliberately the revisions whose own period
+    selector DOES cover the requested coordinate. It is usually non-empty, and
+    that is the whole point: the previous refusal reported those same ids under
+    a message asserting nothing covered the year, so its own evidence
+    contradicted its own claim.
+
+    Subclasses :class:`RegistrySnapshotError`, not
+    :class:`NoRevisionForPeriodError`: every broad ``except
+    RegistrySnapshotError`` site keeps catching it, while a handler that means
+    "no revision was authored" no longer silently absorbs an envelope refusal.
+
+    Structured attributes: ``modelo_id``, ``filing_year``, ``period``,
+    ``floor``, ``horizon``, ``hard_ceiling``, ``covering_revision_ids``.
+    """
+
+    def __init__(
+        self,
+        *,
+        modelo_id: str,
+        filing_year: int,
+        period: str,
+        floor: int,
+        horizon: int,
+        hard_ceiling: int | None,
+        covering_revision_ids: Iterable[str],
+    ) -> None:
+        """Construct the outside-support-envelope refusal.
+
+        Args:
+            modelo_id: The modelo whose selection was refused.
+            filing_year: The requested AEAT filing year the envelope gates.
+            period: The requested period token, or ``"year"`` for the
+                year-only selectors, carried so the refusal names the exact
+                coordinate the caller asked for.
+            floor: The envelope's hard lower gate.
+            horizon: The envelope's last globally authored coordinate.
+            hard_ceiling: The envelope's hard upper gate, when it declares one.
+            covering_revision_ids: The revisions whose declared period selector
+                covers the requested coordinate. REQUIRED, and named as
+                "covering" rather than "available": a refusal that says the
+                envelope gated a year the corpus does author is actionable,
+                and one that merely lists revisions is the misleading form
+                this error exists to replace.
+        """
+        covering = tuple(sorted(covering_revision_ids))
+        self.modelo_id: str = modelo_id
+        self.filing_year: int = filing_year
+        self.period: str = period
+        self.floor: int = floor
+        self.horizon: int = horizon
+        self.hard_ceiling: int | None = hard_ceiling
+        self.covering_revision_ids: tuple[str, ...] = covering
+        ceiling = "open" if hard_ceiling is None else str(hard_ceiling)
+        detail = (
+            f"modelo {modelo_id}: filing year {filing_year} period {period!r} lies outside the "
+            f"registry support envelope [floor={floor}, horizon={horizon}, hard_ceiling={ceiling}]"
+        )
+        if covering:
+            detail = (
+                f"{detail}; the corpus DOES author this coordinate in modelo {modelo_id} "
+                f"revision(s) {', '.join(covering)}, so this is an envelope scope refusal, "
+                f"not a missing revision"
+            )
+        super().__init__(
+            detail,
+            translated_message="errors.snapshot.filing_year_outside_support_envelope",
+            context={
+                "modelo_id": modelo_id,
+                "filing_year": filing_year,
+                "period": period,
+                "floor": floor,
+                "horizon": horizon,
+                "hard_ceiling": "" if hard_ceiling is None else hard_ceiling,
+                "covering_revision_ids": _csv(covering),
+            },
+        )
+
+
 class AmbiguousRevisionSelectionError(RegistrySnapshotError):
     """More than one registry revision matches the temporal natural key.
 
