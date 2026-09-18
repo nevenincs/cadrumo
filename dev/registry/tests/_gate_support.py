@@ -126,97 +126,121 @@ class DeclaringFragment:
     revision_id: str
     section: str
 
-    def mutate(self, find: str, replace: str, *, after: str | None = None) -> None:
-        """Rewrite one occurrence of *find*, refusing a target that is not there.
-
-        *after* scopes the rewrite to the declaration beginning at that text,
-        for a fragment whose other members spell the same term.
-        """
-        original = self.path.read_text(encoding="utf-8")
-        candidates = (
-            (find, replace, after),
-            (_literal_quoted(find), _literal_quoted(replace), after if after is None else _literal_quoted(after)),
-        )
-        for target, replacement, scope in candidates:
-            start = 0 if scope is None else original.find(scope)
-            if start < 0 or target not in original[start:]:
-                continue
-            self.path.write_text(
-                original[:start] + original[start:].replace(target, replacement, 1),
-                encoding="utf-8",
-            )
-            return
-        msg = f"{self.path}: {find!r} is not declared there -- the mutation is stale, diagnose before re-anchoring"
-        raise AssertionError(msg)
+    path: Path
+    edition: str
+    revision_id: str
+    section: str
 
 
-def declaring_fragment(modelo_directory: Path, *, revision_id: str, section: str, anchor: str) -> DeclaringFragment:
-    """The fragment an edition resolves *anchor* from, across its storage chain.
+def _rewrite(text: str, *, member: str, find: str, replace: str) -> str | None:
+    """The text with the first *find* at or after *member* rewritten, or ``None``.
 
-    A source-text mutation has to name the file it rewrites, and naming it by
-    FILENAME rots the moment a section is re-fragmented or collapsed: gates
-    addressing ``0001-export_layouts.toml`` went stale when the layout split,
-    and gates addressing ``<casilla-id>.toml`` went stale again when every
-    family collapsed into one aggregated fragment per edition. Resolving by
-    CONTENT survives both.
+    Both spellings of TOML strings are tried, because the same declaration is
+    quoted one way by hand and the other by the renderer.
+    """
+    for scope, target, replacement in (
+        (member, find, replace),
+        (_literal_quoted(member), _literal_quoted(find), _literal_quoted(replace)),
+    ):
+        start = text.find(scope)
+        if start < 0 or target not in text[start:]:
+            continue
+        return text[:start] + text[start:].replace(target, replacement, 1)
+    return None
 
-    Resolving by content within ONE edition is not enough either. Under the
-    delta layout an edition carries only the families it changes -- modelo 303's
-    2025 edition has no ``casillas/`` or ``bindings/`` directory at all -- so
-    the anchor is looked for along the edition's storage chain and the nearest
-    edition declaring it wins. That is the edition the loader itself resolves
-    the declaration from.
+
+def _edition_declaration_files(revision_root: Path, section: str) -> tuple[Path, ...]:
+    """Every file of one edition that may physically carry a *section* member.
 
     An edition has two storage loci for one family, not one: the section
     fragments, and the overrides its ``revision.toml`` states against a
     baseline member. Modelo 303 authors box 10's projection formula as a
     ``casilla_overrides`` entry, so a search restricted to ``casillas/``
-    concludes the declaration is gone when it is merely delta-authored. Both
-    loci are searched for every edition on the chain.
+    concludes the declaration is gone when it is merely delta-authored.
+    """
+    files: list[Path] = []
+    for directory in _section_directories(revision_root, section):
+        if directory.is_dir():
+            files.extend(scan_directory(directory, pattern="*.toml"))
+    manifest = revision_root / "revision.toml"
+    if manifest.is_file():
+        files.append(manifest)
+    return tuple(files)
 
-    Zero matches anywhere on the chain means the anchor genuinely no longer
-    exists, which is a real staleness the caller must diagnose rather than
-    paper over -- do NOT respond by pointing the anchor at a nearby string,
-    because a mutation retargeted at a convenient neighbour mutates something
-    the gate was never about. More than one match within one edition means a
-    single-occurrence rewrite would silently pick the first, so the mutation
-    would no longer be the one the test describes.
+
+def mutate_declaration(
+    modelo_directory: Path,
+    *,
+    revision_id: str,
+    section: str,
+    member: str,
+    find: str,
+    replace: str,
+) -> DeclaringFragment:
+    """Re-introduce a defect in the source an edition resolves a member from.
+
+    A source-text mutation has to name the file it rewrites, and naming it by
+    FILENAME rots the moment a section is re-fragmented or collapsed: gates
+    addressing ``0001-export_layouts.toml`` went stale when the layout split,
+    and gates addressing ``<casilla-id>.toml`` went stale again when every
+    family collapsed into one aggregated fragment per edition. Addressing the
+    declaration by CONTENT survives both.
+
+    Addressing it within ONE edition is not enough either. Under the delta
+    layout an edition carries only the families it changes -- modelo 303's 2025
+    edition has no ``casillas/`` or ``bindings/`` directory at all -- so the
+    rewrite is looked for along the edition's storage chain and the nearest
+    edition that states it wins. That is the source the loader itself resolves
+    the member's value from, which is exactly where a mutation must land for
+    the edition under test to see it.
+
+    *member* and *find* are resolved together rather than in two steps,
+    because the two loci split one member across two files: a successor's
+    ``revision.toml`` may carry an override naming the member while the field
+    under mutation stays in the baseline's fragment. Selecting the file on
+    *member* alone picks the override and then fails to find the field.
+
+    No file on the chain carrying both means the declaration or the field
+    genuinely changed, which is a real staleness the caller must diagnose
+    rather than paper over -- do NOT respond by pointing the mutation at a
+    nearby string, because a mutation retargeted at a convenient neighbour
+    mutates something the gate was never about. More than one such file within
+    one edition means a single-occurrence rewrite would silently pick the
+    first, so the mutation would no longer be the one the test describes.
 
     Args:
         modelo_directory: The modelo root holding ``revisions/``.
         revision_id: The edition under test.
         section: The revision family the declaration belongs to.
-        anchor: The exact source text the caller intends to rewrite.
+        member: Source text identifying the declaration, typically its id.
+        find: The exact source text to rewrite, at or after *member*.
+        replace: What to put in its place.
 
     Returns:
-        The single fragment declaring *anchor*, with the edition holding it.
+        The fragment that was rewritten, and the edition holding it.
     """
     chain = _storage_chain(modelo_directory, revision_id, section)
-    spellings = (anchor, _literal_quoted(anchor))
     for edition in chain:
-        revision_root = modelo_directory / "revisions" / edition
-        candidates: list[Path] = []
-        for directory in _section_directories(revision_root, section):
-            if directory.is_dir():
-                candidates.extend(scan_directory(directory, pattern="*.toml"))
-        manifest = revision_root / "revision.toml"
-        if manifest.is_file():
-            candidates.append(manifest)
-        matches = [
-            path for path in candidates if any(spelling in path.read_text(encoding="utf-8") for spelling in spellings)
+        rewrites = [
+            (path, rewritten)
+            for path in _edition_declaration_files(modelo_directory / "revisions" / edition, section)
+            for rewritten in (_rewrite(path.read_text(encoding="utf-8"), member=member, find=find, replace=replace),)
+            if rewritten is not None
         ]
-        if not matches:
+        if not rewrites:
             continue
-        if len(matches) > 1:
-            named = ", ".join(path.name for path in matches)
+        if len(rewrites) > 1:
+            named = ", ".join(path.name for path, _ in rewrites)
             msg = (
-                f"{anchor!r} appears in {len(matches)} files of edition {edition} "
+                f"{find!r} is rewritable in {len(rewrites)} files of edition {edition} "
                 f"({named}); a single-occurrence mutation is ambiguous"
             )
             raise AssertionError(msg)
-        return DeclaringFragment(path=matches[0], edition=edition, revision_id=revision_id, section=section)
+        path, rewritten = rewrites[0]
+        path.write_text(rewritten, encoding="utf-8")
+        return DeclaringFragment(path=path, edition=edition, revision_id=revision_id, section=section)
     msg = (
-        f"no fragment declares {anchor!r} for {section} of edition {revision_id!r} "
+        f"no source declares {member!r} with {find!r} for {section} of edition {revision_id!r} "
         f"(storage chain {list(chain)!r}) -- the gate is stale, diagnose before re-anchoring"
     )
     raise AssertionError(msg)

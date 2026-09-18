@@ -43,6 +43,10 @@ from cadrumo.domain.calculations.registry.keyed_families import (
 from cadrumo.domain.calculations.registry.keyed_families import (
     family_identity_value as _family_identity_value,
 )
+from cadrumo.domain.calculations.registry.keyed_families import (
+    family_source_default_fields,
+    inline_family_source_default,
+)
 from cadrumo.domain.calculations.registry.lineage_attestation import (
     LineageAttestation,
     validate_lineage_attestations,
@@ -331,16 +335,10 @@ def inherit_keyed_family(
 def _pin_family_source_default(member: object, predecessor: Mapping[str, object], family: _KeyedFamily) -> object:
     """Keep an inherited member bound to the source default effective at its origin."""
     table = _as_toml_table(member)
-    if table is None or family.source_default_key is None or "source_refs" in table:
+    if table is None:
         return member
-    default = predecessor.get(family.source_default_key)
-    if not isinstance(default, list | tuple) or not default:
-        return member
-    pinned = dict(table)
-    raw_additions = pinned.pop("additional_source_refs", ())
-    additions = raw_additions if isinstance(raw_additions, list | tuple) else ()
-    pinned["source_refs"] = tuple(dict.fromkeys((*default, *additions)))
-    return pinned
+    pinned = inline_family_source_default(table, predecessor, family.source_default_key)
+    return member if pinned is table else pinned
 
 
 def _patch_family_table(context: str, value: object, fields: Mapping[str, object], removed: tuple[str, ...]) -> object:
