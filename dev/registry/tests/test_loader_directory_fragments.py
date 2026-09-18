@@ -10,8 +10,8 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
 from ..compiler.export_fragment_grammar import (
+    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     GENERATED_EXPORT_DIRECTORY_NAME,
-    GENERATED_EXPORT_PROVENANCE_FILENAME,
     revision_section_for_directory,
 )
 from ..compiler.loader import load_modelo_directory
@@ -709,9 +709,9 @@ def test_the_generated_export_tree_is_exactly_the_one_carrying_generation_proven
         label = f"{revision_dir.parent.parent.name}/{revision_dir.name}"
         if generated.is_dir() and authored.is_dir():
             both_spellings.append(label)
-        if generated.is_dir() and not (generated / GENERATED_EXPORT_PROVENANCE_FILENAME).is_file():
+        if generated.is_dir() and not (generated / EXPORT_FRAGMENT_PROVENANCE_FILENAME).is_file():
             missing_provenance.append(label)
-        if authored.is_dir() and (authored / GENERATED_EXPORT_PROVENANCE_FILENAME).is_file():
+        if authored.is_dir() and (authored / EXPORT_FRAGMENT_PROVENANCE_FILENAME).is_file():
             unexpected_provenance.append(label)
 
     assert both_spellings == [], (
@@ -720,7 +720,7 @@ def test_the_generated_export_tree_is_exactly_the_one_carrying_generation_proven
     )
     assert missing_provenance == [], (
         f"revision(s) {missing_provenance!r} carry a generator-owned 'export/' tree with no "
-        f"{GENERATED_EXPORT_PROVENANCE_FILENAME}; either it was hand-authored in the generator's directory "
+        f"{EXPORT_FRAGMENT_PROVENANCE_FILENAME}; either it was hand-authored in the generator's directory "
         "or the generation manifest was dropped"
     )
     assert unexpected_provenance == [], (

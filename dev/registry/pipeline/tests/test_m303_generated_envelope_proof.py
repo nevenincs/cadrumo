@@ -70,6 +70,7 @@ from cadrumo.domain.prorrata_register.register import (
 )
 
 from ...compiler.authority import compiled_bundled_authority
+from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory, load_registry_tree
 from ...compiler.supplementary_orden import compile_supplementary_ordenes
 from .._export_tree import render_complete_export_tree
@@ -78,7 +79,6 @@ from .._tree_validation import GeneratedExportTreeValidationContext
 from ..candidate_staging import stage_continuity_metadata
 from ..cli import stage_published_modelo
 from ..export_fragment_provenance import (
-    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
     collect_export_fragment_output_digests,
     load_export_fragment_provenance_manifest,

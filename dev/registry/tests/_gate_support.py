@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.revision_order import ordered_revision
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision, RegistryCatalogues
 from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_ids
 
+from ..compiler.export_fragment_grammar import EXPORT_SECTION_DIRECTORY_NAMES, revision_section_for_directory
 from ..compiler.loader import load_modelo_declarations, load_registry_tree
 from ..compiler.validator import _runtime_legal_reference_ids
 
@@ -30,12 +31,6 @@ _SCRATCH_CATALOGUE_DIRECTORIES: Final[tuple[str, ...]] = (
     "legal",
     "topics",
 )
-
-#: Sections whose fragments live under a directory spelled differently from
-#: the ``ModeloRevision`` field they carry.
-_SECTION_DIRECTORY_NAMES: Final[dict[str, tuple[str, ...]]] = {
-    "export_layouts": ("export", "export_layouts"),
-}
 
 _CASILLA_STORAGE_BASELINE: Final = "casilla_storage_baseline"
 _FAMILY_STORAGE_BASELINE: Final = "family_storage_baseline"
@@ -109,7 +104,19 @@ def _storage_chain(modelo_directory: Path, revision_id: str, section: str) -> tu
 
 
 def _section_directories(revision_root: Path, section: str) -> tuple[Path, ...]:
-    return tuple(revision_root / name for name in _SECTION_DIRECTORY_NAMES.get(section, (section,)))
+    """The directories one revision may author *section* under.
+
+    Every section is spelled like its field except the export layouts, which
+    are authored under the generator-owned ``export/`` tree or a hand-authored
+    ``export_layouts/`` one. The alias is read from the loader's own grammar
+    rather than restated, so this resolves the same directory the loader does.
+    """
+    names = (
+        sorted(EXPORT_SECTION_DIRECTORY_NAMES)
+        if any(revision_section_for_directory(name) == section for name in EXPORT_SECTION_DIRECTORY_NAMES)
+        else [section]
+    )
+    return tuple(revision_root / name for name in names)
 
 
 @dataclass(frozen=True, slots=True)

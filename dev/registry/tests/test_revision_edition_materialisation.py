@@ -545,3 +545,60 @@ def test_a_predecessor_cycle_is_refused_before_anything_is_inherited(tmp_path: P
 
     with pytest.raises(RegistryLoadError, match="predecessor declarations form a cycle"):
         load_modelo_directory(modelo_dir)
+
+
+def test_an_edge_claim_section_is_never_carried_into_the_inheriting_edition(tmp_path: Path) -> None:
+    """A continuity evolution belongs to the edge that states it, not to every edition after it.
+
+    ``casilla_continuidad_evolutions`` and ``identifier_evolutions`` record what
+    ONE edition did to the identities it received: retired this lineage,
+    replaced that binding id. Inheriting them would make the successor
+    re-assert a withdrawal it never made, against rows that are already gone --
+    and the merge reads retirements from the edition being materialised, so a
+    carried-forward row is a live input, not just a stale claim.
+
+    They are excluded by construction: only families in the canonical keyed
+    table are merged, and these are not in it. That makes this the test that
+    catches one being enrolled by accident, which is the single way the
+    exclusion can be lost.
+
+    The inherited casillas are asserted alongside. Without them, an edition
+    that inherited nothing at all would satisfy the emptiness above for
+    entirely the wrong reason.
+    """
+    modelo_dir = _modelo_root(tmp_path)
+    _write_edition(
+        modelo_dir,
+        "2023",
+        year=2023,
+        casillas=(
+            _casilla("2023", "0001", number="1", lineage="base-imponible")
+            + _casilla("2023", "0002", number="2", lineage="deduccion-retirada")
+        ),
+    )
+    _write_edition(
+        modelo_dir,
+        "2024",
+        year=2024,
+        manifest_extra='predecessor = "2023"\n',
+        casillas="",
+        evolutions=_retirement("2024", lineage="deduccion-retirada", from_revision="2023"),
+    )
+    _write_edition(
+        modelo_dir,
+        "2025",
+        year=2025,
+        manifest_extra='predecessor = "2024"\n',
+        casillas="",
+    )
+
+    revisions = load_modelo_directory(modelo_dir).revisions
+    stating, inheriting = revisions["2024"], revisions["2025"]
+
+    assert stating.casilla_continuidad_evolutions != ()
+    assert inheriting.casilla_continuidad_evolutions == ()
+    assert inheriting.identifier_evolutions == ()
+    # The retirement took effect where it was stated and was not re-run after:
+    # both editions carry the surviving lineage and neither carries the retired one.
+    assert [lineage for _id, _number, lineage in _rows(stating)] == ["base-imponible"]
+    assert [lineage for _id, _number, lineage in _rows(inheriting)] == ["base-imponible"]

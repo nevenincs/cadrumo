@@ -45,11 +45,27 @@ def test_typed_comparison_preserves_false_zero_absence_empty_and_array_order() -
 
 
 def test_only_converter_failure_roots_are_reassessed_against_the_adjacent_revision() -> None:
-    independent = {"predecessor": {"none": {"reason": "different territorial applicability"}}}
-    technical = {"predecessor": {"none": {"reason": "migration predecessor_row_without_lineage"}}}
+    """The structured cause decides, and a root naming a legal or topology cause stays a root."""
+    technical = {"predecessor": {"none": {"cause": "predecessor_row_without_lineage", "reason": "..."}}}
+    structural = {"predecessor": {"none": {"cause": "official_structure_differs", "reason": "..."}}}
 
-    assert not migration._technical_root(independent)
-    assert migration._technical_root(technical)
+    assert migration.technical_root(technical)
+    assert not migration.technical_root(structural)
+
+
+def test_a_roots_prose_never_decides_whether_it_is_reconsidered() -> None:
+    """Free text is not a second spelling of the cause, however closely it reads like one.
+
+    Both declarations below describe a converter limitation in words, one of
+    them quoting a cause token verbatim. Neither states the typed field, so
+    neither is classified: the reassessment acts on the declaration's own
+    claim, not on how its author happened to phrase the sentence beside it.
+    """
+    quoting_a_cause = {"predecessor": {"none": {"reason": "migration hit predecessor_row_without_lineage here"}}}
+    describing_one = {"predecessor": {"none": {"reason": "the earlier rows carry no lineage to chain to"}}}
+
+    assert not migration.technical_root(quoting_a_cause)
+    assert not migration.technical_root(describing_one)
 
 
 def test_nested_values_have_stable_leaf_counting_and_locations() -> None:
