@@ -159,38 +159,38 @@ class SystemMemoryReading(BaseModel):
 def _windows_memory_status() -> tuple[int, int] | None:
     """Return ``(total, available)`` physical bytes from ``GlobalMemoryStatusEx``, or ``None``.
 
-    Returns ``None`` off Windows. The early exit is what establishes the
-    platform inside THIS function's body: a type checker narrows on
-    ``sys.platform``, and a guard at the call site is invisible to it, so
-    ``ctypes.windll`` -- which exists only in the Windows typeshed stubs -- reads
-    as a missing attribute when the tree is analysed for Linux. The runtime
-    behaviour is unchanged; the caller already treats ``None`` as "not measured".
+    Returns ``None`` off Windows. The ``sys.platform == "win32"`` block, rather
+    than an early return off Windows, is what establishes the platform inside
+    THIS function's body: a guard at the call site is invisible to a checker,
+    and the positive block is the only guard shape every checker this project
+    runs narrows on, so ``ctypes.windll`` -- which exists only in the Windows
+    typeshed stubs -- resolves when the tree is analysed for Linux or macOS.
+    The runtime behaviour is unchanged; the caller already treats ``None`` as
+    "not measured".
     """
-    if sys.platform != "win32":  # pragma: no cover - the CI runner is Linux
-        return None
+    if sys.platform == "win32":  # pragma: no cover - the CI runner is Linux
+        import ctypes
 
-    import ctypes
+        class _MemoryStatusEx(ctypes.Structure):
+            _fields_ = (
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            )
 
-    class _MemoryStatusEx(ctypes.Structure):
-        _fields_ = (
-            ("dwLength", ctypes.c_ulong),
-            ("dwMemoryLoad", ctypes.c_ulong),
-            ("ullTotalPhys", ctypes.c_ulonglong),
-            ("ullAvailPhys", ctypes.c_ulonglong),
-            ("ullTotalPageFile", ctypes.c_ulonglong),
-            ("ullAvailPageFile", ctypes.c_ulonglong),
-            ("ullTotalVirtual", ctypes.c_ulonglong),
-            ("ullAvailVirtual", ctypes.c_ulonglong),
-            ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
-        )
-
-    status = _MemoryStatusEx()
-    status.dwLength = ctypes.sizeof(_MemoryStatusEx)
-    try:
-        if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
-            return int(status.ullTotalPhys), int(status.ullAvailPhys)
-    except (OSError, AttributeError):
-        return None
+        status = _MemoryStatusEx()
+        status.dwLength = ctypes.sizeof(_MemoryStatusEx)
+        try:
+            if ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+                return int(status.ullTotalPhys), int(status.ullAvailPhys)
+        except (OSError, AttributeError):
+            return None
     return None
 
 
@@ -209,31 +209,34 @@ def read_system_memory() -> SystemMemoryReading:
     :func:`probe_model_runtime_hardware_floor`, nor mistaken for headroom by
     :func:`assess_model_load_contention`.
     """
-    if sys.platform != "win32":
-        # Guarded on the platform rather than on getattr so a type checker can
-        # follow it: os.sysconf is absent from the Windows stubs entirely. The
-        # inner membership checks stay for POSIX variants that omit the
-        # constants themselves; SC_AVPHYS_PAGES is the more commonly absent of
-        # the three, so a total may be readable where a free figure is not.
-        names = getattr(os, "sysconf_names", {})
-        if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
+    if sys.platform == "win32":
+        # The positive block, rather than an early return off Windows, is what
+        # establishes the platform for both directions of this branch: it is
+        # the only guard shape every checker this project runs narrows on, so
+        # `os.sysconf` -- absent from the Windows stubs entirely -- resolves
+        # below without a getattr probe no checker can follow.
+        measured = _windows_memory_status()
+        if measured is None:
+            return SystemMemoryReading()
+        return SystemMemoryReading(total_bytes=measured[0], free_bytes=measured[1])
+    # The inner membership checks stay for POSIX variants that omit the
+    # constants themselves; SC_AVPHYS_PAGES is the more commonly absent of the
+    # three, so a total may be readable where a free figure is not.
+    names = os.sysconf_names
+    if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
+        try:
+            page_size = int(os.sysconf("SC_PAGE_SIZE"))
+            total = page_size * int(os.sysconf("SC_PHYS_PAGES"))
+        except (OSError, ValueError):
+            return SystemMemoryReading()
+        free: int | None = None
+        if "SC_AVPHYS_PAGES" in names:
             try:
-                page_size = int(os.sysconf("SC_PAGE_SIZE"))
-                total = page_size * int(os.sysconf("SC_PHYS_PAGES"))
+                free = page_size * int(os.sysconf("SC_AVPHYS_PAGES"))
             except (OSError, ValueError):
-                return SystemMemoryReading()
-            free: int | None = None
-            if "SC_AVPHYS_PAGES" in names:
-                try:
-                    free = page_size * int(os.sysconf("SC_AVPHYS_PAGES"))
-                except (OSError, ValueError):
-                    free = None
-            return SystemMemoryReading(total_bytes=total, free_bytes=free)
-        return SystemMemoryReading()
-    measured = _windows_memory_status()
-    if measured is None:
-        return SystemMemoryReading()
-    return SystemMemoryReading(total_bytes=measured[0], free_bytes=measured[1])
+                free = None
+        return SystemMemoryReading(total_bytes=total, free_bytes=free)
+    return SystemMemoryReading()
 
 
 def read_total_system_memory_bytes() -> int | None:
