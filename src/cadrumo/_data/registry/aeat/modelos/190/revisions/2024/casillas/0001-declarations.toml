@@ -1,0 +1,37 @@
+# Modelo 190 Tipo 1 (registro de declarante) header casillas.
+#
+# These are the operator-supplied slots of the declarante record: the contact
+# person, the declaration's own identifying numbers, and the complementaria /
+# sustitutiva flags. Each was previously written as a `filler`, which emits the
+# design's blanks or ceros and gives the operator NO channel to supply the datum
+# at all; the design expects a real value in every one of them.
+#
+# Shapes follow modelo 270's declarante header, which AEAT lays out at the same
+# positions with the same meanings (108-120, 121, 122, 123-135), and modelo 189
+# for the same header block. `required = false` throughout except the numero
+# identificativo, matching those precedents: AEAT admits blancos or ceros in each
+# when the filer has no value, so an unfilled slot stays a valid record.
+#
+# The SELLO ELECTRONICO at 488-500 is deliberately NOT among them. AEAT reserves
+# it for its own programs ("sera cumplimentado exclusivamente por los programas
+# de la AEAT. En cualquier otro caso, se rellenara a blancos"), so leaving it
+# unwritten is the correct authoring, not a gap.
+
+[[revisions."2024".casillas]]
+id = "perc.excesos-acciones-emergentes"
+continuidad_id = "payee-emerging-stock-excess-clave"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "The 2024 record design (aeat-dr-190-2024) prints «EXCESOS ENTREGA ACCIONES EMPRESAS EMERGENTES» at registro de tipo 2 position 388, lines 2590-2592 of corpus/aeat_official/disenos_registro/modelo_190/files/03-190-...-hac-1432-2024...extracted.md (sha256 b86df4e9c542), and closes the record «389-500 – BLANCOS.» (line 2624). The predecessor edition 2023 is grounded on aeat-dr-190-2023, whose registro de tipo 2 ends at position 387 and closes «388-500 – BLANCOS.» (line 2564 of corpus/aeat_official/disenos_registro/modelo_190/files/04-190-...-hfp-1286-2023...extracted.md (sha256 c6cd8235c37e)); that design names empresas emergentes only as prose inside another campo (lines 1319-1321) and prints no box for it. The box lies beyond the predecessor record and is new on this edition's official form."
+number = "388"
+section = ["perceptor", "percepcion"]
+data_type = "text"
+semantic_role = "payee_emerging_stock_excess_clave"
+# Clave 0/1, recorded only for clave A rows whose especie block has content;
+# both claves are recorded facts, never defaults.
+required = true
+legal_refs = ["orden-eha-3127-2009:art-1", "orden-hac-1431-2025:art-2", "rd-439-2007:art-108", "ley-35-2006:art-99", "ley-35-2006:art-42.3.f", "ley-58-2003:art-93"]
+# Modelo 190 Tipo 2 (registro de perceptor) detail-row casillas for the
+# incapacidad-laboral blocks (256-321), the IMV complemento clave (322) and
+# the clave-E foral retention split (323-387). Same template-slot contract as
+# the sibling casilla fragments; the design's own no-content for every amount
+# here is zeros.
