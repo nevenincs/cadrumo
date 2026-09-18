@@ -136,7 +136,7 @@ def _first_live_signed_field(export_layouts: Path) -> tuple[Path, int, str]:
                 continue
             match = re.fullmatch(r'id = "([^"]+)"', stripped)
             if match is not None:
-                field_id = match.group(1)
+                field_id = str(match.group(1))
             elif stripped == "signed = true" and field_id is not None:
                 return layout, index, field_id
     raise AssertionError(f"no live signed field under {export_layouts}")

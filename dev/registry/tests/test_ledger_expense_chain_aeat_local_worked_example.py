@@ -47,6 +47,7 @@ to produce, and what the assertions check.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -192,7 +193,7 @@ def _aggregated(*, suministros_category: SpendingCategory = _SUMINISTROS_CATEGOR
         return _aggregate(rows)
 
 
-def _aggregate(rows: list[object]):
+def _aggregate(rows: Sequence[Transaction]):
     return aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions(tuple(rows)),
         InvoiceCatalogue(),

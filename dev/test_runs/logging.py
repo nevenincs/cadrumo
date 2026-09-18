@@ -302,4 +302,4 @@ def collect_only_listing(stdout: str) -> tuple[Path | None, str | None]:
     match = _COLLECT_ONLY_LISTING.search(stdout)
     if match is None:
         return None, None
-    return Path(match.group("path").strip()), match.group("summary").strip()
+    return Path(str(match.group("path")).strip()), str(match.group("summary")).strip()

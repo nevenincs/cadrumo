@@ -74,9 +74,9 @@ def _placement_refusal_lines(modelo: ModeloDefinition) -> tuple[str, ...]:
         # Validation refuses outright without the profile contract, and that
         # refusal carries no placement line, so an unsupplied schema reads here
         # exactly like a record with nothing wrong in it.
-        user_profile_schema=capture_profile_schema(
-            bundled_path("registry", "cadrumo", "user_profile", "schema.toml")
-        )[1],
+        user_profile_schema=capture_profile_schema(bundled_path("registry", "cadrumo", "user_profile", "schema.toml"))[
+            1
+        ],
     )
     try:
         validator.validate_modelo(modelo)
