@@ -183,6 +183,20 @@ absence as a defect.
 """
 
 
+def ledger_is_filing_eligible(authority_scope: CoverageAuthorityScope) -> bool:
+    """Whether a coverage ledger built at this scope carries filing-grade gaps.
+
+    The one definition of that judgement. It was previously restated on every
+    ledger that needed it -- twice here, byte for byte, and once more in the
+    conformance profile -- and the third copy had already drifted: it compared
+    with ``==`` where these compared with ``is``, which for a ``StrEnum`` also
+    admits the bare string ``"filing"``. Two spellings of one predicate with
+    different acceptance is the failure this function exists to prevent, so
+    callers delegate here rather than repeating the comparison.
+    """
+    return authority_scope is CoverageAuthorityScope.FILING
+
+
 class EvidenceTierCoverageGate(CoverageModel):
     """Coverage state for one evidence tier."""
 
@@ -238,7 +252,7 @@ class ModelLawCoverageLedger(CoverageModel):
     @property
     def filing_eligible(self) -> bool:
         """Whether this ledger was built from filing-grade snapshot authority."""
-        return self.authority_scope is CoverageAuthorityScope.FILING
+        return ledger_is_filing_eligible(self.authority_scope)
 
     @property
     def gaps(self) -> tuple[EvidenceTierCoverageGate, ...]:
@@ -403,7 +417,7 @@ class ConstructEvidenceLedger(CoverageModel):
     @property
     def filing_eligible(self) -> bool:
         """Whether this ledger was built from filing-grade snapshot authority."""
-        return self.authority_scope is CoverageAuthorityScope.FILING
+        return ledger_is_filing_eligible(self.authority_scope)
 
     @property
     def reviewed_but_not_filing_capable(self) -> bool:
