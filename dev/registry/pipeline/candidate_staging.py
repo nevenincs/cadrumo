@@ -453,5 +453,15 @@ def drop_cross_edition_evolutions(revision_root: Path) -> None:
 
 
 def edition_requires_detachment(edition: MaterialisedEdition) -> bool:
-    """Whether an isolated edition must be written complete because it reaches pruned siblings."""
+    """Whether an isolated edition must be written complete because it reaches pruned siblings.
+
+    The inheritance edge is read from ``inherits_from``, never from the table: a
+    materialised table carries no named predecessor by construction, so a test
+    against its keys answered "no" for every delta edition and staged it thin --
+    the staged tree then kept a ``predecessor`` pointing at a sibling the
+    isolation had just pruned. The storage baselines are still read from the
+    table, where they remain declared.
+    """
+    if edition.inherits_from is not None:
+        return True
     return bool(_DETACHMENT_DECLARATIONS.intersection(edition.table))

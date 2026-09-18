@@ -35,7 +35,13 @@ from dev.registry.compiler.record_design_schema import (
     RecordDesignSkippedSheet,
 )
 
-from .record_design_cache import load_cached_record_design, record_design_cache_key, store_cached_record_design
+from .record_design_cache import (
+    load_cached_record_design,
+    load_cached_record_design_refusal,
+    record_design_cache_key,
+    store_cached_record_design,
+    store_cached_record_design_refusal,
+)
 from .record_design_pdf_orchestration import extract_record_design_pdf_cached
 from .record_design_sources import (
     load_corrections,
@@ -80,7 +86,19 @@ def _extract_record_design_cached(
     cached = load_cached_record_design(cache_key)
     if cached is not None:
         return cached
-    extraction = extractor(source_path)
+    # A refusal is persisted alongside a reading, because this memo cannot hold
+    # one: ``lru_cache`` records only returns, so an unreadable source re-parsed
+    # on every call in every process. Six bundled designs refuse, at 19s a
+    # process. The message is replayed rather than summarised so a caller reads
+    # the same refusal whether or not a cache served it.
+    refused = load_cached_record_design_refusal(cache_key)
+    if refused is not None:
+        raise RegistryValidationError(refused)
+    try:
+        extraction = extractor(source_path)
+    except RegistryValidationError as refusal:
+        store_cached_record_design_refusal(cache_key, str(refusal))
+        raise
     store_cached_record_design(cache_key, extraction)
     return extraction
 
