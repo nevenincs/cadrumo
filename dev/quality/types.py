@@ -24,9 +24,13 @@ import json
 import os
 import subprocess
 import sys
+import tomllib
 from collections import Counter
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
 _CWD = os.getcwd().replace("\\", "/")
 
@@ -66,6 +70,81 @@ _PLATFORMS: tuple[TargetPlatform, ...] = (
     TargetPlatform(key="win32", basedpyright="Windows"),
     TargetPlatform(key="darwin", basedpyright="Darwin"),
 )
+
+_REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
+
+
+@dataclass(frozen=True)
+class _PlatformPin:
+    """One checker's declared target platform in ``pyproject.toml``."""
+
+    table: tuple[str, ...]
+    key: str
+    # Which spelling of the platform this checker takes: ty, pyrefly and mypy
+    # use the `sys.platform` value, basedpyright its own capitalised names.
+    spelling: str
+
+
+# Every checker that resolves `sys.platform` declares the SAME platform. mypy is
+# included although CI does not run it: `[tool.mypy]` exists so an external
+# auditor's invocation matches ty's stance, and a stance that disagrees about
+# the platform is not a mirror.
+_PLATFORM_PINS: tuple[_PlatformPin, ...] = (
+    _PlatformPin(table=("tool", "ty", "environment"), key="python-platform", spelling="key"),
+    _PlatformPin(table=("tool", "pyrefly"), key="python_platform", spelling="key"),
+    _PlatformPin(table=("tool", "mypy"), key="platform", spelling="key"),
+    _PlatformPin(table=("tool", "basedpyright"), key="pythonPlatform", spelling="basedpyright"),
+)
+
+
+def _table(document: Mapping[str, Any], path: tuple[str, ...]) -> Mapping[str, Any] | None:
+    """Return a nested TOML table, or ``None`` when any segment is absent."""
+    current: Any = document
+    for segment in path:
+        if not isinstance(current, Mapping) or segment not in current:
+            return None
+        current = current[segment]
+    return current if isinstance(current, Mapping) else None
+
+
+def platform_pin_failures(document: Mapping[str, Any]) -> list[str]:
+    """Return why the declared target platforms cannot be trusted, empty when they can.
+
+    The pin is load-bearing: it is the whole of what stands between a bare
+    ``ty check`` and a verdict that depends on the contributor's operating
+    system. It also fails silently. ty ACCEPTS ``python-platform =
+    "not-a-platform"`` without complaint and analyses as though the target were
+    not Windows, so a typo does not raise -- it quietly produces a
+    plausible-looking answer for a platform nobody chose, and a green one at
+    that. The checkers do not validate this, so the validation is here.
+    """
+    valid = {pin.spelling: {getattr(platform, pin.spelling) for platform in _PLATFORMS} for pin in _PLATFORM_PINS}
+    failures: list[str] = []
+    declared: dict[str, str] = {}
+    for pin in _PLATFORM_PINS:
+        location = f"[{'.'.join(pin.table)}] {pin.key}"
+        table = _table(document, pin.table)
+        value = None if table is None else table.get(pin.key)
+        if not isinstance(value, str):
+            failures.append(f"{location} is not declared; the checker would inherit the host platform")
+            continue
+        if value not in valid[pin.spelling]:
+            failures.append(
+                f"{location} = {value!r} is not a platform this project sweeps "
+                f"({', '.join(sorted(valid[pin.spelling]))})"
+            )
+            continue
+        declared[location] = next(platform.key for platform in _PLATFORMS if getattr(platform, pin.spelling) == value)
+    if len(set(declared.values())) > 1:
+        disagreement = ", ".join(f"{location} -> {key}" for location, key in sorted(declared.items()))
+        failures.append(f"the checkers declare different target platforms: {disagreement}")
+    return failures
+
+
+def read_pyproject() -> Mapping[str, Any]:
+    """Load the project's ``pyproject.toml`` from the repository, not the caller's directory."""
+    with (_REPOSITORY_ROOT / "pyproject.toml").open("rb") as handle:
+        return tomllib.load(handle)
 
 
 @dataclass(frozen=True)
@@ -383,6 +462,13 @@ def _make_output_host_independent() -> None:
 def main() -> int:
     """Run all type checkers and emit signal-only output."""
     _make_output_host_independent()
+    pin_failures = platform_pin_failures(read_pyproject())
+    if pin_failures:
+        # Refused rather than measured: a run whose target platform is unknown
+        # cannot be reported as a verdict about the tree.
+        for failure in pin_failures:
+            sys.stderr.write(f"check-types: {failure}\n")
+        return 1
     parser = argparse.ArgumentParser(description="Signal-only ty + pyrefly + basedpyright harness.")
     output_mode = parser.add_mutually_exclusive_group()
     output_mode.add_argument(
