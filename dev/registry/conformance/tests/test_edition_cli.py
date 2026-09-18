@@ -232,6 +232,16 @@ def _without(table: Mapping[str, object], keys: frozenset[str]) -> dict[str, obj
     return {key: value for key, value in table.items() if key not in keys}
 
 
+def _content(table: Mapping[str, object], keys: frozenset[str]) -> dict[str, object]:
+    """The table's declared content: ``keys`` dropped, and an empty family read as absent.
+
+    Materialisation names every family of the edition it builds, so a delta
+    carries an explicit empty array where the full copy's files simply say
+    nothing. Both declare no members, which is the same edition.
+    """
+    return {key: value for key, value in _without(table, keys).items() if value != []}
+
+
 def _row_markers(stdout: str) -> list[str]:
     return [line.removeprefix("# ") for line in stdout.splitlines() if line.startswith("# row: ")]
 
@@ -260,7 +270,7 @@ def test_a_delta_edition_renders_identically_to_its_full_copy_files(
     # the whole table matches the full copy's own rendering.
     full_copy_rendered = _rendered_edition(_view(full_copy_registry, _MODELO, _SUCCESSOR), _SUCCESSOR)
     excluded = _EXCLUDED_EDITION_KEYS | {"casillas"}
-    assert _without(rendered, excluded) == _without(full_copy_rendered, excluded)
+    assert _content(rendered, excluded) == _content(full_copy_rendered, excluded)
     assert "predecessor" not in rendered
     # Materialisation removes the inheritance edge, never the review it records.
     assert rendered["review_status"] == _REVIEW_STATUS
