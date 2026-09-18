@@ -17,8 +17,9 @@ from __future__ import annotations
 import json
 import re
 import unicodedata
-from collections.abc import Callable, Generator, Iterable
+from collections.abc import Callable, Generator, Iterable, Mapping
 from contextlib import contextmanager
+from functools import cached_property
 from pathlib import Path
 from typing import Annotated, Final, Literal
 
@@ -424,6 +425,38 @@ class RenderProfile(_StrictModel):
     width_17_rules: tuple[Width17MembershipRule, ...]
     singleton_rules: tuple[SingletonNumericRule, ...]
     signed_composite_rules: tuple[SignedMonetaryCompositeRule, ...] = ()
+
+    @cached_property
+    def width_17_rule_by_anchor(self) -> Mapping[RenderProfileAnchor, Width17MembershipRule]:
+        """The width-17 rule covering each anchor, indexed rather than scanned.
+
+        The renderer asks this per FIELD, and a scan answered it by comparing
+        the field's anchor against every anchor of every rule in turn. Anchors
+        are frozen models, so ``in`` over a rule's tuple runs pydantic's
+        ``BaseModel.__eq__`` per element: generating one modelo's export tree
+        issued 32.5 million of those comparisons, 41% of its runtime. The
+        anchors are hashable, so the same answer is one dict lookup.
+
+        First anchor wins, matching the scan it replaces: ``next()`` returned
+        the first rule whose anchors contained the field's, so a later rule
+        claiming the same anchor was already unreachable.
+        """
+        index: dict[RenderProfileAnchor, Width17MembershipRule] = {}
+        for rule in self.width_17_rules:
+            for anchor in rule.anchors:
+                index.setdefault(anchor, rule)
+        return index
+
+    @cached_property
+    def singleton_rule_by_anchor(self) -> Mapping[RenderProfileAnchor, SingletonNumericRule]:
+        """The singleton numeric rule for each anchor, indexed rather than scanned.
+
+        First rule wins, matching the ``next()`` scan it replaces.
+        """
+        index: dict[RenderProfileAnchor, SingletonNumericRule] = {}
+        for rule in self.singleton_rules:
+            index.setdefault(rule.anchor, rule)
+        return index
 
     @model_validator(mode="after")
     def _require_unique_fragment_ids(self) -> RenderProfile:

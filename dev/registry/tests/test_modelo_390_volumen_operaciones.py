@@ -44,6 +44,7 @@ import pytest
 from openpyxl import load_workbook
 
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
     IvaLedgerObservation,
     iva_ledger_selector,
@@ -58,15 +59,10 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 
-_DISENO_DIR = (
-    Path(__file__).resolve().parents[4]
-    / "_data"
-    / "corpus"
-    / "aeat_official"
-    / "disenos_registro"
-    / "modelo_390"
-    / "files"
-)
+# Resolved through the bundled-data accessor rather than counting parent
+# directories: the count was one short of this file's depth and pointed outside
+# the checkout, so the sweep below found no design and asserted over nothing.
+_DISENO_DIR = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_390", "files")
 
 # Each entry: casilla id, its declared official box number, and a phrase that
 # must appear in the official field description AEAT prints against that number.

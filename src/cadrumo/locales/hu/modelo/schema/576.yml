@@ -69,7 +69,7 @@ modelo:
             x-cdmn8bjmclk6iorldhniqqbkeomn8qbgdsmn8obid9in8o8:
               label: C.M.T. Gépjárművek. Műszaki vizsgakártya típusa
             x-cdmn8bjmclk6iorldhniqrb1e9hm2:
-              label: C.M.T. Gépjárművek. Gyártmány
+              label: C.M.T. Gépjárművek. Márka
             x-cdmn8bjmclk6iorldhniqrbfchimorpdehkn0ro:
               label: C.M.T. Gépjárművek. Modell-típus
             x-cdmn8bjmclk6iorldhniqrbfehnn4:
@@ -89,20 +89,20 @@ modelo:
             x-d5n78sjfchqm6t3fe8n6srrdc9p6a:
               label: A Spanyolországba behozó vezeték- és utóneve vagy cégneve
             x-dhkn2bj15li6ap3lcdkn4:
-              label: Adómegállapítás. Levonandó
+              label: Elszámolás. Levonandó
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
-              label: Adómegállapítás. Adóalap
+              label: Adómegállapítás. adóalap
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
-              label: Adómegállapítás. Csökkentett adóalap
+              label: Elszámolás. Csökkentett adóalap
             x-dhkn2bj3elnn8o8:
-              label: Adómegállapítás. Adóösszeg
+              label: Adómegállapítás. adóösszeg
             x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
-              label: Adómegállapítás. Fizetendő adó
+              label: Elszámolás. Fizetendő adó
             x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:
-              label: Adómegállapítás. Lineáris levonás
+              label: Elszámolás. Lineáris levonás
             x-dhkn2bjiclpnar3kc5i6u:
-              label: Adómegállapítás. Az adómegállapítás eredménye
+              label: Elszámolás. Az adómegállapítás eredménye
             x-dhkn2bjkd5o6u:
-              label: Adómegállapítás. Adókulcs %
+              label: Elszámolás. Adókulcs %
           field:
             label: EHA/3851/2007. rendelet, 2008. adóévtől

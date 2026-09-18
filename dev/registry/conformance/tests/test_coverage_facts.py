@@ -13,10 +13,14 @@ isolates what it hands out. If any of those breaks, the speed is worthless.
 
 from __future__ import annotations
 
+from collections.abc import MutableMapping
+from typing import Any, cast
+
 import pytest
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
+from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError, RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
 from ..coverage import build_model_law_coverage_ledger, coverage_facts
@@ -27,6 +31,28 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 @pytest.fixture(scope="module")
 def authority():
     return compiled_bundled_authority()
+
+
+def _a_coordinate_below_filing_grade(authority: ValidatedRegistryAuthority) -> tuple[str, int, str, str]:
+    """Return the first published coordinate whose revision cannot reach filing grade.
+
+    Discovered rather than pinned: which revisions publish below filing grade
+    changes as the registry is authored, and a pinned coordinate that has since
+    been raised leaves the refusal unexercised while still passing.
+    """
+    support = authority.supported_filing_years()
+    for modelo in (definition.id for definition in authority.modelos):
+        for filing_year in range(support.floor, support.horizon + 1):
+            for period in ("0A", "1T"):
+                try:
+                    authority.snapshot(
+                        modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.FILING
+                    )
+                except NoRevisionForPeriodError:
+                    continue  # the coordinate is unauthored, which is not a grade refusal
+                except RegistryValidationError as refusal:
+                    return modelo, filing_year, period, str(refusal)
+    pytest.fail("every published coordinate reaches filing grade, so the refusal parity is unexercised")
 
 
 @pytest.mark.parametrize(
@@ -68,12 +94,12 @@ def test_it_refuses_exactly_where_the_snapshot_boundary_refuses(authority) -> No
     answered where the boundary would not would hand out facts for a coordinate
     the registry never admitted.
     """
-    with pytest.raises(RegistryValidationError) as snapshot_refusal:
-        authority.snapshot("200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.FILING)
-    with pytest.raises(RegistryValidationError) as facts_refusal:
-        coverage_facts(authority, "200", filing_year=2025, period="0A", grade=RegistryAuthorityGrade.FILING)
+    modelo, filing_year, period, snapshot_refusal = _a_coordinate_below_filing_grade(authority)
 
-    assert str(facts_refusal.value) == str(snapshot_refusal.value)
+    with pytest.raises(RegistryValidationError) as facts_refusal:
+        coverage_facts(authority, modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.FILING)
+
+    assert str(facts_refusal.value) == snapshot_refusal
 
 
 def test_what_it_hands_out_is_a_copy_and_not_cached_registry_state(authority) -> None:
@@ -87,11 +113,22 @@ def test_what_it_hands_out_is_a_copy_and_not_cached_registry_state(authority) ->
     first = coverage_facts(authority, "303", filing_year=2026, period="1T")
     assert first.sources, "the fixture coordinate must carry sources for this to prove anything"
     handed_out = first.sources
-    assert isinstance(handed_out, dict), "the projection must hand out its own mapping to be mutable"
-
     victim = next(iter(handed_out))
-    del handed_out[victim]
+
+    if isinstance(handed_out, MutableMapping):
+        del handed_out[victim]
+    else:
+        # A mapping that refuses mutation isolates by construction, which is the
+        # same guarantee by a stronger means; the refusal itself is asserted so
+        # a mapping that silently accepted the write could not pass here.
+        with pytest.raises(TypeError):
+            # Deliberately exercising an operation the static Mapping type does
+            # not support, to prove it fails closed at runtime.
+            del cast(Any, handed_out)[victim]
 
     second = coverage_facts(authority, "303", filing_year=2026, period="1T")
     assert victim in second.sources, "a deletion from one caller's facts reached the registry"
-    assert second.sources is not handed_out
+    if isinstance(handed_out, MutableMapping):
+        # Only a mutable mapping has to be a distinct object; an immutable one
+        # may be shared precisely because no caller can alter it.
+        assert second.sources is not handed_out

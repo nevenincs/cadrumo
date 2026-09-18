@@ -143,7 +143,13 @@ def test_a_nested_pre_qualifier_deadline_window_is_deleted_not_served(tmp_path: 
     )
     stale_modelo = modelos[modelo_index].model_copy(deep=True)
     revision = next(revision for revision in stale_modelo.revisions.values() if revision.deadline_windows)
-    revision.deadline_windows[0].__dict__.pop("resultado_scope")
+    window = revision.deadline_windows[0]
+    # A field the current shape REQUIRES, chosen from the live model rather than
+    # named here: an optional field can be absent legitimately, so popping one
+    # would plant no pre-qualifier object at all and the walk would rightly
+    # serve the cache.
+    missing = next(name for name, field in type(window).model_fields.items() if field.is_required())
+    window.__dict__.pop(missing)
     modelos[modelo_index] = stale_modelo
 
     with scoped_env_var("CADRUMO_REGISTRY_DISK_CACHE_DIR", str(cache_dir)):

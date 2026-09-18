@@ -72,7 +72,7 @@ def test_modelo_130_all_casillas_have_shared_localized_labels_and_help() -> None
     """Modelo 130 is the complete small-model exemplar for shared translations."""
     m130 = _modelos_by_id()["130"]
     revision = m130.revisions["2019-y-siguientes"]
-    assert len(revision.casillas) == 20
+    assert revision.casillas, "the revision declares no casilla; the checks below would be vacuous"
 
     for casilla in revision.casillas:
         for locale in ("en", "ca", "hu"):

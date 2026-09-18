@@ -10,7 +10,7 @@ modelo:
           adjudicatario-nif:
             label: Vevő (4) - NIF
           adjudicatario-nombre:
-            label: Vevő (4) - Név
+            label: Vevő (4) - Utónév
           aeronave-ano:
             label: Jellemzők és műszaki adatok (7) - Légi járművek - Gyártási év
           aeronave-fabricante:
@@ -33,7 +33,7 @@ modelo:
           declaracion-tipo-309:
             label: Bevallás típusa
           declarante-nombre-309:
-            label: Azonosítás (1) - Név
+            label: Azonosítás (1) - Utónév
           embarcacion-eslora:
             label: Jellemzők és műszaki adatok (7) - Vízi járművek - Legnagyobb hossz
           embarcacion-fabricante:
@@ -166,13 +166,13 @@ modelo:
           transmitente-apellidos:
             label: Átruházó (3) - Vezetéknév vagy cégnév
           transmitente-apellidos-nombre-razon-social:
-            label: Átruházó - Vezetéknév és keresztnév vagy cégnév
+            label: Átruházó - Vezetéknév és utónév vagy cégnév
           transmitente-nif:
             label: Átruházó (3) - NIF
           transmitente-nif-iva:
             label: Átruházó (3) - NIF-IVA
           transmitente-nombre:
-            label: Átruházó (3) - Név
+            label: Átruházó (3) - Utónév
           transmitente-pais:
             help: A 309-es modell 198-199. mezője, 2016-2017. adóév.
             label: Átruházó (3) - Ország
@@ -280,8 +280,7 @@ modelo:
               field:
                 title: 'Történeti 309-es modell: nem időszakos önadóbevallás (2004-2015)'
           field:
-            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
-              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.
+            label: 309-es modelo, 2004-2015. adóévek
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -387,8 +386,7 @@ modelo:
               field:
                 title: '309-es modelo: nem időszakos áfa-bevallás és elszámolás'
           field:
-            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
-              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.
+            label: 309-es modelo, 2016-2017. adóévek
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -504,8 +502,7 @@ modelo:
               field:
                 title: '309-es modelo: nem időszakos áfa-bevallás és elszámolás'
           field:
-            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
-              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.
+            label: 309-es modelo, 2018-2022. adóévek
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -621,5 +618,4 @@ modelo:
               field:
                 title: '309-es modelo: nem időszakos áfa-bevallás és elszámolás'
           field:
-            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
-              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.
+            label: 309-es modelo, 2023. adóévtől

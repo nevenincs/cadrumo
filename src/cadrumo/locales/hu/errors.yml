@@ -718,7 +718,8 @@ errors:
     refused: Elutasítva.
   refused:
     auth_configure_no_active_bucket: Hitelesítés nem konfigurálható aktív profil nélkül.
-      Hozzon létre profilt az  paranccsal, és próbálja újra.
+      Hozzon létre profilt az `aeat config profile create NÉV` paranccsal, és próbálja
+      újra.
     auth_profile_identity_mismatch: Az aktív profil azonossága nem rendelkezhet a
       kért hitelesítési munkamenettel.
     bootstrap_already_complete: A biztonságos tároló beállítása már befejeződött.
@@ -829,8 +830,8 @@ errors:
     modelo_project_invalid_decimal_override: Egy előrejelzési felülírás nem érvényes
       decimális összeg.
     modelo_revision_pick: A modellrevízió kiválasztása érvénytelen.
-    modelo_work_capture_not_current: A munkakivalasztas mar nem aktualis. Olvassa
-      be ujra a munkacelt, es probalja meg ismet.
+    modelo_work_capture_not_current: A munkakiválasztás mar nem aktuális. Olvassa
+      be újra a munkacélt, es próbálja meg ismét.
     modelo_work_discard_approval_stale: A munkaegység az elvetés jóváhagyása után
       megváltozott; tekintse át és hagyja jóvá újra.
     modelo_work_period_token: Érvénytelen modell időszak.
@@ -1025,8 +1026,8 @@ errors:
     refused_modelo_applicability_filter: Ismeretlen alkalmazhatósági szűrőnév szerepel
       a nyilvántartásban. Ez egy nyilvántartás-szerzői hiba; frissítse a szűrő diszpécser
       táblázatot.
-    refused_modelo_charge_account_missing: Csoportos beszedesi bevallast valasztottak,
-      de nincs rogzitett terhelesi szamla.
+    refused_modelo_charge_account_missing: Csoportos beszedési bevallást választottak,
+      de nincs rögzített terhelési számla.
     refused_modelo_ledger_evidence_recapture: A bevallás bizonyítékai nem csomagolhatók
       újra, mert a mögöttes főkönyvi tételek a lezárás óta megváltoztak. Számold újra
       a bevallást; az újrarögzítés csak a változatlan tételekhez csatolt bizonyítékot
@@ -1034,10 +1035,10 @@ errors:
     refused_modelo_m303_rectificativa_motive: A 303-as rectificativa egyetlen kanonikus
       indokot követel meg egy alkalmazható és felülvizsgált rekordtervnél; az indok
       minden más esetben tiltott.
-    refused_modelo_payment_election_capability: A valasztott fizetesi mod meg nem
-      tamogatott.
-    refused_modelo_payment_election_incompatible: A valasztott fizetesi modhoz pozitiv
-      eredmeny szukseges.
+    refused_modelo_payment_election_capability: A választott fizetési mod meg nem
+      támogatott.
+    refused_modelo_payment_election_incompatible: A választott fizetési módhoz pozitív
+      eredmény szükséges.
     refused_modelo_refund_account_missing: Visszatérítést kértek, de nincs visszatérítési
       számla rögzítve; az AEAT nem tud visszatérítést fizetni számla nélkül. Állítson
       be visszatérítési számlát, vagy vigye tovább a kreditet (compensar).
@@ -1106,8 +1107,8 @@ errors:
       66. és 70. cikk). A legkorábbi biztonságos törlési dátum: %{earliest_safe_erase_date}.
       Várjon eddig, vagy futtassa újra a --override-retention és --reason kapcsolóval
       a felülbíráláshoz.'
-    refused_review_filter_parse: A  paramétert nem sikerült elemezni. Ellenőrizze
-      a megadott szűrő szintaxisát.
+    refused_review_filter_parse: A `--filter KULCS=ÉRTÉK` paramétert nem sikerült
+      elemezni. Ellenőrizze a megadott szűrő szintaxisát.
     refused_source_mesh_invariant: 'Elutasítva: a forrásháló invariánsának megsértése.'
     refused_storage_bucket_already_present: Már létezik ilyen azonosítójú bucket.
     refused_storage_master_key_no_active_session: A titkosításhoz aktív munkamenet

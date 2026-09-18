@@ -216,7 +216,7 @@ adapters:
             payload de l objecte.
           object_not_found: No s ha trobat l objecte local {object_key_hmac} a l espai
             {namespace}.
-          payload_commit_failed: L emmagatzematge local no ha pogut confirmar atomicament
+          payload_commit_failed: L emmagatzematge local no ha pogut confirmar atòmicament
             el payload de l objecte.
           payload_read_permission: L emmagatzematge local no ha pogut llegir el payload
             de l objecte.

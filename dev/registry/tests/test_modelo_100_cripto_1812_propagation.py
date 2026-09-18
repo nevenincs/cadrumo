@@ -216,6 +216,13 @@ def _binding_values_2025() -> dict[BindingId, Decimal]:
         "renta-profile-unidad-familiar-otros-miembros-base": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
+        # Buques/REBECA exemption inputs (2025 bindings); the scenario models a
+        # filer outside that regime, so the path is not taken and its amounts
+        # and qualifying days are zero.
+        "renta-maritime-path-rebeca": Decimal("0"),
+        "renta-maritime-gross-navigation-income": Decimal("0"),
+        "renta-maritime-annual-salary": Decimal("0"),
+        "renta-maritime-qualifying-days": Decimal("0"),
     }
 
 

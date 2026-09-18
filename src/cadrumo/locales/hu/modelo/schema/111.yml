@@ -78,7 +78,7 @@ modelo:
             '27':
               label: Képmáshoz fűződő jogok átengedése - előlegfizetés összege
             '28':
-              label: Forrásadó és előlegfizetés összesen
+              label: Forrásadó és részletfizetés összesen
             '29':
               label: Korábbi önadózások eredménye
             '30':

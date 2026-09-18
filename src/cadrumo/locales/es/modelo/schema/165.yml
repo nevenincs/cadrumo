@@ -3,8 +3,22 @@ modelo:
     '165':
       casilla:
         continuidad:
+          declaracion-complementaria-sustitutiva:
+            label: Declaración complementaria o sustitutiva
+          declarante-razon-social:
+            label: Denominación o razón social del declarante
+          fecha-adquisicion:
+            label: Fecha de adquisición de las acciones o participaciones
+          fecha-constitucion:
+            label: Fecha de constitución
           filing-year:
             label: Ejercicio al que se refiere la declaración
+          importe-fondos-propios:
+            label: Importe de los fondos propios
+          importe-suscripcion:
+            label: Importe de la suscripción o adquisición
+          importe-total-suscripciones:
+            label: Importe total de las suscripciones o adquisiciones
           m165-declaracion-complementaria-sustitutiva:
             label: Declaración complementaria o sustitutiva
           m165-declarante-razon-social:
@@ -35,6 +49,22 @@ modelo:
             label: NIF del socio o participe
           m165-socio-nombre:
             label: Apellidos y nombre del socio o participe
+          numero-identificativo-anterior:
+            label: Número identificativo de la declaración anterior
+          numero-identificativo-declaracion:
+            label: Número identificativo de la declaración
+          numero-total-declarados:
+            label: Número total de declarados
+          persona-relacion:
+            label: Persona con quien relacionarse
+          porcentaje-participacion:
+            label: Porcentaje de participación
+          representante-legal-nif:
+            label: NIF del representante legal
+          socio-nif:
+            label: NIF del socio o participe
+          socio-nombre:
+            label: Apellidos y nombre del socio o participe
           tipo-declaracion:
             label: Tipo de declaración (originaria / sustitutiva / complementaria)
       construct:
@@ -49,46 +79,16 @@ modelo:
       revision:
         2013-2015:
           field:
-            label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
+            label: Modelo 165, ejercicios 2013 a 2015
         2016-2022:
           field:
-            label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
+            label: Modelo 165, ejercicios 2016 a 2022
         2023-2025:
           field:
-            label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
+            label: Modelo 165, ejercicios 2023 a 2025
         2026-y-siguientes:
           casilla:
-            declaracion-complementaria-sustitutiva:
-              label: Declaración complementaria o sustitutiva
-            declarante-razon-social:
-              label: Denominación o razón social del declarante
             empresa-emergente:
               label: Empresa emergente
-            fecha-adquisicion:
-              label: Fecha de adquisición de las acciones o participaciones
-            fecha-constitucion:
-              label: Fecha de constitución
-            importe-fondos-propios:
-              label: Importe de los fondos propios
-            importe-suscripcion:
-              label: Importe de la suscripción o adquisición
-            importe-total-suscripciones:
-              label: Importe total de las suscripciones o adquisiciones
-            numero-identificativo-anterior:
-              label: Número identificativo de la declaración anterior
-            numero-identificativo-declaracion:
-              label: Número identificativo de la declaración
-            numero-total-declarados:
-              label: Número total de declarados
-            persona-relacion:
-              label: Persona con quien relacionarse
-            porcentaje-participacion:
-              label: Porcentaje de participación
-            representante-legal-nif:
-              label: NIF del representante legal
-            socio-nif:
-              label: NIF del socio o participe
-            socio-nombre:
-              label: Apellidos y nombre del socio o participe
           field:
-            label: Modelo 165 (orden-hap-2455-2013), ejercicios 2013 y siguientes
+            label: Modelo 165, ejercicios 2026 y siguientes

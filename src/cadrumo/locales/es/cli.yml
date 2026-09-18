@@ -96,7 +96,7 @@ cli:
           resuelva el país o el establecimiento de la contraparte.
         confirm_counterparty_name_help: Nombre de la contraparte (sin heuristica de
           extracción todavía; normalmente obligatorio).
-        confirm_counterparty_nif_help: Sobrescribe el NIF del proveedor extraido.
+        confirm_counterparty_nif_help: Sobrescribe el NIF del proveedor extraído.
         confirm_currency_help: Código de moneda ISO-4217.
         confirm_help: Vuelve a extraer el justificante en el equipo local y confírmalo
           como una factura real del catálogo.
@@ -104,10 +104,10 @@ cli:
           no la declare. Una rectificativa se lee del documento cuando este nombra
           la factura que rectifica, de modo que esta opción es la corrección para
           los documentos que no lo hacen.
-        confirm_invoice_date_help: Sobrescribe la fecha de factura extraida (AAAA-MM-DD).
-        confirm_invoice_number_help: Sobrescribe el número de factura extraido.
-        confirm_iva_rate_help: Sobrescribe el tipo de IVA extraido (omitir para conservar
-          el valor extraido).
+        confirm_invoice_date_help: Sobrescribe la fecha de factura extraída (AAAA-MM-DD).
+        confirm_invoice_number_help: Sobrescribe el número de factura extraído.
+        confirm_iva_rate_help: Sobrescribe el tipo de IVA extraído (omitir para conservar
+          el valor extraído).
         confirm_link_hint_message: La factura se registró sin un movimiento coincidente
           del libro.
         confirm_operation_type_help: 'Clave del modelo 349 para una entrega intracomunitaria.
@@ -117,7 +117,7 @@ cli:
           coincide con el total registrado. El total registrado se deriva de la base
           imponible y del tipo de IVA, por lo que una diferencia significa que el
           documento incluye un importe que este registro no recoge, como un recargo
-          de equivalencia, o que se ha leido mal alguna cifra. Revise el documento.
+          de equivalencia, o que se ha leído mal alguna cifra. Revise el documento.
         confirm_rectifies_help: Número de la factura que rectifica esta rectificativa.
           El RD 1619/2012 art. 6.1.a.2 lo exige junto con su propia serie, y se lee
           del documento cuando este lo indica.
@@ -139,7 +139,7 @@ cli:
         confirm_supply_nature_help: Indique si la operación es una entrega de bienes
           o una prestación de servicios. Las reglas de localización difieren, por
           lo que un documento que no lo indica deja el tratamiento sin resolver.
-        confirm_taxable_base_help: Sobrescribe la base imponible extraida.
+        confirm_taxable_base_help: Sobrescribe la base imponible extraída.
         consent:
           bytes_unrecallable: 'Retirar el consentimiento detiene los envíos futuros.
             No permite recuperar los bytes ya enviados: esta aplicación no puede recuperarlos
@@ -265,22 +265,22 @@ cli:
             el país. Este borrador se puede confirmar igualmente; la parte simplemente
             queda sin establecer hasta entonces.'
           finding_help: Muestre solo los borradores cuyo documento no supero esta
-            comprobacion determinista.
-          group_help: Revise los borradores de extraccion pendientes antes de confirmarlos
+            comprobación determinista.
+          group_help: Revise los borradores de extracción pendientes antes de confirmarlos
             como facturas.
-          list_help: Liste los borradores de extraccion pendientes de revision humana.
+          list_help: Liste los borradores de extracción pendientes de revisión humana.
           party_attribution_unverified_message: Nada verifica a qué parte pertenecen
             estos datos de dirección. Si se leyeran dos bloques de dirección al revés,
             ambas partes quedarían situadas en un territorio de IVA en el que ninguna
             está establecida y ninguna comprobación lo detectaría. Contraste cada
             valor con el documento antes de confirmar este borrador.
           reason_help: Muestre solo los borradores bloqueados por este motivo.
-          reference_help: Referencia de evidencia o adjunto de la que se leyo el borrador
+          reference_help: Referencia de evidencia o adjunto de la que se leyó el borrador
             pendiente.
-          resolve_action: Accion de resolucion desconocida.
+          resolve_action: Acción de resolución desconocida.
           resolve_shape: Cada --resolve es <finding-id>=<choose|supply|attest>:<valor-o-motivo>.
             Un choose indica la lectura por su valor o por el resumen que mostró review.
-          unknown_reference: No hay ningun borrador pendiente para esa referencia.
+          unknown_reference: No hay ningún borrador pendiente para esa referencia.
           view_help: Muestra todos los campos revisables de un borrador pendiente,
             junto con sus hallazgos bloqueantes.
         source_path_help: Ruta al PDF o imagen de la factura
@@ -348,7 +348,7 @@ cli:
         kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes
           a un proveedor)'
         list_help: Lista las facturas del catálogo de conciliación.
-        operation_date_help: Fecha en que se realizo la entrega o prestacion (AAAA-MM-DD).
+        operation_date_help: Fecha en que se realizo la entrega o prestación (AAAA-MM-DD).
           Es la fecha de devengo del art. 75 LIVA que determina en que periodo se
           declara la cuota; sin ella se utiliza la fecha de factura.
         operation_type_help: 'Clave de operación M349: E entregas, M entregas posteriores
@@ -406,7 +406,7 @@ cli:
         optional_evidence_reference_help: Evidencia en poder del operador de una opción
           ejercida en este ejercicio; omítela para registrar una continuación expresa
           del régimen ya vigente.
-        percentage_help: Porcentaje de deducción de uso comun 0-100 (LIVA art. 106.Uno
+        percentage_help: Porcentaje de deducción de uso común 0-100 (LIVA art. 106.Uno
           regla 3.a / art. 104.Dos).
         provenance_help: Origen del porcentaje provisional según LIVA art. 105.
         provenance_not_electable: 'El origen {provenance!r} no es declarable por el
@@ -564,11 +564,11 @@ cli:
         pull_all_pairs_refused_factual: 'No se pudieron leer {count} par(es) modelo/ejercicio
           y NO se declararon vacíos: {pairs}. Un rechazo no demuestra que no se presentara
           nada.'
-        pull_dry_run_help: Muestra lo que capturaria esta descarga masiva sin escribir
+        pull_dry_run_help: Muestra lo que capturaría esta descarga masiva sin escribir
           nada. Solo en modo masivo.
         pull_dry_run_single_mode_error: --dry-run solo es valido para una descarga
           masiva con --from-year/--to-year; la descarga de un solo modelo no admite
-          simulacion.
+          simulación.
         pull_help: Descarga datos de declaraciones presentadas del registro autenticado
           de AEAT.
         pull_modelo_help: Limita esta descarga a este modelo.
@@ -603,7 +603,7 @@ cli:
           lectura.
         pull_help: Descarga en directo y persiste la cartera de compensación de IVA
           de la AEAT. La única acción de formulario AEAT permitida es la consulta
-          de lectura protegida de cartera; las puertas de representación solo continuan
+          de lectura protegida de cartera; las puertas de representación solo continúan
           en modo nombre propio.
         pull_history_help: Descarga el historial del Modelo 303 presentado y guarda
           el estado seguro de compensación de IVA. No se envía ninguna declaración
@@ -1402,18 +1402,18 @@ cli:
           sobre modelo/ejercicio/periodo/revisión); no se creó nada nuevo. El --name
           indicado se aplicó como renombrado a %{name}.
         create_stub_modelo_600_refused: 'Modelo %{modelo} (ITP-AJD, transmisiones
-          patrimoniales y actos juridicos documentados) no está soportado para crear
+          patrimoniales y actos jurídicos documentados) no está soportado para crear
           unidades de trabajo en este CLI. Fundamento legal: Ley 28/1990 y competencia
           autonómica ITPyAJD; presente ante la Hacienda / CCAA competente.'
         create_stub_modelo_620_refused: 'Modelo %{modelo} (ITP-AJD, transmisiones
-          de vehiculos usados) no está soportado para crear unidades de trabajo en
+          de vehículos usados) no está soportado para crear unidades de trabajo en
           este CLI. Fundamento legal: Ley 28/1990 y competencia autonómica ITPyAJD;
           presente la autoliquidación ante la Hacienda / CCAA competente.'
         create_stub_modelo_650_refused: 'Modelo %{modelo} (ISD sucesiones) no está
           soportado para crear unidades de trabajo en este CLI. Fundamento legal:
           Ley 29/1987 LISyD y Art. 67 RISD; plazo ordinario de 6 meses desde el fallecimiento.
           Presente ante la Hacienda autonómica competente.'
-        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD caudal relicto, acompanante
+        create_stub_modelo_660_refused: 'Modelo %{modelo} (ISD caudal relicto, acompañante
           del Modelo 650) no está soportado para crear unidades de trabajo en este
           CLI. Fundamento legal: Ley 29/1987 LISyD; presente ante la Hacienda autonómica
           competente.'
@@ -1580,12 +1580,12 @@ cli:
         preview_maritime_exemption_qualifying_days_help: Días naturales trabajados
           fuera del territorio español en el ejercicio. Obligatorio junto con --annual-salary
           cuando se aplica el Art. 7.p).
-        prior_domiciliation_election_help: Mantiene o solicita la baja/modificacion
-          de la domiciliacion previa del modelo 303; la baja/modificacion exige una
-          rectificativa con prueba externa de una presentacion previa U.
+        prior_domiciliation_election_help: Mantiene o solicita la baja/modificación
+          de la domiciliacion previa del modelo 303; la baja/modificación exige una
+          rectificativa con prueba externa de una presentación previa U.
         reason_help: Motivo opcional del descarte (texto libre, hasta 500 caracteres)
         refund_election_help: Elija si un resultado negativo elegible del Modelo 303
-          se compensa o se solicita como devolucion.
+          se compensa o se solicita como devolución.
         relation_help: Valor de relación del registro con sintaxis KEY=VALUE (repetible).
           KEY es un id de relación del registro, no un id de binding; úsalo para entradas
           de relación entre periodos o entre modelos. Ejecuta aeat app modelo bindings
@@ -1619,7 +1619,7 @@ cli:
         rescate_year_help: Año en que se percibe la prestación del rescate (por defecto
           el año de la declaración). Se compara con la ventana del apartado 4 DT 12a
           LIRPF medida desde --contingencia-year.
-        result_summary_header: resumen del resultado  Modelo %{modelo} %{year} %{period}
+        result_summary_header: resumen del resultado Modelo %{modelo} %{year} %{period}
         resume_help: Valida si puedes reintentar una ejecución de flujo interrumpida
           sin contactar con AEAT. Usa --modelo --year --period como ruta normal; los
           ids exactos quedan como escape avanzado.
@@ -2013,7 +2013,7 @@ cli:
           se puede renovar sin un inicio de sesión previo
         sync_push_limit_requires_dry_run: La sincronización push de Google no puede
           usar --limit salvo que --dry-run este activado, porque una ejecución real
-          acotada crearia un manifiesto remoto parcial.
+          acotada crearía un manifiesto remoto parcial.
       errors:
         adc_stale: 'No se pudieron renovar las Credenciales Predeterminadas de la
           Aplicación (ADC): {detail}'
@@ -2121,7 +2121,7 @@ cli:
         export_name_help: Perfil a respaldar; por defecto el activo.
         export_out_help: Ruta de destino del archivo. El nombre debe terminar en '.cadrumo-bucket.tar.gz'.
         help: Copia de seguridad de un perfil en un archivo sellado y cifrado AEAD,
-          o inspeccion de uno; restauralo con 'aeat config profile archive import'.
+          o inspección de uno; restauralo con 'aeat config profile archive import'.
         import_file_help: Ruta del archivo sellado o del directorio de cápsula que
           se va a restaurar.
         import_help: Vuelve a publicar una cápsula de perfil desde un directorio o
@@ -2261,11 +2261,11 @@ cli:
           introducirlos de forma guiada.
         add_help: Añadir uno o varios descendientes al perfil activo.
         ambiguous_relacion_advisory: descendiente %{indices} declara meses_madre_trabajo
-          bajo la relacion no indicada. El manual concede el minimo pero excluye la
+          bajo la relación no indicada. El manual concede el mínimo pero excluye la
           deducción por maternidad del art. 81.1 para un nieto u otro descendiente
           por consanguinidad distinto de un hijo, o un menor bajo guarda y custodia
           judicial -- el dato almacenado no permite distinguirlo de un hijo real.
-          Confirme que este descendiente es un hijo, o indique la relacion real con
+          Confirme que este descendiente es un hijo, o indique la relación real con
           RELACION=.
         help: Declarar descendientes para el mínimo por descendientes del art. 58/61
           LIRPF.
@@ -2755,7 +2755,7 @@ cli:
       art_104_tres_exclusion_help: 'Exclusión del denominador de prorrata declarada
         por el operador (LIVA art. 104.Tres: establecimiento permanente en el extranjero
         u operación inmobiliaria o financiera no habitual); excluye la operación de
-        ambos terminos de la prorrata.'
+        ambos términos de la prorrata.'
       attachment_help: Id de adjunto seguro adicional; se puede repetir
       business_pct_help: Proporción de uso profesional de 0 a 1; solo para filas MIXED.
         Omitir en filas totalmente BUSINESS.
@@ -3142,7 +3142,7 @@ cli:
       sha256: SHA-256
       skipped: Omitidos
       source: Origen
-      split_group_id: id_grupo_division
+      split_group_id: id_grupo_división
       stashed: Apartadas
       taxable_base: Base imponible
       usage_ratio_id: Id de proporción de uso
@@ -3256,9 +3256,9 @@ cli:
       id_help: Id de la transacción que quieres dividir
       llm_exclusive: --llm no puede combinarse con --child-amount/--child-description;
         la vía manual es la anulación explícita del operador.
-      llm_help: Propon una división en N partes basada en evidencia con el proveedor
+      llm_help: Propón una división en N partes basada en evidencia con el proveedor
         LLM indicado.
-      read_evidence_help: Lee la factura adjunta de la transacción en local y alimentala
+      read_evidence_help: Lee la factura adjunta de la transacción en local y aliméntala
         al proponente de división --llm.
       yes_help: Confirma la división de la transacción
     stash:
@@ -3580,7 +3580,7 @@ cli:
       drafts_empty_with_work_units: No hay borradores de declaraciones guardados;
         es normal y no afecta a tus unidades de trabajo de modelos mostradas abajo.
       drafts_present: '%{count} borrador(es) de declaraciones guardados existen en
-        este almacenamiento local. Un espacio vacío recien creado normalmente tiene
+        este almacenamiento local. Un espacio vacío recién creado normalmente tiene
         0, así que este perfil/base de datos ya contiene estado local de borradores.'
       filing_obligation_multiple_pagadores: Percibir rendimientos del trabajo de más
         de un pagador, con más de 1.500 € de los pagadores secundarios, reduce el

@@ -406,7 +406,7 @@ registry = [
 dev = [
   { include-group = "registry" },
   # Type-check and directly exercise the repository's three Hatch build hooks.
-  "hatchling>=1.27,<2",
+  "hatchling>=1.32.3,<2",
   # Alembic CLI for source-controlled schema migrations; development tooling only.
   "alembic>=1.16,<2",
   # Dependency declaration drift: missing, unused, transitive, and misplaced deps.
@@ -710,6 +710,13 @@ convention = "google"
 "dev/audit/complexity.py" = ["S603"]
 "dev/audit/report.py" = ["S603"]
 "dev/audit/semantic.py" = ["S603"]
+# Runs the workflow linter it provisions. The executable is either one already
+# on PATH, resolved through `shutil.which`, or one this file downloaded from a
+# literal `https://github.com/` origin and refused unless its bytes matched a
+# per-platform digest pinned in the file. The remaining argv is literal flags
+# plus the caller's own arguments. The digest check is the trust boundary, and
+# it happens before anything is executed.
+"dev/actionlint.py" = ["S603"]
 # Runs a real `pytest --collect-only` in a child interpreter: collectability is
 # a property of a fresh import, so an in-process check would read modules this
 # process already imported. The command is built from `sys.executable` plus

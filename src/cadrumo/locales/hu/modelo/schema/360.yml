@@ -91,7 +91,7 @@ modelo:
               label: 6. Bankszámlaadatok. Számlatulajdonos. IBAN
             x-chim6r1ec9gmsor1e9kmubbkd5q7ar31e8:
               help: A 360-es modelo 1912-1936. rovata, 2010. adóév.
-              label: 6. Bankszámlaadatok. Számlatulajdonos. Név
+              label: 6. Bankszámlaadatok. Számlatulajdonos. Utónév
             x-chim6r1ecdgmoqb4c5i2qp31ehnn6:
               help: A 360-es modelo 18-18. rovata, 2010. adóév.
               label: Adatminőségi szint
@@ -236,7 +236,7 @@ modelo:
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbeepgn8:
               help: A 360-es modelón bevallott adat, a hivatalos nyomtatványtervből
                 véve.
-              label: Szállítói adatok. Az NVAT kibocsátó országa
+              label: Szállítói adatok. Az NVAT-t kiadó ország
             x-chim6r1edto32bbge9nncpb5chnn4bbgc5kn6bbiclj6asj5dphmio8:
               help: A 360-es modelo 2769-2770. rovata, 2010. adóév.
               label: 1. A termékértékesítő / szolgáltatásnyújtó adatai. Az adóhivatkozást
@@ -439,10 +439,10 @@ modelo:
               label: 3. Képviselő. Postafiók Spanyolországban. Tartomány
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj2dhnn2tb5:
               help: A 360-es modelo 1434-1436. rovata, 2010. adóév.
-              label: 3. Képviselő. Spanyolországi cím. Épületblokk
+              label: 3. Képviselő. Spanyolországi cím. Tömb
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3c5m6ipj9cdgm8rri5ln7arb5e9ng:
               help: A 360-es modelo 1431-1433. rovata, 2010. adóév.
-              label: 3. Képviselő. Spanyolországi cím. Házszám kiegészítő
+              label: 3. Képviselő. Spanyolországi cím. Házszám kiegészítője
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj3dti6iprf5lo6usrkc5m0:
               help: A 360-es modelo 1519-1523. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Irányítószám
@@ -452,7 +452,7 @@ modelo:
                 Pol. Ind, C.C...)
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbj5edhm2r35e9gg:
               help: A 360-es modelo 1440-1442. rovata, 2010. adóév.
-              label: 3. Képviselő. Spanyolországi cím. Lépcső
+              label: 3. Képviselő. Spanyolországi cím. Lépcsőház
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjcdthm2r39chgm8:
               help: A 360-es modelo 1489-1518. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Helység / Település (ha eltér
@@ -471,7 +471,7 @@ modelo:
               label: 3. Képviselő. Spanyolországi cím. Emelet
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjgdtp78obc:
               help: A 360-es modelo 1437-1439. rovata, 2010. adóév.
-              label: 3. Képviselő. Spanyolországi cím. Lépcsőház
+              label: 3. Képviselő. Spanyolországi cím. Bejárat
             x-chim6r1ee9in0sj5edimst31dpq6abj4d5p6aor3d5nmsbjge9nncqbecdkm2:
               help: A 360-es modelo 1554-1555. rovata, 2010. adóév.
               label: 3. Képviselő. Spanyolországi cím. Tartomány
@@ -533,10 +533,10 @@ modelo:
               label: 2. Kérelmező. Postafiók Spanyolországban. Tartomány
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon64r3fe5qma:
               help: A 360-es modelo 375-377. rovata, 2010. adóév.
-              label: 2. Kérelmező. Spanyolországi cím. Épületblokk
+              label: 2. Kérelmező. Spanyolországi cím. Tömb
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66obcd5j6ior1chnn4bbeelmmasjf:
               help: A 360-es modelo 372-374. rovata, 2010. adóév.
-              label: 2. Kérelmező. Spanyolországi cím. Házszám kiegészítő
+              label: 2. Kérelmező. Spanyolországi cím. Házszám kiegészítője
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon66rr4d5jmubbgdtpn8obc:
               help: A 360-es modelo 460-464. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Irányítószám
@@ -546,7 +546,7 @@ modelo:
                 Pol. Ind, C.C...)
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6asr3c5m6asj1:
               help: A 360-es modelo 381-383. rovata, 2010. adóév.
-              label: 2. Kérelmező. Spanyolországi cím. Lépcső
+              label: 2. Kérelmező. Spanyolországi cím. Lépcsőház
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon6orr3c5m6ip31cg:
               help: A 360-es modelo 430-459. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Helység / Település (ha eltér
@@ -565,7 +565,7 @@ modelo:
               label: 2. Kérelmező. Spanyolországi cím. Emelet
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70rriehgmo:
               help: A 360-es modelo 378-380. rovata, 2010. adóév.
-              label: 2. Kérelmező. Spanyolországi cím. Lépcsőház
+              label: 2. Kérelmező. Spanyolországi cím. Bejárat
             x-chim6r1eednmoqb3d5q62rjkckn68qbiclhm6qbfdon70sjfepkmsor9c4:
               help: A 360-es modelo 495-496. rovata, 2010. adóév.
               label: 2. Kérelmező. Spanyolországi cím. Tartomány

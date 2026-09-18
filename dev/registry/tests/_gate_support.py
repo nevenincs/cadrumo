@@ -10,6 +10,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Regist
 from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_ids
 
 from ..compiler.loader import load_registry_tree
+from ..compiler.validator import _runtime_legal_reference_ids
 
 
 def fragment_declaring(directory: Path, anchor: str) -> Path:
@@ -67,6 +68,18 @@ def _m130_declared_reference_ids(modelo: ModeloDefinition) -> tuple[set[str], se
     return legal_ids, source_ids
 
 
+def _catalogue_carried_reference_ids(catalogues: RegistryCatalogues) -> tuple[frozenset[str], frozenset[str]]:
+    """Return the legal and source ids the catalogues themselves cite, modelo aside."""
+    legal = set(_runtime_legal_reference_ids(catalogues.runtime))
+    sources: set[str] = set()
+    for fact in catalogues.facts.facts.values():
+        for variant in fact.variants:
+            legal.update(str(ref) for ref in variant.legal_refs)
+            sources.update(str(ref) for ref in variant.source_refs)
+            sources.update(str(citation.source_ref) for citation in variant.source_citations)
+    return frozenset(legal), frozenset(sources)
+
+
 def catalogues_for_m130_gate_tests(catalogues: RegistryCatalogues) -> RegistryCatalogues:
     """Narrow ``catalogues`` to exactly the refs modelo 130 declares.
 
@@ -83,12 +96,25 @@ def catalogues_for_m130_gate_tests(catalogues: RegistryCatalogues) -> RegistryCa
     same way the modelo declares it.
     """
     modelo = _m130_definition()
-    legal_ids, source_ids = _m130_declared_reference_ids(modelo)
+    legal_ids, _source_ids = _m130_declared_reference_ids(modelo)
+    # The catalogues carry more than one modelo's declarations: the runtime
+    # tables and the governed facts cite their own legal and source identities,
+    # and catalogue validation checks those whichever modelo is being validated.
+    # Narrowing to the modelo's refs alone left them dangling, so every case
+    # here failed on "references unknown legal id" -- again an artefact of the
+    # isolation rather than a defect in what it validates. The narrowing stays
+    # real for the MODELO's own refs, which is what these gates isolate.
+    carried_legal, _carried_sources = _catalogue_carried_reference_ids(catalogues)
+    legal_ids = legal_ids | carried_legal
     return catalogues.model_copy(
         update={
             "legal": {ref_id: catalogues.legal[ref_id] for ref_id in sorted(legal_ids) if ref_id in catalogues.legal},
-            "sources": {
-                ref_id: catalogues.sources[ref_id] for ref_id in sorted(source_ids) if ref_id in catalogues.sources
-            },
+            # The SOURCE map stays whole. These gates validate against the real
+            # bundled source root, and the source-side checks walk that root:
+            # the semantic-annotation check reads every annotation sidecar under
+            # it and requires a declared source target for each. A narrowed map
+            # contradicts the root the validator is reading, so it reported
+            # annotations of other modelos as untargeted. The legal narrowing
+            # above is what these gates isolate, and it still holds.
         },
     )

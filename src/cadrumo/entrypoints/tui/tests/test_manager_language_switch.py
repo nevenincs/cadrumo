@@ -253,8 +253,7 @@ async def test_the_language_is_named_in_the_footer_not_hidden_in_the_table(tmp_p
                 f"the chooser must name languages, not stored tokens, but showed {rendered}"
             )
             assert rendered == [
-                tr(f"wizard.setup.profile.output-language.choices.{token}.label", locale=token)
-                for token in tokens
+                tr(f"wizard.setup.profile.output-language.choices.{token}.label", locale=token) for token in tokens
             ], f"each row must name its language in that language, but showed {rendered}"
             app.app.exit(None)
 

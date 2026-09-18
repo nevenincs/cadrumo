@@ -36,7 +36,7 @@ from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from email.parser import Parser
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any, Final
 
 from cadrumo.core.directory_scan import iter_directory, scan_directory
@@ -632,16 +632,38 @@ def expected_wheel_data_paths_from_source_tree(source_root: Path) -> set[str]:
     return _expected_wheel_data_paths(source_root, build_source_data_paths(source_root))
 
 
+def _configured_wheel_exclusions(repo_root: Path) -> tuple[str, ...]:
+    """Return the wheel target's declared exclusion patterns.
+
+    The build sheds authoring inputs by directory as well as by suffix -- the
+    authored registry tree and the captured profile declarations among them --
+    so an expectation derived from the source tree alone demands payload the
+    wheel can never carry.
+    """
+    pyproject = parse_toml((repo_root / "pyproject.toml").read_text(encoding=_UTF_8))
+    excluded = pyproject["tool"]["hatch"]["build"]["targets"]["wheel"]["exclude"]
+    return tuple(str(pattern) for pattern in excluded)
+
+
+def _is_configured_exclusion(path: str, patterns: tuple[str, ...]) -> bool:
+    """Return whether one source path is shed by a declared wheel exclusion."""
+    candidate = PurePosixPath(path)
+    return any(candidate.full_match(pattern) or candidate.is_relative_to(pattern) for pattern in patterns)
+
+
 def _expected_wheel_data_paths(repo_root: Path, source_paths: set[str]) -> set[str]:
     """Project one already-sealed source-data inventory into wheel member paths."""
     suffixes = _configured_corpus_binary_suffixes(repo_root)
     split_owned = {path for path in source_paths if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
     _assert_split_files_have_companion_owners(repo_root, split_owned)
+    exclusions = _configured_wheel_exclusions(repo_root)
     expected: set[str] = set()
     for path in source_paths:
         if path in split_owned:
             continue
         if "/tests/" in path:
+            continue
+        if _is_configured_exclusion(path, exclusions):
             continue
         expected.add(f"{_WHEEL_DATA_PREFIX}/{path.removeprefix(_SOURCE_DATA_PREFIX)}")
     return expected

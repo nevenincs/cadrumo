@@ -359,7 +359,7 @@ modelo:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
           field:
-            label: Modelo 190 exercici 2024 i següents
+            label: Model 190, exercici 2024
         2025-y-siguientes:
           casilla:
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
@@ -517,4 +517,4 @@ modelo:
               help: Dada del perceptor declarada en el registre de tipus 2 del model
                 190.
           field:
-            label: Modelo 190 exercici 2024 i següents
+            label: Model 190, exercicis 2025 i següents

@@ -62,9 +62,12 @@ def test_candidate_fact_0102_governs_nif_validation_without_installed_authority(
 
     from cadrumo.domain.calculations.registry import authority
 
+    # The installed artifact is reached through ``bundled_indexed_authority``;
+    # patching a name the module no longer carries raised AttributeError, which
+    # failed the test without ever arming the guard it exists to arm.
     monkeypatch.setattr(
         authority,
-        "bundled_authority",
+        "bundled_indexed_authority",
         lambda: (_ for _ in ()).throw(AssertionError("candidate validation consulted the installed artifact")),
     )
     adapter: TypeAdapter[str] = TypeAdapter(NifString)

@@ -2,14 +2,20 @@
 
 A filename census cannot see a yearless module that embeds its temporal
 subjects in a tuple such as ``_GENERATED_TREES``.  This module inspects the
-module-level syntax instead.  It recognises only literal row collections whose
-first two fields are a modelo and a revision-like token; imported or computed
-collections are deliberately not counted again.
+module-level syntax instead.  It recognises literal row collections whose first
+two fields are a modelo and a revision the compiled registry declares; imported
+or computed collections are deliberately not counted again, and a collection
+that keys a modelo to something else - a design filename, a summary modelo -
+names no revision and is not one of these.
 
-Every detected collection is checked against the law-selectable revision
-universe derived from the validated registry.  A missing subject is admissible
-only through a declaration pinned to an exact source digest.  Reissuing that
-source makes the declaration dormant and exposes the missing subject again.
+Every detected collection must name identities that still exist, once each.
+A caller that owns a denominator additionally passes it as ``expected``, and
+then a missing subject is admissible only through a declaration pinned to an
+exact source digest.  Reissuing that source makes the declaration dormant and
+exposes the missing subject again.  The repository-wide sweep makes no
+completeness claim of its own: a registry test may enumerate a deliberate
+subset, and requiring every such collection to carry the whole universe would
+refuse the subsets rather than find drift.
 """
 
 from __future__ import annotations
@@ -98,6 +104,10 @@ class LiteralEnrollmentFinding:
     duplicate_pins: tuple[RegistryRevisionSubject, ...]
     dormant_pins: tuple[RegistryRevisionSubject, ...]
     unnecessary_pins: tuple[RegistryRevisionSubject, ...]
+    #: Identities the collection names that the registry does not declare at
+    #: all, which is how a renamed or retired revision keeps a test green while
+    #: the row it pins has stopped existing.
+    absent: tuple[RegistryRevisionSubject, ...] = ()
 
     @property
     def detail(self) -> str:
@@ -105,6 +115,7 @@ class LiteralEnrollmentFinding:
         parts = (
             ("missing", self.missing),
             ("extra", self.extra),
+            ("absent", self.absent),
             ("duplicates", self.duplicates),
             ("duplicate_pins", self.duplicate_pins),
             ("dormant_pins", self.dormant_pins),
@@ -141,8 +152,16 @@ def audit_registry_test_enrollment_literals(
     root: Path = REGISTRY_TEST_ROOT,
     pins: tuple[TemporalEnrollmentExclusionPin, ...] = ENROLLMENT_EXCLUSION_PINS,
 ) -> LiteralEnrollmentAudit:
-    """Audit every literal temporal enrolment declared under registry tests."""
-    expected = law_selectable_revision_subjects(authority)
+    """Audit every literal revision enumeration declared under registry tests.
+
+    The sweep asks what it can establish about a collection it did not author:
+    that every identity it names still exists in the registry, and that none is
+    named twice. Completeness is a claim only the owning test can make - the
+    registry tests legitimately enumerate deliberate subsets, such as the
+    revisions that split inside one year - so the denominator is supplied by
+    that caller through :func:`audit_temporal_enrollment_source` rather than
+    imposed on every collection here.
+    """
     declarations: list[LiteralEnrollmentDeclaration] = []
     findings: list[LiteralEnrollmentFinding] = []
     for path in sorted(root.rglob("*.py")):
@@ -150,7 +169,7 @@ def audit_registry_test_enrollment_literals(
         audit = audit_temporal_enrollment_source(
             path.read_text(encoding="utf-8"),
             path=relative,
-            expected=expected,
+            expected=None,
             authority=authority,
             pins=pins,
         )
@@ -178,12 +197,17 @@ def audit_temporal_enrollment_source(
     source: str,
     *,
     path: str,
-    expected: frozenset[RegistryRevisionSubject],
+    expected: frozenset[RegistryRevisionSubject] | None,
     authority: ValidatedRegistryAuthority,
     pins: tuple[TemporalEnrollmentExclusionPin, ...] = (),
 ) -> LiteralEnrollmentAudit:
-    """Audit module-level literal revision collections in one Python source."""
-    declarations = _literal_enrollment_declarations(source, path=path)
+    """Audit module-level literal revision collections in one Python source.
+
+    ``expected`` is the denominator this caller claims the collection enumerates.
+    ``None`` means no completeness is claimed, and only the identities the rows
+    name are checked.
+    """
+    declarations = _literal_enrollment_declarations(source, path=path, authority=authority)
     findings = tuple(
         finding
         for declaration in declarations
@@ -200,7 +224,17 @@ def audit_temporal_enrollment_source(
     return LiteralEnrollmentAudit(declarations, findings)
 
 
-def _literal_enrollment_declarations(source: str, *, path: str) -> tuple[LiteralEnrollmentDeclaration, ...]:
+def _literal_enrollment_declarations(
+    source: str, *, path: str, authority: ValidatedRegistryAuthority
+) -> tuple[LiteralEnrollmentDeclaration, ...]:
+    """Return the module-level collections that enumerate registry revisions.
+
+    A row's shape alone does not establish that a collection names revisions:
+    a modelo keyed to a design filename, and a feeder modelo keyed to the
+    summary modelo it feeds, both read as a modelo beside a digit-leading
+    token. Recognition therefore requires at least one row to name a revision
+    the compiled registry actually declares, which those collections never do.
+    """
     tree = ast.parse(source, filename=path)
     declarations: list[LiteralEnrollmentDeclaration] = []
     for statement in tree.body:
@@ -209,9 +243,21 @@ def _literal_enrollment_declarations(source: str, *, path: str) -> tuple[Literal
             continue
         symbol, value = assignment
         subjects = tuple(subject for row in _literal_rows(value) if (subject := _row_subject(row)) is not None)
-        if subjects:
+        if subjects and any(_subject_is_declared(subject, authority=authority) for subject in subjects):
             declarations.append(LiteralEnrollmentDeclaration(path, symbol, subjects))
     return tuple(declarations)
+
+
+def _subject_is_declared(subject: RegistryRevisionSubject, *, authority: ValidatedRegistryAuthority) -> bool:
+    """Whether the compiled registry declares this exact revision identity.
+
+    Declared, not law-selectable: the corpus ships revisions below the supported
+    floor and a test enumerating one is reading real authored history.
+    """
+    try:
+        return subject.revision in authority.modelo(subject.modelo).revisions
+    except (KeyError, LookupError):
+        return False
 
 
 def _module_assignment(statement: ast.stmt) -> tuple[str, ast.expr] | None:
@@ -264,21 +310,25 @@ def _string_literal(node: ast.expr) -> str | None:
 def _declaration_finding(
     declaration: LiteralEnrollmentDeclaration,
     *,
-    expected: frozenset[RegistryRevisionSubject],
+    expected: frozenset[RegistryRevisionSubject] | None,
     authority: ValidatedRegistryAuthority,
     pins: tuple[TemporalEnrollmentExclusionPin, ...],
 ) -> LiteralEnrollmentFinding | None:
     declared = set(declaration.subjects)
     duplicates = tuple(sorted(subject for subject in declared if declaration.subjects.count(subject) > 1))
+    absent = tuple(sorted(subject for subject in declared if not _subject_is_declared(subject, authority=authority)))
     matching_pins = tuple(pin for pin in pins if pin.path == declaration.path and pin.symbol == declaration.symbol)
     pinned_subjects = tuple(pin.subject for pin in matching_pins)
     duplicate_pins = tuple(sorted(subject for subject in set(pinned_subjects) if pinned_subjects.count(subject) > 1))
     active_pins = frozenset(pin.subject for pin in matching_pins if _pin_is_current(pin, authority=authority))
     dormant_pins = tuple(sorted(pin.subject for pin in matching_pins if pin.subject not in active_pins))
-    unnecessary_pins = tuple(sorted(active_pins - (expected - declared)))
-    missing = tuple(sorted(expected - declared - active_pins))
-    extra = tuple(sorted(declared - expected))
-    if not (missing or extra or duplicates or duplicate_pins or dormant_pins or unnecessary_pins):
+    # Without a denominator there is nothing for a pin to exclude, so every
+    # active pin on this declaration is reported rather than silently kept.
+    outstanding = (expected - declared) if expected is not None else frozenset()
+    unnecessary_pins = tuple(sorted(active_pins - outstanding))
+    missing = tuple(sorted(expected - declared - active_pins)) if expected is not None else ()
+    extra = tuple(sorted(declared - expected)) if expected is not None else ()
+    if not (missing or extra or absent or duplicates or duplicate_pins or dormant_pins or unnecessary_pins):
         return None
     return LiteralEnrollmentFinding(
         path=declaration.path,
@@ -289,6 +339,7 @@ def _declaration_finding(
         duplicate_pins=duplicate_pins,
         dormant_pins=dormant_pins,
         unnecessary_pins=unnecessary_pins,
+        absent=absent,
     )
 
 

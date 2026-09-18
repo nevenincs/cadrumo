@@ -56,6 +56,7 @@ __all__ = [
     "casilla_occurrences",
     "edition_text_gaps",
     "load_casilla_values",
+    "repeated_edition_text",
     "resume_install",
 ]
 
@@ -81,8 +82,127 @@ _PLACEHOLDER: Final = re.compile(
 
 #: A value that a length limit cut mid-text and closed with an ellipsis.
 _TRUNCATED: Final = re.compile(r"\S\s?(?:\.\.\.|…)\s*$")
+#: "N por 100" and "N por ciento" state the rate "N%"; the words carry no content.
+_PERCENT_WORDS: Final = re.compile(r"\s*por\s*(?:100|ciento)(?![0-9])", re.IGNORECASE)
+#: An ordinal a translation spells out states the same number as the Spanish digit.
+_SPELLED_NUMBERS: Final[dict[str, int]] = {
+    # English
+    "first": 1,
+    "second": 2,
+    "third": 3,
+    "fourth": 4,
+    "fifth": 5,
+    "sixth": 6,
+    "seventh": 7,
+    "eighth": 8,
+    "ninth": 9,
+    "tenth": 10,
+    "eleventh": 11,
+    "twelfth": 12,
+    # Catalan
+    "primera": 1,
+    "primer": 1,
+    "segona": 2,
+    "segon": 2,
+    "tercera": 3,
+    "tercer": 3,
+    "quarta": 4,
+    "quart": 4,
+    "cinquena": 5,
+    "cinquè": 5,
+    "sisena": 6,
+    "sisè": 6,
+    "setena": 7,
+    "setè": 7,
+    "vuitena": 8,
+    "vuitè": 8,
+    "novena": 9,
+    "novè": 9,
+    "desena": 10,
+    "desè": 10,
+    # Hungarian
+    "első": 1,
+    "második": 2,
+    "harmadik": 3,
+    "negyedik": 4,
+    "ötödik": 5,
+    "hatodik": 6,
+    "hetedik": 7,
+    "nyolcadik": 8,
+    "kilencedik": 9,
+    "tizedik": 10,
+    # Cardinals a translation writes as words for a count the Spanish gives as a digit.
+    "one": 1,
+    "two": 2,
+    "three": 3,
+    "four": 4,
+    "five": 5,
+    "six": 6,
+    "seven": 7,
+    "eight": 8,
+    "nine": 9,
+    "ten": 10,
+    "un": 1,
+    "dos": 2,
+    "tres": 3,
+    "quatre": 4,
+    "cinc": 5,
+    "sis": 6,
+    "set": 7,
+    "vuit": 8,
+    "nou": 9,
+    "deu": 10,
+    "egy": 1,
+    "kettő": 2,
+    "két": 2,
+    "három": 3,
+    "négy": 4,
+    "öt": 5,
+    "hat": 6,
+    "hét": 7,
+    "nyolc": 8,
+    "kilenc": 9,
+    "tíz": 10,
+}
+_WORD_TOKEN: Final = re.compile(r"[^\W\d_]+")
+#: ">=" and "<=" write the comparison the Spanish sets with the symbol itself.
+_ASCII_COMPARISON: Final[dict[str, str]] = {">=": "≥", "<=": "≤"}
+#: A thousands separator is typography: 60.000, 60,000 and 60 000 state one amount.
+_THOUSANDS: Final = re.compile(r"\b\d{1,3}(?:[.,\u00a0 ]\d{3})+\b")
+#: The legal content a label states: box references, amounts and comparison symbols.
+_CONTENT_TOKEN: Final = re.compile(r"\[[0-9][^\]]{0,11}\]|\d+|[≤≥]")
 #: Repeated spaces, or whitespace opening or closing a value; line breaks are authored.
 _IRREGULAR_WHITESPACE: Final = re.compile(r"[ \t]{2,}|^\s|\s$")
+#: The words an official label loses when AEAT shortens it, which carry no legal meaning.
+_SPANISH_FUNCTION_WORDS: Final[frozenset[str]] = frozenset(
+    [
+        "a",
+        "al",
+        "con",
+        "de",
+        "del",
+        "el",
+        "en",
+        "la",
+        "las",
+        "los",
+        "para",
+        "por",
+        "que",
+        "se",
+        "su",
+        "sus",
+        "un",
+        "una",
+        "y",
+    ]
+)
+#: The separators AEAT composes a long label from: heading, regime, year, state of the amount.
+#: A dash also subtracts one box from another, which :func:`_segments` keeps whole, and a full
+#: stop also abbreviates a word, so a sentence break is read only between a word and a capital.
+_SEGMENT: Final = re.compile(r"\s+-\s+|(?<=[^\W\dA-Z_])\.\s+(?=[A-ZÁÀÂÄÉÈÊËÍÏÎÓÒÔÖŐÚÙÛÜŰÑÇ])")
+#: What tells a composed segment from an operand: a segment states words, an operand a box.
+_SEGMENT_PROSE: Final = re.compile(r"[^\W\d_]{3,}")
 #: Spanish texts whose official record design is itself cut short with an ellipsis;
 #: the catalogue mirrors the source, and a translation of them may end the same way.
 SOURCE_TRUNCATED_SPANISH: Final[frozenset[str]] = frozenset(
@@ -190,7 +310,7 @@ def load_casilla_values(locales_dir: Path = LOCALES_DIR) -> Values:
     return values
 
 
-_EDITION_TEXT: Final = re.compile(r"^modelo\.schema\.[^.]+\.revision\.[^.]+\.field\.label$")
+_EDITION_TEXT: Final = re.compile(r"^modelo\.schema\.(?P<modelo>[^.]+)\.revision\.[^.]+\.field\.label$")
 #: Scaffold renderings standing in for revision or construct text that was never authored.
 _EDITION_TEXT_PLACEHOLDER: Final = re.compile(r"^(?:Casilla|Casella)\s*—|—\s*(?:tax|informaci|adóügyi)")
 
@@ -203,19 +323,826 @@ def edition_text_gaps(locales_dir: Path = LOCALES_DIR) -> dict[str, tuple[str, .
     titles are delta-keyed and judged through resolution with casilla labels.
     """
     gaps: dict[str, tuple[str, ...]] = {}
-    for locale in sorted(discover_locale_codes(locales_dir)):
-        found: list[str] = []
-        for shard in sorted((locales_dir / locale / "modelo" / "schema").glob("*.yml")):
-            raw = yaml.safe_load(shard.read_text(encoding="utf-8")) or {}
-            for key, value in _flatten_raw_locale_leaves(raw).items():
-                if _EDITION_TEXT.match(key) and (
-                    value is None or _EDITION_TEXT_PLACEHOLDER.search(str(value)) is not None
-                ):
-                    found.append(key)
-        gaps[locale] = tuple(sorted(found))
+    for locale, labels in _edition_labels(locales_dir).items():
+        gaps[locale] = tuple(
+            sorted(
+                key
+                for key, value in labels.items()
+                if value is None or _EDITION_TEXT_PLACEHOLDER.search(value) is not None
+            )
+        )
     return gaps
 
 
+def repeated_edition_text(locales_dir: Path = LOCALES_DIR) -> dict[str, tuple[str, ...]]:
+    """Return, per locale, revision labels one modelo repeats across editions.
+
+    A revision label names its own edition, so two editions of a modelo cannot
+    carry the same label: the repeated text describes the period of one of them
+    and misdescribes the others. Unlike a casilla label, it inherits nothing, so
+    the repetition is a copy to re-author rather than a collapse target.
+    """
+    repeated: dict[str, tuple[str, ...]] = {}
+    for locale, labels in _edition_labels(locales_dir).items():
+        by_text: dict[tuple[str, str], list[str]] = defaultdict(list)
+        for key, value in labels.items():
+            match = _EDITION_TEXT.match(key)
+            if value is not None and match is not None:
+                by_text[(match.group("modelo"), value)].append(key)
+        repeated[locale] = tuple(sorted(key for keys in by_text.values() if len(keys) > 1 for key in keys))
+    return repeated
+
+
+def _edition_labels(locales_dir: Path) -> dict[str, dict[str, str | None]]:
+    """Return, per locale, every revision-label leaf of the Modelo schema shards."""
+    labels: dict[str, dict[str, str | None]] = {}
+    for locale in sorted(discover_locale_codes(locales_dir)):
+        found: dict[str, str | None] = {}
+        for shard in sorted((locales_dir / locale / "modelo" / "schema").glob("*.yml")):
+            raw = yaml.safe_load(shard.read_text(encoding="utf-8")) or {}
+            for key, value in _flatten_raw_locale_leaves(raw).items():
+                if _EDITION_TEXT.match(key):
+                    found[key] = None if value is None else str(value)
+        labels[locale] = found
+    return labels
+
+
+#: Per (locale, modelo, translation), Spanish wordings a reviewer found equivalent, so one
+#: translation is correct for all of them: an abbreviation, a typo, punctuation or a synonym.
+#: Never widened by modelo or prefix; each entry names the difference the reviewer saw.
+#: Per locale, composed segments a reviewer found to need more than one rendering, with the
+#: reason the context forces it. Each entry names one segment; never a modelo or a prefix.
+#: Per locale, renderings a reviewer found to state two Spanish segments correctly, with the
+#: difference seen: an official typo, an abbreviation, or two spellings of one province.
+REVIEWED_SHARED_SEGMENTS: Final[dict[str, dict[str, str]]] = {
+    "en": {
+        "Acquirer": ("Adquirente and the official misspelling Adquiriente"),
+        "Address": ("Domicilio, and the bilingual Domicilio / Address of the same box"),
+        "Adjustments for the tax year": ("Correcciones and the official misspelling Correciones"),
+        (
+            "Amortization of intangible fixed assets and goodwill (art. 12.2 LIS) and amortization "
+            "under Transitional Provision 13.1 LIS"
+        ): ("one edition cites the transitional provision as art. DT 13a.1, the other as DT 13a.1"),
+        (
+            "Amount excluded for capital or equity increases by set-off of claims not integrated into "
+            "the tax base (art. 17.2 LIS)"
+        ): ("no integrado en la base imponible, restated as que no se integren por aplicacion del art. 17.2"),
+        "Amount payable": ("A ingresar states what the box holds and Importe a ingresar names its amount, for one box"),
+        "Bizkaia": ("the Basque and Castilian spellings of one province"),
+        "Chartered provincial councils and Navarre": ("D. Forales abbreviates Diputaciones Forales"),
+        "Country code": ("Codigo de pais, abbreviated in one edition and given with its English gloss in another"),
+        "Credit of R&D&I deductions due to insufficient tax liability": (
+            "insuf. cuota abbreviates por insuficiencia de cuota"
+        ),
+        "Decreases": ("Disminuciones and the official misspellings Diminuciones and Disminuciones with a stray accent"),
+        "Deductible VAT on intra-Community acquisitions of current goods": (
+            "adquisiciones intracomunitarias corrientes abbreviates the same box"
+        ),
+        "Deduction still outstanding": (
+            "pendiente de aplicacion and pendiente de aplicar state one thing, a deduction not yet taken"
+        ),
+        "Gipuzkoa": ("the Basque and Castilian spellings of one province"),
+        "Income and expenses recognized in equity": (
+            "imputados al patrimonio neto, restated as reconocidos en patrimonio neto"
+        ),
+        "Legal name": ("razon social and denominacion social name one thing, the registered name of a company"),
+        (
+            "Part integrated into the tax base at liability level for debt-relief or deferral "
+            "arrangements (cooperatives only)"
+        ): ("op. abbreviates operaciones"),
+        "Postcode": ("C. Postal abbreviates Codigo postal, which one edition also capitalises"),
+        "Postcode (ZIP)": ("C. Postal abbreviates Codigo postal, whose ZIP note one edition brackets"),
+        "Province, region or state": (
+            "the same wording, its parts separated by slashes in one edition and by words in the other"
+        ),
+        "Reduction of income from certain intangible assets (art. 23 LIS)": (
+            "ingresos, restated as rentas for the same art. 23 LIS reduction"
+        ),
+        "Result of the previous return (supplementary)": ("complementaria and the official plural complementarias"),
+        "Street name": ("Nombre de la via, written out as via publica and capitalised in other editions"),
+        "Surnames and first name or company name": (
+            "razon social and denominacion social name one thing, the registered name of a company"
+        ),
+        "Surnames or company name": (
+            "Denominacion Social and Razon social, with the official o accented in one edition"
+        ),
+        "Taxation by territory": ("por razon de territorio, shortened to por territorio"),
+    },
+    "ca": {
+        "1r fraccionament": ("1er and 1o spell the same first instalment"),
+        "Adquirent": ("Adquirente and the official misspelling Adquiriente"),
+        "Altres 1a": ("1a and the ordinal 1a written with a superscript"),
+        "Altres 2a": ("2a and the ordinal 2a written with a superscript"),
+        "Altres 3a": ("3a and the ordinal 3a written with a superscript"),
+        "Altres 4a": ("4a and the ordinal 4a written with a superscript"),
+        "Altres 5a": ("5a and the ordinal 5a written with a superscript"),
+        "Altres diferències d'imputació temporal d'ingressos i despeses (art. 11 LIS)": (
+            "imputac. abbreviates imputacion"
+        ),
+        "Codi de país": ("Codigo de pais, abbreviated in one edition and given with its English gloss in another"),
+        "Correccions de l'exercici": ("Correcciones and the official misspelling Correciones"),
+        "Correu electrònic": ("E-mail and Email spell one word"),
+        "Diputacions Forals i Navarra": ("D. Forales abbreviates Diputaciones Forales"),
+        "Disminucions": (
+            "Disminuciones and the official misspellings Diminuciones and Disminuciones with a stray accent"
+        ),
+        "Domicili": ("Domicilio, and the bilingual Domicilio / Address of the same box"),
+        "IVA deduïble en operacions interiors de béns d'inversió": ("ops abbreviates operaciones"),
+        (
+            "Import exclòs per operacions d'augment de capital o fons propis per compensació de crèdits "
+            "no integrat en la base imposable (art. 17.2 LIS)"
+        ): ("no integrado en la base imponible, restated as que no se integren por aplicacion del art. 17.2"),
+        (
+            "Part integrada en la base imposable a nivell de quota per operacions de quitament o espera "
+            "(només cooperatives)"
+        ): ("op. abbreviates operaciones"),
+    },
+    "hu": {
+        "1. részletfizetés": ("1er fraccionamiento and 1er. pago fraccionado name the same first instalment"),
+        "A korábbi bevallás eredménye (kiegészítő)": ("complementaria and the official plural complementarias"),
+        "Adóalap": ("Base is the column heading for the Base imponible the row states"),
+        "Az adóalapba adóösszeg szintjén beszámított rész adósságelengedési ügyletek után (csak szövetkezetek)": (
+            "op. abbreviates operaciones"
+        ),
+        "Bizkaia": ("the Basque and Castilian spellings of one province"),
+        "Csökkentett adóalap": (
+            "base liquidable is the base imponible after its reductions, which the other names directly"
+        ),
+        "Csökkenések": (
+            "Disminuciones and the official misspellings Diminuciones and Disminuciones with a stray accent"
+        ),
+        "Cégnév": ("razon social and denominacion social name one thing, the registered name of a company"),
+        "Cím": ("Domicilio, and the bilingual Domicilio / Address of the same box"),
+        "E-mail": ("E-mail and Email spell one word"),
+        "E-mail cím": ("Correo electronico, given as Direccion de correo electronico in another edition"),
+        "Egyéb 1.": ("1a and the ordinal 1a written with a superscript"),
+        "Egyéb 2.": ("2a and the ordinal 2a written with a superscript"),
+        "Egyéb 3.": ("3a and the ordinal 3a written with a superscript"),
+        "Egyéb 4.": ("4a and the ordinal 4a written with a superscript"),
+        "Egyéb 5.": ("5a and the ordinal 5a written with a superscript"),
+        "Fizetendő összeg": (
+            "A ingresar states what the box holds and Importe a ingresar names its amount, for one box"
+        ),
+        "Gipuzkoa": ("the Basque and Castilian spellings of one province"),
+        "Helység": ("Localidad, written Localidad/Poblacion in another edition"),
+        "Irányítószám": ("C. Postal abbreviates Codigo postal, which one edition also capitalises"),
+        "Irányítószám (ZIP)": ("C. Postal abbreviates Codigo postal, whose ZIP note one edition brackets"),
+        "K+F+i levonások jóváírása elégtelen adókötelezettség miatt": (
+            "insuf. cuota abbreviates por insuficiencia de cuota"
+        ),
+        (
+            "Követelés-beszámítással történő tőke- vagy sajáttőke-emelés miatt kizárt, az adóalapba be "
+            "nem számított összeg (LIS 17.2. cikk)"
+        ): ("no integrado en la base imponible, restated as que no se integren por aplicacion del art. 17.2"),
+        "Közterület neve": ("Nombre de la via, written out as via publica and capitalised in other editions"),
+        "Külföldi cím": ("Direccion en el extranjero and Domicilio extranjero name one address"),
+        "Külön jogállású tartományi tanácsok és Navarra": ("D. Forales abbreviates Diputaciones Forales"),
+        "Még érvényesíthető levonás": (
+            "pendiente de aplicacion and pendiente de aplicar state one thing, a deduction not yet taken"
+        ),
+        "Országkód": ("Codigo de pais, abbreviated in one edition and given with its English gloss in another"),
+        "Saját tőkében elszámolt bevételek és ráfordítások": (
+            "imputados al patrimonio neto, restated as reconocidos en patrimonio neto"
+        ),
+        "Tartomány, régió vagy állam": (
+            "the same wording, its parts separated by slashes in one edition and by words in the other"
+        ),
+        "Vezetéknév vagy cégnév": ("Denominacion Social and Razon social, with the official o accented in one edition"),
+        "Vezetéknév és utónév vagy cégnév": (
+            "razon social and denominacion social name one thing, the registered name of a company"
+        ),
+        "Évi korrekciók": ("Correcciones and the official misspelling Correciones"),
+    },
+}
+
+
+REVIEWED_SEGMENT_RENDERINGS: Final[dict[str, dict[str, str]]] = {
+    "en": {
+        "Cuota": "the amount of the IVA, of the recargo or of a fee, named by the label it sits in",
+    },
+    "ca": {
+        "NIF": "the acronym as a field tag, and the number named in full where the label stands alone",
+    },
+}
+
+
+REVIEWED_SHARED_TRANSLATIONS: Final[dict[tuple[str, str, str], str]] = {
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a B.6. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók számára (ezt az "
+        "összeget vigye át a B.6. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók számára (ezt az "
+        "összeget vigye át a B.8. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek megszerzésébe "
+        "történő befektetés miatt (ezt az összeget vigye át a B.7. melléklet [1136] rovatába)",
+    ): "acciones o participaciones sociales, written with y in another edition",
+    (
+        "hu",
+        "100",
+        "Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek megszerzésébe "
+        "történő befektetés miatt (ezt az összeget vigye át a B.8. melléklet [1136] rovatába)",
+    ): "acciones o participaciones sociales, written with y in another edition",
+    (
+        "en",
+        "100",
+        "For illness expenses",
+    ): "number (gasto / gastos)",
+    (
+        "en",
+        "100",
+        "Amount applied in the tax year",
+    ): "synonym (aplicado / que se aplica)",
+    (
+        "hu",
+        "100",
+        "Gyermek születése vagy örökbefogadása után",
+    ): "number (un hijo / hijos)",
+    (
+        "en",
+        "100",
+        "Cadastral reference (property 1)",
+    ): "punctuation/synonym (inmueble / vivienda, missing space before the parenthesis)",
+    (
+        "ca",
+        "100",
+        "Fill/Filla 1 (*): NIF/NIE",
+    ): "synonym (word order variant of the same field)",
+    (
+        "ca",
+        "100",
+        "Fill/Filla 2 (*): NIF/NIE",
+    ): "synonym (word order variant of the same field)",
+    (
+        "ca",
+        "100",
+        (
+            "Per arrendament d'habitatge habitual per contribuents menors de 36 anys (import de la "
+            "casella [1130] de l'annex B.9)"
+        ),
+    ): "punctuation (preposition de / en)",
+    (
+        "ca",
+        "100",
+        "Per obligació de presentar la declaració de l'IRPF per raó de tenir més d'un pagador",
+    ): "synonym (en razon de / por razon de)",
+    (
+        "ca",
+        "100",
+        "Referència cadastral 1",
+    ): "typo (castastral / catastral)",
+    (
+        "ca",
+        "100",
+        "Referència cadastral 2",
+    ): "typo (castastral / catastral)",
+    (
+        "ca",
+        "100",
+        "Referència cadastral 3",
+    ): "typo (castastral / catastral)",
+    (
+        "ca",
+        "100",
+        "Referència cadastral 4",
+    ): "typo (castastral / catastral)",
+    (
+        "ca",
+        "202",
+        (
+            "Informació addicional (5) - Import de renda exempta de les entitats que apliquen el règim "
+            "fiscal especial del Cap. XIV del Tít. VII LIS"
+        ),
+    ): "punctuation/typo (de/del, Tit./Tit.)",
+    (
+        "ca",
+        "202",
+        (
+            "Informació addicional (5) - Import exclòs per operacions d'augment de capital o fons "
+            "propis per compensació de crèdits no integrat en la base imposable (art. 17.2 LIS)"
+        ),
+    ): "synonym (rewording, same concept)",
+    (
+        "ca",
+        "202",
+        (
+            "Informació addicional (5) - Part integrada en la base imposable a nivell de quota per "
+            "operacions de quitament o espera (només cooperatives)"
+        ),
+    ): "abbreviation (op. / operaciones)",
+    (
+        "ca",
+        "322",
+        "Codi d'activitat - Altres 1a",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "ca",
+        "322",
+        "Codi d'activitat - Altres 2a",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "ca",
+        "322",
+        "Codi d'activitat - Altres 3a",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "ca",
+        "322",
+        "Codi d'activitat - Altres 4a",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "ca",
+        "322",
+        "Codi d'activitat - Altres 5a",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "ca",
+        "322",
+        "Epígraf IAE - Altres 1a",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "ca",
+        "322",
+        "Epígraf IAE - Altres 2a",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "ca",
+        "322",
+        "Epígraf IAE - Altres 3a",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "ca",
+        "322",
+        "Epígraf IAE - Altres 4a",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "ca",
+        "322",
+        "Epígraf IAE - Altres 5a",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "en",
+        "100",
+        "Cadastral reference 1",
+    ): "typo (castastral / catastral)",
+    (
+        "en",
+        "100",
+        "Cadastral reference 2",
+    ): "typo (castastral / catastral)",
+    (
+        "en",
+        "100",
+        "Cadastral reference 3",
+    ): "typo (castastral / catastral)",
+    (
+        "en",
+        "100",
+        "Cadastral reference 4",
+    ): "typo (castastral / catastral)",
+    (
+        "en",
+        "100",
+        "For a large family",
+    ): "synonym (por / para)",
+    (
+        "en",
+        "100",
+        "For donations for ecological purposes",
+    ): "synonym (donaciones / donativos)",
+    (
+        "en",
+        "100",
+        "For education expenses",
+    ): "synonym (gastos educativos / gastos de educacion)",
+    (
+        "en",
+        "100",
+        (
+            "For investment in shares of entities listed on the growth-companies segment of the "
+            "Alternative Stock Market (amount from box [1142] of Annex B.11)"
+        ),
+    ): "synonym (Bursatil / Bolsista)",
+    (
+        "en",
+        "100",
+        (
+            "For investment in the acquisition of shares or company units of newly or recently created "
+            "entities (amount from box [1136] of Annex B.11)"
+        ),
+    ): "punctuation/typo (o/y conjunction, stray parenthesis, capitalization)",
+    (
+        "en",
+        "100",
+        "For rental of the habitual residence (amount from box [1130] of annex B.9)",
+    ): "synonym (arrendamiento / alquiler)",
+    (
+        "en",
+        "100",
+        "For rental of the habitual residence (this amount is transferred to box [1130] of annex B.9)",
+    ): "synonym (arrendamiento / alquiler, article variant)",
+    (
+        "en",
+        "100",
+        ("For rental of the habitual residence for taxpayers under 36 years old (amount from box [1130] of annex B.9)"),
+    ): "punctuation (preposition de / en)",
+    (
+        "en",
+        "100",
+        "For single-parent families",
+    ): "synonym (por / para)",
+    (
+        "en",
+        "100",
+        "For taxpayers with a disability",
+    ): "synonym (con discapacidad / afectados por discapacidad)",
+    (
+        "en",
+        "100",
+        "For the international adoption of children",
+    ): "synonym (rewording, same concept)",
+    (
+        "en",
+        "100",
+        "For the lease of a primary residence (this amount is carried to box [1130] of Annex B.11)",
+    ): "punctuation (added article el)",
+    (
+        "en",
+        "100",
+        (
+            "For the lease of a primary residence for taxpayers under 36 years old (amount from box "
+            "[1130] of Annex B.11)"
+        ),
+    ): "punctuation (preposition de / en)",
+    (
+        "en",
+        "100",
+        (
+            "For the lease of a primary residence linked to certain debt-for-property settlement "
+            "transactions (amount from box [1170] of Annex B.12)"
+        ),
+    ): "punctuation (added article el)",
+    (
+        "en",
+        "100",
+        "For the purchase of school supplies",
+    ): "synonym (compra / adquisicion)",
+    (
+        "en",
+        "100",
+        "For the purchase of textbooks and school supplies",
+    ): "punctuation (added article la)",
+    (
+        "en",
+        "100",
+        'If you do not have a cadastral reference, mark this box with an "X"',
+    ): "punctuation (quote style)",
+    (
+        "en",
+        "100",
+        "Number of days",
+    ): "abbreviation (Numero / No)",
+    (
+        "en",
+        "100",
+        "Payments on account passed on",
+    ): "abbreviation (Ing. / Ingr.)",
+    (
+        "en",
+        "100",
+        "Reduction for income from artistic activities obtained exceptionally",
+    ): "typo (artisticas / artisticos)",
+    (
+        "en",
+        "100",
+        "Social Security contribution account code",
+    ): "punctuation (missing de)",
+    (
+        "en",
+        "100",
+        "Tax ID (NIF) of entity 1, newly or recently created",
+    ): "punctuation (missing de)",
+    (
+        "en",
+        "100",
+        "Tax ID (NIF) of entity 2, newly or recently created",
+    ): "punctuation (missing de)",
+    (
+        "en",
+        "100",
+        "Tax ID number (NIF) of the person with the disability holding the protected estate",
+    ): "abbreviation (Numero / No)",
+    (
+        "en",
+        "100",
+        "Utilities (electricity, water, gas, telephone and internet)",
+    ): "synonym (luz / electricidad)",
+    (
+        "en",
+        "202",
+        (
+            "Additional information (5) - Amount excluded for capital or equity increases by set-off of"
+            " claims not integrated into the tax base (art. 17.2 LIS)"
+        ),
+    ): "synonym (rewording, same concept)",
+    (
+        "en",
+        "202",
+        (
+            "Additional information (5) - Amount of exempt income of entities applying the special tax "
+            "regime of Chapter XIV of Title VII LIS"
+        ),
+    ): "punctuation/typo (de/del, Tit./Tit.)",
+    (
+        "en",
+        "202",
+        (
+            "Additional information (5) - Part integrated into the tax base at liability level for "
+            "debt-relief or deferral arrangements (cooperatives only)"
+        ),
+    ): "abbreviation (op. / operaciones)",
+    (
+        "en",
+        "303",
+        "Total accrued VAT amount",
+    ): "synonym (short label vs. detailed elaboration of the same total)",
+    (
+        "hu",
+        "100",
+        "1. Kataszteri hivatkozás",
+    ): "typo (castastral / catastral)",
+    (
+        "hu",
+        "100",
+        "1. Új vagy nemrég alapított entitás adóazonosító száma",
+    ): "punctuation (missing de)",
+    (
+        "hu",
+        "100",
+        "2. Kataszteri hivatkozás",
+    ): "typo (castastral / catastral)",
+    (
+        "hu",
+        "100",
+        "2. Új vagy nemrég alapított entitás adóazonosító száma",
+    ): "punctuation (missing de)",
+    (
+        "hu",
+        "100",
+        "3. Kataszteri hivatkozás",
+    ): "typo (castastral / catastral)",
+    (
+        "hu",
+        "100",
+        "36 év alatti adózók szokásos lakóhelyének bérlése után (a B.9 melléklet [1130] rovatának összege)",
+    ): "punctuation (preposition de / en)",
+    (
+        "hu",
+        "100",
+        "4. kataszteri hivatkozás",
+    ): "typo (castastral / catastral)",
+    (
+        "hu",
+        "100",
+        (
+            "A 2021. adóévre vonatkozó korábbi önadózásokból vagy közigazgatási adómegállapításokból "
+            "származó, befizetendő eredmények"
+        ),
+    ): "punctuation (added article las)",
+    (
+        "hu",
+        "100",
+        (
+            "A 2022. adóévre vonatkozó korábbi önadózásokból vagy közigazgatási adómegállapításokból "
+            "származó, befizetendő eredmények"
+        ),
+    ): "punctuation (added article las)",
+    (
+        "hu",
+        "100",
+        (
+            "A 2023. adóévre vonatkozó korábbi önadózásokból vagy közigazgatási adómegállapításokból "
+            "származó, befizetendő eredmények"
+        ),
+    ): "punctuation (added article las)",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a B.6. melléklet [1130] casillájába)",
+    ): "synonym (arrendamiento / alquiler, article variant)",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)",
+    ): "synonym (arrendamiento / alquiler, article variant)",
+    (
+        "hu",
+        "100",
+        (
+            "A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók számára (ezt az összeget "
+            "vigye át a B.6. melléklet [1130] casillájába)"
+        ),
+    ): "synonym (arrendamiento / alquiler)",
+    (
+        "hu",
+        "100",
+        (
+            "A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók számára (ezt az összeget "
+            "vigye át a B.8. melléklet [1130] casillájába)"
+        ),
+    ): "synonym (arrendamiento / alquiler)",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlése után (ez az összeg a B.9 melléklet [1130] rovatába kerül át)",
+    ): "synonym (arrendamiento / alquiler, article variant)",
+    (
+        "hu",
+        "100",
+        ("A szokásos lakóingatlan bérbevétele után (ez az összeg átvitelre kerül a B.11 melléklet [1130] rovatába)"),
+    ): "synonym (arrendamiento / alquiler, article variant)",
+    (
+        "hu",
+        "100",
+        (
+            "Az Alternatív Tőzsde terjeszkedő vállalkozási szegmensében jegyzett entitások részvényeibe"
+            " történő befektetés után (a B.11 melléklet [1142] rovatának összege)"
+        ),
+    ): "synonym (Bursatil / Bolsista)",
+    (
+        "hu",
+        "100",
+        "Az adóévben alkalmazott összeg",
+    ): "synonym (grammar/voice variant, same meaning)",
+    (
+        "hu",
+        "100",
+        "Csökkentés kivételes módon szerzett művészi tevékenységekből származó jövedelmek után",
+    ): "typo (artisticas / artisticos)",
+    (
+        "hu",
+        "100",
+        "Gyermekek nemzetközi örökbefogadása után",
+    ): "synonym (rewording, same concept)",
+    (
+        "hu",
+        "100",
+        "Járulékfizetési számlakód",
+    ): "punctuation (missing de)",
+    (
+        "hu",
+        "100",
+        "Napok száma",
+    ): "abbreviation (Numero de dias / No de dias)",
+    (
+        "hu",
+        "100",
+        "Oktatási kiadások után",
+    ): "synonym (gastos educativos / gastos de educacion)",
+    (
+        "hu",
+        "100",
+        "Szokásos lakóhely bérlése után (a B.9 melléklet [1130] rovatának összege)",
+    ): "synonym (arrendamiento / alquiler)",
+    (
+        "hu",
+        "100",
+        "Szokásos lakóingatlan beszerzése vagy felújítása után vidéki övezetekben",
+    ): "punctuation (added article la)",
+    (
+        "hu",
+        "100",
+        "Szokásos lakóingatlan bérbevétele után (a B.11 melléklet [1130] rovatának összege)",
+    ): "synonym (arrendamiento / alquiler)",
+    (
+        "hu",
+        "100",
+        "Tankönyvek és iskolai felszerelés beszerzése után",
+    ): "punctuation (added article la)",
+    (
+        "hu",
+        "100",
+        "Életjáradékokba történő újrabefektetés miatt mentesített nyereségek",
+    ): "punctuation (preposition de / en)",
+    (
+        "hu",
+        "100",
+        "Ökológiai célú adományok után",
+    ): "synonym (donaciones / donativos)",
+    (
+        "hu",
+        "100",
+        (
+            "Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek megszerzésébe történő "
+            "befektetés miatt (ezt az összeget vigye át a B.7. melléklet [1136] casillájába)"
+        ),
+    ): "punctuation/typo (o/y conjunction)",
+    (
+        "hu",
+        "100",
+        (
+            "Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek megszerzésébe történő "
+            "befektetés miatt (ezt az összeget vigye át a B.8. melléklet [1136] casillájába)"
+        ),
+    ): "punctuation/typo (o/y conjunction)",
+    (
+        "hu",
+        "202",
+        (
+            "Kiegészítő információ (5) - A LIS VII. cím XIV. fejezete szerinti különös adórendszert "
+            "alkalmazó szervezetek adómentes jövedelme"
+        ),
+    ): "punctuation/typo (de/del, Tit./Tit.)",
+    (
+        "hu",
+        "202",
+        (
+            "Kiegészítő információ (5) - Az adóalapba adóösszeg szintjén beszámított rész "
+            "adósságelengedési ügyletek után (csak szövetkezetek)"
+        ),
+    ): "abbreviation (op. / operaciones)",
+    (
+        "hu",
+        "202",
+        (
+            "Kiegészítő információ (5) - Követelés-beszámítással történő tőke- vagy sajáttőke-emelés "
+            "miatt kizárt, az adóalapba be nem számított összeg (LIS 17.2. cikk)"
+        ),
+    ): "synonym (rewording, same concept)",
+    (
+        "hu",
+        "303",
+        "Összes keletkezett ÁFA összeg",
+    ): "synonym (short label vs. detailed elaboration of the same total)",
+    (
+        "hu",
+        "322",
+        "IAE besorolás - Egyéb 1.",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "hu",
+        "322",
+        "IAE besorolás - Egyéb 2.",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "hu",
+        "322",
+        "IAE besorolás - Egyéb 3.",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "hu",
+        "322",
+        "IAE besorolás - Egyéb 4.",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "hu",
+        "322",
+        "IAE besorolás - Egyéb 5.",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "hu",
+        "322",
+        "Tevékenységi kód - Egyéb 1.",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "hu",
+        "322",
+        "Tevékenységi kód - Egyéb 2.",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "hu",
+        "322",
+        "Tevékenységi kód - Egyéb 3.",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "hu",
+        "322",
+        "Tevékenységi kód - Egyéb 4.",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+    (
+        "hu",
+        "322",
+        "Tevékenységi kód - Egyéb 5.",
+    ): "punctuation (ordinal ordinal-indicator vs plain a)",
+}
 #: Lineages whose Spanish wording changed between editions without changing meaning, so one
 #: translation correctly renders every edition. Keyed per (locale, modelo, lineage), each with
 #: the reviewer's reason; never widened by modelo or prefix.
@@ -256,6 +1183,14 @@ class CatalogueFindings:
     """Per locale, values cut short and closed with an ellipsis."""
     irregular_whitespace: dict[str, tuple[str, ...]] = field(default_factory=dict)
     """Per locale, values with repeated spaces or surrounding whitespace copied from a source."""
+    dropped_source_content: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, translations that lost a box reference, amount or comparison the Spanish states."""
+    shared_translations: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, one translation rendering more than one Spanish wording of a modelo."""
+    segment_drift: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, composed segments whose one Spanish wording is rendered more than one way."""
+    shared_segments: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    """Per locale, one rendering standing for more than one Spanish segment."""
     unresolved_spanish: tuple[str, ...] = ()
     untranslated: dict[str, int] = field(default_factory=dict)
     translation_drift: dict[str, tuple[str, ...]] = field(default_factory=dict)
@@ -282,6 +1217,10 @@ class CatalogueFindings:
             "glossary_artifacts": total(self.glossary_artifacts),
             "truncated_text": total(self.truncated_text),
             "irregular_whitespace": total(self.irregular_whitespace),
+            "dropped_source_content": total(self.dropped_source_content),
+            "shared_translations": total(self.shared_translations),
+            "segment_drift": total(self.segment_drift),
+            "shared_segments": total(self.shared_segments),
             "unresolved_spanish": len(self.unresolved_spanish),
             "untranslated": dict(sorted(self.untranslated.items())),
             "translation_drift": total(self.translation_drift),
@@ -318,6 +1257,10 @@ class CatalogueFindings:
                 any(self.glossary_artifacts.values()),
                 any(self.truncated_text.values()),
                 any(self.irregular_whitespace.values()),
+                any(self.dropped_source_content.values()),
+                any(self.shared_translations.values()),
+                any(self.segment_drift.values()),
+                any(self.shared_segments.values()),
                 any(self.translation_drift.values()),
                 any(self.stranded_translations.values()),
                 any(self.stale_translations.values()),
@@ -479,11 +1422,28 @@ class ModeloCasillaCatalogue:
             locale: sum(
                 1
                 for index in range(len(self.occurrences))
-                if self.resolve(index, "label", locale) is not None
-                and _served_locale(self, index, "label", locale) != locale
+                for field_name in _FIELDS
+                if self.resolve(index, field_name, locale) is not None
+                and _served_locale(self, index, field_name, locale) != locale
             )
             for locale in self.locales
             if locale != SOURCE_LOCALE
+        }
+        found.dropped_source_content = {
+            locale: tuple(sorted(self.dropped_source_content(locale)))
+            for locale in self.locales
+            if locale != SOURCE_LOCALE
+        }
+        found.shared_translations = {
+            locale: tuple(sorted(self.shared_translations(locale)))
+            for locale in self.locales
+            if locale != SOURCE_LOCALE
+        }
+        found.segment_drift = {
+            locale: tuple(sorted(self.segment_drift(locale))) for locale in self.locales if locale != SOURCE_LOCALE
+        }
+        found.shared_segments = {
+            locale: tuple(sorted(self.shared_segments(locale))) for locale in self.locales if locale != SOURCE_LOCALE
         }
         found.translation_drift = self.translation_drift()
         found.stale_translations = {
@@ -493,6 +1453,121 @@ class ModeloCasillaCatalogue:
             locale: self.stranded_translations(locale) for locale in self.locales if locale != SOURCE_LOCALE
         }
         return found
+
+    def dropped_source_content(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
+        """Return, per serving key, the source tokens a translation lost.
+
+        A label's numbers, box references and comparison symbols are the legal
+        content an operator acts on: a cap of 500 euros, the transitional
+        provisions a deduction rests on, the box an amount is carried from. A
+        translation that renders the prose but drops those states something the
+        Spanish does not. Number formatting differs between languages, so
+        digits are compared with separators removed.
+        """
+        lookup = self.lookup_for(self.values if values is None else values)
+        dropped: dict[str, tuple[str, ...]] = {}
+        for index, occurrence in enumerate(self.occurrences):
+            spanish = self.resolve(index, "label", SOURCE_LOCALE, values)
+            if spanish is None:
+                continue
+            source = _content_tokens(spanish)
+            if not source:
+                continue
+            served = modelo_localization_source(occurrence.chain("label"), locale=locale, lookup=lookup)
+            if served is None or served[1] != locale:
+                continue
+            rendered = _content_tokens(self.resolve(index, "label", locale, values) or "", spelled=True)
+            # A reference repeated in one sentence states the same box once.
+            missing = Counter({token: 1 for token in source if token not in rendered})
+            if missing:
+                dropped[served[0]] = tuple(sorted(missing.elements()))
+        return dropped
+
+    def shared_translations(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
+        """Return translations one modelo renders for more than one Spanish wording.
+
+        Two Spanish labels that differ only in case, accents or punctuation say
+        one thing, so one translation serves both. A difference in wording may
+        still be equivalent, which a reviewer records in
+        :data:`REVIEWED_SHARED_TRANSLATIONS`; anything else is two concepts
+        wearing one translation, as a reused box number produced in Modelo 200.
+        """
+        grouped: dict[tuple[str, str], set[str]] = defaultdict(set)
+        for index, occurrence in enumerate(self.occurrences):
+            spanish = self.resolve(index, "label", SOURCE_LOCALE, values)
+            text = self.resolve(index, "label", locale, values)
+            if spanish is None or text is None or _served_locale(self, index, "label", locale, values) != locale:
+                continue
+            grouped[(occurrence.modelo, text)].add(spanish)
+        shared: dict[str, tuple[str, ...]] = {}
+        for (modelo, text), spanish_texts in grouped.items():
+            if len({_plain_wording(spanish) for spanish in spanish_texts}) < 2:
+                continue
+            if (locale, modelo, text) in REVIEWED_SHARED_TRANSLATIONS:
+                continue
+            shared[text] = tuple(sorted(spanish_texts))
+        return shared
+
+    def segment_drift(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
+        """Return the composed segments this locale renders more than one way.
+
+        AEAT composes a long label from segments joined by ``" - "``: a heading,
+        a regime, a year, the state of the amount. A segment repeated across
+        labels states the same thing each time, so its translation repeats too,
+        the way the registry's delta keying stores one text for one meaning.
+        Two renderings of one segment are a defect of a kind whole-value drift
+        cannot see, since the surrounding labels differ: the meaning may even
+        invert, as ``Sin reiteración`` rendered as a repeated donation.
+        A reviewer records a segment whose context genuinely forces two
+        renderings in :data:`REVIEWED_SEGMENT_RENDERINGS` with its reason.
+        """
+        view = self.values if values is None else values
+        rendered: dict[str, set[str]] = defaultdict(set)
+        for key, spanish_texts in self.served_sources(locale).items():
+            translation = view.get(locale, {}).get(key)
+            if translation is None or len(spanish_texts) != 1:
+                continue
+            spanish = _segments(next(iter(spanish_texts)))
+            parts = _segments(translation)
+            if len(spanish) != len(parts) or len(spanish) < 2:
+                continue
+            for source_part, rendering in zip(spanish, parts, strict=True):
+                rendered[source_part.strip()].add(rendering.strip())
+        return {
+            segment: tuple(sorted(renderings))
+            for segment, renderings in rendered.items()
+            if len(renderings) > 1 and segment not in REVIEWED_SEGMENT_RENDERINGS.get(locale, {})
+        }
+
+    def shared_segments(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
+        """Return the renderings this locale gives to more than one Spanish segment.
+
+        The mirror of :meth:`segment_drift`: one rendering standing for two
+        segments hides a distinction the Spanish draws, as the Basque
+        ``Concierto económico`` and the Navarrese ``Convenio económico`` once
+        shared one English rendering. AEAT states one segment several ways
+        across editions, abbreviating it or dropping its prepositions, and
+        those wordings share one rendering correctly; a reviewer records each
+        such pair in :data:`REVIEWED_SHARED_SEGMENTS` with the difference seen.
+        """
+        view = self.values if values is None else values
+        rendered: dict[str, set[str]] = defaultdict(set)
+        for key, spanish_texts in self.served_sources(locale).items():
+            translation = view.get(locale, {}).get(key)
+            if translation is None or len(spanish_texts) != 1:
+                continue
+            spanish = _segments(next(iter(spanish_texts)))
+            parts = _segments(translation)
+            if len(spanish) != len(parts) or len(spanish) < 2:
+                continue
+            for source_part, rendering in zip(spanish, parts, strict=True):
+                rendered[rendering.strip()].add(source_part.strip())
+        reviewed = REVIEWED_SHARED_SEGMENTS.get(locale, {})
+        return {
+            rendering: tuple(sorted(sources))
+            for rendering, sources in rendered.items()
+            if len({_abbreviated_wording(source) for source in sources}) > 1 and rendering not in reviewed
+        }
 
     def translation_drift(self, values: Values | None = None) -> dict[str, tuple[str, ...]]:
         """Return, per locale, the lineages rendering one Spanish text more than one way.
@@ -841,7 +1916,9 @@ class ModeloCasillaCatalogue:
 
         The registry compares a casilla's label across the editions that declare
         it and refuses an undeclared difference, so an authored edition-specific
-        Spanish text must come with a continuity evolution in the registry.
+        Spanish text must come with a continuity evolution in the registry. Help
+        is not one of the fields it compares, so edition-specific help needs no
+        evolution and is not judged here.
         """
         editions: dict[tuple[str, str], list[int]] = defaultdict(list)
         for index, occurrence in enumerate(self.occurrences):
@@ -944,6 +2021,78 @@ def _normalised(text: str) -> str:
     decomposed = unicodedata.normalize("NFKD", text.casefold())
     letters = "".join(character for character in decomposed if not unicodedata.combining(character))
     return " ".join(re.sub(r"[^\w]+", " ", letters).split())
+
+
+def _content_tokens(text: str, *, spelled: bool = False) -> Counter[str]:
+    """Return the numbers, box references and comparison symbols a label states.
+
+    Compared across languages, so a rendering difference is not a difference in
+    content: "25 por 100" and "25%" state one rate, a date is reordered, and the
+    separators inside a number or between the parts of a citation vary. With
+    ``spelled``, a number written as a word counts as that number, which is how
+    a translation may render a digit the Spanish wrote; the Spanish side never
+    reads words, because its own prose says "un" and "dos" as articles.
+    """
+    found: Counter[str] = Counter()
+    grouped = _PERCENT_WORDS.sub("%", text)
+    for ascii_form, symbol in _ASCII_COMPARISON.items():
+        grouped = grouped.replace(ascii_form, symbol)
+    plain = _THOUSANDS.sub(lambda match: re.sub(r"[^0-9]", "", match.group()), grouped)
+    for token in _CONTENT_TOKEN.findall(plain):
+        cleaned = re.sub(r"\s+", "", token)
+        found[cleaned.lstrip("0") or "0" if cleaned.isdigit() else cleaned] += 1
+    if spelled:
+        for word in _WORD_TOKEN.findall(text):
+            number = _SPELLED_NUMBERS.get(word.casefold())
+            if number is not None:
+                found[str(number)] += 1
+    return found
+
+
+def _segments(text: str) -> tuple[str, ...]:
+    """Split a composed label into its segments, leaving arithmetic whole.
+
+    ``" - "`` both joins the segments of a label and subtracts one box from
+    another. A subtraction is written inside its parentheses and its operands
+    are box references rather than prose, so a split is read only outside
+    brackets and only when every segment states words.
+    """
+    depth = 0
+    parts: list[str] = []
+    start = 0
+    for match in re.finditer(rf"[()\[\]]|{_SEGMENT.pattern}", text):
+        bracket = match.group()
+        if bracket in "([":
+            depth += 1
+        elif bracket in ")]":
+            depth = max(0, depth - 1)
+        elif depth == 0:
+            parts.append(text[start : match.start()])
+            start = match.end()
+    parts.append(text[start:])
+    if len(parts) < 2 or not all(_SEGMENT_PROSE.search(part) for part in parts):
+        return (text,)
+    return tuple(parts)
+
+
+def _plain_wording(text: str) -> str:
+    """Return text stripped to its letters and digits, so case and punctuation do not distinguish it."""
+    unmarked = "".join(ch for ch in unicodedata.normalize("NFD", text) if not unicodedata.combining(ch))
+    return re.sub(r"[^a-z0-9]", "", unmarked.casefold())
+
+
+def _abbreviated_wording(text: str) -> str:
+    """Return a wording without the words AEAT drops when it shortens a label.
+
+    An official label is written out in one edition and abbreviated in the
+    next, losing its prepositions and articles: ``IVA deducible en
+    importaciones de bienes corrientes`` becomes ``IVA deducible importaciones
+    bienes corrientes``. The two state one thing, so they may share one
+    rendering; a difference in the remaining words may not.
+    """
+    unmarked = "".join(ch for ch in unicodedata.normalize("NFD", text) if not unicodedata.combining(ch))
+    words = (match.group() for match in re.finditer(r"[a-z0-9+]+", unmarked.casefold()))
+    return " ".join(word for word in words if word not in _SPANISH_FUNCTION_WORDS)
 
 
 def _is_derived_help(key: str, value: str) -> bool:

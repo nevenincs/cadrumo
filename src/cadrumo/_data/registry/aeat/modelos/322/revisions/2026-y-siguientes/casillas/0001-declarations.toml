@@ -1,0 +1,31 @@
+# Modelo 322 numbered casillas, transcribed from the bundled Diseno de
+# Registro aeat-dr-322-2026, sha256
+# f014cec44d4906bc1e2ba96ee1b336f9b400254519df5b1ab0ce69d513631a76.
+# Box number, byte extent and label are AEAT's own; data_type is derived from
+# the row's declared length and decimal shape (17 = 15 enteros + 2 decimales
+# -> money; 5 = 3 enteros + 2 decimales -> ratio).
+#
+# No row is named after a rate. Where AEAT repeats a Base/Tipo/Cuota triple,
+# the rate is a DATA slot on the row, not a label, so which statutory rate a
+# triple carries is the filer's entry and is not asserted here.
+
+[[revisions."2026-y-siguientes".casillas]]
+id = "112"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:221 (sha256 f014cec44d49) prints box [112]; corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md (sha256 a70f3a2ca7dd) prints no box [112] and retires none"
+number = "112"
+section = ["iva", "regimen_general", "devengado"]
+legal_refs = ["ley-37-1992:art-88", "ley-37-1992:art-90", "ley-37-1992:art-91", "orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]
+
+# Identificacion. Sujeto pasivo con derecho a deducir pago a cuenta de entregas
+# de gasolinas, gasoleos y biocarburantes posteriores a la ultimacion del regimen
+# de deposito distinto del aduanero. "0=Vacio, Si=1, No=2".
+[[revisions."2026-y-siguientes".casillas]]
+id = "decl.deduccion-pago-cuenta-gasolinas"
+number = "deduccion-pago-cuenta-gasolinas"
+continuidad_origin = "new_on_form"
+continuidad_evidence = "corpus/aeat_official/disenos_registro/modelo_322/files/01-322-ejercicio-2026-y-siguientes-actualizado-28-01-26.xlsx.extracted.md:51 (sha256 f014cec44d49) declara el campo 19, posicion 136, longitud 1, Num: Identificacion. Sujeto pasivo con derecho a deducir pago a cuenta de entregas de gasolinas, gasoleos y biocarburantes posteriores a la ultimacion del regimen de deposito distinto del aduanero (0=Vacio, Si=1, No=2). El diseno de la edicion predecesora corpus/aeat_official/disenos_registro/modelo_322/files/03-322-ejercicios-2024-y-2025-actualizado-10-12-25-949-kb-xls.xls.extracted.md (sha256 a70f3a2ca7dd) cubre el mismo bloque de Identificacion, que termina en el campo 15, posicion 132, y no declara este campo ni ningun otro que mencione gasolinas, gasoleos o biocarburantes. La casilla acompanante [112] tampoco existe alli: su Resultado de la autoliquidacion es ([68] - [69]) [70] en el campo 12, posicion 154, frente a ([68] - [69] - [112]) [70] en 2026. El bloque es nuevo en el formulario 2026."
+section = ["identificacion"]
+data_type = "text"
+constraints = { max_length = 1, enum = ["0", "1", "2"], legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"] }
+legal_refs = ["orden-eha-3434-2007:art-1", "rd-1624-1992:art-71"]

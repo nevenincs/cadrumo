@@ -1,0 +1,208 @@
+# Modelo 165 declaration-header casillas (scheduling/applicability-grade). Only
+# the declaration header (ejercicio, tipo de declaración) is declared, grounded in
+# orden-hap-2455-2013 art 1. No numbered form casilla is invented — no
+# authoritative Modelo 165 diseño de registro is bundled.
+
+# Campo 5. Positions 18-57, alfanumerico. "Se consignara la razon social
+# completa, sin anagrama."
+[[revisions."2016-2022".casillas]]
+id = "declarante-razon-social"
+continuidad_id = "m165-declarante-razon-social"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 1 campo 5, posiciones 18-57 (denominación o razón social del declarante), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span and role. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo1.18-57"
+section = ["declarante"]
+data_type = "name"
+semantic_role = "m165_declarante_razon_social"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 7. Positions 59-107, alfanumerico de 49 posiciones. The design
+# subdivides the slot (59-67 TELEFONO, 68-107 APELLIDOS Y NOMBRE) but declares
+# ONE top-level campo of 49 bytes.
+[[revisions."2016-2022".casillas]]
+id = "persona-relacion"
+continuidad_id = "m165-persona-relacion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 1 campo 7, posiciones 59-107 (persona con quien relacionarse), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same 49-position span and role. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo1.59-107"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m165_persona_relacion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 8. Positions 108-120, numerico de 13 posiciones. "Un numero secuencial
+# cuyos tres primeros digitos se corresponderan con el codigo 165."
+[[revisions."2016-2022".casillas]]
+id = "numero-identificativo-declaracion"
+continuidad_id = "m165-numero-identificativo-declaracion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 1 campo 8, posiciones 108-120 (número identificativo de la declaración), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span and role. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo1.108-120"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "m165_numero_identificativo_declaracion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 9. Positions 121-122, alfabetico: 121 declaracion complementaria ("C"),
+# 122 declaracion sustitutiva ("S").
+[[revisions."2016-2022".casillas]]
+id = "declaracion-complementaria-sustitutiva"
+continuidad_id = "m165-declaracion-complementaria-sustitutiva"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 1 campo 9, posiciones 121-122 (declaración complementaria o sustitutiva), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span and combined role. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo1.121-122"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m165_declaracion_complementaria_sustitutiva"
+semantic_role_cardinality = "intentional_singleton"
+semantic_role_cardinality_reason = "One combined 'Declaracion complementaria / sustitutiva' box on this informativa; the role is modelo-scoped, so no sibling casilla can carry it. Modelo 190 records the same decision for its own complementaria and sustitutiva boxes."
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 10. Positions 123-135, numerico de 13 posiciones. "En cualquier otro
+# caso debera rellenarse a CEROS."
+[[revisions."2016-2022".casillas]]
+id = "numero-identificativo-anterior"
+continuidad_id = "m165-numero-identificativo-anterior"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 1 campo 10, posiciones 123-135 (número identificativo de la declaración anterior), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span and role. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo1.123-135"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "m165_numero_identificativo_anterior"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 11. Positions 136-144, numerico de 9 posiciones: "el numero total de
+# registros de socios o participes (Registro de tipo 2) declarados".
+[[revisions."2016-2022".casillas]]
+id = "numero-total-declarados"
+continuidad_id = "m165-numero-total-declarados"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 1 campo 11, posiciones 136-144 (número total de declarados), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span and semantic role. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo1.136-144"
+section = ["declarante"]
+data_type = "integer"
+semantic_role = "m165_numero_total_declarados"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 12. Positions 145-159. IMPORTE TOTAL DE LAS SUSCRIPCIONES O
+# ADQUISICIONES DE ACCIONES O PARTICIPACIONES. "Se consignara sin signo y sin
+# coma decimal", subdivided 145-157 parte entera and 158-159 parte decimal --
+# an unsigned amount with two implied decimals filling the whole 15-byte slot.
+[[revisions."2016-2022".casillas]]
+id = "importe-total-suscripciones"
+continuidad_id = "m165-importe-total-suscripciones"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 1 campo 12, posiciones 145-159 (importe total de las suscripciones o adquisiciones), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span, unsigned two-decimal representation, and semantic role. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo1.145-159"
+section = ["declarante", "resumen"]
+semantic_role = "m165_importe_total_suscripciones"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 13. Positions 160-167. FECHA DE CONSTITUCION de la empresa de nueva o
+# reciente creacion, subdivided 160-163 ANO, 164-165 MES, 166-167 DIA.
+[[revisions."2016-2022".casillas]]
+id = "fecha-constitucion"
+continuidad_id = "m165-fecha-constitucion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 1 campo 13, posiciones 160-167 (fecha de constitución), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span, year/month/day subdivision, and semantic role. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo1.160-167"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "m165_fecha_constitucion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 14. Positions 168-183, alfanumerica de 16 posiciones. IMPORTE FONDOS
+# PROPIOS de la entidad al inicio del periodo impositivo en que el contribuyente
+# adquiere las acciones. The only signed amount on this record: "168 SIGNO:
+# campo alfabetico que se cumplimentara cuando la cuantia de los fondos propios
+# ... sea menor que 0 (cero); en este caso se consignara una 'N'. En cualquier
+# otro caso el contenido del campo sera un espacio", then "169-183 IMPORTE:
+# campo numerico de 15 posiciones", itself 169-181 entera and 182-183 decimal.
+[[revisions."2016-2022".casillas]]
+id = "importe-fondos-propios"
+continuidad_id = "m165-importe-fondos-propios"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 1 campo 14, positions 168-182 (importe fondos propios), and the 2016-2022 design's Type 1 field 14, positions 168-183, prove one legal own-funds concept across the predecessor-silent registry gap. The 2016 design explicitly changes representation: position 168 becomes a negative-sign marker and positions 169-183 carry the 15-position amount; this is an evolution, not a retirement or many-to-one match. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo1.168-183"
+section = ["declarante"]
+semantic_role = "m165_importe_fondos_propios"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 5. Positions 18-26. N.I.F. DEL SOCIO O PARTICIPE de la entidad de nueva
+# o reciente creacion.
+[[revisions."2016-2022".casillas]]
+id = "socio-nif"
+continuidad_id = "m165-socio-nif"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 2 campo 5, posiciones 18-26 (NIF del socio o partícipe), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span and NIF role. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo2.18-26"
+section = ["socio"]
+data_type = "nif"
+semantic_role = "m165_socio_nif"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 6. Positions 27-35. "Si el perceptor es menor de 14 anos se consignara
+# en este campo el numero de identificacion fiscal de su representante legal
+# (padre, madre o tutor). En cualquier otro caso ... se rellenara a espacios."
+[[revisions."2016-2022".casillas]]
+id = "representante-legal-nif"
+continuidad_id = "m165-representante-legal-nif"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 2 campo 6, positions 27-35 (NIF del representante legal), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span and conditional NIF role. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo2.27-35"
+section = ["socio"]
+data_type = "nif"
+semantic_role = "m165_representante_legal_nif"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 7. Positions 36-75. APELLIDOS Y NOMBRE DEL SOCIO O PARTICIPE: "el primer
+# apellido, un espacio, el segundo apellido, un espacio y el nombre completo".
+[[revisions."2016-2022".casillas]]
+id = "socio-nombre"
+continuidad_id = "m165-socio-nombre"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 2 campo 7, positions 36-75 (apellidos y nombre del socio o partícipe), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span, name semantics, and ordering of surnames and given name. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo2.36-75"
+section = ["socio"]
+data_type = "name"
+semantic_role = "m165_socio_nombre"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 8. Positions 76-88. IMPORTE DE LA SUSCRIPCION O ADQUISICION, "sin signo
+# y sin coma decimal", subdivided 76-86 parte entera and 87-88 parte decimal.
+[[revisions."2016-2022".casillas]]
+id = "importe-suscripcion"
+continuidad_id = "m165-importe-suscripcion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 2 campo 8, positions 76-88 (importe de la suscripción o adquisición), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span and unsigned two-decimal representation. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo2.76-88"
+section = ["socio", "adquisicion"]
+semantic_role = "m165_importe_suscripcion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 9. Positions 89-96. FECHA DE ADQUISICION DE LAS ACCIONES/PARTICIPACIONES,
+# subdivided 89-92 ANO, 93-94 MES, 95-96 DIA.
+[[revisions."2016-2022".casillas]]
+id = "fecha-adquisicion"
+continuidad_id = "m165-fecha-adquisicion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 2 campo 9, positions 89-96 (fecha de adquisición de las acciones o participaciones), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span and year/month/day subdivision. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo2.89-96"
+section = ["socio", "adquisicion"]
+data_type = "text"
+semantic_role = "m165_fecha_adquisicion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
+
+# Campo 10. Positions 97-101. PORCENTAJE DE PARTICIPACION en el capital social.
+# "Dicho porcentaje, cuando no sea un numero entero, se expresara con dos
+# decimales", subdivided 97-99 parte entera and 100-101 parte decimal.
+[[revisions."2016-2022".casillas]]
+id = "porcentaje-participacion"
+continuidad_id = "m165-porcentaje-participacion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "BOE/AEAT Modelo 165 diseño de registro 2013, Tipo 2 campo 10, positions 97-101 (porcentaje de participación), is present in the official predecessor design while the 2013-2015 registry declares no casilla row; the 2016-2022 design repeats the same span and two-decimal percentage semantics. Sources: src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/02-165-orden-hap-2455-2013.pdf.corpus_text.json (sha256 053f93614de9ca37a481a416f74236277422be3efb79211a45eaa1819d1f974b) and src/cadrumo/_data/manual_corpus_text/aeat_official/disenos_registro/modelo_165/files/03-165-orden-hap-2455-2013-actualizado-por-orden-hfp-1822-2016.pdf.corpus_text.json (sha256 2f5f6dfd277c094a494d2ed8bc95c663ac24813b271a88a8f4f1a4d848b663c5)."
+number = "tipo2.97-101"
+section = ["socio", "adquisicion"]
+data_type = "decimal"
+semantic_role = "m165_porcentaje_participacion"
+legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]

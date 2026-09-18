@@ -29,6 +29,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.core.aggregation import ROW_SET_GROUPING_FOR_BINDING_SOURCE, BindingAggregation, BindingAggregationOp
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -190,7 +191,7 @@ def test_the_gate_detects_a_row_set_resting_on_an_exactly_one_terminal_origin() 
         ),
     )
 
-    with pytest.raises(Exception, match="cannot rest on an exactly_one terminal origin"):
+    with pytest.raises(ValidationError, match="cannot rest on an exactly_one terminal origin"):
         BindingDefinition.model_validate(row)
 
 

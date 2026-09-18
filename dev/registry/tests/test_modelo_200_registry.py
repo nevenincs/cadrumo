@@ -24,6 +24,7 @@ from cadrumo.domain.calculations.registry.runtime_graph import expression_casill
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.compiler.legal_grounding import verify_legal_catalogue_grounding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -181,7 +182,10 @@ def test_modelo_200_form_order_is_boe_corpus_backed() -> None:
     revision = modelo.revisions["2024"]
     legal = {_M200_FORM_ORDER_REF: catalogues.legal[_M200_FORM_ORDER_REF]}
 
-    assert compiled_bundled_authority().evidence.legal_text(_M200_FORM_ORDER_REF)
+    # Grounding is proved against the bundled corpus itself: the evidence
+    # projection is carried by the eager baseline artifact, not by this
+    # compiled view, so asking it here proved nothing about the citation.
+    verify_legal_catalogue_grounding(legal, source_root=bundled_path())
 
     assert _M200_FORM_ORDER_REF in modelo.legal_refs
     assert _M200_FORM_ORDER_REF in revision.legal_refs

@@ -22,7 +22,9 @@ from cadrumo.domain.iva_compensation.carry_forward import (
 from cadrumo.entrypoints.live_state_composition import carry_forward_lot_row, taxpayer_ref
 from cadrumo.tests.aeat_literal_fixtures import IVA_WALLET_SOURCE_URL_FIXTURE
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+# The lot's taxpayer NIF is validated against the registry's governed tax-ID
+# format, so constructing one needs the same authority scope the product has.
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("governed_fact_scope")]
 
 #: A checksum-valid synthetic NIF, used only to prove the populated branch
 #: still pseudonymises. It never reaches storage or an AEAT surface.

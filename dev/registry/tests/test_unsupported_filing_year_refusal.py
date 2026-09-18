@@ -22,8 +22,6 @@ that open end.
 
 from __future__ import annotations
 
-import inspect
-
 import pytest
 
 from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
@@ -45,11 +43,32 @@ def test_every_declared_year_is_admitted() -> None:
         assert compiled_bundled_authority().project_filing_year(year) == year
 
 
-def test_filing_year_admission_delegates_to_the_validated_authority() -> None:
-    source = inspect.getsource(type(compiled_bundled_authority()).project_filing_year)
+def test_filing_year_admission_delegates_to_the_declaration() -> None:
+    """The guard carries no span of its own: every answer is the declaration's.
 
-    assert ".project_filing_year(" in source
-    assert ".admits_filing_year(" not in source
+    Asserted as behaviour over the span's own boundaries rather than by reading
+    the method's text. The text assertion this replaces looked for a forwarding
+    call that no longer exists - the projection is computed here now - so it
+    failed on the implementation moving rather than on the contract breaking,
+    and the string it looked for is already pinned where the runtime boundary is
+    checked.
+    """
+    authority = compiled_bundled_authority()
+    declaration = authority.catalogues.supported_filing_years
+    assert declaration is not None, "the bundled registry declares no supported filing years"
+
+    ceiling = declaration.hard_ceiling if declaration.hard_ceiling is not None else declaration.horizon
+    probed = range(declaration.floor - 2, ceiling + 3)
+    projected: dict[int, int | None] = {}
+    for year in probed:
+        try:
+            projected[year] = authority.project_filing_year(year)
+        except RegistrySnapshotError:
+            projected[year] = None
+
+    assert projected == {year: declaration.projection_coordinate(year) for year in probed}
+    assert any(value is None for value in projected.values()), "no probed year was refused, so delegation is unproven"
+    assert any(value is not None for value in projected.values()), "no probed year was admitted"
 
 
 def test_a_year_below_the_declared_window_refuses() -> None:

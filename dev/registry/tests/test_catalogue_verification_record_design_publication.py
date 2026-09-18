@@ -59,7 +59,12 @@ def test_authority_publication_rejects_divergent_record_design_manifest_binding(
 
     assert isinstance(published, ValidatedRegistryAuthority)
 
-    declaration_path = next(path for path in registry_root.rglob("*.toml") if f'"{source.id}"' in path.read_text())
+    # Explicit UTF-8: the registry tree is UTF-8 and ``read_text`` without an
+    # encoding takes the platform default, which on Windows is cp1252 and
+    # cannot decode it.
+    declaration_path = next(
+        path for path in registry_root.rglob("*.toml") if f'"{source.id}"' in path.read_text(encoding="utf-8")
+    )
     declaration = declaration_path.read_text(encoding="utf-8")
     section_start = declaration.index(f'[sources."{source.id}"]')
     section_end = declaration.find("\n[sources.", section_start + 1)

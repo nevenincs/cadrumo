@@ -33,8 +33,8 @@ modelo:
             label: '"50 aniversario del Hospital Sant Joan de Deu": Ebben a bevallásban
               alkalmazva'
           irpf-aeip-60-aniversario-del-festival-porta-ferrada-aplicado:
-            label: '"60 aniversario del Festival Porta Ferrada": Alkalmazva ebben
-              a bevallásban'
+            label: '"A Festival Porta Ferrada 60. évfordulója": Alkalmazva ebben a
+              bevallásban'
           irpf-aeip-75-aniversario-de-la-opera-en-oviedo-aplicado:
             label: '"75 aniversario de la Ópera en Oviedo": Ebben a bevallásban alkalmazva'
           irpf-aeip-750-aniversario-del-consolat-del-mar-aplicado:
@@ -336,7 +336,9 @@ modelo:
           irpf-anexo-a-residente-ue-cuota-familiar-irpf:
             label: A személyi jövedelemadó hatálya alá tartozó családi egység tagjainak
               állami és regionális nettó adókötelezettsége a következő rovatok alapján
-              ([0545], [0546], [0547], [0548], [0549], [0550], [0551], [0552], [0553])
+              ([0545], [0546], [0547], [0548], [0549], [0550], [0551], [0552], [0553],
+              [0554], [0555], [0556], [0557], [0558], [0559], [0560], [0561], [0562],
+              [0563], [0564])
           irpf-anexo-a-residente-ue-deduccion-importe:
             label: Az adózót megillető levonás (**)
           irpf-anexo-a-residente-ue-diferencia:
@@ -802,7 +804,7 @@ modelo:
           irpf-ascendiente-discapacidad-fecha-inicio:
             label: A fogyatékosság kezdetének dátuma
           irpf-ascendiente-discapacidad-nombre:
-            label: Név
+            label: Utónév
           irpf-ascendiente-nif-nif2r:
             label: Annak a felmenőnek az adóazonosító száma, akinek a levonását rendezik
           irpf-ascendiente-nif-nifdafas2:
@@ -898,7 +900,7 @@ modelo:
           irpf-conyuge-discapacidad-nif:
             label: A házastárs adóazonosító száma
           irpf-conyuge-discapacidad-nombre:
-            label: Név
+            label: Utónév
           irpf-conyuge-discapacidad-otro-contribuyente-flag:
             label: Jelölje meg "X"-szel, ha másik adózó jogosult a fogyatékkal élő
               házastárs tekintetében az eltartott fogyatékkal élő leszármazott vagy
@@ -920,7 +922,7 @@ modelo:
             label: A személyi jövedelemadó összege, amely az adózó lakóhelye szerinti
               autonóm közösséget illeti ([0671] - [0672])
           irpf-cuota-diferencial:
-            label: Differenciál adó
+            label: Különbözeti adó
           irpf-cuota-integra-autonomica:
             label: 'Autonóm közösségi teljes adó: autonóm közösségi rész'
           irpf-cuota-integra-estatal:
@@ -2047,7 +2049,7 @@ modelo:
           irpf-descendiente-discapacidad-fecha-inicio:
             label: A fogyatékosság kezdetének dátuma
           irpf-descendiente-discapacidad-nombre:
-            label: Név
+            label: Utónév
           irpf-descendiente-num-contribuyentes-derecho:
             label: Adja meg a leszármazottak utáni minimumra jogosult személyek számát
           irpf-discrepancia-criterio-administrativo:
@@ -2294,7 +2296,7 @@ modelo:
           irpf-eo-otras-percepciones:
             label: Egyéb vállalati kifizetések
           irpf-eo-rdto-neto-minorado:
-            label: Csökkentett nettó jövedelem
+            label: Csökkentett nettó jövedelem (mérséklés után)
           irpf-eo-rdto-neto-modulos:
             label: Modulok szerinti nettó jövedelem
           irpf-eo-rdto-neto-previo:
@@ -2376,10 +2378,6 @@ modelo:
             label: A nagycsaládi igazolvány azonosítószáma
           irpf-feac-elemento-descripcion:
             label: Leírás
-          irpf-feac-entidad-nif-c2nifafeac:
-            label: Adóazonosító szám
-          irpf-feac-entidad-nif-c2nifefeac:
-            label: Adóazonosító szám
           irpf-feac-entidad-receptora-denominacion:
             label: Cégnév
           irpf-feac-entidad-receptora-sin-nif-flag:
@@ -2434,7 +2432,7 @@ modelo:
             label: Csökkentett vagyoni nyereségek ( [0408] - [0410] )
           irpf-g4-re-transmision-intervivos-flag:
             label: Ha az adózó a részvényeket vagy üzletrészeket élők közötti jogügylettel
-              átruházta, jelölje meg ezt a casillát (kizárólag azoknak az adózóknak,
+              átruházta, jelölje meg ezt a rovatot (kizárólag azoknak az adózóknak,
               akik lakóhelyüket egy másik európai uniós tagállamba helyezték át)
           irpf-g4-re-valor-adquisicion-acciones:
             label: A részvények vagy üzletrészek szerzési értéke
@@ -3661,7 +3659,7 @@ modelo:
       construct:
         renta-anexo-c-base-liquidable-negativa-general:
           field:
-            title: Modelo 100 Anexo C általános nettó adóalap negativa carry-forward
+            title: Modelo 100 Anexo C negatív általános nettó adóalap carry-forward
         renta-cuota-chain:
           field:
             title: '100-as modelo: az IRPF-kvóta számítási lánca'
@@ -3671,7 +3669,7 @@ modelo:
         renta-mini-model-deduccion-madrid-nacimiento-adopcion:
           field:
             title: Modelo 100 2025 Madridi autonóm közösség születési/örökbefogadási
-              levonása (1039. casilla)
+              levonása (1039. rovat)
         renta-movable-capital:
           field:
             title: Modelo 100 az ingó tőkétől való függőség bizonyítékai
@@ -3717,19 +3715,20 @@ modelo:
                 biztosításokhoz. Az adózónak betudott összegek
             '0010':
               label: Hozzájárulások fogyatékossággal élő személyek védett vagyonához,
-                amelynek tulajdonosa az adózó - beszámítható összeg
+                amelynek tulajdonosa az adózó - Beszámítható összeg
             '0011':
-              label: Csökkentések az adótörvény 18. cikke és átmeneti rendelkezései
-                alapján
+              label: Csökkentések az adótörvény 18. cikkének 2. és 3. bekezdése, valamint
+                11., 12. és 25. átmeneti rendelkezése alapján
             '0012':
               label: Teljes figyelembe vehető bruttó bevétel
             '0013':
               label: Társadalombiztosítási és hasonló kötelező hozzájárulások
             '0015':
-              label: Szakmai kamarai tagdíjak
+              label: Szakmai kamarai tagdíjak (ha a kamarai tagság kötelező, évi legfeljebb
+                500 euróig)
             '0016':
               label: A munkáltatóval folytatott jogvitákból eredő jogi védekezési
-                költségek
+                költségek (évi legfeljebb 300 euróig)
             '0017':
               label: Előzetes nettó jövedelem
             0018:
@@ -3876,7 +3875,7 @@ modelo:
               label: Rokonság esetén beszámítandó minimumjövedelem (a személyi jövedelemadóról
                 szóló törvény 24. cikke)
             '0153':
-              label: Levonások és előlegfizetések
+              label: Forrásadó és részletfizetés
             '0154':
               label: 'Ingatlantőkéből származó csökkentett nettó jövedelem: a ([0149]
                 - [0150] - [0151]) és [0152] közül a nagyobb összeg'
@@ -3913,8 +3912,8 @@ modelo:
             0194:
               label: Közművek (villany, víz, gáz, telefon és internet)
             '0205':
-              label: IVA soportado (után ejermplo, recargo szerinti equivalencia és/vagy
-                kiegyenlítés szerinti agricultura, ganadería és pesca)
+              label: Előzetesen felszámított IVA (például egyenértékűségi felár és/vagy
+                mezőgazdasági, állattenyésztési és halászati kompenzáció)
             0208:
               label: A tárgyi eszközök értékcsökkenésére elszámolt tárgyévi leírások
             '0214':
@@ -3946,7 +3945,7 @@ modelo:
                 módon szerzett jövedelmek csökkentései (az adótörvény 32.1. cikke
                 és D.T 25.ª rendelkezése)
             '0226':
-              label: Rendimiento nettó reducido ( [0224] - [0225] )
+              label: Csökkentett nettó jövedelem ( [0224] - [0225] )
             '0227':
               label: Az immateriális javak értékcsökkenésére elszámolt tárgyévi leírások
             '0231':
@@ -3966,7 +3965,7 @@ modelo:
                 nettó jövedelme ([0231] - [0232] - [0233] - [0234])
             '0245':
               label: Ha a házasság a teljes 2020. évben fennállt, jelölje meg ezt
-                a casillát
+                a rovatot
             '0246':
               label: A házasság első hónapja, amelyben a 2020. évben fennállt
             '0247':
@@ -3983,7 +3982,7 @@ modelo:
               label: 'A nemzetközi adóátláthatósági rendszer szerinti jövedelem-hozzárendelések
                 összege: (a [0269] rovat összege)'
             0286:
-              label: Összeg computable ([0283] + [0284] - [0285])
+              label: Figyelembe vehető összeg ([0283] + [0284] - [0285])
             0288:
               label: E játékokból származó vagyoni nyereségek összege ([0282] + [0286]
                 mezők összege)
@@ -3998,8 +3997,8 @@ modelo:
                 az abban lévő szerkezeti hibák javítására szánt támogatások vagy segélyek.
                 A 2020. évre elszámolható összeg
             '0301':
-              label: Demás vagyoni nyereségek származó szerinti támogatások públicas.
-                Összeg elszámolható a(z) 2020
+              label: Egyéb, állami támogatásokból származó vagyoni nyereségek. 2020-ra
+                elszámolható összeg
             '0303':
               label: Önállósodási alapjövedelem
             '0304':
@@ -4007,14 +4006,13 @@ modelo:
                 nyereségek összege'
             '0306':
               label: A vagyoni elemek átruházásából nem származó egyéb nyereségek
-                összege (a casilla [0299] + [0300] + [0301] + [0302] + [0303] + [0304]
+                összege (a rovat [0299] + [0300] + [0301] + [0302] + [0303] + [0304]
                 összege)
             0309:
               label: Az átruházás felhalmozott teljes értéke, amelyre a DT 9.ª rendelkezést
                 alkalmazták a 2015, 2016, 2017, 2018 és 2019 adóévben
             '0314':
-              label: Érték szerinti átruházás a(z) amely resulta alkalmazandó a D.T.
-                9.ª
+              label: Átruházási érték, amelyre a D.T. 9.ª alkalmazandó
             0318:
               label: A csökkentésre jogosító tőkenyereség része (az adótörvény D.T.
                 9.ª rendelkezése)
@@ -4025,33 +4023,29 @@ modelo:
             '0324':
               label: A kollektív befektetési vállalkozások vagy SOCIMI részvényeinek
                 vagy üzletrészeinek átruházásából vagy visszaváltásából származó vagyoni
-                nyereségek összege (a casilla [0320] összege)
+                nyereségek összege (a rovat [0320] összege)
             '0330':
-              label: Érték szerinti átruházás a(z) amely resulta alkalmazandó a D.T.
-                9.ª
+              label: Átruházási érték, amelyre a D.T. 9.ª alkalmazandó
             '0334':
-              label: Parte szerinti a vagyoni nyereségek susceptibles szerinti csökkentés
-                (D.T. 9.ª)
+              label: A csökkentésre jogosult vagyoni nyereségek része (D.T. 9.ª)
             '0335':
               label: Csökkentés alkalmazandó (D.T. 9.ª)
             0339:
-              label: Összeg szerinti vagyoni nyereségek származó szerinti átruházások
-                szerinti részvények negociadas<br/>(összeg szerinti a rovatok [0336])
+              label: Tőzsdén jegyzett részvények átruházásából származó vagyoni nyereségek
+                összege<br/>(a [0336] rovatok összege)
             '0340':
-              label: Összeg szerinti vagyoni veszteségek származó szerinti átruházások
-                szerinti részvények negociadas<br/>(összeg szerinti a rovatok [0338])
+              label: Tőzsdén jegyzett részvények átruházásából származó vagyoni veszteségek
+                összege<br/>(a [0338] rovatok összege)
             '0345':
-              label: Érték szerinti átruházás a(z) amely resulta alkalmazandó a D.T.
-                9.ª
+              label: Átruházási érték, amelyre a D.T. 9.ª alkalmazandó
             0349:
-              label: Parte szerinti a vagyoni nyereségek susceptibles szerinti csökkentés
-                (D.T. 9.ª)
+              label: A csökkentésre jogosult vagyoni nyereségek része (D.T. 9.ª)
             '0350':
               label: Csökkentés alkalmazandó (D.T. 9.ª)
             '0356':
               label: Az elem sorszáma
             0358:
-              label: Nº teljes évek szerinti cobro
+              label: Folyósítási évek száma összesen
             '0360':
               label: 1. Kataszteri hivatkozás
             '0361':
@@ -4069,33 +4063,31 @@ modelo:
                 kamatok)
             0393:
               label: A korábbi adóévekben végrehajtott átruházásokból eredő, a 2020.
-                évnek betudható tőkenyereségek összege (a [0392] casilla összege)
+                évnek betudható tőkenyereségek összege (a [0392] rovat összege)
             0396:
               label: A korábbi adóévekben végrehajtott átruházásokból eredő, a 2020.
-                évnek betudható tőkeveszteségek összege (a [0395] casilla összege)
+                évnek betudható tőkeveszteségek összege (a [0395] mező összege)
             '0400':
-              label: Összeg szerinti imputación a(z) 2020 szerinti vagyoni nyereségek
-                hatálya alá tartozó a(z) halasztás után újrabefektetés(összeg szerinti
-                a rovatok [0399] )
+              label: A 2020-re elszámolt, újrabefektetési halasztás hatálya alá tartozó
+                vagyoni nyereségek imputálásának összege (a [0399] rovatok összege)
             '0406':
-              label: Érték a(z) amely resulta alkalmazandó a D.T. 9.ª
+              label: Érték, amelyre a D.T. 9.ª alkalmazandó
             0409:
-              label: Parte szerinti a vagyoni nyereségek susceptibles szerinti csökkentés
-                (D.T. 9.ª)
+              label: A csökkentésre jogosult vagyoni nyereségek része (D.T. 9.ª)
             '0410':
               label: Csökkentés alkalmazandó (D.T. 9.ª)
             '0414':
-              label: 'DECLARANTE: Nº szerinti operaciones'
+              label: 'DECLARANTE: Ügyletek száma'
             '0416':
-              label: 'CONYUGE: Nº szerinti operaciones'
+              label: 'CONYUGE: Ügyletek száma'
             '0417':
               label: Ha a nem belföldi illetőségű szervezetek nem alkalmaztak ehhez
                 hasonló adórendszert, jelölje be a rovatot
             '0420':
               label: Ha a ( [0418] - [0419] ) különbözet pozitív
             '0422':
-              label: Összeg szerinti vagyoni nyereségek ( [1608] + [0324] + [0339]
-                + [0354] + [0386] + [0387] + [0390] + [0393] + [0412] )
+              label: Vagyoni nyereségek összege ( [1608] + [0324] + [0339] + [0354]
+                + [0386] + [0387] + [0390] + [0393] + [0412] )
             '0423':
               label: Összeg szerinti vagyoni veszteségek ( [1609] + [0325] + [0340]
                 + [0355] + [0385] + [0396] )
@@ -4108,7 +4100,8 @@ modelo:
                 ki a C.2. mellékletet)
             '0433':
               label: A(z) 2020. évi tőkenyereségek és -veszteségek általános adóalapba
-                beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432])
+                beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432],
+                [0421])
             '0434':
               label: Az átruházásokból nem eredő 2016-2019. évi vagyoni nyereségek
                 és veszteségek 2020. január 1-jén még kompenzálásra váró fennmaradó
@@ -4119,8 +4112,8 @@ modelo:
               label: Általános adóalap
             '0436':
               label: A(z) 2020. évre beszámítható ingó tőkejövedelmek negatív nettó
-                egyenlegei a megtakarítási adóalapban, a következő korláttal ([0424],
-                [0430])
+                egyenlegei a megtakarítási adóalapban, a [0424] rovat összegének 25%-os
+                korlátjával (vigye át a [0430] rovat összegét, ha alkalmazandó)
             0439:
               label: A 2016. évi, a megtakarítási adóalapba beszámítandó tőkenyereségek
                 és -veszteségek negatív nettó egyenlege, amely 2020. január 1-jén
@@ -4157,8 +4150,8 @@ modelo:
                 (Töltse ki a C.2. mellékletet)
             '0446':
               label: A(z) 2020. évre beszámítható tőkenyereségek és -veszteségek negatív
-                nettó egyenlegei a megtakarítási adóalapban, a következő korláttal
-                ([0429])
+                nettó egyenlegei a megtakarítási adóalapban, a [0429] rovat összegének
+                25%-os korlátjával (vigye át a [0425] rovat összegét, ha alkalmazandó)
             '0447':
               label: 2019. évi ingó tőkejövedelem 2020. január 1-jén még beszámításra
                 váró fennmaradó negatív nettó egyenlegei, a megtakarítási adóalapba
@@ -4209,17 +4202,17 @@ modelo:
               label: A(z) 1. gyermek adóazonosító jele (NIF/NIE)(*)
             '0457':
               label: Ha nincs adóazonosító jele (NIF) vagy külföldi azonosító jele
-                (NIE), jelölje meg "X"-szel ezt a casillát
+                (NIE), jelölje meg "X"-szel ezt a rovatot
             0458:
               label: A(z) 2. gyermek adóazonosító jele (NIF/NIE)(*)
             0459:
               label: Ha nincs adóazonosító jele (NIF) vagy külföldi azonosító jele
-                (NIE), jelölje meg "X"-szel ezt a casillát
+                (NIE), jelölje meg "X"-szel ezt a rovatot
             '0460':
               label: A megtakarítási adóalap számítása a következő rovatok alapján
                 ([0424], [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445],
                 [0447], [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454],
-                [0455])
+                [0455], [0448])
             '0461':
               label: 'Csökkentés az együttes adózást választó családi egységek részére:
                 Összeg'
@@ -4266,8 +4259,8 @@ modelo:
               label: A védett vagyon jogosultjaként szereplő fogyatékossággal élő
                 személy adóazonosító száma (NIF)
             0479:
-              label: Excesos fennmaradó szerinti csökkenteni procedentes szerinti
-                a adóévs 2016 a(z) 2019 (Vea a anexo C.3)
+              label: A 2016-2019. adóévekből származó, csökkentésre váró többletek
+                (lásd a C.3 mellékletet)
             0480:
               label: 2020-Ban a fogyatékkal élő személy védett vagyonához teljesített
                 hozzájárulások
@@ -4281,20 +4274,20 @@ modelo:
               label: A 2020. évben bírósági határozat alapján kifizetett nyugdíj vagy
                 járadék összege
             0488:
-              label: Excesos fennmaradó szerinti csökkenteni procedentes szerinti
-                a adóévs 2015 a(z) 2019 (Vea a anexo C.3)
+              label: A 2015-2019. adóévekből származó, csökkentésre váró többletek
+                (lásd a C.3 mellékletet)
             0493:
               label: A házastárs résztvevőjeként, biztosítópénztár-tagjaként vagy
                 tulajdonosaként fennálló szociális előrelátási rendszerekbe fizetett
                 hozzájárulások után. A [0469] rovat alkalmazott összege
             '0501':
-              label: 'Kiegyenlítés (ha a casilla [0500] pozitív, az összeg felső határáig):
+              label: 'Kiegyenlítés (ha a rovat [0500] pozitív, az összeg felső határáig):
                 2016-2019 közötti negatív általános nettó adóalapok (töltse ki a C.3
                 mellékletet)'
             '0521':
               label: Az általános nettó adóalapba beszámított személyi és családi
                 minimum a(z) állami adó kiszámításához, a következő rovatok alapján
-                ([0505] és [051...)
+                ([0505], [0519], [0521])
             '0522':
               label: 'A megtakarítási nettó adóalap részét képező személyi és családi
                 minimum összege az állami adó számítása szempontjából: a ( [0519]
@@ -4302,7 +4295,7 @@ modelo:
             '0523':
               label: Az általános nettó adóalapba beszámított személyi és családi
                 minimum a(z) regionális adó kiszámításához, a következő rovatok alapján
-                ([0505])
+                ([0505], [0520], [0523])
             '0524':
               label: 'A megtakarítási nettó adóalap részét képező személyi és családi
                 minimum összege az autonóm-közösségi adó számítása szempontjából:
@@ -4327,7 +4320,7 @@ modelo:
                 közösségi rész'
             0549:
               label: 'Új vagy nemrég alakult vállalkozásokba történő befektetés utáni
-                levonás: (vigye át ugyanezen casillák összegeit az A.1 mellékletből):
+                levonás: (vigye át ugyanezen rovatok összegeit az A.1 mellékletből):
                 állami rész'
             '0550':
               label: 'Kulturális érdekű beruházások vagy kiadások miatt (vigye át
@@ -4338,16 +4331,16 @@ modelo:
                 rész'
             '0552':
               label: 'Adományok és egyéb hozzájárulások miatt (vigye át ugyanezen
-                casillák összegeit az A.2 mellékletből): állami rész'
+                rovatok összegeit az A.2 mellékletből): állami rész'
             '0553':
               label: 'Adományok és egyéb hozzájárulások miatt (vigye át ugyanezen
-                casillák összegeit az A.2 mellékletből): autonóm közösségi rész'
+                rovatok összegeit az A.2 mellékletből): autonóm közösségi rész'
             '0554':
               label: 'Vállalkozási befektetések ösztönzése és élénkítése miatt (vigye
-                át ugyanezen casillák összegeit az A.4 mellékletből): állami rész'
+                át ugyanezen rovatok összegeit az A.4 mellékletből): állami rész'
             '0555':
               label: 'Vállalkozási befektetések ösztönzése és élénkítése miatt (vigye
-                át ugyanezen casillák összegeit az A.4 mellékletből): autonóm közösségi
+                át ugyanezen rovatok összegeit az A.4 mellékletből): autonóm közösségi
                 rész'
             '0560':
               label: 'Ceutában vagy Melillában szerzett jövedelmek miatt (vigye át
@@ -4357,14 +4350,14 @@ modelo:
                 ugyanezen mezők összegeit az A.2 mellékletből): autonóm közösségi
                 rész'
             '0562':
-              label: 'Lakóhelyül szolgáló saját lakás bérlése miatt. Átmeneti szabályozás
+              label: 'A szokásos lakóingatlan bérbevétele után. Átmeneti szabályozás
                 (vigye át ugyanezen mező összegét az A.1 mellékletből): állami rész'
             '0563':
-              label: 'Lakóhelyül szolgáló saját lakás bérlése miatt. Átmeneti szabályozás
+              label: 'A szokásos lakóingatlan bérbevétele után. Átmeneti szabályozás
                 (vigye át ugyanezen mező összegét az A.1 mellékletből): autonóm közösségi
                 rész'
             '0564':
-              label: Autonóm közösségi levonások összege (vigye át ugyanezen casilla
+              label: Autonóm közösségi levonások összege (vigye át ugyanezen rovat
                 összegét a B.1, B.2, B.3, B.4, B.5 vagy B.6 melléklet közül a megfelelőből)
             '0565':
               label: 'Az Európai Unió vagy az Európai Gazdasági Térség tagállamaiban
@@ -4445,9 +4438,8 @@ modelo:
             0599:
               label: Gazdasági tevékenységekből származó jövedelmek után (*)
             '0600':
-              label: Összeg szerinti levonások és adóelőlegek atribuidos szerinti
-                vagyoni nyereségek és veszteségek elszámolható a(z) 2020 (összeg szerinti
-                a rovatok [1600])
+              label: A 2020-re elszámolható vagyoni nyereségekhez és veszteségekhez
+                rendelt levonások és adóelőlegek összege (a [1600] rovatok összege)
             '0601':
               label: Beszámított visszatartások és előlegek összege ([0264] mezők
                 összege)
@@ -4639,7 +4631,7 @@ modelo:
                 Alkalmazva ebben a bevallásban'
             0759:
               label: 'Nyugat-afrikai területeken végrehajtott befektetések utáni levonás
-                (art.º 27.1.a) bis de la Ley 19/1994): ebben a bevallásban alkalmazva'
+                (a 19/1994. törvény 27.1.a) bis cikke): ebben a bevallásban alkalmazva'
             '0760':
               label: '"VIII Centenario de la Universidad de Salamanca": Ebben a bevallásban
                 alkalmazva'
@@ -4743,7 +4735,7 @@ modelo:
             0823:
               label: Kantábriában letelepedett szociális gazdasági jogalanyokba történő
                 befektetések vagy azoknak nyújtott adományok miatt (vigye át a B.7.
-                melléklet [1179] casillájának összegét)
+                melléklet [1179] rovatának összegét)
             0824:
               label: Az IRPF bevallás benyújtási kötelezettsége miatt, egynél több
                 kifizetővel rendelkezés okán
@@ -4796,7 +4788,11 @@ modelo:
             0845:
               label: A vállalkozási beruházás ösztönzésére és támogatására szolgáló,
                 e bevallásban alkalmazott kedvezmények teljes összege a következő
-                rovatok alapján ([0752], [0759], [0843], [0760], [0761], [0766])
+                rovatok alapján ([0752], [0759], [0843], [0760], [0761], [0766], [0767],
+                [0776], [0779], [0788], [0791], [0793], [0795], [0798], [0800], [0801],
+                [0804], [0809], [0762], [0810], [0816], [0763], [0764], [0817], [0765],
+                [0818], [0820], [0768], [0821], [0823], [0769], [0770], [0825], [0829],
+                [0836], [0837], [0841], [0844])
             0849:
               label: A COVID-19 terjedése elleni küzdelemre az Andalúz Egészségügyi
                 Szolgálatnak adományozott összegek miatt
@@ -4806,7 +4802,7 @@ modelo:
               label: A védett lakások támogatásainak kedvezményezettjei részére
             0853:
               label: A szokásos lakóhely bérletébe fektetett összegek miatt (ezt az
-                összeget vigye át a B.6. melléklet [1130] casillájába)
+                összeget vigye át a B.6. melléklet [1130] rovatába)
             0854:
               label: Kereskedelmi társaságok alapításáról vagy a kereskedelmi társaságokban
                 történő tőkeemelésről szóló megállapodások következtében részvények
@@ -4818,21 +4814,21 @@ modelo:
             0872:
               label: Az Alternatív Tőzsde terjeszkedő vállalkozások szegmensében jegyzett
                 jogalanyok részvényeibe történő befektetés miatt (ezt az összeget
-                vigye át a B.7. melléklet [1142] casillájába)
+                vigye át a B.7. melléklet [1142] rovatába)
             0873:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.7. melléklet [1136] casillájába)
+                B.7. melléklet [1136] rovatába)
             0874:
               label: Vidéki vagy hasonló településeken történő lakásvásárlás vagy
                 -felújítás miatt
             0876:
               label: A tartozás fejében történő ingatlanátruházáshoz kapcsolódó szokásos
                 lakóhely bérbeadása miatt (ezt az összeget vigye át a B.7. melléklet
-                [1170] casillájába)
+                [1170] rovatába)
             0879:
               label: Szociális gazdasági jogalanyokba történő befektetés miatt (vigye
-                át a B.7. melléklet [1179] casillájának összegét)
+                át a B.7. melléklet [1179] rovatának összegét)
             0885:
               label: Fogyatékossággal élő házastárssal, felmenővel vagy leszármazottal
                 együtt élő adózók lakóingatlan-szerzése vagy -átalakítása miatt
@@ -4841,7 +4837,7 @@ modelo:
                 után
             0887:
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.6. melléklet [1130] casillájába)
+                B.6. melléklet [1130] rovatába)
             0888:
               label: Vidéki ingatlanok Asztúria javára történő adományozása miatt
             0898:
@@ -4850,19 +4846,19 @@ modelo:
             0903:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.7. melléklet [1136] casillájába)
+                B.7. melléklet [1136] rovatába)
             0906:
               label: Testi, szellemi vagy érzékszervi fogyatékossággal élő, vagy ilyen
                 állapotú leszármazottal rendelkező adózók számára
             0907:
               label: A szokásos lakóhely bérlete miatt, meghatározott csoportok javára
-                (ezt az összeget vigye át a B.6. melléklet [1130] casillájába)
+                (ezt az összeget vigye át a B.6. melléklet [1130] rovatába)
             0909:
               label: Lakhatási célú ingatlanok Baleár-szigeteki bérbeadása miatt
             0911:
               label: 1. Bérbeadó adóazonosító száma/külföldi azonosító száma
             0919:
-              label: Után kiadások szerinti estudios
+              label: Tanulmányi kiadások után
             0921:
               label: 35 Év alatti leszármazottaknak vagy örökbefogadottaknak első
                 szokásos lakóingatlanuk megszerzésére vagy felújítására adott pénzadományok
@@ -4871,11 +4867,11 @@ modelo:
               label: Bölcsődei kiadások után
             0928:
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.6. melléklet [1130] casillájába)
+                B.6. melléklet [1130] rovatába)
             0930:
-              label: Ha nincs kataszteri hivatkozása, jelölje meg ezt a casillát
+              label: Ha nincs kataszteri hivatkozása, jelölje meg ezt a mezőt
             0932:
-              label: Ha nincs kataszteri hivatkozása, jelölje meg ezt a casillát
+              label: Ha nincs kataszteri hivatkozása, jelölje meg ezt a mezőt
             0936:
               label: Óvodai, alapfokú, kötelező középfokú, érettségit adó és középfokú
                 szakképzési tanulmányi kiadások miatt
@@ -4883,17 +4879,16 @@ modelo:
               label: A szokásos lakóingatlan energetikai felújítási és átalakítási
                 munkálatai után
             0940:
-              label: Után kiadás szerinti enfermedad
+              label: Betegséggel kapcsolatos kiadás után
             0942:
               label: A szokásos lakóhely bérlete miatt, tartozás fejében történő ingatlanátruházáshoz
-                kapcsolódóan (vigye át a B.7. melléklet [1170] casillájának összegét)
+                kapcsolódóan (vigye át a B.7. melléklet [1170] rovatának összegét)
             0944:
               label: Társadalmi fenntarthatóságú árakon történő bérbeadás miatt (a
-                bérbeadó levonása) (vigye át a B.8. melléklet [1186] casillájának
-                összegét)
+                bérbeadó levonása) (vigye át a B.8. melléklet [1186] rovatának összegét)
             0946:
               label: A szokásos lakóhely bérlete miatt, fiatalok, idősek és fogyatékossággal
-                élők számára (ezt az összeget vigye át a B.6. melléklet [1130] casillájába)
+                élők számára (ezt az összeget vigye át a B.6. melléklet [1130] rovatába)
             0948:
               label: 'Lakóingatlanokon végzett munkálatok miatt: a 2017. és/vagy 2018.
                 évben keletkezett, alkalmazásra váró összegek'
@@ -4902,7 +4897,7 @@ modelo:
             0953:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.7. melléklet [1136] casillájába)
+                B.7. melléklet [1136] rovatába)
             0956:
               label: A 2020. évben keletkezett, lakóingatlanon végzett munkálatok
                 miatt, a következő 2 évben levonható összeg
@@ -4911,24 +4906,24 @@ modelo:
                 miatt
             0968:
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (ezt az összeget vigye át a B.6. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.6. melléklet [1130] rovatába)
             0970:
               label: A fogyatékossággal élő adózók részére
             0971:
               label: Fiatalok által vidéki településeken történő lakásvásárlás miatt
             0975:
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (ezt az összeget vigye át a B.6. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.6. melléklet [1130] rovatába)
             0976:
               label: Környezetvédelmi és fogyatékossággal élők számára történő lakhatási
                 alkalmassá tételi berendezésekbe a szokásos lakóhelyen történő befektetés
                 miatt
             0979:
               label: Vállalkozói kedvezmény a vállalkozásindítás ösztönzésére (ezt
-                az összeget vigye át a B.7. melléklet [1136] casillájába)
+                az összeget vigye át a B.7. melléklet [1136] rovatába)
             0980:
               label: Vállalkozói kedvezmény a vállalkozásindítás ösztönzésére (ezt
-                az összeget vigye át a B.7. melléklet [1136] casillájába)
+                az összeget vigye át a B.7. melléklet [1136] rovatába)
             0981:
               label: A 2017. évben keletkezett, alkalmazásra váró összeg
             0982:
@@ -4941,10 +4936,10 @@ modelo:
               label: A(z) 2018. és/vagy 2019. évben történt többes szülés vagy egyidejű
                 örökbefogadás miatt
             0991:
-              label: Után paternidad
+              label: Apaság után
             0995:
-              label: Teljes összeg aplicado szerinti a összeg szerinti a rovatok [0985]
-                a(z) [0988] + [0990] a(z) [0992] + [0994]
+              label: A [0985]-[0988] + [0990]-[0992] + [0994] rovatok összegére alkalmazott
+                teljes összeg
             0997:
               label: A 2018. évben keletkezett, alkalmazásra váró összeg
             0998:
@@ -4952,16 +4947,16 @@ modelo:
             0999:
               label: A 2020. évben keletkezett, alkalmazásra váró összeg
             '1000':
-              label: Születés vagy örökbefogadás után szerinti egy hijo
+              label: Gyermek születése vagy örökbefogadása után
             '1003':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.6. melléklet [1130] casillájába)
+                B.6. melléklet [1130] rovatába)
             '1005':
               label: Az özveggyé vált adózók részére
             '1008':
               label: Befektetési angyal által új vagy nemrég alakult jogalanyok részvényeinek
                 vagy üzletrészeinek megszerzésébe történő befektetés miatt (ezt az
-                összeget vigye át a B.7. melléklet [1136] casillájába)
+                összeget vigye át a B.7. melléklet [1136] rovatába)
             '1016':
               label: Kereskedelmi társaságok alapításáról vagy tőkeemeléséről szóló
                 megállapodások következtében részvények vagy üzletrészek megszerzésébe
@@ -4969,26 +4964,26 @@ modelo:
                 számú rovatába kell átvezetni)
             '1019':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.6. melléklet [1130] casillájába)
+                B.6. melléklet [1130] rovatába)
             '1026':
               label: A szokásos lakóhely bérlete miatt, legfeljebb 35 éves adózók
-                számára (ezt az összeget vigye át a B.6. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.6. melléklet [1130] rovatába)
             '1028':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (vigye át a B.7. melléklet
-                [1136] casillájának összegét)
+                [1136] rovatának összegét)
             '1029':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe és annak finanszírozásába történő befektetés miatt (vigye
-                át a B.7. melléklet [1148] casillájának összegét)
+                át a B.7. melléklet [1148] rovatának összegét)
             '1030':
               label: A Bolsa-i Alternatív Piac terjeszkedő vállalkozások szegmensében
                 jegyzett jogalanyok részvényeibe történő befektetés miatt (vigye át
-                a B.7. melléklet [1142] casillájának összegét)
+                a B.7. melléklet [1142] rovatának összegét)
             '1035':
               label: Mezőgazdasági vállalkozásokba és mezőgazdasági vagy közösségi
                 földhasznosítási szövetkezetekbe történő befektetés miatt (vigye át
-                a B.7. melléklet [1154] casillájának összegét).
+                a B.7. melléklet [1154] rovatának összegét).
             '1036':
               label: A 2017 októberében Galíciában történt tűzesetek által okozott
                 károk következtében kapott bizonyos támogatások és/vagy segélyek után
@@ -4999,16 +4994,16 @@ modelo:
               label: Gyermek születése vagy örökbefogadása után
             '1043':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.6. melléklet [1130] casillájába)
+                B.6. melléklet [1130] rovatába)
             '1046':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.7. melléklet [1136] casillájába)
+                B.7. melléklet [1136] rovatába)
             '1048':
               label: Az Alternatív Tőzsdén (MAB) jegyzett jogalanyokba történő befektetések
-                miatt (ezt az összeget vigye át a B.7. melléklet [1142] casillájába)
+                miatt (ezt az összeget vigye át a B.7. melléklet [1142] rovatába)
             '1049':
-              label: Adományok után a(z) fundaciones
+              label: Alapítványoknak nyújtott adományok után
             '1050':
               label: 3 év alatti gyermekek gondozása után
             '1052':
@@ -5023,10 +5018,10 @@ modelo:
             '1057':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.7. melléklet [1136] casillájába)
+                B.7. melléklet [1136] rovatába)
             '1058':
               label: Az Alternatív Tőzsdén (MAB) jegyzett jogalanyokba történő befektetések
-                miatt (ezt az összeget vigye át a B.7. melléklet [1142] casillájába)
+                miatt (ezt az összeget vigye át a B.7. melléklet [1142] rovatába)
             '1069':
               label: A levonás összege
             '1070':
@@ -5058,16 +5053,16 @@ modelo:
                 munka elvégzése miatt
             '1095':
               label: A szokásos lakóhely bérletébe fektetett összegek miatt (ezt az
-                összeget vigye át a B.6. melléklet [1130] casillájába)
+                összeget vigye át a B.6. melléklet [1130] rovatába)
             '1096':
               label: A bérbeadó NIF-je
             '1097':
               label: Olyan lakóingatlan bérbeadásából származó jövedelmek szerzése
                 után, amelynek bérleti díja nem haladja meg a magánbérletek referenciaárát
             '1105':
-              label: A Generalitat által a 2009. évi 6. törvényben foglaltak alapján
-                az anyaság védelmére nyújtott állami támogatásokból származó összegek
-                miatt.
+              label: A Generalitat által a 2009. június 30-i 6. törvényben foglaltak
+                alapján az anyaság védelmére nyújtott állami támogatásokból származó
+                összegek miatt.
             '1108':
               label: A levonás összege
             '1110':
@@ -5103,28 +5098,28 @@ modelo:
               label: A kifizetett teljes összeg
             '1135':
               label: A befektetett, levonásra jogosító összegek teljes összege (a
-                [1132] és [1134] casillák összege)
+                [1132] és [1134] rovatok összege)
             '1136':
               label: Új vagy nemrég alakult vállalkozásokba történő befektetés utáni
                 levonás teljes összege
             '1141':
               label: A levonásra jogosító összegek teljes összege (a [1138] és [1140]
-                casillák összege)
+                rovatok összege)
             '1147':
               label: A befektetett, levonásra jogosító összegek teljes összege (a
-                [1144] és [1146] casillák összege)
+                [1144] és [1146] rovatok összege)
             '1153':
               label: A befektetett, levonásra jogosító összegek teljes összege (a
-                [1150] és [1152] casillák összege)
+                [1150] és [1152] rovatok összege)
             '1155':
               label: A bérbeadó NIF/NIE azonosítója
             '1158':
-              label: Után conciliación
+              label: A munka és a családi élet összehangolása után
             '1164':
               label: Településkód
             '1165':
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (vigye át a B.6. melléklet [1130] casillájának összegét)
+                számára (vigye át a B.6. melléklet [1130] rovatának összegét)
             '1167':
               label: A COVID-19 által érintett családtagok gondozására felvett személyek
                 foglalkoztatása után
@@ -5137,7 +5132,7 @@ modelo:
                 származó összegek után
             '1178':
               label: A befektetett, levonásra jogosító összegek teljes összege (a
-                [1150] és [1152] casillák összege)
+                [1150] és [1152] rovatok összege)
             '1202':
               label: Kifizetett díjak
             '1203':
@@ -5174,7 +5169,7 @@ modelo:
             '1224':
               label: 2020. adóév. Az ingatlan megszerzésébe vagy felújításába fektetett
                 tőke kamatai, valamint javítási és karbantartási kiadások (vigye át
-                a [0108] casilla összegét)
+                a [0108] rovat összegét)
             '1225':
               label: Tulajdonos adózó
             '1226':
@@ -5216,7 +5211,7 @@ modelo:
             '1257':
               label: A 2020. évnek betudható, az általános adóalapba beszámítandó
                 tőkenyereségek és -veszteségek negatív egyenlege, amely a következő
-                4 adóévben számolható el (a [0421] - [0433] casillák)
+                4 adóévben számolható el (a [0421] - [0433] rovatok)
             '1259':
               label: '2016. Adóév: az időszak elején még alkalmazásra váró összeg'
             '1260':
@@ -5242,7 +5237,7 @@ modelo:
             '1270':
               label: A 2020. évnek betudható, a megtakarítási adóalapba beszámítandó
                 tőkenyereségek és -veszteségek negatív egyenlege, amely a következő
-                4 adóévben számolható el (a [0425] - [0446] casillák)
+                4 adóévben számolható el (a [0425] - [0446] rovatok)
             '1272':
               label: '2016. Adóév: az időszak elején még alkalmazásra váró összeg'
             '1273':
@@ -5268,7 +5263,7 @@ modelo:
             '1283':
               label: A(z) 2020. évre beszámítható ingó tőkejövedelmek negatív egyenlege
                 a megtakarítási adóalapban, amely a következő négy évben kompenzálható,
-                a következő rovatok alapján ([0430])
+                a következő rovatok alapján ([0430], [0436])
             '1284':
               label: Csökkentésre jogosult adózó
             '1285':
@@ -5505,67 +5500,67 @@ modelo:
             '1463':
               label: Egységek száma
             '1475':
-              label: Általános jellegű csökkentés (a [1474] casilla összegének 20%-a
+              label: Általános jellegű csökkentés (a [1474] rovat összegének 20%-a
                 vagy 35%-a, ha ez az összeg nagyobb, mint 0)
             '1476':
               label: Lorca (Murcia) település területén végzett gazdasági tevékenységek
                 csökkentése
             '1479':
-              label: Rendimiento nettó szerinti a actividad
+              label: A tevékenység nettó jövedelme
             '1480':
               label: A 2 évnél hosszabb idő alatt keletkezett vagy rendkívül szabálytalan
                 módon szerzett jövedelmek csökkentései (az adótörvény 32.1. cikke
                 és D.T 25.ª rendelkezése)
             '1488':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1491':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1494':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1497':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1500':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1503':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1506':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1509':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1512':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1515':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1518':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1521':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1524':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1527':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1530':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1531':
               label: Index
             '1532':
               label: Terméknek megfelelő alapjövedelem
             '1533':
-              label: Bevételek íntegros
+              label: Bruttó bevételek
             '1538':
               label: Tárgyi és immateriális befektetett eszközök amortizációja
             '1539':
-              label: Csökkentett nettó jövedelem
+              label: Csökkentett nettó jövedelem (mérséklés után)
             '1549':
-              label: Általános jellegű csökkentés (a [1548] casilla összegének 20
-                százaléka, ha ez az összeg > 0)
+              label: Általános jellegű csökkentés (a [1548] rovat összegének 20 százaléka,
+                ha ez az összeg > 0)
             '1550':
               label: Különbözet ([1548 - [1549])
             '1551':
               label: Fiatal mezőgazdasági termelők csökkentése (az adótörvény hatodik
                 kiegészítő rendelkezése)
             '1553':
-              label: Rendimiento nettó szerinti a actividad
+              label: A tevékenység nettó jövedelme
             '1554':
               label: A 2 évnél hosszabb idő alatt keletkezett vagy rendkívül szabálytalan
                 módon szerzett jövedelmek csökkentései (az adótörvény 32.1. cikke
@@ -5582,8 +5577,8 @@ modelo:
               label: Alkalmazandó csökkentések (az adótörvény 23.3. cikke és D.T.
                 25.ª rendelkezése)
             '1577':
-              label: Rendimiento nettó (estimación directa normal és estimación objetiva)/
-                Rendimiento nettó previo (estimación directa simplificada)
+              label: Nettó jövedelem (estimación directa normal és estimación objetiva)/
+                Előzetes nettó jövedelem (estimación directa simplificada)
             '1579':
               label: Levonható tartalékok és nehezen igazolható kiadások (csak egyszerűsített
                 közvetlen becslés esetén)(*)
@@ -5594,11 +5589,9 @@ modelo:
               label: Beszámítható nettó hozam ([1577] - [1578] - [1579] - [1580] -
                 [1581] - [1582])
             '1588':
-              label: Érték szerinti átruházás a(z) amely resulta alkalmazandó a D.T
-                9ª
+              label: Átruházási érték, amelyre a D.T 9ª alkalmazandó
             '1592':
-              label: Parte szerinti a vagyoni nyereségek susceptibles szerinti csökkentés
-                (D.T 9ª)
+              label: A csökkentésre jogosult vagyoni nyereségek része (D.T 9ª)
             '1593':
               label: Csökkentések alkalmazandó (D.T. 9ª)
             '1595':
@@ -5625,8 +5618,7 @@ modelo:
               label: A szokásos lakóingatlan átruházási értéke, amely a szokásos lakóingatlanba
                 történő újrabefektetés miatti mentesség szempontjából újrabefektethető
             '1636':
-              label: Érték szerinti átruházás susceptible szerinti csökkentés (D.T.
-                9.ª)
+              label: Csökkentésre jogosult átruházási érték (D.T. 9.ª)
             '1639':
               label: 2020-Ra hozzárendelhető vagyoni veszteség
             '1641':
@@ -5650,8 +5642,8 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2020 levonások, részletfizetések and withholding
-                  cross-modelo inputs
+                title: 'Modelo 100 2020: levonások, részletfizetések és más kapcsolódó
+                  modellekből származó levonások'
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2020 a közvetlen adózás összesítő mezői
@@ -5691,8 +5683,8 @@ modelo:
               label: Azoknak a napoknak a száma, amikor az ingatlan a szokásos lakóhelye
                 volt a 2021. évben
             '0103':
-              label: Fennmaradó összeg szerinti deducir szerinti a adóévs 2017, 2018,
-                2019 és 2020 (Cumplimente a anexo C.1)
+              label: A 2017, 2018, 2019 és 2020 adóévekből fennmaradó, levonásra váró
+                összeg (töltse ki a C.1 mellékletet)
             '0105':
               label: Az ingatlan megszerzésébe vagy felújításába fektetett tőke kamatai
                 és egyéb finanszírozási költségek a 2021. évben
@@ -5735,18 +5727,18 @@ modelo:
               label: Bölcsődei kiadások után
             '0212':
               label: A szokásos lakóhely bérlete miatt, tartozás fejében történő ingatlanátruházáshoz
-                kapcsolódóan (vigye át a B.9. melléklet [1170] casillájának összegét)
+                kapcsolódóan (vigye át a B.9. melléklet [1170] rovatának összegét)
             '0213':
               label: A szokásos lakóhely bérlete miatt, nagycsaládok számára (vigye
-                át a B.8. melléklet [1130] casillájának összegét)
+                át a B.8. melléklet [1130] rovatának összegét)
             0228:
               label: A szokásos lakóhely bérlete miatt, egyszülős családok számára
-                (vigye át a B.8. melléklet [1130] casillájának összegét)
+                (vigye át a B.8. melléklet [1130] rovatának összegét)
             0229:
               label: Gyermek születése vagy örökbefogadása után
             '0245':
               label: Ha a házasság a teljes 2021. évben fennállt, jelölje meg ezt
-                a casillát
+                a rovatot
             '0246':
               label: A házasság első hónapja, amelyben a 2021. évben fennállt
             '0247':
@@ -5774,8 +5766,7 @@ modelo:
                 vagy segélyek. 2021-re hozzárendelhető összeg (töltse ki a C.1. mellékletet)
                 (*)
             '0301':
-              label: Demás vagyoni nyereségek származó szerinti támogatások públicas.
-                (*)
+              label: Egyéb, állami támogatásokból származó vagyoni nyereségek. (*)
             '0302':
               label: A 2021. évben a szomszédok által közterületi erdőgazdálkodási
                 hasznosítás következtében szerzett tőkenyereség
@@ -5784,7 +5775,7 @@ modelo:
                 Nyereség összege'
             '0306':
               label: A vagyoni elemek átruházásából nem származó egyéb nyereségek
-                összege (a casilla [0299]-[0304], valamint [0266] és [0279] összege)
+                összege (a rovat [0299]-[0304], valamint [0266] és [0279] összege)
             0309:
               label: Az átruházás felhalmozott teljes értéke, amelyre a DT 9.ª rendelkezést
                 alkalmazták a 2015, 2016, 2017, 2018, 2019 és 2020 adóévben
@@ -5796,18 +5787,17 @@ modelo:
               label: A 2021-ra elszámolandó vagyoni nyereség összege
             0393:
               label: A korábbi adóévekben végrehajtott átruházásokból eredő, a 2021.
-                évnek betudható tőkenyereségek összege (a [0392] casilla összege)
+                évnek betudható tőkenyereségek összege (a [0392] rovat összege)
             0395:
               label: A 2021-ra elszámolandó vagyoni veszteség összege
             0396:
               label: A korábbi adóévekben végrehajtott átruházásokból eredő, a 2021.
-                évnek betudható tőkeveszteségek összege (a [0395] casilla összege)
+                évnek betudható tőkeveszteségek összege (a [0395] rovat összege)
             0399:
               label: A 2021-ra elszámolandó vagyoni nyereség összege
             '0400':
-              label: Összeg szerinti imputación a(z) 2021 szerinti vagyoni nyereségek
-                hatálya alá tartozó a(z) halasztás után újrabefektetés(összeg szerinti
-                a rovatok [0399] )
+              label: A 2021-re elszámolt, újrabefektetési halasztás hatálya alá tartozó
+                vagyoni nyereségek imputálásának összege (a [0399] rovatok összege)
             '0426':
               label: Munkáltatói hozzájárulások (kivéve a gondozási kockázatra kötött
                 csoportos biztosításokhoz fizetett munkáltatói hozzájárulásokból származókat)
@@ -5830,7 +5820,8 @@ modelo:
                 ki a C.2. mellékletet)
             '0433':
               label: A(z) 2021. évi tőkenyereségek és -veszteségek általános adóalapba
-                beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432])
+                beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432],
+                [0421])
             '0434':
               label: Az átruházásokból nem eredő 2017-2020. évi vagyoni nyereségek
                 és veszteségek 2021. január 1-jén még kompenzálásra váró fennmaradó
@@ -5839,11 +5830,10 @@ modelo:
                 (a [0431] rovatban fennmaradó, nem kompenzált egyenleg)
             '0436':
               label: A(z) 2021. évre beszámítható ingó tőkejövedelmek negatív nettó
-                egyenlegei a megtakarítási adóalapban, a következő korláttal ([0424],
-                [0430])
+                egyenlegei a megtakarítási adóalapban, a [0424] rovat összegének 25%-os
+                korlátjával (vigye át a [0430] rovat összegét, ha alkalmazandó)
             '0437':
-              label: Excesos fennmaradó szerinti csökkenteni procedentes szerinti
-                a adóévs 2016 a(z) 2020
+              label: A 2016-2020. adóévekből származó, csökkentésre váró többletek
             0439:
               label: A 2017. évi, a megtakarítási adóalapba beszámítandó tőkenyereségek
                 és -veszteségek negatív nettó egyenlege, amely 2021. január 1-jén
@@ -5880,8 +5870,8 @@ modelo:
                 (Töltse ki a C.2. mellékletet)
             '0446':
               label: A(z) 2021. évre beszámítható tőkenyereségek és -veszteségek negatív
-                nettó egyenlegei a megtakarítási adóalapban, a következő korláttal
-                ([0429])
+                nettó egyenlegei a megtakarítási adóalapban, a [0429] rovat összegének
+                25%-os korlátjával (vigye át a [0425] rovat összegét, ha alkalmazandó)
             '0447':
               label: 2020. évi ingó tőkejövedelem 2021. január 1-jén még beszámításra
                 váró fennmaradó negatív nettó egyenlegei, a megtakarítási adóalapba
@@ -5932,7 +5922,7 @@ modelo:
               label: A megtakarítási adóalap számítása a következő rovatok alapján
                 ([0424], [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445],
                 [0447], [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454],
-                [0455])
+                [0455], [0448])
             '0463':
               label: Hozzájárulások indiviudales (Cumplimente a anexo C.2)
             '0464':
@@ -5947,8 +5937,7 @@ modelo:
                 + [0427] + [0466] ) (az adótörvény 52. cikke szerinti legmagasabb
                 korlát)
             0468:
-              label: Excesos fennmaradó szerinti csökkenteni procedentes szerinti
-                a adóévs 2016 a(z) 2020
+              label: A 2016-2020. adóévekből származó, csökkentésre váró többletek
             '0472':
               label: A 2016-2020. adóévekből származó, csökkentésre váró többletek
                 a fogyatékossággal élő személy által teljesített befizetések után
@@ -5963,8 +5952,8 @@ modelo:
               label: A 2021. évben a fogyatékossággal élő személy javára rokonok vagy
                 gyámok által teljesített hozzájárulások
             0479:
-              label: Excesos fennmaradó szerinti csökkenteni procedentes szerinti
-                a adóévs 2017 a(z) 2020 (Vea a anexo C.4)
+              label: A 2017-2020. adóévekből származó, csökkentésre váró többletek
+                (lásd a C.4 mellékletet)
             0480:
               label: A 2021. évben a fogyatékossággal élő személy védett vagyonába
                 teljesített hozzájárulások
@@ -5972,29 +5961,29 @@ modelo:
               label: A 2021. évben bírósági határozat alapján kifizetett nyugdíj vagy
                 járadék összege
             0493:
-              label: A házastárs által részt vevőként, tagként vagy jogosultként igénybe
-                vett szociális előgondoskodási rendszerekhez teljesített hozzájárulások
-                miatt. A [0437] casilla alkalmazott összege
+              label: A házastárs résztvevőjeként, biztosítópénztár-tagjaként vagy
+                tulajdonosaként fennálló szociális előrelátási rendszerekbe fizetett
+                hozzájárulások után. A [0437] rovat alkalmazott összege
             '0501':
-              label: 'Kiegyenlítés (ha a casilla [0500] pozitív, az összeg felső határáig):
+              label: 'Kiegyenlítés (ha a rovat [0500] pozitív, az összeg felső határáig):
                 2017-2020 közötti negatív általános nettó adóalapok (töltse ki a C.4
                 mellékletet)'
             '0521':
               label: Az általános nettó adóalapba beszámított személyi és családi
                 minimum a(z) állami adó kiszámításához, a következő rovatok alapján
-                ([0505] és [05...)
+                ([0505], [0519], [0521])
             '0522':
               label: 'Az állami adókulcs kiszámításánál a megtakarítási nettó adóalap
                 részét képező személyi és családi minimum összege:: a ( [0519] - [0521]
-                ) különbözet és a [0510] casilla közül a kisebb'
+                ) különbözet és a [0510] rovat közül a kisebb'
             '0523':
               label: Az általános nettó adóalapba beszámított személyi és családi
                 minimum a(z) regionális adó kiszámításához, a következő rovatok alapján
-                ([0505])
+                ([0505], [0520], [0523])
             '0524':
               label: Az általános nettó adóalapba beszámított személyi és családi
                 minimum a(z) regionális adó kiszámításához, a következő rovatok alapján
-                ([0520], [0523])
+                ([0520], [0523], [0510])
             '0552':
               label: 'Adományok és más hozzájárulások miatt (vigye át ugyanezen mezők
                 összegeit az A.1 mellékletből): állami rész'
@@ -6003,10 +5992,10 @@ modelo:
                 összegeit az A.1 mellékletből): autonóm közösségi rész'
             '0554':
               label: 'Vállalkozási befektetések ösztönzése és élénkítése miatt (vigye
-                át ugyanezen casillák összegeit az A.5 mellékletből): állami rész'
+                át ugyanezen rovatok összegeit az A.5 mellékletből): állami rész'
             '0555':
               label: 'Vállalkozási befektetések ösztönzése és élénkítése miatt (vigye
-                át ugyanezen casillák összegeit az A.5 mellékletből): autonóm közösségi
+                át ugyanezen rovatok összegeit az A.5 mellékletből): autonóm közösségi
                 rész'
             '0565':
               label: 'Az Európai Unió vagy az Európai Gazdasági Térség tagállamaiban
@@ -6020,7 +6009,7 @@ modelo:
                 mellékletből): Autonóm közösségi rész'
             '0567':
               label: 'Lakóingatlanok energiahatékonysági felújítása miatt (vigye át
-                ugyanezen casillák összegeit az A.2 mellékletből): állami rész'
+                ugyanezen rovatok összegeit az A.2 mellékletből): állami rész'
             '0572':
               label: 'A 2021. évben elvesztett levonási jogosultság összege: állami
                 rész'
@@ -6038,9 +6027,8 @@ modelo:
               label: 'A 2021. évben elvesztett autonóm közösségi levonási jogosultság
                 összege: autonóm közösségi rész'
             '0600':
-              label: Összeg szerinti levonások és adóelőlegek atribuidos szerinti
-                vagyoni nyereségek és veszteségek elszámolható a(z) 2021 (összeg szerinti
-                a rovatok [1600])
+              label: A 2021-re elszámolható vagyoni nyereségekhez és veszteségekhez
+                rendelt levonások és adóelőlegek összege (a [1600] rovatok összege)
             '0606':
               label: A 2003/48/EK tanácsi irányelv 11. cikke szerinti, 2019. január
                 1. előtt esedékessé vált visszatartások (Ausztria, Luxemburg, Svájc,
@@ -6171,7 +6159,7 @@ modelo:
             0823:
               label: Kantábriában letelepedett szociális gazdasági jogalanyokba történő
                 befektetések vagy azoknak nyújtott adományok miatt (vigye át a B.8.
-                melléklet [1179] casillájának összegét)
+                melléklet [1179] rovatának összegét)
             0829:
               label: 'A 2018. évi (4) Kanári-szigeteki Beruházási Tartalék (RIC):
                 az art.º 27.4 C és D pontjaiban (2.º-6.º) előírt befektetések'
@@ -6212,7 +6200,10 @@ modelo:
             0845:
               label: A vállalkozási beruházás ösztönzésére és támogatására szolgáló,
                 e bevallásban alkalmazott kedvezmények teljes összege a következő
-                rovatok alapján ([0752], [0759], [0764], [0767], [0776], [0780])
+                rovatok alapján ([0752], [0759], [0764], [0767], [0776], [0780], [0783],
+                [0784], [0788], [0791], [0793], [0795], [0798], [0800], [0801], [0804],
+                [0808], [0809], [0810], [0815], [0817], [1686], [1721], [0836], [0837],
+                [0841], [0843], [0844], [1727], [1729])
             0846:
               label: La Palma szigetén történt vulkánkitörés miatti gyökértelenné
                 válásra tekintettel
@@ -6224,37 +6215,37 @@ modelo:
                 miatt
             0853:
               label: A szokásos lakóhely bérletébe fektetett összegek miatt (ezt az
-                összeget vigye át a B.8. melléklet [1130] casillájába)
+                összeget vigye át a B.8. melléklet [1130] rovatába)
             0872:
               label: Az Alternatív Tőzsde terjeszkedő vállalkozások szegmensében jegyzett
                 jogalanyok részvényeibe történő befektetés miatt (ezt az összeget
-                vigye át a B.8. melléklet [1142] casillájába)
+                vigye át a B.8. melléklet [1142] rovatába)
             0873:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             0876:
               label: A tartozás fejében történő ingatlanátruházáshoz kapcsolódó szokásos
                 lakóhely bérbeadása miatt (ezt az összeget vigye át a B.9. melléklet
-                [1170] casillájába)
+                [1170] rovatába)
             0879:
               label: Szociális gazdasági jogalanyokba történő befektetés miatt (vigye
-                át a B.8. melléklet [1179] casillájának összegét)
+                át a B.8. melléklet [1179] rovatának összegét)
             0886:
               label: A levonás összege
             0887:
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             0903:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             0907:
               label: A szokásos lakóhely bérlete miatt, meghatározott csoportok javára
-                (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                (ezt az összeget vigye át a B.8. melléklet [1130] mezőjébe)
             0928:
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             0930:
               label: Ha nincs kataszteri hivatkozása, jelölje meg 'X'-szel ezt a rovatot
             0932:
@@ -6263,36 +6254,36 @@ modelo:
               label: A szokásos lakóingatlan energetikai felújítási munkálatai után
             0942:
               label: A szokásos lakóhely bérlete miatt, tartozás fejében történő ingatlanátruházáshoz
-                kapcsolódóan (vigye át a B.9. melléklet [1170] casillájának összegét)
+                kapcsolódóan (vigye át a B.9. melléklet [1170] rovatának összegét)
             0944:
               label: A lakásbérleti díjak nemfizetése elleni hitelbiztosítási díjak
-                miatt (a bérbeadó levonása) (vigye át a B.9. melléklet [1203] casillájának
+                miatt (a bérbeadó levonása) (vigye át a B.9. melléklet [1203] rovatának
                 összegét)
             0946:
               label: A szokásos lakóhely bérlete miatt, fiatalok, idősek és fogyatékossággal
-                élők számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                élők számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             0948:
               label: 'Lakóingatlanokon végzett munkálatok miatt: a(z) 2019. és/vagy
                 2020. évben keletkezett, alkalmazásra váró összegek'
             0953:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             0956:
               label: A 2021. évben keletkezett, lakóingatlanon végzett munkálatok
                 miatt, a következő 2 évben levonható összeg
             0968:
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             0975:
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             0979:
               label: Vállalkozásindítás ösztönzésére (vigye át a B.8. melléklet [1136]
-                casillájának összegét)
+                rovatának összegét)
             0980:
               label: Vállalkozásindítás ösztönzésére (vigye át a B.8. melléklet [1136]
-                casillájának összegét)
+                rovatának összegét)
             0981:
               label: A 2018. évben keletkezett, alkalmazásra váró összeg
             0982:
@@ -6312,56 +6303,56 @@ modelo:
               label: A 2021-ben keletkezett, még alkalmazásra váró összeg
             '1003':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             '1008':
               label: Befektetési angyal által új vagy nemrég alakult jogalanyok részvényeinek
                 vagy üzletrészeinek megszerzésébe történő befektetés miatt (ezt az
-                összeget vigye át a B.8. melléklet [1136] casillájába)
+                összeget vigye át a B.8. melléklet [1136] rovatába)
             '1019':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             '1026':
               label: A szokásos lakóhely bérlete miatt, legfeljebb 35 éves adózók
-                számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             '1028':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (vigye át a B.8. melléklet
-                [1136] casillájának összegét)
+                [1136] rovatának összegét)
             '1029':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe és annak finanszírozásába történő befektetés miatt (vigye
-                át a B.8. melléklet [1148] casillájának összegét)
+                át a B.8. melléklet [1148] rovatának összegét)
             '1030':
               label: A Bolsa-i Alternatív Piac terjeszkedő vállalkozások szegmensében
                 jegyzett jogalanyok részvényeibe történő befektetés miatt (vigye át
-                a B.8. melléklet [1142] casillájának összegét)
+                a B.8. melléklet [1142] rovatának összegét)
             '1035':
               label: Mezőgazdasági tevékenységet folytató vállalkozásokba történő
-                befektetés miatt (vigye át a B.8. melléklet [1154] casillájának összegét)
+                befektetés miatt (vigye át a B.8. melléklet [1154] rovatának összegét)
             '1043':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             '1046':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             '1048':
               label: Az Alternatív Tőzsdén (MAB) jegyzett jogalanyokba történő befektetések
-                miatt (ezt az összeget vigye át a B.8. melléklet [1142] casillájába)
+                miatt (ezt az összeget vigye át a B.8. melléklet [1142] rovatába)
             '1057':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             '1058':
               label: Az Alternatív Tőzsdén (MAB) jegyzett jogalanyokba történő befektetések
-                miatt (ezt az összeget vigye át a B.8. melléklet [1142] casillájába)
+                miatt (ezt az összeget vigye át a B.8. melléklet [1142] rovatába)
             '1078':
               label: Az 2019. és/vagy 2020. évben kifizetett, alkalmazásra váró összeg
                 (bármilyen típusú lakóingatlanba vagy az annak helyt adó épületbe
                 történő befektetések esetén)
             '1095':
               label: A szokásos lakóhely bérletébe fektetett összegek miatt (ezt az
-                összeget vigye át a B.8. melléklet [1130] casillájába)
+                összeget vigye át a B.8. melléklet [1130] rovatába)
             '1114':
               label: Teljes összeg szerinti a levonás ([1116] + [1119] + [1185] +
                 [1207])
@@ -6380,10 +6371,10 @@ modelo:
               label: 'Település kódja:'
             '1165':
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (vigye át a B.8. melléklet [1130] casillájának összegét)
+                számára (vigye át a B.8. melléklet [1130] rovatának összegét)
             '1178':
               label: A befektetett, levonásra jogosító összegek teljes összege (a
-                [1175] és [1177] casillák összege)
+                [1175] és [1177] rovatok összege)
             '1182':
               label: A 2021. évben keletkezett összeg
             '1183':
@@ -6430,7 +6421,7 @@ modelo:
             '1224':
               label: 2021. adóév. Az ingatlan megszerzésébe vagy felújításába fektetett
                 tőke kamatai, valamint javítási és karbantartási kiadások (vigye át
-                a [0108] casilla összegét)
+                a [0108] rovat összegét)
             '1228':
               label: A 31-12-2021. napig új szokásos lakóhely megszerzésébe újrabefektetett
                 összeg
@@ -6474,7 +6465,7 @@ modelo:
             '1257':
               label: A 2021. évnek betudható, az általános adóalapba beszámítandó
                 tőkenyereségek és -veszteségek negatív egyenlege, amely a következő
-                4 adóévben számolható el (a [0421] - [0433] casillák)
+                4 adóévben számolható el (a [0421] - [0433] rovatok)
             '1259':
               label: '2017. Adóév: az időszak elején még alkalmazásra váró összeg'
             '1260':
@@ -6500,7 +6491,7 @@ modelo:
             '1270':
               label: A 2021. évnek betudható, a megtakarítási adóalapba beszámítandó
                 tőkenyereségek és -veszteségek negatív egyenlege, amely a következő
-                4 adóévben számolható el (a [0425] - [0446] casillák)
+                4 adóévben számolható el (a [0425] - [0446] rovatok)
             '1272':
               label: '2017. Adóév: az időszak elején még alkalmazásra váró összeg'
             '1273':
@@ -6526,7 +6517,7 @@ modelo:
             '1283':
               label: A(z) 2021. évre beszámítható ingó tőkejövedelmek negatív egyenlege
                 a megtakarítási adóalapban, amely a következő négy évben kompenzálható,
-                a következő rovatok alapján ([0430])
+                a következő rovatok alapján ([0430], [0436])
             '1285':
               label: '2016. Adóév: az időszak elején még alkalmazásra váró összeg'
             '1286':
@@ -6740,8 +6731,7 @@ modelo:
                 szokásos lakóhely-szerzés vagy -felújítás miatt, legfeljebb 35 éves
                 adózók, valamint nagycsaládok és egyszülős családok számára
             '1595':
-              label: Vagyoni nyereségek reducidas nem mentesített elszámolható a(z)
-                2021
+              label: 2021-re elszámolható, csökkentett, nem mentesített vagyoni nyereségek
             '1600':
               label: Atribución szerinti levonások szerinti vagyoni nyereségek és
                 veszteségek elszámolható a(z) 2021
@@ -6750,7 +6740,7 @@ modelo:
             '1611':
               label: A 2021-ben keletkezett, még alkalmazásra váró összeg
             '1639':
-              label: Pérdida patrimonial elszámolható a(z) 2021
+              label: 2021-re elszámolható vagyoni veszteség
             '1650':
               label: A 2021-nak betudható, nem mentes, csökkentett vagyoni nyereség
             '1654':
@@ -6863,8 +6853,8 @@ modelo:
             '1758':
               label: '2021. adóév: ebben a bevallásban alkalmazott saját befizetések'
             '1759':
-              label: 'Adóév 2021: Hozzájárulások personales fennmaradó szerinti alkalmazás
-                a jövőbeli adóévekben'
+              label: 'Adóév 2021: Személyes hozzájárulások, amelyek alkalmazása jövőbeli
+                adóévekre vár'
             '1760':
               label: Csökkentésre jogosult adózó
             '1761':
@@ -6872,8 +6862,8 @@ modelo:
             '1762':
               label: '2021. adóév: ebben a bevallásban alkalmazott vállalati befizetések'
             '1763':
-              label: 'Adóév 2021: Befizetések empresariales fennmaradó szerinti alkalmazás
-                a jövőbeli adóévekben'
+              label: '2021. adóév: Munkáltatói hozzájárulások, jövőbeli adóévekben
+                alkalmazásra váró fennmaradó összege'
             '1780':
               label: IBAN (helyesbítés)
             '1781':
@@ -6895,8 +6885,8 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2021 levonások, részletfizetések and withholding
-                  cross-modelo inputs
+                title: 'Modelo 100 2021: levonások, részletfizetések és más kapcsolódó
+                  modellekből származó levonások'
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2021 a közvetlen adózás összesítő mezői
@@ -6949,8 +6939,8 @@ modelo:
               label: Azoknak a napoknak a száma, amikor az ingatlan a szokásos lakóhelye
                 volt a 2022. évben
             '0103':
-              label: Fennmaradó összeg szerinti deducir szerinti a adóévs 2018, 2019,
-                2020 és 2021 (Cumplimente a anexo C.1)
+              label: A 2018, 2019, 2020 és 2021 adóévekből fennmaradó, levonásra váró
+                összeg (töltse ki a C.1 mellékletet)
             '0105':
               label: Az ingatlan megszerzésébe vagy felújításába fektetett tőke kamatai
                 és egyéb finanszírozási költségek a 2022. évben
@@ -6992,10 +6982,10 @@ modelo:
                 mezőgazdasági, állattenyésztési és halászati kompenzáció)
             0229:
               label: A szokásos lakóhely bérlete miatt, fogyatékossággal élő személyek
-                számára (vigye át a B.8. melléklet [1130] casillájának összegét)
+                számára (vigye át a B.8. melléklet [1130] rovatának összegét)
             '0245':
               label: Ha a házasság a teljes 2022. évben fennállt, jelölje meg ezt
-                a casillát
+                a rovatot
             '0246':
               label: A házasság első hónapja, amelyben a 2022. évben fennállt
             '0247':
@@ -7044,21 +7034,20 @@ modelo:
               label: A 2022-ra elszámolandó vagyoni nyereség összege
             0393:
               label: A korábbi adóévekben végrehajtott átruházásokból eredő, a 2022.
-                évnek betudható tőkenyereségek összege (a [0392] casilla összege)
+                évnek betudható tőkenyereségek összege (a [0392] rovat összege)
             0395:
               label: A 2022-ra elszámolandó vagyoni veszteség összege
             0396:
               label: A korábbi adóévekben végrehajtott átruházásokból eredő, a 2022.
-                évnek betudható tőkeveszteségek összege (a [0395] casilla összege)
+                évnek betudható tőkeveszteségek összege (a [0395] rovat összege)
             0397:
               label: A foglalkoztatói nyugdíjrendszer nyugdíjpénztárának adóazonosító
                 jele (NIF)
             0399:
               label: A 2022-ra elszámolandó vagyoni nyereség összege
             '0400':
-              label: Összeg szerinti imputación a(z) 2022 szerinti vagyoni nyereségek
-                hatálya alá tartozó a(z) halasztás után újrabefektetés(összeg szerinti
-                a rovatok [0399] )
+              label: A 2022-re elszámolt, újrabefektetési halasztás hatálya alá tartozó
+                vagyoni nyereségek imputálásának összege (a [0399] rovatok összege)
             '0422':
               label: Vagyoni nyereségek összege ([1608] + [0324] + [0339] + [0354]
                 + [1814] + [1845] + [1846] + [0386] + [0387] + [0390] + [0393] + [0412])
@@ -7088,7 +7077,8 @@ modelo:
                 ki a C.2. mellékletet)
             '0433':
               label: A(z) 2022. évi tőkenyereségek és -veszteségek általános adóalapba
-                beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432])
+                beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432],
+                [0421])
             '0434':
               label: Az átruházásokból nem eredő 2018-2021. évi vagyoni nyereségek
                 és veszteségek 2022. január 1-jén még kompenzálásra váró fennmaradó
@@ -7097,11 +7087,10 @@ modelo:
                 (a [0431] rovatban fennmaradó, nem kompenzált egyenleg)
             '0436':
               label: A(z) 2022. évre beszámítható ingó tőkejövedelmek negatív nettó
-                egyenlegei a megtakarítási adóalapban, a következő korláttal ([0424],
-                [0430])
+                egyenlegei a megtakarítási adóalapban, a [0424] rovat összegének 25%-os
+                korlátjával (vigye át a [0430] rovat összegét, ha alkalmazandó)
             '0437':
-              label: Excesos fennmaradó szerinti csökkenteni procedentes szerinti
-                a adóévs 2017 a(z) 2021
+              label: A 2017-2021. adóévekből származó, csökkentésre váró többletek
             0438:
               label: A vállalat által teljesített befizetések, amelyek a munkavállaló
                 döntéséből erednek
@@ -7141,8 +7130,8 @@ modelo:
                 (Töltse ki a C.2. mellékletet)
             '0446':
               label: A(z) 2022. évre beszámítható tőkenyereségek és -veszteségek negatív
-                nettó egyenlegei a megtakarítási adóalapban, a következő korláttal
-                ([0429])
+                nettó egyenlegei a megtakarítási adóalapban, a [0429] rovat összegének
+                25%-os korlátjával (vigye át a [0425] rovat összegét, ha alkalmazandó)
             '0447':
               label: 2021. évi ingó tőkejövedelem 2022. január 1-jén még beszámításra
                 váró fennmaradó negatív nettó egyenlegei, a megtakarítási adóalapba
@@ -7193,7 +7182,7 @@ modelo:
               label: A megtakarítási adóalap számítása a következő rovatok alapján
                 ([0424], [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445],
                 [0447], [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454],
-                [0455])
+                [0455], [0448])
             '0461':
               label: Az együttes adózást választó családi egységek csökkentése. Összeg
             '0463':
@@ -7228,8 +7217,8 @@ modelo:
               label: A 2022. évben a fogyatékossággal élő személy javára rokonok vagy
                 gyámok által teljesített hozzájárulások
             0479:
-              label: Excesos fennmaradó szerinti csökkenteni procedentes szerinti
-                a adóévs 2018 a(z) 2021 (Vea a anexo C.3)
+              label: A 2018-2021. adóévekből származó, csökkentésre váró többletek
+                (lásd a C.3 mellékletet)
             0480:
               label: A 2022. évben a fogyatékossággal élő személy védett vagyonába
                 teljesített hozzájárulások
@@ -7237,8 +7226,8 @@ modelo:
               label: A 2022. évben bírósági határozat alapján kifizetett nyugdíj vagy
                 járadék összege
             0488:
-              label: Excesos fennmaradó szerinti csökkenteni procedentes szerinti
-                a adóévs 2017 a(z) 2021 (Vea a anexo C.4)
+              label: A 2017-2021. adóévekből származó, csökkentésre váró túllépések
+                (lásd a C.4 mellékletet)
             0489:
               label: A 2022. évben teljesített, csökkentésre jogosító hozzájárulások
                 és befizetések
@@ -7249,11 +7238,11 @@ modelo:
                 szociális gondoskodási tervekhez vagy kollektív gondozási biztosításokhoz,
                 amelyeknek szerződője és biztosítottja
             '0501':
-              label: 'Kiegyenlítés (ha a casilla [0500] pozitív, az összeg felső határáig):
+              label: 'Kiegyenlítés (ha a rovat [0500] pozitív, az összeg felső határáig):
                 2018-2021 közötti negatív általános nettó adóalapok (töltse ki a C.4
                 mellékletet)'
             '0544':
-              label: 'La Palma szigetén szerzett jövedelmek miatt (ezen casillák összegei
+              label: 'La Palma szigetén szerzett jövedelmek miatt (ezen rovatok összegei
                 az A.6 mellékletből): állami rész'
             '0552':
               label: 'Adományok és más hozzájárulások miatt (vigye át ugyanezen mezők
@@ -7263,13 +7252,13 @@ modelo:
                 összegeit az A.1 mellékletből): autonóm közösségi rész'
             '0554':
               label: 'Vállalkozási befektetések ösztönzése és élénkítése miatt (vigye
-                át ugyanezen casillák összegeit az A.5 mellékletből): állami rész'
+                át ugyanezen rovatok összegeit az A.5 mellékletből): állami rész'
             '0555':
               label: 'Vállalkozási befektetések ösztönzése és élénkítése miatt (vigye
-                át ugyanezen casillák összegeit az A.5 mellékletből): autonóm közösségi
+                át ugyanezen rovatok összegeit az A.5 mellékletből): autonóm közösségi
                 rész'
             '0564':
-              label: 'Autonóm közösségi levonások összege (vigye át ugyanezen casilla
+              label: 'Autonóm közösségi levonások összege (vigye át ugyanezen rovat
                 összegét a B.1, B.2, B.3, B.4, B.5 vagy B.6 melléklet közül a megfelelőből):
                 autonóm közösségi rész'
             '0565':
@@ -7313,7 +7302,7 @@ modelo:
               help: 'Adja meg vagy ellenőrizze a(z) „A korábbi levonásoknak megfelelő
                 késedelmi kamatok: autonóm-közösségi rész” értékét ehhez az önadózáshoz.'
             0584:
-              label: 'La Palma szigetén szerzett jövedelmek miatt (ezen casillák összegei
+              label: 'La Palma szigetén szerzett jövedelmek miatt (ezen rovatok összegei
                 az A.6 mellékletből): autonóm közösségi rész'
             0585:
               label: 'Megnövelt nettó állami adókvóta ([0585] = [0570] + [0568] +
@@ -7323,9 +7312,8 @@ modelo:
                 + [0583] + [0577] + [0578] + [0579] + [0581] ): Autonóm közösségi
                 rész'
             '0600':
-              label: Összeg szerinti levonások és adóelőlegek atribuidos szerinti
-                vagyoni nyereségek és veszteségek elszámolható a(z) 2022 (összeg szerinti
-                a rovatok [1600])
+              label: A 2022-re elszámolható vagyoni nyereségekhez és veszteségekhez
+                rendelt levonások és adóelőlegek összege (a [1600] rovatok összege)
             '0601':
               label: Beszámított visszatartások és előlegek összege ([0264] mezők
                 összege)
@@ -7342,7 +7330,7 @@ modelo:
             '0670':
               label: A bevallás eredménye a következő rovatok alapján ([0610], [0611],
                 [0612], [0613], [1912], [1913], [1915], [1916], [0623], [0624], [0636],
-                [0637], [0248], [0249], [0660], [0661], [0662], [0663])
+                [0637], [0248], [0249], [0660], [0661], [0662], [0663], [0664], [0666])
             '0676':
               label: A 2022. adóévre vonatkozó korábbi önadózásokból vagy közigazgatási
                 adómegállapításokból származó, befizetendő eredmények
@@ -7357,8 +7345,9 @@ modelo:
                 korábbi önadózások feldolgozása következtében
             0729:
               label: A nem rezidensek jövedelemadójának kvótái a családi egység többi,
-                az Un... tagállamában rezidens tagja által Spanyolországban 2022-ben
-                szerzett jövedelmek után
+                az Európai Unió vagy az Európai Gazdasági Térség valamely tagállamában
+                rezidens tagja által Spanyolországban 2022-ben szerzett jövedelmek
+                után
             '0733':
               label: 'A 2018. évi (2) Kanári-szigeteki Beruházási Tartalék (RIC):
                 a juttatások összege'
@@ -7475,7 +7464,7 @@ modelo:
             0823:
               label: Kantábriában letelepedett szociális gazdasági jogalanyokba történő
                 befektetések vagy azoknak nyújtott adományok miatt (vigye át a B.8.
-                melléklet [1179] casillájának összegét)
+                melléklet [1179] rovatának összegét)
             0829:
               label: 'A 2018. évi (2) Kanári-szigeteki Beruházási Tartalék (RIC):
                 még megvalósításra váró összeg'
@@ -7509,70 +7498,73 @@ modelo:
             0845:
               label: A vállalkozási beruházás ösztönzésére és támogatására szolgáló,
                 e bevallásban alkalmazott kedvezmények teljes összege a következő
-                rovatok alapján ([0752], [0768], [0776], [0780], [0788], [0791])
+                rovatok alapján ([0752], [0768], [0776], [0780], [0788], [0791], [0793],
+                [0796], [0798], [0809], [0815], [0817], [0843], [1686], [1691], [1693],
+                [1695], [1697], [1708], [1710], [1721], [0706], [0707], [0773], [0779],
+                [1623], [1627], [1630], [0836], [0837], [0841], [0844], [1727], [1729])
             0853:
               label: A szokásos lakóhely bérletébe fektetett összegek miatt (ezt az
-                összeget vigye át a B.8. melléklet [1130] casillájába)
+                összeget vigye át a B.8. melléklet [1130] rovatába)
             0872:
               label: Az Alternatív Tőzsde terjeszkedő vállalkozások szegmensében jegyzett
                 jogalanyok részvényeibe történő befektetés miatt (ezt az összeget
-                vigye át a B.8. melléklet [1142] casillájába)
+                vigye át a B.8. melléklet [1142] rovatába)
             0873:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             0876:
               label: A tartozás fejében történő ingatlanátruházáshoz kapcsolódó szokásos
                 lakóhely bérbeadása miatt (ezt az összeget vigye át a B.9. melléklet
-                [1170] casillájába)
+                [1170] rovatába)
             0879:
               label: Szociális gazdasági jogalanyokba történő befektetés miatt (vigye
-                át a B.8. melléklet [1179] casillájának összegét)
+                át a B.8. melléklet [1179] rovatának összegét)
             0886:
               label: A levonás összege
             0887:
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             0903:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             0907:
               label: A szokásos lakóhely bérlete miatt, meghatározott csoportok javára
-                (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                (ezt az összeget vigye át a B.8. melléklet [1130] mezőjébe)
             0928:
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             0939:
               label: A szokásos lakóingatlan energetikai felújítási munkálatai után
             0942:
               label: A szokásos lakóhely bérlete miatt, tartozás fejében történő ingatlanátruházáshoz
-                kapcsolódóan (vigye át a B.9. melléklet [1170] casillájának összegét)
+                kapcsolódóan (vigye át a B.9. melléklet [1170] rovatának összegét)
             0944:
               label: A lakásbérleti díjak nemfizetése elleni hitelbiztosítási díjak
-                miatt (a bérbeadó levonása) (vigye át a B.9. melléklet [1203] casillájának
+                miatt (a bérbeadó levonása) (vigye át a B.9. melléklet [1203] rovatának
                 összegét)
             0946:
               label: A szokásos lakóhely bérlete miatt, fiatalok, idősek és fogyatékossággal
-                élők számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                élők számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             0948:
               label: 'Lakóingatlanokon végzett munkálatok miatt: a(z) 2020. és/vagy
                 2021. évben keletkezett, alkalmazásra váró összegek'
             0953:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             0956:
               label: A 2022. évben keletkezett, lakóingatlanon végzett munkálatok
                 miatt, a következő 2 évben levonható összeg
             0968:
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             0975:
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             0979:
-              label: Vállalkozásindítás ösztönzésére (a B.8. melléklet [1136] casillájának
+              label: Vállalkozásindítás ösztönzésére (a B.8. melléklet [1136] rovatának
                 összege)
             0980:
               label: Vidéki településeken bérbeadásra szánt lakóingatlanok felújításába
@@ -7589,7 +7581,7 @@ modelo:
               label: A(z) 2020. és/vagy 2021. évben történt többes szülés vagy egyidejű
                 örökbefogadás miatt
             0991:
-              label: A szokásos lakóhely bérlete miatt (a B.8. melléklet [1130] casillájának
+              label: A szokásos lakóhely bérlete miatt (a B.8. melléklet [1130] rovatának
                 összege)
             0997:
               label: A 2020. évben keletkezett, alkalmazásra váró összeg
@@ -7599,62 +7591,63 @@ modelo:
               label: A 2022-ben keletkezett, még alkalmazásra váró összeg
             '1003':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             '1008':
               label: Befektetési angyal által új vagy nemrég alakult jogalanyok részvényeinek
                 vagy üzletrészeinek megszerzésébe történő befektetés miatt (ezt az
-                összeget vigye át a B.8. melléklet [1136] casillájába)
+                összeget vigye át a B.8. melléklet [1136] rovatába)
             '1019':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             '1026':
               label: A szokásos lakóhely bérlete miatt, legfeljebb 35 éves adózók
-                számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             '1028':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (vigye át a B.8. melléklet
-                [1136] casillájának összegét)
+                [1136] rovatának összegét)
             '1029':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe és annak finanszírozásába történő befektetés miatt (vigye
-                át a B.8. melléklet [1148] casillájának összegét)
+                át a B.8. melléklet [1148] rovatának összegét)
             '1030':
               label: A Bolsa-i Alternatív Piac terjeszkedő vállalkozások szegmensében
                 jegyzett jogalanyok részvényeibe történő befektetés miatt (vigye át
-                a B.8. melléklet [1142] casillájának összegét)
+                a B.8. melléklet [1142] rovatának összegét)
             '1035':
               label: Mezőgazdasági tevékenységet folytató vállalkozásokba történő
-                befektetés miatt (vigye át a B.8. melléklet [1154] casillájának összegét)
+                befektetés miatt (vigye át a B.8. melléklet [1154] rovatának összegét)
             '1043':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             '1046':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             '1048':
               label: Az Alternatív Tőzsdén (MAB) jegyzett jogalanyokba történő befektetések
-                miatt (ezt az összeget vigye át a B.8. melléklet [1142] casillájába)
+                miatt (ezt az összeget vigye át a B.8. melléklet [1142] rovatába)
             '1057':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             '1058':
               label: Az Alternatív Tőzsdén (MAB) jegyzett jogalanyokba történő befektetések
-                miatt (ezt az összeget vigye át a B.8. melléklet [1142] casillájába)
+                miatt (ezt az összeget vigye át a B.8. melléklet [1142] rovatába)
             '1078':
               label: Az 2019. és/vagy 2020. évben kifizetett, alkalmazásra váró összeg
                 (bármilyen típusú lakóingatlanba vagy az annak helyt adó épületbe
                 történő befektetések esetén)
             '1095':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             '1110':
               label: A levonás összege
             '1114':
               label: A lakóhelyen vagy az azt magában foglaló épületben létesített
                 villamosenergia-önfogyasztási vagy megújulóenergia-hasznosító berendezésekbe
-                történő beruházás után, a következő rovat alapján ([1114])
+                történő beruházás után, a B.9. melléklet [1114] rovatának összege
+                alapján
             '1115':
               label: Az 2018. évben kifizetett, alkalmazásra váró összeg (kizárólag
                 a szokásos lakóhelybe vagy az annak helyt adó épületbe történő befektetések
@@ -7672,16 +7665,16 @@ modelo:
               label: 'Település kódja:'
             '1165':
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (vigye át a B.8. melléklet [1130] casillájának összegét)
+                számára (vigye át a B.8. melléklet [1130] rovatának összegét)
             '1178':
               label: A befektetett, levonásra jogosító összegek teljes összege (a
-                [1175] és [1177] casillák összege)
+                [1175] és [1177] rovatok összege)
             '1182':
-              label: A 2022. évben keletkezett összeg (a B.8. melléklet [1136] casillájának
+              label: A 2022. évben keletkezett összeg (a B.8. melléklet [1136] rovatának
                 összege)
             '1183':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
-                megszerzésébe történő befektetés miatt (a [0808] és [1117] casillák
+                megszerzésébe történő befektetés miatt (a [0808] és [1117] rovatok
                 összege)
             '1184':
               label: A 2022-ben keletkezett, még alkalmazásra váró összeg
@@ -7717,7 +7710,7 @@ modelo:
             '1224':
               label: 2022. adóév. Az ingatlan megszerzésébe vagy felújításába fektetett
                 tőke kamatai, valamint javítási és karbantartási kiadások (vigye át
-                a [0108] casilla összegét)
+                a [0108] rovat összegét)
             '1228':
               label: A 31-12-2022. napig új szokásos lakóhely megszerzésébe újrabefektetett
                 összeg
@@ -7761,7 +7754,7 @@ modelo:
             '1257':
               label: A 2022. évnek betudható, az általános adóalapba beszámítandó
                 tőkenyereségek és -veszteségek negatív egyenlege, amely a következő
-                4 adóévben számolható el (a [0421] - [0433] casillák)
+                4 adóévben számolható el (a [0421] - [0433] rovatok)
             '1259':
               label: '2018. Adóév: az időszak elején még alkalmazásra váró összeg'
             '1260':
@@ -7787,7 +7780,7 @@ modelo:
             '1270':
               label: A 2022. évnek betudható, a megtakarítási adóalapba beszámítandó
                 tőkenyereségek és -veszteségek negatív egyenlege, amely a következő
-                4 adóévben számolható el (a [0425] - [0446] casillák)
+                4 adóévben számolható el (a [0425] - [0446] rovatok)
             '1272':
               label: '2018. Adóév: az időszak elején még alkalmazásra váró összeg'
             '1273':
@@ -7813,7 +7806,7 @@ modelo:
             '1283':
               label: A(z) 2022. évre beszámítható ingó tőkejövedelmek negatív egyenlege
                 a megtakarítási adóalapban, amely a következő négy évben kompenzálható,
-                a következő rovatok alapján ([0430])
+                a következő rovatok alapján ([0430], [0436])
             '1285':
               label: '2017. Adóév: az időszak elején még alkalmazásra váró összeg'
             '1286':
@@ -8083,8 +8076,7 @@ modelo:
               label: Elnéptelenedés kockázatának kitett községekben történő szokásos
                 lakóhely-szerzés vagy -felújítás miatt
             '1595':
-              label: Vagyoni nyereségek reducidas nem mentesített elszámolható a(z)
-                2022
+              label: 2022-re elszámolható, csökkentett, nem mentesített vagyoni nyereségek
             '1600':
               label: Atribución szerinti levonások szerinti vagyoni nyereségek és
                 veszteségek elszámolható a(z) 2022
@@ -8159,8 +8151,7 @@ modelo:
             '1826':
               label: Átruházási érték
             '1829':
-              label: Érték szerinti átruházás susceptible szerinti csökkentés (D.T.
-                9.ª)
+              label: Csökkentésre jogosult átruházási érték (D.T. 9.ª)
             '1830':
               label: Szerzési érték
             '1832':
@@ -8192,14 +8183,14 @@ modelo:
             '1856':
               label: '2021. Adóév: jövőbeli adóévekben még alkalmazásra váró összeg'
             '1859':
-              label: Nº teljes évek szerinti cobro
+              label: Folyósítási évek száma összesen
             '1881':
-              label: Nº teljes évek szerinti cobro
+              label: Folyósítási évek száma összesen
             '1907':
               label: Az infláció hatásainak ellentételezésére
             '1909':
               label: Szociális gazdasági jogalanyokba történő befektetés miatt (a
-                B.8. melléklet [1179] casillájának összege)
+                B.8. melléklet [1179] rovatának összege)
             '1911':
               label: Az anyasági levonásra jogosító gyermekek száma
             '1912':
@@ -8217,8 +8208,8 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2022 levonások, részletfizetések and withholding
-                  cross-modelo inputs
+                title: 'Modelo 100 2022: levonások, részletfizetések és más kapcsolódó
+                  modellekből származó levonások'
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2022 a közvetlen adózás összesítő mezői
@@ -8270,15 +8261,16 @@ modelo:
                 tőkék teljes összege, amelynek hozamára a D.T.4.ª rendelkezést alkalmazzák
             '0057':
               label: Csökkentés a XXXVII America's Cup Barcelona adórendszere alá
-                tartozó jövedelmekre
+                tartozó jövedelmekre (a 2023. évi állami költségvetésről szóló 31/2022.
+                törvény harminchatodik záró rendelkezése)
             '0070':
               label: Szokásos lakóhely 2023-ben
             '0076':
               label: Azoknak a napoknak a száma, amikor az ingatlan a szokásos lakóhelye
                 volt a 2023. évben
             '0103':
-              label: Fennmaradó összeg szerinti deducir szerinti a adóévs 2019, 2020,
-                2021 és 2022 (Cumplimente a anexo C.1)
+              label: A 2019, 2020, 2021 és 2022 adóévekből fennmaradó, levonásra váró
+                összeg (töltse ki a C.1 mellékletet)
             '0105':
               label: Az ingatlan megszerzésébe vagy felújításába fektetett tőke kamatai
                 és egyéb finanszírozási költségek a 2023. évben
@@ -8328,14 +8320,14 @@ modelo:
               label: Csökkentett nettó jövedelem ([0224] - [0225] - [0236])
             0229:
               label: A szokásos lakóhely bérlete miatt, fogyatékossággal élő személyek
-                számára (vigye át a B.8. melléklet [1130] casillájának összegét)
+                számára (vigye át a B.8. melléklet [1130] rovatának összegét)
             '0236':
               label: A "XXXVII America's Cup Barcelona" esemény adózási rendszerébe
                 tartozó jövedelmek csökkentése (a PGE-2023-ra vonatkozó 31/2022. törvény
                 harminchatodik záró rendelkezése)
             '0245':
               label: Ha a házasság a teljes 2023. évben fennállt, jelölje meg ezt
-                a casillát
+                a rovatot
             '0246':
               label: A házasság első hónapja, amelyben a 2023. évben fennállt
             '0247':
@@ -8394,23 +8386,22 @@ modelo:
               label: A 2023-ra elszámolandó vagyoni nyereség összege
             0393:
               label: A korábbi adóévekben végrehajtott átruházásokból eredő, a 2023.
-                évnek betudható tőkenyereségek összege (a [0392] casilla összege)
+                évnek betudható tőkenyereségek összege (a [0392] rovat összege)
             0395:
               label: A 2023-ra elszámolandó vagyoni veszteség összege
             0396:
               label: A korábbi adóévekben végrehajtott átruházásokból eredő, a 2023.
-                évnek betudható tőkeveszteségek összege (a [0395] casilla összege)
+                évnek betudható tőkeveszteségek összege (a [0395] rovat összege)
             0399:
               label: A 2023-ra elszámolandó vagyoni nyereség összege
             '0400':
-              label: Összeg szerinti imputación a(z) 2023 szerinti vagyoni nyereségek
-                hatálya alá tartozó a(z) halasztás után újrabefektetés(összeg szerinti
-                a rovatok [0399] )
+              label: A 2023-ra betudott, újrabefektetés miatti halasztás alá eső vagyoni
+                nyereségek összege (a [0399] rovatok összege)
             '0416':
               label: Ha az adózókat, akik Spanyolországban nem rezidens jogalanyok
                 tagjai, 2023-ban érintette a Társasági adóról szóló törvény VII. címének
                 VII. fejezetében szabályozott egyesülési, szétválási vagy értékpapírcsere-ügylet,
-                jelölje meg "X"-szel ezt a casillát
+                jelölje meg "X"-szel ezt a rovatot
             '0417':
               label: Ha az adózók, Spanyolországban nem rezidens szervezetek tagjai,
                 2023-ban az ilyen szervezetek által végrehajtott, szabályozott egyesülési,
@@ -8440,7 +8431,8 @@ modelo:
                 ki a C.3. mellékletet)
             '0433':
               label: A(z) 2023. évi tőkenyereségek és -veszteségek általános adóalapba
-                beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432])
+                beszámítandó negatív nettó egyenlege, a rovat összegének 25%-áig ([0432],
+                [0421])
             '0434':
               label: Az átruházásokból nem eredő 2019-2022. évi vagyoni nyereségek
                 és veszteségek 2023. január 1-jén még kompenzálásra váró fennmaradó
@@ -8449,11 +8441,10 @@ modelo:
                 (a [0431] rovatban fennmaradó, nem kompenzált egyenleg)
             '0436':
               label: A(z) 2023. évre beszámítható ingó tőkejövedelmek negatív nettó
-                egyenlegei a megtakarítási adóalapban, a következő korláttal ([0424],
-                [0430])
+                egyenlegei a megtakarítási adóalapban, a [0424] rovat összegének 25%-os
+                korlátjával (vigye át a [0430] rovat összegét, ha alkalmazandó)
             '0437':
-              label: Excesos fennmaradó szerinti csökkenteni procedentes szerinti
-                a adóévs 2018 a(z) 2022
+              label: A 2018-2022. adóévekből származó, csökkentésre váró többletek
             0439:
               label: A 2019. évi, a megtakarítási adóalapba beszámítandó tőkenyereségek
                 és -veszteségek negatív nettó egyenlege, amely 2023. január 1-jén
@@ -8490,8 +8481,8 @@ modelo:
                 (Töltse ki a C.3. mellékletet)
             '0446':
               label: A(z) 2023. évre beszámítható tőkenyereségek és -veszteségek negatív
-                nettó egyenlegei a megtakarítási adóalapban, a következő korláttal
-                ([0429])
+                nettó egyenlegei a megtakarítási adóalapban, a [0429] rovat összegének
+                25%-os korlátjával (vigye át a [0425] rovat összegét, ha alkalmazandó)
             '0447':
               label: 2022. évi ingó tőkejövedelem 2023. január 1-jén még beszámításra
                 váró fennmaradó negatív nettó egyenlegei, a megtakarítási adóalapba
@@ -8542,7 +8533,7 @@ modelo:
               label: A megtakarítási adóalap számítása a következő rovatok alapján
                 ([0424], [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445],
                 [0447], [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454],
-                [0455])
+                [0455], [0448])
             '0461':
               label: Az együttes adózást választó családi egységek csökkentése. Összeg
             0468:
@@ -8561,8 +8552,8 @@ modelo:
               label: A 2023. évben a fogyatékossággal élő személy javára rokonok vagy
                 gyámok által teljesített hozzájárulások
             0479:
-              label: Excesos fennmaradó szerinti csökkenteni procedentes szerinti
-                a adóévs 2019 a(z) 2022 (cumplimente a anexo C.4)
+              label: A 2019-2022. adóévekből származó, csökkentésre váró többletek
+                (töltse ki a C.4 mellékletet)
             0480:
               label: A 2023. évben a fogyatékossággal élő személy védett vagyonába
                 teljesített hozzájárulások
@@ -8570,13 +8561,13 @@ modelo:
               label: A 2023. évben bírósági határozat alapján kifizetett nyugdíj vagy
                 járadék összege
             0488:
-              label: Excesos fennmaradó szerinti csökkenteni procedentes szerinti
-                a adóévs 2018 a(z) 2022 (Vea a anexo C.4)
+              label: A 2018-2022. adóévekből származó, csökkentésre váró többletek
+                (lásd a C.4 mellékletet)
             0489:
               label: A 2023. évben teljesített, csökkentésre jogosító hozzájárulások
                 és befizetések
             '0501':
-              label: 'Kiegyenlítés (ha a casilla [0500] pozitív, az összeg felső határáig):
+              label: 'Kiegyenlítés (ha a rovat [0500] pozitív, az összeg felső határáig):
                 2019-2022 közötti negatív általános nettó adóalapok (töltse ki a C.4
                 mellékletet)'
             '0544':
@@ -8600,7 +8591,7 @@ modelo:
                 át ugyanezen mezők összegeit az A.7 mellékletből): autonóm közösségi
                 rész'
             '0564':
-              label: 'Autonóm közösségi levonások összege (vigye át ugyanezen casilla
+              label: 'Autonóm közösségi levonások összege (vigye át ugyanezen rovat
                 összegét a B.1, B.2, B.3, B.4, B.5, B.6 vagy B7 melléklet közül a
                 megfelelőből): autonóm közösségi rész'
             '0565':
@@ -8646,9 +8637,8 @@ modelo:
                 + [0569] + [0583] + [0577] + [0578] + [0579] + [0581] + [0504]): autonóm
                 közösségi rész'
             '0600':
-              label: Összeg szerinti levonások és adóelőlegek atribuidos szerinti
-                vagyoni nyereségek és veszteségek elszámolható a(z) 2023 (összeg szerinti
-                a rovatok [1600])
+              label: A 2023-re elszámolható vagyoni nyereségekhez és veszteségekhez
+                rendelt levonások és adóelőlegek összege (a [1600] rovatok összege)
             '0607':
               label: 'Plug-in elektromos járművek és üzemanyagcellás járművek beszerzése
                 miatt: állami rész'
@@ -8797,7 +8787,7 @@ modelo:
             0823:
               label: Kantábriában letelepedett szociális gazdasági jogalanyokba történő
                 befektetések vagy azoknak nyújtott adományok miatt (vigye át a B.8.
-                melléklet [1179] casillájának összegét)
+                melléklet [1179] rovatának összegét)
             0829:
               label: 'A 2019. évi (1) Kanári-szigeteki Beruházási Tartalék (RIC):
                 még megvalósításra váró összeg'
@@ -8831,68 +8821,72 @@ modelo:
             0845:
               label: A vállalkozási beruházás ösztönzésére és támogatására szolgáló,
                 e bevallásban alkalmazott kedvezmények teljes összege a következő
-                rovatok alapján ([0706], [0707], [0752], [0762], [0764], [0768])
+                rovatok alapján ([0706], [0707], [0752], [0762], [0764], [0768], [0773],
+                [0779], [0788], [0791], [0793], [0796], [0797], [0815], [0817], [0836],
+                [0844], [1623], [1627], [1629], [1630], [1686], [1691], [1693], [1694],
+                [1698], [1703], [1705], [1708], [1710], [1717], [1720], [1722], [1723],
+                [1727], [1731], [1944], [1958])
             0853:
               label: A szokásos lakóhely bérletébe fektetett összegek miatt (ezt az
-                összeget vigye át a B.8. melléklet [1130] casillájába)
+                összeget vigye át a B.8. melléklet [1130] rovatába)
             0872:
               label: Az Alternatív Tőzsde terjeszkedő vállalkozások szegmensében jegyzett
                 jogalanyok részvényeibe történő befektetés miatt (ezt az összeget
-                vigye át a B.8. melléklet [1142] casillájába)
+                vigye át a B.8. melléklet [1142] rovatába)
             0873:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             0876:
               label: A tartozás fejében történő ingatlanátruházáshoz kapcsolódó szokásos
                 lakóhely bérbeadása miatt (ezt az összeget vigye át a B.9. melléklet
-                [1170] casillájába)
+                [1170] rovatába)
             0879:
               label: Szociális gazdasági jogalanyokba történő befektetés miatt (vigye
-                át a B.8. melléklet [1179] casillájának összegét)
+                át a B.8. melléklet [1179] rovatának összegét)
             0887:
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             0903:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             0907:
-              label: A szokásos lakóhely bérlete miatt (a B.8. melléklet [1130] casillájának
+              label: A szokásos lakóhely bérlete miatt (a B.8. melléklet [1130] rovatának
                 összege)
             0928:
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             0939:
               label: A szokásos lakóingatlan energetikai felújítási munkálatai után
             0942:
               label: A szokásos lakóhely bérlete miatt, tartozás fejében történő ingatlanátruházáshoz
-                kapcsolódóan (vigye át a B.9. melléklet [1170] casillájának összegét)
+                kapcsolódóan (vigye át a B.9. melléklet [1170] rovatának összegét)
             0944:
               label: A lakásbérleti díjak nemfizetése elleni hitelbiztosítási díjak
-                miatt (a bérbeadó levonása) (vigye át a B.9. melléklet [1203] casillájának
+                miatt (a bérbeadó levonása) (vigye át a B.9. melléklet [1203] rovatának
                 összegét)
             0946:
               label: A szokásos lakóhely bérlete miatt, fiatalok, idősek és fogyatékossággal
-                élők számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                élők számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             0948:
               label: 'Lakóingatlanokon végzett munkálatok miatt: a(z) 2021. és/vagy
                 2022. évben keletkezett, alkalmazásra váró összegek'
             0953:
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             0956:
               label: A 2023. évben keletkezett, lakóingatlanon végzett munkálatok
                 miatt, a következő 2 évben levonható összeg
             0968:
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             0975:
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             0979:
-              label: Vállalkozásindítás ösztönzésére (a B.8. melléklet [1136] casillájának
+              label: Vállalkozásindítás ösztönzésére (a B.8. melléklet [1136] rovatának
                 összege)
             0980:
               label: Vidéki településeken bérbeadásra szánt lakóingatlanok felújításába
@@ -8913,79 +8907,79 @@ modelo:
               label: A 2022-ben keletkezett, még alkalmazásra váró összeg
             '1003':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             '1005':
               label: A 2021., 2022. és 2023. adóévben özveggyé vált adózók számára
             '1008':
               label: Befektetési angyal által új vagy nemrég alakult jogalanyok részvényeinek
                 vagy üzletrészeinek megszerzésébe történő befektetés miatt (ezt az
-                összeget vigye át a B.8. melléklet [1136] casillájába)
+                összeget vigye át a B.8. melléklet [1136] rovatába)
             '1019':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             '1026':
               label: A szokásos lakóhely bérlete miatt, legfeljebb 35 éves adózók
-                számára (ezt az összeget vigye át a B.8. melléklet [1130] casillájába)
+                számára (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)
             '1028':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (vigye át a B.8. melléklet
-                [1136] casillájának összegét)
+                [1136] rovatának összegét)
             '1029':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe és annak finanszírozásába történő befektetés miatt (vigye
-                át a B.8. melléklet [1148] casillájának összegét)
+                át a B.8. melléklet [1148] rovatának összegét)
             '1030':
               label: A Bolsa-i Alternatív Piac terjeszkedő vállalkozások szegmensében
                 jegyzett jogalanyok részvényeibe történő befektetés miatt (vigye át
-                a B.8. melléklet [1142] casillájának összegét)
+                a B.8. melléklet [1142] rovatának összegét)
             '1035':
               label: Mezőgazdasági tevékenységet folytató vállalkozásokba történő
-                befektetés miatt (vigye át a B.8. melléklet [1154] casillájának összegét)
+                befektetés miatt (vigye át a B.8. melléklet [1154] rovatának összegét)
             '1043':
               label: A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a
-                B.8. melléklet [1130] casillájába)
+                B.8. melléklet [1130] rovatába)
             '1046':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             '1048':
               label: Az Alternatív Tőzsdén (MAB) jegyzett jogalanyokba történő befektetések
-                miatt (ezt az összeget vigye át a B.8. melléklet [1142] casillájába)
+                miatt (ezt az összeget vigye át a B.8. melléklet [1142] rovatába)
             '1050':
               label: 3 év alatti gyermekek, gondozásra szoruló idősek és fogyatékossággal
                 élő személyek gondozása után
             '1057':
               label: Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek
                 megszerzésébe történő befektetés miatt (ezt az összeget vigye át a
-                B.8. melléklet [1136] casillájába)
+                B.8. melléklet [1136] rovatába)
             '1058':
               label: Az Alternatív Tőzsdén (MAB) jegyzett jogalanyokba történő befektetések
-                miatt (ezt az összeget vigye át a B.8. melléklet [1142] casillájába)
+                miatt (ezt az összeget vigye át a B.8. melléklet [1142] rovatába)
             '1078':
               label: Az 2019. és/vagy 2020. évben kifizetett, alkalmazásra váró összeg
             '1095':
               label: A szokásos lakóhely használati jogának átengedéséért fizetett
                 bérlet vagy díj miatt (ezt az összeget vigye át a B.8. melléklet [1130]
-                casillájába)
+                rovatába)
             '1114':
               label: 2022-ig saját fogyasztású, illetve megújuló forrásokból villamos
                 vagy hőenergiát termelő berendezésekbe fektetett összegek miatt (a
-                B.9. melléklet [1114] casillájának összege)
+                B.9. melléklet [1114] rovatának összege)
             '1120':
               label: A nagycsaládi jogállás megszerzése után
             '1162':
               label: 'Település kódja:'
             '1165':
               label: A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók
-                számára (vigye át a B.8. melléklet [1130] casillájának összegét)
+                számára (vigye át a B.8. melléklet [1130] rovatának összegét)
             '1168':
               label: A testmozgás és a sportolás ösztönzésére
             '1178':
               label: A befektetett, levonásra jogosító összegek teljes összege (a
-                [1175] és [1177] casillák összege)
+                [1175] és [1177] rovatok összege)
             '1182':
               label: A 2023. évben keletkezett, alkalmazásra váró összeg (a B.8. melléklet
-                [1136] casillájának összege)
+                [1136] rovatának összege)
             '1184':
               label: A 2022-ben keletkezett, még alkalmazásra váró összeg
             '1186':
@@ -9016,7 +9010,7 @@ modelo:
             '1224':
               label: 2023. adóév. Az ingatlan megszerzésébe vagy felújításába fektetett
                 tőke kamatai, valamint javítási és karbantartási kiadások (vigye át
-                a [0108] casilla összegét)
+                a [0108] rovat összegét)
             '1228':
               label: A 31-12-2023. napig új szokásos lakóhely megszerzésébe újrabefektetett
                 összeg
@@ -9060,7 +9054,7 @@ modelo:
             '1257':
               label: A 2023. évnek betudható, az általános adóalapba beszámítandó
                 tőkenyereségek és -veszteségek negatív egyenlege, amely a következő
-                4 adóévben számolható el (a [0421] - [0433] casillák)
+                4 adóévben számolható el (a [0421] - [0433] rovatok)
             '1259':
               label: '2019. Adóév: az időszak elején még alkalmazásra váró összeg'
             '1260':
@@ -9086,7 +9080,7 @@ modelo:
             '1270':
               label: A 2023. évnek betudható, a megtakarítási adóalapba beszámítandó
                 tőkenyereségek és -veszteségek negatív egyenlege, amely a következő
-                4 adóévben számolható el (a [0425] - [0446] casillák)
+                4 adóévben számolható el (a [0425] - [0446] rovatok)
             '1272':
               label: '2019. Adóév: az időszak elején még alkalmazásra váró összeg'
             '1273':
@@ -9112,7 +9106,7 @@ modelo:
             '1283':
               label: A(z) 2023. évre beszámítható ingó tőkejövedelmek negatív egyenlege
                 a megtakarítási adóalapban, amely a következő négy évben kompenzálható,
-                a következő rovatok alapján ([0430])
+                a következő rovatok alapján ([0430], [0436])
             '1285':
               label: '2018. Adóév: az időszak elején még alkalmazásra váró összeg'
             '1286':
@@ -9379,8 +9373,7 @@ modelo:
               label: Elnéptelenedés kockázatának kitett községekben történő szokásos
                 lakóhely-szerzés vagy -felújítás miatt
             '1595':
-              label: Vagyoni nyereségek reducidas nem mentesített elszámolható a(z)
-                2023
+              label: 2023-ra elszámolható, csökkentett, nem mentesített vagyoni nyereségek
             '1600':
               label: Atribución szerinti levonások szerinti vagyoni nyereségek és
                 veszteségek elszámolható a(z) 2023
@@ -9392,7 +9385,7 @@ modelo:
                 levonásai (későbbi adóévekben alkalmazható): a 2022-ben keletkezett,
                 még alkalmazásra váró összeg'
             '1639':
-              label: Pérdida patrimonial elszámolható a(z) 2023
+              label: 2023-ra elszámolható vagyoni veszteség
             '1650':
               label: A 2023-nak betudható, nem mentes, csökkentett vagyoni nyereség
             '1654':
@@ -9432,9 +9425,9 @@ modelo:
               label: 2021-ben és/vagy 2022-ben megfizetett, jövőbeli adóévekben még
                 alkalmazásra váró összeg
             '1718':
-              label: Születés miatt (a B.10. melléklet [1990] casillájának összege)
+              label: Születés miatt (a B.10. melléklet [1990] rovatának összege)
             '1721':
-              label: Örökbefogadás miatt (a B.10. melléklet [1994] casillájának összege)
+              label: Örökbefogadás miatt (a B.10. melléklet [1994] rovatának összege)
             '1762':
               label: Az árak emelkedése miatt
             '1777':
@@ -9449,11 +9442,11 @@ modelo:
             '1794':
               label: Számlaszám
             '1808':
-              label: Pérdida patrimonial elszámolható a(z) 2023
+              label: 2023-ra elszámolható vagyoni veszteség
             '1812':
               label: Ganancia no exenta elszámolható a(z) 2023
             '1832':
-              label: Pérdida patrimonial elszámolható a(z) 2023
+              label: 2023-ra elszámolható vagyoni veszteség
             '1841':
               label: A 2023-nak betudható, nem mentes, csökkentett vagyoni nyereség
             '1843':
@@ -9511,8 +9504,8 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2023 levonások, részletfizetések and withholding
-                  cross-modelo inputs
+                title: 'Modelo 100 2023: levonások, részletfizetések és más kapcsolódó
+                  modellekből származó levonások'
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2023 a közvetlen adózás összesítő mezői
@@ -9710,7 +9703,8 @@ modelo:
                 rendkívüli módon szerzett jövedelmek csökkentései az adótörvény 26.2
                 cikke és 25. átmeneti rendelkezése alapján.'
               label: Több mint két év alatt keletkezett vagy nyilvánvalóan rendkívüli
-                módon szerzett jövedelmek csökkentései
+                módon szerzett jövedelmek csökkentései (az adótörvény 26.2. cikke
+                és 25. átmeneti rendelkezése)
             '0056':
               help: '0056. mező: az általános adóalapba tartozó ingó tőkejövedelem
                 szakasz csökkentett nettó jövedelme.'
@@ -10805,7 +10799,7 @@ modelo:
               label: Ha az adózókat, akik Spanyolországban nem rezidens jogalanyok
                 tagjai, 2023-ban érintette a Társasági adóról szóló törvény VII. címének
                 VII. fejezetében szabályozott egyesülési, szétválási vagy értékpapírcsere-ügylet,
-                jelölje meg "X"-szel ezt a casillát
+                jelölje meg "X"-szel ezt a rovatot
             '0417':
               help: Jelölje be ezt a mezőt, ha az adózót nem spanyolországi illetőségű
                 jogalanyok tagjaként 2023-ban e jogalanyok által végrehajtott, a társasági
@@ -11067,7 +11061,7 @@ modelo:
               label: A megtakarítási adóalap számítása a következő rovatok alapján
                 ([0424], [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445],
                 [0447], [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454],
-                [0455])
+                [0455], [0448])
             '0462':
               help: Azonosítsa azt az adózót, aki a nyugdíj- és szociális előtakarékossági
                 befizetéseket és hozzájárulásokat teljesíti, vagy akinek azokat betudják.
@@ -11182,7 +11176,7 @@ modelo:
             0493:
               help: Tüntesse fel a [0469] mezőből azokra a szociális előtakarékossági
                 rendszerekre alkalmazott összeget, amelyekben a házastárs résztvevő,
-                mutualista vagy jogosult.
+                pénztártag vagy jogosult.
             0494:
               help: Tüntesse fel a [0476] mezőből a fogyatékossággal élő személyek
                 javára létrehozott szociális előtakarékossági rendszerekre alkalmazott
@@ -15783,8 +15777,8 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2024 levonások, részletfizetések and withholding
-                  cross-modelo inputs
+                title: 'Modelo 100 2024: levonások, részletfizetések és más kapcsolódó
+                  modellekből származó levonások'
             renta-final-settlement:
               field:
                 title: Modelo 100 2024 vég settlement result
@@ -16241,7 +16235,7 @@ modelo:
               label: Ha az adózókat, akik Spanyolországban nem rezidens jogalanyok
                 tagjai, 2024-ben érintette a Társasági adóról szóló törvény VII. címének
                 VII. fejezetében szabályozott egyesülési, szétválási vagy értékpapírcsere-ügylet,
-                jelölje meg "X"-szel ezt a casillát
+                jelölje meg "X"-szel ezt a rovatot
             '0417':
               label: Ha az adózókat, akik Spanyolországban nem rezidens jogalanyok
                 tagjai, 2024-ben érintette az ilyen jogalanyok által végzett, a Társasági
@@ -16375,7 +16369,7 @@ modelo:
               label: A megtakarítási adóalap számítása a következő rovatok alapján
                 ([0424], [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445],
                 [0447], [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454],
-                [0455])
+                [0455], [0448])
             '0472':
               label: A 2020-2024. adóévekből származó, a fogyatékkal élő személy saját
                 hozzájárulásai miatt csökkentésre váró túllépések (töltse ki a C.4

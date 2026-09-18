@@ -17,7 +17,7 @@ modelo:
             '02':
               label: Forrásadó és előlegfizetés alapja
             '03':
-              label: Forrásadó és előlegfizetés
+              label: Forrásadó és részletfizetés
             '04':
               label: Korábbi bevallások eredménye
             '05':

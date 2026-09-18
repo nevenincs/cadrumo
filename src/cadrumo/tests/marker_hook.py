@@ -114,6 +114,10 @@ def apply(config: pytest.Config, items: list[pytest.Item]) -> None:
     Raises :class:`pytest.UsageError` for items missing exactly one execution
     marker or exactly one accepted hexagonal architecture marker.
 
+    The contract runs before marker selection, because a test violating the
+    taxonomy is wrong whether or not this lane would execute it. The serial
+    hold is the opposite case and lives in :func:`apply_serial_hold`.
+
     Args:
         config: The active :class:`pytest.Config` from the collection hook.
         items: The mutable collection items list; filtered in-place.
@@ -130,6 +134,37 @@ def apply(config: pytest.Config, items: list[pytest.Item]) -> None:
         remaining.append(item)
     items[:] = remaining
     _refuse_marker_violations(config, violations, offending)
+
+
+class SerialHoldPlugin:
+    """Carries the serial hold in its own hook, so it runs after marker selection.
+
+    A conftest module can implement each pytest hook once, and the taxonomy
+    contract needs the pre-selection list while the hold needs the
+    post-selection one. A registered plugin object is how one process supplies
+    both orderings of the same hook.
+    """
+
+    @pytest.hookimpl(trylast=True)
+    def pytest_collection_modifyitems(self, config: pytest.Config, items: list[pytest.Item]) -> None:
+        """Hold serial items once every other plugin has finished selecting."""
+        apply_serial_hold(config, items)
+
+
+def apply_serial_hold(config: pytest.Config, items: list[pytest.Item]) -> None:
+    """Hold serial items out of a worker run, AFTER marker selection has run.
+
+    Ordering is the whole contract here. The hold refuses the session, so it
+    must see the items this invocation would actually have executed: a lane
+    whose marker expression never selected a serial test has lost nothing, and
+    refusing it reports an incomplete run that was in fact complete. Registered
+    from a ``trylast`` collection hook for that reason, where pytest's own mark
+    plugin has already removed the deselected items.
+
+    Args:
+        config: The active :class:`pytest.Config` from the collection hook.
+        items: The selected items list; filtered in-place.
+    """
     _hold_serial_items_from_xdist(config, items)
 
 
