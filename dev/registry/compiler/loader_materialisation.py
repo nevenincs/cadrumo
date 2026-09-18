@@ -115,6 +115,7 @@ _PREDECESSOR_FIELD: Final = "predecessor"
 _CASILLA_STORAGE_BASELINE_FIELD: Final = "casilla_storage_baseline"
 _FAMILY_STORAGE_BASELINE_FIELD: Final = "family_storage_baseline"
 _RESTATED_FAMILIES_FIELD: Final = "restated_families"
+_CLEARED_FAMILIES_FIELD: Final = "cleared_families"
 _NO_PREDECESSOR_TABLE_KEY: Final = "none"
 _INHERITED_SECTION: Final = "casillas"
 _RETIREMENT_SECTION: Final = "casilla_continuidad_evolutions"
@@ -165,6 +166,34 @@ def _restated_families(successor: Mapping[str, object]) -> frozenset[str]:
     edition be refused with the schema's error rather than a loader one.
     """
     entries = as_toml_array(successor.get(_RESTATED_FAMILIES_FIELD, ())) or ()
+    declared: set[str] = set()
+    for raw_entry in entries:
+        entry = _as_toml_table(raw_entry)
+        if entry is None:
+            continue
+        family = entry.get("family")
+        if isinstance(family, str):
+            declared.add(family)
+    return frozenset(declared)
+
+
+def _cleared_families(successor: Mapping[str, object]) -> frozenset[str]:
+    """Return the families ``successor`` declares it takes none of on this edge.
+
+    A declared family resolves to nothing at all: neither the predecessor's
+    members nor any of the successor's own, because a clearance is the claim
+    that this edition HAS none. It is the strongest of the withdrawal
+    declarations, which is why it carries the same authored cause and reason a
+    restatement does rather than a bare family name.
+
+    Nothing is validated here, for the same reason the restatement reading
+    validates nothing: a malformed entry, a family outside the keyed merge
+    vocabulary, and a clearance with no reason are all refused by the
+    declaration's own typed validators, so a reading that recognises nothing
+    merges as before and lets the edition be refused with the schema's error
+    rather than a loader one.
+    """
+    entries = as_toml_array(successor.get(_CLEARED_FAMILIES_FIELD, ())) or ()
     declared: set[str] = set()
     for raw_entry in entries:
         entry = _as_toml_table(raw_entry)
@@ -227,8 +256,7 @@ def inherit_keyed_family(
     supersedes; and a stated member carrying an identity the same edition
     retires.
     """
-    cleared = as_toml_array(successor.get("cleared_families", ())) or ()
-    if family.section in cleared:
+    if family.section in _cleared_families(successor):
         if successor.get(family.section):
             raise RegistryLoadError(f"{context}: cleared family {family.section!r} also states members")
         return ()
@@ -412,7 +440,7 @@ def _apply_family_storage_delta(
     successor: Mapping[str, object],
 ) -> tuple[tuple[object, ...], frozenset[str], tuple[tuple[str, int], ...], frozenset[str]]:
     """Apply the canonical field/removal/order delta to one keyed family."""
-    if family.section in (as_toml_array(successor.get("cleared_families", ())) or ()):
+    if family.section in _cleared_families(successor):
         return tuple(), frozenset[str](), tuple(), frozenset[str]()
     try:
         overrides = tuple(
@@ -481,7 +509,7 @@ def _refuse_undecided_scoped_family(
     family: _KeyedFamily,
     inherited: tuple[object, ...],
     stated: tuple[object, ...],
-    declined: tuple[object, ...],
+    declined: frozenset[str],
 ) -> None:
     """Refuse silence that would leave a scoped family empty on both sides of an edge.
 
@@ -1162,7 +1190,7 @@ def _materialise_revision(
                 source_path, raw_revisions, named, storage_named, family_storage_named, family_baseline_id, resolved
             )
             asserted = as_toml_array(table.get("scoped_families", ())) or ()
-            declined = as_toml_array(table.get("cleared_families", ())) or ()
+            declined = _cleared_families(table)
             for family in _KEYED_FAMILIES:
                 if family.section in restated:
                     continue
