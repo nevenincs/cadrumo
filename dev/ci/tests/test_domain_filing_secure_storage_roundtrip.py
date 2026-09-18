@@ -238,6 +238,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
     """
 
     from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
+    from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from cadrumo.domain.calculations.registry.bindings import CasillaObservation
     from cadrumo.domain.modelos.calculation_revision import (
         CalculationRevision,
@@ -245,6 +246,7 @@ def test_calculation_revision_observations_survive_encrypted_storage(
         CalculationRevisionState,
         derive_calculation_revision_id,
     )
+    from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, derive_work_unit_id
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         observation = CasillaObservation(
@@ -257,15 +259,40 @@ def test_calculation_revision_observations_survive_encrypted_storage(
             legal_refs=("ley-37-1992:art-94",),
             source_refs=("aeat-iva-2025",),
         )
-        work_unit_id = "9" * 64
-        registry_snapshot_ref = (
-            compiled_bundled_authority()
-            .snapshot(
-                "303",
-                filing_year=2025,
-                period="1T",
+        # The calculation revision hangs off a WorkUnit, and the repository
+        # refuses one whose parent is not persisted or whose registry
+        # coordinate disagrees with it. So the parent is built from the same
+        # snapshot the revision cites and saved first, rather than the invented
+        # id this test used to carry: that id could never resolve, so the test
+        # was asserting the round trip of a revision the product would refuse
+        # to store at all.
+        snapshot = compiled_bundled_authority().snapshot("303", filing_year=2025, period="1T")
+        registry_snapshot_ref = snapshot.snapshot_ref
+        period = Period.from_year_and_code(registry_snapshot_ref.modelo_year, registry_snapshot_ref.period)
+        work_unit_id = derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo=registry_snapshot_ref.modelo,
+            filing_year=registry_snapshot_ref.modelo_year,
+            period=period,
+            revision_id=registry_snapshot_ref.revision_id,
+        )
+        WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID).save(
+            WorkUnitCatalogue(
+                work_units={
+                    work_unit_id: WorkUnit(
+                        work_unit_id=work_unit_id,
+                        bucket_id=_BUCKET_ID,
+                        modelo=registry_snapshot_ref.modelo,
+                        filing_year=registry_snapshot_ref.modelo_year,
+                        period=period,
+                        revision_id=registry_snapshot_ref.revision_id,
+                        name=f"{registry_snapshot_ref.modelo}-{registry_snapshot_ref.modelo_year}-"
+                        f"{registry_snapshot_ref.period}",
+                        created_at=_DRAFT_TIMESTAMP,
+                        updated_at=_DRAFT_TIMESTAMP,
+                    )
+                }
             )
-            .snapshot_ref
         )
         casilla_values: dict[CasillaId, Decimal] = {_IVA_RESULTADO_REGIMEN_GENERAL_CASILLA: Decimal("12345.67")}
         revision = CalculationRevision(
