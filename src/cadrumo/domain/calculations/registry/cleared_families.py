@@ -25,12 +25,14 @@ while reading as though it did.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from enum import StrEnum
-from typing import Annotated, Final
+from typing import Annotated, Final, cast
 
 from pydantic import BeforeValidator, Field, field_validator
 
 from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.type_guards import is_object_mapping
 from .errors import RegistryValidationError
 from .keyed_families import CASILLAS_FAMILY
 from .keyed_families import KEYED_FAMILY_SPECS as _CANONICAL_KEYED_FAMILY_SPECS
@@ -41,6 +43,7 @@ __all__ = (
     "ClearedFamilyCause",
     "ClearedFamilyCauseField",
     "ClearedFamilyDeclaration",
+    "cleared_family_names",
 )
 
 
@@ -52,6 +55,33 @@ __all__ = (
 #: still carried every row. The set is projected from the domain-owned policy
 #: table so the authored claim and the merge stay closed on one vocabulary.
 CLEARABLE_FAMILIES: Final[frozenset[str]] = frozenset(spec.section for spec in _CANONICAL_KEYED_FAMILY_SPECS)
+
+
+def cleared_family_names(declarations: object) -> frozenset[str]:
+    """Return the families a ``cleared_families`` value withdraws.
+
+    Compilation, the delta signal and the migration assessment all need the
+    same answer from the same value, and they hold it at different stages: the
+    loader sees raw TOML tables, later consumers may hold typed declarations.
+    Reading both shapes here keeps one answer rather than a membership test per
+    consumer, which is how a bare-string reading survived in three places at
+    once.
+
+    Nothing is validated. An entry that is neither shape, or one naming no
+    family, contributes nothing and is refused by
+    :class:`ClearedFamilyDeclaration` itself, so a reading that recognises
+    nothing declines nothing and lets the edition be refused with the schema's
+    error rather than a consumer's.
+    """
+    if isinstance(declarations, str) or not isinstance(declarations, Iterable):
+        return frozenset()
+    entries = cast("Iterable[object]", declarations)
+    names: set[str] = set()
+    for declaration in entries:
+        family = declaration.get("family") if is_object_mapping(declaration) else getattr(declaration, "family", None)
+        if isinstance(family, str):
+            names.add(family)
+    return frozenset(names)
 
 
 class ClearedFamilyCause(StrEnum):
