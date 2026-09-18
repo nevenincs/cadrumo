@@ -21,7 +21,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
-from ....core.type_guards import is_object_mapping
+from ....core.type_guards import is_object_list_or_tuple, is_object_mapping
 
 __all__ = (
     "CANONICAL_FAMILY_SPECS",
@@ -353,8 +353,8 @@ def bound_family_source_refs(
     typed construction and is refused there with the field's own error rather
     than being silently repaired here.
     """
-    ordered_default = tuple(default) if isinstance(default, list | tuple) else ()
-    ordered_additions = tuple(additions) if isinstance(additions, list | tuple) else ()
+    ordered_default = tuple(default) if is_object_list_or_tuple(default) else ()
+    ordered_additions = tuple(additions) if is_object_list_or_tuple(additions) else ()
     return tuple(dict.fromkeys((*ordered_default, *ordered_additions)))
 
 
@@ -383,7 +383,7 @@ def inline_family_source_default(
     if default_key is None or ROW_SOURCE_FIELD in member:
         return member
     default = edition.get(default_key)
-    if not isinstance(default, list | tuple) or not default:
+    if not is_object_list_or_tuple(default) or not default:
         return member
     bound = dict(member)
     additions = bound.pop(ROW_SOURCE_ADDITIONS_FIELD, ())
