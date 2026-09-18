@@ -1112,17 +1112,21 @@ def _build_modelo_coverage(reports: Iterable[WorkbookArtefactReport]) -> tuple[W
 def _detect_excel_com_clsid() -> str | None:
     # ``sys`` is imported at module level rather than here: a checker narrows
     # ``sys.platform`` only through a module-level binding, so the function-local
-    # import left the winreg block analysed on every platform.
-    if sys.platform != "win32":  # narrows winreg to the platform that ships it
-        return None
-    try:
-        import winreg
+    # import left the winreg block analysed on every platform. The positive
+    # block, rather than an early return off Windows, is what narrows ``winreg``
+    # to the platform that ships it: it is the only guard shape every checker
+    # this project runs honours, which is what retired the suppressions that
+    # used to sit on the two calls below.
+    if sys.platform == "win32":
+        try:
+            import winreg
 
-        with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r"Excel.Application\CLSID") as key:  # pyrefly: ignore[missing-attribute]  # reason: winreg attributes are platform-gated in typeshed and the function returns early off-Windows, so this block is unreachable there
-            value, _kind = winreg.QueryValueEx(key, "")  # pyrefly: ignore[missing-attribute]  # reason: same platform gate as the OpenKey call above
-        return str(value)
-    except (FileNotFoundError, OSError, ImportError):
-        return None
+            with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r"Excel.Application\CLSID") as key:
+                value, _kind = winreg.QueryValueEx(key, "")
+            return str(value)
+        except (FileNotFoundError, OSError, ImportError):
+            return None
+    return None
 
 
 def _infer_modelo(relative_path: str) -> str | None:
