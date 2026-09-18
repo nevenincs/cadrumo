@@ -11,7 +11,7 @@ from pydantic import Field, TypeAdapter, model_validator
 from .....core.errors.hierarchy import pydantic_validation_boundary
 from .....core.filing_year import FilingYear
 from .....core.period import RegistrySelectorPeriodCode
-from ..errors import RegistryValidationError
+from ..errors import GovernedFactNotApplicableError, RegistryValidationError
 from ..ids import LegalRefId, RegistryRevisionNodeId, SourceRefId
 from ..period_selector_match import selector_period_matches_request
 from ..schema_base import (
@@ -358,7 +358,11 @@ def resolve_validated_governed_fact(
     projection_direction = TemporalProjectionDirection.AUTHORED
     projected_from_date: date | None = None
     if not candidates:
-        raise RegistryValidationError(f"governed fact {query.fact_id!r} has no variant for the exact query context")
+        raise GovernedFactNotApplicableError(
+            fact_id=query.fact_id,
+            effective_date=query.effective_date,
+            date_axis=query.date_axis.value,
+        )
     candidate_variants = tuple(variant for variant, _window in candidates)
     superseded = {
         variant_id

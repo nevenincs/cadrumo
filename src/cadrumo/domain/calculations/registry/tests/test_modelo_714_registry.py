@@ -10,7 +10,7 @@ import pytest
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.resources.bundled_data import bundled_path
 from ..binding_temporal import TargetPeriods
-from ..errors import NoRevisionForPeriodError
+from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
 from ..relations import relation_prefill_bindings_for_period, relation_source_requirements
 from ..schema import ModeloDefinition, RegistryCatalogues
@@ -388,7 +388,7 @@ def test_modelo_714_snapshot_refuses_the_authored_2021_event_period_below_the_su
     assert supported_years.floor > 2021
     modelo, catalogues = _load_modelo_714()
     assert modelo.revisions["2021"].period_selector.years == (2021,)
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError) as excinfo:
         build_snapshot(
             modelo,
             catalogues,
@@ -396,6 +396,8 @@ def test_modelo_714_snapshot_refuses_the_authored_2021_event_period_below_the_su
             filing_year=2021,
             period="0A",
         )
+    # The refusal is the envelope's, and it says so: 2021 IS authored.
+    assert "2021" in excinfo.value.covering_revision_ids
 
 
 def test_modelo_714_snapshot_builds_for_the_supported_floor_event_period() -> None:

@@ -631,8 +631,9 @@ class ModeloRevision(RegistryRevisionDeclaration):
     one of them differs. Each is independent: declaring one says nothing about
     the others, and an edition declaring none is exactly as it was before these
     keys existed. The pairing of family to field is declared once, in
-    :data:`~.reference_sections.FAMILY_SOURCE_DEFAULT_FIELDS`, which is what the
-    loader fills from, so no family can be defaulted from another's grounding.
+    :data:`~.keyed_families.CANONICAL_FAMILY_SPECS`, whose ``source_default_key``
+    is what the loader fills from, so no family can be defaulted from another's
+    grounding.
 
     Whether a useful family source default can be derived is an optimization
     result calculated from the member declarations. It is not revision data.

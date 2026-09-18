@@ -15,6 +15,7 @@ from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
+from datetime import date
 from enum import StrEnum
 from typing import Self
 
@@ -134,6 +135,55 @@ class RegistryValidationError(RegistryError, CoreValidationError):
                 "filing_year": ejercicio,
                 "required_slot_first": 1,
                 "required_slot_last": 5,
+            },
+        )
+
+
+class GovernedFactNotApplicableError(RegistryValidationError):
+    """A registered governed fact authors no variant covering the query coordinate.
+
+    This is the governed-fact half of the invariant
+    :class:`FilingYearOutsideSupportEnvelopeError` holds for revision
+    selection: *absent* and *unresolvable* are different states, and a caller
+    that cannot tell them apart cannot choose a remedy.
+
+    Only this error means "the law authors nothing here". Every other refusal
+    the resolver raises -- an unregistered fact id, a family mismatch, a
+    coordinate the support envelope gates, an ambiguous variant set, a caller
+    with no facts authority in scope at all -- stays a plain
+    :class:`RegistryValidationError`, because each names a defect in the
+    caller or the corpus rather than a statement about applicability.
+
+    The distinction is not academic. A compiler boundary that decides whether
+    an observed source feature is legally expected resolves the fact and reads
+    its absence as "not expected this year". Catching the broad type there
+    converts a missing scope, a mistyped fact id, or a corrupted payload into
+    a confident claim about tax law -- the silent under-declaration failure
+    mode arriving from the opposite direction, where an unknown is promoted to
+    a declared finding instead of demoted to zero.
+
+    Structured attributes: ``fact_id``, ``effective_date``, ``date_axis``.
+    """
+
+    def __init__(self, *, fact_id: str, effective_date: date, date_axis: str) -> None:
+        """Construct the no-applicable-variant refusal.
+
+        Args:
+            fact_id: The registered fact whose variants were searched.
+            effective_date: The coordinate no variant window contained.
+            date_axis: The axis the query was posed on, carried because a fact
+                may author the coordinate on a different axis entirely and a
+                refusal that omits the axis sends the reader to the wrong rows.
+        """
+        self.fact_id: str = fact_id
+        self.effective_date: date = effective_date
+        self.date_axis: str = date_axis
+        super().__init__(
+            f"governed fact {fact_id!r} has no variant for the exact query context",
+            context={
+                "fact_id": fact_id,
+                "effective_date": effective_date.isoformat(),
+                "date_axis": date_axis,
             },
         )
 
@@ -357,6 +407,10 @@ class FilingYearOutsideSupportEnvelopeError(RegistrySnapshotError):
                 f"revision(s) {', '.join(covering)}, so this is an envelope scope refusal, "
                 f"not a missing revision"
             )
+        else:
+            # Both facts are true at once here, and saying only the first would
+            # send a reader to move the floor for a coordinate nothing authors.
+            detail = f"{detail}, and no modelo {modelo_id} revision covers it either"
         super().__init__(
             detail,
             translated_message="errors.snapshot.filing_year_outside_support_envelope",
