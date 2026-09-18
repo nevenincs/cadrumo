@@ -1621,16 +1621,17 @@ class ModeloCasillaCatalogue:
         return drift
 
     def copied_translations(self, locale: str) -> dict[str, str]:
-        """Return the ``locale`` keys that serve a label identical to its resolved Spanish text."""
+        """Return the ``locale`` keys that serve a label or help identical to its resolved Spanish."""
         copied: dict[str, str] = {}
         lookup = self.lookup_for(self.values)
         for index, occurrence in enumerate(self.occurrences):
-            source = modelo_localization_source(occurrence.chain("label"), locale=locale, lookup=lookup)
-            if source is None or source[1] != locale:
-                continue
-            text = self.values[locale][source[0]]
-            if text is not None and text == self.resolve(index, "label", SOURCE_LOCALE):
-                copied[source[0]] = text
+            for field_name in _FIELDS:
+                source = modelo_localization_source(occurrence.chain(field_name), locale=locale, lookup=lookup)
+                if source is None or source[1] != locale:
+                    continue
+                text = self.values[locale][source[0]]
+                if text is not None and text == self.resolve(index, field_name, SOURCE_LOCALE):
+                    copied[source[0]] = text
         return copied
 
     def stale_translations(
@@ -1641,20 +1642,21 @@ class ModeloCasillaCatalogue:
         """Return lineages where one translation renders two different Spanish texts.
 
         The official wording changed and the translation did not follow, so a
-        filer reads text that no longer matches the Spanish label.
+        filer reads text that no longer matches the Spanish label or help.
         """
         lookup = self.lookup_for(self.values)
         spanish_by_translation: dict[tuple[str, str, str], set[str]] = defaultdict(set)
         for index, occurrence in enumerate(self.occurrences):
-            source = modelo_localization_source(occurrence.chain("label"), locale=locale, lookup=lookup)
-            spanish = self.resolve(index, "label", SOURCE_LOCALE)
-            if source is None or source[1] != locale or spanish is None:
-                continue
-            translation = self.values[locale][source[0]]
-            if translation is None:
-                continue
-            lineage = occurrence.continuidad_id or f"casilla:{occurrence.casilla}"
-            spanish_by_translation[(occurrence.modelo, lineage, translation)].add(spanish)
+            for field_name in _FIELDS:
+                source = modelo_localization_source(occurrence.chain(field_name), locale=locale, lookup=lookup)
+                spanish = self.resolve(index, field_name, SOURCE_LOCALE)
+                if source is None or source[1] != locale or spanish is None:
+                    continue
+                translation = self.values[locale][source[0]]
+                if translation is None:
+                    continue
+                lineage = occurrence.continuidad_id or f"casilla:{occurrence.casilla}"
+                spanish_by_translation[(occurrence.modelo, lineage, translation)].add(spanish)
         return tuple(
             sorted(
                 {
@@ -1672,18 +1674,20 @@ class ModeloCasillaCatalogue:
         it. Such rows are derivable, never new translation work.
         """
         lookup = self.lookup_for(self.values)
-        translated: set[tuple[str, str, str]] = set()
-        untranslated: list[tuple[tuple[str, str, str], str]] = []
+        translated: set[tuple[str, str, str, str]] = set()
+        untranslated: list[tuple[tuple[str, str, str, str], str]] = []
         for index, occurrence in enumerate(self.occurrences):
-            spanish = self.resolve(index, "label", SOURCE_LOCALE)
-            if spanish is None:
-                continue
-            group = (occurrence.modelo, occurrence.continuidad_id or f"casilla:{occurrence.casilla}", spanish)
-            source = modelo_localization_source(occurrence.chain("label"), locale=locale, lookup=lookup)
-            if source is not None and source[1] == locale:
-                translated.add(group)
-            else:
-                untranslated.append((group, f"{occurrence.modelo}/{occurrence.revision}/{occurrence.casilla}"))
+            for field_name in _FIELDS:
+                spanish = self.resolve(index, field_name, SOURCE_LOCALE)
+                if spanish is None:
+                    continue
+                lineage = occurrence.continuidad_id or f"casilla:{occurrence.casilla}"
+                group = (occurrence.modelo, lineage, field_name, spanish)
+                source = modelo_localization_source(occurrence.chain(field_name), locale=locale, lookup=lookup)
+                if source is not None and source[1] == locale:
+                    translated.add(group)
+                else:
+                    untranslated.append((group, f"{occurrence.modelo}/{occurrence.revision}/{occurrence.casilla}"))
         return tuple(sorted(label for group, label in untranslated if group in translated))
 
     def served_sources(self, locale: str) -> dict[str, frozenset[str]]:
