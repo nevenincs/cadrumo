@@ -92,3 +92,35 @@ def test_the_authored_history_authority_resolves_a_pre_floor_ejercicio_the_filin
     )
 
     assert revision.id == "2020"
+
+
+def test_no_pending_orden_declaration_is_swallowed_by_the_envelope_gate() -> None:
+    """A pending-Orden year must sit inside the envelope, or its message is lost.
+
+    `EjercicioOrdenNotYetPublishedError` exists to say something the plain
+    absence refusal cannot: this year is not an authoring gap anybody can
+    close, because AEAT has not issued the Orden yet. That refusal is built
+    only after the envelope gate has let the request through, so a pending
+    declaration for a year below the floor would be answered by the envelope
+    instead and its specific advice would never reach an operator.
+
+    Which is the RIGHT ordering -- below the floor, waiting for the Orden does
+    not help, so telling someone to wait would be wrong. What is not right is
+    authoring such a declaration and never learning it is inert. This asserts
+    the corpus stays out of that state, derived from the live declarations and
+    the live envelope so neither can drift into it unnoticed.
+    """
+    authority = compiled_bundled_authority()
+    support = authority.catalogues.require_supported_filing_years()
+    inert = tuple(
+        (str(modelo.id), pending.filing_year)
+        for modelo in authority.modelos
+        for pending in modelo.pending_ejercicio_ordenes
+        if not support.admits_filing_year(pending.filing_year)
+    )
+
+    assert not inert, (
+        f"pending-Orden declarations sit outside the support envelope "
+        f"[floor={support.floor}, hard_ceiling={support.hard_ceiling}], so the envelope "
+        f"refusal preempts their message: {inert!r}"
+    )
