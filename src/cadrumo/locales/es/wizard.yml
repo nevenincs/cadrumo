@@ -268,7 +268,7 @@ wizard:
     filing-export:
       charge-iban:
         help: IBAN que la AEAT puede cargar cuando una declaración del Modelo 303
-          elige la domiciliacion. Es distinto de la cuenta de devolucion.
+          elige la domiciliacion. Es distinto de la cuenta de devolución.
         prompt: IBAN para la domiciliacion de la AEAT
       title: Cuenta de cargo del Modelo 303
     flags:
@@ -282,7 +282,7 @@ wizard:
         help: Código postal del domicilio fiscal
       art109-activity-income-withholding-ge-70pct:
         help: Cobertura Art. 109 - al menos 70% de ingresos de actividades profesionales,
-          agricolas, ganaderas o forestales sujetos a retención o ingreso a cuenta
+          agrícolas, ganaderas o forestales sujetos a retención o ingreso a cuenta
       bienes-extranjero-above-threshold:
         help: Bienes en el extranjero superan el umbral legal
       charge-iban:

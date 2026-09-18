@@ -1776,7 +1776,7 @@ modelo:
               - Amount paid due to insufficient tax liability [01130]
           01138:
             help: '6.- Double taxation relief: deduction base - B) Datos económicos'
-            label: 'B) Datos económicos. 6.- Double taxation relief: deduction base'
+            label: 'B) Economic data. 6.- Double taxation relief: deduction base'
           '01140':
             label: Capitalization reserve - Capitalization reserve allocated in the
               year [01140]
@@ -6460,10 +6460,10 @@ modelo:
           dp200014-00563:
             label: Settlement III - Tax credits/Double taxation deductions - Rebate
               on income from the sale of tangible goods produced in the Canary Islands
-              [00563]
+              (art. 26, Law 19/1994) [00563]
           dp200014-00566:
             label: Settlement III - Tax credits/Double taxation deductions - Rebates
-              for cooperative societies [00566]
+              for cooperative societies (Law 20/1990) [00566]
           dp200014-00567:
             label: Settlement III - Tax credits/Double taxation deductions - Rebate
               for income obtained in Ceuta and Melilla (art. 33 LIS) [00567]
@@ -6552,7 +6552,7 @@ modelo:
               the entity
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-base-de-la-deduc:
             help: '6.- Double taxation relief: deduction base - B) Datos económicos'
-            label: 'B) Datos económicos. 6.- Double taxation relief: deduction base'
+            label: 'B) Economic data. 6.- Double taxation relief: deduction base'
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-importe-de-la-de:
             help: '6.- Double taxation relief: deduction amount - B) Datos económicos'
             label: 'B) Datos económicos. 6.- Double taxation relief: deduction amount'
@@ -8685,8 +8685,8 @@ modelo:
           is-deduccion-espectaculos-vivo-productor-aplicado-periodo:
             help: 'Applied in this settlement - Productor: espectáculos en vivo artes
               escénicas y musicales (EV)'
-            label: 'Productor: espectáculos en vivo artes escénicas y musicales (EV).
-              Applied in this settlement'
+            label: 'Producer: live performing-arts and music shows (EV). Applied in
+              this settlement'
           is-deduccion-espectaculos-vivo-productor-pendiente-futuros:
             help: 'Pending application in future periods - Productor: espectáculos
               en vivo artes escénicas y musicales (EV)'
@@ -8799,8 +8799,8 @@ modelo:
           is-deduccion-produccion-cinematografica-espanola-financiador:
             help: 'Deduction pending or generated - Financiador: producciones cinematográficas
               españolas (FPC)'
-            label: 'Financiador: producciones cinematográficas españolas (FPC). Deduction
-              pending or generated'
+            label: 'Financier: Spanish film productions (FPC). Deduction pending or
+              generated'
           is-deduccion-produccion-cinematografica-espanola-financiador-aplicado-periodo:
             help: 'Applied in this settlement - Financiador: producciones cinematográficas
               españolas (FPC)'
@@ -8949,7 +8949,9 @@ modelo:
               or owners - Increase (reduction) in equity from business combination
               - Capital - Subscribed [00590]
           is-ecpn-total-cambios-conversion-pasivos-acciones-participaciones-propias:
-            label: Settlement III - Tax base - Tax base [00552]
+            label: Statement of changes in equity (II) - Transactions with partners
+              or owners - Conversion of liabilities into equity - Treasury shares
+              and equity holdings [00552]
           is-ecpn-total-cambios-conversion-pasivos-prima-emision:
             label: Settlement III - Tax base - Tax base before offsetting negative
               tax bases [00550]
@@ -9102,8 +9104,9 @@ modelo:
             help: Flag indicating venture capital entities [00031].
             label: Venture capital entities [00031]
           is-entidades-sometidas-a-normativa-foral:
-            help: Flag indicating entities subject to foral regulations [00047].
-            label: Entities subject to foral regulations [00047]
+            help: Flag indicating entities subject to regional (foral) regulations
+              [00047].
+            label: Entities subject to regional (foral) regulations [00047]
           is-erd-amortizacion-acelerada-aumento:
             label: 'Small enterprises: accelerated depreciation (art. 103 LIS and
               Transitional Provision 28 LIS) - Increase - Adjustments for the tax
@@ -9715,8 +9718,9 @@ modelo:
             help: Flag indicating the SOCIMI exit tax regime [00057].
             label: SOCIMI exit tax regime [00057]
           is-regimenes-especiales-de-normativa-foral:
-            help: Flag indicating special regimes under foral regulations [00049].
-            label: Special foral-regulation regimes [00049]
+            help: Flag indicating special regimes under regional (foral) regulations
+              [00049].
+            label: Special regimes under regional (foral) regulations [00049]
           is-reserva-capitalizacion-derecho-generado:
             label: Capitalization reserve - Total - Right to reduce tax base generated
               in period/pending application at start of period [01137]
@@ -10725,17 +10729,18 @@ modelo:
             '01242':
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.5 and/or 83 LIS - c1) Finance costs of the tax period deductible
-                after applying the art. 16.5 and/or 83 LIS limit (≤ [a=c1+c2] [01242]
+                after applying the art. 16.5 and/or 83 LIS limit (≤ [b], [a=c1+c2],
+                ≥ 0) [01242]
             '01244':
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.5 and/or 83 LIS - d) Finance costs pending deduction from earlier
                 periods, affected by art. 16.5 and/or 83 LIS, deductible after this
-                limit ( [01244]
+                limit ([b≥c1+d], ≥ 0] [01244]
             01258:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - m) Finance costs pending deduction from earlier
                 tax periods, affected by art. 16.5 and/or 83 LIS, deductible after
-                applying both limits (≤ [01258]
+                applying both limits (≤ [d], ≥ 0) [01258]
             01259:
               label: Limitation on deductibility of financial expenses - Limit art.
                 16.1 and 16.2 LIS - n) Finance costs pending deduction from earlier
@@ -12195,7 +12200,7 @@ modelo:
                 - Adjustments for the tax year - Temporary (originating in prior tax
                 years) [03368]
           field:
-            label: Modelo 200 tax years 2024 and following (DR200e25.xls)
+            label: Modelo 200, tax year 2024
         2025-y-siguientes:
           casilla:
             '00077':
@@ -15117,7 +15122,9 @@ modelo:
               label: Settlement III - Tax base - Offset of negative tax bases from
                 previous periods [00547]
             x-8h834c1g60oj2ehg60qjae0:
-              label: Settlement III - Tax base - Tax rate [00558]
+              label: Statement of changes in equity (III) - Transactions with shareholders
+                or owners - Conversion of liabilities into equity - Value change adjustments
+                [00558]
             x-8h834c1g60oj2ehg60qjce8:
               label: Statement of changes in equity (III) - Transactions with shareholders
                 or owners - (-) Distribution of dividends - Result for the period
@@ -15164,4 +15171,4 @@ modelo:
               label: Statement of changes in equity (III) - Other changes in equity
                 - Result for the period [00625]
           field:
-            label: Modelo 200 tax years 2024 and following (DR200e25.xls)
+            label: Modelo 200, tax years 2025 onwards

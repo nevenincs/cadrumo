@@ -1501,7 +1501,7 @@ cli:
         rescate_year_help: Year the rescate benefit is received (defaults to the filing
           year). Compared against the LIRPF DT 12a apartado-4 window measured from
           --contingencia-year.
-        result_summary_header: result summary  Modelo %{modelo} %{year} %{period}
+        result_summary_header: result summary Modelo %{modelo} %{year} %{period}
         resume_help: Validate whether you can retry an interrupted workflow run without
           contacting AEAT. Use --modelo --year --period for the normal path; exact
           ids remain advanced escape hatches.

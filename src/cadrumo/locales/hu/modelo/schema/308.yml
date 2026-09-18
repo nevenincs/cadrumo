@@ -22,16 +22,13 @@ modelo:
       revision:
         2009-2011-junio:
           field:
-            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
-              szerinti eseti szabályozás)
+            label: 308-es modelo, 2009-2011. adóévek, 2011. júniusáig
         2011-julio-2015:
           field:
-            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
-              szerinti eseti szabályozás)
+            label: 308-es modelo, 2011-2015. adóévek, 2011. júliusától
         2016-2018:
           field:
-            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
-              szerinti eseti szabályozás)
+            label: 308-es modelo, 2016-2018. adóévek
         2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
@@ -172,5 +169,4 @@ modelo:
               help: A 308-es modelo 109. rovata, 2009. adóév.
               label: Adózás típusa az adóalany szerint
           field:
-            label: 308-as modelo, 2009. adóévtől (EHA/3786/2008 rendelet, operátortípus
-              szerinti eseti szabályozás)
+            label: 308-es modelo, 2019. adóévtől

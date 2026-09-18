@@ -115,19 +115,19 @@ modelo:
             label: IVA meritat - Suma de quotes d'activitats no agrícoles, ramaderes
               i forestals
           iva-anual-regimen-simplificado-entrega-activos-fijos-cuota-devengada:
-            label: IVA meritat en lliuraments de activos fixos
+            label: IVA meritat en lliuraments de actius fixos
           iva-anual-regimen-simplificado-inversion-sujeto-pasivo-cuota-devengada:
             label: IVA meritat per inversió del subjecte passiu
           iva-anual-regimen-simplificado-iva-soportado-activos-fijos:
-            label: Deduccions - IVA suportat en adquisició de activos fixos
+            label: Deduccions - IVA suportat en adquisició de actius fixos
           iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
             label: Deduccions - Regularització de béns de inversió
           iva-anual-regimen-simplificado-resultado:
-            label: Resultat règim simplificado
+            label: Resultat règim simplificat
           iva-anual-regimen-simplificado-suma-deducciones:
             label: Deduccions - Suma de deduccions
           iva-anual-regularizacion-bienes-inversion:
-            label: Regularització de béns d'inversió
+            label: Regularització de béns d'inversió (LIVA arts. 107-110)
           iva-anual-regularizacion-prorrata-definitiva:
             label: Regularització de prorrata per percentatge definitiu - quota
           iva-anual-repercutido-recargo-tipo-0-26-base:
@@ -210,7 +210,8 @@ modelo:
           iva-compensacion-cuotas-ejercicio-anterior:
             label: Compensació de quotes de l'exercici anterior
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+            label: Quota d'IVA autorepercutit en adquisicions intracomunitàries (LIVA
+              art. 84.Uno.2)
           iva-cuota-recargo-equivalencia-general:
             label: Recàrrec d'equivalència al tipus general (5,2%) - quota
           iva-cuota-recargo-equivalencia-reducido:
@@ -251,6 +252,7 @@ modelo:
             label: Quota d'IVA repercutit al tipus 7,5%
           iva-cuota-soportada-importaciones:
             label: Quota d'IVA suportat deduïble en importacions de béns corrents
+              (LIVA art. 17 + art. 92; casella oficial 33)
           iva-cuota-soportada-interiores:
             label: Quota IVA suportat en operacions interiors corrents
           iva-deducible-aic-corrientes-tipo-10-base:
@@ -649,7 +651,8 @@ modelo:
             label: Base imposable de l'IVA autorepercutit en operacions interiors
               amb inversió del subjecte passiu
           iva-isp-interior-cuota:
-            label: IVA autorepercutit meritat en operacions interiors
+            label: IVA autorepercutit meritat en operacions interiors (LIVA art. 84.Uno.2;
+              casella oficial 13)
           iva-liquidaciones-total-a-ingresar:
             label: Total resultats a ingressar de les autoliquidacions d'IVA de l'exercici
           iva-liquidaciones-total-devoluciones-elementos-transporte:
@@ -1593,18 +1596,18 @@ modelo:
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
               help: 'Consulteu la informació de la casella: IVA meritat en lliuraments
-                de activos fixos.'
+                de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
               help: 'Consulteu la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
               help: 'Consulteu la informació de la casella: Deduccions - IVA suportat
-                en adquisició de activos fixos.'
+                en adquisició de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
               help: 'Consulteu la informació de la casella: Deduccions - Regularització
                 de béns de inversió.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Consulteu la informació de la casella: Resultat règim simplificado.'
+              help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.
@@ -2472,18 +2475,18 @@ modelo:
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
               help: 'Consulteu la informació de la casella: IVA meritat en lliuraments
-                de activos fixos.'
+                de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
               help: 'Consulteu la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
               help: 'Consulteu la informació de la casella: Deduccions - IVA suportat
-                en adquisició de activos fixos.'
+                en adquisició de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
               help: 'Consulteu la informació de la casella: Deduccions - Regularització
                 de béns de inversió.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Consulteu la informació de la casella: Resultat règim simplificado.'
+              help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.
@@ -3371,18 +3374,18 @@ modelo:
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
               help: 'Consulteu la informació de la casella: IVA meritat en lliuraments
-                de activos fixos.'
+                de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
               help: 'Consulteu la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
               help: 'Consulteu la informació de la casella: Deduccions - IVA suportat
-                en adquisició de activos fixos.'
+                en adquisició de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
               help: 'Consulteu la informació de la casella: Deduccions - Regularització
                 de béns de inversió.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Consulteu la informació de la casella: Resultat règim simplificado.'
+              help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.

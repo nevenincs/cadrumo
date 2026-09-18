@@ -93,7 +93,7 @@ cli:
           donar el document per erroni, de manera que aquesta factura queda registrada
           sense tractament d'IVA i no es desglossarà en una declaració fins que es
           resolgui el país o l'establiment de la contrapart.
-        confirm_counterparty_name_help: Nom de la contrapart (sense heuristica d'extracció
+        confirm_counterparty_name_help: Nom de la contrapart (sense heurística d'extracció
           encara; normalment obligatori).
         confirm_counterparty_nif_help: Sobreescriu el NIF del proveïdor extret.
         confirm_currency_help: Codi de moneda ISO-4217.
@@ -264,10 +264,10 @@ cli:
             país. Aquest esborrany es pot confirmar igualment; la part simplement
             queda sense establir fins llavors.'
           finding_help: Mostreu nomes els esborranys el document dels quals no ha
-            superat aquesta comprovacio determinista.
-          group_help: Reviseu els esborranys d'extraccio pendents abans de confirmar-los
+            superat aquesta comprovació determinista.
+          group_help: Reviseu els esborranys d'extracció pendents abans de confirmar-los
             com a factures.
-          list_help: Llisteu els esborranys d'extraccio pendents de revisio humana.
+          list_help: Llisteu els esborranys d'extracció pendents de revisió humana.
           party_attribution_unverified_message: Res no verifica a quina part pertanyen
             aquestes dades d'adreça. Si es llegissin dos blocs d'adreça a l'inrevés,
             ambdues parts quedarien situades en un territori d'IVA on cap no està
@@ -276,7 +276,7 @@ cli:
           reason_help: Mostreu nomes els esborranys blocats per aquest motiu.
           reference_help: Referencia d'evidencia o adjunt de la qual s'ha llegit l'esborrany
             pendent.
-          resolve_action: Accio de resolucio desconeguda.
+          resolve_action: Acció de resolució desconeguda.
           resolve_shape: Cada --resolve és <finding-id>=<choose|supply|attest>:<valor-o-motiu>.
             Un choose indica la lectura pel seu valor o pel resum que va mostrar review.
           unknown_reference: No hi ha cap esborrany pendent per a aquesta referencia.
@@ -347,8 +347,8 @@ cli:
         kind_help: 'Tipus de factura: emesa (un client t''ha de pagar) o rebuda (deus
           a un proveïdor)'
         list_help: Llista les factures del catàleg de conciliació.
-        operation_date_help: Data en que es va fer el lliurament o la prestacio (AAAA-MM-DD).
-          Es la data de meritacio de l'art. 75 LIVA que determina en quin periode
+        operation_date_help: Data en que es va fer el lliurament o la prestació (AAAA-MM-DD).
+          Es la data de meritació de l'art. 75 LIVA que determina en quin període
           es declara la quota; sense aquesta s'utilitza la data de factura.
         operation_type_help: 'Clau d''operació M349: E lliuraments, M lliuraments
           posteriors a importació exempta, H les mateixes per representant fiscal,
@@ -566,7 +566,7 @@ cli:
           escriure res. Nomes en mode massiu.
         pull_dry_run_single_mode_error: --dry-run nomes es valid per a una descarrega
           massiva amb --from-year/--to-year; la descarrega d'un sol model no admet
-          simulacio.
+          simulació.
         pull_help: Descàrrega dades de declaracions presentades del registre autenticat
           d'AEAT.
         pull_modelo_help: Limita aquesta descàrrega a aquest model.
@@ -960,7 +960,7 @@ cli:
         override_confirm_help: Indicador de confirmació obligatori. Reconeix que la
           sobreescriptura canvia la xifra de compensació prèvia presentada i que l
           exactitud de la declaració depèn del valor aportat.
-        override_confirm_required: Passa --confirm per reconeixer que això registra
+        override_confirm_required: Passa --confirm per reconèixer que això registra
           una sobreescriptura de l arrossegament de compensació prèvia del M303. L
           exactitud de la declaració depèn del valor aportat.
         override_evidence_locator_help: Localitzador obligatori de l evidència que
@@ -972,7 +972,7 @@ cli:
           sobreescriu l arrossegament de compensació prèvia.
         override_help: Registra una sobreescriptura de l arrossegament de compensació
           prèvia del Model 303 des d evidència externa al moneder local. Només desbloqueja
-          el càlcul i no satisfara la verificació d evidència oficial. Requereix --confirm.
+          el càlcul i no satisfarà la verificació d evidència oficial. Requereix --confirm.
         override_period_help: Període de la declaració dependent del Model 303 que
           rep l arrossegament, per exemple 2T o 3T.
         override_reason_help: Base obligatòria de la sobreescriptura, registrada com
@@ -1108,7 +1108,7 @@ cli:
         section_ledger: derivades_del_llibre_de_moviments
         section_optional: caselles_opcionals_manuals
         section_profile: derivades_del_perfil
-        section_required: caselles_obligatories_manuals
+        section_required: caselles_obligatòries_manuals
         unbucketed_binding_source: Algunes fonts d'enllaç declarades no pertanyen
           a cap categoria de l'inventari de dades de modelo.requires. Es mostren sense
           suggerir una reparació perquè cal revisar la semàntica de la font.
@@ -1385,7 +1385,7 @@ cli:
           sobre model/exercici/període/revisió); no s'ha creat res nou. El --name
           indicat s'ha aplicat com a reanomenament a %{name}.
         create_stub_modelo_600_refused: 'El model %{modelo} (ITP-AJD, transmissions
-          patrimonials i actes juridics documentats) no està suportat per crear unitats
+          patrimonials i actes jurídics documentats) no està suportat per crear unitats
           de treball en aquest CLI. Fonament legal: Ley 28/1990 i competència autonòmica
           ITPyAJD; presenteu-lo davant la Hacienda / CCAA competent.'
         create_stub_modelo_620_refused: 'El model %{modelo} (ITP-AJD, transmissions
@@ -1517,7 +1517,7 @@ cli:
           `aeat app modelo bindings list --missing` per veure els bindings que necessita
           el càlcul.
         payment_election_help: 'Trieu com es paga un resultat positiu del Model 303:
-          ingras ordinari o domiciliacio.'
+          ingras ordinari o domiciliació.'
         period_help: 'Token de període de la unitat: 0A anual, 1T-4T trimestres, 01-12
           mesos; per a models censals (036) usa alta, modificacion o baja.'
         period_token_invalid: '--period ''%{token}'' no és un token de període vàlid
@@ -1570,7 +1570,7 @@ cli:
           rectificativa amb prova externa d'una presentació prèvia U.
         reason_help: Motiu opcional del descart (text lliure, fins a 500 caràcters)
         refund_election_help: Trieu si un resultat negatiu elegible del Model 303
-          es compensa o se sollicita com a devolucio.
+          es compensa o se sollicita com a devolució.
         relation_help: Valor de relació del registre amb sintaxi KEY=VALUE (repetible).
           KEY és un id de relació del registre, no un id de binding; fes-lo servir
           per a entrades de relació entre períodes o entre models. Executa aeat app
@@ -1604,7 +1604,7 @@ cli:
         rescate_year_help: Any en que es percep la prestació del rescat (per defecte
           l'any de la declaració). Es compara amb la finestra de l'apartat 4 DT 12a
           LIRPF mesurada des de --contingència-year.
-        result_summary_header: resum del resultat  Model %{modelo} %{year} %{period}
+        result_summary_header: resum del resultat Model %{modelo} %{year} %{period}
         resume_help: Valida si pots reintentar una execució de flux interrompuda sense
           contactar amb AEAT. Fes servir --modelo --year --period com a ruta normal;
           els ids exactes queden com a escape avançat.
@@ -2058,7 +2058,7 @@ cli:
       help: Autentica un perfil i inicia una sessió reprenible
       name_help: UUID o etiqueta exacta del perfil; omet-lo per usar el perfil seleccionat
       notices:
-        already_authenticated: Aquest perfil ja té la sessió iniciada; s'ha repres
+        already_authenticated: Aquest perfil ja té la sessió iniciada; s'ha reprès
           la sessió existent sense canvis.
         closed_previous_session: S'ha tancat la sessió del perfil anterior abans d'iniciar
           aquesta.
@@ -2099,7 +2099,7 @@ cli:
         export_name_help: Perfil a copiar; per defecte l'actiu.
         export_out_help: Camí de destinació de l'arxiu. El nom ha d'acabar en '.cadrumo-bucket.tar.gz'.
         help: Copia de seguretat d'un perfil en un arxiu segellat i xifrat AEAD, o
-          inspeccio d'un; restaura'l amb 'aeat config profile archive import'.
+          inspecció d'un; restaura'l amb 'aeat config profile archive import'.
         import_file_help: Camí del fitxer segellat o del directori de càpsula que
           es vol restaurar.
         import_help: Torna a publicar una càpsula de perfil des d'un directori o un
@@ -2107,7 +2107,7 @@ cli:
         import_label_help: Nom visible del perfil restaurat.
         inspect_help: Mostra la capçalera d'un arxiu segellat sense desxifrar-lo ni
           restaurar-lo.
-        inspect_path_help: Cami al fitxer segellat que s'inspeccionara.
+        inspect_path_help: Camí al fitxer segellat que s'inspeccionara.
         push_dry_run_help: Planifica la pujada sense enviar fitxers
         push_help: Puja els espais de dades locals a Google Drive
         push_limit_help: Nombre màxim de fitxers que es pujaran
@@ -2237,11 +2237,11 @@ cli:
           per introduir-los de manera guiada.
         add_help: Afegeix un o més descendents al perfil actiu.
         ambiguous_relacion_advisory: descendent %{indices} declara meses_madre_trabajo
-          sota la relacio no indicada. El manual concedeix el minim pero exclou la
-          deduccio per maternitat de l'art. 81.1 per a un net o altre descendent per
+          sota la relació no indicada. El manual concedeix el minim pero exclou la
+          deducció per maternitat de l'art. 81.1 per a un net o altre descendent per
           consanguinitat diferent d'un fill, o un menor sota guarda i custodia judicial
           -- la dada emmagatzemada no permet distingir-lo d'un fill real. Confirmeu
-          que aquest descendent es un fill, o indiqueu la relacio real amb RELACION=.
+          que aquest descendent es un fill, o indiqueu la relació real amb RELACION=.
         help: Declara descendents per al mínim per descendents de l'art. 58/61 LIRPF.
         index_out_of_range: Índex %{index} fora de rang; el perfil té %{total} descendent(s).
         invalid_flag: El valor de --descendiente no és vàlid. Cada fila ha de declarar
@@ -3114,7 +3114,7 @@ cli:
       sha256: SHA-256
       skipped: Omesos
       source: Origen
-      split_group_id: id_grup_divisio
+      split_group_id: id_grup_divisió
       stashed: Apartades
       taxable_base: Base imposable
       usage_ratio_id: Id de proporció d'ús
@@ -3141,7 +3141,7 @@ cli:
         p. ex. period=1T) amb l'any (p. ex. year=2026), classificació, incidència,
         importació, direcció (ingrés/despesa) o text. Per filtrar per etiqueta de
         grup useu l'opció --group.
-      footer_truncated: Mostrant files {start}-{end} de {total} (desplacament {offset}).
+      footer_truncated: Mostrant files {start}-{end} de {total} (desplaçament {offset}).
         Feu servir --offset/--límit per paginar.
       group_filter_help: Mostra només les files d'aquesta etiqueta de grup.
       header: MOVIMENTS DEL LLIBRE COMPTABLE

@@ -2,10 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 import re
+from collections.abc import Iterator
+from contextlib import contextmanager
 from dataclasses import dataclass
 from io import BytesIO
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
@@ -21,6 +24,40 @@ from .record_design_pdf_state import validate_pdf_sheet
 _NUMERIC_TUPLE_ADAPTER: TypeAdapter[tuple[int | float, ...]] = TypeAdapter(
     tuple[int | float, ...], config=ConfigDict(strict=True)
 )
+
+#: The text backends whose own DEBUG stream is noise to a record-design read.
+_PDF_TEXT_BACKEND_LOGGERS: Final = ("pdfminer", "pdfplumber")
+
+
+@contextmanager
+def quiet_pdf_text_backend_logging() -> Iterator[None]:
+    """Hold the PDF text backends' own logging at WARNING for one read.
+
+    pdfminer emits a DEBUG record per parsed token. Only ``configure_logging``
+    declares these libraries at WARNING, so a process that has not run it --
+    an analysis script, a bare compiler entry, anything reaching the extractor
+    outside a configured host -- leaves them inheriting the root level. One
+    record-design sweep measured that way issued 4.47 million records whose
+    stack walks cost more than the parses they described: the two designs that
+    reach this backend went 1.57s -> 0.50s and 0.85s -> 0.30s. The pytest
+    session configures logging at its own host boundary and never saw this, so
+    the cost lands exactly where no test would have reported it.
+
+    Only a logger carrying NO level of its own is raised, so a developer who
+    sets ``pdfminer`` to DEBUG to debug a parse still gets it; what is
+    suppressed is DEBUG merely inherited from an unconfigured root.
+    """
+    raised: list[logging.Logger] = []
+    for name in _PDF_TEXT_BACKEND_LOGGERS:
+        logger = logging.getLogger(name)
+        if logger.level == logging.NOTSET and logger.getEffectiveLevel() < logging.WARNING:
+            logger.setLevel(logging.WARNING)
+            raised.append(logger)
+    try:
+        yield
+    finally:
+        for logger in raised:
+            logger.setLevel(logging.NOTSET)
 
 
 @dataclass(frozen=True, slots=True)

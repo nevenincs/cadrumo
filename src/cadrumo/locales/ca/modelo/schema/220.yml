@@ -396,61 +396,64 @@ modelo:
               Total incorporació de resultats per operacions internes (Pàg. 7C)
           t22009000-00186:
             label: Altres deduccions. Quota líquida. Deduccions R+D+i excloses del
-              límit de l'art. 39.2 LIS
+              límit de l'art. 39.2 LIS (pàg. 14 quinquies)
           t22009000-00399:
             label: Altres deduccions. Quota líquida. Deduccions específiques de les
               entitats sotmeses a normativa foral
           t22009000-00436:
             label: Resultat de l'autoliquidació. Abonament de deduccions R+D+i per
-              insuficiència de quota (opció art. 39.2 LIS), total. Diputacions Forals
-              i Navarra
+              insuficiència de quota (opció art. 39.2 LIS) (pàg. 14 quinquies), total.
+              Diputacions Forals i Navarra
           t22009000-00562:
             label: Quota íntegra
           t22009000-00563:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. Bonificació de rendiments per venda de béns corporals produïts
-              a Canàries (art. 26 Llei 19/1994)
+              a Canàries (art. 26 Llei 19/1994) (pàg. 11)
           t22009000-00565:
             label: Altres deduccions. Quota líquida. Deducció per donacions a entitats
-              sense finalitat de lucre (Llei 49/2002)
+              sense finalitat de lucre (Llei 49/2002) (pàg. 14 quater)
           t22009000-00566:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
-              positiva. Bonificacions societats cooperatives (Llei 20/1990)
+              positiva. Bonificacions societats cooperatives (Llei 20/1990) (pàg.
+              11)
           t22009000-00567:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. Bonificació per rendes obtingudes a Ceuta i Melilla (art.
-              33 LIS)
+              33 LIS) (pàg. 11)
           t22009000-00568:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
-              positiva. Bonificacions per prestació de serveis (art. 34 LIS)
+              positiva. Bonificacions per prestació de serveis (art. 34 LIS) (pàg.
+              11)
           t22009000-00569:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
-              positiva. Altres bonificacions
+              positiva. Altres bonificacions (pàg. 11)
           t22009000-00570:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. DI interna de períodes anteriors aplicada a l'exercici (art.
-              30 RDLeg 4/2004)
+              30 RDLeg 4/2004) (pàg. 12)
           t22009000-00571:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
-              positiva. DI interna generada i aplicada al període (DT 23a.1 LIS)
+              positiva. DI interna generada i aplicada al període (DT 23a.1 LIS) (pàg.
+              12)
           t22009000-00572:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. DI internacional de períodes anteriors aplicada al període
-              (arts. 31 i 32 RDLeg 4/2004)
+              (arts. 31 i 32 RDLeg 4/2004) (pàg. 12)
           t22009000-00575:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. Transparència fiscal internacional (art. 100.10 LIS)
           t22009000-00576:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. Bonificacions entitats dedicades a l'arrendament d'habitatges
-              (Cap. III Tít. VII LIS)
+              (Cap. III Tít. VII LIS) (pàg. 11)
           t22009000-00577:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. DI interna intersocietària al 5/10 per cent (cooperatives)
           t22009000-00581:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. Bonificacions empreses navilieres a Canàries (art. 76 Llei
-              19/1994)
+              19/1994) (pàg. 11)
           t22009000-00582:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva
@@ -458,15 +461,18 @@ modelo:
             label: Altres deduccions. Quota líquida. Suport fiscal a la inversió i
               altres deduccions
           t22009000-00584:
-            label: Altres deduccions. Quota líquida. Deduccions DT 24a.1 LIS
+            label: Altres deduccions. Quota líquida. Deduccions DT 24a.1 LIS (pàg.
+              13)
           t22009000-00585:
             label: Altres deduccions. Quota líquida. Deducció DT 24a.7 LIS, art. 42
-              RDLeg 4/2004
+              RDLeg 4/2004 (pàg. 13)
           t22009000-00588:
             label: Altres deduccions. Quota líquida. Deduccions per incentivar determinades
               activitats (Cap. IV Tít. VI, DT 24a.3 LIS i art. 27.3 primer, Llei 49/2002)
+              (pàg. 14, 14 bis)
           t22009000-00590:
             label: Altres deduccions. Quota líquida. Deduccions d'inversió a Canàries
+              (pàg. 13 bis)
           t22009000-00592:
             label: Altres deduccions. Quota líquida. Quota líquida
           t22009000-00595:
@@ -520,7 +526,7 @@ modelo:
           t22009000-01375:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. Bonificació de rendiments per venda de béns corporals produïts
-              a les Illes Balears (DA 70 Llei 31/2022)
+              a les Illes Balears (DA 70 Llei 31/2022) (pàg. 11)
           t22009000-01629:
             label: Altres deduccions. Quota líquida. Quota líquida mínima (art. 30
               bis LIS)
@@ -539,16 +545,18 @@ modelo:
           t22009000-01965:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. DI interna de períodes anteriors aplicada al període (DT 23a.1
-              LIS)
+              LIS) (pàg. 12)
           t22009000-02188:
             label: Quota del període a ingressar o a retornar. Total retencions i
               ingressos a compte
           t22009000-02353:
             label: Altres deduccions. Quota líquida. Deducció per produccions cinematogràfiques
-              estrangeres a Canàries (art. 36.2 LIS i DA 14a Llei 14/1994)
+              estrangeres a Canàries (art. 36.2 LIS i DA 14a Llei 14/1994) (pàg. 13
+              ter)
           t22009000-02354:
             label: Altres deduccions. Quota líquida. Deduccions per inversions i despeses
-              realitzades per les autoritats portuàries (art. 38 bis LIS)
+              realitzades per les autoritats portuàries (art. 38 bis LIS) (pàg. 14
+              ter)
           t22009000-02538:
             label: Liquidació. Resultat de l'autoliquidació. Estat
           t22009000-02539:
@@ -557,40 +565,41 @@ modelo:
           t22009000-03251:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. DI internacional de períodes anteriors aplicada al període
-              (arts. 31 i 32 LIS)
+              (arts. 31 i 32 LIS) (pàg. 12)
           t22009000-03261:
             label: Bonificacions i deduccions per doble imposició. Quota íntegra ajustada
               positiva. DI internacional generada i aplicada al període (arts. 31
-              i 32 LIS)
+              i 32 LIS) (pàg. 12)
           t22009000-03344:
             label: Altres deduccions. Quota líquida. Deducció per reversió de mesures
-              temporals, DT 37a.1 LIS
+              temporals, DT 37a.1 LIS (pàg. 14 sexies)
           t22009000-03356:
             label: Altres deduccions. Quota líquida. Deducció per reversió de mesures
-              temporals, DT 37a.2 LIS
+              temporals, DT 37a.2 LIS (pàg. 14 sexies)
           t22009000-03358:
             label: Quota íntegra. Regularització de la reserva d'anivellament (art.
               105.6 LIS)
           t22009000-03359:
             label: Altres deduccions. Quota líquida. Deducció per produccions cinematogràfiques
-              estrangeres (art. 36.2 LIS)
+              estrangeres (art. 36.2 LIS) (pàg. 14 ter)
           t22009000-03360:
             label: Resultat de l'autoliquidació. Abonament de deduccions per produccions
-              cinematogràfiques estrangeres (art. 39.3 LIS), total. Diputacions Forals
-              i Navarra
+              cinematogràfiques estrangeres (art. 39.3 LIS) (pàg. 14 ter), total.
+              Diputacions Forals i Navarra
           t22009000-03393:
             label: Resultat de l'autoliquidació. Abonament de deduccions R+D+i per
-              insuficiència de quota (opció art. 39.2 LIS), Diputacions Forals i Navarra
+              insuficiència de quota (opció art. 39.2 LIS) (pàg. 14 quinquies), Diputacions
+              Forals i Navarra
           t22009000-03398:
             label: Resultat de l'autoliquidació. Abonament de deduccions per produccions
-              cinematogràfiques estrangeres (art. 39.3 LIS), Diputacions Forals i
-              Navarra
+              cinematogràfiques estrangeres (art. 39.3 LIS) (pàg. 14 ter), Diputacions
+              Forals i Navarra
           t22009000-03399:
             label: Resultat de l'autoliquidació. Abonament de deduccions R+D+i per
-              insuficiència de quota (opció art. 39.2 LIS), Estat
+              insuficiència de quota (opció art. 39.2 LIS) (pàg. 14 quinquies), Estat
           t22009000-03400:
             label: Resultat de l'autoliquidació. Abonament de deduccions per produccions
-              cinematogràfiques estrangeres (art. 39.3 LIS), Estat
+              cinematogràfiques estrangeres (art. 39.3 LIS) (pàg. 14 ter), Estat
           t22016000-00052:
             label: Repartiment entre Administracions forals. Total. Araba
           t22016000-00053:
@@ -1844,7 +1853,7 @@ modelo:
                 pròpies
             x-agp34c1g6d1j0c9q60o34c1o:
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Resultat
-                atribuible als propietaris de la dominant
+                atribuïble als propietaris de la dominant
             x-agp34c1g6d1j0c9q60o34c1p:
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). (-) Dividends
                 a compte
@@ -1945,7 +1954,7 @@ modelo:
             x-agp34c1g6d1j0c9q60r38cg:
               label: Balanç consolidat. Patrimoni net (pàg. 3C full 01). Canvis del
                 valor raonable dels passius financers a valor raonable amb canvis
-                en resultats atribuibles a canvis en el risc de crèdit
+                en resultats atribuïbles a canvis en el risc de crèdit
             x-agp34c1g6d1j0chq60o32dhj:
               label: Balanç consolidat. Passiu (pàg. 3C full 02). Passius financers
                 mantinguts per negociar
@@ -2678,7 +2687,7 @@ modelo:
             x-agp34c1g6l0j0c9q60o3cd9h:
               label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici
                 (pàg. 5A full 01). Canvis del valor raonable dels passius financers
-                a valor raonable amb canvis en resultats atribuibles a canvis en el
+                a valor raonable amb canvis en resultats atribuïbles a canvis en el
                 risc de crèdit
             x-agp34c1g6l0j0c9q60o3cd9i:
               label: Estat d'ingressos i despeses reconeguts consolidat en l'exercici

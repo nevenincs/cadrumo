@@ -115,8 +115,7 @@ modelo:
       construct:
         modelo-193-annual-summary:
           field:
-            title: Modelo 193 annual summary of withholdings on capital mobiliario
-              income
+            title: Modelo 193 annual summary of withholdings on movable-capital income
       field:
         official_name: Modelo 193. Informative return. Withholdings and payments on
           account on certain income from movable capital and certain income. Annual
@@ -132,12 +131,12 @@ modelo:
         '2024':
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: Total declared in modelo 193's declarante record. The design splits
+              help: Total declared in modelo 193's declarant record. The design splits
                 it into an integer and a decimal part.
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: Box 121 of modelo 193, tax year 2024.
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
-              help: Total declared in modelo 193's declarante record. The design splits
+              help: Total declared in modelo 193's declarant record. The design splits
                 it into an integer and a decimal part.
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: Box 235 of modelo 193, tax year 2024.
@@ -153,7 +152,7 @@ modelo:
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
               help: Box 175-189 of modelo 193, tax year 2024.
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: Total declared in modelo 193's declarante record. The design splits
+              help: Total declared in modelo 193's declarant record. The design splits
                 it into an integer and a decimal part.
             x-chim6r1eedqn6t39ehqn8qbmc4:
               help: Box 122 of modelo 193, tax year 2024.
@@ -269,12 +268,12 @@ modelo:
         2025-y-siguientes:
           casilla:
             x-chim6r1ec9gn6p9dehnn8obc:
-              help: Total declared in modelo 193's declarante record. The design splits
+              help: Total declared in modelo 193's declarant record. The design splits
                 it into an integer and a decimal part.
             x-chim6r1ecdnmqs3cclmmarjkc5p6io8:
               help: Box 121 of modelo 193, tax year 2025.
             x-chim6r1ectgn6t3fecmn8rrkc5m0:
-              help: Total declared in modelo 193's declarante record. The design splits
+              help: Total declared in modelo 193's declarant record. The design splits
                 it into an integer and a decimal part.
             x-chim6r1edpgn8tbic5m6auj15li6aorcc5p62rjkck:
               help: Box 235 of modelo 193, tax year 2025.
@@ -290,7 +289,7 @@ modelo:
             x-chim6r1ee9in8pbecdkmurj5ecmmirj7e9in6ob4c5pg:
               help: Box 175-189 of modelo 193, tax year 2025.
             x-chim6r1ee9in8pbecdkmurj5ecmn8rrkc5m0:
-              help: Total declared in modelo 193's declarante record. The design splits
+              help: Total declared in modelo 193's declarant record. The design splits
                 it into an integer and a decimal part.
             x-chim6r1eedqn6t39ehqn8qbmc4:
               help: Box 122 of modelo 193, tax year 2025.

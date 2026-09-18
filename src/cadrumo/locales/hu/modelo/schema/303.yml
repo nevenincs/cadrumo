@@ -44,6 +44,8 @@ modelo:
           dr303-111:
             label: Helyesbítő bevallás - helyesbítés összege
           dr303-112:
+            help: Az államnak betudott, benzin, gázolaj és bioüzemanyag értékesítése
+              utáni elszámolt előleg
             label: Az államnak tulajdonított benzin-, gázolaj- és bioüzemanyag-szállítások
               előlege
           dr303-12:
@@ -254,15 +256,21 @@ modelo:
             label: Korábbi időszaki ÁFA-beszámítások, amelyek későbbi időszakokra
               fennmaradnak
           iva-cuota-autorepercutida-interior-deducible:
-            label: Levonható fordított adózású ÁFA belföldi ügyleteknél
+            label: Levonható fordított adózású ÁFA belföldi ügyleteknél (LIVA 84.
+              cikk Uno.2. és 92. cikk; hivatalos 37. rovat)
           iva-cuota-autorepercutida-interior-devengado:
-            label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+            label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél (LIVA 84.
+              cikk Uno.2.; hivatalos 13. rovat)
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+            label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél (LIVA
+              84. cikk Uno.2.)
           iva-cuota-autorepercutida-intracomunitaria-deducible:
             label: Levonható fordított adózású ÁFA Közösségen belüli beszerzéseknél
+              (LIVA 13., 15. és 84. cikk Uno.2., valamint 92. cikk; hivatalos 36/37.
+              rovat)
           iva-cuota-autorepercutida-intracomunitaria-devengado:
             label: Keletkezett fordított adózású ÁFA Közösségen belüli beszerzéseknél
+              (LIVA 13., 15. és 84. cikk Uno.2.; hivatalos 10/11. rovat)
           iva-cuota-deducible-total:
             label: Összes levonható ÁFA összeg
           iva-cuota-devengada-total:
@@ -285,17 +293,19 @@ modelo:
               kulccsal együtt létezik.
             label: Felszámított ÁFA összeg átmeneti szupercsökkentett kulccsal (2%)
           iva-cuota-soportada-importaciones:
-            label: Levonható előzetesen felszámított ÁFA folyó áruk importján
+            label: Levonható előzetesen felszámított ÁFA folyó áruk importján (LIVA
+              17. és 92. cikk; hivatalos 33. rovat)
           iva-cuota-soportada-interiores:
             label: Levonható ÁFA összeg belföldi folyó ügyletek után
           iva-prorrata-porcentaje:
-            label: Általános levonási hányad százaléka
+            label: Általános levonási hányad százaléka (levonásra jogosító volumen
+              / teljes volumen × 100)
           iva-prorrata-volumen-con-derecho:
             label: Levonási jogot keletkeztető éves ügyletvolumen
           iva-prorrata-volumen-total:
             label: Az ügyletek éves teljes volumene
           iva-regularizacion-inversiones:
-            label: Beruházási javak korrekciója
+            label: Beruházási javak korrekciója (LIVA 107-110. cikk)
           iva-resultado-regimen-general:
             label: Általános rendszer eredménye
           m303-deducciones-sector-1-domestic-current-base:
@@ -636,8 +646,8 @@ modelo:
                 [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
-              help: 'Tekintse át a casilla adatait: Eredmény final ([69]-[70]+[109]).'
-              label: Eredmény final ([69]-[70]+[109])
+              help: 'Tekintse át a casilla adatait: Végeredmény ([69]-[70]+[109]).'
+              label: Végeredmény ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
               help: 'Tekintse át a casilla adatait: Eredmény - önadózási bevallás
                 ([66]+[77]+[68]-[78]).'
@@ -655,8 +665,8 @@ modelo:
                 [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
-              help: 'Tekintse át a casilla adatait: Eredmény final ([69]-[70]+[109]).'
-              label: Eredmény final ([69]-[70]+[109])
+              help: 'Tekintse át a casilla adatait: Végeredmény ([69]-[70]+[109]).'
+              label: Végeredmény ([69]-[70]+[109])
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
               help: 'A Modelo 303 . casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bjiclpnar3kc5i6u:
@@ -676,8 +686,8 @@ modelo:
                 [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
-              help: 'Tekintse át a casilla adatait: Eredmény final ([69]-[70]+[109]).'
-              label: Eredmény final ([69]-[70]+[109])
+              help: 'Tekintse át a casilla adatait: Végeredmény ([69]-[70]+[109]).'
+              label: Végeredmény ([69]-[70]+[109])
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
               help: 'A Modelo 303 . casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bjiclpnar3kc5i6u:
@@ -697,8 +707,8 @@ modelo:
                 [64], [65].'
               label: Eredmény - az Állami Adóigazgatásnak tulajdonítható összeg ([64]×[65]/100)
             '71':
-              help: 'Tekintse át a casilla adatait: Eredmény final ([69]-[70]+[109]).'
-              label: Eredmény final ([69]-[70]+[109])
+              help: 'Tekintse át a casilla adatait: Végeredmény ([69]-[70]+[109]).'
+              label: Végeredmény ([69]-[70]+[109])
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4n68pbmcln6eob4dsn64objck:
               help: 'A Modelo 303 . casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bjiclpnar3kc5i6u:
@@ -946,8 +956,8 @@ modelo:
               help: '70. mező: ugyanazon év és időszak korábbi önbevallásaiból fizetendő
                 összegek.'
             '71':
-              help: 'Tekintse át a casilla adatait: Eredmény final ([69]-[70]+[109]).'
-              label: Eredmény final ([69]-[70]+[109])
+              help: 'Tekintse át a casilla adatait: Végeredmény ([69]-[70]+[109]).'
+              label: Végeredmény ([69]-[70]+[109])
             '74':
               help: '74. mező: pénzforgalmi szemléletű beszerzések adóalapja.'
             '75':

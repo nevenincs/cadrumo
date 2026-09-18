@@ -85,47 +85,75 @@ def _relative_to_modelos_root(path: Path, modelos_root: Path) -> Path:
         return path.resolve().relative_to(modelos_root)
 
 
+def _content_row(row: tuple[str, int, int, str], registry_root: Path) -> tuple[str, int, str]:
+    """Reduce one fingerprint row to what decides a validation outcome.
+
+    A verdict is a statement about CONTENT: the same declarations validate the
+    same way wherever they sit and whenever they were written. The row is
+    therefore keyed by its path relative to the registry root, its size and its
+    content digest, with the modification time dropped. Keyed on the absolute
+    path and mtime instead, a staged candidate -- a copy of these bytes under a
+    temporary root, with fresh mtimes -- shared no verdict with the tree it was
+    copied from, so every candidate re-validated the whole corpus.
+    """
+    path, size, _modified_ns, digest = row
+    candidate = Path(path)
+    try:
+        relative = candidate.relative_to(registry_root)
+    except ValueError:
+        try:
+            relative = candidate.resolve().relative_to(registry_root)
+        except (OSError, ValueError):
+            # Outside the registry root: keep the absolute spelling, which is
+            # stable for a shared corpus root and still content-checked.
+            return candidate.as_posix(), size, digest
+    return relative.as_posix(), size, digest
+
+
 def validation_verdict_scope(
     *,
     registry_root: Path,
-    registry_identity_digest: str,
     fingerprints: FingerprintRows,
     source_receipt: str,
     compiler_identity_digest: str,
 ) -> ValidationVerdictScope:
     """Derive the verdict keys for one compilation from the inputs that decide its outcome."""
+    registry_root_resolved = registry_root.resolve()
+    modelos_root = (registry_root / "modelos").resolve()
+    shared_rows: list[tuple[str, int, str]] = []
+    modelo_rows: dict[str, list[tuple[str, int, str]]] = {}
+    for row in fingerprints:
+        path = Path(row[0])
+        keyed = _content_row(row, registry_root_resolved)
+        try:
+            relative = _relative_to_modelos_root(path, modelos_root)
+        except (OSError, ValueError):
+            shared_rows.append(keyed)
+            continue
+        if not relative.parts:
+            shared_rows.append(keyed)
+            continue
+        member = relative.parts[0]
+        modelo_rows.setdefault(member.removesuffix(".toml"), []).append(keyed)
+    shared_digest = content_hash_hex(sorted([list(row) for row in shared_rows]))
     registry_key = content_hash_hex(
         {
             "schema": _SCHEMA,
             "subject": "registry",
-            "registry_identity_digest": registry_identity_digest,
+            "tree_rows_digest": content_hash_hex(
+                sorted([list(row) for row in (*shared_rows, *(r for rows in modelo_rows.values() for r in rows))])
+            ),
             "source_receipt": source_receipt,
             "compiler_identity_digest": compiler_identity_digest,
         }
     )
-    modelos_root = (registry_root / "modelos").resolve()
-    shared_rows: list[tuple[str, int, int, str]] = []
-    modelo_rows: dict[str, list[tuple[str, int, int, str]]] = {}
-    for row in fingerprints:
-        path = Path(row[0])
-        try:
-            relative = _relative_to_modelos_root(path, modelos_root)
-        except (OSError, ValueError):
-            shared_rows.append(row)
-            continue
-        if not relative.parts:
-            shared_rows.append(row)
-            continue
-        member = relative.parts[0]
-        modelo_rows.setdefault(member.removesuffix(".toml"), []).append(row)
-    shared_digest = content_hash_hex([list(row) for row in shared_rows])
     modelo_keys = {
         modelo_id: content_hash_hex(
             {
                 "schema": _SCHEMA,
                 "subject": "modelo",
                 "modelo_id": modelo_id,
-                "modelo_rows": [list(row) for row in rows],
+                "modelo_rows": sorted([list(row) for row in rows]),
                 "shared_rows_digest": shared_digest,
                 "source_receipt": source_receipt,
                 "compiler_identity_digest": compiler_identity_digest,

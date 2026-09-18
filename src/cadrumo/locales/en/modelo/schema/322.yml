@@ -172,7 +172,8 @@ modelo:
           filing-year:
             label: Filing year to which the return relates
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Reverse-charge VAT amount on intra-Community acquisitions
+            label: Reverse-charge VAT amount on intra-Community acquisitions (LIVA
+              art. 84.Uno.2)
           iva-cuota-deducible-total:
             label: Total deductible VAT amount
           iva-cuota-devengada-total:
@@ -219,7 +220,7 @@ modelo:
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-suma-de-deducciones-cuota-deducible:
             label: 'Activities under differentiated deduction regimes. Deductible
               IVA: Group 1. Total deductions (701 + 703 + 705 + 707 + 709 + 711 +
-              713 + 715 + 716). Deductible cuota [717]'
+              713 + 715 + 716). Deductible amount [717]'
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-compensaciones-en-regimen-especial-de-la:
             label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 2. Compensation under the special agriculture, livestock and fisheries
@@ -247,7 +248,7 @@ modelo:
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-suma-de-deducciones-cuota-deducible:
             label: 'Activities under differentiated deduction regimes. Deductible
               IVA: Group 2. Total deductions (719 + 721 + 723 + 725 + 727 + 729 +
-              731 + 733 + 734). Deductible cuota [735]'
+              731 + 733 + 734). Deductible amount [735]'
           m322-actividades-deduccion-diferenciadas-grupo-1-regularizacion-bienes-inversion-cuota:
             label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 1. Capital-goods regularisation. Deductible tax amount [716]
@@ -371,8 +372,8 @@ modelo:
             label: Settlement. Deductible VAT. Capital-goods regularisation. Tax amount
               [60]
           m322-liquidacion-iva-deducible-regularizacion-por-aplicacion-del-porcentaje-definitivo-de-prorrata-cuota:
-            label: Settlement. Deductible VAT. Regularisation for the definitive prorrata
-              percentage. Tax amount [61]
+            label: Settlement. Deductible VAT. Regularisation for the definitive pro
+              rata percentage. Tax amount [61]
           m322-liquidacion-iva-deducible-total-a-deducir:
             label: Total deductible ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
               [62]
@@ -650,7 +651,7 @@ modelo:
               help: Box 37 of modelo 322, tax year 2008.
             '38':
               help: Box 38 of modelo 322, tax year 2008.
-              label: Total accrued cuota ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
+              label: Total accrued amount ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
                 [38]
             '39':
               help: Box 39 of modelo 322, tax year 2008.
@@ -959,7 +960,7 @@ modelo:
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
               help: Field declared on modelo 322, the group-of-entities individual
                 monthly self-assessment.
-              label: Taxable person taxed exclusively by a foral tax administration,
+              label: Taxable person taxed exclusively by a regional (foral) tax administration,
                 with import IVA assessed by Customs still to be paid
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
               help: Field declared on modelo 322, the group-of-entities individual
@@ -981,7 +982,7 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Box iva.soportado.interiores of modelo 322, tax year 2008.
           field:
-            label: Modelo 322, tax years 2008 to 2025
+            label: Modelo 322, tax year 2022
         '2023':
           casilla:
             '150':
@@ -1015,7 +1016,7 @@ modelo:
             '164':
               help: Box 164 of modelo 322, tax year 2008.
           field:
-            label: Modelo 322, tax years 2008 to 2025
+            label: Modelo 322, tax year 2023
         2024-2025:
           casilla:
             '01':
@@ -1427,7 +1428,7 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Box iva.soportado.interiores of modelo 322, tax year 2024.
           field:
-            label: Modelo 322, tax years 2008 to 2025
+            label: Modelo 322, tax years 2024 to 2025
         2026-y-siguientes:
           casilla:
             '01':
@@ -2049,8 +2050,8 @@ modelo:
               help: 'Review the casilla information: NIF of the entity parent.'
               label: Tax ID of the dominant entity
             x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
-              help: 'Review the casilla information: Exonerado of the return-resumen
-                annual, modelo 390.'
+              help: 'Review the casilla information: Exempted from the annual summary
+                return, modelo 390.'
               label: Exempt from the annual summary return, form 390
             x-chim6r1ectp7as3f5ln7arb5e9ng:
               help: Tax information for casilla of Modelo 322.
@@ -2071,7 +2072,7 @@ modelo:
               label: Electing the regime under LIVA article 163 sexies.Five
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
               help: Tax information for casilla of Modelo 322.
-              label: Taxed exclusively under a foral administration
+              label: Taxed exclusively under a regional (foral) administration
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
               help: Tax information about tax information in casilla of Modelo 322.
               label: Annual turnover other than zero

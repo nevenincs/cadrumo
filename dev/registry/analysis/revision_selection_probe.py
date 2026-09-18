@@ -44,6 +44,11 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.errors import AmbiguousRevisionSelectionError
 
 from ..compiler.authority import admitted_revision_id, compiled_bundled_authority
+from ..maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
+)
 
 __all__ = [
     "SelectionProbe",
@@ -102,9 +107,20 @@ def probe_modelo(
     Returns:
         One probe per revision and declared period code.
     """
+    horizon = coverage_assessment_horizon(authority.catalogues)
+    floor = coverage_assessment_floor(authority.catalogues)
     probes: list[SelectionProbe] = []
     for revision_id, revision in authority.modelo(modelo_id).revisions.items():
-        year = filing_year if filing_year is not None else revision.valid_from.year
+        # An omitted year asks about the revision's earliest SELECTABLE
+        # coordinate, not its opening year. The two differ for every edition
+        # that opens below the supported floor: asked about its opening year the
+        # registry refuses because the year is out of support, and the probe
+        # reported that as the revision failing to resolve itself. A revision
+        # lying wholly below the floor has no coordinate to be asked about.
+        coordinates = revision_selection_coordinates(revision, assessment_horizon=horizon, assessment_floor=floor)
+        if filing_year is None and not coordinates:
+            continue
+        year = filing_year if filing_year is not None else min(item[0] for item in coordinates)
         for code in declared_period_codes(revision):
             resolved: str | None = None
             refusal: str | None = None

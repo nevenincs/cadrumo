@@ -153,7 +153,7 @@ adapters:
             el perfil activo. Ejecuta `aeat config google login` primero.
           kind_empty: CADRUMO_STORAGE_PROVIDER_KIND esta vacío.
           kind_unhandled: El tipo de proveedor de almacenamiento {kind} no está gestionado
-            por la factoria.
+            por la factoría.
           kind_unknown: El tipo de proveedor de almacenamiento {value} no se reconoce;
             se esperaba uno de {expected}.
       google_drive:

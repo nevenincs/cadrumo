@@ -46,7 +46,6 @@ from .fact_providers import (
 )
 from .identity import RegistryIdentity, resolve_registry_identity
 from .loader import load_registry_tree, load_shared_catalogues
-from .loader_cache import is_bundled_registry_root
 from .loader_fingerprints import collect_registry_tree_fingerprints
 from .profile_schema import (
     CapturedProfileSchema,
@@ -311,15 +310,19 @@ def compile_validated_authority(
         }
     )
     compiler_identity_digest = authority_compiler_identity()
+    # Every root gets a verdict scope, bundled or staged. The keys are content
+    # keys -- relative path, size and content digest per declaration -- so a
+    # staged candidate reuses the per-modelo verdicts of the identical bytes it
+    # was copied from and only its OWN edited modelo validates again. Gated to
+    # the bundled root before, each candidate re-validated the whole corpus.
     verdicts = (
         validation_verdict_scope(
             registry_root=pair.registry_root,
-            registry_identity_digest=identity.digest,
             fingerprints=identity.fingerprints,
             source_receipt=source_receipt,
             compiler_identity_digest=compiler_identity_digest,
         )
-        if is_bundled_registry_root(pair.registry_root)
+        if identity.fingerprints
         else None
     )
     authority = cached_compilation(

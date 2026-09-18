@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
@@ -83,11 +84,18 @@ def test_each_boe_redaction_boundary_selects_the_exact_variant(
     assert resolved.source_refs == (f"boe-lirpf-art-101-administrator-{variant_suffix}",)
 
 
-def test_pre_2015_administrator_reduced_rate_back_projects_the_first_authored_variant() -> None:
-    resolved = _resolve("lirpf-art-101:retencion-administrador-reducida", date(2014, 12, 31))
+def test_the_administrator_reduced_rate_does_not_precede_its_first_authored_variant() -> None:
+    """The reduced rate states when it entered into force, and that is a legal boundary.
 
-    assert resolved.projection_direction == "backward"
-    assert resolved.projected_from_date == date(2015, 1, 1)
+    2015 is where this rate begins; the day before it, no authored variant
+    governs the question, so resolution refuses rather than projecting a rate
+    backwards into a year that never carried it.
+    """
+    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
+        _resolve("lirpf-art-101:retencion-administrador-reducida", date(2014, 12, 31))
+
+    resolved = _resolve("lirpf-art-101:retencion-administrador-reducida", date(2015, 1, 1))
+
     assert resolved.variant_id.endswith("2015-01-01")
     assert resolved.payload.value == Decimal("0.19")
     assert resolved.payload.unit == "fraction"

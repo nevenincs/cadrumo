@@ -4,14 +4,24 @@ modelo:
       casilla:
         continuidad:
           capitalizacion-seguros-resumen-base-negativa:
+            help: Sum of the withholding and payment-on-account bases shown in the
+              records of recipients with a negative base.
             label: Negative base for withholdings and payments on account
           capitalizacion-seguros-resumen-base-positiva:
+            help: Sum of the withholding and payment-on-account bases shown in the
+              records of recipients with a positive base.
             label: Base for withholdings and payments on account
           capitalizacion-seguros-resumen-perceptores-base-negativa:
+            help: Number of recipients (records) whose base for withholdings and payments
+              on account is negative.
             label: Total number of recipients with a negative base
           capitalizacion-seguros-resumen-perceptores-base-positiva:
+            help: Number of recipients (records) whose base for withholdings and payments
+              on account is positive.
             label: Total number of recipients with a positive base
           capitalizacion-seguros-resumen-retenciones:
+            help: Sum of the withholdings and payments on account made on the declared
+              income.
             label: Withholdings and payments on account
       field:
         official_name: Modelo 188. Withholdings and payments on account. Income from

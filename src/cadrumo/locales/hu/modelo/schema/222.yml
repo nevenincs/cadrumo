@@ -131,14 +131,16 @@ modelo:
             help: Az adócsoport részletfizetési elszámolásának 53. rovata (Mod. 40.3
               LIS).
             label: Mod. 40.3 LIS - B.1) Általános eset - Kvótává alakított kiegyenlítési
-              tartalék (LIS 105. cikk), csak a kisvállalkozói feltételeknek megfelelő
-              csoportoknak - Csökkentések
+              tartalék (LIS 105. cikk), csak a kisvállalkozói méretcsökkentési kedvezmények
+              feltételeinek (LIS 101. cikk) megfelelő és az ezekre az entitásokra
+              előírt különleges adókulcsot alkalmazó csoportoknak - Csökkentések
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-cuotas-aumentos:
             help: Az adócsoport részletfizetési elszámolásának 52. rovata (Mod. 40.3
               LIS).
             label: Mod. 40.3 LIS - B.1) Általános eset - Kvótává alakított kiegyenlítési
-              tartalék (LIS 105. cikk), csak a kisvállalkozói feltételeknek megfelelő
-              csoportoknak - Növelések
+              tartalék (LIS 105. cikk), csak a kisvállalkozói méretcsökkentési kedvezmények
+              feltételeinek (LIS 101. cikk) megfelelő és az ezekre az entitásokra
+              előírt különleges adókulcsot alkalmazó csoportoknak - Növelések
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-resutlado-previo:
             help: Az adócsoport részletfizetési elszámolásának 18. rovata (Mod. 40.3
               LIS).
@@ -238,12 +240,16 @@ modelo:
             help: Az adócsoport részletfizetési elszámolásának 56. rovata (Mod. 40.3
               LIS).
             label: Mod. 40.3 LIS - B.2) - Kiegyenlítési tartalék (LIS 105. cikk),
-              csak a kisvállalkozói kedvezményekre jogosult csoportoknak - Csökkentések
+              csak a kisvállalkozói méretcsökkentési kedvezmények feltételeinek (LIS
+              101. cikk) megfelelő és az ezekre az entitásokra előírt különleges adókulcsot
+              alkalmazó csoportoknak - Csökkentések
           is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-es-aumentos:
             help: Az adócsoport részletfizetési elszámolásának 55. rovata (Mod. 40.3
               LIS).
             label: Mod. 40.3 LIS - B.2) - Kiegyenlítési tartalék (LIS 105. cikk),
-              csak a kisvállalkozói kedvezményekre jogosult csoportoknak - Növelések
+              csak a kisvállalkozói méretcsökkentési kedvezmények feltételeinek (LIS
+              101. cikk) megfelelő és az ezekre az entitásokra előírt különleges adókulcsot
+              alkalmazó csoportoknak - Növelések
           is-pf-grupo-mod-40-3-lis-base-imponible-previa:
             help: Az adócsoport részletfizetési elszámolásának 13. rovata (Mod. 40.3
               LIS).

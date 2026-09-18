@@ -148,7 +148,7 @@ modelo:
                 special corrective index (Order HFP/1359/2023 Annex II, instruction
                 2.3.a/b.1).'
             modulos-rendimiento-neto-modulos:
-              label: 'Net income from módulos (Phase 3: reduced amount adjusted by
+              label: 'Net income from modules (Phase 3: reduced amount adjusted by
                 the general corrective indices - small enterprise, seasonal/new-activity
                 start-up, excess - in the order and with the incompatibilities of
                 Order HFP/1359/2023 Annex II, instruction 2.3)'
@@ -203,7 +203,7 @@ modelo:
                 special corrective index (Order HAC/1347/2024 Annex II, instruction
                 2.3.a/b.1).'
             modulos-rendimiento-neto-modulos:
-              label: 'Net income from módulos (Phase 3: reduced amount adjusted by
+              label: 'Net income from modules (Phase 3: reduced amount adjusted by
                 the general corrective indices - small enterprise, seasonal/new-activity
                 start-up, excess - in the order and with the incompatibilities of
                 Order HAC/1347/2024 Annex II, instruction 2.3)'
@@ -233,7 +233,7 @@ modelo:
                 asset register - see Order HAC/1425/2025 Annex II, instruction 2.2.b)
                 and your own depreciation schedule.
             modulos-rendimiento-neto-modulos:
-              label: 'Net income from módulos (Phase 3: reduced amount adjusted by
+              label: 'Net income from modules (Phase 3: reduced amount adjusted by
                 the excess corrective index)'
           construct:
             modelo-131-objective-estimation-instalment:

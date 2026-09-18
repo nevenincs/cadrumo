@@ -278,8 +278,7 @@ modelo:
               field:
                 title: 'Historical Modelo 309: non-periodic self-assessment (2004-2015)'
           field:
-            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
-              one and three). Ad hoc, triggered by a non-periodic obligation.
+            label: Modelo 309, tax years 2004 to 2015
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -385,8 +384,7 @@ modelo:
               field:
                 title: 'Modelo 309: non-periodic VAT return'
           field:
-            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
-              one and three). Ad hoc, triggered by a non-periodic obligation.
+            label: Modelo 309, tax years 2016 to 2017
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -502,8 +500,7 @@ modelo:
               field:
                 title: 'Modelo 309: non-periodic VAT return'
           field:
-            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
-              one and three). Ad hoc, triggered by a non-periodic obligation.
+            label: Modelo 309, tax years 2018 to 2022
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -619,5 +616,4 @@ modelo:
               field:
                 title: 'Modelo 309: non-periodic VAT return'
           field:
-            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
-              one and three). Ad hoc, triggered by a non-periodic obligation.
+            label: Modelo 309, tax years 2023 onwards

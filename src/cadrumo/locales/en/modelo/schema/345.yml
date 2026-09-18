@@ -39,7 +39,7 @@ modelo:
           m345-empleador-nombre:
             label: Surname and first name or company name of the employer
           m345-entidad-aseguradora-nif:
-            label: NIF of the entity aseguradora
+            label: NIF of the insurance entity
           m345-fondo-pensiones-nif:
             label: Tax ID of the pension fund
           m345-fondo-pensiones-numero-registro:
@@ -63,7 +63,7 @@ modelo:
           m345-pias-fecha-primera-prima:
             label: Date of payment of the first premium
           m345-pias-importe-acumulado:
-            label: Amount acumulado PIAS
+            label: Accumulated PIAS amount
           m345-plan-pensiones-denominacion:
             label: Name of the pension plan
           m345-rendimientos-trabajo-no-superiores-60000:

@@ -439,7 +439,7 @@ modelo:
           iva-facturacion-factura-por-destinatarios-fecha:
             label: IVA. Facturació. Facturació per destinataris o tercers. Data
           iva-gran-empresa-es-admon-publica-presupuesto:
-            label: Gran empresa i administracions publiques. Es administració publica
+            label: Gran empresa i administracions públiques. Es administració pública
               amb un darrer pressupost anual aprovat superior a 6 milions d'euros
           iva-gran-empresa-es-gran-empresa:
             label: Gran empresa i administracions públiques. Té la condició de gran
@@ -786,7 +786,7 @@ modelo:
           pf-domicilio-residencia-extranjero-poblacion:
             label: Domicili a l'Estat de residència. Població o ciutat
           pf-domicilio-residencia-extranjero-provincia-region:
-            label: Domicili a l'Estat de residencia. Província, regio o estat
+            label: Domicili a l'Estat de residencia. Província, regió o estat
           pf-establecimientos-permanentes-cuantos:
             label: Establiments permanents. Nombre d'establiments permanents
           pf-establecimientos-permanentes-denominacion-1:

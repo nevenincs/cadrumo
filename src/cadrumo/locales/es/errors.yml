@@ -848,7 +848,7 @@ errors:
     modelo_349_country_prefix_context: 'El Modelo 349 rechaza el prefijo de país {country_code}
       para la clave de operación {clave_operacion} en {filing_year}/{period}: {reason}.
       Fundamento: instrucciones AEAT Brexit IVA NIF-IVA / Modelo 349.'
-    modelo_ambiguous_semantic_role_casilla: Mas de una casilla usa el rol semantico
+    modelo_ambiguous_semantic_role_casilla: Mas de una casilla usa el rol semántico
       %{semantic_role}; usa el casilla.id canónico exacto.
     modelo_calculate_binding_input: La sobrescritura de --binding indicada no se pudo
       resolver para la revisión activa.
@@ -881,8 +881,8 @@ errors:
     modelo_project_invalid_decimal_override: Una sobrescritura de proyección no es
       un importe decimal válido.
     modelo_revision_pick: No se pudo seleccionar la revisión de cálculo indicada.
-    modelo_work_capture_not_current: La seleccion de trabajo ya no es actual. Vuelva
-      a leer el objetivo de trabajo e intentelo de nuevo.
+    modelo_work_capture_not_current: La selección de trabajo ya no es actual. Vuelva
+      a leer el objetivo de trabajo e inténtelo de nuevo.
     modelo_work_discard_approval_stale: La unidad de trabajo cambió después de aprobarse
       el descarte; revísela y apruebe de nuevo.
     modelo_work_period_token: Periodo de modelo no válido.
@@ -1098,9 +1098,9 @@ errors:
     refused_modelo_m303_rectificativa_motive: Las rectificativas del modelo 303 requieren
       exactamente un motivo canónico en un diseño de registro aplicable y revisado;
       el motivo está prohibido en los demás casos.
-    refused_modelo_payment_election_capability: El metodo de pago elegido aun no esta
+    refused_modelo_payment_election_capability: El método de pago elegido aun no esta
       disponible.
-    refused_modelo_payment_election_incompatible: La opcion de pago elegida requiere
+    refused_modelo_payment_election_incompatible: La opción de pago elegida requiere
       un resultado positivo.
     refused_modelo_refund_account_missing: Se solicitó una devolución pero no hay
       ninguna cuenta de devolución configurada; la AEAT no puede pagar una devolución
@@ -1108,9 +1108,9 @@ errors:
     refused_modelo_refund_election_not_eligible: Se solicitó una devolución en un
       periodo donde no está disponible; solo el último periodo de declaración del
       año permite la devolución a un no inscrito en REDEME.
-    refused_modeloprior_domiciliation_election: Se ha rechazado la baja o modificacion
+    refused_modeloprior_domiciliation_election: Se ha rechazado la baja o modificación
       de la domiciliacion previa porque falta o no es valida la rectificativa del
-      modelo 303 o la prueba oficial de la presentacion base U.
+      modelo 303 o la prueba oficial de la presentación base U.
     refused_no_active_profile: Esta operación necesita un perfil activo. Crea o selecciona
       un perfil y vuelve a intentarlo.
     refused_operator_surface_contract: La superficie solicitada queda fuera del contrato
