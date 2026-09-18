@@ -17,6 +17,7 @@ from ..modelo_casilla_catalogue import (
     CatalogueFindings,
     ModeloCasillaCatalogue,
     edition_text_gaps,
+    repeated_edition_text,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -56,6 +57,38 @@ def test_no_casilla_text_is_cut_short_glossary_output_or_padded() -> None:
         for family in ("truncated_text", "glossary_artifacts", "irregular_whitespace")
     }
     assert not any(defects.values()), defects
+
+
+def test_no_modelo_repeats_one_revision_label_across_editions() -> None:
+    """A revision label names its own edition, so two editions cannot share one text.
+
+    Re-author the repeated label from each edition's own period and order.
+    """
+    repeated = {locale: keys for locale, keys in repeated_edition_text(LOCALES_DIR).items() if keys}
+
+    assert not repeated, {locale: keys[:5] for locale, keys in repeated.items()}
+
+
+def test_no_translation_drops_content_the_spanish_states() -> None:
+    """A translation states every box reference, amount and comparison its Spanish does.
+
+    Restore what was dropped and install it with
+    ``python -m dev.locales casilla-author``.
+    """
+    dropped = {locale: keys[:5] for locale, keys in _findings().dropped_source_content.items() if keys}
+
+    assert not dropped, dropped
+
+
+def test_no_translation_renders_two_spanish_wordings() -> None:
+    """One translation per Spanish wording, unless a reviewer recorded them as equivalent.
+
+    A reused box number put one casilla's translation on another in Modelo 200;
+    record a genuine equivalence in ``REVIEWED_SHARED_TRANSLATIONS`` instead.
+    """
+    shared = {locale: keys[:5] for locale, keys in _findings().shared_translations.items() if keys}
+
+    assert not shared, shared
 
 
 def test_every_source_truncation_is_still_stored() -> None:

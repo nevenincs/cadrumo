@@ -212,6 +212,29 @@ def test_a_pending_install_blocks_a_new_plan_until_resumed(tmp_path: Path) -> No
     assert not pending.exists()
 
 
+def test_an_interrupted_install_is_finished_from_its_staged_catalogue(tmp_path: Path) -> None:
+    """A staged, verified catalogue left behind by a crash installs on resume.
+
+    The install copies shard by shard, so a crash can leave the catalogue half
+    written. Recovery replays the staged copy rather than re-planning against a
+    half-installed baseline, whose resolution is nobody's intended state.
+    """
+    locales = tmp_path / "locales"
+    pending = tmp_path / "pending"
+    _write_catalogue(locales, {"es": {_OCC_2023: "Base imponible", _OCC_2024: "Base imponible"}, "en": {}})
+    _write_catalogue(pending / "locales", {"es": {_LINEAGE: "Base imponible"}, "en": {}})
+    before = ModeloCasillaCatalogue(_chains(), load_casilla_values(locales)).resolution()
+
+    resume_install(locales, pending)
+
+    installed = ModeloCasillaCatalogue(_chains(), load_casilla_values(locales))
+    assert installed.resolution() == before
+    assert installed.values["es"] == {_LINEAGE: "Base imponible"}
+    assert not pending.exists()
+    with pytest.raises(CollapseVerificationError, match="no install is pending"):
+        resume_install(locales, pending)
+
+
 def test_authored_values_install_only_when_they_serve_every_change(tmp_path: Path) -> None:
     locales = tmp_path / "locales"
     pending = tmp_path / "pending"
@@ -241,6 +264,29 @@ def test_an_authored_removal_falls_back_and_an_edition_split_is_refused(tmp_path
     with pytest.raises(CollapseVerificationError, match="continuity evolution"):
         agreeing.author({"es": {_OCC_2024: "Base imponible del ejercicio"}}, locales, pending)
     assert not pending.exists()
+
+
+@pytest.mark.parametrize(
+    ("spanish", "english", "dropped"),
+    [
+        ("Reducción del 25 por 100", "Reduction of 25%", False),
+        ("Disposición transitoria 6ª", "Sixth transitional provision", False),
+        ("Compensación en los 4 ejercicios siguientes", "Offset over the next four tax years", False),
+        ("Rendimientos superiores a 60.000 euros", "Income above 60,000 euros", False),
+        ("Discapacidad ≥33%", "Disability >=33%", False),
+        ("Actividad iniciada desde el 1-1-2024", "Activity started on 2024-01-01", False),
+        ("Importe de las casillas [0430] y [0430]", "Amount from box [0430]", False),
+        ("Aportaciones [interno]", "Contributions [internal]", False),
+        ("Actividad iniciada desde el 1-1-2024", "Activity started on 2023-01-01", True),
+        ("Deducción con un máximo de 500 euros", "Deduction", True),
+        ("Traslade el importe de la casilla [0421]", "Transfer the amount", True),
+    ],
+)
+def test_a_translation_keeps_the_content_the_spanish_states(spanish: str, english: str, dropped: bool) -> None:
+    """Numbers, box references and comparisons are compared across rendering differences."""
+    catalogue = _catalogue({"es": {_LINEAGE: spanish}, "en": {_LINEAGE: english}})
+
+    assert bool(catalogue.dropped_source_content("en")) is dropped
 
 
 def test_keys_under_an_undeclared_revision_are_a_rename_never_an_orphan() -> None:

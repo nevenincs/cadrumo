@@ -26,6 +26,7 @@ from .manager import (
     LocaleFileAudit,
     LocaleManager,
     LocalePlaceholderMismatch,
+    _flatten_raw_locale_leaves,
 )
 
 _REVISION_PREFIX_TEMPLATE = "modelo.schema.{modelo}.revision.{revision}"
@@ -121,12 +122,18 @@ def casilla_audit(
 def casilla_orthography(
     as_json: Annotated[bool, typer.Option("--json", help="Emit every finding as JSON.")] = False,
 ) -> None:
-    """Report casilla words that lost their diacritics or were left in Spanish; exit 1 when any remain."""
+    """Report locale words that lost their diacritics or were left in Spanish; exit 1 when any remain.
+
+    Diacritics are judged across every shipped surface, because the interface
+    domains lost them the same way the casilla catalogue did. Untranslated
+    Spanish is judged on the casilla surface, where each value has one Spanish
+    source to compare with.
+    """
     from .casilla_orthography import spanish_leftovers, unaccented_words
     from .modelo_casilla_catalogue import ModeloCasillaCatalogue
 
     catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
-    unaccented = list(unaccented_words(catalogue.values))
+    unaccented = list(unaccented_words({**_interface_values(), **catalogue.values}))
     sources = {locale: catalogue.served_sources(locale) for locale in catalogue.locales}
     leftovers = list(spanish_leftovers(catalogue.values, sources))
     if as_json:
@@ -147,6 +154,22 @@ def casilla_orthography(
             typer.echo(f"spanish-leftover {leftover.locale} {leftover.key} {' '.join(leftover.words)}")
     if unaccented or leftovers:
         raise typer.Exit(code=1)
+
+
+def _interface_values() -> dict[str, dict[str, str | None]]:
+    """Return every shipped non-Modelo locale value, keyed per locale."""
+    from .modelo_casilla_catalogue import load_casilla_values
+
+    manager = _default_manager()
+    values: dict[str, dict[str, str | None]] = {}
+    for locale in sorted(load_casilla_values(LOCALES_DIR)):
+        leaves = _flatten_raw_locale_leaves(manager._load_raw_locale(LOCALES_DIR / locale))
+        values[locale] = {
+            key: value
+            for key, value in leaves.items()
+            if not key.startswith("modelo.schema.") and isinstance(value, str)
+        }
+    return values
 
 
 @app.command("casilla-collapse")
