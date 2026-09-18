@@ -1379,7 +1379,6 @@ __all__ = [
     "build_retencion_observation_ports",
     "build_verification_repository_bundle",
     "build_work_lifecycle_ports",
-    "composed_profile_persistence_ports",
     "profile_adapter_composition",
     "profile_free_adapter_composition",
 ]
@@ -1490,49 +1489,6 @@ def _resolve_column_roles(table: NormalizedTable) -> ColumnRoleMappingPort | Non
 
 
 @contextmanager
-def composed_profile_persistence_ports() -> Generator[ProfileCustodyPort]:
-    """Bind the profile-persistence ports every profile-bound host resolves.
-
-    Custody, the login session, workflow persistence and the language resolver
-    are one unit: a host that binds some of them and not the rest can open a
-    capsule it cannot then read a record through. Application code says so by
-    refusing rather than assuming - an unbound port raises
-    ``InternalInvariantError`` instead of reporting an absent profile - so the
-    obligation is the host's, and this is the one place that discharges it.
-
-    Every host enters this same scope: the shipped frontend through
-    :func:`profile_adapter_composition`, the pytest hosts through their session
-    fixture, the MCP harness tests around the servers they start, and the
-    docs-sequence runner. Each used to restate the wiring, and the copies had
-    already drifted apart over which ports belonged to the set. A port added
-    here now reaches all of them together.
-
-    The yielded custody port is the one that was bound, so a caller that needs
-    to hold onto it does not build a second instance.
-
-    The imports are function-local for the reason the rest of this module's
-    are: entering this scope is what pulls the persistence tree into the
-    process.
-    """
-    from ..adapters.persistence.storage.profile_custody import build_profile_custody_port
-    from ..adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-    from ..adapters.persistence.workflow import build_workflow_persistence_port
-    from ..application.user_profile.custody_ports import bind_profile_custody_port
-    from ..application.user_profile.language_resolver import register_language_resolver
-    from ..application.user_profile.login_session_port import bind_profile_login_session_port
-    from ..application.workflow.persistence import bind_workflow_persistence_port
-
-    profile_custody = build_profile_custody_port()
-    with (
-        bind_profile_custody_port(profile_custody),
-        bind_profile_login_session_port(build_profile_login_session_port()),
-        bind_workflow_persistence_port(build_workflow_persistence_port()),
-    ):
-        register_language_resolver()
-        yield profile_custody
-
-
-@contextmanager
 def profile_free_adapter_composition() -> Generator[None]:
     """Bind only what a command that reads no profile still touches.
 
@@ -1567,6 +1523,9 @@ def profile_adapter_composition() -> Generator[ProfileAdapterComposition]:
     from ..adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
     from ..adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from ..adapters.outbound.aeat.auth.session_store import build_session_store
+    from ..adapters.persistence.storage.profile_persistence_composition import (
+        composed_profile_persistence_ports,
+    )
     from ..application.auth.protocols import bind_session_store
     from ..application.auth.providers import bind_auth_provider_selector
     from ..application.bucket_event_repository import bind_bucket_event_history_repository_factory
