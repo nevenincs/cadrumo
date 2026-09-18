@@ -89,6 +89,19 @@ class LocalObservationPorts:
     work_unit_repository: WorkUnitCatalogueRepositoryProtocol
 
 
+LOCAL_OBSERVATION_ACTION_CARRIES_DETAIL: Mapping[str, bool] = {
+    "recorded": True,
+    "cleared": False,
+}
+"""Whether each local-observation outcome carries the observation's own detail.
+
+Recording an override states a revision, a source kind and the values it
+overrides; clearing one states none of them, because the layer it removed is
+what held them. The two results below are the typed halves of that split, and
+this mapping is what a projection of either consults rather than restating it.
+"""
+
+
 class ModeloLocalObservationResult(BaseModel):
     """Result of recording one operator-supplied local observation."""
 
