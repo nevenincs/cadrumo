@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import hashlib
+import re
+from urllib.parse import urlsplit
 
 import pytest
 
@@ -49,6 +51,10 @@ _HEX_DIGEST = "EB58612F0394953A4B516B938AD3FEB1"
 _BOE_CITATION = "BOE-A-2024-26694"
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 _URL = "https://example.test/private/path?token=secret"
+#: The host-only spelling redaction leaves behind: scheme and host survive,
+#: path and query do not. Compared exactly, so a look-alike host such as
+#: ``https://example.test.attacker.invalid`` cannot satisfy the assertion.
+_URL_HOST_ONLY = f"{urlsplit(_URL).scheme}://{urlsplit(_URL).netloc}"
 _OBJECT_KEY = "wallet:2026-secret"
 _OTHER_OBJECT_KEY = "wallet:2026-other"
 
@@ -81,7 +87,9 @@ def test_cli_output_text_redacts_sensitive_canaries() -> None:
     assert "active_profile=operator" in rendered
     assert f"bucket_id={CLI_BUCKET_ID_PLACEHOLDER}" in rendered
     assert f"object_key={CLI_OBJECT_KEY_PLACEHOLDER}" in rendered
-    assert "https://example.test" in rendered
+    surviving_url = re.search(r"\burl=(\S+)", rendered)
+    assert surviving_url is not None
+    assert surviving_url[1] == _URL_HOST_ONLY
     assert "private/path" not in rendered
     assert "sha256:" in rendered
     assert "token:sha256:" in rendered

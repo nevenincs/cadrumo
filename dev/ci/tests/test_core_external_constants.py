@@ -21,6 +21,7 @@ import ast
 import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import pytest
 from pydantic import ValidationError
@@ -558,9 +559,16 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
 
     assert settings.cadrumo_live_iva_declaration_capture_timeout_ms < settings.cadrumo_live_iva_surface_timeout_ms
     assert settings.cadrumo_live_iva_cli_watchdog_timeout_ms < 300_000
-    assert settings.cadrumo_llm_openai_chat_completions_url.startswith("https://api.openai.com")
+    # Host compared exactly rather than by URL prefix: a prefix check also
+    # accepts ``https://api.openai.com.attacker.invalid/...``, which is a
+    # different origin entirely.
+    openai_url = urlsplit(settings.cadrumo_llm_openai_chat_completions_url)
+    assert openai_url.scheme == "https"
+    assert openai_url.hostname == "api.openai.com"
     assert "{model}" in settings.cadrumo_llm_gemini_generate_content_template
-    assert settings.cadrumo_llm_ollama_chat_url.startswith("http://")
+    ollama_url = urlsplit(settings.cadrumo_llm_ollama_chat_url)
+    assert ollama_url.scheme == "http"
+    assert ollama_url.hostname in {"localhost", "127.0.0.1"}
 
 
 def test_settings_refuse_the_former_product_google_drive_vault_folder() -> None:

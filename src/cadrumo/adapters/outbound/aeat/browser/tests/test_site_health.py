@@ -12,11 +12,13 @@ the fast-path test selection.
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, datetime, timedelta
 from email.utils import format_datetime
 from inspect import signature
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlsplit
 
 import pytest
 from pydantic import ValidationError
@@ -140,11 +142,12 @@ def test_waf_fixtures_classify() -> None:
 
 def test_waf_evidence_fragment_is_centrally_redacted() -> None:
     """Remote-provider HTML evidence must not carry raw sensitive payloads."""
+    support_url = "https://example.test/private/path?token=secret"
     html = (
         "<html><body>"
         "<p>Request blocked by web application firewall.</p>"
         "<p>Reference ID 12345678Z</p>"
-        "<a href='https://example.test/private/path?token=secret'>support</a>"
+        f"<a href='{support_url}'>support</a>"
         f"<script>const authorization = 'bearer {_JWT}';</script>"
         "</body></html>"
     )
@@ -162,7 +165,12 @@ def test_waf_evidence_fragment_is_centrally_redacted() -> None:
     assert "sha256:" in fragment
     assert "private/path" not in fragment
     assert "token=secret" not in fragment
-    assert "https://example.test" in fragment
+    # Exact comparison, not a substring: the anchor must keep the host whole and
+    # alone, so a look-alike such as ``https://example.test.attacker.invalid``
+    # cannot satisfy the assertion.
+    surviving_href = re.search(r"href='([^']*)'", fragment)
+    assert surviving_href is not None
+    assert surviving_href[1] == f"{urlsplit(support_url).scheme}://{urlsplit(support_url).netloc}"
     assert _JWT not in fragment
     assert "token:sha256:" in fragment
 
