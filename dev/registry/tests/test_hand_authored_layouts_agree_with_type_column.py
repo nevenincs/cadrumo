@@ -41,8 +41,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: Signing them would need a signed integer the schema does not have, for a
 #: value no filing can carry, so they are declared here rather than changed.
 _BLOCKED_PER_REVISION: dict[str, tuple[int, str]] = {
-    f"714/{year}": (12, "data type 'integer' cannot be signed; only money can")
-    for year in ("2021", "2022", "2023", "2024", "2025")
+    "714/2021": (12, "data type 'integer' cannot be signed; only money can"),
 }
 
 #: Records that cannot be joined to exactly one sheet of their revision's design.
@@ -51,30 +50,34 @@ _BLOCKED_PER_REVISION: dict[str, tuple[int, str]] = {
 #: not determined by geometry. ``unmatched``: no sheet carries them all. None of
 #: these is compared, so each is an open question rather than a pass.
 _UNCHECKED_PER_REVISION: dict[str, dict[str, int]] = {
+    "111/2019-y-siguientes": {"unmatched": 1},
+    "115/2019-y-siguientes": {"unmatched": 1},
+    "117/2019-y-siguientes": {"unmatched": 1},
     "122/2017-y-siguientes": {"unmatched": 1},
-    "126/2019-y-siguientes": {"no_design": 2},
-    "128/2019-y-siguientes": {"no_design": 2},
+    "123/2019-2023": {"unmatched": 1},
+    "126/2019-y-siguientes": {"no_design": 3},
+    "128/2019-y-siguientes": {"no_design": 3},
+    "130/2019-y-siguientes": {"unmatched": 1},
+    "131/2019-2023": {"unmatched": 1},
+    "131/2026": {"unmatched": 1},
     "180/2019-2022": {"unmatched": 2},
     "180/2023-y-siguientes": {"unmatched": 2},
     "190/2024": {"unmatched": 2},
-    "190/2025-y-siguientes": {"unmatched": 2},
     "193/2024": {"unmatched": 2},
-    "193/2025-y-siguientes": {"unmatched": 2},
     "216/2024-y-siguientes": {"unmatched": 1},
     "270/2013-2022": {"unmatched": 1},
-    "270/2023-y-siguientes": {"unmatched": 1},
+    "322/2026-y-siguientes": {"unmatched": 1},
+    "341/2016-y-siguientes": {"unmatched": 1},
     "349/2020-y-siguientes": {"unmatched": 3},
     "369/esquema-exterior": {"ambiguous": 2},
     "369/esquema-importacion": {"ambiguous": 2},
     "369/esquema-union": {"ambiguous": 3},
-    "490/2022-2t-4t": {"ambiguous": 4},
-    "490/2023-y-siguientes": {"ambiguous": 4},
+    "490/2021": {"unmatched": 1},
+    "490/2023-y-siguientes": {"unmatched": 1},
     "576/2008-y-siguientes": {"unmatched": 1},
+    "604/2021-2023": {"unmatched": 1},
+    "604/2024-y-siguientes": {"unmatched": 1},
     "714/2021": {"unmatched": 1},
-    "714/2022": {"unmatched": 1},
-    "714/2023": {"unmatched": 1},
-    "714/2024": {"unmatched": 1},
-    "714/2025": {"unmatched": 1},
 }
 
 
@@ -123,19 +126,35 @@ def _planted_revision(tmp_path: Path, modelo: str, revision: str) -> Path:
     raise AssertionError(f"{modelo}/{revision} is not a hand-authored revision")
 
 
+def _first_live_signed_field(export_layouts: Path) -> tuple[Path, int, str]:
+    """Return the file, line index and field id of the first live ``signed = true``."""
+    for layout in sorted(export_layouts.glob("*.toml")):
+        field_id: str | None = None
+        for index, line in enumerate(layout.read_text("utf-8").splitlines()):
+            stripped = line.strip()
+            if stripped.startswith("#"):
+                continue
+            match = re.fullmatch(r'id = "([^"]+)"', stripped)
+            if match is not None:
+                field_id = match.group(1)
+            elif stripped == "signed = true" and field_id is not None:
+                return layout, index, field_id
+    raise AssertionError(f"no live signed field under {export_layouts}")
+
+
 def test_a_planted_unsigned_field_is_reported_by_name(tmp_path: Path) -> None:
     """Unsigning one aligned N field is caught as exactly that field, and nothing else."""
     authority = compiled_bundled_authority()
     planted = _planted_revision(tmp_path, "490", "2021")
-    layout = next(
-        path
-        for path in sorted((planted / "export_layouts").glob("*.toml"))
-        if "signed = true" in path.read_text("utf-8")
-    )
-    text = layout.read_text("utf-8")
-    field_line = text.index("signed = true")
-    field_id = re.findall(r'^id = "([^"]+)"$', text[:field_line], flags=re.MULTILINE)[-1]
-    layout.write_text(text[:field_line] + "signed = false" + text[field_line + len("signed = true") :], "utf-8")
+    # Live declarations only. These layout files carry commented reference
+    # blocks of the same shape, and a substring search finds the comment first:
+    # the id scan behind it then sees no live field at all and the planting
+    # raises instead of planting, which is a broken tooth rather than a clean
+    # corpus.
+    layout, line_number, field_id = _first_live_signed_field(planted / "export_layouts")
+    lines = layout.read_text("utf-8").splitlines(keepends=True)
+    lines[line_number] = lines[line_number].replace("signed = true", "signed = false")
+    layout.write_text("".join(lines), "utf-8")
 
     _clean_alignments, clean = revision_findings(
         authority, modelo="490", revision="2021", revision_root=_planted_revision(tmp_path / "clean", "490", "2021")

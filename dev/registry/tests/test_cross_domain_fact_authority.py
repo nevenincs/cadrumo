@@ -12,6 +12,7 @@ from cadrumo.core.concepto_ingreso import ConceptoIngreso
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.facts.resolution import ResolvedEventFact, ResolvedMappingFact
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.irnr_tipo_renta import resolve_tipo_renta_irnr_catalogue
 from cadrumo.domain.calculations.registry.m347_threshold import resolve_m347_counterparty_annual_threshold
 from cadrumo.domain.contribuyente.family_fact_context import FamilyFactResolutionContext
@@ -67,7 +68,11 @@ def test_cross_domain_consumers_preserve_the_authority_result_without_parallel_r
 
     iva_rate = registry_authority.resolve_governed_fact(_probe("iva-rate").query)
     assert isinstance(iva_rate, ResolvedMappingFact)
-    projected_rate = rate_record_from_fact(iva_rate, authority=registry_authority)
+    # Constructing the record resolves the EU member-state catalogue, which is a
+    # governed fact and refuses to answer outside an authority scope rather than
+    # guessing which generation asked.
+    with validating_governed_facts(registry_authority):
+        projected_rate = rate_record_from_fact(iva_rate, authority=registry_authority)
     assert projected_rate.pct == Decimal("21")
     assert projected_rate.legal_refs == iva_rate.legal_refs
     assert projected_rate.source_refs == iva_rate.source_refs
@@ -84,7 +89,10 @@ def test_cross_domain_consumers_preserve_the_authority_result_without_parallel_r
     income_exclusion = registry_authority.resolve_governed_fact(_probe("modelo-131-income-exclusion").query)
     assert counts_toward_volumen_de_ingresos(
         ConceptoIngreso.from_registry("subvencion_capital"),
-        effective_date=date(2018, 12, 23),
+        # The same coordinate the probe uses: the variant opens below the
+        # supported floor, so a query at its opening date is refused for being
+        # out of support rather than answered.
+        effective_date=_probe("modelo-131-income-exclusion").query.effective_date,
         authority=registry_authority,
     ) is (ConceptoIngreso.from_registry("subvencion_capital").value not in income_exclusion.payload.entities)
 

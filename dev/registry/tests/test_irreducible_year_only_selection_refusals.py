@@ -1,4 +1,4 @@
-"""Every year-only selection refusal in the coverage matrix is legally irreducible.
+"""Every irreducible year-only coordinate in the registry is legally irreducible.
 
 The temporal coverage matrix addresses each cell by ``(modelo, revision,
 filing_year, period)``. AEAT does not always honour that coordinate system: an
@@ -12,8 +12,9 @@ The discriminator is the PERIOD axis, and the corpus makes it visible. Modelos
 declare disjoint period sets, so ``2T`` and ``3T`` name the design by
 themselves. Modelo 369's three OSS schemes share a start date and partition the
 periods the same way. Only a split whose halves declare OVERLAPPING periods is
-undecidable -- Modelo 308 declares ``AD-HOC`` on both sides of the July 2011
-boundary, and ``AD-HOC`` carries no sub-year granularity to discriminate on.
+undecidable -- modelo 036 declares ``alta``, ``modificacion`` and ``baja`` on
+both sides of the 3 February 2025 boundary, and a census declaration token
+carries no sub-year granularity to discriminate on.
 
 So the obligation is not "do not refuse". It is that every refusal is explained
 by a boundary AEAT actually published: the halves must overlap on period, their
@@ -27,8 +28,9 @@ date-qualified query resolves each half to a distinct revision. That is what
 separates "this coordinate is too coarse" from "this registry is broken", and it
 is asserted per refusal rather than assumed.
 
-Nothing here is keyed to a tally or to Modelo 308. A new grounded mid-year
-AD-HOC split passes without editing this file; an ungrounded one fails.
+Nothing here is keyed to a tally or to one modelo: the subject is derived from
+the declarations, so a new grounded mid-year split sharing a period token passes
+without editing this file, and an ungrounded one fails.
 """
 
 from __future__ import annotations

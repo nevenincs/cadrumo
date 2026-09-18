@@ -27,10 +27,15 @@ from cadrumo.domain.calculations.registry.binding_provider_registration import (
     registration_for,
 )
 from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.filing.errors import ModeloBuilderError
 from dev.registry.compiler.authority import compiled_bundled_authority
+from dev.registry.maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -53,22 +58,36 @@ class _FilingGradeBinding:
     binding: BindingDefinition
 
 
-def _representative_scope(period_selector: PeriodSelector) -> tuple[int, str]:
-    """Return one filing coordinate covered by a revision's period selector."""
-    filing_year = period_selector.years[0] if period_selector.years else period_selector.year_from
-    assert filing_year is not None
-    return int(filing_year), period_selector.periods[0]
+def _representative_scope(revision: ModeloRevision, *, floor: int, horizon: int) -> tuple[int, str] | None:
+    """Return one SUPPORTED filing coordinate the revision covers, or ``None``.
+
+    The revision's own earliest year is not usable: a revision opening below the
+    supported floor - modelo 100's 2020 edition among them - is refused at that
+    coordinate for being out of support, which says nothing about the bindings
+    this module reads. ``None`` means the revision lies wholly outside the span
+    and carries no filing coordinate to resolve.
+    """
+    coordinates = revision_selection_coordinates(revision, assessment_horizon=horizon, assessment_floor=floor)
+    if not coordinates:
+        return None
+    filing_year, period = min(coordinates)
+    return int(filing_year), str(period)
 
 
 def _filing_grade_revisions() -> tuple[_FilingGradeRevision, ...]:
     """Select every filing-grade revision through the validated authority."""
     authority = compiled_bundled_authority()
+    floor = coverage_assessment_floor(authority.catalogues)
+    horizon = coverage_assessment_horizon(authority.catalogues)
     records: list[_FilingGradeRevision] = []
     for modelo in authority.modelos:
         for declared_revision in modelo.revisions.values():
             if declared_revision.effective_authority_grade is not RegistryAuthorityGrade.FILING:
                 continue
-            filing_year, period = _representative_scope(declared_revision.period_selector)
+            scope = _representative_scope(declared_revision, floor=floor, horizon=horizon)
+            if scope is None:
+                continue
+            filing_year, period = scope
             snapshot = authority.snapshot(
                 str(modelo.id),
                 filing_year=filing_year,
@@ -125,6 +144,19 @@ def test_every_filing_grade_binding_has_a_validated_selector_and_calculation_bou
     assert revisions, "validated authority yielded no filing-grade revisions"
     assert records, "filing-grade revision corpus yielded no bindings"
     violations: list[str] = []
+    # Selector validation resolves the OSS/IOSS regime catalogue, a governed
+    # fact that refuses to answer outside an authority scope rather than
+    # guessing which generation asked.
+    with validating_governed_facts(compiled_bundled_authority()):
+        _validate_selectors(records, violations)
+    for record in revisions:
+        assert_no_novel_source_kinds(record.revision)
+
+    assert not violations, "filing-grade selector validation failed:\n" + "\n".join(violations)
+
+
+def _validate_selectors(records: tuple[_FilingGradeBinding, ...], violations: list[str]) -> None:
+    """Collect the selector and provider-model violations of one binding corpus."""
     for record in records:
         provider_model = provider_model_for(record.binding.source)
         if not isinstance(record.binding.provider, provider_model):
@@ -134,8 +166,6 @@ def test_every_filing_grade_binding_has_a_validated_selector_and_calculation_bou
             violations.append(
                 f"{record.modelo_id}/{record.revision_id}/{record.binding.id}: " + "; ".join(diagnostics),
             )
-    for record in revisions:
-        assert_no_novel_source_kinds(record.revision)
 
     assert not violations, "filing-grade selector validation failed:\n" + "\n".join(violations)
 

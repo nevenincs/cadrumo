@@ -151,28 +151,13 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
     entry that acquires an epoch, or disappears, must leave this map rather than
     sit here looking cleared.
     """
-    pending: dict[str, str] = {
-        # The modelo 184 ejercicio-2023 pair. Its revision cites BOTH the AEAT
-        # diseno de registro and the BOE publication of the orden that
-        # established it, so a bare "2023" would collide with the epoch
-        # aeat-dr-184-2023-2024 already holds. Which of the two is the
-        # selectable LAYOUT and which is merely the establishing instrument is
-        # the temporal-design owner's ruling, not a sub-year label: they are the
-        # same layout, not an AEAT mid-ejercicio re-lay.
-        "boe-dr-184-2023-2024": "same-ejercicio pair with aeat-dr-184-2023-2024, which already holds epoch 2023",
-        # The four older raw BOE ordenes for modelo 184. These carry NO epoch by
-        # adjudication, not by omission: test_modelo_184_registry's
-        # raw-BOE-design-eras regression asserts `record_design_epoch is None`
-        # for exactly these four, on the ruling that a raw BOE design is
-        # provenance and not a surrogate for a later AEAT map. Its parser
-        # refusal is deliberate and load-bearing. Declaring an epoch here to
-        # satisfy this gate contradicts that contract -- which is precisely what
-        # happened before this entry existed.
-        "boe-dr-184-2015": "raw BOE orden, adjudicated provenance rather than a mapped design",
-        "boe-dr-184-2016-2018": "raw BOE orden, adjudicated provenance rather than a mapped design",
-        "boe-dr-184-2019-2021": "raw BOE orden, adjudicated provenance rather than a mapped design",
-        "boe-dr-184-2022": "raw BOE orden, adjudicated provenance rather than a mapped design",
-    }
+    # Empty, and still load-bearing: an epoch a design genuinely OWES, but does
+    # not yet declare, belongs here with its reason and leaves when it arrives.
+    # The raw BOE ordenes that used to sit here - modelo 184's four eras, its
+    # 2023 pair, and modelo 345's 2022 orden - are exempt by declaration now,
+    # through ``design_authority = "provenance_only"`` below, so listing them
+    # twice would mean this map going stale each time another is catalogued.
+    pending: dict[str, str] = {}
 
     modelos, catalogues = registry_tree()
     designs = [source for source in catalogues.sources.values() if source.kind == "record_design"]
@@ -186,7 +171,17 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         for source_ref in revision.source_refs
     }
 
-    undeclared = {source.id for source in designs if source.record_design_epoch is None}
+    # A design catalogued as PROVENANCE declares no epoch by adjudication: it is
+    # the establishing instrument, not a map a generator can read, and its
+    # parser refusal is deliberate. The tree states that as
+    # ``design_authority = "provenance_only"``, so the exemption is read from
+    # the declaration rather than listed by id here -- a list went stale the
+    # moment modelo 345's 2022 orden was catalogued on exactly that standing.
+    undeclared = {
+        source.id
+        for source in designs
+        if source.record_design_epoch is None and getattr(source, "design_authority", None) != "provenance_only"
+    }
 
     malformed = sorted(
         f"{source.id!r} declares epoch {source.record_design_epoch!r}"
