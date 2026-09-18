@@ -57,14 +57,10 @@ from cadrumo.application.modelo.work_lifecycle import create_work_unit
 # `python -c` child does not inherit.
 from contextlib import ExitStack
 
-from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
-from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 
 composition = ExitStack()
-composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+composition.enter_context(composed_profile_persistence_ports())
 operation = composition.enter_context(bundled_indexed_authority().operation())
 
 _PROFILE_ID = "20020020-0200-4200-8200-200200200200"
