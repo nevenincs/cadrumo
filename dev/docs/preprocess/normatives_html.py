@@ -95,10 +95,14 @@ _CANONICAL_LINK = re.compile(
 
 # Block-level noise stripped before article splitting: jurisprudence forms,
 # scripts, styles, and the per-article "Subir" (back-to-top) nav paragraph.
-_FORM = re.compile(r"<form\b.*?</form>", re.IGNORECASE | re.DOTALL)
-_SCRIPT = re.compile(r"<script\b.*?</script>", re.IGNORECASE | re.DOTALL)
-_STYLE = re.compile(r"<style\b.*?</style>", re.IGNORECASE | re.DOTALL)
-_SUBIR = re.compile(r'<p[^>]*class="linkSubir"[^>]*>.*?</p>', re.IGNORECASE | re.DOTALL)
+# Each end tag tolerates whitespace before its `>`. HTML permits it, browsers
+# honour it, and a stripper that does not match `</script >` leaves the whole
+# element behind -- so its body, which is not article prose, is carried into the
+# extracted text and into every sidecar built from it.
+_FORM = re.compile(r"<form\b.*?</form\s*>", re.IGNORECASE | re.DOTALL)
+_SCRIPT = re.compile(r"<script\b.*?</script\s*>", re.IGNORECASE | re.DOTALL)
+_STYLE = re.compile(r"<style\b.*?</style\s*>", re.IGNORECASE | re.DOTALL)
+_SUBIR = re.compile(r'<p[^>]*class="linkSubir"[^>]*>.*?</p\s*>', re.IGNORECASE | re.DOTALL)
 
 # The unit-heading delimiter and the bloque markers. The anchor matcher
 # preserves every BOE fragment assigned to an extracted unit, including
