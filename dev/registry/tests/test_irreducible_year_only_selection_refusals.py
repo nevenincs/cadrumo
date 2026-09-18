@@ -33,6 +33,7 @@ AD-HOC split passes without editing this file; an ungrounded one fails.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import date
 from itertools import pairwise
 
@@ -44,7 +45,7 @@ from cadrumo.domain.calculations.registry.temporal import select_revision
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_registry_tree
-from ..temporal_coverage import compose_temporal_coverage
+from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -67,33 +68,54 @@ def _co_claimants(modelo, filing_year: int, period: str):
     )
 
 
-#: Floor for the refusals this module's three gates iterate. Every assertion
-#: in all three runs INSIDE the loop over this tuple, so an empty result is
-#: not a passing corpus -- it is three gates executing nothing. The rows are
-#: legally irreducible, as the module docstring sets out: a mid-year orden
-#: leaves no correct year-only answer, so the coordinate cannot stop being
-#: refused without the resolver silently PICKING one design. Live the matrix
-#: carries two, both modelo 308; a floor rather than a pin, because a newly
-#: published mid-year split legitimately adds rows.
-_MINIMUM_REFUSED_ROWS = 2
+@dataclass(frozen=True, slots=True)
+class _IrreducibleCoordinate:
+    """One supported coordinate two revisions claim through the same period token."""
+
+    modelo: str
+    filing_year: int
+    period: str
 
 
-def _refused_selection_rows():
-    report = compose_temporal_coverage(authority=_authority())
-    rows = tuple(row for row in report.refused_rows if row.failure_code == "law_selection_refused")
-    assert len(rows) >= _MINIMUM_REFUSED_ROWS, (
-        f"the coverage matrix reports {len(rows)} year-only selection refusal(s); below "
-        "this the gates that iterate them assert nothing, and a resolver that stopped "
-        "refusing an irreducible coordinate would read exactly like a clean corpus"
+def _irreducible_year_only_coordinates() -> tuple[_IrreducibleCoordinate, ...]:
+    """Every supported ``(modelo, year, period)`` that two revisions both claim.
+
+    Derived from the declarations, not from the coverage matrix's refused rows.
+    Those rows answer a different question: the matrix re-asks an ambiguity on a
+    date the revision itself governs, so a mid-year split resolves there and
+    records no refusal at all, and the only rows that survived were coordinates
+    refused for lying OUTSIDE the supported envelope - modelo 308's 2011 split,
+    below the floor. Reading them as year-only ambiguity attributed one refusal
+    to another's cause, and the envelope work emptied the set, which is how it
+    surfaced.
+
+    What the module is about is unchanged: a coordinate whose claimants share a
+    period token cannot be decided by the year, and the assertions below hold it
+    to a published boundary and to date-reducibility.
+    """
+    authority = _authority()
+    floor = coverage_assessment_floor(authority.catalogues)
+    horizon = coverage_assessment_horizon(authority.catalogues)
+    coordinates: list[_IrreducibleCoordinate] = []
+    for modelo in authority.modelos:
+        declared = sorted({code for revision in modelo.revisions.values() for code in revision.period_selector.periods})
+        for filing_year in range(floor, horizon + 1):
+            for period in declared:
+                if len(_co_claimants(modelo, filing_year, period)) > 1:
+                    coordinates.append(_IrreducibleCoordinate(str(modelo.id), filing_year, period))
+    assert coordinates, (
+        "no supported coordinate is claimed by two revisions through one period token, so every "
+        "gate below iterates nothing; author a mid-year split sharing a period token on an isolated "
+        "tree rather than dropping these, because the refusal they guard returns silently"
     )
-    return rows
+    return tuple(coordinates)
 
 
 def test_every_year_only_refusal_is_an_overlapping_period_split() -> None:
     """A refusal must come from co-claimants the period axis cannot separate."""
     authority = _authority()
 
-    for row in _refused_selection_rows():
+    for row in _irreducible_year_only_coordinates():
         modelo = next(candidate for candidate in authority.modelos if candidate.id == str(row.modelo))
         claimants = _co_claimants(modelo, row.filing_year, str(row.period))
 
@@ -108,7 +130,7 @@ def test_every_refused_split_has_disjoint_windows_breaking_inside_the_year() -> 
     """The halves must partition the year, so a date could name one of them."""
     authority = _authority()
 
-    for row in _refused_selection_rows():
+    for row in _irreducible_year_only_coordinates():
         modelo = next(candidate for candidate in authority.modelos if candidate.id == str(row.modelo))
         claimants = _co_claimants(modelo, row.filing_year, str(row.period))
 
@@ -137,7 +159,7 @@ def test_every_refused_boundary_is_grounded_in_a_published_orden() -> None:
     authority = _authority()
     _modelos, catalogues = load_registry_tree(bundled_path("registry", "aeat"))
 
-    for row in _refused_selection_rows():
+    for row in _irreducible_year_only_coordinates():
         modelo = next(candidate for candidate in authority.modelos if candidate.id == str(row.modelo))
         claimants = _co_claimants(modelo, row.filing_year, str(row.period))
 
@@ -163,7 +185,7 @@ def test_a_date_resolves_every_refused_coordinate_to_one_revision() -> None:
     """
     authority = _authority()
 
-    for row in _refused_selection_rows():
+    for row in _irreducible_year_only_coordinates():
         modelo = next(candidate for candidate in authority.modelos if candidate.id == str(row.modelo))
         claimants = _co_claimants(modelo, row.filing_year, str(row.period))
 
