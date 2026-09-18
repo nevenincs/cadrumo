@@ -10,7 +10,10 @@ from pathlib import Path
 import tomlkit
 
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
-from cadrumo.domain.calculations.registry.keyed_families import KEYED_FAMILY_SPECS
+from cadrumo.domain.calculations.registry.keyed_families import (
+    KEYED_FAMILY_SPECS,
+    inline_family_source_default,
+)
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions
 from dev.registry.compiler.edition_materialisation import materialise_edition
 from dev.registry.compiler.loader import inherit_keyed_family, load_modelo_declarations, load_modelo_directory
@@ -48,17 +51,6 @@ def _effective(value: object) -> object:
     if isinstance(value, list | tuple):
         return [_effective(item) for item in value]
     return value
-
-
-def _normalise(member: Mapping[str, object], table: Mapping[str, object], default_key: str | None) -> dict[str, object]:
-    result = dict(member)
-    if default_key is not None and "source_refs" not in result:
-        default = table.get(default_key)
-        if isinstance(default, list | tuple) and default:
-            raw_additions = result.pop("additional_source_refs", ())
-            additions = raw_additions if isinstance(raw_additions, list | tuple) else ()
-            result["source_refs"] = list(dict.fromkeys((*default, *additions)))
-    return result
 
 
 def _difference(
@@ -291,9 +283,13 @@ def collapse_keyed_families(source: Path, candidate: Path) -> dict[str, object]:
             if set(typed_order) == set(new_by_identity):
                 new_members = tuple(new_by_identity[identity] for identity in typed_order)
             old = {
-                str(item[spec.identity]): _normalise(item, predecessor, spec.source_default_key) for item in old_members
+                str(item[spec.identity]): inline_family_source_default(item, predecessor, spec.source_default_key)
+                for item in old_members
             }
-            new = {str(item[spec.identity]): _normalise(item, current, spec.source_default_key) for item in new_members}
+            new = {
+                str(item[spec.identity]): inline_family_source_default(item, current, spec.source_default_key)
+                for item in new_members
+            }
             authored_ids = _authored_member_ids(revision_dir, revision_id, spec.section, spec.identity)
             replacements: dict[str, str] = {}
             if (spec.singleton or spec.period_scoped) and len(old) == len(new) == 1:

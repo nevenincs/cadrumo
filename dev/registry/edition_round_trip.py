@@ -115,12 +115,12 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.bindings import binding_source_modelo
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.domain.calculations.registry.keyed_families import family_source_default_fields
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
     casilla_occurrence_locale_key,
     resolve_modelo_localization,
 )
-from cadrumo.domain.calculations.registry.reference_sections import FAMILY_SOURCE_DEFAULT_FIELDS
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 from cadrumo.domain.filing.protocols import ModeloInputs
@@ -236,7 +236,7 @@ _EXCLUDED_FROM_EQUALITY: Final = frozenset(
         # continuity identity, origin, evidence, legal refs and source refs.
         "lineage_attestations",
     }
-    | {default_field for _section, default_field in FAMILY_SOURCE_DEFAULT_FIELDS}
+    | {default_field for _section, default_field in family_source_default_fields()}
 )
 _GIT_TIMEOUT_SECONDS: Final = 120
 #: Variables that would point git at a repository other than the one named.

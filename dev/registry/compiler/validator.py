@@ -52,6 +52,7 @@ from .source_evidence_fingerprint import (
     collect_source_evidence_fingerprints,
 )
 from .validate_evidence import EvidenceValidator, flush_corpus_text_cache
+from .validate_inherited_family_pairing import inherited_family_pairing_failures
 from .validate_layout_authority_content import validate_layout_authority_content
 from .validate_official_source_guidance_content import validate_suppression_notice_content
 from .validate_record_design_epochs import (
@@ -333,6 +334,7 @@ class RegistryValidator:
         )
         failures.extend(validate_informative_class_invariant(modelo))
         failures.extend(validate_m210_tipo_renta_code_projection_parity(modelo))
+        failures.extend(inherited_family_pairing_failures(modelo))
         return failures
 
     def _registry_cache_key(

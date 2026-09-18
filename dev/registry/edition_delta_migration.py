@@ -149,6 +149,8 @@ from cadrumo.domain.calculations.registry.keyed_families import (
     HELD_BACK_FAMILY_REASONS,
     FamilyInheritanceMode,
     family_identity_value,
+    family_source_default_fields,
+    inline_family_source_default,
 )
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
@@ -2926,25 +2928,16 @@ def _chain_materialisation(source: _EditionSource) -> bytes:
 def _family_defaults_inlined(table: Mapping[str, object]) -> dict[str, object]:
     """Inline keyed-family source defaults for representation-blind chain proof."""
     result = dict(table)
-    for spec in CANONICAL_FAMILY_SPECS:
-        default_key = spec.source_default_key
-        if spec.section == CASILLAS_FAMILY or default_key is None:
+    for section, default_key in family_source_default_fields():
+        raw_members = table.get(section)
+        if not isinstance(raw_members, list | tuple):
             continue
-        default = table.get(default_key)
-        raw_members = table.get(spec.section)
-        if not isinstance(default, list | tuple) or not default or not isinstance(raw_members, list | tuple):
-            continue
-        members: list[object] = []
-        for raw_member in raw_members:
-            if not isinstance(raw_member, Mapping) or _ROW_SOURCE in raw_member:
-                members.append(raw_member)
-                continue
-            member = dict(raw_member)
-            raw_additions = member.pop(_ROW_SOURCE_ADDITIONS, ())
-            additions = raw_additions if isinstance(raw_additions, list | tuple) else ()
-            member[_ROW_SOURCE] = list(dict.fromkeys((*default, *additions)))
-            members.append(member)
-        result[spec.section] = members
+        result[section] = [
+            inline_family_source_default(raw_member, table, default_key)
+            if isinstance(raw_member, Mapping)
+            else raw_member
+            for raw_member in raw_members
+        ]
     return result
 
 

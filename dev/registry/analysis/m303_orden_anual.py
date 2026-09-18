@@ -13,6 +13,10 @@ import argparse
 from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.governed_fact_scope import (
+    CandidateFactAuthority,
+    validating_governed_facts,
+)
 
 from ..compiler.loader import load_registry_tree
 from ..compiler.m303_orden_census_artefact import m303_orden_census_artefact_path
@@ -50,31 +54,39 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--check", action="store_true", help="refuse a missing or stale generated artefact")
     args = parser.parse_args(argv)
     _, catalogues = load_registry_tree(_registry_root())
-    source_root = bundled_path()
-    manifest_path = _manifest_path()
-    artefact_path = _census_artefact_path()
-    if args.check:
-        check_m303_annual_orden_manifest(
-            manifest_path=manifest_path,
-            source_root=source_root,
-            sources=catalogues.sources,
+    # Extraction cross-checks the observed annual Orden against the authored
+    # facts it must agree with, so the facts being validated against are scoped
+    # here exactly as any other registry validation scopes them. Without it
+    # every fact-backed check below refuses for want of an authority rather
+    # than for anything the corpus actually says.
+    with validating_governed_facts(
+        CandidateFactAuthority(catalogues.facts, catalogues.require_supported_filing_years())
+    ):
+        source_root = bundled_path()
+        manifest_path = _manifest_path()
+        artefact_path = _census_artefact_path()
+        if args.check:
+            check_m303_annual_orden_manifest(
+                manifest_path=manifest_path,
+                source_root=source_root,
+                sources=catalogues.sources,
+            )
+            check_m303_annual_orden_census_artefact(
+                artefact_path=artefact_path,
+                source_root=source_root,
+                sources=catalogues.sources,
+            )
+            return 0
+        manifest_path.write_text(
+            render_m303_annual_orden_manifest(source_root=source_root, sources=catalogues.sources),
+            encoding="utf-8",
+            newline="\n",
         )
-        check_m303_annual_orden_census_artefact(
-            artefact_path=artefact_path,
-            source_root=source_root,
-            sources=catalogues.sources,
+        artefact_path.write_text(
+            render_m303_annual_orden_census_artefact(source_root=source_root, sources=catalogues.sources),
+            encoding="utf-8",
+            newline="\n",
         )
-        return 0
-    manifest_path.write_text(
-        render_m303_annual_orden_manifest(source_root=source_root, sources=catalogues.sources),
-        encoding="utf-8",
-        newline="\n",
-    )
-    artefact_path.write_text(
-        render_m303_annual_orden_census_artefact(source_root=source_root, sources=catalogues.sources),
-        encoding="utf-8",
-        newline="\n",
-    )
     # The conformance snapshot cache is keyed only on `validate`, never on
     # registry source state, so a read in this same process would otherwise
     # serve the pre-write profile. See reset_conformance_cache.
