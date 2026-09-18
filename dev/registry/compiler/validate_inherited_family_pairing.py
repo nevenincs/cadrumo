@@ -33,7 +33,7 @@ from cadrumo.domain.calculations.registry.keyed_families import family_spec
 from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
-from ._validate_application_links import _SIMPLE_APPLICATION_LINK_RULES
+from ._validate_application_links import APPLICATION_LINK_SURFACE_RULES
 
 __all__ = ["inherited_family_pairing_failures"]
 
@@ -94,7 +94,7 @@ def _broken_pair_failures(scope: str, revision: ModeloRevision, baseline: Modelo
     """
     surfaces = {link.surface for link in revision.application_links}
     failures: list[str] = []
-    for section, surface, _message in _SIMPLE_APPLICATION_LINK_RULES:
+    for section, surface, _message in APPLICATION_LINK_SURFACE_RULES:
         if surface not in surfaces:
             continue
         if _member_count(revision, section) or not _member_count(baseline, section):
