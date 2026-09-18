@@ -241,8 +241,8 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.reconciliation_records import bind_modelo_reconciliation_persistence_factory
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .core.redaction.tax_identity_admission import bind_tax_identity_admission
-    from .entrypoints.adapter_composition import composed_profile_persistence_ports
     from .domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
+    from .entrypoints.adapter_composition import composed_profile_persistence_ports
     from .tests.recorded_ecb_rates import recorded_ecb_rate_provider
 
     with (
