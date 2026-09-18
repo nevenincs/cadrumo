@@ -141,6 +141,7 @@ import tomlkit
 from pydantic import ValidationError
 
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.cleared_families import cleared_family_names
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryLoadError
 from cadrumo.domain.calculations.registry.keyed_families import (
     CANONICAL_FAMILY_SPECS,
@@ -899,8 +900,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                     row["structural_overhead"] += len(
                         _leaf_values({key: value for key, value in operation.items() if key != "fields"})
                     )
-            cleared = raw.get("cleared_families", ())
-            if isinstance(cleared, list | tuple) and spec.section in cleared:
+            if spec.section in cleared_family_names(raw.get("cleared_families", ())):
                 row["removals"] += 1
                 row["structural_overhead"] += 1
             if spec.inheritance is FamilyInheritanceMode.PER_EDITION:

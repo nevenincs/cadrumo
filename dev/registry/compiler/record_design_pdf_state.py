@@ -393,16 +393,29 @@ def _finalise_extraction(
     # at position 160, and validating it AT CONSTRUCTION raised before the
     # classification that would have sent it to `skipped` ever ran -- so a
     # document whose three annex records each tile 1..500 cleanly was refused as
-    # though it opened at 160. The bodies themselves are unchanged; only the
-    # moment they are judged moved, from draft-finish to read-classification.
-    for sheet in read:
-        validate_pdf_sheet(sheet, source_label=source_label)
+    # though it opened at 160. The body itself is unchanged, and it is still not
+    # returned -- the contiguity pass below already routes it to `skipped`. Only
+    # the moment it is judged moved, to after that routing, so a body the read
+    # does not return can no longer refuse the whole document.
     read = _recover_inline_constants(read)
     read = _apply_range_start_corrections(read, corrections)
     broken = _contiguity_failures(read)
+    returned = tuple(sheet for sheet in read if sheet.name not in broken)
+    if not returned:
+        # Every identified body was routed away, so the document yielded no
+        # record at all. Refusing here keeps that as loud as the empty-`read`
+        # case above: without it, relaxing the judgement moment would turn a
+        # document the parser cannot read into an extraction carrying zero
+        # sheets, which only a caller that checks `is_complete` would notice.
+        raise RegistryValidationError(
+            f"{source_label} yielded no readable record sheet; "
+            f"{len(broken)} identified body/bodies were routed to unread"
+        )
+    for sheet in returned:
+        validate_pdf_sheet(sheet, source_label=source_label)
     return RecordDesignExtraction(
         source=source_label,
-        sheets=tuple(sheet for sheet in read if sheet.name not in broken),
+        sheets=returned,
         skipped=(
             *_skipped_sheets(results),
             *(RecordDesignSkippedSheet(name=name, reason=reason) for name, reason in broken.items()),

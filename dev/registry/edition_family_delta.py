@@ -9,6 +9,7 @@ from pathlib import Path
 
 import tomlkit
 
+from cadrumo.domain.calculations.registry.cleared_families import cleared_family_names
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 from cadrumo.domain.calculations.registry.keyed_families import (
     KEYED_FAMILY_SPECS,
@@ -246,7 +247,7 @@ def collapse_keyed_families(source: Path, candidate: Path) -> dict[str, object]:
             for operations in (overrides, removals, positions)
             for operation in operations
             if isinstance(operation, Mapping) and operation.get("family") is not None
-        } | {str(section) for section in revision.get("cleared_families", ())}
+        } | cleared_family_names(revision.get("cleared_families", ()))
         missing_scopes = sorted((operated_sections & scoped_sections) - set(scoped_families))
         scoped_families.extend(missing_scopes)
         revision_changed = bool(missing_scopes)
