@@ -415,9 +415,9 @@ categories:
         a l'activitat (Ley 35/2006 art. 30.2.5.b regla 4a).
     suministros_local_afecto:
       label: Subministraments del local afecte
-      notes: 'Despesa totalment deduible: l''immoble on es desenvolupa l''activitat
-        esta afecte (Llei 35/2006 art. 29.1.a) i els seus subministraments son despesa
-        deduible (art. 28.1). No s''aplica la regla del 30 per cent de l''art. 30.2.5.b,
+      notes: 'Despesa totalment deduïble: l''immoble on es desenvolupa l''activitat
+        està afecte (Llei 35/2006 art. 29.1.a) i els seus subministraments son despesa
+        deduïble (art. 28.1). No s''aplica la regla del 30 per cent de l''art. 30.2.5.b,
         reservada a l''habitatge habitual parcialment afecte.'
     telefonia_fija:
       label: Despesa de telefonia fixa

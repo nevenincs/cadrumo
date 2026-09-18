@@ -29,8 +29,9 @@ import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_references import SourceReference
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from dev.registry.compiler.validate_layout_authority_content import validate_layout_authority_content
+
+from .catalogue_verification_support import authored_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -57,8 +58,13 @@ _ANNEX_CROSS_REFERENCE_DOC = (
 
 
 def _bundled_sources() -> dict[str, SourceReference]:
-    _modelos, catalogues = bundled_registry_tree()
-    return {str(ref): source for ref, source in catalogues.sources.items()}
+    """Return the COMMITTED source catalogue, not the published view.
+
+    The view carries only what published modelos cite, and a source whose
+    layout claim was retiered is not necessarily cited by one - which made a
+    lookup here raise KeyError rather than report the claim it exists to read.
+    """
+    return {str(ref): source for ref, source in authored_catalogues().sources.items()}
 
 
 def _norm_text_layout_claims() -> dict[str, SourceReference]:

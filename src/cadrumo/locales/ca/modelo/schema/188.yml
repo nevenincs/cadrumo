@@ -4,14 +4,24 @@ modelo:
       casilla:
         continuidad:
           capitalizacion-seguros-resumen-base-negativa:
+            help: Suma de les bases de retenció i ingrés a compte reflectides en els
+              registres de perceptor amb base negativa.
             label: Base de retencions i ingressos a compte negativa
           capitalizacion-seguros-resumen-base-positiva:
+            help: Suma de les bases de retenció i ingrés a compte reflectides en els
+              registres de perceptor amb base positiva.
             label: Base de retencions i ingressos a compte
           capitalizacion-seguros-resumen-perceptores-base-negativa:
+            help: Nombre de perceptors (registres) la base de retencions i ingressos
+              a compte dels quals és negativa.
             label: Nombre total de perceptors amb base negativa
           capitalizacion-seguros-resumen-perceptores-base-positiva:
+            help: Nombre de perceptors (registres) la base de retencions i ingressos
+              a compte dels quals és positiva.
             label: Nombre total de perceptors amb base positiva
           capitalizacion-seguros-resumen-retenciones:
+            help: Suma de les retencions i ingressos a compte practicats sobre les
+              rendes declarades.
             label: Retencions i ingressos a compte
       field:
         official_name: Modelo 188. Retencions i ingressos a compte. Rendes del capital
@@ -35,9 +45,6 @@ modelo:
             '02':
               help: Suma de les bases de retenció reflectides en els registres de
                 perceptor amb base positiva.
-            '03':
-              help: Suma de les retencions i ingressos a compte practicats sobre les
-                rendes declarades.
             '04':
               help: Nombre de perceptors (registres) la base de retencions dels quals
                 és negativa.

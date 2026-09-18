@@ -17,7 +17,7 @@ modelo:
           domicilio-fiscal-espana-bloque:
             label: Adóügyi lakóhely spanyol területen. Tömb
           domicilio-fiscal-espana-calificador-numero:
-            label: Adóügyi lakóhely spanyol területen. Házszám kiegészítő
+            label: Adóügyi lakóhely spanyol területen. Házszám kiegészítője
           domicilio-fiscal-espana-codigo-postal:
             label: Adóügyi lakóhely spanyol területen. Irányítószám
           domicilio-fiscal-espana-codigo-provincia:
@@ -29,7 +29,7 @@ modelo:
           domicilio-fiscal-espana-localidad:
             label: Adóügyi lakóhely spanyol területen. Helység vagy település
           domicilio-fiscal-espana-municipio:
-            label: Adóügyi lakóhely spanyol területen. Önkormányzat
+            label: Adóügyi lakóhely spanyol területen. Település
           domicilio-fiscal-espana-nombre-via:
             label: Adóügyi lakóhely spanyol területen. Közterület neve
           domicilio-fiscal-espana-numero-casa:
@@ -53,7 +53,7 @@ modelo:
           domicilio-fiscal-extranjero-complemento:
             label: Adóügyi lakóhely külföldön. Cím kiegészítés
           domicilio-fiscal-extranjero-domicilio:
-            label: Adóügyi lakóhely külföldön. Cím
+            label: Adóügyi lakóhely külföldön. Lakcím
           domicilio-fiscal-extranjero-pais:
             label: Adóügyi lakóhely külföldön. Ország
           domicilio-fiscal-extranjero-poblacion:
@@ -100,8 +100,8 @@ modelo:
         2021-2023:
           casilla:
             x-dhkn2bhg6cmn6qb7dpniqoj1ediiqsrld9in8obj:
-              label: Az időszak adóköteles, nem mentes ügyletei. Az adóalap előjele
-                [03]
+              label: Az időszakban végzett adóköteles, nem mentes ügyletek. Az adóalap
+                előjele [03]
           field:
             label: 604-es modelo (HAC/510/2021 rendelet), 2021-2023. adóévek
         2024-y-siguientes:

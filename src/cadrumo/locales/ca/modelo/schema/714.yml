@@ -104,7 +104,7 @@ modelo:
           patrimonio-domicilio-extranjero-pais:
             label: Subjecte passiu - Domicili estranger - País
           patrimonio-domicilio-extranjero-poblacion:
-            label: Subjecte passiu - Domicili estranger - Població / ciutat
+            label: Subjecte passiu - Domicili estranger - Població / Ciutat
           patrimonio-domicilio-extranjero-provincia-region-estado:
             label: Subjecte passiu - Domicili estranger - Província / regió / estat
           patrimonio-domicilio-habitual-bloque:
@@ -112,7 +112,7 @@ modelo:
           patrimonio-domicilio-habitual-calificador-numero:
             label: Subjecte passiu - Domicili habitual - Qualificador del número
           patrimonio-domicilio-habitual-codigo-postal:
-            label: Subjecte passiu - Domicili habitual - Codi postal
+            label: Subjecte passiu - Domicili habitual - Codi Postal
           patrimonio-domicilio-habitual-codigo-provincia:
             label: Subjecte passiu - Domicili habitual - Codi de província
           patrimonio-domicilio-habitual-datos-complementarios:

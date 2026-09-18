@@ -291,7 +291,7 @@ modelo:
           ep-domicilio-fiscal-complemento-domicilio:
             label: Permanent establishment. Tax address in Spain. Address complement
           ep-domicilio-fiscal-escalera:
-            label: Permanent establishment. Tax address in Spain. Stairway
+            label: Permanent establishment. Tax address in Spain. Staircase
           ep-domicilio-fiscal-indicador-referencia-catastral:
             label: Permanent establishment. Tax address in Spain. Cadastral reference
               indicator of the tax address
@@ -661,7 +661,7 @@ modelo:
           pf-domicilio-fiscal-complemento-domicilio:
             label: Tax address in Spain. Address complement
           pf-domicilio-fiscal-escalera:
-            label: Tax address in Spain. Stairway
+            label: Tax address in Spain. Staircase
           pf-domicilio-fiscal-indicador-referencia-catastral:
             label: Tax address in Spain. Cadastral reference indicator of the tax
               address
@@ -696,7 +696,7 @@ modelo:
           pf-domicilio-gestion-administrativa-complemento-domicilio:
             label: Administrative management address. Address complement
           pf-domicilio-gestion-administrativa-escalera:
-            label: Administrative management address. Stairway
+            label: Administrative management address. Staircase
           pf-domicilio-gestion-administrativa-indicador-baja:
             label: Administrative management address. Deregistration indicator of
               the administrative management address
@@ -815,7 +815,7 @@ modelo:
             label: Identification. Tax identification code of the State of residence
               or VAT number
           pf-identificacion-nombre:
-            label: Identification. Forename
+            label: Identification. Given name
           pf-identificacion-nombre-comercial:
             label: Identification. Trade name
           pj-aviso-email:
@@ -855,7 +855,7 @@ modelo:
           pj-dfisc-complemento-domicilio:
             label: Legal person or entity. Tax address in Spain. Address complement
           pj-dfisc-escalera:
-            label: Legal person or entity. Tax address in Spain. Stairway
+            label: Legal person or entity. Tax address in Spain. Staircase
           pj-dfisc-indicador-referencia-catastral:
             label: Legal person or entity. Tax address in Spain. Cadastral reference
               indicator of the tax address
@@ -957,7 +957,7 @@ modelo:
           pj-dsoc-complemento-domicilio:
             label: Legal person or entity. Registered office. Address complement
           pj-dsoc-escalera:
-            label: Legal person or entity. Registered office. Stairway
+            label: Legal person or entity. Registered office. Staircase
           pj-dsoc-localidad:
             label: Legal person or entity. Registered office. Locality or town
           pj-dsoc-municipio:

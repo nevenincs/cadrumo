@@ -40,7 +40,7 @@ modelo:
             '02':
               label: Levonások és előlegfizetések adóalapja
             '03':
-              label: Levonások és előlegfizetések
+              label: Forrásadó és részletfizetés
           construct:
             modelo-123-capital-withholding:
               field:

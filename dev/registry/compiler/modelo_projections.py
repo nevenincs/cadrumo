@@ -22,6 +22,7 @@ __all__ = [
     "MODELO_PARAMETER_PROJECTION_PROVIDER_ID",
     "ModeloParameterFact",
     "compile_modelo_parameter_projection_facts",
+    "projected_parameter_ids",
 ]
 
 
@@ -70,6 +71,17 @@ def projected_modelo_ids() -> frozenset[str]:
     rediscovered as a failure.
     """
     return frozenset(target.modelo_id for target in _TARGETS)
+
+
+def projected_parameter_ids(modelo_id: str) -> frozenset[str]:
+    """Return the parameter ids a projection consumes from one modelo.
+
+    A projected parameter is read by the compiler rather than by a formula or a
+    ``read_parameter`` call, so a consumer census that walks only those two
+    paths reports it as unused. Exposed so the census can ask instead of
+    guessing.
+    """
+    return frozenset(target.parameter_id for target in _TARGETS if target.modelo_id == modelo_id)
 
 
 def compile_modelo_parameter_projection_facts(

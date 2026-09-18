@@ -19,7 +19,7 @@ modelo:
             '02':
               label: Visszatartások és előlegfizetések alapja
             '03':
-              label: Visszatartások és előlegfizetések
+              label: Forrásadó és részletfizetés
             '04':
               label: Kedvezményezettek száma (kiegészítő blokk)
             '05':

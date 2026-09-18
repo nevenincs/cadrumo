@@ -7,12 +7,12 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.aggregation import RetencionClave
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.governed_fact_scope import GovernedFactSource
 from cadrumo.domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_source_requirements,
@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import reg
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from cadrumo.domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
+    resolve_retencion_clave,
     resolve_withholding_binding_values,
 )
 from cadrumo.domain.deadlines.errors import DeadlineValidationError
@@ -59,12 +60,18 @@ _RETIRED_M111_PERCEPCIONES_SOURCE_CASILLAS: frozenset[CasillaId] = frozenset(
 _M190_PERCEPCIONES_BINDING = "modelo-190-percepciones-anual"
 
 
-def _withholding_observation(source_id: str, nif: str, clave: str) -> WithholdingObservation:
+def _withholding_observation(
+    source_id: str,
+    nif: str,
+    clave: str,
+    *,
+    authority: GovernedFactSource,
+) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=source_id,
         perceptor_tax_id=nif,
         transaction_date=date(2025, 6, 1),
-        clave=RetencionClave(clave),
+        clave=resolve_retencion_clave(clave, date(2025, 6, 1), modelo="190", authority=authority),
         percibido_dinerario=Decimal("1000"),
         retencion_practicada=Decimal("190"),
         incapacity_cash_perception=Decimal("0"),
@@ -231,7 +238,11 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert schedule.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
     assert schedule.source_refs == ("aeat-modelo-190-procedure", "boe-modelo-190-2025-form")
 
-    assert set(windows) == {window_id}
+    # The edition spans every supported year from 2025 onward and declares one
+    # window per year, so the requested year's window is asserted rather than
+    # the edition holding exactly one.
+    assert window_id in windows
+    assert len({window.filing_year for window in windows.values()}) == len(windows)
     window = windows[window_id]
     expected_filing_year, expected_period, opens_on, closes_on = expected
     assert window.filing_year == expected_filing_year
@@ -243,7 +254,10 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert {"aeat-modelo-190-procedure", "boe-modelo-190-2025-form"} <= set(window.source_refs)
     with bundled_indexed_authority().operation() as operation:
         if window.closes_on.year == 2026:
-            with pytest.raises(DeadlineValidationError, match="no variant for the exact query context"):
+            with pytest.raises(
+                DeadlineValidationError,
+                match="holiday calendar publication for 2026 could not be resolved",
+            ):
                 shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
         else:
             shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
@@ -349,15 +363,14 @@ def test_modelo_190_calculation_aggregates_modelo_111_quarterly_observations() -
         Decimal("0"),
     )
     expected_retenciones_total = sum(source_values[_M111_RETENCIONES_TOTAL_CASILLA], Decimal("0"))
-    withholding_values = resolve_withholding_binding_values(
-        snapshot.revision,
-        (
-            _withholding_observation("m190-1", "11111111H", "A"),
-            _withholding_observation("m190-1-repeat", "11111111H", "A"),
-            _withholding_observation("m190-2", "11111111H", "G"),
-            _withholding_observation("m190-3", "22222222J", "A"),
-        ),
-    )
+    with bundled_indexed_authority().operation() as operation:
+        observations = (
+            _withholding_observation("m190-1", "11111111H", "A", authority=operation),
+            _withholding_observation("m190-1-repeat", "11111111H", "A", authority=operation),
+            _withholding_observation("m190-2", "11111111H", "G", authority=operation),
+            _withholding_observation("m190-3", "22222222J", "A", authority=operation),
+        )
+    withholding_values = resolve_withholding_binding_values(snapshot.revision, observations)
     assert withholding_values[_M190_PERCEPCIONES_BINDING] == Decimal("3")
 
     result = calculate_registry_snapshot(

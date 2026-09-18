@@ -10,85 +10,85 @@ modelo:
               - adóalap
           iva-aic-bienes-tipo-0-cuota:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 0% kulccsal
-              - ÁFA összeg
+              - adóösszeg
           iva-aic-bienes-tipo-10-base:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 10% kulccsal
               - adóalap
           iva-aic-bienes-tipo-10-cuota:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 10% kulccsal
-              - ÁFA összeg
+              - adóösszeg
           iva-aic-bienes-tipo-2-base:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 2% kulccsal
               - adóalap
           iva-aic-bienes-tipo-2-cuota:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 2% kulccsal
-              - ÁFA összeg
+              - adóösszeg
           iva-aic-bienes-tipo-21-base:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 21% kulccsal
               - adóalap
           iva-aic-bienes-tipo-21-cuota:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 21% kulccsal
-              - ÁFA összeg
+              - adóösszeg
           iva-aic-bienes-tipo-4-base:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 4% kulccsal
               - adóalap
           iva-aic-bienes-tipo-4-cuota:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 4% kulccsal
-              - ÁFA összeg
+              - adóösszeg
           iva-aic-bienes-tipo-5-base:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 5% kulccsal
               - adóalap
           iva-aic-bienes-tipo-5-cuota:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 5% kulccsal
-              - ÁFA összeg
+              - adóösszeg
           iva-aic-bienes-tipo-7-5-base:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 7.5% kulccsal
               - adóalap
           iva-aic-bienes-tipo-7-5-cuota:
             label: Közösségen belüli termékbeszerzések után keletkezett ÁFA 7.5% kulccsal
-              - ÁFA összeg
+              - adóösszeg
           iva-aic-servicios-tipo-0-base:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
               0% kulccsal - adóalap
           iva-aic-servicios-tipo-0-cuota:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-              0% kulccsal - ÁFA összeg
+              0% kulccsal - adóösszeg
           iva-aic-servicios-tipo-10-base:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
               10% kulccsal - adóalap
           iva-aic-servicios-tipo-10-cuota:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-              10% kulccsal - ÁFA összeg
+              10% kulccsal - adóösszeg
           iva-aic-servicios-tipo-2-base:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
               2% kulccsal - adóalap
           iva-aic-servicios-tipo-2-cuota:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-              2% kulccsal - ÁFA összeg
+              2% kulccsal - adóösszeg
           iva-aic-servicios-tipo-21-base:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
               21% kulccsal - adóalap
           iva-aic-servicios-tipo-21-cuota:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-              21% kulccsal - ÁFA összeg
+              21% kulccsal - adóösszeg
           iva-aic-servicios-tipo-4-base:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
               4% kulccsal - adóalap
           iva-aic-servicios-tipo-4-cuota:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-              4% kulccsal - ÁFA összeg
+              4% kulccsal - adóösszeg
           iva-aic-servicios-tipo-5-base:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
               5% kulccsal - adóalap
           iva-aic-servicios-tipo-5-cuota:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-              5% kulccsal - ÁFA összeg
+              5% kulccsal - adóösszeg
           iva-aic-servicios-tipo-7-5-base:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
               7.5% kulccsal - adóalap
           iva-aic-servicios-tipo-7-5-cuota:
             label: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-              7.5% kulccsal - ÁFA összeg
+              7.5% kulccsal - adóösszeg
           iva-anual-compensacion-generada-ejercicio:
             label: Az évben keletkezett beszámítási egyenleg
           iva-anual-compensacion-ultimo-periodo:
@@ -124,13 +124,13 @@ modelo:
           iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
             label: Levonások - Beruházási javak korrekciója
           iva-anual-regimen-simplificado-resultado:
-            label: Eredmény rendszer simplificado
+            label: Eredmény - egyszerűsített rendszer
           iva-anual-regimen-simplificado-suma-deducciones:
             label: Levonások - Levonások összege
           iva-anual-regularizacion-bienes-inversion:
-            label: Beruházási javak korrekciója
+            label: Beruházási javak korrekciója (LIVA 107-110. cikk)
           iva-anual-regularizacion-prorrata-definitiva:
-            label: Levonási hányad korrekciója végleges százalék alapján - összeg
+            label: Levonási hányad korrekciója végleges százalék alapján - adóösszeg
           iva-anual-repercutido-recargo-tipo-0-26-base:
             help: A 390-es éves IVA-összesítőn bevallott összeg a megadott kulcsú
               egyenértékűségi felárhoz.
@@ -208,25 +208,26 @@ modelo:
           iva-compensacion-cuotas-ejercicio-anterior:
             label: Előző évi adójóváírás beszámítása
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+            label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél (LIVA
+              84. cikk Uno.2.)
           iva-cuota-recargo-equivalencia-general:
-            label: Egyenértékűségi felár általános kulccsal (5.2%) - összeg
+            label: Egyenértékűségi felár általános kulccsal (5.2%) - adóösszeg
           iva-cuota-recargo-equivalencia-reducido:
-            label: Egyenértékűségi felár csökkentett kulccsal (1.4%) - összeg
+            label: Egyenértékűségi felár csökkentett kulccsal (1.4%) - adóösszeg
           iva-cuota-recargo-equivalencia-super-reducido:
-            label: Egyenértékűségi felár szupercsökkentett kulccsal (0.5%) - összeg
+            label: Egyenértékűségi felár szupercsökkentett kulccsal (0.5%) - adóösszeg
           iva-cuota-recargo-equivalencia-tipo-0-26:
-            label: Egyenértékűségi felár 0.26% - összeg
+            label: Egyenértékűségi felár 0.26% - adóösszeg
           iva-cuota-recargo-equivalencia-tipo-0-5:
-            label: Egyenértékűségi felár 0.5% - összeg
+            label: Egyenértékűségi felár 0.5% kulccsal - adóösszeg
           iva-cuota-recargo-equivalencia-tipo-0-62:
-            label: Egyenértékűségi felár 0.62% - összeg
+            label: Egyenértékűségi felár 0.62% - adóösszeg
           iva-cuota-recargo-equivalencia-tipo-1:
-            label: Egyenértékűségi felár 1% - összeg
+            label: Egyenértékűségi felár 1% - adóösszeg
           iva-cuota-recargo-equivalencia-tipo-1-4:
-            label: Egyenértékűségi felár 1.4% - összeg
+            label: Egyenértékűségi felár 1.4% kulccsal - adóösszeg
           iva-cuota-recargo-equivalencia-tipo-5-2:
-            label: Egyenértékűségi felár 5.2% - összeg
+            label: Egyenértékűségi felár 5.2% kulccsal - adóösszeg
           iva-cuota-repercutida-general:
             label: Felszámított ÁFA összeg általános kulccsal (21%)
           iva-cuota-repercutida-reducido:
@@ -248,7 +249,8 @@ modelo:
           iva-cuota-repercutida-tipo-7-5:
             label: Felszámított ÁFA összeg 7.5% kulccsal
           iva-cuota-soportada-importaciones:
-            label: Levonható előzetesen felszámított ÁFA folyó áruk importján
+            label: Levonható előzetesen felszámított ÁFA folyó áruk importján (LIVA
+              17. és 92. cikk; hivatalos 33. rovat)
           iva-cuota-soportada-interiores:
             label: Levonható ÁFA összeg belföldi folyó ügyletek után
           iva-deducible-aic-corrientes-tipo-10-base:
@@ -378,11 +380,11 @@ modelo:
             label: 'Összesen: Közösségen belüli szolgáltatásbeszerzések után levonható
               előzetesen felszámított ÁFA - levonható adóösszeg'
           iva-deducible-compensaciones-reagp-base:
-            label: A mezőgazdasági, állattenyésztési és halászati különös szabályok
-              szerinti átalánytérítés - adóalap
+            label: A mezőgazdasági, állattenyésztési és halászati különös szabályozás
+              átalánytérítése - adóalap
           iva-deducible-compensaciones-reagp-cuota:
-            label: A mezőgazdasági, állattenyésztési és halászati különös szabályok
-              szerinti átalánytérítés - levonható adóösszeg
+            label: A mezőgazdasági, állattenyésztési és halászati különös szabályozás
+              átalánytérítése - levonható adóösszeg
           iva-deducible-importaciones-corrientes-tipo-10-base:
             label: Folyó termékek importja után levonható előzetesen felszámított
               ÁFA 10% kulccsal - adóalap
@@ -647,7 +649,8 @@ modelo:
           iva-isp-interior-base:
             label: Fordított adózású ÁFA adóalapja belföldi ügyleteknél
           iva-isp-interior-cuota:
-            label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+            label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél (LIVA 84.
+              cikk Uno.2.; hivatalos 13. rovat)
           iva-liquidaciones-total-a-ingresar:
             label: Az évi ÁFA-önadózások alapján fizetendő összegek összesen
           iva-liquidaciones-total-devoluciones-elementos-transporte:
@@ -686,10 +689,10 @@ modelo:
               fizetésképtelenségi eljárás miatt - adóalap
           iva-modificacion-recargo-concurso-cuota:
             label: Az egyenértékűségi felár adóalapjának és összegének módosítása
-              fizetésképtelenségi eljárás miatt - felár összege
+              fizetésképtelenségi eljárás miatt - adóösszeg
           iva-modificacion-recargo-cuota:
             label: Az egyenértékűségi felár adóalapjának és összegének módosítása
-              - felár összege
+              - adóösszeg
           iva-operaciones-especificas-adquisiciones-interiores-exentas:
             label: Különös ügyletek - Adómentes belföldi beszerzések [230]
           iva-operaciones-especificas-adquisiciones-intracomunitarias-exentas:
@@ -726,7 +729,7 @@ modelo:
           iva-recargo-equivalencia-tipo-1-75-base:
             label: Egyenértékűségi felár 1.75% kulccsal - adóalap
           iva-recargo-equivalencia-tipo-1-75-cuota:
-            label: Egyenértékűségi felár 1.75% kulccsal - felár összege
+            label: Egyenértékűségi felár 1.75% kulccsal - adóösszeg
           iva-recargo-equivalencia-tipo-5-2-base:
             label: Egyenértékűségi felár 5.2% kulccsal - adóalap
           iva-regularizacion-cuotas-art-80-cinco-5:
@@ -1134,31 +1137,31 @@ modelo:
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 0% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 10% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 10% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 21% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 21% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 4% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 4% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 5% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 5% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
               help: Közösségen belüli termékbeszerzések összes adóalapja nulla kulccsal
                 (0%)
@@ -1176,31 +1179,31 @@ modelo:
                 0% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                0% kulccsal - ÁFA összeg
+                0% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 10% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                10% kulccsal - ÁFA összeg
+                10% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 21% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                21% kulccsal - ÁFA összeg
+                21% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 4% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                4% kulccsal - ÁFA összeg
+                4% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 5% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                5% kulccsal - ÁFA összeg
+                5% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
               help: Közösségen belüli szolgáltatásbeszerzések összes adóalapja nulla
                 kulccsal (0%)
@@ -1311,11 +1314,11 @@ modelo:
               help: 'Összesen: Közösségen belüli szolgáltatásbeszerzések után levonható
                 előzetesen felszámított ÁFA - levonható adóösszeg'
             x-d5r62bj1dpqm2r1echim8tb3d5h6op9ecdnmqs35dppm2or9dtn6aspde9im2prg5ph62sr5:
-              help: A mezőgazdasági, állattenyésztési és halászati különös szabályok
-                szerinti átalánytérítés - adóalap
+              help: A mezőgazdasági, állattenyésztési és halászati különös szabályozás
+                átalánytérítése - adóalap
             x-d5r62bj1dpqm2r1echim8tb3d5h6op9ecdnmqs35dppm2or9dtn6aspde9im2prg5phnarrkc4:
-              help: A mezőgazdasági, állattenyésztési és halászati különös szabályok
-                szerinti átalánytérítés - levonható adóösszeg
+              help: A mezőgazdasági, állattenyésztési és halászati különös szabályozás
+                átalánytérítése - levonható adóösszeg
             x-d5r62bj1dpqm2r1echim8tb3d5h6op9ed5mn0rriehgm6qbfdpin6bb3dtp74qb5dpq6aspeehkn0rpd64o2soj1edig:
               help: Folyó termékek importja után levonható előzetesen felszámított
                 ÁFA 10% kulccsal - adóalap
@@ -1569,13 +1572,13 @@ modelo:
                 fizetésképtelenségi eljárás miatt - adóalap
             x-d5r62bj1dpqm2r1edlnm8qb6d5hm2or9dtn2ssj5cdgn4prf5lhmurj3elp76rpecdqmut31:
               help: Az egyenértékűségi felár adóalapjának és összegének módosítása
-                fizetésképtelenségi eljárás miatt - felár összege
+                fizetésképtelenségi eljárás miatt - adóösszeg
             x-d5r62bj1dpqm2r1edlnm8qb6d5hm2or9dtn2ssj5cdgn4prf5ph62sr5:
               help: Az egyenértékűségi felár adóalapjának és összegének módosítása
                 - adóalap
             x-d5r62bj1dpqm2r1edlnm8qb6d5hm2or9dtn2ssj5cdgn4prf5phnarrkc4:
               help: Az egyenértékűségi felár adóalapjának és összegének módosítása
-                - felár összege
+                - adóösszeg
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
               help: Éves egyeztetés - a 303-as bevallásokban bevallott levonható ÁFA
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
@@ -1587,32 +1590,32 @@ modelo:
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: Éves egyeztetés - a 303-as bevallásokban bevallott eredmény
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa en Közösségen
-                belüli beszerzések.'
+              help: 'Tekintse át a rovat adatait: Felszámított áfa en Közösségen belüli
+                beszerzések.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
-              help: 'A Modelo 390 75. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 75. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
-              help: 'A Modelo 390 74. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 74. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'A Modelo 390 78. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 78. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa szerinti fordított
+              help: 'Tekintse át a rovat adatait: Felszámított áfa szerinti fordított
                 adózás.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'A Modelo 390 80. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 80. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'A Modelo 390 81. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 81. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Tekintse át a casilla adatait: Eredmény rendszer simplificado.'
+              help: 'Tekintse át a rovat adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
-              help: 'A Modelo 390 82. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 82. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: Beruházási javak korrekciója
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: A LIVA 80. cikk Ötödik bekezdés 5. pontja szerinti adóösszegek
                 helyesbítése
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
-              help: Levonási hányad korrekciója végleges százalék alapján - összeg
+              help: Levonási hányad korrekciója végleges százalék alapján - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn62pr5dphmiobj5lr6iobaclpist39e1niqchh5ph62sr5:
               help: Az utazási irodák különös szabályai szerinti ÁFA 21% kulccsal
                 - adóalap
@@ -1708,27 +1711,27 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6irjke9gmesjle1nist39e1niqd9ecdqmut31:
               help: Csoporton belüli ügyletek után keletkezett ÁFA 5% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
-              help: Egyenértékűségi felár általános kulccsal (5.2%) - összeg
+              help: Egyenértékűségi felár általános kulccsal (5.2%) - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
-              help: Egyenértékűségi felár csökkentett kulccsal (1.4%) - összeg
+              help: Egyenértékűségi felár csökkentett kulccsal (1.4%) - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
-              help: Egyenértékűségi felár szupercsökkentett kulccsal (0.5%) - összeg
+              help: Egyenértékűségi felár szupercsökkentett kulccsal (0.5%) - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj2c5pma:
               help: Egyenértékűségi felár 0.5% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: Egyenértékűségi felár 0.5% - összeg
+              help: Egyenértékűségi felár 0.5% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: Egyenértékűségi felár 1.4% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: Egyenértékűségi felár 1.4% - összeg
+              help: Egyenértékűségi felár 1.4% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ec9gn6p8:
               help: Egyenértékűségi felár 1.75% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ecdqmut31:
-              help: Egyenértékűségi felár 1.75% kulccsal - felár összege
+              help: Egyenértékűségi felár 1.75% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj2c5pma:
               help: Egyenértékűségi felár 5.2% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: Egyenértékűségi felár 5.2% - összeg
+              help: Egyenértékűségi felár 5.2% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: Felszámított ÁFA összeg csökkentett kulccsal (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
@@ -2015,31 +2018,31 @@ modelo:
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 0% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 10% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 10% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 21% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 21% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 4% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 4% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 5% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 5% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
               help: Közösségen belüli termékbeszerzések összes adóalapja nulla kulccsal
                 (0%)
@@ -2057,31 +2060,31 @@ modelo:
                 0% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                0% kulccsal - ÁFA összeg
+                0% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 10% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                10% kulccsal - ÁFA összeg
+                10% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 21% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                21% kulccsal - ÁFA összeg
+                21% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 4% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                4% kulccsal - ÁFA összeg
+                4% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 5% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                5% kulccsal - ÁFA összeg
+                5% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
               help: Közösségen belüli szolgáltatásbeszerzések összes adóalapja nulla
                 kulccsal (0%)
@@ -2192,11 +2195,11 @@ modelo:
               help: 'Összesen: Közösségen belüli szolgáltatásbeszerzések után levonható
                 előzetesen felszámított ÁFA - levonható adóösszeg'
             x-d5r62bj1dpqm2r1echim8tb3d5h6op9ecdnmqs35dppm2or9dtn6aspde9im2prg5ph62sr5:
-              help: A mezőgazdasági, állattenyésztési és halászati különös szabályok
-                szerinti átalánytérítés - adóalap
+              help: A mezőgazdasági, állattenyésztési és halászati különös szabályozás
+                átalánytérítése - adóalap
             x-d5r62bj1dpqm2r1echim8tb3d5h6op9ecdnmqs35dppm2or9dtn6aspde9im2prg5phnarrkc4:
-              help: A mezőgazdasági, állattenyésztési és halászati különös szabályok
-                szerinti átalánytérítés - levonható adóösszeg
+              help: A mezőgazdasági, állattenyésztési és halászati különös szabályozás
+                átalánytérítése - levonható adóösszeg
             x-d5r62bj1dpqm2r1echim8tb3d5h6op9ed5mn0rriehgm6qbfdpin6bb3dtp74qb5dpq6aspeehkn0rpd64o2soj1edig:
               help: Folyó termékek importja után levonható előzetesen felszámított
                 ÁFA 10% kulccsal - adóalap
@@ -2450,13 +2453,13 @@ modelo:
                 fizetésképtelenségi eljárás miatt - adóalap
             x-d5r62bj1dpqm2r1edlnm8qb6d5hm2or9dtn2ssj5cdgn4prf5lhmurj3elp76rpecdqmut31:
               help: Az egyenértékűségi felár adóalapjának és összegének módosítása
-                fizetésképtelenségi eljárás miatt - felár összege
+                fizetésképtelenségi eljárás miatt - adóösszeg
             x-d5r62bj1dpqm2r1edlnm8qb6d5hm2or9dtn2ssj5cdgn4prf5ph62sr5:
               help: Az egyenértékűségi felár adóalapjának és összegének módosítása
                 - adóalap
             x-d5r62bj1dpqm2r1edlnm8qb6d5hm2or9dtn2ssj5cdgn4prf5phnarrkc4:
               help: Az egyenértékűségi felár adóalapjának és összegének módosítása
-                - felár összege
+                - adóösszeg
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
               help: Éves egyeztetés - a 303-as bevallásokban bevallott levonható ÁFA
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
@@ -2468,32 +2471,32 @@ modelo:
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: Éves egyeztetés - a 303-as bevallásokban bevallott eredmény
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa en Közösségen
-                belüli beszerzések.'
+              help: 'Tekintse át a rovat adatait: Felszámított áfa en Közösségen belüli
+                beszerzések.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
-              help: 'A Modelo 390 75. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 75. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
-              help: 'A Modelo 390 74. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 74. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'A Modelo 390 78. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 78. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa szerinti fordított
+              help: 'Tekintse át a rovat adatait: Felszámított áfa szerinti fordított
                 adózás.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'A Modelo 390 80. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 80. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'A Modelo 390 81. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 81. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Tekintse át a casilla adatait: Eredmény rendszer simplificado.'
+              help: 'Tekintse át a rovat adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
-              help: 'A Modelo 390 82. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 82. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: Beruházási javak korrekciója
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: A LIVA 80. cikk Ötödik bekezdés 5. pontja szerinti adóösszegek
                 helyesbítése
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
-              help: Levonási hányad korrekciója végleges százalék alapján - összeg
+              help: Levonási hányad korrekciója végleges százalék alapján - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn62pr5dphmiobj5lr6iobaclpist39e1niqchh5ph62sr5:
               help: Az utazási irodák különös szabályai szerinti ÁFA 21% kulccsal
                 - adóalap
@@ -2589,27 +2592,27 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6irjke9gmesjle1nist39e1niqd9ecdqmut31:
               help: Csoporton belüli ügyletek után keletkezett ÁFA 5% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
-              help: Egyenértékűségi felár általános kulccsal (5.2%) - összeg
+              help: Egyenértékűségi felár általános kulccsal (5.2%) - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
-              help: Egyenértékűségi felár csökkentett kulccsal (1.4%) - összeg
+              help: Egyenértékűségi felár csökkentett kulccsal (1.4%) - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
-              help: Egyenértékűségi felár szupercsökkentett kulccsal (0.5%) - összeg
+              help: Egyenértékűségi felár szupercsökkentett kulccsal (0.5%) - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj2c5pma:
               help: Egyenértékűségi felár 0.5% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: Egyenértékűségi felár 0.5% - összeg
+              help: Egyenértékűségi felár 0.5% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: Egyenértékűségi felár 1.4% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: Egyenértékűségi felár 1.4% - összeg
+              help: Egyenértékűségi felár 1.4% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ec9gn6p8:
               help: Egyenértékűségi felár 1.75% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ecdqmut31:
-              help: Egyenértékűségi felár 1.75% kulccsal - felár összege
+              help: Egyenértékűségi felár 1.75% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj2c5pma:
               help: Egyenértékűségi felár 5.2% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: Egyenértékűségi felár 5.2% - összeg
+              help: Egyenértékűségi felár 5.2% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: Felszámított ÁFA összeg csökkentett kulccsal (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
@@ -2892,43 +2895,43 @@ modelo:
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5ko2sorldtq62:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 0% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj2c5pma:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 10% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5koj0bj3elnn8o8:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 10% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2soj1edig:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 2% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp2sorldtq62:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 2% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj2c5pma:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 21% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kp32bj3elnn8o8:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 21% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2soj1edig:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 4% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kq2sorldtq62:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 4% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisoj1edig:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 5% kulccsal
                 - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kqisorldtq62:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 5% kulccsal
-                - ÁFA összeg
+                - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ec9gn6p8:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 7.5%
                 kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pq6is3f5kriqd9ecdqmut31:
               help: Közösségen belüli termékbeszerzések után keletkezett ÁFA 7.5%
-                kulccsal - ÁFA összeg
+                kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bj2d5imspbj5pt6asjf5ph62sr5:
               help: Közösségen belüli termékbeszerzések összes adóalapja nulla kulccsal
                 (0%)
@@ -2946,43 +2949,43 @@ modelo:
                 0% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9g5phnarrkc4:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                0% kulccsal - ÁFA összeg
+                0% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n64objck:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 10% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9h60n66tbfehgg:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                10% kulccsal - ÁFA összeg
+                10% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5ph62sr5:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 2% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i5phnarrkc4:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                2% kulccsal - ÁFA összeg
+                2% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n64objck:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 21% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9i64n66tbfehgg:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                21% kulccsal - ÁFA összeg
+                21% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5ph62sr5:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 4% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9k5phnarrkc4:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                4% kulccsal - ÁFA összeg
+                4% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5ph62sr5:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 5% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9l5phnarrkc4:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                5% kulccsal - ÁFA összeg
+                5% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisoj1edig:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
                 7.5% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjkd5o6ub9n5kqisorldtq62:
               help: Közösségen belüli szolgáltatásbeszerzések után keletkezett ÁFA
-                7.5% kulccsal - ÁFA összeg
+                7.5% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ec5km6bjjclp7cqb3d5nn6bjqclp6ubj2c5pma:
               help: Közösségen belüli szolgáltatásbeszerzések összes adóalapja nulla
                 kulccsal (0%)
@@ -3093,11 +3096,11 @@ modelo:
               help: 'Összesen: Közösségen belüli szolgáltatásbeszerzések után levonható
                 előzetesen felszámított ÁFA - levonható adóösszeg'
             x-d5r62bj1dpqm2r1echim8tb3d5h6op9ecdnmqs35dppm2or9dtn6aspde9im2prg5ph62sr5:
-              help: A mezőgazdasági, állattenyésztési és halászati különös szabályok
-                szerinti átalánytérítés - adóalap
+              help: A mezőgazdasági, állattenyésztési és halászati különös szabályozás
+                átalánytérítése - adóalap
             x-d5r62bj1dpqm2r1echim8tb3d5h6op9ecdnmqs35dppm2or9dtn6aspde9im2prg5phnarrkc4:
-              help: A mezőgazdasági, állattenyésztési és halászati különös szabályok
-                szerinti átalánytérítés - levonható adóösszeg
+              help: A mezőgazdasági, állattenyésztési és halászati különös szabályozás
+                átalánytérítése - levonható adóösszeg
             x-d5r62bj1dpqm2r1echim8tb3d5h6op9ed5mn0rriehgm6qbfdpin6bb3dtp74qb5dpq6aspeehkn0rpd64o2soj1edig:
               help: Folyó termékek importja után levonható előzetesen felszámított
                 ÁFA 10% kulccsal - adóalap
@@ -3351,13 +3354,13 @@ modelo:
                 fizetésképtelenségi eljárás miatt - adóalap
             x-d5r62bj1dpqm2r1edlnm8qb6d5hm2or9dtn2ssj5cdgn4prf5lhmurj3elp76rpecdqmut31:
               help: Az egyenértékűségi felár adóalapjának és összegének módosítása
-                fizetésképtelenségi eljárás miatt - felár összege
+                fizetésképtelenségi eljárás miatt - adóösszeg
             x-d5r62bj1dpqm2r1edlnm8qb6d5hm2or9dtn2ssj5cdgn4prf5ph62sr5:
               help: Az egyenértékűségi felár adóalapjának és összegének módosítása
                 - adóalap
             x-d5r62bj1dpqm2r1edlnm8qb6d5hm2or9dtn2ssj5cdgn4prf5phnarrkc4:
               help: Az egyenértékűségi felár adóalapjának és összegének módosítása
-                - felár összege
+                - adóösszeg
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechim8tb3d5h6op9d6co36:
               help: Éves egyeztetés - a 303-as bevallásokban bevallott levonható ÁFA
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhechincpbectgm8o9d6co36:
@@ -3369,32 +3372,32 @@ modelo:
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: Éves egyeztetés - a 303-as bevallásokban bevallott eredmény
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa en Közösségen
-                belüli beszerzések.'
+              help: 'Tekintse át a rovat adatait: Felszámított áfa en Közösségen belüli
+                beszerzések.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
-              help: 'A Modelo 390 75. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 75. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
-              help: 'A Modelo 390 74. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 74. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'A Modelo 390 78. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 78. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa szerinti fordított
+              help: 'Tekintse át a rovat adatait: Felszámított áfa szerinti fordított
                 adózás.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'A Modelo 390 80. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 80. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'A Modelo 390 81. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 81. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Tekintse át a casilla adatait: Eredmény rendszer simplificado.'
+              help: 'Tekintse át a rovat adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
-              help: 'A Modelo 390 82. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 82. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: Beruházási javak korrekciója
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: A LIVA 80. cikk Ötödik bekezdés 5. pontja szerinti adóösszegek
                 helyesbítése
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
-              help: Levonási hányad korrekciója végleges százalék alapján - összeg
+              help: Levonási hányad korrekciója végleges százalék alapján - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn62pr5dphmiobj5lr6iobaclpist39e1niqchh5ph62sr5:
               help: Az utazási irodák különös szabályai szerinti ÁFA 21% kulccsal
                 - adóalap
@@ -3490,27 +3493,27 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn6irjke9gmesjle1nist39e1niqd9ecdqmut31:
               help: Csoporton belüli ügyletek után keletkezett ÁFA 5% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpectimspbic5m0:
-              help: Egyenértékűségi felár általános kulccsal (5.2%) - összeg
+              help: Egyenértékűségi felár általános kulccsal (5.2%) - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpee9im8tb3d5i6u:
-              help: Egyenértékűségi felár csökkentett kulccsal (1.4%) - összeg
+              help: Egyenértékűségi felár csökkentett kulccsal (1.4%) - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeedqn0pbi5lp6ap3lcdkm8ro:
-              help: Egyenértékűségi felár szupercsökkentett kulccsal (0.5%) - összeg
+              help: Egyenértékűségi felár szupercsökkentett kulccsal (0.5%) - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj2c5pma:
               help: Egyenértékűségi felár 0.5% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: Egyenértékűségi felár 0.5% - összeg
+              help: Egyenértékűségi felár 0.5% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: Egyenértékűségi felár 1.4% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: Egyenértékűségi felár 1.4% - összeg
+              help: Egyenértékűségi felár 1.4% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ec9gn6p8:
               help: Egyenértékűségi felár 1.75% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ecdqmut31:
-              help: Egyenértékűségi felár 1.75% kulccsal - felár összege
+              help: Egyenértékűségi felár 1.75% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj2c5pma:
               help: Egyenértékűségi felár 5.2% kulccsal - adóalap
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: Egyenértékűségi felár 5.2% - összeg
+              help: Egyenértékűségi felár 5.2% kulccsal - adóösszeg
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: Felszámított ÁFA összeg csökkentett kulccsal (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:

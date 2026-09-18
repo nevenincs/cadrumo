@@ -1202,7 +1202,9 @@ def test_modelo_100_retrib_especie_no_exenta_total_role_names_aggregate() -> Non
         assert casilla.semantic_role == expected_role
         assert "42.3.f" in casilla.label
         assert "14.2.m" in casilla.label
-        assert casilla.label.endswith("Impo...")
+        # The label now carries AEAT's full wording; it used to be stored
+        # truncated, and a truncated label is what this guards against.
+        assert not casilla.label.endswith("...")
         assert expected_legal_refs.issubset(casilla.legal_refs)
         assert {f"aeat-dr-100-{filing_year}-dictionary", f"aeat-dr-100-{filing_year}-xsd"}.issubset(
             casilla.source_refs,

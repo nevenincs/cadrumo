@@ -10,7 +10,7 @@ modelo:
           adjudicatario-nif:
             label: Awardee (4) - NIF
           adjudicatario-nombre:
-            label: Awardee (4) - First name
+            label: Awardee (4) - Given name
           aeronave-ano:
             label: Characteristics and technical data (7) - Aircraft - Year of manufacture
           aeronave-fabricante:
@@ -33,7 +33,7 @@ modelo:
           declaracion-tipo-309:
             label: Return type
           declarante-nombre-309:
-            label: Identification (1) - First name
+            label: Identification (1) - Given name
           embarcacion-eslora:
             label: Characteristics and technical data (7) - Vessels - Maximum length
           embarcacion-fabricante:
@@ -169,7 +169,7 @@ modelo:
           transmitente-nif-iva:
             label: Transferor (3) - NIF-IVA
           transmitente-nombre:
-            label: Transferor (3) - First name
+            label: Transferor (3) - Given name
           transmitente-pais:
             help: Box 198-199 of Modelo 309, tax years 2016-2017.
             label: Transferor (3) - Country
@@ -278,8 +278,7 @@ modelo:
               field:
                 title: 'Historical Modelo 309: non-periodic self-assessment (2004-2015)'
           field:
-            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
-              one and three). Ad hoc, triggered by a non-periodic obligation.
+            label: Modelo 309, tax years 2004 to 2015
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -385,8 +384,7 @@ modelo:
               field:
                 title: 'Modelo 309: non-periodic VAT return'
           field:
-            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
-              one and three). Ad hoc, triggered by a non-periodic obligation.
+            label: Modelo 309, tax years 2016 to 2017
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -502,8 +500,7 @@ modelo:
               field:
                 title: 'Modelo 309: non-periodic VAT return'
           field:
-            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
-              one and three). Ad hoc, triggered by a non-periodic obligation.
+            label: Modelo 309, tax years 2018 to 2022
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -619,5 +616,4 @@ modelo:
               field:
                 title: 'Modelo 309: non-periodic VAT return'
           field:
-            label: Modelo 309, tax years 2004 onwards (Order HAC/3625/2003, sections
-              one and three). Ad hoc, triggered by a non-periodic obligation.
+            label: Modelo 309, tax years 2023 onwards

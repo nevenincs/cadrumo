@@ -43,6 +43,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _CONFTEST = """\
 from cadrumo.tests.marker_hook import (
+    SerialHoldPlugin,
     apply,
     fail_session_on_held_serials,
     record_held_from_node,
@@ -53,6 +54,7 @@ from cadrumo.tests.marker_hook import (
 
 def pytest_configure(config):
     reset_held_serials()
+    config.pluginmanager.register(SerialHoldPlugin(), "cadrumo-serial-hold")
     config.addinivalue_line("markers", "serial: isolation-sensitive")
     for name in ("unit", "hex_core"):
         config.addinivalue_line("markers", name + ": taxonomy marker")
@@ -161,3 +163,22 @@ def test_serial_item_is_held_and_announced_under_real_xdist_workers(serial_marke
     assert "SerialTestsHeldWarning" in output, f"the hold must be announced, not silent:\n{output}"
     assert "SERIAL TESTS HELD BACK" in output, f"the controller must report the held population:\n{output}"
     assert "test_generated.py::test_needs_isolation" in output, f"the announcement must name the held test:\n{output}"
+
+
+def test_a_lane_that_never_selected_the_serial_item_is_not_refused(serial_marker_package: Path) -> None:
+    """A marker expression that deselects the serial test loses nothing, so the run stands.
+
+    The hold refuses the session, and the refusal claims the invocation was
+    incomplete. That claim is only true of a test this lane would have run.
+    Applied before pytest's own mark plugin, the hold saw every collected item
+    and refused whole lanes over tests they had already deselected: the live
+    suite's worker-parallel unit batches exited USAGE_ERROR while printing a
+    green summary, because the tree holds ``serial`` items marked
+    ``integration``.
+    """
+    completed = _nested_pytest(serial_marker_package, "-n2", "--dist=loadfile", "-m", "not serial")
+    output = completed.stdout + completed.stderr
+
+    assert completed.returncode == 0, output
+    assert "1 passed" in completed.stdout, output
+    assert "SERIAL TESTS HELD BACK" not in output, f"nothing was held, so nothing may be reported held:\n{output}"

@@ -201,10 +201,20 @@ def test_one_family_restated_twice_is_refused(tmp_path: Path) -> None:
 
 
 def test_a_family_the_merge_never_inherits_is_refused(tmp_path: Path) -> None:
-    """``bindings`` are full copy in every edition, so restating them declines nothing."""
-    assert "bindings" not in INHERITED_FAMILIES
+    """A name outside the merge vocabulary declines nothing, so the declaration is refused.
+
+    The name is chosen against the live vocabulary rather than pinned. This test
+    named ``bindings`` while bindings were full copy in every edition; they are
+    inherited now, and the pin then proved the opposite of its own docstring by
+    refusing for a different reason. Every canonical family being inherited is
+    itself a legitimate state, and what stays true across it is that a family
+    the merge never carries forward declines nothing.
+    """
+    never_inherited = "una-familia-que-el-registro-no-declara"
+    assert never_inherited not in INHERITED_FAMILIES, "the chosen name must lie outside the merge vocabulary"
     not_inherited = (
-        f'restated_families = [{{ family = "bindings", cause = "official_structure_differs", reason = "{_REASON}" }}]\n'
+        f'restated_families = [{{ family = "{never_inherited}", cause = "official_structure_differs", '
+        f'reason = "{_REASON}" }}]\n'
     )
     with pytest.raises(RegistryLoadError, match="is not inherited along a predecessor chain"):
         load_modelo_directory(_build_modelo(tmp_path, successor_extra=not_inherited))

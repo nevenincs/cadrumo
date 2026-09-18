@@ -44,13 +44,13 @@ modelo:
               label: Rendes no sotmeses a retenció o ingrés a compte. Nombre de rendes.
                 Total
             '17':
-              label: Rendes no sotmeses a retenció o ingrés a compte. Base. Dividends
+              label: Rendes no sotmeses a retenció o ingrés a compte. base. Dividends
                 i altres rendes de participació en fons propis d'entitats
             '18':
-              label: Rendes no sotmeses a retenció o ingrés a compte. Base. Resta
+              label: Rendes no sotmeses a retenció o ingrés a compte. base. Resta
                 de rendes
             '19':
-              label: Rendes no sotmeses a retenció o ingrés a compte. Base. Total
+              label: Rendes no sotmeses a retenció o ingrés a compte. base. Total
             '20':
               label: Resultats a ingressar de declaracions anteriors pel mateix concepte,
                 exercici i període

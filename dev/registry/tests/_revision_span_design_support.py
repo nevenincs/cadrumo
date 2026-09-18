@@ -19,11 +19,7 @@ from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_reg
 from dev.registry.compiler.record_design_schema import RecordDesignSheet
 
 from ..compiler.authority import compile_validated_authority
-from ..compiler.record_design import (
-    extract_record_design_pdf,
-    extract_record_design_workbook,
-    extract_record_design_xls_workbook,
-)
+from ..compiler.record_design import extract_record_design
 from ..compiler.record_design_pdf_rows import clean_pdf_line
 from ..compiler.record_design_pdf_visual import extract_pdf_text_lines
 
@@ -107,7 +103,17 @@ _CONSTANT_EJERCICIO_REVERSED = re.compile(
 )
 
 
+@cache
 def _authority() -> ValidatedRegistryAuthority:
+    """The bundled authority, once per process.
+
+    The compiler holds its own slot per registry root, but resolving that slot
+    re-derives the compilation receipt -- the registry fingerprint walk and the
+    per-modelo verdict scope -- on every call, measured at 0.40s against a cold
+    compile of 8.8s. This module's callers sit inside per-modelo and per-year
+    loops: one gate entered the doorway 59 times and paid 24s for a result it
+    already held.
+    """
     return compile_validated_authority(bundled_path("registry", "aeat"), bundled_path())
 
 
@@ -552,14 +558,7 @@ def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
     unreadable-reporting path still names it. A parse that fails must stay
     visible as unmeasured; only a parse that never ran should disappear.
     """
-    parsers = {
-        ".xlsx": extract_record_design_workbook,
-        ".xlsm": extract_record_design_workbook,
-        ".xls": extract_record_design_xls_workbook,
-        ".pdf": extract_record_design_pdf,
-    }
-    parser = parsers.get(path.suffix.lower())
-    if parser is None:
+    if path.suffix.lower() not in _DESIGN_SUFFIXES:
         return ()
     try:
         # ACCEPTS a partial read deliberately. This module compares designs against
@@ -567,13 +566,15 @@ def _design_sheets(path: Path) -> tuple[RecordDesignSheet, ...]:
         # the sheets it did read; refusing it here would replace a comparison that
         # sees most of a boundary with one that sees none of it. The completeness
         # of each read is reported by the coverage guard rather than resolved here.
-        sheets = parser(path).accept_partial()
+        sheets = extract_record_design(path).accept_partial()
     except Exception:
         sheets = ()
-    # The parse itself is persisted across processes by the compiler's own
-    # record-design extraction cache, which keys on the source bytes, its
-    # sidecars and the extractor code. This memo only stops the same process
-    # re-entering that cache once per caller.
+    # Entered through the canonical extraction, NOT the per-suffix backends it
+    # dispatches to, so the parse is served by the compiler's own record-design
+    # cache -- keyed on the source bytes, its sidecars and the extractor code.
+    # Calling a backend directly reached the same parser and skipped that cache
+    # entirely: 219 bundled sources cost 133s a process rather than 22s, and
+    # the memo here only ever hid the repetition within one of them.
     return sheets
 
 

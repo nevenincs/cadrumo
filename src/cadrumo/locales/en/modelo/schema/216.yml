@@ -28,12 +28,12 @@ modelo:
             '10':
               label: Withholding and advance payment tax base. Total
             '11':
-              label: Withholdings and advance payments. Dividends and other income
+              label: Withholdings and payments on account. Dividends and other income
                 from holdings in the equity of entities
             '12':
-              label: Withholdings and advance payments. Other income
+              label: Withholdings and payments on account. Other income
             '13':
-              label: Withholdings and advance payments. Total
+              label: Withholdings and payments on account. Total
             '14':
               label: Income not subject to withholding or advance payment. Number
                 of income items. Dividends and other income from holdings in the equity

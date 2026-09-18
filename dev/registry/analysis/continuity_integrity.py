@@ -12,9 +12,13 @@ Four conditions are reported:
   grammar. Identity across a grammar change is not automatically wrong, but it
   is the shape a mistaken chain takes, and it is the case an identifier
   contract would have to permit explicitly rather than by silence.
-- ``singleton_chain`` - a chain whose members all sit in one revision, so it
-  asserts continuity across nothing. Either a sibling is missing or the
-  identifier should not be a chain at all.
+- ``singleton_chain`` - a chain whose members all sit in one revision without
+  declaring that it starts there, so it asserts continuity across nothing.
+  Either a sibling is missing or the identifier should not be a chain at all.
+  A chain whose every member declares an absence origin is a chain beginning,
+  not a broken one, and is not reported: modelo 100's casilla 0414 carries the
+  deduction Ley 5/2025 introduced for 2025, so it has no earlier sibling to
+  point at and says so.
 - ``evolution_without_members`` - an evolution record names a chain no casilla
   carries, so the transition it describes has no endpoints.
 - ``modelo_without_continuity`` - a modelo with several revisions where no
@@ -46,6 +50,7 @@ from .corpus import bundled_modelo_ids
 __all__ = [
     "ContinuityFinding",
     "chain_index",
+    "chains_beginning_here",
     "continuity_census",
     "definition_findings",
     "screen_authority",
@@ -92,6 +97,33 @@ def chain_index(definition: ModeloDefinition) -> tuple[dict[str, set[str]], dict
     return dict(grammars), dict(revisions), dict(evolutions)
 
 
+def chains_beginning_here(definition: ModeloDefinition) -> frozenset[str]:
+    """Return the chains whose every member declares it does not continue one.
+
+    A chain has to start somewhere, and the row that starts it says so: the
+    lineage origins that describe an absence - a box new on the form, absent
+    from it, or unmentioned by the predecessor edition - assert there is no
+    earlier member to point at. Read through
+    :attr:`~cadrumo.domain.calculations.registry.casilla_lineage.CasillaLineageOrigin.continues_a_chain`
+    rather than by naming origins here, so the screen cannot drift from the
+    vocabulary it reads.
+
+    A chain with one member and no origin at all stays a finding: silence is
+    not a claim that the chain begins, and a missing sibling looks exactly like
+    that.
+    """
+    beginnings: dict[str, bool] = {}
+    for revision in definition.revisions.values():
+        for casilla in revision.casillas:
+            chain = getattr(casilla, "continuidad_id", None)
+            if not chain:
+                continue
+            origin = getattr(casilla, "continuidad_origin", None)
+            begins = origin is not None and not origin.continues_a_chain
+            beginnings[str(chain)] = beginnings.get(str(chain), True) and begins
+    return frozenset(chain for chain, begins in beginnings.items() if begins)
+
+
 def definition_findings(definition: ModeloDefinition, *, modelo_id: str) -> tuple[ContinuityFinding, ...]:
     """Return one modelo definition's continuity findings.
 
@@ -104,6 +136,7 @@ def definition_findings(definition: ModeloDefinition, *, modelo_id: str) -> tupl
     """
     findings: list[ContinuityFinding] = []
     grammars, revisions, evolutions = chain_index(definition)
+    chains_that_begin = chains_beginning_here(definition)
     if not grammars and len(definition.revisions) > 1:
         findings.append(
             ContinuityFinding(
@@ -122,7 +155,7 @@ def definition_findings(definition: ModeloDefinition, *, modelo_id: str) -> tupl
                 )
             )
     for chain, seen in sorted(revisions.items()):
-        if len(seen) == 1:
+        if len(seen) == 1 and chain not in chains_that_begin:
             findings.append(
                 ContinuityFinding(
                     modelo=modelo_id,

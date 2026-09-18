@@ -60,10 +60,14 @@ def test_the_static_closure_matches_what_a_real_load_imports(
     made the test unsatisfiable for legitimate function-scoped imports used to
     avoid import cycles.
 
-    So the difference is required to be exactly the deferred edges. Every module
-    the graph reaches but the load did not import must have no module-level
-    importer at all. A module that goes missing for any other reason - deleted,
-    renamed, or dropped out of the load path - still fails here, which is the
+    So the difference is required to be exactly the deferred edges. A module the
+    graph reaches but the load did not import is explained when no module that
+    ACTUALLY loaded imports it at module level. Asking only whether some
+    module-level importer exists anywhere was too shallow: an importer that is
+    itself reached through a deferred edge never runs, so its own module-level
+    imports are deferred too, one level down. A module that goes missing for any
+    other reason - deleted, renamed, or dropped out of the load path while a
+    loaded module still imports it eagerly - still fails here, which is the
     detection this test existed for.
     """
     import sys
@@ -72,7 +76,7 @@ def test_the_static_closure_matches_what_a_real_load_imports(
     imported = {name for name in sys.modules if name == REGISTRY_PACKAGE or name.startswith(REGISTRY_PACKAGE + ".")}
     closure = {m for m in static_load_closure(build_runtime_graph()) if m.startswith(REGISTRY_PACKAGE)}
 
-    eagerly_reachable = {module for module in closure - imported if module_level_importers(module)}
+    eagerly_reachable = {module for module in closure - imported if module_level_importers(module) & imported}
     assert eagerly_reachable == set(), (
         "the graph says a load imports these modules and the real load did not, "
         f"and each has a module-level importer so no deferred edge explains it: {sorted(eagerly_reachable)}"
@@ -123,15 +127,22 @@ def test_the_evaluator_reads_a_constant_whatever_shape_it_is_built_from() -> Non
     module, so both spellings answer identically - which is the property that
     stops the next construction from blinding it again.
     """
+    import importlib.util
+
     from ..analysis.load_census import evaluated_string_sequence
 
-    members = evaluated_string_sequence(
-        "cadrumo.domain.calculations.registry.snapshot",
-        "_CROSS_DOMAIN_CHECK_MODULES",
-    )
+    package = "cadrumo.domain.calculations.registry"
+    members = evaluated_string_sequence(f"{package}.snapshot", "_CROSS_DOMAIN_CHECK_MODULES")
 
     assert members is not None, "the live non-literal construction must resolve"
-    assert all(name.startswith("cadrumo.domain.renta.") for name in members)
+    assert members, "the cross-domain check set is empty, so this proves nothing about the evaluator"
+    for name in members:
+        # The names are written relative to the registry package, which is how
+        # snapshot imports them; each must name a real module OUTSIDE it,
+        # because installing a check inside the registry is not cross-domain.
+        resolved = importlib.util.resolve_name(name, package)
+        assert not resolved.startswith(f"{package}."), resolved
+        assert importlib.util.find_spec(resolved) is not None, resolved
 
 
 def test_the_evaluator_returns_none_rather_than_guessing() -> None:
@@ -372,3 +383,59 @@ def test_the_clean_property_reads_every_field_it_claims_to() -> None:
     assert settled.clean, "a report with nothing outstanding must read clean"
 
     assert not dataclasses.replace(settled, dead_candidates=frozenset({_PLANTED})).clean
+
+
+def test_the_reference_map_is_built_once_per_set_of_roots(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """The scan is memoised on its roots, not on nothing.
+
+    Building the map reads and AST-parses every file under the roots, and the
+    census asks for it twice -- directly and again inside ``run_census`` -- so
+    an unchanged tree was walked twice per gate file, measured at 154s a walk.
+
+    Keyed on the roots because the redirected-roots tests above must still get
+    their own scan: a cache that ignored the roots would serve them the real
+    map and make every one of them vacuous while still passing.
+    """
+    from ..analysis import load_census
+
+    root = tmp_path / "cadrumo"
+    root.mkdir()
+    (root / "consumer.py").write_text(
+        "from cadrumo.domain.calculations.registry.module_a import Thing" + chr(10),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+    load_census._reference_map_for.cache_clear()
+
+    first = load_census.build_reference_map()
+    second = load_census.build_reference_map()
+
+    assert first is second, "one set of roots must be scanned once"
+    assert load_census._reference_map_for.cache_info().misses == 1
+
+
+def test_redirected_roots_are_scanned_separately(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: pathlib.Path,
+) -> None:
+    """Two root sets cannot share one answer, however similar their trees."""
+    from ..analysis import load_census
+
+    load_census._reference_map_for.cache_clear()
+    maps = []
+    for name, target in (("one", "module_a"), ("two", "module_b")):
+        root = tmp_path / name / "cadrumo"
+        root.mkdir(parents=True)
+        (root / "consumer.py").write_text(
+            f"from cadrumo.domain.calculations.registry.{target} import Thing" + chr(10),
+            encoding="utf-8",
+        )
+        monkeypatch.setattr(load_census, "REFERENCE_SCAN_ROOTS", (root,))
+        maps.append(load_census.build_reference_map())
+
+    assert "cadrumo.domain.calculations.registry.module_a" in maps[0].production
+    assert "cadrumo.domain.calculations.registry.module_a" not in maps[1].production
+    assert load_census._reference_map_for.cache_info().misses == 2

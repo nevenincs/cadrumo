@@ -31,6 +31,7 @@ from secrets import token_urlsafe
 from uuid import uuid4
 
 import keyring
+import keyring.errors
 import pytest
 
 _PROBE_SERVICE = "cadrumo-credential-store-probe"
@@ -65,7 +66,11 @@ def os_credential_store_refusal() -> str | None:
     except Exception as exc:
         return f"{backend} refused a synthetic probe read: {exc}"
     finally:
-        with suppress(Exception):
+        # The probe's own cleanup, and only the store refusing to delete is
+        # tolerable here: a backend that cannot remove one synthetic entry has
+        # already answered the question this probe asks, and the read above
+        # carries the verdict. Anything else is a defect in this hook.
+        with suppress(keyring.errors.KeyringError, OSError):
             keyring.delete_password(_PROBE_SERVICE, account)
     if stored != probe_value:
         return f"{backend} accepted a synthetic probe write but its read-back disagreed"

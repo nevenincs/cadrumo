@@ -7,7 +7,7 @@ import json
 import shutil
 import tarfile
 import zipfile
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 import pytest
 
@@ -81,10 +81,26 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         members = set(archive.namelist())
     actual_runtime = {name for name in members if name.startswith("cadrumo/_data/") and not name.endswith("/")}
 
+    # Read the declared exclusions here rather than calling the production
+    # projection, so this expectation stays an independent oracle: the wheel
+    # sheds authoring inputs (the authored registry tree, captured profile
+    # declarations, the verdict caches) by configuration, and an expectation
+    # that ignored them would demand payload the build can never carry.
+    with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
+        declared_exclusions = tuple(
+            str(pattern) for pattern in load_toml(handle)["tool"]["hatch"]["build"]["targets"]["wheel"]["exclude"]
+        )
+
+    def _excluded(path: str) -> bool:
+        candidate = PurePosixPath(path)
+        return any(
+            candidate.full_match(pattern) or candidate.is_relative_to(pattern) for pattern in declared_exclusions
+        )
+
     independently_expected = {
         f"cadrumo/_data/{path.removeprefix('src/cadrumo/_data/')}"
         for path in source_paths - split_owned
-        if "/tests/" not in path
+        if "/tests/" not in path and not _excluded(path)
     }
     assert expected_wheel_data_paths(_REPO_ROOT) == independently_expected
     assert actual_runtime == independently_expected
@@ -108,8 +124,19 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
             data_wheel_official=companions[0],
         )
 
+    with (_REPO_ROOT / "pyproject.toml").open("rb") as handle:
+        sdist_exclusions = tuple(
+            str(pattern) for pattern in load_toml(handle)["tool"]["hatch"]["build"]["targets"]["sdist"]["exclude"]
+        )
+
+    def _excluded_from_sdist(path: str) -> bool:
+        candidate = PurePosixPath(path)
+        return any(candidate.full_match(pattern) or candidate.is_relative_to(pattern) for pattern in sdist_exclusions)
+
     expected_sdist_data = {
-        path for path in source_paths if not _is_corpus_source_binary(path, suffixes) and "/tests/" not in path
+        path
+        for path in source_paths
+        if not _is_corpus_source_binary(path, suffixes) and "/tests/" not in path and not _excluded_from_sdist(path)
     }
     sdist = build_sdist(tmp_path, uv, build_root=build_root)
     _assert_sdist_contains_expected_data(sdist, expected_sdist_data, corpus_binary_suffixes=suffixes)
