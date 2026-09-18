@@ -219,25 +219,31 @@ def read_system_memory() -> SystemMemoryReading:
         if measured is None:
             return SystemMemoryReading()
         return SystemMemoryReading(total_bytes=measured[0], free_bytes=measured[1])
-    # The getattr and the inner membership checks stay for POSIX variants that
-    # omit the constants themselves; SC_AVPHYS_PAGES is the more commonly
-    # absent of the three, so a total may be readable where a free figure is
-    # not.
-    names = getattr(os, "sysconf_names", {})
-    if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
-        try:
-            page_size = int(os.sysconf("SC_PAGE_SIZE"))
-            total = page_size * int(os.sysconf("SC_PHYS_PAGES"))
-        except (OSError, ValueError):
-            return SystemMemoryReading()
-        free: int | None = None
-        if "SC_AVPHYS_PAGES" in names:
+    else:
+        # An explicit `else`, not a fallthrough: the positive block narrows the
+        # Windows arm in every checker, but only the written `else` narrows the
+        # POSIX arm, so `os.sysconf` -- absent from the Windows stubs entirely
+        # -- resolves when the tree is analysed for Windows.
+        #
+        # The getattr and the inner membership checks stay for POSIX variants
+        # that omit the constants themselves; SC_AVPHYS_PAGES is the more
+        # commonly absent of the three, so a total may be readable where a free
+        # figure is not.
+        names = getattr(os, "sysconf_names", {})
+        if "SC_PAGE_SIZE" in names and "SC_PHYS_PAGES" in names:
             try:
-                free = page_size * int(os.sysconf("SC_AVPHYS_PAGES"))
+                page_size = int(os.sysconf("SC_PAGE_SIZE"))
+                total = page_size * int(os.sysconf("SC_PHYS_PAGES"))
             except (OSError, ValueError):
-                free = None
-        return SystemMemoryReading(total_bytes=total, free_bytes=free)
-    return SystemMemoryReading()
+                return SystemMemoryReading()
+            free: int | None = None
+            if "SC_AVPHYS_PAGES" in names:
+                try:
+                    free = page_size * int(os.sysconf("SC_AVPHYS_PAGES"))
+                except (OSError, ValueError):
+                    free = None
+            return SystemMemoryReading(total_bytes=total, free_bytes=free)
+        return SystemMemoryReading()
 
 
 def read_total_system_memory_bytes() -> int | None:
