@@ -20,11 +20,11 @@ from __future__ import annotations
 import asyncio
 import json
 import os
-import platform
 import re
 import shutil
 import signal
 import subprocess
+import sys
 from collections.abc import Awaitable, Sequence
 from dataclasses import dataclass
 from pathlib import Path
@@ -747,7 +747,7 @@ async def _process_command_inventory() -> tuple[_ProcessCommand, ...] | None:
     which would have licensed the reaper to kill processes it never created.
     """
     try:
-        if platform.system() == "Windows":
+        if sys.platform == "win32":
             return await _windows_process_command_inventory()
         return await _posix_process_command_inventory()
     except (OSError, subprocess.SubprocessError, json.JSONDecodeError, KeyError, TypeError, ValueError):
