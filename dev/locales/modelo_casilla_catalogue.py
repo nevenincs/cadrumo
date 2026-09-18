@@ -2050,7 +2050,14 @@ def _content_tokens(text: str, *, spelled: bool = False) -> Counter[str]:
         found[cleaned.lstrip("0") or "0" if cleaned.isdigit() else cleaned] += 1
     if spelled:
         for word in _WORD_TOKEN.findall(text):
-            number = _SPELLED_NUMBERS.get(word.casefold())
+            plain_word = word.casefold()
+            number = _SPELLED_NUMBERS.get(plain_word)
+            if number is None:
+                # Hungarian builds a compound around the numeral: two children is kétgyermekes.
+                number = next(
+                    (value for numeral, value in _SPELLED_NUMBERS.items() if plain_word.startswith(numeral)),
+                    None,
+                )
             if number is not None:
                 found[str(number)] += 1
     return found
