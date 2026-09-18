@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ...conformance.stamp import bundled_registry_root
 from ..loader import load_modelo_directory, load_shared_catalogues
+from ..profile_schema import capture_profile_schema
 from ..validate_export_field_placement import (
     binding_export_spans,
     export_record_placement_advisories,
@@ -67,7 +68,16 @@ def _placement_refusal_lines(modelo: ModeloDefinition) -> tuple[str, ...]:
     the check under test instead of the catalogue's current state, and keeps a
     silent expectation expressible: no placement line at all.
     """
-    validator = RegistryValidator(load_shared_catalogues(bundled_registry_root()), source_root=bundled_path())
+    validator = RegistryValidator(
+        load_shared_catalogues(bundled_registry_root()),
+        source_root=bundled_path(),
+        # Validation refuses outright without the profile contract, and that
+        # refusal carries no placement line, so an unsupplied schema reads here
+        # exactly like a record with nothing wrong in it.
+        user_profile_schema=capture_profile_schema(
+            bundled_path("registry", "cadrumo", "user_profile", "schema.toml")
+        )[1],
+    )
     try:
         validator.validate_modelo(modelo)
     except RegistryValidationError as refusal:

@@ -1471,12 +1471,15 @@ def _apply_edition_reference_defaults(context: str, table: Mapping[str, object])
     empty array, which typed construction then refuses. A default is never
     merged into a stated value; only additions extend one.
 
-    It runs on the materialised edition, so an inherited row is defaulted from
-    the edition it now sits in: source references are declared per edition, and
-    a row the predecessor did not ground itself must not carry the
-    predecessor's grounding forward. Additions are the row's own and so extend
-    the default of the edition the row now sits in. This relies on inheritance
-    reading each predecessor's rows before its own defaults are applied.
+    It runs on the materialised edition, so an inherited CASILLA is defaulted
+    from the edition it now sits in: a casilla carries its own lineage and the
+    edition it lands in grounds it. Additions are the row's own and so extend
+    the default of the edition the row now sits in.
+
+    A keyed-family member is the other case, and :func:`_pin_family_source_default`
+    has already bound it to the default effective where it was stated, so it
+    arrives here carrying ``source_refs`` and is left alone. Re-grounding it
+    would make the successor's source attest a row that source never saw.
 
     Returns the identical table when it fills nothing, so an edition declaring
     no default and no additions reaches typed construction exactly as authored.

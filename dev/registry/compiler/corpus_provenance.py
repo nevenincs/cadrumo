@@ -7,6 +7,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Final
 
+from cadrumo.core.paths import path_stat_fingerprint
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 
@@ -59,9 +60,26 @@ def resolve_normative_corpus_path(source_root: Path, corpus_ref: str) -> Path | 
 def classify_normative_corpus_provenance(source_root: Path, corpus_ref: str) -> NormativeCorpusProvenance:
     """Classify source evidence while development tooling still owns the root."""
     path = resolve_normative_corpus_path(source_root, corpus_ref)
-    return (
-        NormativeCorpusProvenance.OUT_OF_SCOPE if path is None else classify_normative_corpus_bytes(path.read_bytes())
-    )
+    if path is None:
+        return NormativeCorpusProvenance.OUT_OF_SCOPE
+    return _classified_normative_corpus_file(*path_stat_fingerprint(path))
+
+
+@lru_cache(maxsize=512)
+def _classified_normative_corpus_file(path: str, byte_count: int, modified_ns: int) -> NormativeCorpusProvenance:
+    """Classify one corpus FILE, once per observed identity in this process.
+
+    Provenance is decided by the file's bytes, but it is asked per legal
+    REFERENCE, and references cite the same file at different anchors: 732
+    declarations resolve to 388 distinct files, so one validation pass read and
+    regex-scanned 415 MB where the distinct files hold 36.8 MB -- an 11.3x
+    redundancy, with ``ley-35-2006.html`` alone read 86 times. Keyed on the stat
+    identity the record-design and loader caches already key on, so an edited
+    file reclassifies. In-process only: a published artifact carries its own
+    provenance and never consults this.
+    """
+    del byte_count, modified_ns
+    return classify_normative_corpus_bytes(Path(path).read_bytes())
 
 
 def classify_normative_corpus_bytes(payload: bytes) -> NormativeCorpusProvenance:

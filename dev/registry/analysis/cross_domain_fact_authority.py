@@ -75,6 +75,13 @@ class CrossDomainFactProbe:
     unsupported_query: GovernedFactQuery
 
 
+#: A filing-period coordinate inside the product's supported span, used where a
+#: fact's own window opens below the floor. Stated rather than derived, because
+#: deriving it would compile the registry at import time; the screen checks it
+#: against the live envelope before probing, so a floor that moves past it fails
+#: loudly instead of turning every probe below into an out-of-support refusal.
+_SUPPORTED_PROBE_DATE = date(2025, 12, 31)
+
 CROSS_DOMAIN_FACT_PROBES = (
     CrossDomainFactProbe(
         domain="modelo-347-threshold",
@@ -178,15 +185,23 @@ CROSS_DOMAIN_FACT_PROBES = (
     ),
     CrossDomainFactProbe(
         domain="modelo-131-income-exclusion",
+        # The authored variant opens on 2018-12-23 and never closes, so the
+        # coordinate that reaches it has to sit inside the SUPPORTED span: a
+        # query below the floor is refused for being out of support, which says
+        # nothing about the fact. The negative therefore cannot be "one day
+        # earlier" here -- that date is below the floor too -- so it is a
+        # selector the variant does not declare, which is the other half of what
+        # this table proves.
         query=EntitySetFactQuery(
             fact_id="rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2018, 12, 23),
+            effective_date=_SUPPORTED_PROBE_DATE,
         ),
         unsupported_query=EntitySetFactQuery(
             fact_id="rd-439-2007-art-110:conceptos-ingreso-excluidos-volumen-agrario",
             date_axis=DateAxis.FILING_PERIOD,
-            effective_date=date(2018, 12, 22),
+            effective_date=_SUPPORTED_PROBE_DATE,
+            selectors=(FactSelector(name="jurisdiction", value="no-such-jurisdiction"),),
         ),
     ),
 )
@@ -211,6 +226,13 @@ def cross_domain_fact_findings(
         source_refs=authority.catalogues.sources,
         source_root=source_root,
     )
+    supported = authority.catalogues.supported_filing_years
+    if supported is not None and not supported.admits_filing_year(_SUPPORTED_PROBE_DATE.year):
+        raise RegistryValidationError(
+            f"the cross-domain probe coordinate {_SUPPORTED_PROBE_DATE} lies outside the supported span; "
+            "move it inside, or every probe below reports an out-of-support refusal rather than the "
+            "authority behaviour it exists to measure"
+        )
     for probe in probes:
         try:
             resolved = authority.resolve_governed_fact(probe.query)

@@ -1392,14 +1392,17 @@ def _render_profile_numeric_derivation(
     export_record_id: str,
 ) -> ExportFieldDerivation:
     anchor = _render_profile_anchor(joined_field)
-    width_rule = next((rule for rule in profile.width_17_rules if anchor in rule.anchors), None)
+    # Indexed on the profile, not scanned here: a scan compared this anchor
+    # against every anchor of every rule, and anchors are pydantic models whose
+    # equality is not cheap.
+    width_rule = profile.width_17_rule_by_anchor.get(anchor)
     if width_rule is not None:
         return _profile_width_17_derivation(
             joined_field,
             width_rule,
             export_record_id=export_record_id,
         )
-    singleton = next((rule for rule in profile.singleton_rules if rule.anchor == anchor), None)
+    singleton = profile.singleton_rule_by_anchor.get(anchor)
     if singleton is None:
         raise RegistryValidationError(
             f"validated render profile has no exact rule for blank numeric anchor {anchor!r}",
@@ -1825,10 +1828,16 @@ def _order_toml_values_before_tables(value: object) -> object:
     serializer a valid TOML order.
     """
     if isinstance(value, Mapping):
-        ordered_items = tuple((str(key), _order_toml_values_before_tables(item)) for key, item in value.items())
-        values = tuple((key, item) for key, item in ordered_items if not _toml_table_like(item))
-        tables = tuple((key, item) for key, item in ordered_items if _toml_table_like(item))
-        return {key: item for key, item in (*values, *tables)}
+        # Partitioned in ONE pass: the shape test was evaluated twice per item,
+        # once to reject it from the scalars and again to admit it to the
+        # tables, and this recursion reaches every node of every generated
+        # tree -- 8.9M calls for one modelo.
+        values: list[tuple[str, object]] = []
+        tables: list[tuple[str, object]] = []
+        for key, item in value.items():
+            ordered = _order_toml_values_before_tables(item)
+            (tables if _toml_table_like(ordered) else values).append((str(key), ordered))
+        return dict((*values, *tables))
     if isinstance(value, list):
         return [_order_toml_values_before_tables(item) for item in value]
     if isinstance(value, tuple):
