@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:3814cc763283bd1b409f506288c2134d77797cf47bba5971239079f44ebd8e00'
+body_hash: 'sha256:2591b0fd8aca9cba5b048dc6322bd2098f245554f25ebd2b397ff9cdf5d5096b'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -124,6 +124,20 @@ related:
 - `S16` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
 - `S16` `M` `dev/locales/tests/test_shipped_casilla_catalogue.py`
 - `S16` `verify:` `pytest dev/locales/tests/test_locale_translation_honesty.py` -> `pass`
+- `S14` `verify:` `pytest dev/locales/tests` -> `pass`
+- `S15` `M` `dev/locales/modelo_casilla_catalogue.py`
+- `S15` `M` `dev/locales/tests/test_modelo_casilla_catalogue.py`
+- `S15` `M` `src/cadrumo/locales`
+- `S15` `verify:` `ruff check dev/locales` -> `pass`
+- `S15` `M` `dev/locales/tests/test_shipped_casilla_catalogue.py`
+- `S15` `verify:` `pytest dev/locales/tests/test_shipped_casilla_catalogue.py` -> `pass`
+- `S16` `verify:` `pytest dev/locales/tests` -> `pass`
+- `S17` `M` `dev/locales/modelo_casilla_catalogue.py`
+- `S17` `M` `src/cadrumo/locales`
+- `S17` `verify:` `python -m dev.locales casilla-author` -> `pass`
+- `S17` `M` `dev/locales/tests/test_locale_translation_honesty.py`
+- `S17` `verify:` `pytest dev/locales/tests/test_locale_translation_honesty.py` -> `pass`
+- `S17` `verify:` `pytest dev/locales/tests` -> `pass`
 
 ## Notes
 
@@ -139,4 +153,12 @@ related:
 - `S14` The interface domains lost diacritics like the casilla surface did: 125 texts repaired across es/ca/hu, the check now reads every shipped surface with reviewed-word exemptions, and a gate covers it; placeholder and glossary patterns stay casilla-only because progress ellipses and the Hungarian -kent suffix are correct there
 - `S16` A 300-label sample measured meaning-defect rates of en 5.0/ca 2.7/hu 4.0 per cent; the dominant class, translations dropping a box reference, amount or comparison the Spanish states, is now a check with cross-language equivalences, 268 repairs installed, one wrong year caught in Modelo 131, and a gate at zero
 - `S16` One translation may render only one Spanish wording of a modelo: 72 keys carried another casilla's text, including a reused box number in Modelo 200 and the minorado/reducido pair, with 100 reviewer-recorded equivalences for abbreviations, typos, punctuation and synonyms
+- `S14` Half-translated text is now a gated invariant at one untranslated Spanish word: 747 texts repaired (en 266, ca 190, hu 108) and the reviewers' kept terms recorded with reasons, covering Latin, official programme names, field identifiers and terms the product states in Spanish
+- `S14` Third blind 300-label sample measured the meaning-defect rate at en 2.33, ca 1.67 and hu 1.67 per cent, against en 5.0/ca 2.7/hu 4.0 in the first sample and en 2.3/ca 2.3/hu 2.7 in the second; its 17 findings were installed (Abono read as a credit rather than a payment, retencion as withholding rather than deduction, El Hierro kept as a place name, I.A.E. restored, and six half-translated fragments)
+- `S15` Segment drift is now measured: AEAT composes a label from segments joined by a dash, so a repeated Spanish segment must keep one rendering the way one meaning keeps one key. Box subtraction uses the same characters and is kept whole. 357 segments render more than one way (en 142, ca 70, hu 145); the case-only and apostrophe variants were normalised first, the rest are under review
+- `S15` Segment drift is closed and gated: reviewers chose one canonical rendering for each of the 357 drifting segments, installing 5,028 stored values (ca 1,046, en 2,279, hu 1,703). The corrections reach meaning, not only style - Abono as a credit, retencion as withholding, a disposicion transitoria no longer cited as an article, El Hierro and Gipuzkoa kept as place names, and jovobeli restored to future periods. Cuota is the one recorded exception: it names the IVA amount, the recargo amount or a fee by the label it sits in
+- `S16` shared_segments mirrors segment drift: one rendering standing for two Spanish segments hides a distinction the source draws. It found the Basque Concierto economico and the Navarrese Convenio economico sharing one English name, box 00418 wearing another box's label in three locales, Abono read as a payment again, and a levelling-reserve variant dropping its Aumentos. AEAT restates a segment by abbreviating it or dropping prepositions, so those wordings compare equal; 44 further pairs are recorded with the difference a reviewer saw
+- `S17` The sentence break is now a composition separator too, read only between a word and a capital so that art. 12.2 LIS and pag. 3D stay whole; about five thousand more labels became checkable. It exposed Catalan accent losses the spell check had passed because the unaccented forms are English words (electronic, referencia, traves), Spanish left untranslated in Catalan and English, and shared renderings merging distinct concepts: Portal with Escalera, Otros acreedores with Otros pasivos, Otros deudores with Otros creditos, and the first, second and third legal representative under one Hungarian label. 754 stored values were repaired; accented renderings now win over more frequent unaccented ones
+- `S17` Round two of segment canonicalisation is installed (en 388, hu 654, ca 67 values). Two regressions the reviewers introduced were caught by the existing gates and corrected: a generic Hungarian heading erased which of the three legal representatives a row names, and two rows lost the page reference of their official design while restoring Kifizetes for Abono. The representative rows now carry the ordinal in parentheses so the rendering holds no sentence break of its own. Drift is down to the one reviewed Catalan NIF case; NIF is classified as an acronym for English and Hungarian too
+- `S17` Both segment families now read zero. The 76 legitimate shared renderings are recorded with the difference a reviewer saw: an official misspelling, an abbreviation AEAT writes out in another edition, the slash and word forms of one heading, two spellings of one province, and pairs like razon social with denominacion social or base liquidable with base imponible reducida that name one thing
 
