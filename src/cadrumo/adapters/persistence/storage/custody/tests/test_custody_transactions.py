@@ -240,8 +240,8 @@ def _hold_transaction_lock_in_sibling(
     is timing a Windows spawn plus a cadrumo import -- seconds of startup that
     swallow any window short enough to be a useful contention probe.
     """
-    from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
     from cadrumo.application.user_profile.custody_repository import profile_custody_transaction_lock
+    from cadrumo.entrypoints.adapter_composition import composed_profile_persistence_ports
 
     with composed_profile_persistence_ports():
         result_queue.put("ready")
@@ -257,8 +257,8 @@ def _write_active_pointer_in_sibling(root_text: str, bucket_id_text: str, result
     transaction is the only work left, so a caller timing "did the sibling get
     in?" measures the lock rather than the seconds a spawn spends importing.
     """
-    from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
     from cadrumo.application.user_profile.profile_pointer import active_profile_pointer_transaction
+    from cadrumo.entrypoints.adapter_composition import composed_profile_persistence_ports
 
     with composed_profile_persistence_ports():
         result_queue.put("ready")
@@ -269,7 +269,7 @@ def _write_active_pointer_in_sibling(root_text: str, bucket_id_text: str, result
 
 def _crash_create_at_durable_boundary(root_text: str, transaction_id_text: str, boundary: str) -> None:
     """Persist one real create boundary in a child, then terminate without cleanup."""
-    from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
+    from cadrumo.entrypoints.adapter_composition import composed_profile_persistence_ports
 
     composition = composed_profile_persistence_ports()
     composition.__enter__()
@@ -350,7 +350,7 @@ def _create_labeled_capsule_in_sibling(
     whenever their own KDF setup happens to finish, so the race is loose and
     the collision is decided by scheduling luck rather than by the lock.
     """
-    from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
+    from cadrumo.entrypoints.adapter_composition import composed_profile_persistence_ports
 
     root = Path(root_text)
     profile_id = UUID(profile_id_text)
