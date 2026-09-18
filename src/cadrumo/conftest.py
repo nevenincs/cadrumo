@@ -221,6 +221,9 @@ def compose_runtime_ports() -> Iterator[None]:
         load_usage_ratios_with_censo_guard,
         save_usage_ratios,
     )
+    from .adapters.persistence.storage.profile_persistence_composition import (
+        composed_profile_persistence_ports,
+    )
     from .application.auth.protocols import bind_session_store
     from .application.auth.providers import bind_auth_provider_selector
     from .application.bucket_event_repository import bind_bucket_event_history_repository_factory
@@ -242,7 +245,6 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .core.redaction.tax_identity_admission import bind_tax_identity_admission
     from .domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
-    from .entrypoints.adapter_composition import composed_profile_persistence_ports
     from .tests.recorded_ecb_rates import recorded_ecb_rate_provider
 
     with (
