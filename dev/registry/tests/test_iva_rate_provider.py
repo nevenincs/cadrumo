@@ -169,10 +169,14 @@ def test_iva_query_resolves_exact_date_selectors_and_provenance() -> None:
     assert resolved.legal_refs == ("ley-37-1992:art-90",)
     assert resolved.authority_digest == "a" * 64
 
+    # A coordinate INSIDE the supported span that the schedule does not author:
+    # Germany declares only ``general`` and ``reduced``. The old probe asked for
+    # the day before Spain's 2012 general rate opened, which now refuses for
+    # lying below the floor -- a different refusal, and not this one.
     with pytest.raises(RegistryValidationError, match="no variant for the exact query context"):
         resolve_governed_fact(
             _catalogue(),
-            iva_rate_fact_query(require_eu_member_state("ES"), IvaRateKind("general"), date(2012, 8, 31)),
+            iva_rate_fact_query(require_eu_member_state("DE"), IvaRateKind("super_reduced"), date(2025, 6, 1)),
             authority_digest="a" * 64,
             support=committed_supported_filing_years(),
         )
