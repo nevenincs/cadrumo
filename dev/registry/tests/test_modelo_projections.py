@@ -125,9 +125,25 @@ def _modelo_347() -> ModeloDefinition:
 
 
 def _revision(revision_id: str, parameters: tuple[ParameterDefinition, ...]) -> object:
+    """One stand-in edition, carrying the window the projection orders editions by.
+
+    The window is read from the id the way the authored tree spells it: a first
+    year, then either a closing year or an open "y-siguientes" tail. Stated
+    rather than omitted because the projection picks the newest edition by
+    ``valid_from`` and only carries an end forward when it is that edition's own.
+    """
     from types import SimpleNamespace
 
-    return SimpleNamespace(id=revision_id, parameters=parameters, review_status=RevisionReviewStatus.AGENT_REVIEWED)
+    first, _, tail = revision_id.partition("-")
+    valid_from = date(int(first), 1, 1)
+    valid_to = None if tail in {"", "y-siguientes"} else date(int(tail), 12, 31)
+    return SimpleNamespace(
+        id=revision_id,
+        parameters=parameters,
+        review_status=RevisionReviewStatus.AGENT_REVIEWED,
+        valid_from=valid_from,
+        valid_to=valid_to,
+    )
 
 
 def _modelo_payload(modelo_id: str, revisions: dict[str, object]) -> object:
