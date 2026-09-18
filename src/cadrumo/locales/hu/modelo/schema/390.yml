@@ -124,11 +124,11 @@ modelo:
           iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
             label: Levonások - Beruházási javak korrekciója
           iva-anual-regimen-simplificado-resultado:
-            label: Eredmény rendszer simplificado
+            label: Eredmény - egyszerűsített rendszer
           iva-anual-regimen-simplificado-suma-deducciones:
             label: Levonások - Levonások összege
           iva-anual-regularizacion-bienes-inversion:
-            label: Beruházási javak korrekciója
+            label: Beruházási javak korrekciója (LIVA 107-110. cikk)
           iva-anual-regularizacion-prorrata-definitiva:
             label: Levonási hányad korrekciója végleges százalék alapján - összeg
           iva-anual-repercutido-recargo-tipo-0-26-base:
@@ -208,7 +208,8 @@ modelo:
           iva-compensacion-cuotas-ejercicio-anterior:
             label: Előző évi adójóváírás beszámítása
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+            label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél (LIVA
+              84. cikk Uno.2.)
           iva-cuota-recargo-equivalencia-general:
             label: Egyenértékűségi felár általános kulccsal (5.2%) - összeg
           iva-cuota-recargo-equivalencia-reducido:
@@ -248,7 +249,8 @@ modelo:
           iva-cuota-repercutida-tipo-7-5:
             label: Felszámított ÁFA összeg 7.5% kulccsal
           iva-cuota-soportada-importaciones:
-            label: Levonható előzetesen felszámított ÁFA folyó áruk importján
+            label: Levonható előzetesen felszámított ÁFA folyó áruk importján (LIVA
+              17. és 92. cikk; hivatalos 33. rovat)
           iva-cuota-soportada-interiores:
             label: Levonható ÁFA összeg belföldi folyó ügyletek után
           iva-deducible-aic-corrientes-tipo-10-base:
@@ -647,7 +649,8 @@ modelo:
           iva-isp-interior-base:
             label: Fordított adózású ÁFA adóalapja belföldi ügyleteknél
           iva-isp-interior-cuota:
-            label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél
+            label: Keletkezett fordított adózású ÁFA belföldi ügyleteknél (LIVA 84.
+              cikk Uno.2.; hivatalos 13. rovat)
           iva-liquidaciones-total-a-ingresar:
             label: Az évi ÁFA-önadózások alapján fizetendő összegek összesen
           iva-liquidaciones-total-devoluciones-elementos-transporte:
@@ -1603,7 +1606,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
               help: 'A Modelo 390 81. casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Tekintse át a casilla adatait: Eredmény rendszer simplificado.'
+              help: 'Tekintse át a casilla adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: 'A Modelo 390 82. casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
@@ -2484,7 +2487,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
               help: 'A Modelo 390 81. casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Tekintse át a casilla adatait: Eredmény rendszer simplificado.'
+              help: 'Tekintse át a casilla adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: 'A Modelo 390 82. casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
@@ -3385,7 +3388,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
               help: 'A Modelo 390 81. casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Tekintse át a casilla adatait: Eredmény rendszer simplificado.'
+              help: 'Tekintse át a casilla adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: 'A Modelo 390 82. casilla adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:

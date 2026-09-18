@@ -3,8 +3,22 @@ modelo:
     '165':
       casilla:
         continuidad:
+          declaracion-complementaria-sustitutiva:
+            label: Supplementary or replacement return
+          declarante-razon-social:
+            label: Name or business name of the filer
+          fecha-adquisicion:
+            label: Date the shares or holdings were acquired
+          fecha-constitucion:
+            label: Incorporation date
           filing-year:
             label: Filing year to which the return relates
+          importe-fondos-propios:
+            label: Amount of shareholders' equity
+          importe-suscripcion:
+            label: Amount of the subscription or acquisition
+          importe-total-suscripciones:
+            label: Total amount of subscriptions or acquisitions
           m165-declaracion-complementaria-sustitutiva:
             label: Supplementary or replacement return
           m165-declarante-razon-social:
@@ -35,6 +49,22 @@ modelo:
             label: Tax ID of the member or shareholder
           m165-socio-nombre:
             label: Surnames and given name of the member or shareholder
+          numero-identificativo-anterior:
+            label: Identifying number of the previous return
+          numero-identificativo-declaracion:
+            label: Declaration identifying number
+          numero-total-declarados:
+            label: Total number of reported members
+          persona-relacion:
+            label: Contact person
+          porcentaje-participacion:
+            label: Percentage of shareholding
+          representante-legal-nif:
+            label: Tax ID of the legal representative
+          socio-nif:
+            label: Tax ID of the member or shareholder
+          socio-nombre:
+            label: Surnames and given name of the member or shareholder
           tipo-declaracion:
             label: Return type (original / substitute / supplementary)
       construct:
@@ -49,46 +79,16 @@ modelo:
       revision:
         2013-2015:
           field:
-            label: Modelo 165 (Order HAP/2455/2013), tax years 2013 onwards
+            label: Modelo 165, tax years 2013 to 2015
         2016-2022:
           field:
-            label: Modelo 165 (Order HAP/2455/2013), tax years 2013 onwards
+            label: Modelo 165, tax years 2016 to 2022
         2023-2025:
           field:
-            label: Modelo 165 (Order HAP/2455/2013), tax years 2013 onwards
+            label: Modelo 165, tax years 2023 to 2025
         2026-y-siguientes:
           casilla:
-            declaracion-complementaria-sustitutiva:
-              label: Supplementary or replacement return
-            declarante-razon-social:
-              label: Name or business name of the filer
             empresa-emergente:
               label: Start-up company
-            fecha-adquisicion:
-              label: Date the shares or holdings were acquired
-            fecha-constitucion:
-              label: Incorporation date
-            importe-fondos-propios:
-              label: Amount of shareholders' equity
-            importe-suscripcion:
-              label: Amount of the subscription or acquisition
-            importe-total-suscripciones:
-              label: Total amount of subscriptions or acquisitions
-            numero-identificativo-anterior:
-              label: Identifying number of the previous return
-            numero-identificativo-declaracion:
-              label: Declaration identifying number
-            numero-total-declarados:
-              label: Total number of reported members
-            persona-relacion:
-              label: Contact person
-            porcentaje-participacion:
-              label: Percentage of shareholding
-            representante-legal-nif:
-              label: Tax ID of the legal representative
-            socio-nif:
-              label: Tax ID of the member or shareholder
-            socio-nombre:
-              label: Surnames and given name of the member or shareholder
           field:
-            label: Modelo 165 (Order HAP/2455/2013), tax years 2013 onwards
+            label: Modelo 165, tax years 2026 onwards

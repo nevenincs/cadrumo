@@ -1045,7 +1045,7 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Casilla iva.soportado.interiores del modelo 322, ejercicio 2008.
           field:
-            label: Modelo 322, ejercicios 2008 a 2025
+            label: Modelo 322, ejercicio 2022
         '2023':
           casilla:
             '150':
@@ -1079,7 +1079,7 @@ modelo:
             '164':
               help: Casilla 164 del modelo 322, ejercicio 2008.
           field:
-            label: Modelo 322, ejercicios 2008 a 2025
+            label: Modelo 322, ejercicio 2023
         2024-2025:
           casilla:
             '01':
@@ -1475,7 +1475,7 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Casilla iva.soportado.interiores del modelo 322, ejercicio 2024.
           field:
-            label: Modelo 322, ejercicios 2008 a 2025
+            label: Modelo 322, ejercicios 2024 a 2025
         2026-y-siguientes:
           casilla:
             '112':

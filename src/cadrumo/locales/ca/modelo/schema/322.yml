@@ -164,7 +164,8 @@ modelo:
           filing-year:
             label: Exercici a què es refereix la declaració
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+            label: Quota d'IVA autorepercutit en adquisicions intracomunitàries (LIVA
+              art. 84.Uno.2)
           iva-cuota-deducible-total:
             label: Total quota d'IVA deduïble
           iva-cuota-devengada-total:
@@ -974,7 +975,7 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Casella iva.soportado.interiores del model 322, exercici 2008.
           field:
-            label: Model 322, exercicis 2008 a 2025
+            label: Model 322, exercici 2022
         '2023':
           casilla:
             '150':
@@ -1008,7 +1009,7 @@ modelo:
             '164':
               help: Casella 164 del model 322, exercici 2008.
           field:
-            label: Model 322, exercicis 2008 a 2025
+            label: Model 322, exercici 2023
         2024-2025:
           casilla:
             '01':
@@ -1422,7 +1423,7 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Casella iva.soportado.interiores del model 322, exercici 2024.
           field:
-            label: Model 322, exercicis 2008 a 2025
+            label: Model 322, exercicis 2024 a 2025
         2026-y-siguientes:
           casilla:
             '01':
@@ -1669,7 +1670,7 @@ modelo:
                 Modelo 322 Referències: [41].'
             '42':
               help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                per quotes soportadas en operacions intragrupo amb béns de inversió.
+                per quotes suportades en operacions intragrupo amb béns de inversió.
                 Quota [42].'
             '43':
               help: 'Informació fiscal sobre informació fiscal de la casella 43 del
@@ -1760,7 +1761,7 @@ modelo:
                 [519].'
             '52':
               help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                per quotes soportadas en las importacions de béns de inversió. Quota
+                per quotes suportades en las importacions de béns de inversió. Quota
                 [52].'
             '520':
               help: 'Consulteu la informació de la casella: Prorratas - 5 - Codi CNAE
@@ -1782,7 +1783,7 @@ modelo:
                 Modelo 322 Referències: [53].'
             '54':
               help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                En adquisicions intracomunitàries de béns i serveis corrientes. Quota[54].'
+                En adquisicions intracomunitàries de béns i serveis corrents. Quota[54].'
             '55':
               help: 'Informació fiscal sobre informació fiscal de la casella 55 del
                 Modelo 322 Referències: [55].'
@@ -1803,7 +1804,7 @@ modelo:
                 Regularització béns de inversió. Quota [60].'
             '61':
               help: 'Consulteu la informació de la casella: Liquidació. IVA Deduïble.
-                Regularització per aplicació del percentatge definitivo de prorrata.
+                Regularització per aplicació del percentatge definitiu de prorrata.
                 Quota [61].'
             '62':
               help: 'Consulteu la informació de la casella: Total a deduir ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
@@ -1864,7 +1865,7 @@ modelo:
               help: 'Informació fiscal sobre informació fiscal de la casella 709 del
                 Modelo 322 Referències: [709].'
             '71':
-              help: 'Consulteu la informació de la casella: Información adicional.
+              help: 'Consulteu la informació de la casella: Información addicional.
                 Lliuraments intracomunitarias de béns i serveis [71].'
             '710':
               help: 'Informació fiscal sobre informació fiscal de la casella 710 del
@@ -1959,7 +1960,7 @@ modelo:
               help: 'Informació fiscal sobre informació fiscal de la casella 79 del
                 Modelo 322 Referències: [79].'
             '80':
-              help: 'Consulteu la informació de la casella: Operacions realizadas
+              help: 'Consulteu la informació de la casella: Operacions realitzades
                 en el exercici. Operacions en règim general [80].'
             '83':
               help: 'Informació fiscal sobre informació fiscal de la casella 83 del
@@ -1988,7 +1989,7 @@ modelo:
               help: 'Informació fiscal sobre informació fiscal de la casella 92 del
                 Modelo 322 Referències: [92].'
             '93':
-              help: 'Consulteu la informació de la casella: Operacions realizadas
+              help: 'Consulteu la informació de la casella: Operacions realitzades
                 en el exercici. Lliuraments intracomunitarias de béns i serveis [93].'
             '94':
               help: 'Informació fiscal sobre informació fiscal de la casella 94 del
@@ -2005,11 +2006,11 @@ modelo:
                 en el exercici. Operacions en Règim especial de béns usats, objectes
                 d''art, antiguitats i objectes de col·lecció [97].'
             '98':
-              help: 'Consulteu la informació de la casella: Operacions realizadas
+              help: 'Consulteu la informació de la casella: Operacions realitzades
                 en el exercici. Operacions en règim especial de Agencias de Viajes
                 [98].'
             '99':
-              help: 'Consulteu la informació de la casella: Operacions realizadas
+              help: 'Consulteu la informació de la casella: Operacions realitzades
                 en el exercici. Lliuraments de béns de inversió [99].'
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
               help: Informació fiscal de la casella del Modelo 322.
@@ -2071,7 +2072,7 @@ modelo:
               help: Informació fiscal de la casella del Modelo 322.
               label: Número de grup
             x-chim6r1ectp7as3f5lp6ur0:
-              help: 'Consulteu la informació de la casella: Dominant o dependiente.'
+              help: 'Consulteu la informació de la casella: Dominant o dependent.'
               label: Dominant o dependent
             x-chim6r1ee1in4qbfchng:
               help: 'Consulteu la informació de la casella: Període (anual, 0A).'
@@ -2083,7 +2084,7 @@ modelo:
               help: Informació fiscal de la casella del Modelo 322.
               label: Inscrit al Registre de devolució mensual
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: 'Consulteu la informació de la casella: Acogido a la modalidad
+              help: 'Consulteu la informació de la casella: Acogido a la modalitat
                 del articulo 163 sexies.Cinco LIVA.'
               label: Acollit a la modalitat de l'article 163 sexies.Cinc LIVA
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
@@ -2113,6 +2114,6 @@ modelo:
                 (quota meritada - quota deduïble).'
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: 'Consulteu la informació de la casella: Quota IVA suportat en
-                operacions interiors corrientes.'
+                operacions interiors corrents.'
           field:
             label: Model 322, exercicis 2026 i següents

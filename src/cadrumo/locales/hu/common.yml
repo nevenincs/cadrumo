@@ -396,11 +396,11 @@ categories:
         (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
         art. 30.2.5.b szabály 4.ª).
     suministros_local_afecto:
-      label: Uzleti helyiseg kozuzemi koltsegei
-      notes: 'Teljes egeszeben levonhato koltseg: a tevekenyseg vegzesenek helyet
-        ado ingatlan uzleti eszkoznek minosul (Ley 35/2006 art. 29.1.a), ezert kozuzemi
-        koltsegei levonhatok (art. 28.1). A 30 szazalekos szabaly (art. 30.2.5.b)
-        nem alkalmazando, mert az csak a reszben uzleti celra hasznalt lakohelyre
+      label: Üzleti helyiség közüzemi költségei
+      notes: 'Teljes egészében levonható költség: a tevékenység végzésének helyet
+        ado ingatlan üzleti eszköznek minősül (Ley 35/2006 art. 29.1.a), ezert közüzemi
+        költségei levonhatok (art. 28.1). A 30 százalékos szabály (art. 30.2.5.b)
+        nem alkalmazandó, mert az csak a részben üzleti célra használt lakóhelyre
         vonatkozik.'
     telefonia_fija:
       label: Vezetékes telefon-költség
@@ -699,10 +699,10 @@ operation:
   modal:
     action:
       apply: Alkalmaz
-      cancel: Megszakit
+      cancel: Megszakít
       close: Bezár
       detach: Leválaszt
-      reject: Elutasit
+      reject: Elutasít
     detail:
       action_refused: Elutasított művelet
       cleanup_deadline: Lezárási határidő

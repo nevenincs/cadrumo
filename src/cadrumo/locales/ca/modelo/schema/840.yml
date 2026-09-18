@@ -139,28 +139,28 @@ modelo:
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dcdqmut315limopbdcln78ro:
               label: 'Quota municipal: quota de l''element tributari (reservat a l''Administració)'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dcdnmqs3lehgm4r35:
-              label: 'Quota municipal: suma de la superficie computable dels locals'
+              label: 'Quota municipal: suma de la superfície computable dels locals'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9de9im6t39cpkm6ob4c4:
-              label: 'Quota municipal: suma de la superficie rectificada dels locals'
+              label: 'Quota municipal: suma de la superfície rectificada dels locals'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqmqo9dehnn8obc:
-              label: 'Quota municipal: suma de la superficie total dels locals'
+              label: 'Quota municipal: suma de la superfície total dels locals'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55lhmurbgelq62ojcck:
-              label: 'Quota municipal: superficie computable'
+              label: 'Quota municipal: superfície computable'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1dedqn0pbicpkm6qb55li6ap3lcdkm4r35:
               label: 'Quota municipal: superfície deduïble'
             x-clm6ar9dehp6iohedlqmsqb3d5o62r1depgmorri5limopbdcln78ro:
               label: 'Quota municipal: valor de l''element tributari (reservat a l''Administració)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdnmqs3lehgm4r35:
-              label: 'Quota provincial o nacional: superficie computable dels locals'
+              label: 'Quota provincial o nacional: superfície computable dels locals'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dcdqmut315limopbdcln78ro:
               label: 'Quota provincial o nacional: quota de l''element tributari (reservat
                 a l''Administració)'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1ddpqmqpbids:
               label: 'Quota provincial o nacional: nombre de locals'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1de9im6t39cpkm6ob4c4:
-              label: 'Quota provincial o nacional: superficie rectificada dels locals'
+              label: 'Quota provincial o nacional: superfície rectificada dels locals'
             x-clm6ar9dehp6iohee1p6utj9dphmiobc5ln62or9dtn62r1dehnn8obc:
-              label: 'Quota provincial o nacional: superficie total dels locals'
+              label: 'Quota provincial o nacional: superfície total dels locals'
             x-dhnm6obc5lkmsp39e9im6t3f5phmup39ctniqrbldpkm6qbgd5ng:
               label: Codi de municipi del local afecte indirectament a l'activitat
                 (reservat a l'Administració)

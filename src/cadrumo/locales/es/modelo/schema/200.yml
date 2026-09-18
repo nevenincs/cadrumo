@@ -12216,7 +12216,7 @@ modelo:
                 Correcciones del ejercicio - Temporarias (con origen en ejercicios
                 anteriores) [03368]
           field:
-            label: Modelo 200 ejercicios 2024 y siguientes (DR200e25.xls)
+            label: Modelo 200, ejercicio 2024
         2025-y-siguientes:
           casilla:
             '00077':
@@ -15067,4 +15067,4 @@ modelo:
               label: Estado de cambios patrimonio neto (III) - Otras variaciones del
                 patrimonio neto - Resultado del ejercicio [00625]
           field:
-            label: Modelo 200 ejercicios 2024 y siguientes (DR200e25.xls)
+            label: Modelo 200, ejercicios 2025 y siguientes

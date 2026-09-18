@@ -384,12 +384,14 @@ modelo:
               előtti időszakokból (LIS 67. f) és 74.3. f) cikk)
           t22007000-02548:
             label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-              lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
-              szerinti céltartalékok és ráfordítások. Növekedés (szövetkezetek)
+              lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 14.1. és 14.2.
+              cikke szerinti céltartalékok és ráfordítások, amelyekre a LIS 11.12.
+              cikke utal. Növekedés (szövetkezetek)
           t22007000-02549:
             label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
-              lap). A LIS 13.1. cikke szerinti értékvesztések és a LIS 11.12. cikke
-              szerinti céltartalékok és ráfordítások. Csökkenés (szövetkezetek)
+              lap). A LIS 13.1. cikke szerinti értékvesztések, valamint a LIS 14.1.
+              és 14.2. cikke szerinti céltartalékok és ráfordítások, amelyekre a LIS
+              11.12. cikke hivatkozik. Csökkenés (szövetkezetek)
           t22007000-02890:
             label: A csoport adóalapja és bruttó adókötelezettsége (7. oldal, 00.
               lap). A LIS 11.12. cikke és a 20/1990. törvény 7. kiegészítő rendelkezése
@@ -421,55 +423,57 @@ modelo:
               miatt (**). Belső ügyletek eredményének beszámítása összesen (7C. o.)
           t22009000-00186:
             label: Egyéb levonások. Nettó adótartozás. A LIS 39.2. cikk szerinti korlát
-              alól kivont K+F+I levonások
+              alól kivont K+F+I levonások (14. quinquies oldal)
           t22009000-00399:
             label: Egyéb levonások. Nettó adótartozás. A helyi szabályok alá tartozó
               szervezetek egyedi levonásai
           t22009000-00436:
             label: 'Az önadózás eredménye. Kifizetés: K+F+I levonások elégtelen adótartozás
               miatt (LIS 39.2. cikk szerinti választás), összesen. Külön jogállású
-              tartományi tanácsok és Navarra'
+              tartományi tanácsok és Navarra (14. quinquies oldal)'
           t22009000-00562:
             label: Teljes adótartozás
           t22009000-00563:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. A Kanári-szigeteken előállított tárgyi termékek
-              értékesítésének kedvezménye (19/1994. törvény 26. cikk)
+              értékesítésének kedvezménye (19/1994. törvény 26. cikk) (11. oldal)
           t22009000-00565:
             label: Egyéb levonások. Nettó adótartozás. Nonprofit szervezeteknek nyújtott
-              adományok levonása (49/2002. törvény)
+              adományok levonása (49/2002. törvény) (14. quater oldal)
           t22009000-00566:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Szövetkezeti társaságok kedvezményei (20/1990. törvény)
+              (11. oldal)
           t22009000-00567:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Ceutában és Melillában szerzett jövedelem kedvezménye
-              (LIS 33. cikk)
+              (LIS 33. cikk) (11. oldal)
           t22009000-00568:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Szolgáltatásnyújtási kedvezmények (LIS 34. cikk)
+              (11. oldal)
           t22009000-00569:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
-              teljes adótartozás. Egyéb kedvezmények
+              teljes adótartozás. Egyéb kedvezmények (11. oldal)
           t22009000-00570:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Korábbi időszakok belföldi kettős adóztatása a tárgyévben
-              érvényesítve (RDLeg 4/2004 30. cikk)
+              érvényesítve (RDLeg 4/2004 30. cikk) (12. oldal)
           t22009000-00571:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Az időszakban keletkezett és érvényesített belföldi
-              kettős adóztatás (LIS 23.1. átmeneti rendelkezés)
+              kettős adóztatás (LIS 23.1. átmeneti rendelkezés) (12. oldal)
           t22009000-00572:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Korábbi időszakok nemzetközi kettős adóztatása az
-              időszakban érvényesítve (RDLeg 4/2004 31. és 32. cikk)
+              időszakban érvényesítve (RDLeg 4/2004 31. és 32. cikk) (12. oldal)
           t22009000-00575:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Nemzetközi adóátláthatóság (LIS 100.10. cikk)
           t22009000-00576:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Lakásbérbeadással foglalkozó szervezetek kedvezményei
-              (LIS VII. cím III. fejezet)
+              (LIS VII. cím III. fejezet) (11. oldal)
           t22009000-00577:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Társaságok közötti belföldi kettős adóztatás 5/10
@@ -477,7 +481,7 @@ modelo:
           t22009000-00581:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Kanári-szigeteki hajózási társaságok kedvezményei
-              (19/1994. törvény 76. cikk)
+              (19/1994. törvény 76. cikk) (11. oldal)
           t22009000-00582:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás
@@ -486,17 +490,17 @@ modelo:
               egyéb levonások
           t22009000-00584:
             label: Egyéb levonások. Nettó adótartozás. Levonások a LIS 24.1. átmeneti
-              rendelkezése alapján
+              rendelkezése alapján (13. oldal)
           t22009000-00585:
             label: Egyéb levonások. Nettó adótartozás. Levonás a LIS 24.7. átmeneti
-              rendelkezése és az RDLeg 4/2004 42. cikke alapján
+              rendelkezése és az RDLeg 4/2004 42. cikke alapján (13. oldal)
           t22009000-00588:
             label: Egyéb levonások. Nettó adótartozás. Egyes tevékenységek ösztönzésére
               szolgáló levonások (LIS VI. cím IV. fejezet, 24.3. átmeneti rendelkezés
-              és a 49/2002. törvény 27.3. cikke)
+              és a 49/2002. törvény 27.3. cikke) (14. és 14. bis oldal)
           t22009000-00590:
             label: Egyéb levonások. Nettó adótartozás. Kanári-szigeteki beruházási
-              levonások
+              levonások (13. bis oldal)
           t22009000-00592:
             label: Egyéb levonások. Nettó adótartozás. Nettó adótartozás
           t22009000-00595:
@@ -553,6 +557,7 @@ modelo:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. A Baleári-szigeteken előállított tárgyi termékek
               értékesítésének kedvezménye (31/2022. törvény 70. kiegészítő rendelkezése)
+              (11. oldal)
           t22009000-01629:
             label: Egyéb levonások. Nettó adótartozás. Minimális nettó adótartozás
               (LIS 30. bis cikk)
@@ -571,16 +576,17 @@ modelo:
           t22009000-01965:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Korábbi időszakok belföldi kettős adóztatása az
-              időszakban érvényesítve (LIS 23.1. átmeneti rendelkezés)
+              időszakban érvényesítve (LIS 23.1. átmeneti rendelkezés) (12. oldal)
           t22009000-02188:
             label: Az időszak fizetendő vagy visszajáró adója. Levonások és számlára
               történő befizetések összesen
           t22009000-02353:
             label: Egyéb levonások. Nettó adótartozás. Kanári-szigeteki külföldi filmgyártási
               levonás (LIS 36.2. cikk és a 14/1994. törvény 14. kiegészítő rendelkezése)
+              (13. ter oldal)
           t22009000-02354:
             label: Egyéb levonások. Nettó adótartozás. Kikötői hatóságok beruházásai
-              és költségei utáni levonások (LIS 38. bis cikk)
+              és költségei utáni levonások (LIS 38. bis cikk) (14. ter oldal)
           t22009000-02538:
             label: Elszámolás. Az önadózás eredménye. Állam
           t22009000-02539:
@@ -589,39 +595,41 @@ modelo:
           t22009000-03251:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Korábbi időszakok nemzetközi kettős adóztatása az
-              időszakban érvényesítve (LIS 31. és 32. cikk)
+              időszakban érvényesítve (LIS 31. és 32. cikk) (12. oldal)
           t22009000-03261:
             label: Kedvezmények és kettős adóztatási levonások. Kiigazított pozitív
               teljes adótartozás. Az időszakban keletkezett és érvényesített nemzetközi
-              kettős adóztatás (LIS 31. és 32. cikk)
+              kettős adóztatás (LIS 31. és 32. cikk) (12. oldal)
           t22009000-03344:
             label: Egyéb levonások. Nettó adótartozás. Az átmeneti intézkedések visszafordítása
-              miatti levonás (LIS 37.1. átmeneti rendelkezés)
+              miatti levonás (LIS 37.1. átmeneti rendelkezés) (14. sexies oldal)
           t22009000-03356:
             label: Egyéb levonások. Nettó adótartozás. Az átmeneti intézkedések visszafordítása
-              miatti levonás (LIS 37.2. átmeneti rendelkezés)
+              miatti levonás (LIS 37.2. átmeneti rendelkezés) (14. sexies oldal)
           t22009000-03358:
             label: Teljes adótartozás. A kiegyenlítő tartalék korrekciója (LIS 105.6.
               cikk)
           t22009000-03359:
             label: Egyéb levonások. Nettó adótartozás. Külföldi filmgyártási levonás
-              (LIS 36.2. cikk)
+              (LIS 36.2. cikk) (14. ter oldal)
           t22009000-03360:
             label: 'Az önadózás eredménye. Kifizetés: külföldi filmgyártási levonások
-              (LIS 39.3. cikk), összesen. Külön jogállású tartományi tanácsok és Navarra'
+              (LIS 39.3. cikk), összesen. Külön jogállású tartományi tanácsok és Navarra
+              (14. ter oldal)'
           t22009000-03393:
             label: 'Az önadózás eredménye. Kifizetés: K+F+I levonások elégtelen adótartozás
               miatt (LIS 39.2. cikk szerinti választás), Külön jogállású tartományi
-              tanácsok és Navarra'
+              tanácsok és Navarra (14. quinquies oldal)'
           t22009000-03398:
             label: 'Az önadózás eredménye. Kifizetés: külföldi filmgyártási levonások
-              (LIS 39.3. cikk), Külön jogállású tartományi tanácsok és Navarra'
+              (LIS 39.3. cikk), Külön jogállású tartományi tanácsok és Navarra (14.
+              ter oldal)'
           t22009000-03399:
             label: 'Az önadózás eredménye. Kifizetés: K+F+I levonások elégtelen adótartozás
-              miatt (LIS 39.2. cikk szerinti választás), Állam'
+              miatt (LIS 39.2. cikk szerinti választás), Állam (14. quinquies oldal)'
           t22009000-03400:
             label: 'Az önadózás eredménye. Kifizetés: külföldi filmgyártási levonások
-              (LIS 39.3. cikk), Állam'
+              (LIS 39.3. cikk), Állam (14. ter oldal)'
           t22016000-00052:
             label: Felosztás a külön jogállású adóhatóságok között. Összesen. Araba
           t22016000-00053:

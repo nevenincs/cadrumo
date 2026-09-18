@@ -36,6 +36,8 @@ modelo:
           dr303-111:
             label: Corrective return - correction amount
           dr303-112:
+            help: Payment on account for supplies of petrol, diesel and biofuels attributed
+              to the State
             label: Advance payment for gasoline, diesel and biofuels supplies allocated
               to the State
           dr303-12:
@@ -230,6 +232,7 @@ modelo:
             help: Add up the self-charged taxable base accrued on intra-Community
               acquisitions.
             label: Taxable base of accrued reverse-charge VAT on intra-Community acquisitions
+              (LIVA art. 13 + art. 15 + art. 84.Uno.2; official boxes 10/11)
           iva-compensacion-aplicada-periodo:
             label: VAT credit from previous periods applied in this period
           iva-compensacion-disponible-fin-periodo:
@@ -241,15 +244,20 @@ modelo:
           iva-compensacion-pendiente-posteriores:
             label: VAT credit from previous periods carried forward to later periods
           iva-cuota-autorepercutida-interior-deducible:
-            label: Deductible reverse-charge VAT on domestic transactions
+            label: Deductible reverse-charge VAT on domestic transactions (LIVA art.
+              84.Uno.2 + art. 92; official box 37)
           iva-cuota-autorepercutida-interior-devengado:
-            label: Accrued reverse-charge VAT on domestic transactions
+            label: Accrued reverse-charge VAT on domestic transactions (LIVA art.
+              84.Uno.2; official box 13)
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Reverse-charge VAT amount on intra-Community acquisitions
+            label: Reverse-charge VAT amount on intra-Community acquisitions (LIVA
+              art. 84.Uno.2)
           iva-cuota-autorepercutida-intracomunitaria-deducible:
-            label: Deductible reverse-charge VAT on intra-Community acquisitions
+            label: Deductible reverse-charge VAT on intra-Community acquisitions (LIVA
+              art. 13 + art. 15 + art. 84.Uno.2 + art. 92; official boxes 36/37)
           iva-cuota-autorepercutida-intracomunitaria-devengado:
-            label: Accrued reverse-charge VAT on intra-Community acquisitions
+            label: Accrued reverse-charge VAT on intra-Community acquisitions (LIVA
+              art. 13 + art. 15 + art. 84.Uno.2; official boxes 10/11)
           iva-cuota-deducible-total:
             label: Total deductible VAT amount
           iva-cuota-devengada-total:
@@ -270,17 +278,19 @@ modelo:
               coexisting with the ordinary 4% super-reduced rate.
             label: Output VAT amount at the transitional super-reduced rate (2%)
           iva-cuota-soportada-importaciones:
-            label: Deductible input VAT on imports of current goods
+            label: Deductible input VAT on imports of current goods (LIVA art. 17
+              + art. 92; official box 33)
           iva-cuota-soportada-interiores:
             label: Deductible input VAT on domestic current transactions
           iva-prorrata-porcentaje:
-            label: General pro rata percentage
+            label: General pro rata percentage (eligible turnover / total turnover
+              × 100)
           iva-prorrata-volumen-con-derecho:
             label: Annual turnover giving deduction rights
           iva-prorrata-volumen-total:
             label: Total annual turnover
           iva-regularizacion-inversiones:
-            label: Capital goods adjustment
+            label: Capital goods adjustment (LIVA arts. 107-110)
           iva-resultado-regimen-general:
             label: General regime result
           m303-deducciones-sector-1-domestic-current-base:
@@ -290,7 +300,7 @@ modelo:
           m303-deducciones-sector-1-domestic-current-cuota:
             help: Box 701 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Deductible IVA, domestic
-              transactions - Current goods and services - Deductible cuota
+              transactions - Current goods and services - Deductible amount
           m303-deducciones-sector-1-domestic-investment-base:
             help: Box 702 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Deductible IVA, domestic
@@ -298,7 +308,7 @@ modelo:
           m303-deducciones-sector-1-domestic-investment-cuota:
             help: Box 703 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Deductible IVA, domestic
-              transactions - Capital goods - Deductible cuota
+              transactions - Capital goods - Deductible amount
           m303-deducciones-sector-1-import-current-base:
             help: Box 704 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
@@ -306,7 +316,7 @@ modelo:
           m303-deducciones-sector-1-import-current-cuota:
             help: Box 705 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
-              - Current goods - Deductible cuota
+              - Current goods - Deductible amount
           m303-deducciones-sector-1-import-investment-base:
             help: Box 706 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
@@ -314,7 +324,7 @@ modelo:
           m303-deducciones-sector-1-import-investment-cuota:
             help: Box 707 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Deductible IVA, imports
-              - Capital goods - Deductible cuota
+              - Capital goods - Deductible amount
           m303-deducciones-sector-1-intra-eu-current-base:
             help: Box 708 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
@@ -322,7 +332,7 @@ modelo:
           m303-deducciones-sector-1-intra-eu-current-cuota:
             help: Box 709 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
-              acquisitions - Current goods and services - Deductible cuota
+              acquisitions - Current goods and services - Deductible amount
           m303-deducciones-sector-1-intra-eu-investment-base:
             help: Box 710 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
@@ -330,7 +340,7 @@ modelo:
           m303-deducciones-sector-1-intra-eu-investment-cuota:
             help: Box 711 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community
-              acquisitions - Capital goods - Deductible cuota
+              acquisitions - Capital goods - Deductible amount
           m303-deducciones-sector-1-investment-regularisation:
             help: Box 716 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Adjustment of capital
@@ -342,7 +352,7 @@ modelo:
           m303-deducciones-sector-1-reagp-cuota:
             help: Box 713 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Compensation, special
-              regime for agriculture, livestock and fishing - Deductible cuota
+              regime for agriculture, livestock and fishing - Deductible amount
           m303-deducciones-sector-1-rectification-base:
             help: Box 714 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Correction of deductions
@@ -350,7 +360,7 @@ modelo:
           m303-deducciones-sector-1-rectification-cuota:
             help: Box 715 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Correction of deductions
-              - Deductible cuota
+              - Deductible amount
           m303-deducciones-sector-1-total:
             help: Box 717 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 1 - Total deductions
@@ -361,7 +371,7 @@ modelo:
           m303-deducciones-sector-2-domestic-current-cuota:
             help: Box 719 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Deductible IVA, domestic
-              transactions - Current goods and services - Deductible cuota
+              transactions - Current goods and services - Deductible amount
           m303-deducciones-sector-2-domestic-investment-base:
             help: Box 720 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Deductible IVA, domestic
@@ -369,7 +379,7 @@ modelo:
           m303-deducciones-sector-2-domestic-investment-cuota:
             help: Box 721 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Deductible IVA, domestic
-              transactions - Capital goods - Deductible cuota
+              transactions - Capital goods - Deductible amount
           m303-deducciones-sector-2-import-current-base:
             help: Box 722 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
@@ -377,7 +387,7 @@ modelo:
           m303-deducciones-sector-2-import-current-cuota:
             help: Box 723 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
-              - Current goods - Deductible cuota
+              - Current goods - Deductible amount
           m303-deducciones-sector-2-import-investment-base:
             help: Box 724 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
@@ -385,7 +395,7 @@ modelo:
           m303-deducciones-sector-2-import-investment-cuota:
             help: Box 725 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Deductible IVA, imports
-              - Capital goods - Deductible cuota
+              - Capital goods - Deductible amount
           m303-deducciones-sector-2-intra-eu-current-base:
             help: Box 726 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
@@ -393,7 +403,7 @@ modelo:
           m303-deducciones-sector-2-intra-eu-current-cuota:
             help: Box 727 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
-              acquisitions - Current goods and services - Deductible cuota
+              acquisitions - Current goods and services - Deductible amount
           m303-deducciones-sector-2-intra-eu-investment-base:
             help: Box 728 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
@@ -401,7 +411,7 @@ modelo:
           m303-deducciones-sector-2-intra-eu-investment-cuota:
             help: Box 729 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community
-              acquisitions - Capital goods - Deductible cuota
+              acquisitions - Capital goods - Deductible amount
           m303-deducciones-sector-2-investment-regularisation:
             help: Box 734 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Adjustment of capital
@@ -413,7 +423,7 @@ modelo:
           m303-deducciones-sector-2-reagp-cuota:
             help: Box 731 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Compensation, special
-              regime for agriculture, livestock and fishing - Deductible cuota
+              regime for agriculture, livestock and fishing - Deductible amount
           m303-deducciones-sector-2-rectification-base:
             help: Box 732 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Correction of deductions
@@ -421,7 +431,7 @@ modelo:
           m303-deducciones-sector-2-rectification-cuota:
             help: Box 733 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Correction of deductions
-              - Deductible cuota
+              - Deductible amount
           m303-deducciones-sector-2-total:
             help: Box 735 of modelo 303, tax year 2022.
             label: 13. Differentiated deduction regimes - 2 - Total deductions
@@ -695,18 +705,254 @@ modelo:
             label: Modelo 303, tax year 2025
         2026-y-siguientes:
           casilla:
+            '01':
+              help: 'Box 01: taxable base of VAT accrued under the general regime
+                at the super-reduced rate of 4%.'
+            '02':
+              help: 'Box 02: percentage rate of VAT accrued under the general regime
+                at the super-reduced rate of 4%.'
+            '03':
+              help: 'Box 03: amount of VAT accrued under the general regime at the
+                super-reduced rate of 4%.'
+            '04':
+              help: 'Box 04: taxable base of VAT accrued under the general regime
+                at the reduced rate of 10%.'
+            '05':
+              help: 'Box 05: percentage rate of VAT accrued under the general regime
+                at the reduced rate of 10%.'
+            '06':
+              help: 'Box 06: amount of VAT accrued under the general regime at the
+                reduced rate of 10%.'
+            '07':
+              help: 'Box 07: taxable base of VAT accrued under the general regime
+                at the standard rate of 21%.'
+            08:
+              help: 'Box 08: percentage rate of VAT accrued under the general regime
+                at the standard rate of 21%.'
+            09:
+              help: 'Box 09: amount of VAT accrued under the general regime at the
+                standard rate of 21%.'
+            '10':
+              help: 'Box 10: base of VAT accrued on intra-Community acquisitions of
+                goods and services.'
+            '108':
+              help: 'Box 108: other adjustments in an amending self-assessment for
+                cases determined by a discrepancy in administrative interpretation.'
+            '109':
+              help: 'Box 109: refunds agreed by the AEAT in previous self-assessments
+                for the same year and period.'
+            '11':
+              help: 'Box 11: amount of VAT accrued on intra-Community acquisitions
+                of goods and services.'
+            '111':
+              help: 'Box 111: amount of the correction declared in an amending self-assessment.'
+            '12':
+              help: 'Box 12: base of VAT accrued on other transactions subject to
+                the reverse charge mechanism, excluding intra-Community transactions.'
+            '120':
+              help: 'Box 120: additional information on transactions not subject to
+                tax under place-of-supply rules, excluding box 123.'
+            '122':
+              help: 'Box 122: additional information on transactions subject to the
+                reverse charge mechanism.'
+            '123':
+              help: 'Box 123: additional information on transactions not subject to
+                tax under place-of-supply rules within special one-stop shop schemes.'
+            '124':
+              help: 'Box 124: additional information on transactions subject to tax
+                within special one-stop shop schemes.'
+            '13':
+              help: 'Box 13: amount of VAT accrued on other transactions subject to
+                the reverse charge mechanism, excluding intra-Community transactions.'
+            '14':
+              help: 'Box 14: taxable base of the adjustment to bases and amounts of
+                VAT accrued.'
+            '15':
+              help: 'Box 15: amount of the adjustment to bases and amounts of VAT
+                accrued.'
+            '150':
+              help: 'Box 150: taxable base of VAT accrued under the general regime
+                at the new rate, tier 1.'
+            '151':
+              help: 'Box 151: percentage rate of VAT accrued under the general regime
+                at the new rate, tier 1.'
+            '152':
+              help: 'Box 152: amount of VAT accrued under the general regime at the
+                new rate, tier 1.'
+            '153':
+              help: 'Box 153: taxable base of VAT accrued under the general regime
+                at the new rate, tier 2.'
+            '154':
+              help: 'Box 154: percentage rate of VAT accrued under the general regime
+                at the new rate, tier 2.'
+            '155':
+              help: 'Box 155: amount of VAT accrued under the general regime at the
+                new rate, tier 2.'
+            '156':
+              help: 'Box 156: taxable base of the equivalence surcharge at 0.5%.'
+            '157':
+              help: 'Box 157: percentage rate of the equivalence surcharge at 0.5%.'
+            '158':
+              help: 'Box 158: amount of the equivalence surcharge at 0.5%.'
+            '16':
+              help: 'Box 16: taxable base of the equivalence surcharge at 1.0%.'
+            '165':
+              help: 'Box 165: taxable base of VAT accrued under the general regime
+                at the rate of 2% from 2024.'
+            '166':
+              help: 'Box 166: percentage rate of VAT accrued under the general regime
+                at the rate of 2% from 2024.'
+            '167':
+              help: 'Box 167: amount of VAT accrued under the general regime at the
+                rate of 2% from 2024.'
+            '168':
+              help: 'Box 168: taxable base of the new equivalence surcharge rate from
+                2024.'
+            '169':
+              help: 'Box 169: percentage rate of the new equivalence surcharge from
+                2024.'
+            '17':
+              help: 'Box 17: percentage rate of the equivalence surcharge at 1.0%.'
+            '170':
+              help: 'Box 170: amount of the new equivalence surcharge from 2024.'
+            '18':
+              help: 'Box 18: amount of the equivalence surcharge at 1.0%.'
+            '19':
+              help: 'Box 19: taxable base of the equivalence surcharge at 1.4%.'
+            '20':
+              help: 'Box 20: percentage rate of the equivalence surcharge at 1.4%.'
+            '21':
+              help: 'Box 21: amount of the equivalence surcharge at 1.4%.'
+            '22':
+              help: 'Box 22: taxable base of the equivalence surcharge at 5.2%.'
+            '23':
+              help: 'Box 23: percentage rate of the equivalence surcharge at 5.2%.'
+            '24':
+              help: 'Box 24: amount of the equivalence surcharge at 5.2%.'
+            '25':
+              help: 'Box 25: taxable base of the adjustment to bases and amounts of
+                the equivalence surcharge.'
+            '26':
+              help: 'Box 26: amount of the adjustment to bases and amounts of the
+                equivalence surcharge.'
+            '27':
+              help: 'Box 27: total amount of VAT accrued.'
+            '28':
+              help: 'Box 28: base of deductible VAT on current domestic transactions.'
+            '29':
+              help: 'Box 29: amount of deductible VAT on current domestic transactions.'
+            '30':
+              help: 'Box 30: base of deductible VAT on domestic transactions in capital
+                goods.'
+            '31':
+              help: 'Box 31: amount of deductible VAT on domestic transactions in
+                capital goods.'
+            '32':
+              help: 'Box 32: base of deductible VAT on imports of current goods.'
+            '33':
+              help: 'Box 33: amount of deductible VAT on imports of current goods.'
+            '34':
+              help: 'Box 34: base of deductible VAT on imports of capital goods.'
+            '35':
+              help: 'Box 35: amount of deductible VAT on imports of capital goods.'
+            '36':
+              help: 'Box 36: base of deductible VAT on current intra-Community acquisitions.'
+            '37':
+              help: 'Box 37: amount of deductible VAT on current intra-Community acquisitions.'
+            '38':
+              help: 'Box 38: base of deductible VAT on intra-Community acquisitions
+                of capital goods.'
+            '39':
+              help: 'Box 39: amount of deductible VAT on intra-Community acquisitions
+                of capital goods.'
+            '40':
+              help: 'Box 40: base of the correction of deductions.'
+            '41':
+              help: 'Box 41: amount of the correction of deductions.'
+            '42':
+              help: 'Box 42: amount of compensation under the special scheme for agriculture,
+                livestock farming and fishing.'
+            '43':
+              help: 'Box 43: amount of the capital goods adjustment.'
+            '44':
+              help: 'Box 44: amount of the pro rata adjustment by definitive percentage.'
+            '45':
+              help: 'Box 45: total amount of VAT to be deducted.'
+            '47':
+              help: 'Box 47: sum of payments on account for all activities under the
+                simplified regime in the 1st, 2nd or 3rd quarter.'
+            '48':
+              help: 'Box 48: sum of amounts arising from all activities under the
+                simplified regime in the 4th quarter.'
+            '49':
+              help: 'Box 49: sum of payments on account made during the year under
+                the simplified regime in the 4th quarter.'
+            '50':
+              help: 'Box 50: result of the simplified regime in the 4th quarter, calculated
+                as box 48 minus box 49 ([48]-[49]).'
+            '51':
+              help: 'Box 51: VAT amounts accrued on intra-Community acquisitions of
+                goods under the simplified regime.'
+            '52':
+              help: 'Box 52: VAT amounts accrued on supplies of fixed assets under
+                the simplified regime.'
+            '53':
+              help: 'Box 53: VAT amounts accrued under the simplified regime on transactions
+                subject to the reverse charge mechanism.'
+            '54':
+              help: 'Box 54: total resulting amount under the simplified regime.'
+            '55':
+              help: 'Box 55: deductible VAT on the acquisition or import of fixed
+                assets under the simplified regime.'
+            '56':
+              help: 'Box 56: deductible VAT on the capital goods adjustment under
+                the simplified regime.'
+            '57':
+              help: 'Box 57: total deductible VAT under the simplified regime, calculated
+                as box 55 plus box 56 ([55]+[56]).'
+            '58':
+              help: 'Box 58: result of the simplified regime, calculated as box 54
+                minus box 57 ([54]-[57]).'
+            '59':
+              help: 'Box 59: additional information on intra-Community supplies of
+                goods and services.'
+            '60':
+              help: 'Box 60: additional information on exports and assimilated transactions.'
+            '62':
+              help: 'Box 62: taxable base of supplies accrued under the cash accounting
+                scheme pursuant to article 75 LIVA.'
+            '63':
+              help: 'Box 63: amount of supplies accrued under the cash accounting
+                scheme pursuant to article 75 LIVA.'
             '64':
               help: 'Tax information about tax information in casilla 64 of Modelo
                 303 References: [46], [58], [76].'
               label: Result - Sum of results ([46]+[58]+[76])
+            '65':
+              help: 'Box 65: percentage of the result attributable to the State Administration.'
             '66':
               help: 'Tax information about tax information in casilla 66 of Modelo
                 303 References: [64], [65].'
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
+            '68':
+              help: 'Box 68: result of the annual adjustment for joint taxation.'
+            '70':
+              help: 'Box 70: amounts payable arising from previous self-assessments
+                for the same year and period.'
             '71':
               help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
               label: Result final ([69]-[70]+[109])
+            '74':
+              help: 'Box 74: taxable base of acquisitions under the cash accounting
+                scheme.'
+            '75':
+              help: 'Box 75: amount of acquisitions under the cash accounting scheme.'
+            '76':
+              help: 'Box 76: adjustment to the result for the correction of amounts
+                under article 80.cinco.5ª LIVA.'
+            '77':
+              help: 'Box 77: import VAT assessed by Customs that is pending payment.'
             x-chim6r1ecll6asj3d5hmiro:
               help: Tax year to which the self-assessment refers.
             x-chim6r1ee1in4qbfchng:

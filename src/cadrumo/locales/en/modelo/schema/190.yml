@@ -346,7 +346,7 @@ modelo:
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.
           field:
-            label: Modelo 190, tax year 2024 onwards
+            label: Modelo 190, tax year 2024
         2025-y-siguientes:
           casilla:
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
@@ -491,4 +491,4 @@ modelo:
             x-e1in4opeehkn8tbcc5p2qtbed5i62p1dcdnmstj9epimsor9c4:
               help: Perceptor field declared in modelo 190's type 2 record.
           field:
-            label: Modelo 190, tax year 2024 onwards
+            label: Modelo 190, tax years 2025 onwards

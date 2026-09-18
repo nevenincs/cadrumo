@@ -407,7 +407,7 @@ modelo:
               label: Test submission
             x-chim6r1ee1p6usjic5q62bb1dpq6asj9dtp0:
               help: Box 26-26 of modelo 360, tax year 2010.
-              label: 1. Notification of the definitive prorrata for an earlier year
+              label: 1. Notification of the definitive pro rata for an earlier year
             x-chim6r1ee9in0sj5edimst31dpq6abb5dlgmir0:
               help: Box 1253-1352 of modelo 360, tax year 2010.
               label: 3. Representative. Email
@@ -703,7 +703,7 @@ modelo:
               label: 5. Amendment of the previous year's pro rata. Definitive pro
                 rata
             x-e1p6usjic5q62bj5d9in4or9cdkmu:
-              label: 5. Amendment of the previous year's prorrata. Tax year
+              label: 5. Amendment of the previous year's pro rata. Tax year
           field:
             label: Modelo 360, tax years 2010 onwards (Order EHA/789/2010, amended
               by HAP/841/2016). Ad hoc, triggered by a refund request.

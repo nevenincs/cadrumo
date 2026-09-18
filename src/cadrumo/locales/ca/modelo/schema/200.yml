@@ -1794,8 +1794,8 @@ modelo:
           01138:
             help: '6.- Deduc. evitar doble imposició: base de la deducció - B) Datos
               económicos'
-            label: 'B) Datos económicos. 6.- Deduc. evitar doble imposició: base de
-              la deducció'
+            label: 'B) Dades econòmiques. 6.- Deduc. evitar doble imposició: base
+              de la deducció'
           '01140':
             label: Reserva capitalització - Reserva capitalització dotada en l'exercici
               [01140]
@@ -6385,10 +6385,11 @@ modelo:
               quota líquida positiva pendent d'aplicació en períodes futurs [01469]
           dp200014-00563:
             label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificació
-              de rendiments per venda de béns corporals produïts a Canàries [00563]
+              de rendiments per venda de béns corporals produïts a Canàries (art.
+              26 Llei 19/1994) [00563]
           dp200014-00566:
             label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificacions
-              de societats cooperatives [00566]
+              de societats cooperatives (Llei 20/1990) [00566]
           dp200014-00567:
             label: Liquidació III - Bonificacions/Deduccions doble imposició - Bonificació
               per rendes obtingudes a Ceuta i Melilla (art. 33 LIS) [00567]
@@ -6477,8 +6478,8 @@ modelo:
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-base-de-la-deduc:
             help: '6.- Deduc. evitar doble imposició: base de la deducció - B) Datos
               económicos'
-            label: 'B) Datos económicos. 6.- Deduc. evitar doble imposició: base de
-              la deducció'
+            label: 'B) Dades econòmiques. 6.- Deduc. evitar doble imposició: base
+              de la deducció'
           is-agrupacion-interes-econo-6-deduc-evitar-doble-imposicion-importe-de-la-de:
             help: '6.- Deduc. evitar doble imposició: import de la deducció - B) Datos
               económicos'
@@ -8579,7 +8580,7 @@ modelo:
           is-deduccion-espectaculos-vivo-productor-aplicado-periodo:
             help: 'Aplicat en aquesta liquidació - Productor: espectáculos en vivo
               artes escénicas y musicales (EV)'
-            label: 'Productor: espectáculos en vivo artes escénicas y musicales (EV).
+            label: 'Productor: espectacles en viu d''arts escèniques i musicals (EV).
               Aplicat en aquesta liquidació'
           is-deduccion-espectaculos-vivo-productor-pendiente-futuros:
             help: 'Pendent d''aplicació en períodes futurs - Productor: espectáculos
@@ -8691,7 +8692,7 @@ modelo:
           is-deduccion-produccion-cinematografica-espanola-financiador:
             help: 'Deducció pendent/generada - Financiador: producciones cinematográficas
               españolas (FPC)'
-            label: 'Financiador: producciones cinematográficas españolas (FPC). Deducció
+            label: 'Finançador: produccions cinematogràfiques espanyoles (FPC). Deducció
               pendent/generada'
           is-deduccion-produccion-cinematografica-espanola-financiador-aplicado-periodo:
             help: 'Aplicat en aquesta liquidació - Financiador: producciones cinematográficas
@@ -8841,16 +8842,21 @@ modelo:
               o propietaris - Increment (reducció) de patrim. net de combinació de
               negocis - Capital - Escripturat [00590]
           is-ecpn-total-cambios-conversion-pasivos-acciones-participaciones-propias:
-            label: Liquidació III - Base imposable - Base imposable [00552]
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - Conversió de passius en patrimoni net - Accions i participacions
+              en patrimoni propi [00552]
           is-ecpn-total-cambios-conversion-pasivos-prima-emision:
-            label: Liquidació III - Base imposable - Base imposable abans de la compensació
-              de bases imposables negatives [00550]
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - Conversió de passius en patrimoni net - Prima d'emissió
+              [00550]
           is-ecpn-total-cambios-distribucion-dividendos-acciones-participaciones-propias:
             label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
               o propietaris - (-) Distribució de dividends - Accions i participacions
               en patrimoni pròpies [00566]
           is-ecpn-total-cambios-distribucion-dividendos-capital-escriturado:
-            label: Liquidació III - Base imposable - Quota íntegra [00562]
+            label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
+              o propietaris - (-) Distribució de dividends - Capital - Escripturat
+              [00562]
           is-ecpn-total-cambios-distribucion-dividendos-capital-no-exigido:
             label: Estat de canvis en el patrimoni net (II) - Operacions amb socis
               o propietaris - (-) Distribució de dividends - Capital - No exigit [00563]
@@ -10618,18 +10624,18 @@ modelo:
             '01242':
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.5
                 i/o 83 LIS - c1) Despeses financeres del període impositiu deduïbles
-                després d'aplicar el límit de l'art. 16.5 i/o 83 LIS (≤ [a=c1+c2]
-                [01242]
+                després d'aplicar el límit de l'art. 16.5 i/o 83 LIS (≤ [b], [a=c1+c2],
+                ≥ 0) [01242]
             '01244':
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.5
                 i/o 83 LIS - d) Despeses financeres pendents de deduir de períodes
                 anteriors afectades per l'art. 16.5 i/o 83 LIS, deduïbles després
-                d'aquest límit ( [01244]
+                d'aquest límit ([b≥c1+d], ≥ 0) [01244]
             01258:
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
                 i 16.2 LIS - m) Despeses financeres pendents de deduir de períodes
                 impositius anteriors afectades per l'art. 16.5 i/o 83 LIS, deduïbles
-                després d'aplicar els 2 límits (≤ [01258]
+                després d'aplicar els 2 límits (≤ [d], ≥ 0) [01258]
             01259:
               label: Limitació deduïbilitat despeses financeres - Límit art. 16.1
                 i 16.2 LIS - n) Despeses financeres pendents de deduir de períodes
@@ -12007,7 +12013,7 @@ modelo:
                 presència en territ. espanyol (art. 38 TRLIRNR) - Disminució - Correccions
                 de l'exercici - Temporànies (amb origen en exercicis anteriors) [03368]
           field:
-            label: Modelo 200 exercicis 2024 i següents (DR200e25.xls)
+            label: Model 200, exercici 2024
         2025-y-siguientes:
           casilla:
             '00077':
@@ -14804,7 +14810,9 @@ modelo:
               label: Liquidació III - Base imposable - Compensació de bases imposables
                 negatives períodes anteriors [00547]
             x-8h834c1g60oj2ehg60qjae0:
-              label: Liquidació III - Base imposable - Tipus de gravamen [00558]
+              label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
+                o propietaris - Conversió de passius en patrimoni net - Ajustos per
+                canvis de valor [00558]
             x-8h834c1g60oj2ehg60qjce8:
               label: Estat de canvis en el patrimoni net (III) - Operacions amb socis
                 o propietaris - (-) Distribució de dividends - Resultat de l'exercici
@@ -14851,4 +14859,4 @@ modelo:
               label: Estat de canvis en el patrimoni net (III) - Altres variacions
                 del patrimoni net - Resultat de l'exercici [00625]
           field:
-            label: Modelo 200 exercicis 2024 i següents (DR200e25.xls)
+            label: Model 200, exercicis 2025 i següents

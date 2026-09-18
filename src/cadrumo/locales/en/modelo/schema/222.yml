@@ -134,13 +134,15 @@ modelo:
               LIS).
             label: Mod. 40.3 LIS - B.1) General case - Levelling reserve (art. 105
               LIS) converted into tax liability, only groups meeting the reduced-size
-              undertaking requirements - Decreases
+              undertaking requirements (art. 101 LIS) and applying the specific tax
+              rate provided for these entities - Decreases
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-cuotas-aumentos:
             help: Box 52 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
             label: Mod. 40.3 LIS - B.1) General case - Levelling reserve (art. 105
               LIS) converted into tax liability, only groups meeting the reduced-size
-              undertaking requirements - Increases
+              undertaking requirements (art. 101 LIS) and applying the specific tax
+              rate provided for these entities - Increases
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-resutlado-previo:
             help: Box 18 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
@@ -242,12 +244,16 @@ modelo:
             help: Box 56 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
             label: Mod. 40.3 LIS - B.2) - Levelling reserve (art. 105 LIS), only groups
-              meeting the requirements for reduced-size undertaking incentives - Decreases
+              meeting the requirements for reduced-size undertaking incentives (art.
+              101 LIS) and applying the specific tax rate provided for these entities
+              - Decreases
           is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-es-aumentos:
             help: Box 55 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).
             label: Mod. 40.3 LIS - B.2) - Levelling reserve (art. 105 LIS), only groups
-              meeting the requirements for reduced-size undertaking incentives - Increases
+              meeting the requirements for reduced-size undertaking incentives (art.
+              101 LIS) and applying the specific tax rate provided for these entities
+              - Increases
           is-pf-grupo-mod-40-3-lis-base-imponible-previa:
             help: Box 13 of the tax group's instalment payment settlement (Mod. 40.3
               LIS).

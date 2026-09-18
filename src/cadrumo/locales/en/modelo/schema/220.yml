@@ -402,63 +402,66 @@ modelo:
               (p. 7C)
           t22009000-00186:
             label: Other deductions. Net tax liability. R&D&i deductions excluded
-              from the limit of art. 39.2 LIS
+              from the limit of art. 39.2 LIS (page 14 quinquies)
           t22009000-00399:
             label: Other deductions. Net tax liability. Specific deductions for entities
               subject to chartered rules
           t22009000-00436:
             label: Self-assessment result. Payment of R&D&i deductions for insufficient
-              tax liability (election art. 39.2 LIS), total. Chartered provincial
-              councils and Navarre
+              tax liability (election art. 39.2 LIS) (page 14 quinquies), total. Chartered
+              provincial councils and Navarre
           t22009000-00562:
             label: Gross tax liability
           t22009000-00563:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Relief for income from the sale of tangible goods produced
-              in the Canary Islands (art. 26 Law 19/1994)
+              in the Canary Islands (art. 26 Law 19/1994) (page 11)
           t22009000-00565:
             label: Other deductions. Net tax liability. Deduction for donations to
-              non-profit entities (Law 49/2002)
+              non-profit entities (Law 49/2002) (page 14 quater)
           t22009000-00566:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
-              tax liability. Reliefs for cooperative societies (Law 20/1990)
+              tax liability. Reliefs for cooperative societies (Law 20/1990) (page
+              11)
           t22009000-00567:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Relief for income obtained in Ceuta and Melilla (art.
-              33 LIS)
+              33 LIS) (page 11)
           t22009000-00568:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
-              tax liability. Reliefs for the provision of services (art. 34 LIS)
+              tax liability. Reliefs for the provision of services (art. 34 LIS) (page
+              11)
           t22009000-00569:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
-              tax liability. Other reliefs
+              tax liability. Other reliefs (page 11)
           t22009000-00570:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Internal double taxation from prior periods applied in
-              the year (art. 30 RDLeg 4/2004)
+              the year (art. 30 RDLeg 4/2004) (page 12)
           t22009000-00571:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Internal double taxation generated and applied in the
-              period (transitional provision 23.1 LIS)
+              period (transitional provision 23.1 LIS) (page 12)
           t22009000-00572:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. International double taxation from prior periods applied
-              in the period (arts. 31 and 32 RDLeg 4/2004)
+              in the period (arts. 31 and 32 RDLeg 4/2004) (page 12)
           t22009000-00575:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
-              tax liability. International tax transparency (art. 100.10 LIS)
+              tax liability. International tax transparency (art. 100.10 LIS) (page
+              10)
           t22009000-00576:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Reliefs for entities engaged in residential letting (Chapter
-              III, Title VII LIS)
+              III, Title VII LIS) (page 11)
           t22009000-00577:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Inter-company internal double taxation at 5/10 per cent
-              (cooperatives)
+              (cooperatives) (page 10)
           t22009000-00581:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Reliefs for shipping companies in the Canary Islands
-              (art. 76 Law 19/1994)
+              (art. 76 Law 19/1994) (page 11)
           t22009000-00582:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability
@@ -467,17 +470,17 @@ modelo:
               and other deductions
           t22009000-00584:
             label: Other deductions. Net tax liability. Deductions under transitional
-              provision 24.1 LIS
+              provision 24.1 LIS (page 13)
           t22009000-00585:
             label: Other deductions. Net tax liability. Deduction under transitional
-              provision 24.7 LIS, art. 42 RDLeg 4/2004
+              provision 24.7 LIS, art. 42 RDLeg 4/2004 (page 13)
           t22009000-00588:
             label: Other deductions. Net tax liability. Deductions to encourage certain
               activities (Chapter IV Title VI, transitional provision 24.3 LIS and
-              art. 27.3 first, Law 49/2002)
+              art. 27.3 first, Law 49/2002) (page 14, 14 bis)
           t22009000-00590:
             label: Other deductions. Net tax liability. Canary Islands investment
-              deductions
+              deductions (page 13 bis)
           t22009000-00592:
             label: Other deductions. Net tax liability. Net tax liability
           t22009000-00595:
@@ -533,7 +536,8 @@ modelo:
           t22009000-01375:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Relief for income from the sale of tangible goods produced
-              in the Balearic Islands (70th additional provision, Law 31/2022)
+              in the Balearic Islands (70th additional provision, Law 31/2022) (page
+              11)
           t22009000-01629:
             label: Other deductions. Net tax liability. Minimum net tax liability
               (art. 30 bis LIS)
@@ -552,17 +556,17 @@ modelo:
           t22009000-01965:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Internal double taxation from prior periods applied in
-              the period (transitional provision 23.1 LIS)
+              the period (transitional provision 23.1 LIS) (page 12)
           t22009000-02188:
             label: Tax for the period, payable or refundable. Total withholdings and
               payments on account
           t22009000-02353:
             label: Other deductions. Net tax liability. Deduction for foreign film
               productions in the Canary Islands (art. 36.2 LIS and 14th additional
-              provision, Law 14/1994)
+              provision, Law 14/1994) (page 13 ter)
           t22009000-02354:
             label: Other deductions. Net tax liability. Deductions for investments
-              and expenses made by port authorities (art. 38 bis LIS)
+              and expenses made by port authorities (art. 38 bis LIS) (page 14 ter)
           t22009000-02538:
             label: Settlement. Self-assessment result. State
           t22009000-02539:
@@ -571,40 +575,41 @@ modelo:
           t22009000-03251:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. International double taxation from prior periods applied
-              in the period (arts. 31 and 32 LIS)
+              in the period (arts. 31 and 32 LIS) (page 12)
           t22009000-03261:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. International double taxation generated and applied in
-              the period (arts. 31 and 32 LIS)
+              the period (arts. 31 and 32 LIS) (page 12)
           t22009000-03344:
             label: Other deductions. Net tax liability. Deduction for reversal of
-              temporary measures, transitional provision 37.1 LIS
+              temporary measures, transitional provision 37.1 LIS (page 14 sexies)
           t22009000-03356:
             label: Other deductions. Net tax liability. Deduction for reversal of
-              temporary measures, transitional provision 37.2 LIS
+              temporary measures, transitional provision 37.2 LIS (page 14 sexies)
           t22009000-03358:
             label: Gross tax liability. Adjustment of the levelling reserve (art.
               105.6 LIS)
           t22009000-03359:
             label: Other deductions. Net tax liability. Deduction for foreign film
-              productions (art. 36.2 LIS)
+              productions (art. 36.2 LIS) (page 14 ter)
           t22009000-03360:
             label: Self-assessment result. Payment of deductions for foreign film
-              productions (art. 39.3 LIS), total. Chartered provincial councils and
-              Navarre
+              productions (art. 39.3 LIS) (page 14 ter), total. Chartered provincial
+              councils and Navarre
           t22009000-03393:
             label: Self-assessment result. Payment of R&D&i deductions for insufficient
-              tax liability (election art. 39.2 LIS), Chartered provincial councils
-              and Navarre
+              tax liability (election art. 39.2 LIS) (page 14 quinquies), Chartered
+              provincial councils and Navarre
           t22009000-03398:
             label: Self-assessment result. Payment of deductions for foreign film
-              productions (art. 39.3 LIS), Chartered provincial councils and Navarre
+              productions (art. 39.3 LIS) (page 14 ter), Chartered provincial councils
+              and Navarre
           t22009000-03399:
             label: Self-assessment result. Payment of R&D&i deductions for insufficient
-              tax liability (election art. 39.2 LIS), State
+              tax liability (election art. 39.2 LIS) (page 14 quinquies), State
           t22009000-03400:
             label: Self-assessment result. Payment of deductions for foreign film
-              productions (art. 39.3 LIS), State
+              productions (art. 39.3 LIS) (page 14 ter), State
           t22016000-00052:
             label: Allocation between chartered tax administrations. Total. Araba
           t22016000-00053:

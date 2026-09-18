@@ -181,7 +181,8 @@ modelo:
           filing-year:
             label: Az adóbevallás vonatkozási éve
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél
+            label: Fordított adózású ÁFA összeg Közösségen belüli beszerzéseknél (LIVA
+              84. cikk Uno.2.)
           iva-cuota-deducible-total:
             label: Összes levonható ÁFA összeg
           iva-cuota-devengada-total:
@@ -992,7 +993,7 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: A 322-es modelo iva.soportado.interiores. rovata, 2008. adóév.
           field:
-            label: 322-es modelo, 2008-2025. adóévek
+            label: 322-es modelo, 2022. adóév
         '2023':
           casilla:
             '150':
@@ -1026,7 +1027,7 @@ modelo:
             '164':
               help: A 322-es modelo 164. rovata, 2008. adóév.
           field:
-            label: 322-es modelo, 2008-2025. adóévek
+            label: 322-es modelo, 2023. adóév
         2024-2025:
           casilla:
             '01':
@@ -1439,7 +1440,7 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: A 322-es modelo iva.soportado.interiores. rovata, 2024. adóév.
           field:
-            label: 322-es modelo, 2008-2025. adóévek
+            label: 322-es modelo, 2024-2025. adóévek
         2026-y-siguientes:
           casilla:
             '01':
@@ -1670,11 +1671,11 @@ modelo:
                 Egyenértékűségi felár. Adóösszeg [35].'
             '36':
               help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
-                Modificación bases és adóösszegek - egyenértékűségi felár. Adóalap
+                Adóalapok és adóösszegek módosítása - egyenértékűségi felár. Adóalap
                 [36].'
             '37':
               help: 'Tekintse át a casilla adatait: Adóelszámolás. Felszámított áfa.
-                Modificación bases és adóösszegek - egyenértékűségi felár. Adóösszeg
+                Adóalapok és adóösszegek módosítása - egyenértékűségi felár. Adóösszeg
                 [37].'
             '38':
               help: 'Tekintse át a casilla adatait: Total adóösszeg felszámított ([161]+[173]+[03]+[164]+[06]+[09]+[152]+[167]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[170]+[32]+[35]+[37]).
@@ -1815,7 +1816,7 @@ modelo:
                 [58].'
             '59':
               help: 'Tekintse át a casilla adatait: Adóelszámolás. IVA Levonható.Beszámítás
-                rendszer especial A.G. és P. Adóösszeg [59].'
+                - speciális rendszer (A.G. és P.). Adóösszeg [59].'
             '60':
               help: 'A Modelo 322 60. casilla adóügyi adatai: adóügyi információ Hivatkozások:
                 [60].'
@@ -2069,7 +2070,7 @@ modelo:
               help: 'Tekintse át a casilla adatait: NIF - szervezet anyavállalat.'
               label: Az anyavállalat adószáma
             x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
-              help: 'Tekintse át a casilla adatait: Exonerado - bevallás-resumen éves,
+              help: 'Tekintse át a casilla adatait: Exonerado - éves összesítő bevallás,
                 modelo 390.'
               label: Mentesül a 390-es éves összesítő bevallás alól
             x-chim6r1ectp7as3f5ln7arb5e9ng:
@@ -2112,8 +2113,8 @@ modelo:
               help: 'Tekintse át a casilla adatait: Adóösszeg Felszámított áfa al
                 kulcs szupercsökkentett (4%).'
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: 'Tekintse át a casilla adatait: Eredmény - rendszer general (adóösszeg
-                felszámított - adóösszeg levonható).'
+              help: 'Tekintse át a casilla adatait: Eredmény - általános rendszer
+                (adóösszeg felszámított - adóösszeg levonható).'
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: 'Tekintse át a casilla adatait: Levonható áfa összege a folyó
                 belföldi ügyletek után.'

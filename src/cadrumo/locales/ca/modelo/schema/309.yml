@@ -283,8 +283,7 @@ modelo:
               field:
                 title: 'Model 309 històric: autoliquidació no periòdica (2004-2015)'
           field:
-            label: Model 309, exercicis 2004 i següents (Ordre HAC/3625/2003, apartats
-              primer i tercer). Ad hoc, desencadenat per una obligació no periòdica.
+            label: Model 309, exercicis 2004 a 2015
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -390,8 +389,7 @@ modelo:
               field:
                 title: 'Model 309: declaració-liquidació d''IVA no periòdica'
           field:
-            label: Model 309, exercicis 2004 i següents (Ordre HAC/3625/2003, apartats
-              primer i tercer). Ad hoc, desencadenat per una obligació no periòdica.
+            label: Model 309, exercicis 2016 a 2017
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -507,8 +505,7 @@ modelo:
               field:
                 title: 'Model 309: declaració-liquidació d''IVA no periòdica'
           field:
-            label: Model 309, exercicis 2004 i següents (Ordre HAC/3625/2003, apartats
-              primer i tercer). Ad hoc, desencadenat per una obligació no periòdica.
+            label: Model 309, exercicis 2018 a 2022
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -624,5 +621,4 @@ modelo:
               field:
                 title: 'Model 309: declaració-liquidació d''IVA no periòdica'
           field:
-            label: Model 309, exercicis 2004 i següents (Ordre HAC/3625/2003, apartats
-              primer i tercer). Ad hoc, desencadenat per una obligació no periòdica.
+            label: Model 309, exercicis 2023 i següents

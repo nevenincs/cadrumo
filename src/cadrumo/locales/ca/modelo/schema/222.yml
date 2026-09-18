@@ -132,13 +132,13 @@ modelo:
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.1) Cas general - Reserva d'anivellament (art.
               105 LIS) convertida en quotes, només grups que compleixin els requisits
-              d'empresa de dimensió reduïda - Disminucions
+              d'empresa de dimensió reduïda (art. 101 LIS) - Disminucions
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-reserva-de-nivelacion-convertido-en-cuotas-aumentos:
             help: Casella 52 de la liquidació del pagament fraccionat del grup fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.1) Cas general - Reserva d'anivellament (art.
               105 LIS) convertida en quotes, només grups que compleixin els requisits
-              d'empresa de dimensió reduïda - Augments
+              d'empresa de dimensió reduïda (art. 101 LIS) - Augments
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-resutlado-previo:
             help: Casella 18 de la liquidació del pagament fraccionat del grup fiscal
               (Mod. 40.3 LIS).
@@ -240,13 +240,14 @@ modelo:
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Reserva d'anivellament (art. 105 LIS), només
               grups que compleixin els requisits per als incentius d'empresa de dimensió
-              reduïda - Disminucions
+              reduïda (art. 101 LIS) i apliquin el tipus de gravamen específic previst
+              per a aquestes entitats - Disminucions
           is-pf-grupo-mod-40-3-lis-b-2-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-es-aumentos:
             help: Casella 55 de la liquidació del pagament fraccionat del grup fiscal
               (Mod. 40.3 LIS).
             label: Mod. 40.3 LIS - B.2) - Reserva d'anivellament (art. 105 LIS), només
               grups que compleixin els requisits per als incentius d'empresa de dimensió
-              reduïda - Augments
+              reduïda (art. 101 LIS) - Augments
           is-pf-grupo-mod-40-3-lis-base-imponible-previa:
             help: Casella 13 de la liquidació del pagament fraccionat del grup fiscal
               (Mod. 40.3 LIS).

@@ -4,14 +4,24 @@ modelo:
       casilla:
         continuidad:
           capitalizacion-seguros-resumen-base-negativa:
+            help: A negatív alapú kedvezményezettek rekordjaiban feltüntetett levonási
+              és elszámolt előleg alapok összege.
             label: A levonások és előlegfizetések negatív alapja
           capitalizacion-seguros-resumen-base-positiva:
+            help: A pozitív alapú kedvezményezettek rekordjaiban feltüntetett levonási
+              és elszámolt előleg alapok összege.
             label: A levonások és előlegfizetések alapja
           capitalizacion-seguros-resumen-perceptores-base-negativa:
+            help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási és elszámolt
+              előleg alapja negatív.
             label: Negatív adóalappal rendelkező kedvezményezettek teljes száma
           capitalizacion-seguros-resumen-perceptores-base-positiva:
+            help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási és elszámolt
+              előleg alapja pozitív.
             label: Pozitív adóalappal rendelkező kedvezményezettek teljes száma
           capitalizacion-seguros-resumen-retenciones:
+            help: A bevallott jövedelmek után teljesített levonások és elszámolt előlegek
+              összege.
             label: Levonások és előlegfizetések
       field:
         official_name: Modelo 188. Adóelőleg-levonások és -befizetések. Tőkésítési

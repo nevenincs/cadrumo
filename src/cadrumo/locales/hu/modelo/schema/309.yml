@@ -280,8 +280,7 @@ modelo:
               field:
                 title: 'Történeti 309-es modell: nem időszakos önadóbevallás (2004-2015)'
           field:
-            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
-              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.
+            label: 309-es modelo, 2004-2015. adóévek
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -387,8 +386,7 @@ modelo:
               field:
                 title: '309-es modelo: nem időszakos áfa-bevallás és elszámolás'
           field:
-            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
-              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.
+            label: 309-es modelo, 2016-2017. adóévek
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -504,8 +502,7 @@ modelo:
               field:
                 title: '309-es modelo: nem időszakos áfa-bevallás és elszámolás'
           field:
-            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
-              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.
+            label: 309-es modelo, 2018-2022. adóévek
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -621,5 +618,4 @@ modelo:
               field:
                 title: '309-es modelo: nem időszakos áfa-bevallás és elszámolás'
           field:
-            label: 309-es modelo, 2004. adóévtől (HAC/3625/2003 rendelet, első és
-              harmadik szakasz). Eseti, nem időszakos kötelezettség váltja ki.
+            label: 309-es modelo, 2023. adóévtől

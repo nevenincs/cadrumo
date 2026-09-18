@@ -125,11 +125,11 @@ modelo:
           iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
             label: Deductions - Capital goods adjustment
           iva-anual-regimen-simplificado-resultado:
-            label: Result regime simplificado
+            label: Result under the simplified regime
           iva-anual-regimen-simplificado-suma-deducciones:
             label: Deductions - Sum of deductions
           iva-anual-regularizacion-bienes-inversion:
-            label: Capital goods adjustment
+            label: Capital goods adjustment (LIVA arts. 107-110)
           iva-anual-regularizacion-prorrata-definitiva:
             label: Pro rata regularization using final percentage - amount
           iva-anual-repercutido-recargo-tipo-0-26-base:
@@ -212,7 +212,8 @@ modelo:
           iva-compensacion-cuotas-ejercicio-anterior:
             label: Carry-forward of VAT credits from the previous year
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Reverse-charge VAT amount on intra-Community acquisitions
+            label: Reverse-charge VAT amount on intra-Community acquisitions (LIVA
+              art. 84.Uno.2)
           iva-cuota-recargo-equivalencia-general:
             label: Equivalence surcharge at the standard rate (5.2%) - surcharge amount
           iva-cuota-recargo-equivalencia-reducido:
@@ -253,7 +254,8 @@ modelo:
           iva-cuota-repercutida-tipo-7-5:
             label: Output VAT amount at the 7.5% rate
           iva-cuota-soportada-importaciones:
-            label: Deductible input VAT on imports of current goods
+            label: Deductible input VAT on imports of current goods (LIVA art. 17
+              + art. 92; official box 33)
           iva-cuota-soportada-interiores:
             label: Deductible input VAT on domestic current transactions
           iva-deducible-aic-corrientes-tipo-10-base:
@@ -653,7 +655,8 @@ modelo:
           iva-isp-interior-base:
             label: Taxable base of accrued reverse-charge VAT on domestic transactions
           iva-isp-interior-cuota:
-            label: Accrued reverse-charge VAT on domestic transactions
+            label: Accrued reverse-charge VAT on domestic transactions (LIVA art.
+              84.Uno.2; official box 13)
           iva-liquidaciones-total-a-ingresar:
             label: Total amounts payable from the year's VAT self-assessments
           iva-liquidaciones-total-devoluciones-elementos-transporte:
@@ -1619,7 +1622,7 @@ modelo:
               help: Tax information about tax information in casilla 81 of Modelo
                 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Review the casilla information: Result regime simplificado.'
+              help: 'Review the casilla information: Result under the simplified regime.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Tax information about tax information in casilla 82 of Modelo
                 390.
@@ -2510,7 +2513,7 @@ modelo:
               help: Tax information about tax information in casilla 81 of Modelo
                 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Review the casilla information: Result regime simplificado.'
+              help: 'Review the casilla information: Result under the simplified regime.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Tax information about tax information in casilla 82 of Modelo
                 390.
@@ -3421,7 +3424,7 @@ modelo:
               help: Tax information about tax information in casilla 81 of Modelo
                 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Review the casilla information: Result regime simplificado.'
+              help: 'Review the casilla information: Result under the simplified regime.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Tax information about tax information in casilla 82 of Modelo
                 390.
