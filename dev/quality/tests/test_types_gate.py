@@ -38,6 +38,8 @@ from ..types import (
     collect_ty,
     fold_platforms,
     main,
+    platform_pin_failures,
+    read_pyproject,
     require_report,
 )
 
@@ -136,6 +138,86 @@ def test_the_sweep_covers_every_supported_platform(monkeypatch: pytest.MonkeyPat
     assert sorted(seen) == sorted(
         (checker, platform.key) for platform in _PLATFORMS for checker in ("ty", "pyrefly", "basedpyright")
     )
+
+
+def test_the_live_configuration_pins_every_checker_to_one_swept_platform() -> None:
+    """The pin is what keeps a bare `ty check` from answering about the host."""
+    assert platform_pin_failures(read_pyproject()) == []
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        ("not-a-platform", "is not a platform this project sweeps"),
+        ("Linux", "is not a platform this project sweeps"),
+        (None, "would inherit the host platform"),
+    ],
+)
+def test_a_mistyped_or_missing_pin_is_refused(value: str | None, expected: str) -> None:
+    """The teeth. ty itself accepts a nonsense platform, so this is the only refusal.
+
+    `python-platform = "not-a-platform"` does not raise from ty: it analyses as
+    though the target were simply not Windows and reports a plausible, green
+    answer for a platform nobody chose. A silent degradation of the pin is the
+    exact failure the pin exists to remove, so it fails here instead.
+    `"Linux"` is the near-miss that matters most - it is basedpyright's correct
+    spelling and ty's wrong one.
+    """
+    environment = {} if value is None else {"python-platform": value}
+    document = {
+        "tool": {
+            "ty": {"environment": environment},
+            "pyrefly": {"python_platform": "linux"},
+            "mypy": {"platform": "linux"},
+            "basedpyright": {"pythonPlatform": "Linux"},
+        }
+    }
+
+    failures = platform_pin_failures(document)
+
+    assert len(failures) == 1
+    assert "[tool.ty.environment] python-platform" in failures[0]
+    assert expected in failures[0]
+
+
+def test_checkers_pinned_to_different_platforms_are_refused() -> None:
+    """Four pins that disagree are four verdicts, and none of them is the tree's."""
+    document = {
+        "tool": {
+            "ty": {"environment": {"python-platform": "linux"}},
+            "pyrefly": {"python_platform": "win32"},
+            "mypy": {"platform": "linux"},
+            "basedpyright": {"pythonPlatform": "Linux"},
+        }
+    }
+
+    failures = platform_pin_failures(document)
+
+    assert failures == [
+        "the checkers declare different target platforms: "
+        "[tool.mypy] platform -> linux, [tool.pyrefly] python_platform -> win32, "
+        "[tool.ty.environment] python-platform -> linux, [tool.basedpyright] pythonPlatform -> linux"
+    ]
+
+
+def test_the_gate_refuses_to_measure_when_the_pin_cannot_be_trusted(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An unknown target platform is not a tree to report on; no checker runs."""
+
+    def unreachable(platform: TargetPlatform) -> list[Diagnostic]:  # pragma: no cover - must not run
+        raise AssertionError("a checker ran although the target platform was unusable")
+
+    monkeypatch.setattr("dev.quality.types.read_pyproject", dict)
+    for name in ("collect_ty", "collect_pyrefly", "collect_basedpyright"):
+        monkeypatch.setattr(f"dev.quality.types.{name}", unreachable)
+    monkeypatch.setattr(sys, "argv", ["dev.quality.types", "--count"])
+
+    assert main() == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "would inherit the host platform" in captured.err
 
 
 def test_one_defect_seen_on_every_platform_counts_once() -> None:
