@@ -195,8 +195,8 @@ def test_checkers_pinned_to_different_platforms_are_refused() -> None:
 
     assert failures == [
         "the checkers declare different target platforms: "
-        "[tool.mypy] platform -> linux, [tool.pyrefly] python_platform -> win32, "
-        "[tool.ty.environment] python-platform -> linux, [tool.basedpyright] pythonPlatform -> linux"
+        "[tool.basedpyright] pythonPlatform -> linux, [tool.mypy] platform -> linux, "
+        "[tool.pyrefly] python_platform -> win32, [tool.ty.environment] python-platform -> linux"
     ]
 
 
