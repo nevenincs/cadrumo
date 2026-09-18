@@ -12,7 +12,6 @@ import logging
 import os
 import sys
 from pathlib import Path
-from typing import Final
 
 _log = logging.getLogger(__name__)
 
@@ -22,7 +21,7 @@ _log = logging.getLogger(__name__)
 #: invisible to every checker this project runs, which then report the flag
 #: unresolved whenever the tree is analysed for Windows, and the positive block
 #: is the only guard shape all of them narrow on.
-_DIRECTORY_OPEN_FLAGS: Final[int | None]
+_DIRECTORY_OPEN_FLAGS: int | None
 if sys.platform == "win32":
     # Windows exposes no directory FlushFileBuffers contract, and therefore no
     # O_DIRECTORY: durability for a directory entry is the caller's rename fence.
