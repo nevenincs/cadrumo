@@ -5,7 +5,7 @@ tags:
 date: '2026-09-17'
 modified: '2026-09-18'
 body_schema: 'body-v2'
-body_hash: 'sha256:2591b0fd8aca9cba5b048dc6322bd2098f245554f25ebd2b397ff9cdf5d5096b'
+body_hash: 'sha256:c772447c82e9f04af1f15dccadea3610d276a5cfd840c4375f2cad3579ec2fee'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
@@ -138,6 +138,8 @@ related:
 - `S17` `M` `dev/locales/tests/test_locale_translation_honesty.py`
 - `S17` `verify:` `pytest dev/locales/tests/test_locale_translation_honesty.py` -> `pass`
 - `S17` `verify:` `pytest dev/locales/tests` -> `pass`
+- `S18` `M` `dev/locales/tests/test_shipped_casilla_catalogue.py`
+- `S18` `verify:` `pytest dev/locales/tests/test_shipped_casilla_catalogue.py` -> `pass`
 
 ## Notes
 
@@ -161,4 +163,5 @@ related:
 - `S17` The sentence break is now a composition separator too, read only between a word and a capital so that art. 12.2 LIS and pag. 3D stay whole; about five thousand more labels became checkable. It exposed Catalan accent losses the spell check had passed because the unaccented forms are English words (electronic, referencia, traves), Spanish left untranslated in Catalan and English, and shared renderings merging distinct concepts: Portal with Escalera, Otros acreedores with Otros pasivos, Otros deudores with Otros creditos, and the first, second and third legal representative under one Hungarian label. 754 stored values were repaired; accented renderings now win over more frequent unaccented ones
 - `S17` Round two of segment canonicalisation is installed (en 388, hu 654, ca 67 values). Two regressions the reviewers introduced were caught by the existing gates and corrected: a generic Hungarian heading erased which of the three legal representatives a row names, and two rows lost the page reference of their official design while restoring Kifizetes for Abono. The representative rows now carry the ordinal in parentheses so the rendering holds no sentence break of its own. Drift is down to the one reviewed Catalan NIF case; NIF is classified as an acronym for English and Hungarian too
 - `S17` Both segment families now read zero. The 76 legitimate shared renderings are recorded with the difference a reviewer saw: an official misspelling, an abbreviation AEAT writes out in another edition, the slash and word forms of one heading, two spellings of one province, and pairs like razon social with denominacion social or base liquidable with base imponible reducida that name one thing
+- `S18` Two readers stand behind every stored text: the registry surfaces load the shipped shards through the product's own catalogue, and the dev module reads the authoring tree. The gate requires the same label and help from both for every casilla the product exposes in every locale, and treats a casilla the catalogue does not know as a finding rather than a skipped row, so the comparison cannot go quiet
 
