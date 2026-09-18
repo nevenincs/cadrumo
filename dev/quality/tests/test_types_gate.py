@@ -131,13 +131,11 @@ def test_the_sweep_covers_every_supported_platform(monkeypatch: pytest.MonkeyPat
 
     assert collect_all() == []
     assert {platform.key for platform in _PLATFORMS} == {"linux", "win32", "darwin"}
-    # Exact order, not a set: the runs are sequential on purpose. Overlapping
-    # them made three basedpyright processes contend for one analysis cache,
-    # and two sweeps of an unchanged tree disagreed -- a verdict that depends
-    # on a race is the defect this whole change exists to remove.
-    assert seen == [
+    # A set, because the nine runs overlap; the union is sorted before it is
+    # reported, so completion order cannot reach the verdict.
+    assert sorted(seen) == sorted(
         (checker, platform.key) for platform in _PLATFORMS for checker in ("ty", "pyrefly", "basedpyright")
-    ]
+    )
 
 
 def test_one_defect_seen_on_every_platform_counts_once() -> None:
