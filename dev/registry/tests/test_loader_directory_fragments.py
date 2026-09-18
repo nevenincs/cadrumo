@@ -6,10 +6,16 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.errors import RegistryLoadError
 
+from ..compiler.export_fragment_grammar import (
+    GENERATED_EXPORT_DIRECTORY_NAME,
+    GENERATED_EXPORT_PROVENANCE_FILENAME,
+    revision_section_for_directory,
+)
 from ..compiler.loader import load_modelo_directory
-from ..compiler.loader_grammar import revision_section_fragment_paths
+from ..compiler.loader_grammar import REVISION_SECTION_FIELDS, revision_section_fragment_paths
 from ..conformance.loader_directory_mode_support import (
     COMPLETENESS_CASILLA_0001 as _COMPLETENESS_CASILLA_0001,
 )
@@ -629,3 +635,95 @@ def test_directory_mode_rejects_fragment_scalar_redeclaration(tmp_path: Path) ->
 
     with pytest.raises(RegistryLoadError, match="must live in its owned section subdirectory"):
         load_modelo_directory(target)
+
+
+def _bundled_revision_directories() -> tuple[Path, ...]:
+    """Every authored revision directory in the bundled registry source tree."""
+    modelos = bundled_path("registry", "aeat", "modelos")
+    return tuple(
+        revision_dir
+        for modelo_dir in sorted(modelos.iterdir())
+        if modelo_dir.is_dir()
+        for revision_dir in sorted((modelo_dir / "revisions").iterdir())
+        if revision_dir.is_dir()
+    )
+
+
+def _section_directories(revision_dir: Path) -> tuple[Path, ...]:
+    return tuple(child for child in sorted(revision_dir.iterdir()) if child.is_dir() and child.name != "locales")
+
+
+def test_only_the_export_tree_is_spelled_differently_from_its_section() -> None:
+    """``revision_section_for_directory`` is identity except for the one declared alias.
+
+    Read against the live section fields, so a second alias -- or a section
+    renamed without its directory -- shows up here rather than as fragments
+    merging into a section nobody meant.
+    """
+    aliased = {
+        field: revision_section_for_directory(field)
+        for field in REVISION_SECTION_FIELDS
+        if revision_section_for_directory(field) != field
+    }
+
+    assert aliased == {}, f"section field(s) {sorted(aliased)!r} do not resolve to themselves"
+    assert revision_section_for_directory(GENERATED_EXPORT_DIRECTORY_NAME) == "export_layouts"
+    assert "export_layouts" in REVISION_SECTION_FIELDS
+
+
+def test_every_authored_section_directory_names_a_real_section() -> None:
+    """A directory the grammar does not recognise would merge under its own name and fail late.
+
+    The loader walks every subdirectory of a revision except ``locales``, so a
+    typo'd or stray directory becomes a section the schema has never heard of.
+    """
+    unrecognised = sorted(
+        {
+            f"{section_dir.parent.parent.parent.name}/{section_dir.parent.name}/{section_dir.name}"
+            for revision_dir in _bundled_revision_directories()
+            for section_dir in _section_directories(revision_dir)
+            if revision_section_for_directory(section_dir.name) not in REVISION_SECTION_FIELDS
+        },
+    )
+
+    assert unrecognised == [], f"revision section directories naming no section: {unrecognised!r}"
+
+
+def test_the_generated_export_tree_is_exactly_the_one_carrying_generation_provenance() -> None:
+    """The two export spellings are not interchangeable, and nothing else enforced it.
+
+    ``export/`` is the generator-owned tree: hand-editing it is editing
+    generated output. ``export_layouts/`` is authored by hand and has no
+    generation to attest. The loader merges both into one section and accepts
+    the provenance manifest only under ``export/``, but nothing required an
+    ``export/`` tree to actually carry one -- so a hand-authored tree could sit
+    in the generator's directory and read as generated. Measured over whatever
+    the tree holds rather than a recorded count, in both directions.
+    """
+    missing_provenance: list[str] = []
+    unexpected_provenance: list[str] = []
+    both_spellings: list[str] = []
+    for revision_dir in _bundled_revision_directories():
+        generated = revision_dir / GENERATED_EXPORT_DIRECTORY_NAME
+        authored = revision_dir / "export_layouts"
+        label = f"{revision_dir.parent.parent.name}/{revision_dir.name}"
+        if generated.is_dir() and authored.is_dir():
+            both_spellings.append(label)
+        if generated.is_dir() and not (generated / GENERATED_EXPORT_PROVENANCE_FILENAME).is_file():
+            missing_provenance.append(label)
+        if authored.is_dir() and (authored / GENERATED_EXPORT_PROVENANCE_FILENAME).is_file():
+            unexpected_provenance.append(label)
+
+    assert both_spellings == [], (
+        f"revision(s) {both_spellings!r} author the export section under both spellings; the two merge into "
+        "one section, so which members survive depends on directory scan order"
+    )
+    assert missing_provenance == [], (
+        f"revision(s) {missing_provenance!r} carry a generator-owned 'export/' tree with no "
+        f"{GENERATED_EXPORT_PROVENANCE_FILENAME}; either it was hand-authored in the generator's directory "
+        "or the generation manifest was dropped"
+    )
+    assert unexpected_provenance == [], (
+        f"revision(s) {unexpected_provenance!r} carry a generation manifest in the hand-authored "
+        "'export_layouts/' tree, which the loader will refuse as an unrecognized fragment file"
+    )

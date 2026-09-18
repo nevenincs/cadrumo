@@ -307,6 +307,17 @@ governed by the forbidding checks instead.
 _AUTHORITY_CHECKED_STATUSES: frozenset[ConstructEvidenceStatus] = frozenset({"grounded", "inherited"})
 """Statuses that may only be reached through the validated audit fold."""
 
+_INCOMPLETE_EVIDENCE_STATUSES: frozenset[ConstructEvidenceStatus] = frozenset(
+    {"unresolved", "unmeasured", "unvalidated"}
+)
+"""Statuses that make a construct row a gap: the complement of the set above.
+
+Named rather than written inline at the one place it was used, because what
+counts as a gap is the load-bearing half of this vocabulary and its complement
+already had a name. An inline literal beside a named sibling is how the two
+drift apart when a sixth status is added and only one of them is updated.
+"""
+
 
 class _AuthorityCheckProof:
     """Proof held only by the validated audit fold, naming the tier that backs it.
@@ -440,7 +451,7 @@ class ConstructEvidenceLedger(CoverageModel):
     @property
     def gaps(self) -> tuple[ConstructEvidenceRow, ...]:
         """Return construct rows whose own or inherited evidence is incomplete."""
-        return tuple(row for row in self.rows if row.status in {"unresolved", "unmeasured", "unvalidated"})
+        return tuple(row for row in self.rows if row.status in _INCOMPLETE_EVIDENCE_STATUSES)
 
     @property
     def filing_gaps(self) -> tuple[ConstructEvidenceRow, ...]:

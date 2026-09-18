@@ -49,6 +49,7 @@ from cadrumo.domain.calculations.registry.ids import RevisionId
 from dev.cache_root import dev_cache_dir
 
 from ._toml_helpers import as_toml_table as _as_toml_table
+from .export_fragment_grammar import is_generated_export_provenance
 
 type TomlReader = Callable[..., dict[str, object]]
 """Parses one authored registry TOML file, refusing through ``error_factory``."""
@@ -83,7 +84,6 @@ _ADMINISTRATIVE_FRAGMENT_NAME = re.compile(
 _CASILLA_FRAGMENT_NAME = re.compile(r"^[A-Za-z0-9][A-Za-z0-9+_.-]*\.toml$")
 _CONTINUIDAD_FRAGMENT_NAME = re.compile(r"^[a-z0-9][a-z0-9.-]*\.toml$")
 _SOURCE_NATIVE_FRAGMENT_SECTIONS = frozenset({"casillas", "casilla_continuidad_evolutions"})
-_GENERATED_EXPORT_PROVENANCE_FILENAME = "_generation.provenance.json"
 
 
 @dataclass(frozen=True, slots=True)
@@ -345,15 +345,10 @@ def _validate_revision_fragment_top_level(path: Path) -> None:
 
 def _validate_revision_fragment_file_suffixes(path: Path) -> None:
     for entry in scan_directory(path, recursive=True, select=DirectoryEntryKind.FILES):
-        if entry.suffix != ".toml" and not _is_generated_export_provenance(entry, path):
+        if entry.suffix != ".toml" and not is_generated_export_provenance(entry, path):
             raise RegistryLoadError(
                 f"{entry}: unrecognized revision fragment file; fragments must use the '.toml' suffix",
             )
-
-
-def _is_generated_export_provenance(entry: Path, revision_root: Path) -> bool:
-    """Recognise the one generator-owned non-TOML revision artefact."""
-    return entry.name == _GENERATED_EXPORT_PROVENANCE_FILENAME and entry.parent == revision_root / "export"
 
 
 def _revision_fragment_section_directories(path: Path) -> tuple[Path, ...]:
