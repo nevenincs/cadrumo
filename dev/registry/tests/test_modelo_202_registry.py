@@ -245,9 +245,10 @@ def test_committed_modelo_202_cuota_base_relation_periods_and_year_offsets_are_d
     expected_source_years = {"1P": 2023, "2P": 2024, "3P": 2024}
     for target_period, expected_source_year in expected_source_years.items():
         requirements = relation_source_requirements(revision, filing_year=2025, period=target_period)
-        assert len(requirements) == 1
-        requirement = requirements[0]
-        assert requirement.target_bindings == (binding.id,)
+        # 2P and 3P also require this year's earlier pagos fraccionados, so the
+        # requirement under test is selected by its binding rather than by being
+        # the only one.
+        (requirement,) = [item for item in requirements if item.target_bindings == (binding.id,)]
         assert requirement.filing_year == expected_source_year
         assert requirement.periods == ("0A",)
 
