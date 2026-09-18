@@ -148,3 +148,13 @@ def test_no_shipped_casilla_text_is_half_translated() -> None:
     ]
 
     assert not found, found[:5]
+
+
+@pytest.mark.integration
+@pytest.mark.external_tool
+def test_the_spanish_word_for_a_box_is_reported_in_a_translation() -> None:
+    """Every locale states the box in its own word, so `casilla` is a leftover."""
+    values: Values = {"en": {_KEY: "Transfer the amount to casilla [1142] of annex B.7"}}
+    sources = {"en": {_KEY: frozenset({"Traslade el importe a la casilla [1142] del anexo B.7"})}}
+
+    assert [item.words for item in spanish_leftovers(values, sources)] == [("casilla",)]

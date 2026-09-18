@@ -2395,8 +2395,8 @@ modelo:
             label: Reduced capital gains ([0408] - [0410])
           irpf-g4-re-transmision-intervivos-flag:
             label: If this is a taxpayer who has transferred the shares or holdings
-              inter vivos, tick this casilla (only taxpayers who have changed their
-              residence to another Member State of the European Union)
+              inter vivos, tick this box (only taxpayers who have changed their residence
+              to another Member State of the European Union)
           irpf-g4-re-valor-adquisicion-acciones:
             label: Acquisition value of the shares or units
           irpf-g4-re-valor-mercado-acciones:
@@ -3924,7 +3924,7 @@ modelo:
               label: Total reduced net income from economic activities under direct
                 assessment ([0231] - [0232] - [0233] - [0234])
             '0245':
-              label: If the marriage was in effect throughout 2020, tick this casilla
+              label: If the marriage was in effect throughout 2020, tick this box
             '0246':
               label: First month in which the marriage was in effect in 2020
             '0247':
@@ -3962,7 +3962,7 @@ modelo:
               label: Basic emancipation income
             '0306':
               label: Sum of other gains not arising from the transfer of assets (sum
-                of casillas [0299] + [0300] + [0301] + [0302] + [0303] + [0304])
+                of boxes [0299] + [0300] + [0301] + [0302] + [0303] + [0304])
             0309:
               label: Total accumulated transfer value to which the 9th Transitional
                 Provision (DT 9.ª) has been applied in tax years 2015, 2016, 2017,
@@ -4146,11 +4146,11 @@ modelo:
             '0456':
               label: NIF/NIE of child 1(*)
             '0457':
-              label: If you do not have a NIF or NIE, mark this casilla with an "X"
+              label: If you do not have a NIF or NIE, mark this box with an "X"
             0458:
               label: NIF/NIE of child 2(*)
             0459:
-              label: If you do not have a NIF or NIE, mark this casilla with an "X"
+              label: If you do not have a NIF or NIE, mark this box with an "X"
             '0460':
               label: Savings taxable base calculated from boxes [0424], [0436], [0439],
                 [0440], [0441], [0442], [0443], [0444], [0445], [0447], [0429], [0446],
@@ -4261,10 +4261,10 @@ modelo:
                 part'
             '0552':
               label: 'For donations and other contributions (transfer the amounts
-                from these same casillas in annex A.2): National part'
+                from these same boxes in annex A.2): National part'
             '0553':
               label: 'For donations and other contributions (transfer the amounts
-                from these same casillas in annex A.2): Regional part'
+                from these same boxes in annex A.2): Regional part'
             '0554':
               label: 'For incentives to promote business investment (transfer the
                 amounts from these same boxes in Annex A.4): State part'
@@ -4286,7 +4286,7 @@ modelo:
                 part'
             '0564':
               label: Sum of regional deductions (transfer the amount from this same
-                casilla in annex B.1, B.2, B.3, B.4, B.5 or B.6, as applicable)
+                box in annex B.1, B.2, B.3, B.4, B.5 or B.6, as applicable)
             '0565':
               label: 'Deduction applicable to family units made up of tax residents
                 of Member States of the European Union or the European Economic Area
@@ -4492,7 +4492,8 @@ modelo:
               label: 'Canary Islands Investment Reserve 2017: investments provided
                 for in points C and D (2nd to 6th) of Article 27.4'
             0738:
-              label: 'Reserva for Investments in Canarias 2018: Amount of the allocations'
+              label: 'Reserve for Investments in the Canary Islands 2018: Amount of
+                the allocations'
             0739:
               label: 'Canary Islands Investment Reserve 2018: investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -4786,9 +4787,9 @@ modelo:
               label: For renting of primary residence (is traslada este amount to
                 the box [1130] of the anexo B.6)
             0930:
-              label: If you do not have a cadastral reference, tick this casilla
+              label: If you do not have a cadastral reference, tick this box
             0932:
-              label: If you do not have a cadastral reference, tick this casilla
+              label: If you do not have a cadastral reference, tick this box
             0936:
               label: For study expenses in early years education, primary education,
                 compulsory secondary education, upper secondary school and intermediate
@@ -5406,8 +5407,8 @@ modelo:
             '1463':
               label: Number of units
             '1475':
-              label: General reduction (20% or 35% of the amount in casilla [1474],
-                if it is greater than 0)
+              label: General reduction (20% or 35% of the amount in box [1474], if
+                it is greater than 0)
             '1476':
               label: Reduction for economic activities carried out in the municipality
                 of Lorca (Murcia)
@@ -5626,7 +5627,7 @@ modelo:
             0229:
               label: For the birth or adoption of children
             '0245':
-              label: If the marriage was in effect throughout 2021, tick this casilla
+              label: If the marriage was in effect throughout 2021, tick this box
             '0246':
               label: First month in which the marriage was in effect in 2021
             '0247':
@@ -5661,7 +5662,7 @@ modelo:
                 amount'
             '0306':
               label: Sum of other gains not arising from the transfer of assets (sum
-                of casillas [0299] to [0304] + [0266] + [0279])
+                of boxes [0299] to [0304] + [0266] + [0279])
             0309:
               label: Total accumulated transfer value to which the 9th Transitional
                 Provision (DT 9.ª) has been applied in tax years 2015, 2016, 2017,
@@ -6846,7 +6847,7 @@ modelo:
               label: For renting a primary residence by persons with disabilities
                 (transfer the amount from box [1130] of Annex B.8)
             '0245':
-              label: If the marriage was in effect throughout 2022, tick this casilla
+              label: If the marriage was in effect throughout 2022, tick this box
             '0246':
               label: First month in which the marriage was in effect in 2022
             '0247':
@@ -7104,7 +7105,7 @@ modelo:
                 amounts from these same boxes in Annex A.5): Regional part'
             '0564':
               label: 'Sum of regional deductions (transfer the amount from this same
-                casilla in annex B.1, B.2, B.3, B.4, B.5 or B.6, as applicable): Regional
+                box in annex B.1, B.2, B.3, B.4, B.5 or B.6, as applicable): Regional
                 part'
             '0565':
               label: 'Deduction applicable to family units made up of tax residents
@@ -8147,7 +8148,7 @@ modelo:
                 America's Cup Barcelona" event (thirty-sixth final provision of Law
                 31/2022 on the 2023 State Budget)
             '0245':
-              label: If the marriage was in effect throughout 2023, tick this casilla
+              label: If the marriage was in effect throughout 2023, tick this box
             '0246':
               label: First month in which the marriage was in effect in 2023
             '0247':
@@ -8398,7 +8399,7 @@ modelo:
                 part'
             '0564':
               label: 'Sum of regional deductions (transfer the amount from this same
-                casilla in annex B.1, B.2, B.3, B.4, B.5, B.6, or B7, as applicable):
+                box in annex B.1, B.2, B.3, B.4, B.5, B.6, or B7, as applicable):
                 Regional part'
             '0565':
               label: 'Deduction applicable to family units made up of tax residents

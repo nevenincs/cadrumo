@@ -129,7 +129,7 @@ modelo:
               részre bontja.
             label: Költségek / negatív jövedelem többlete
           importe-atribuido-miembro:
-            label: ÖSSZEG (HOZAM / LEVONÁS / KEDVEZMÉNY)
+            label: ÖSSZEG (HOZAM / FORRÁSADÓ / LEVONÁS)
           importe-neto-cifra-negocios:
             help: A 184-es modelón bevallott összeg. A nyomtatvány egész és tizedes
               részre bontja.

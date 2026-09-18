@@ -1590,25 +1590,25 @@ modelo:
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: Éves egyeztetés - a 303-as bevallásokban bevallott eredmény
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa en Közösségen
-                belüli beszerzések.'
+              help: 'Tekintse át a rovat adatait: Felszámított áfa en Közösségen belüli
+                beszerzések.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
-              help: 'A Modelo 390 75. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 75. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
-              help: 'A Modelo 390 74. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 74. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'A Modelo 390 78. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 78. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa szerinti fordított
+              help: 'Tekintse át a rovat adatait: Felszámított áfa szerinti fordított
                 adózás.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'A Modelo 390 80. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 80. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'A Modelo 390 81. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 81. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Tekintse át a casilla adatait: Eredmény - egyszerűsített rendszer.'
+              help: 'Tekintse át a rovat adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
-              help: 'A Modelo 390 82. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 82. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: Beruházási javak korrekciója
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
@@ -2471,25 +2471,25 @@ modelo:
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: Éves egyeztetés - a 303-as bevallásokban bevallott eredmény
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa en Közösségen
-                belüli beszerzések.'
+              help: 'Tekintse át a rovat adatait: Felszámított áfa en Közösségen belüli
+                beszerzések.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
-              help: 'A Modelo 390 75. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 75. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
-              help: 'A Modelo 390 74. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 74. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'A Modelo 390 78. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 78. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa szerinti fordított
+              help: 'Tekintse át a rovat adatait: Felszámított áfa szerinti fordított
                 adózás.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'A Modelo 390 80. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 80. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'A Modelo 390 81. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 81. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Tekintse át a casilla adatait: Eredmény - egyszerűsített rendszer.'
+              help: 'Tekintse át a rovat adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
-              help: 'A Modelo 390 82. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 82. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: Beruházási javak korrekciója
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
@@ -3372,25 +3372,25 @@ modelo:
             x-d5r62bj1dpqm2r1ee9im6rrecdkmoqb1cdkmurhee9in6tbcehgm8rpd6co36:
               help: Éves egyeztetés - a 303-as bevallásokban bevallott eredmény
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pgmiopdc9kmarj5ecmm6tbfehgiqp35epimspr1chgg:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa en Közösségen
-                belüli beszerzések.'
+              help: 'Tekintse át a rovat adatait: Felszámított áfa en Közösségen belüli
+                beszerzések.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqob7e9km6rrcc4:
-              help: 'A Modelo 390 75. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 75. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5phnarrkc4mn4pbjelm78obeehiiqrjf5lgmesj9cdnmoo8:
-              help: 'A Modelo 390 74. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 74. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
-              help: 'A Modelo 390 78. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 78. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
-              help: 'Tekintse át a casilla adatait: Felszámított áfa szerinti fordított
+              help: 'Tekintse át a rovat adatait: Felszámított áfa szerinti fordított
                 adózás.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'A Modelo 390 80. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 80. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'A Modelo 390 81. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 81. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Tekintse át a casilla adatait: Eredmény - egyszerűsített rendszer.'
+              help: 'Tekintse át a rovat adatait: Eredmény - egyszerűsített rendszer.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
-              help: 'A Modelo 390 82. casilla adóügyi adatai: adóügyi információ.'
+              help: 'A Modelo 390 82. rovat adóügyi adatai: adóügyi információ.'
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
               help: Beruházási javak korrekciója
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:

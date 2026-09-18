@@ -4165,11 +4165,11 @@ modelo:
             '0456':
               label: 'Fill/Filla 1 (*): NIF/NIE'
             '0457':
-              label: Si no teniu NIF o NIE, marqueu amb una "X" aquesta casilla
+              label: Si no teniu NIF o NIE, marqueu amb una "X" aquesta casella
             0458:
               label: 'Fill/Filla 2 (*): NIF/NIE'
             0459:
-              label: Si no teniu NIF o NIE, marqueu amb una "X" aquesta casilla
+              label: Si no teniu NIF o NIE, marqueu amb una "X" aquesta casella
             '0460':
               label: Base imposable de l'estalvi calculada segons les caselles ([0424],
                 [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447],
@@ -4274,20 +4274,20 @@ modelo:
                 imports d''aquestes mateixes caselles de l''annex A.1): Part autonòmica'
             0549:
               label: 'Deducció per inversió en empreses de nova o recent creació:
-                (traslladeu els imports d''aquestes mateixes casillas de l''annex
+                (traslladeu els imports d''aquestes mateixes caselles de l''annex
                 A.1): Part estatal'
             '0550':
               label: 'Per inversions o despeses d''interès cultural (traslladeu els
-                imports d''aquestes mateixes casillas de l''annex A.2): Part estatal'
+                imports d''aquestes mateixes caselles de l''annex A.2): Part estatal'
             '0551':
               label: 'Per inversions o despeses d''interès cultural (traslladeu els
-                imports d''aquestes mateixes casillas de l''annex A.2): Part autonòmica'
+                imports d''aquestes mateixes caselles de l''annex A.2): Part autonòmica'
             '0552':
               label: 'Per donatius i altres aportacions (traslladeu els imports d''aquestes
-                mateixes casillas de l''annex A.2): Part estatal'
+                mateixes caselles de l''annex A.2): Part estatal'
             '0553':
               label: 'Per donatius i altres aportacions (traslladeu els imports d''aquestes
-                mateixes casillas de l''annex A.2): Part autonòmica'
+                mateixes caselles de l''annex A.2): Part autonòmica'
             '0554':
               label: 'Per incentius i estímuls a la inversió empresarial (traslladéu
                 els imports d''aquestes mateixes caselles de l''annex A.4): part estatal'
@@ -4552,7 +4552,7 @@ modelo:
               label: 'Reserva per a Inversions a Canàries 2020: Inversions previstes
                 a les lletres C i D (2n a 6è) de l''art. 27.4'
             0749:
-              label: 'Reserva per a Inversions en Canàries 2020: Pendiente de materialitzar
+              label: 'Reserva per a Inversions en Canàries 2020: Pendent de materialitzar
                 (**)'
             '0750':
               label: 'Inversions anticipades de futures dotacions a la RIC, efectuades
@@ -4712,8 +4712,8 @@ modelo:
                 en 2020 que s''inverteixen en elements nous efectes: percentatge de
                 deducció'
             0835:
-              label: 'Import dels rendiments nets de activitats econòmiques obtinguts
-                en 2020 que s''inverteixen en elements nous efectes: import de la
+              label: 'Import dels rendiments nets d''activitats econòmiques obtinguts
+                el 2020 que s''inverteixen en elements nous afectes: import de la
                 deducció (**)'
             0839:
               label: 'Activitats de investigació i desenvolupament e innovació tecnològica
@@ -4815,9 +4815,9 @@ modelo:
               label: Per lloguer de habitatge habitual (es trasllada este import a
                 la casella [1130] del annex B.6)
             0930:
-              label: Si no teniu referència cadastral, marqueu aquesta casilla
+              label: Si no teniu referència cadastral, marqueu aquesta casella
             0932:
-              label: Si no teniu referència cadastral, marqueu aquesta casilla
+              label: Si no teniu referència cadastral, marqueu aquesta casella
             0936:
               label: Per despeses d'estudis en educació infantil, primària, ensenyament
                 secundari obligatori, batxillerat i formació professional de grau
@@ -5951,7 +5951,7 @@ modelo:
                 A.3): Part autonòmica'
             '0567':
               label: 'Per obres de millora de l''eficiència energètica d''habitatges
-                (traslladeu l''import d''aquestes mateixes casillas de l''annex A.2):
+                (traslladeu l''import d''aquestes mateixes caselles de l''annex A.2):
                 Part estatal'
             '0572':
               label: 'Import de les deduccions a les quals s''ha perdut el dret en
@@ -6122,8 +6122,8 @@ modelo:
                 en 2020 que s''inverteixen en elements nous efectes: percentatge de
                 deducció'
             0832:
-              label: 'Import dels rendiments nets de activitats econòmiques obtinguts
-                en 2020 que s''inverteixen en elements nous efectes: import de la
+              label: 'Import dels rendiments nets d''activitats econòmiques obtinguts
+                el 2020 que s''inverteixen en elements nous afectes: import de la
                 deducció (**)'
             0833:
               label: 'Import dels rendiments nets de activitats econòmiques obtinguts
@@ -7188,7 +7188,7 @@ modelo:
                 al 2021 (empleneu l''annex C.4)'
             '0544':
               label: 'Per rendes obtingudes a l''illa de la Palma (imports d''aquestes
-                casillas de l''annex A.6): Part estatal'
+                caselles de l''annex A.6): Part estatal'
             '0552':
               label: 'Per donatius i altres aportacions (traslladeu els imports d''aquestes
                 mateixes caselles de l''annex A.1): Part estatal'
@@ -7247,7 +7247,7 @@ modelo:
                 deduccions anteriors: Part autonòmica» per completar aquesta autoliquidació.'
             0584:
               label: 'Per rendes obtingudes a l''illa de la Palma (imports d''aquestes
-                casillas de l''annex A.6): Part autonòmica'
+                caselles de l''annex A.6): Part autonòmica'
             0585:
               label: 'Quota líquida estatal incrementada ([0585] = [0570] + [0568]
                 + [0582] + [0572] + [0573] + [0574] + [0576]): Part estatal'

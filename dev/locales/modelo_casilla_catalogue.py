@@ -528,6 +528,40 @@ REVIEWED_SEGMENT_RENDERINGS: Final[dict[str, dict[str, str]]] = {
 
 REVIEWED_SHARED_TRANSLATIONS: Final[dict[tuple[str, str, str], str]] = {
     (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a B.6. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a B.8. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók számára (ezt az "
+        "összeget vigye át a B.6. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "A szokásos lakóhely bérlete miatt, 36 évesnél fiatalabb adózók számára (ezt az "
+        "összeget vigye át a B.8. melléklet [1130] rovatába)",
+    ): "alquiler, arrendamiento and el arrendamiento de la vivienda habitual name one letting",
+    (
+        "hu",
+        "100",
+        "Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek megszerzésébe "
+        "történő befektetés miatt (ezt az összeget vigye át a B.7. melléklet [1136] rovatába)",
+    ): "acciones o participaciones sociales, written with y in another edition",
+    (
+        "hu",
+        "100",
+        "Új vagy nemrég alakult jogalanyok részvényeinek vagy üzletrészeinek megszerzésébe "
+        "történő befektetés miatt (ezt az összeget vigye át a B.8. melléklet [1136] rovatába)",
+    ): "acciones o participaciones sociales, written with y in another edition",
+    (
         "en",
         "100",
         "For illness expenses",

@@ -8709,7 +8709,7 @@ modelo:
           is-deduccion-produccion-cinematografica-espanola-productor-pendiente-futuros:
             help: 'Pendent d''aplicació en períodes futurs - Productor: produccions
               cinematogràfiques espanyoles (PC)'
-            label: 'Productor: producciones cinematográficas españolas (PC). Pendent
+            label: 'Productor: produccions cinematogràfiques espanyoles (PC). Pendent
               d''aplicació en períodes futurs'
           is-deduccion-reinversion-beneficios-dt24a7-periodo:
             label: Deducc. Disposic. Transit. 24a.7 LIS - Deducc. DT 24a.7 LIS 2023
@@ -8751,8 +8751,8 @@ modelo:
           is-deduccion-sociedades-forestales-aplicado-periodo:
             help: Aplicat en aquesta liquidació - Despeses i inversions de societats
               forestals (SF)
-            label: Gastos e inversiones de sociedades forestales (SF). Aplicat en
-              aquesta liquidació
+            label: Despeses i inversions de societats forestals (SF). Aplicat en aquesta
+              liquidació
           is-deduccion-sociedades-forestales-pendiente-futuros:
             help: Pendent d'aplicació en períodes futurs - Despeses i inversions de
               societats forestals (SF)

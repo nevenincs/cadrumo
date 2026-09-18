@@ -180,7 +180,7 @@ def unaccented_words(
 
 
 #: Spanish tax vocabulary every locale keeps untranslated, and registry identifier stems.
-_KEPT_SPANISH: Final = frozenset({"modelo", "modelos", "casilla", "casillas", "contraparte", "importe"})
+_KEPT_SPANISH: Final = frozenset({"modelo", "modelos", "contraparte", "importe"})
 #: Per locale, Spanish words a translation keeps on purpose: Latin ("inter vivos"), the
 #: names of official programmes and deductions, registry and form field identifiers, and
 #: terms the product states in Spanish everywhere ("perceptor", "recargo de equivalencia").

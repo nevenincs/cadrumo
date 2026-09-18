@@ -626,80 +626,76 @@ modelo:
         '2023':
           casilla:
             '64':
-              help: 'Tax information about tax information in casilla 64 of Modelo
-                303 References: [46], [58], [76].'
+              help: 'Tax information about tax information in box 64 of Modelo 303
+                References: [46], [58], [76].'
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in casilla 66 of Modelo
-                303 References: [64], [65].'
+              help: 'Tax information about tax information in box 66 of Modelo 303
+                References: [64], [65].'
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
+              help: 'Review the box information: Result final ([69]-[70]+[109]).'
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Review the casilla information: Result of the self-assessment
-                ([66]+[77]+[68]-[78]).'
+              help: 'Review the box information: Result of the self-assessment ([66]+[77]+[68]-[78]).'
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2023
         2024-desde-09-y-3t:
           casilla:
             '64':
-              help: 'Tax information about tax information in casilla 64 of Modelo
-                303 References: [46], [58], [76].'
+              help: 'Tax information about tax information in box 64 of Modelo 303
+                References: [46], [58], [76].'
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in casilla 66 of Modelo
-                303 References: [64], [65].'
+              help: 'Tax information about tax information in box 66 of Modelo 303
+                References: [64], [65].'
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
+              help: 'Review the box information: Result final ([69]-[70]+[109]).'
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Review the casilla information: Result of the self-assessment
-                ([66]+[77]+[68]-[78]).'
+              help: 'Review the box information: Result of the self-assessment ([66]+[77]+[68]-[78]).'
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2024, from periods 09 and Q3 onwards
         2024-hasta-08-y-2t:
           casilla:
             '64':
-              help: 'Tax information about tax information in casilla 64 of Modelo
-                303 References: [46], [58], [76].'
+              help: 'Tax information about tax information in box 64 of Modelo 303
+                References: [46], [58], [76].'
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in casilla 66 of Modelo
-                303 References: [64], [65].'
+              help: 'Tax information about tax information in box 66 of Modelo 303
+                References: [64], [65].'
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
+              help: 'Review the box information: Result final ([69]-[70]+[109]).'
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Review the casilla information: Result of the self-assessment
-                ([66]+[77]+[68]-[78]).'
+              help: 'Review the box information: Result of the self-assessment ([66]+[77]+[68]-[78]).'
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2024, up to periods 08 and Q2
         '2025':
           casilla:
             '64':
-              help: 'Tax information about tax information in casilla 64 of Modelo
-                303 References: [46], [58], [76].'
+              help: 'Tax information about tax information in box 64 of Modelo 303
+                References: [46], [58], [76].'
               label: Result - Sum of results ([46]+[58]+[76])
             '66':
-              help: 'Tax information about tax information in casilla 66 of Modelo
-                303 References: [64], [65].'
+              help: 'Tax information about tax information in box 66 of Modelo 303
+                References: [64], [65].'
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '71':
-              help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
+              help: 'Review the box information: Result final ([69]-[70]+[109]).'
               label: Result final ([69]-[70]+[109])
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Review the casilla information: Result of the self-assessment
-                ([66]+[77]+[68]-[78]).'
+              help: 'Review the box information: Result of the self-assessment ([66]+[77]+[68]-[78]).'
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
           field:
             label: Modelo 303, tax year 2025
@@ -925,14 +921,14 @@ modelo:
               help: 'Box 63: amount of supplies accrued under the cash accounting
                 scheme pursuant to article 75 LIVA.'
             '64':
-              help: 'Tax information about tax information in casilla 64 of Modelo
-                303 References: [46], [58], [76].'
+              help: 'Tax information about tax information in box 64 of Modelo 303
+                References: [46], [58], [76].'
               label: Result - Sum of results ([46]+[58]+[76])
             '65':
               help: 'Box 65: percentage of the result attributable to the State Administration.'
             '66':
-              help: 'Tax information about tax information in casilla 66 of Modelo
-                303 References: [64], [65].'
+              help: 'Tax information about tax information in box 66 of Modelo 303
+                References: [64], [65].'
               label: Result - Amount attributable to the State Tax Administration
                 ([64]×[65]/100)
             '68':
@@ -941,7 +937,7 @@ modelo:
               help: 'Box 70: amounts payable arising from previous self-assessments
                 for the same year and period.'
             '71':
-              help: 'Review the casilla information: Result final ([69]-[70]+[109]).'
+              help: 'Review the box information: Result final ([69]-[70]+[109]).'
               label: Result final ([69]-[70]+[109])
             '74':
               help: 'Box 74: taxable base of acquisitions under the cash accounting
@@ -1005,8 +1001,7 @@ modelo:
             x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
               help: Total output VAT calculated at the super-reduced 4% rate.
             x-d5r62bjiclpnar3kc5i6u:
-              help: 'Review the casilla information: Result of the self-assessment
-                ([66]+[77]+[68]-[78]).'
+              help: 'Review the box information: Result of the self-assessment ([66]+[77]+[68]-[78]).'
               label: Result of the self-assessment ([66]+[77]+[68]-[78])
             x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
               help: General regime result calculated as accrued VAT minus deductible

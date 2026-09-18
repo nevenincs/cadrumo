@@ -8812,8 +8812,7 @@ modelo:
           is-deduccion-produccion-cinematografica-espanola-productor-pendiente-futuros:
             help: 'Jövőbeli időszakokban alkalmazandó - Producer: spanyol filmprodukciók
               (PC)'
-            label: 'Productor: producciones cinematográficas españolas (PC). Jövőbeli
-              időszakokban alkalmazandó'
+            label: 'Producer: spanyol filmprodukciók (PC). Jövőbeli időszakokban alkalmazandó'
           is-deduccion-reinversion-beneficios-dt24a7-periodo:
             label: LIS 24.7. átmeneti rendelkezés szerinti levonások - LIS 24.7. átmeneti
               rendelkezés 2023. évi levonása - Függőben lévő/keletkezett levonás [00696]
@@ -8855,8 +8854,8 @@ modelo:
           is-deduccion-sociedades-forestales-aplicado-periodo:
             help: Ebben az elszámolásban alkalmazva - Erdőgazdálkodási társaságok
               kiadásai és beruházásai (SF)
-            label: Gastos e inversiones de sociedades forestales (SF). Ebben az elszámolásban
-              alkalmazva
+            label: Erdőgazdálkodási társaságok kiadásai és beruházásai (SF). Ebben
+              az elszámolásban alkalmazva
           is-deduccion-sociedades-forestales-pendiente-futuros:
             help: Jövőbeli időszakokban alkalmazandó - Erdőgazdálkodási társaságok
               kiadásai és beruházásai (SF)

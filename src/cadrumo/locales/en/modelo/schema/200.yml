@@ -8843,8 +8843,8 @@ modelo:
           is-deduccion-produccion-cinematografica-espanola-productor-pendiente-futuros:
             help: 'Pending application in future periods - Producer: Spanish film
               productions (PC)'
-            label: 'Productor: producciones cinematográficas españolas (PC). Pending
-              application in future periods'
+            label: 'Producer: Spanish film productions (PC). Pending application in
+              future periods'
           is-deduccion-reinversion-beneficios-dt24a7-periodo:
             label: Deductions under Transitional Provision 24.7 LIS - Deduction DT
               24.7 LIS 2023 - Pending/generated deduction [00696]
@@ -8886,7 +8886,7 @@ modelo:
           is-deduccion-sociedades-forestales-aplicado-periodo:
             help: Applied in this settlement - Expenses and investments of forestry
               companies (SF)
-            label: Gastos e inversiones de sociedades forestales (SF). Applied in
+            label: Expenses and investments of forestry companies (SF). Applied in
               this settlement
           is-deduccion-sociedades-forestales-pendiente-futuros:
             help: Pending application in future periods - Expenses and investments
