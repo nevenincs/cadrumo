@@ -30,7 +30,6 @@ official records.
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 
 import pytest
@@ -39,7 +38,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
 from ..compiler.loader import load_registry_tree
-from ._gate_support import fragment_declaring
+from ._gate_support import declaring_fragment, scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -185,50 +184,25 @@ def test_mutation_repointing_offset_1628_to_the_recargo_inclusive_total_reds_the
     fails on that mutated tree -- proving the gate has teeth rather than
     passing vacuously.
     """
-    # Copy only what the raw loader needs to compile Modelo 390 (its own
-    # directory plus the small cross-cutting catalogues) rather than the
-    # full ~74-modelo registry tree: this host's shared drive makes a
-    # whole-tree copytree + os.walk fingerprint pass prohibitively slow
-    # under concurrent load, and every other modelo directory is irrelevant
-    # to this mutation.
-    bundled_root = _bundled_registry_root()
-    scratch_root = tmp_path / "registry-mutant" / "aeat"
-    (scratch_root / "modelos").mkdir(parents=True)
-    shutil.copytree(bundled_root / "modelos" / "390", scratch_root / "modelos" / "390")
-    for catalogue_dir in (
-        "apoderamientos",
-        "categories",
-        "iva",
-        "legal",
-        "topics",
-    ):
-        source = bundled_root / catalogue_dir
-        if source.is_dir():
-            shutil.copytree(source, scratch_root / catalogue_dir)
-        elif source.exists():
-            shutil.copy2(source, scratch_root / catalogue_dir)
-
+    scratch_root = scratch_registry_tree(tmp_path, "390")
     target_revision_id = next(
         revision_id
-        for revision_id, revision in sorted(_m390_revisions(bundled_root).items())
+        for revision_id, revision in sorted(_m390_revisions(_bundled_registry_root()).items())
         if _FORMULA_BOX_34 in {formula.id for formula in revision.formulas}
     )
-    formula_path = fragment_declaring(
-        scratch_root / "modelos" / "390" / "revisions" / target_revision_id / "formulas",
-        _FORMULA_BOX_34,
+    formulas = declaring_fragment(
+        scratch_root / "modelos" / "390",
+        revision_id=target_revision_id,
+        section="formulas",
+        anchor=f'id = "{_FORMULA_BOX_34}"',
     )
-    original = formula_path.read_text(encoding="utf-8")
-    # The fragment declares several formulas, so the mutation is applied inside
-    # the box-34 declaration rather than at the file's first matching term.
-    declaration = original.index(f'id = "{_FORMULA_BOX_34}"')
-    head, tail = original[:declaration], original[declaration:]
-    mutated = head + tail.replace(
+    # The fragment declares several formulas, so the mutation is scoped to the
+    # box-34 declaration rather than the file's first matching term.
+    formulas.mutate(
         '{ casilla_id = "iva.anual.repercutido.general" }',
         '{ casilla_id = "iva.anual.recargo-equivalencia.general" }',
-        1,
+        after=f'id = "{_FORMULA_BOX_34}"',
     )
-    assert mutated != original, "the mutation target string was not found -- test is stale"
-    formula_path.write_text(mutated, encoding="utf-8")
 
     mutated_revision = _m390_revisions(scratch_root)[target_revision_id]
     mutated_formula = {formula.id: formula for formula in mutated_revision.formulas}[_FORMULA_BOX_34]

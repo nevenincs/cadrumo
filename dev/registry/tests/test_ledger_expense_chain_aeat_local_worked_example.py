@@ -54,7 +54,6 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
 from cadrumo.application.aggregation.renta_ledger import (
     RentaLedgerAggregationIssueReason,
     aggregate_renta_ledger_expenses,
@@ -185,12 +184,7 @@ def _aggregated(*, suministros_category: SpendingCategory = _SUMINISTROS_CATEGOR
     """Drive the example's purchase facts through the production aggregation."""
     rows = [_expense_row(reference, amount, suministros_category) for reference, amount in _SUMINISTRO_ROWS]
     rows.extend(_expense_row(reference, amount, category) for reference, amount, category in _OTHER_ROWS)
-    # The aggregation reads the profile record for its health-insurance person
-    # counts, and that reaches the login-session port. The port is composed by
-    # the entrypoint in production, so a test driving the aggregation directly
-    # composes it too rather than meeting an uncomposed-infrastructure refusal.
-    with composed_profile_persistence_ports():
-        return _aggregate(rows)
+    return _aggregate(rows)
 
 
 def _aggregate(rows: Sequence[Transaction]):
@@ -324,8 +318,7 @@ def test_moving_one_bill_moves_the_published_subtotal() -> None:
             for reference, amount in _SUMINISTRO_ROWS[1:]
         ),
     ]
-    with composed_profile_persistence_ports():
-        aggregation = _aggregate(nudged_rows)
+    aggregation = _aggregate(nudged_rows)
     nudged = resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
         _modelo_100_revision(),
         aggregation.observations,

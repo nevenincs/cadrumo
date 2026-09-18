@@ -27,7 +27,6 @@ defect.
 
 from __future__ import annotations
 
-import shutil
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -45,7 +44,7 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 from ..compiler.loader import load_registry_tree
-from ._gate_support import fragment_declaring
+from ._gate_support import declaring_fragment, scratch_registry_tree
 from .ledger_iva_aggregation_support import _deduction_provenance
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
@@ -58,6 +57,8 @@ _REVISION_ID = "2025"
 _CASILLA_BOX_26 = "iva.anual.aic.bienes.tipo-21.cuota"
 _CASILLA_BOX_28 = "iva.anual.autorepercutido.interior.cuota"
 _CASILLA_AIC_BLIND = "iva.anual.autorepercutido.intracomunitaria"
+#: The page-02 export field the position gate below pins to box 28.
+_EXPORT_FIELD_BOX_28 = "modelo-390-page-02-casilla-autorepercutido-interior-cuota"
 _AIC_ZERO_BASE_BINDING = "modelo-390-iva-aic-bienes-tipo-0-base"
 _AIC_ZERO_CUOTA_BINDING = "modelo-390-iva-aic-bienes-tipo-0-cuota"
 
@@ -203,35 +204,18 @@ def test_zero_rate_aic_base_reaches_its_own_official_box_layer() -> None:
 
 def test_mutation_removing_zero_from_m390_aic_base_selector_reds_the_gate(tmp_path: Path) -> None:
     """Removing zero on a scratch registry makes the AIC base assertion fail."""
-    bundled_root = _bundled_registry_root()
-    scratch_root = tmp_path / "registry-mutant" / "aeat"
-    (scratch_root / "modelos").mkdir(parents=True)
-    shutil.copytree(bundled_root / "modelos" / "390", scratch_root / "modelos" / "390")
-    for catalogue_dir in (
-        "apoderamientos",
-        "categories",
-        "iva",
-        "legal",
-        "topics",
-    ):
-        source = bundled_root / catalogue_dir
-        if source.is_dir():
-            shutil.copytree(source, scratch_root / catalogue_dir)
-        elif source.exists():
-            shutil.copy2(source, scratch_root / catalogue_dir)
-
-    bindings_path = fragment_declaring(
-        scratch_root / "modelos" / "390" / "revisions" / _REVISION_ID / "bindings",
-        f'id = "{_AIC_ZERO_BASE_BINDING}"',
+    scratch_root = scratch_registry_tree(tmp_path, "390")
+    bindings = declaring_fragment(
+        scratch_root / "modelos" / "390",
+        revision_id=_REVISION_ID,
+        section="bindings",
+        anchor=f'id = "{_AIC_ZERO_BASE_BINDING}"',
     )
-    original = bindings_path.read_text(encoding="utf-8")
-    mutated = original.replace(
+    bindings.mutate(
         'rate_kinds = ["zero"], applied_rates = ["0.00"]',
         'rate_kinds = ["general"], applied_rates = ["0.00"]',
-        1,
+        after=f'id = "{_AIC_ZERO_BASE_BINDING}"',
     )
-    assert mutated != original, "the mutation target string was not found -- test is stale"
-    bindings_path.write_text(mutated, encoding="utf-8")
 
     aic_row = IvaLedgerObservation(
         ledger_id="aic-bienes-zero-mutant",
@@ -259,35 +243,18 @@ def test_mutation_repointing_box_28_to_the_aic_blind_casilla_reds_the_gate(tmp_p
     the registry tree (never the tracked file) and confirm the position test
     above would have caught it.
     """
-    bundled_root = _bundled_registry_root()
-    scratch_root = tmp_path / "registry-mutant" / "aeat"
-    (scratch_root / "modelos").mkdir(parents=True)
-    shutil.copytree(bundled_root / "modelos" / "390", scratch_root / "modelos" / "390")
-    for catalogue_dir in (
-        "apoderamientos",
-        "categories",
-        "iva",
-        "legal",
-        "topics",
-    ):
-        source = bundled_root / catalogue_dir
-        if source.is_dir():
-            shutil.copytree(source, scratch_root / catalogue_dir)
-        elif source.exists():
-            shutil.copy2(source, scratch_root / catalogue_dir)
-
-    export_layout_path = fragment_declaring(
-        scratch_root / "modelos" / "390" / "revisions" / _REVISION_ID / "export_layouts",
-        'casilla_id = "iva.anual.autorepercutido.interior.cuota"',
+    scratch_root = scratch_registry_tree(tmp_path, "390")
+    export_layout = declaring_fragment(
+        scratch_root / "modelos" / "390",
+        revision_id=_REVISION_ID,
+        section="export_layouts",
+        anchor=f'id = "{_EXPORT_FIELD_BOX_28}"',
     )
-    original = export_layout_path.read_text(encoding="utf-8")
-    mutated = original.replace(
-        'casilla_id = "iva.anual.autorepercutido.interior.cuota"',
-        'casilla_id = "iva.anual.autorepercutido.intracomunitaria"',
-        1,
+    export_layout.mutate(
+        f'casilla_id = "{_CASILLA_BOX_28}"',
+        f'casilla_id = "{_CASILLA_AIC_BLIND}"',
+        after=f'id = "{_EXPORT_FIELD_BOX_28}"',
     )
-    assert mutated != original, "the mutation target string was not found -- test is stale"
-    export_layout_path.write_text(mutated, encoding="utf-8")
 
     mutated_revision = _m390_revision(scratch_root)
     mutated_field_28 = _export_field(mutated_revision, record_id="modelo-390-page-02", offset=1492)
