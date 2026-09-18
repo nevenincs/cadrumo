@@ -21,13 +21,13 @@ _log = logging.getLogger(__name__)
 #: invisible to every checker this project runs, which then report the flag
 #: unresolved whenever the tree is analysed for Windows, and the positive block
 #: is the only guard shape all of them narrow on.
-_DIRECTORY_OPEN_FLAGS: int | None
+_directory_open_flags: int | None
 if sys.platform == "win32":
     # Windows exposes no directory FlushFileBuffers contract, and therefore no
     # O_DIRECTORY: durability for a directory entry is the caller's rename fence.
-    _DIRECTORY_OPEN_FLAGS = None
+    _directory_open_flags = None
 else:
-    _DIRECTORY_OPEN_FLAGS = os.O_DIRECTORY | os.O_RDONLY
+    _directory_open_flags = os.O_DIRECTORY | os.O_RDONLY
 
 
 def fsync_parent_dir(target: Path) -> None:
@@ -35,11 +35,11 @@ def fsync_parent_dir(target: Path) -> None:
 
     A no-op on a platform that cannot open a directory for flushing.
     """
-    if _DIRECTORY_OPEN_FLAGS is None:
+    if _directory_open_flags is None:
         return
     parent = target.parent
     try:
-        fd = os.open(parent, _DIRECTORY_OPEN_FLAGS)
+        fd = os.open(parent, _directory_open_flags)
     except OSError:
         _log.debug("fsync_parent_dir: could not open parent directory %s", parent, exc_info=True)
         return
