@@ -37,6 +37,7 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from cadrumo.entrypoints.adapter_composition import composed_profile_persistence_ports
 
 from ...resources import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 from .._persona_scope import AgentPersona
@@ -59,7 +60,7 @@ from ..harness_tools import (
 )
 from ..tools import build_tool_descriptors
 from ._profile import PROFILE_PASSPHRASE, READY_PROFILE_FACTS
-from ._support import composed_profile_persistence_ports, isolated_profile_storage_root
+from ._support import isolated_profile_storage_root
 from .session import connected_server_and_client_session as connect
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
