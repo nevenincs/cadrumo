@@ -13,6 +13,7 @@ import base64
 import binascii
 import json
 import os
+import sys
 from collections.abc import Mapping
 from typing import cast
 
@@ -92,7 +93,7 @@ def _close_unallowlisted_posix_file_descriptors(
     result_fd: int,
     descriptor_bound: int | None,
 ) -> None:
-    if os.name == "nt":
+    if sys.platform == "win32":
         return
 
     if descriptor_bound is None:
@@ -108,9 +109,17 @@ def _close_unallowlisted_posix_file_descriptors(
 
 
 def _worker_fds(args: argparse.Namespace) -> tuple[int, int]:
+    """Resolve the worker's request/result descriptors from either transport.
+
+    The ``sys.platform == "win32"`` block, rather than a guard at the call
+    site or an early return, is what establishes the platform for the Windows
+    API below: it is the only guard shape every checker this project runs
+    narrows on, so those references resolve when the tree is analysed for a
+    platform that does not ship them.
+    """
     if args.request_fd is not None and args.result_fd is not None:
         return cast(int, args.request_fd), cast(int, args.result_fd)
-    if args.request_handle is not None and args.result_handle is not None:
+    if sys.platform == "win32" and args.request_handle is not None and args.result_handle is not None:
         import msvcrt
 
         return (
