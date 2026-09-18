@@ -214,7 +214,7 @@ def test_a_keyed_family_the_successor_does_not_restate_is_carried_from_its_prede
         modelo_dir,
         "2025",
         year=2025,
-        manifest_extra='predecessor = "2024"\ncleared_families = ["export_layouts"]\n',
+        manifest_extra='predecessor = "2024"\ncleared_families = [{ family = "export_layouts", cause = "not_authored_for_this_edition", reason = "This edition authors no export layout and does not adopt the predecessor s." }]\n',
         casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
     )
 
@@ -267,7 +267,7 @@ def test_asserting_a_scoped_family_carries_it_and_declining_it_takes_none(tmp_pa
         declined_dir,
         "2025",
         year=2025,
-        manifest_extra='predecessor = "2024"\ncleared_families = ["export_layouts"]\n',
+        manifest_extra='predecessor = "2024"\ncleared_families = [{ family = "export_layouts", cause = "not_authored_for_this_edition", reason = "This edition authors no export layout and does not adopt the predecessor s." }]\n',
         casillas=_casilla("2025", "0005", number="5", lineage="recargo-nuevo"),
     )
 

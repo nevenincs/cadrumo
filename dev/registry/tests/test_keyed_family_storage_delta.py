@@ -57,7 +57,7 @@ def test_member_removal_addition_and_order_are_exact(tmp_path: Path) -> None:
 
 def test_explicit_clear_differs_from_omitted_family(tmp_path: Path) -> None:
     inherited = _successor(tmp_path / "inherited", "")
-    modelo = _build_modelo(tmp_path / "cleared", successor_extra='cleared_families = ["constructs"]\n')
+    modelo = _build_modelo(tmp_path / "cleared", successor_extra='cleared_families = [{ family = "constructs", cause = "official_structure_withdraws", reason = "The document governing this edition lays out no construct at all." }]\n')
     successor_construct = next((modelo / "revisions" / _SUCCESSOR / "constructs").glob("*.toml"))
     successor_construct.unlink()
     successor_construct.parent.rmdir()
