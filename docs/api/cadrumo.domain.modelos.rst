@@ -30,6 +30,7 @@ Submodules
    cadrumo.domain.modelos.m232_row_materialisation
    cadrumo.domain.modelos.modelo_fact_context
    cadrumo.domain.modelos.participation_index
+   cadrumo.domain.modelos.perceptor_clave_scope
    cadrumo.domain.modelos.protocols
    cadrumo.domain.modelos.repository
    cadrumo.domain.modelos.row_models
