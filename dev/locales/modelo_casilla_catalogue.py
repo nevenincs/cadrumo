@@ -528,6 +528,11 @@ REVIEWED_SEGMENT_RENDERINGS: Final[dict[str, dict[str, str]]] = {
 
 REVIEWED_SHARED_TRANSLATIONS: Final[dict[tuple[str, str, str], str]] = {
     (
+        "ca",
+        "100",
+        "IVA suportat (per exemple, recàrrec d'equivalència i/o compensació d'agricultura, ramaderia i pesca)",
+    ): "one edition misspells por ejemplo as por ejermplo",
+    (
         "hu",
         "100",
         "A szokásos lakóhely bérlete miatt (ezt az összeget vigye át a B.6. melléklet [1130] rovatába)",
@@ -1157,6 +1162,7 @@ REVIEWED_EQUIVALENT_SPANISH: Final[dict[tuple[str, str, str], str]] = {
         )
     },
     ("en", "100", "irpf-ed-suministros"): "'Electricity' renders both 'luz' and 'electricidad'.",
+    ("ca", "100", "irpf-ed-iva-soportado"): "One edition misspells 'por ejemplo' as 'por ejermplo'.",
 }
 
 
@@ -1457,7 +1463,7 @@ class ModeloCasillaCatalogue:
     def dropped_source_content(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
         """Return, per serving key, the source tokens a translation lost.
 
-        A label's numbers, box references and comparison symbols are the legal
+        A label's or a help text's numbers, box references and comparison symbols are the legal
         content an operator acts on: a cap of 500 euros, the transitional
         provisions a deduction rests on, the box an amount is carried from. A
         translation that renders the prose but drops those states something the
@@ -1467,20 +1473,21 @@ class ModeloCasillaCatalogue:
         lookup = self.lookup_for(self.values if values is None else values)
         dropped: dict[str, tuple[str, ...]] = {}
         for index, occurrence in enumerate(self.occurrences):
-            spanish = self.resolve(index, "label", SOURCE_LOCALE, values)
-            if spanish is None:
-                continue
-            source = _content_tokens(spanish)
-            if not source:
-                continue
-            served = modelo_localization_source(occurrence.chain("label"), locale=locale, lookup=lookup)
-            if served is None or served[1] != locale:
-                continue
-            rendered = _content_tokens(self.resolve(index, "label", locale, values) or "", spelled=True)
-            # A reference repeated in one sentence states the same box once.
-            missing = Counter({token: 1 for token in source if token not in rendered})
-            if missing:
-                dropped[served[0]] = tuple(sorted(missing.elements()))
+            for field_name in _FIELDS:
+                spanish = self.resolve(index, field_name, SOURCE_LOCALE, values)
+                if spanish is None:
+                    continue
+                source = _content_tokens(spanish)
+                if not source:
+                    continue
+                served = modelo_localization_source(occurrence.chain(field_name), locale=locale, lookup=lookup)
+                if served is None or served[1] != locale:
+                    continue
+                rendered = _content_tokens(self.resolve(index, field_name, locale, values) or "", spelled=True)
+                # A reference repeated in one sentence states the same box once.
+                missing = Counter({token: 1 for token in source if token not in rendered})
+                if missing:
+                    dropped[served[0]] = tuple(sorted(missing.elements()))
         return dropped
 
     def shared_translations(self, locale: str, values: Values | None = None) -> dict[str, tuple[str, ...]]:
