@@ -1,5 +1,7 @@
 [build-system]
-requires = ["hatchling"]
+# Floored at the release whose BuildHookInterface takes both type parameters,
+# which this package's hook subscripts; an older backend cannot load it.
+requires = ["hatchling>=1.32.3,<2"]
 build-backend = "hatchling.build"
 
 [project]

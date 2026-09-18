@@ -28,6 +28,21 @@ from ..resolution import ChunkHit, TargetResolver
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.docs]
 
 
+@pytest.fixture(scope="session", autouse=True)
+def built_cli_reference() -> None:
+    """Generate the CLI-reference tree these gates read, once per session.
+
+    ``docs/cli`` is disposable build output, so a fresh clone and a CI runner
+    both meet it unbuilt. Stating the precondition here keeps the refusal in
+    :func:`_require_built_cli_reference` meaningful -- a resolution that silently
+    dropped every CLI hit is what it exists to prevent -- while making these
+    tests carry their own input instead of an undeclared build step.
+    """
+    from ...cli_reference import generate_cli_reference_in_subprocess
+
+    generate_cli_reference_in_subprocess(REPO_ROOT / "docs")
+
+
 @pytest.fixture(scope="module")
 def resolver() -> TargetResolver:
     """Build the resolver once (projects casilla records + legal index)."""

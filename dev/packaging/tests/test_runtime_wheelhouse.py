@@ -146,7 +146,19 @@ def test_current_lock_selects_distinct_stable_runtime_wheels() -> None:
     assert plans["3.14"].missing == ()
     assert "cp313-cp313" in plans["3.13"].platforms["linux-x86-64"]["cffi"]
     assert "cp314-cp314" in plans["3.14"].platforms["linux-x86-64"]["cffi"]
-    assert {item["distribution"] for item in plans["3.15"].missing} == {"pydantic-core", "pyyaml"}
+    # The 3.15 gap is stated by the lock, not frozen here: a name list goes
+    # stale as each project publishes its cp315 build. What holds is that the
+    # gap is real, is reported for the one supported reason, and names only
+    # distributions that ship an ABI-specific build in the ready closure.
+    abi_specific = {
+        distribution
+        for distribution, filename in plans["3.13"].platforms["linux-x86-64"].items()
+        if "cp313" in filename
+    }
+    gap = {item["distribution"] for item in plans["3.15"].missing}
+    assert gap, "a 3.15 closure with no gap would make this an unmeasured runtime"
+    assert gap < abi_specific, "only an ABI-specific distribution can lack a cp315 build"
+    assert all(item["reason"] == "no-compatible-wheel" for item in plans["3.15"].missing)
 
 
 def test_runtime_rows_come_only_from_the_canonical_inventory(tmp_path: Path) -> None:

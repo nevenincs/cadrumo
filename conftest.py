@@ -132,6 +132,10 @@ def pytest_configure(config: pytest.Config) -> None:
     """Create and announce this pytest invocation's durable run log."""
     marker_hook.reset_held_serials()
     marker_hook.reset_marker_violations()
+    # The hold must see the SELECTED items, which this module's own
+    # collection hook cannot: it runs first, on purpose, so the taxonomy
+    # contract reaches tests this lane would never execute.
+    config.pluginmanager.register(marker_hook.SerialHoldPlugin(), "cadrumo-serial-hold")
     fixture_resolution_hook.reset_refused_requests()
     # The unraisable-exception plugin forces full gc passes at session end to
     # flush __del__ errors. Over this suite's post-collection heap those passes
