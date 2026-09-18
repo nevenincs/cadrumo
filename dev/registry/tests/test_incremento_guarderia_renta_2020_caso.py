@@ -22,9 +22,9 @@ from cadrumo.domain.contribuyente.family_types import MinimoDescendientesThresho
 from cadrumo.domain.contribuyente.guarderia_mensual import parse_guarderia_mensual
 from cadrumo.domain.contribuyente.meses_trabajo import parse_meses_trabajo
 
-from ..compiler.authority import compiled_bundled_authority
+from .profile_schema_support import authored_history_authority
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("authored_history_fact_scope")]
 
 _YEAR = 2020
 
@@ -36,7 +36,7 @@ _CAP_ANUAL = Decimal("1000")
 
 def _authored_thresholds(filing_year: int) -> MinimoDescendientesThresholds:
     """The Art. 58.1 and Art. 61 norma 2a ceilings the authored M100 revision declares."""
-    revision = select_revision(compiled_bundled_authority().modelo("100"), filing_year=filing_year, period="0A")
+    revision = select_revision(authored_history_authority().modelo("100"), filing_year=filing_year, period="0A")
     by_id = {parameter.id: parameter for parameter in revision.parameters}
     coordinate = {"filing_period": date(filing_year, 12, 31)}
     return MinimoDescendientesThresholds(
@@ -53,7 +53,7 @@ def _authored_thresholds(filing_year: int) -> MinimoDescendientesThresholds:
 
 def _context(filing_year: int) -> FamilyFactResolutionContext:
     coordinate = date(filing_year, 12, 31)
-    return FamilyFactResolutionContext(compiled_bundled_authority(), coordinate, coordinate)
+    return FamilyFactResolutionContext(authored_history_authority(), coordinate, coordinate)
 
 
 def test_a_child_who_never_turns_three_keeps_months_after_september() -> None:

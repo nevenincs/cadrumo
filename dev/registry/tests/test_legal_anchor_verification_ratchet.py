@@ -29,7 +29,8 @@ import pytest
 
 from cadrumo.core.corpus_text import CorpusAnchorResolutionError, resolve_anchored_extracted_unit
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+
+from .catalogue_verification_support import authored_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -175,7 +176,10 @@ def _classify() -> tuple[list[str], list[str], set[str]]:
     *unverified* when it resolves just as the declared anchor does.
     """
     source_root = _source_root()
-    _modelos, catalogues = bundled_registry_tree()
+    # The COMMITTED catalogue: the published view lists only what published
+    # modelos cite, so a ratchet over the whole legal corpus reads about a
+    # third of it there and its population moves for the wrong reason.
+    catalogues = authored_catalogues()
     verified: list[str] = []
     unverified: list[str] = []
     files: set[str] = set()
@@ -248,7 +252,10 @@ def test_entries_whose_anchor_is_absent_from_their_files_ids_only_shrink() -> No
     are the real finding.
     """
     source_root = _source_root()
-    _modelos, catalogues = bundled_registry_tree()
+    # The COMMITTED catalogue: the published view lists only what published
+    # modelos cite, so a ratchet over the whole legal corpus reads about a
+    # third of it there and its population moves for the wrong reason.
+    catalogues = authored_catalogues()
 
     mismatched: set[str] = set()
     for ref_id, reference in catalogues.legal.items():

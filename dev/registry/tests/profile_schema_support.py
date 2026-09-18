@@ -7,6 +7,7 @@ from functools import cache
 from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
 from cadrumo.domain.calculations.registry.schema import (
     ModeloDefinition,
@@ -135,3 +136,28 @@ class CommittedRegistryValidator:
 def committed_registry_validator(catalogues: RegistryCatalogues) -> CommittedRegistryValidator:
     """Return the scoped validator for committed-registry catalogues."""
     return CommittedRegistryValidator(catalogues)
+
+
+@cache
+def authored_history_authority() -> ValidatedRegistryAuthority:
+    """Return the compiled authority scoped to the AUTHORED history, not the filing span.
+
+    The committed envelope gates what the product resolves, so a governed-fact
+    query below its floor is refused for being out of support. A case whose
+    subject IS the authored source of an older ejercicio has to reach those
+    stored variants, and it reaches them through the authority it resolves
+    against: an ambient scope alone does not widen an authority handed to a
+    resolution context.
+    """
+    from dataclasses import replace
+
+    from ..compiler.authority import compiled_bundled_authority
+
+    authority = compiled_bundled_authority()
+    return replace(
+        authority,
+        catalogues=authority.catalogues.model_copy(
+            update={"supported_filing_years": authored_history_supported_filing_years()}
+        ),
+        _snapshots={},
+    )

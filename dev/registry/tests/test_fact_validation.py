@@ -6,6 +6,7 @@ from datetime import date
 from importlib import import_module
 
 import pytest
+from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.facts.schema import GovernedFact, GovernedFactCatalogue
 
@@ -37,7 +38,18 @@ def _variant(
 
 
 def _failures(*variants: dict[str, object]) -> tuple[str, ...]:
-    fact = GovernedFact.model_validate({"fact_id": "test.rate", "family": "scalar", "variants": variants})
+    """Return the refusals a declaration draws, from whichever boundary refuses it.
+
+    Several of these contracts are enforced at CONSTRUCTION now - a precedence
+    cycle, an unresolved overlap - so the declaration never reaches the
+    catalogue check that used to report them. The test's subject is that the
+    declaration is refused and why, not which layer says so, and reading only
+    the catalogue failures turned every one of those into an error.
+    """
+    try:
+        fact = GovernedFact.model_validate({"fact_id": "test.rate", "family": "scalar", "variants": variants})
+    except ValidationError as refusal:
+        return tuple(str(error["msg"]) for error in refusal.errors())
     return governed_fact_catalogue_failures(
         GovernedFactCatalogue(facts={fact.fact_id: fact}),
         legal_ref_ids={"law"},

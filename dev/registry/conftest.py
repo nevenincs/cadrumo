@@ -27,6 +27,17 @@ def _isolate_registry_caches() -> Iterator[None]:
 
 
 @pytest.fixture
+def authored_history_fact_scope() -> Iterator[None]:
+    """Scope governed facts against the AUTHORED history rather than the filing span."""
+    from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+
+    from .tests.profile_schema_support import authored_history_authority
+
+    with validating_governed_facts(authored_history_authority()):
+        yield
+
+
+@pytest.fixture
 def governed_fact_scope() -> Iterator[None]:
     """Resolve registry tokens in one requesting test against the compiled authored facts.
 
