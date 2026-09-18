@@ -498,26 +498,28 @@ cli:
     live:
       app_help: Csak olvasható AEAT élő megfigyelési parancsok.
       borrador:
-        app_help: Modelo 100 borrador pillanatképek.
+        app_help: 100-as nyomtatvány borrador pillanatképek.
         filing_year_help: Benyújtási év (pl. 2024).
         import_coverage_absent: Az elemző nem adott vissza kinyerési lefedettséget
           a nyilvántartási profilhoz; semmi sem lett importálva.
         import_ejercicio_mismatch: A PDF-en szereplő adóév nem egyezik a kért benyújtási
           évvel; semmi sem lett importálva.
-        import_file_help: Az importálandó Modelo 100 borrador PDF elérési útja.
-        import_help: Helyi Modelo 100 borrador PDF importálása a pillanatkép-tárolóba.
-        import_period_help: Időszakkód (alapértelmezés 0A, a Modelo 100 éves időszaka).
+        import_file_help: Az importálandó 100-as nyomtatvány borrador PDF elérési
+          útja.
+        import_help: Helyi 100-as nyomtatvány borrador PDF importálása a pillanatkép-tárolóba.
+        import_period_help: Időszakkód (alapértelmezés 0A, a 100-as nyomtatvány éves
+          időszaka).
         import_period_invalid: Az időszakkód nem érvényes ehhez a benyújtási évhez.
         import_profile_unresolved: A nyilvántartás nem deklarál egyetlen borrador
           kinyerési profilt sem ehhez a benyújtási évhez és időszakhoz.
         latest_help: A legfrissebb aktív pillanatkép megjelenítése egy benyújtási
           évre.
-        list_help: Mentett Modelo 100 borrador pillanatképek listázása.
-        modelo_100_help: Modelo 100 borrador pillanatkép-parancsok.
+        list_help: Mentett 100-as nyomtatvány borrador pillanatképek listázása.
+        modelo_100_help: 100-as nyomtatvány borrador pillanatkép-parancsok.
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
         state_help: 'Pillanatkép-állapot szűrő: active, superseded, discarded vagy
           all.'
-        view_help: Egyetlen Modelo 100 borrador pillanatkép megjelenítése.
+        view_help: Egyetlen 100-as nyomtatvány borrador pillanatkép megjelenítése.
       expediente_help: AEAT expediente azonosító.
       expedientes:
         app_help: Csak olvasható AEAT expediente pillanatképek.
@@ -531,8 +533,8 @@ cli:
         casillas_not_enrolled: 'A rögzített bevallásokban {count} rovat értéke nem
           összeg, ezért nem került be számítási bizonyítékként: {affected}. Az érintett
           bevallások minden számszerű adata a szokásos módon bekerült.'
-        discover_help: Megjeleníti, mely modelo- és ejercicio-párokat járná be egy
-          előzményletöltés.
+        discover_help: Megjeleníti, mely nyomtatvány- és ejercicio-párokat járná be
+          egy előzményletöltés.
         discover_no_profile_denominator: 'Ez a jelentés nem tartalmaz adózóspecifikus
           nevezőt: hiányzik a profil vagy annak tevékenységkezdő dátuma, ezért a párok
           száma nem méri a lefedettséget. Egészítse ki a profilt, és futtassa újra,
@@ -548,7 +550,7 @@ cli:
         list_help: Benyújtott bevallássorok listázása artefaktok letöltése nélkül.
         pull_all_help: Egyetlen menetben letölti az adózó AEAT-nál benyújtott bevallási
           előzményét, és jelenti a találtakat.
-        pull_all_limit_help: A menetben bejárandó modelo- és adóévpárok legnagyobb
+        pull_all_limit_help: A menetben bejárandó nyomtatvány- és adóévpárok legnagyobb
           száma.
         pull_all_pairs_refused_factual: '{count} modell/év pár nem volt olvasható,
           és a rendszer NEM jelentette üresnek: {pairs}. Az elutasítás nem bizonyítja,
@@ -584,15 +586,16 @@ cli:
         as_of_year_help: Az IVA-kompenzációs átviteli tételek korosításához használt
           év.
         history_help: Helyi biztonságos IVA-kompenzációs előzmények, átviteli tételek
-          és Modelo 303 rögzítésekből származó megőrzött pénztárca-döntések listázása.
-        pull_evidence_help: Letölti a benyújtott Modelo 303 előzményeket és megkísérli
-          az AEAT tárca/IVA olvasást egy tipizált, csak olvasható lekérésként.
+          és 303-es nyomtatvány rögzítésekből származó megőrzött pénztárca-döntések
+          listázása.
+        pull_evidence_help: Letölti a benyújtott 303-es nyomtatvány előzményeket és
+          megkísérli az AEAT tárca/IVA olvasást egy tipizált, csak olvasható lekérésként.
         pull_help: Az AEAT IVA-kompenzációs pénztárcájának élő lekérése és megőrzése.
           Az egyetlen engedélyezett AEAT-formanyomtatvány-művelet a védett pénztárca-lekérdezés;
           képviseleti kapuk csak saját nevű módban folytatódnak.
-        pull_history_help: Letölti a benyújtott Modelo 303 előzményeket és biztonságos
-          IVA-kompenzációs állapotot ment. Nem küld be AEAT nyilatkozatot vagy tárca-űrlap
-          választást.
+        pull_history_help: Letölti a benyújtott 303-es nyomtatvány előzményeket és
+          biztonságos IVA-kompenzációs állapotot ment. Nem küld be AEAT nyilatkozatot
+          vagy tárca-űrlap választást.
         taxpayer_nif_help: 'Az adóalany NIF-je; alapértelmezés: a hitelesített azonosság.'
       justificante:
         app_help: 'AEAT igazolás-rögzítések (csak olvasható): tölts le egy benyújtott
@@ -682,8 +685,8 @@ cli:
         invoice_retencion_excluded_notice: 'A(z) %{invoice_id} számla nem került a
           levonás-tárolóba: %{reasons}.'
         invoice_retencion_wrong_modelo: A --received-invoice-retencion a perceptoronkénti
-          levonás-tárolóba irányít; a(z) %{modelo} modelo nem a 111, 115, 123, 180,
-          190, 193 egyike.
+          levonás-tárolóba irányít; a(z) %{modelo} nyomtatvány nem a 111, 115, 123,
+          180, 190, 193 egyike.
         json_not_object: A(z) {flag} értékének JSON-objektumnak kell lennie.
         json_parse_error: A(z) {flag} értékének JSON-objektumnak kell lennie; érvénytelen
           JSON a(z) {pos}. bájtnál.
@@ -699,7 +702,7 @@ cli:
           ismételje meg.
         retencion_observation_help: 'JSON RetencionObservation objektum. A source_kind
           értéke ledger_transaction, purchase_invoice_evidence, payable_invoice vagy
-          collectible_invoice lehet. A 111-es Modelo munka esetén a rendimientos_trabajo
+          collectible_invoice lehet. A 111-es nyomtatvány munka esetén a rendimientos_trabajo
           scheme az alkalmazotti progresszív kulcs (LIRPF 101.1. cikk), a rendimientos_trabajo_administrador
           pedig a rögzített igazgatói/tanácstagi kulcs (LIRPF 101.2. cikk: 35 százalék,
           vagy 19 százalék, ha a szervezet nettó árbevétele 100.000 EUR alatt van).
@@ -784,8 +787,7 @@ cli:
         explain_help: Lokalizált súgószöveg bevonása a szöveges kimenetbe.
         form_number_help: Mezők szűrése BOE-n nyomtatott nyomtatványszám szerint (pl.
           46).
-        help: A kiválasztott modell verzióhoz tartozó összes casilla (mező/doboz)
-          listázása.
+        help: A kiválasztott modell verzióhoz tartozó összes rovat (mező/doboz) listázása.
         input_kind_help: Mezők szűrése beviteli típus szerint (manual, bound, computed,
           informational, projection_only).
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
@@ -819,7 +821,7 @@ cli:
         label_cadence: Gyakoriság
         label_casillas: Mezők
         label_formulas: Képletek
-        label_modelo: Modelo
+        label_modelo: Nyomtatvány
         label_official_name: Hivatalos név
         label_periods: Időszakok
         label_revision: Verzió
@@ -913,8 +915,8 @@ cli:
         as_of_help: A megadott ISO-dátumon aktív nyomtatvány-revízió feloldása (ÉÉÉÉ-HH-NN).
         explain_help: Az egyes képleteket megalapozó legal_refs és source_refs bevonása
           a szöveges kimenetbe. A JSON-adatcsomag mindig tartalmazza azokat.
-        help: A kiválasztott modell verzióhoz tartozó összes számított casilla és
-          képlet listázása.
+        help: A kiválasztott modell verzióhoz tartozó összes számított rovat és képlet
+          listázása.
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         period_help: 'A nyomtatvány-revíziót feloldó időszaktoken: 0A éves, 1T-4T
           negyedévek, 01-12 hónapok; nyilvántartási nyomtatványokhoz (036): alta,
@@ -928,9 +930,9 @@ cli:
       history_help: Egy nyomtatvány kronológiai életciklus-auditjának megjelenítése.
       iva_wallet:
         as_of_year_help: Referenciaév az átvitel korának és lejáratának számításához.
-        balance_help: Megjeleníti a helyi Modelo 303 előzményekből számított összesített
-          IVA-kompenzációs átviteli egyenleget. Jelenti a total_balance, active_balance,
-          expired_balance, lot_count és next_expiry_year értékeket.
+        balance_help: Megjeleníti a helyi 303-es nyomtatvány előzményekből számított
+          összesített IVA-kompenzációs átviteli egyenleget. Jelenti a total_balance,
+          active_balance, expired_balance, lot_count és next_expiry_year értékeket.
         correct_amount_help: A javított átvihető egyenleg összege EUR-ban (tizedes,
           pl. 1200.50).
         correct_confirm_help: Kötelező megerősítő jelző. Tudomásul veszi, hogy ez
@@ -938,22 +940,22 @@ cli:
           az új értéktől függ.
         correct_confirm_required: 'Adja meg a --confirm jelzőt a megerősítéshez: ez
           felülírja a megadott időszakhoz korábban beállított M303 átvihető egyenleget.'
-        correct_filing_year_help: A javítandó beállított Modelo 303 időszak bevallási
-          éve.
+        correct_filing_year_help: A javítandó beállított 303-es nyomtatvány időszak
+          bevallási éve.
         correct_help: A helyi előzményeket megelőző időszakra korábban beállított,
-          hibás Modelo 303 nyitó átvihető egyenleg javítása. Felülírja a meglévő beállított
-          összeget; elutasítja, ha az időszakhoz nincs rekord (előbb seed), és ha
-          egy már benyújtott Modelo 303 felhasználta a beállított alapot (annak módosítása
-          egy benyújtott bevallást változtatna meg). A --reason értéket auditeseménybe
-          rögzíti. Szükséges a --confirm.
-        correct_period_help: A javítandó beállított Modelo 303 rekord időszaka (pl.
-          4T, 3T).
+          hibás 303-es nyomtatvány nyitó átvihető egyenleg javítása. Felülírja a meglévő
+          beállított összeget; elutasítja, ha az időszakhoz nincs rekord (előbb seed),
+          és ha egy már benyújtott 303-es nyomtatvány felhasználta a beállított alapot
+          (annak módosítása egy benyújtott bevallást változtatna meg). A --reason
+          értéket auditeseménybe rögzíti. Szükséges a --confirm.
+        correct_period_help: A javítandó beállított 303-es nyomtatvány rekord időszaka
+          (pl. 4T, 3T).
         correct_reason_help: A javítás indoka, az auditeseménybe rögzítve.
         correct_reason_required: 'Adja meg a --reason értéket: rögzítse, miért javítja
           a nyitó egyenleget; nem lehet üres.'
         group_help: Helyi IVA-kompenzációs tárca egyenleg parancsok.
         override_amount_help: Felülírt előző kompenzációs összeg EUR-ban az iva.compensacion-pendiente-periodos-anteriores
-          mezőre, AEAT 110-es casilla; decimális, például 420.00.
+          mezőre, AEAT 110-es rovat; decimális, például 420.00.
         override_confirm_help: Kötelező megerősítő jelző. Elismeri, hogy a felülírás
           megváltoztatja a benyújtott előző kompenzációs értéket, és a bevallás pontossága
           a megadott értéktől függ.
@@ -964,13 +966,13 @@ cli:
           hivatkozása, például korábbi justificante referencia.
         override_evidence_locator_required: Adja meg a --evidence-locator értékét
           a felülírást alátámasztó bizonyíték hivatkozásával.
-        override_filing_year_help: Annak a Modelo 303 időszaknak a bevallási éve,
-          amelynek előző kompenzációs átvitele felülírásra kerül.
-        override_help: Rögzít egy adózói felülírást a Modelo 303 előző kompenzációs
+        override_filing_year_help: Annak a 303-es nyomtatvány időszaknak a bevallási
+          éve, amelynek előző kompenzációs átvitele felülírásra kerül.
+        override_help: Rögzít egy adózói felülírást a 303-es nyomtatvány előző kompenzációs
           átviteléhez a helyi tárcán kívüli bizonyíték alapján. Csak a számítást oldja
           fel, és nem teljesíti a hivatalos bizonyítéki ellenőrzést. --confirm szükséges.
-        override_period_help: A függő Modelo 303 bevallási időszak, amely megkapja
-          az átvitelt, például 2T vagy 3T.
+        override_period_help: A függő 303-es nyomtatvány bevallási időszak, amely
+          megkapja az átvitelt, például 2T vagy 3T.
         override_reason_help: A felülírás kötelező indoka, auditálható eredetként
           rögzítve.
         override_reason_required: Adja meg a --reason értékét, amely megindokolja
@@ -982,19 +984,19 @@ cli:
         seed_conflict: Már létezik IVA-kompenzációs állapot a(z) %{filing_year}/%{period}
           időszakhoz; újabb kezdőérték nem hozható létre.
         seed_filing_year_help: A vetőösszeg benyújtási éve.
-        seed_help: "Modelo 303 áthozott kompenzációs nyitóegyenleg deklarálása egy\
-          \ olyan időszakra, amely megelőzi a helyi előzményeket. Megtagadja, ha az\
-          \ időszakhoz már van rekord.\n\nKét eset:\n\n  --amount 0   Nulla nyitóegyenleg:\
-          \ azt deklarálja, hogy erre az időszakra nincs áthozandó függő kompenzáció.\
-          \ Ez olyan adózónál is előfordulhat, aki korábban már adott be M303 bevallást,\
-          \ ha az utolsó M303 nem hagyott függőben lévő kompenzációt.\n\n  --amount\
-          \ X   Áthozott egyenleg: az adózó korábbi M303 bevallásokat nyújtott be\
-          \ más eszközzel vagy közvetlenül az AEAT-nál. X az utolsó benyújtott M303\
-          \ bevallásból származó, későbbi időszakokra függőben maradó kompenzáció.\n\
+        seed_help: "A 303-es nyomtatvány áthozott kompenzációs nyitóegyenleg deklarálása\
+          \ egy olyan időszakra, amely megelőzi a helyi előzményeket. Megtagadja,\
+          \ ha az időszakhoz már van rekord.\n\nKét eset:\n\n  --amount 0   Nulla\
+          \ nyitóegyenleg: azt deklarálja, hogy erre az időszakra nincs áthozandó\
+          \ függő kompenzáció. Ez olyan adózónál is előfordulhat, aki korábban már\
+          \ adott be M303 bevallást, ha az utolsó M303 nem hagyott függőben lévő kompenzációt.\n\
+          \n  --amount X   Áthozott egyenleg: az adózó korábbi M303 bevallásokat nyújtott\
+          \ be más eszközzel vagy közvetlenül az AEAT-nál. X az utolsó benyújtott\
+          \ M303 bevallásból származó, későbbi időszakokra függőben maradó kompenzáció.\n\
           \nAz automatikus first_period_zero eset független a seed parancstól: a számítás\
           \ és az egyeztetés során a tevékenységkezdési és nyilvántartási feltételek\
-          \ bizonyítják, hogy ez az első IVA-időszak; ekkor az AEAT 110-es casilla\
-          \ nulla a LIVA 99.5. cikke (37/1992. törvény) alapján, és nem blokkol."
+          \ bizonyítják, hogy ez az első IVA-időszak; ekkor az AEAT 110-es rovat nulla\
+          \ a LIVA 99.5. cikke (37/1992. törvény) alapján, és nem blokkol."
         seed_invalid_amount: 'Az IVA kezdőösszege érvénytelen: %{amount}.'
         seed_period_help: 'A 303-as nyomtatvány benyújtásának időszaka: 1T-4T negyedévek
           (pl. 4T).'
@@ -1034,28 +1036,32 @@ cli:
         casilla_help: Ismételhető nyilvántartási mezőhozzárendelés, ID=ÉRTÉK formában.
         communication_record_id_help: A kommunikációs rekord azonosítója (vagy egyértelmű
           előtagja).
-        create_help: Hozzon létre egy helyi Modelo 145 kifizetői kommunikációs rekordot.
+        create_help: Hozzon létre egy helyi 145-ös nyomtatvány kifizetői kommunikációs
+          rekordot.
         errors:
           casilla_required: Adjon meg legalább egy --casilla ID=ÉRTÉK bejegyzést.
-        export_help: Exportáljon egy helyi Modelo 145 kifizetői kommunikációs rekordot.
-        group_help: Kezelje a Modelo 145 helyi kifizetői kommunikációs rekordjait.
-        mark_delivered_to_payer_help: Jelölje meg a helyi Modelo 145 kommunikációs
+        export_help: Exportáljon egy helyi 145-ös nyomtatvány kifizetői kommunikációs
+          rekordot.
+        group_help: Kezelje a 145-ös nyomtatvány helyi kifizetői kommunikációs rekordjait.
+        mark_delivered_to_payer_help: Jelölje meg a helyi 145-ös nyomtatvány kommunikációs
           rekordot a kifizetőnek kézbesítettként.
-        mark_locally_completed_help: Jelölje meg a helyi Modelo 145 kommunikációs
+        mark_locally_completed_help: Jelölje meg a helyi 145-ös nyomtatvány kommunikációs
           rekordot helyileg befejezettként.
         note_help: Opcionális operátori megjegyzés.
         period_help: 'A kommunikáció időszakának tokenje: comunicacion vagy variacion.'
-        validate_help: Ellenőrizzen egy helyi Modelo 145 kifizetői kommunikációs rekordot.
+        validate_help: Ellenőrizzen egy helyi 145-ös nyomtatvány kifizetői kommunikációs
+          rekordot.
         year_help: A kommunikáció éve.
       project:
         binding_help: Kötési érték KEY=VALUE szintaxissal (ismételhető).
         casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető).
         ccaa_help: Autonóm közösség kódja a területi vetítéshez.
-        no_m130_revisions: Nincs negyedéves Modelo 130 piszkozat revízió a(z) %{year}
+        no_m130_revisions: Nincs negyedéves 130-as nyomtatvány piszkozat revízió a(z)
+          %{year} adóévre.
+        no_m130_units: Nincs 130-as nyomtatvány piszkozat munkaegység a(z) %{year}
           adóévre.
-        no_m130_units: Nincs Modelo 130 piszkozat munkaegység a(z) %{year} adóévre.
         year_help: Adóév a vetítéshez.
-      project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves Modelo 130
+      project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves 130-as nyomtatvány
         összesítés).
       readiness:
         modelo_help: Nyomtatványkód (pl. 303).
@@ -1261,7 +1267,7 @@ cli:
       support_matrix:
         help: 'Megjeleníti a regisztráció szintű, modellenkénti támogatási mátrixot:
           számítási szint, teljességi jegyzék, exportformátumok, kinyerő lefedettség,
-          deklarált casilla-átnevezések és AEAT-portál kereszthivatkozások.'
+          deklarált rovat-átnevezések és AEAT-portál kereszthivatkozások.'
       verification_report:
         app_help: Rögzített ellenőrzési jelentések vizsgálata.
         list_help: Ellenőrzési jelentések listázása, opcionálisan egy számítási revízióra
@@ -1331,10 +1337,10 @@ cli:
         autoconsumo_promotor_base_not_decimal: 'Az --autoconsumo-promotor-base értéknek
           decimális összegnek kell lennie; kapott érték: {value}. Használjon tizedespontot
           ezreselválasztó nélkül, pl. 1234.56.'
-        borrador_help: Modelo 100 borrador pillanatkép-azonosítója (teljes vagy egyértelmű
-          előtag). A pillanatkép-kötési értékeket csak az aeat_prefilled-ként jelölt
-          nyilvántartási kötéseknél használják; a hívó --binding felülbírálatok mindig
-          elsőbbséget élveznek.
+        borrador_help: 100-as nyomtatvány borrador pillanatkép-azonosítója (teljes
+          vagy egyértelmű előtag). A pillanatkép-kötési értékeket csak az aeat_prefilled-ként
+          jelölt nyilvántartási kötéseknél használják; a hívó --binding felülbírálatok
+          mindig elsőbbséget élveznek.
         bucket_id_help: A munkaegységhez tartozó profil.
         calculate_help: Új tervezet számítási revízió megőrzése a munkaegységhez.
         calculate_saved: 'Mentve tervezet számítási revízióként: %{revision_id} (állapot:
@@ -1389,9 +1395,9 @@ cli:
           LISyD és Art. 67 RISD; a rendes határidő a haláltól számított 6 hónap. A
           megfelelő regionális Hacienda adóhatóságnál kell benyújtani.'
         create_stub_modelo_660_refused: 'A(z) %{modelo} nyomtatvány (ISD hagyatéki
-          leltár, a Modelo 650 melléklete) munkafeladat-létrehozása ebben a CLI-ben
-          nem támogatott. Jogalap: Ley 29/1987 LISyD; a megfelelő regionális Hacienda
-          adóhatóságnál kell benyújtani.'
+          leltár, a 650-es nyomtatvány melléklete) munkafeladat-létrehozása ebben
+          a CLI-ben nem támogatott. Jogalap: Ley 29/1987 LISyD; a megfelelő regionális
+          Hacienda adóhatóságnál kell benyújtani.'
         dependencies_help: Keresztidőszaki bevallástörténeti függőségek és az aktuális
           clean-state blokkolók megjelenítése a célbevalláshoz
         dependencies_period_requires_modelo: A --period beállításhoz kötelező a --modelo.
@@ -1464,14 +1470,14 @@ cli:
           adóalapot kap (%{porcentaje}% részesedés). A tagnak a saját munkaterületén
           attribution_received tényekként kell rögzítenie (entity_nif, entity_name,
           share_pct, base_imponible_attributed, filing_year), majd az adóalapot be
-          kell építenie a saját Modelo 100 hozzárendelési rendszer (gazdasági tevékenység)
-          %{casilla} rovatába (LIRPF 86-89. cikk).'
+          kell építenie a saját 100-as nyomtatvány hozzárendelési rendszer (gazdasági
+          tevékenység) %{casilla} rovatába (LIRPF 86-89. cikk).'
         m210_gross_income_source_help: 'Az M210-es modell [5] mezőjének forrása: kézi
           (alapértelmezett) vagy spanyol forrású főkönyvi összesítés.'
         m210_plazo_resolved: 'A 210-es modell benyújtási időszaka meghatározva: az
           önkéntes benyújtás határideje %{closes_on}.'
-        m303_filing_evidence_help: A teljes, típusos Modelo 303 bevallási bizonyíték
-          JSON-dokumentumának elérési útja.
+        m303_filing_evidence_help: A teljes, típusos 303-es nyomtatvány bevallási
+          bizonyíték JSON-dokumentumának elérési útja.
         m303_rectificativa_motive_help: 'Alkalmazható 303-as rectificativa esetén
           kötelező: válassza a rectificaciones vagy discrepancia_criterio_administrativo
           értéket. Soha nem következtethető ki és nincs alapértéke.'
@@ -1491,14 +1497,13 @@ cli:
           formában ezen a parancson; a KEY registry relation id, nem binding id. Futtasd:
           %{discover}, hogy lásd a relation útmutatót és a számítás által még igényelt
           bindingokat.'
-        missing_relation_guidance_m200_m202: '%{base} A Modelo 202 pagos fraccionados
-          értékeit a Modelo 200-hoz --relation RELATION_ID=VALUE formában add meg,
-          nem --bindinggal. A DP200014B:00611 két, kölcsönösen kizáró M202 payment
+        missing_relation_guidance_m200_m202: '%{base} A 202-es nyomtatvány pagos fraccionados
+          értékeit a 200-as nyomtatványhoz --relation RELATION_ID=VALUE formában add
+          meg, nem --bindinggal. A DP200014B:00611 két, kölcsönösen kizáró M202 payment
           relation csatornát von le: modelo-200-2024-rel-202-pagos-fraccionados a
-          40.3 casilla 34-hez és modelo-200-2024-rel-202-pagos-fraccionados-40-2 a
-          40.2 casilla 03-hoz. Kézi érték megadásakor a nem használt modalitást állítsd
-          0-ra. Futtasd: %{discover}, hogy lásd a relation útmutatót és a fennmaradó
-          bindingokat.'
+          40.3 rovat 34-hez és modelo-200-2024-rel-202-pagos-fraccionados-40-2 a 40.2
+          rovat 03-hoz. Kézi érték megadásakor a nem használt modalitást állítsd 0-ra.
+          Futtasd: %{discover}, hogy lásd a relation útmutatót és a fennmaradó bindingokat.'
         modelo_help: Adónyomtatvány kódja (pl. 303, 130, 100).
         name_help: Opcionális megjelenítési név a munkaegységhez.
         name_required: Adja meg a --name értékét.
@@ -1508,8 +1513,8 @@ cli:
         output_language_help: A megjelenített üzenetek kimeneti nyelve.
         override_help: 'Kötési érték KEY=VALUE szintaxissal (ismételhető); futtassa:
           `aeat app modelo bindings list --missing` a hiányzó kötések megtekintéséhez.'
-        payment_election_help: 'Válassza ki, hogyan fizetik a pozitív Modelo 303 eredményt:
-          átutalással vagy csoportos beszedéssel.'
+        payment_election_help: 'Válassza ki, hogyan fizetik a pozitív 303-es nyomtatvány
+          eredményt: átutalással vagy csoportos beszedéssel.'
         period_help: 'Munkaegység időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok;
           nyilvántartási nyomtatványokhoz (036): alta, modificacion vagy baja.'
         period_token_invalid: 'A --period "%{token}" nem érvényes időszaktokent a(z)
@@ -1560,14 +1565,14 @@ cli:
           megtartása vagy törlése/módosítása; a törléshez vagy módosításhoz külső
           bizonyítékkal alátámasztott, U típusú helyesbítő alapbevallás szükséges.
         reason_help: Az eldobás opcionális szabad szöveges oka (max. 500 karakter).
-        refund_election_help: Válassza ki, hogy a jogosult negatív Modelo 303 eredményt
-          továbbviszik vagy visszaterítésként kérik.
+        refund_election_help: Válassza ki, hogy a jogosult negatív 303-es nyomtatvány
+          eredményt továbbviszik vagy visszaterítésként kérik.
         relation_help: 'Registry relation érték KEY=VALUE formában (ismételhető).
           A KEY registry relation id, nem binding id; ezt használd időszakok vagy
           modellek közötti relation bemenetekhez. Futtasd: aeat app modelo bindings
-          list --missing a scope-hoz tartozó relation útmutatóért. A Modelo 200 M202
-          pagos fraccionados esetében a kölcsönösen kizáró 40.3 casilla 34 és 40.2
-          casilla 03 relation csatornákat használd, és kézi érték megadásakor a nem
+          list --missing a scope-hoz tartozó relation útmutatóért. A 200-as nyomtatvány
+          M202 pagos fraccionados esetében a kölcsönösen kizáró 40.3 rovat 34 és 40.2
+          rovat 03 relation csatornákat használd, és kézi érték megadásakor a nem
           használt modalitást állítsd 0-ra.'
         rename_help: Egy munkaegység megjelenítési nevének frissítése.
         rescate_contingencia_year_help: 'Az az év, amikor a nyugdíjpénztári esemény
@@ -1597,7 +1602,8 @@ cli:
         rescate_year_help: Az az év, amikor a visszaváltási juttatást megkapják (alapértelmezetten
           a bevallás éve). Összehasonlítva a LIRPF DT 12a 4. bekezdés szerinti ablakkal,
           a --contingencia-year évtől mérve.
-        result_summary_header: eredmény-összefoglaló Modelo %{modelo} %{year} %{period}
+        result_summary_header: eredmény-összefoglaló nyomtatvány %{modelo} %{year}
+          %{period}
         resume_help: Ellenőrzi, hogy megszakított munkafolyamat újrapróbálható-e az
           AEAT megkeresése nélkül. A normál út a --modelo --year --period; a pontos
           azonosítók haladó menekülőútvonalak.
@@ -1710,12 +1716,12 @@ cli:
       errors:
         m303_evidence_forbidden: A 303-as modell bevallási példányához tartozó bizonyíték
           más modellhez nem használható.
-        m303_filing_evidence_invalid: A(z) {path} helyen lévő Modelo 303 bevallási
+        m303_filing_evidence_invalid: A(z) {path} helyen lévő 303-es nyomtatvány bevallási
           bizonyíték dokumentum nem olvasható vagy érvénytelen.
-        m303_filing_evidence_period_mismatch: A Modelo 303 bevallási bizonyíték időszaka
-          nem egyezik a kiválasztott munkaidőszakkal.
-        m303_filing_evidence_required: A Modelo 303 számításhoz előzetesen teljes
-          bevallási bizonyíték JSON-dokumentum szükséges.
+        m303_filing_evidence_period_mismatch: A 303-as nyomtatvány bevallási bizonyíték
+          időszaka nem egyezik a kiválasztott munkaidőszakkal.
+        m303_filing_evidence_required: A 303-as nyomtatvány számításhoz előzetesen
+          teljes bevallási bizonyíték JSON-dokumentum szükséges.
   common:
     errors:
       filing_requires_declared_tax_id: 'Az aktív profil nem ad meg adóazonosítót,
@@ -2744,8 +2750,8 @@ cli:
         deklarált szektorral.
       purchase_invoice_evidence_help: Kanonikus vásárlásiszámla-bizonyíték azonosítója.
       recargo_amount_help: A recargo de equivalencia rendszerű kiskereskedőnek történő
-        értékesítésre felszámított recargo-tétel (LIVA 161. cikk); a Modelo 303 recargo-tételébe
-        IVA-kulcs szerint összesítve
+        értékesítésre felszámított recargo-tétel (LIVA 161. cikk); a 303-as nyomtatvány
+        recargo-tételébe IVA-kulcs szerint összesítve
       sector_unmatched: A(z) --sector '{sector_id}' egyetlen deklarált megkülönböztetett
         szektorral sem egyezik (LIVA 9.1.c és 101. cikk), ezért ez a bemenet a közös
         használati százalékkal vonható le a szektor százaléka helyett. A szektornak
@@ -3154,7 +3160,7 @@ cli:
       yes_help: Az egyesítés megerősítése (minden gyermeket és a szülőt archiválja,
         és megőriz egy friss tartalom-azonosítójú egyesített tranzakciót).
     participation:
-      help: Annak ellenőrzése, hogy mely véglegesített modelo-revíziók és benyújtások
+      help: Annak ellenőrzése, hogy mely véglegesített nyomtatvány-revíziók és benyújtások
         használtak fel egy főkönyvi tranzakciót.
       rebuild_help: Az aktív bucket részvételi indexének újraépítése.
       transaction_id_help: A főkönyvi tranzakció azonosítója, amelynek véglegesített
@@ -3286,7 +3292,7 @@ cli:
         ledger_view: Egyetlen tranzakció megtekintése.
         live_filed_capture: Csak olvasható megfigyelés letöltése az AEAT-ből.
         live_filed_capture_sources: Letöltési forráslehetőségek listázása.
-        live_filed_discover: Megmutatja, mely modelo-évpárokat járná be egy letöltés,
+        live_filed_discover: Megmutatja, mely nyomtatvány-évpárokat járná be egy letöltés,
           anélkül hogy letöltene.
         live_filed_list: Helyileg rögzített benyújtott bevallás-megfigyelések listázása.
         live_filed_pull_all: Egyetlen menetben letölti a teljes AEAT-nál benyújtott
@@ -3297,7 +3303,7 @@ cli:
         modelo_bindings: Nyilvántartási kötésfedettség vizsgálata.
         modelo_describe: Egy nyomtatvány-revízió leírása.
         modelo_list: Támogatott nyomtatványok listázása.
-        modelo_m036: Az AEAT-nál benyújtott Modelo 036 nyilatkozat rögzítése.
+        modelo_m036: Az AEAT-nál benyújtott 036-os nyomtatvány nyilatkozat rögzítése.
         modelo_verification_report: Modellellenőrzési jelentések listázása és megtekintése.
         modelo_work: Nyomtatványhoz tartozó munkaegységek létrehozása és kezelése.
         overview_status: Az aktuális profil és munkállapot összefoglalása.
@@ -3369,7 +3375,7 @@ cli:
         family_config: Profil-, munkamenet-, tár- és javítási parancsok megnyitása.
         footer: 'Részletek: --help. Töröld az érzékeny adatokat, majd jelentsd: github.com/nevenincs/cadrumo/issues.'
         heading: CADRUMO - helyi munkafolyamat a spanyol adóhatósággal (AEAT)
-        paragraph_app_root: Az app gyökér kezeli a profiláttekintést, főkönyvet, modelo-munkát,
+        paragraph_app_root: Az app gyökér kezeli a profiláttekintést, főkönyvet, nyomtatvány-munkát,
           felülvizsgálatot és hitelesített AEAT-lekérdezéseket.
         paragraph_config_root: A config gyökér kezeli a profilokat, a titkosított
           helyi adatokat, a helyreállítási kulcsokat, a munkameneteket, az AEAT-hitelesítést
@@ -3383,7 +3389,7 @@ cli:
           folytatható hozzáférést ad a titkosított adatokhoz.
         paragraph_review_terms: A felülvizsgálati sor kezelői beavatkozást igénylő
           megállapításokat tartalmaz.
-        paragraph_tax_terms: A főkönyv importált pénzmozgásokat tartalmaz. A modelo
+        paragraph_tax_terms: A főkönyv importált pénzmozgásokat tartalmaz. A nyomtatvány
           hivatalos AEAT-bevallási űrlap, amely nem azonos a helyi munkaegységgel
           vagy exporttal.
         recovery_login: Hiányzó, lezárt vagy lejárt profilmunkamenet indítása vagy
@@ -3403,7 +3409,7 @@ cli:
         start_status: A profil készültségének és hiteles következő lépésének ellenőrzése.
         workflow_import: Banki vagy könyvelési tranzakciók importálása.
         workflow_ledger_review: Figyelmet igénylő importált sorok felülvizsgálata.
-        workflow_modelo: Modelo-munkaegységek létrehozása vagy kezelése.
+        workflow_modelo: Nyomtatvány-munkaegységek létrehozása vagy kezelése.
         workflow_overview: A profil- és munkaállapot összegzése.
         workflow_profile_status: A profil készültségének megjelenítése.
         workflow_review_queue: Kezelői felülvizsgálatra váró profilelemek megjelenítése.
@@ -3447,7 +3453,7 @@ cli:
         business_day: Munkanap
         calendar_unavailable: Naptár nem elérhető
         domingo: Vasárnap
-        modelo_exception: Modelo-kivétel
+        modelo_exception: Nyomtatvány-kivétel
         sabado: Szombat
       show_suppressed_help: Elnyomott bejegyzések megjelenítése is a naptárban.
       to_help: A naptárablak záró dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
@@ -3472,7 +3478,7 @@ cli:
         év.'
     labels:
       period: Időszak
-    local_work_units_unavailable: A helyi Modelo munkaegység-állapot nem tölthető
+    local_work_units_unavailable: A helyi nyomtatvány munkaegység-állapot nem tölthető
       be; ez az áttekintés a határidőnaptárból származik, és egy folyamatban lévő
       piszkozatot még esedékesként túljelezhet, vagy régebbi folyamatban lévő piszkozatokat
       kihagyhat.
@@ -3534,7 +3540,7 @@ cli:
         és a másodlagos kifizetőktől kapott összeg meghaladja az 1.500 €-t, az IRPF
         bevallási mentességi határ a 96.3 LIRPF szerinti csökkentett értékre csökken;
         ha a teljes munkajövedelem ezt meghaladja, előfordulhat, hogy be kell nyújtania
-        a Modelo 100-at.
+        a 100-as nyomtatványt.
       invoices_empty: Nincs értékesítési vagy vásárlási számla tárolva a számlaregiszterben.
         Ez külön tár a banki főkönyvtől – a besorolt főkönyvi tranzakciókat nem számolja.
         Üres számlaregiszter normális, ha csak a banki főkönyvet használja.
@@ -3546,16 +3552,16 @@ cli:
         create_profile: Hozzon létre adózói profilt, mielőtt adatokat importálna vagy
           bevallást indítana.
         import_transactions: Importáljon bankkivonatot a tranzakciói rögzítéséhez.
-        modelo_210_sede_only: A Modelo 210 IRNR-felderítéshez látható, de a helyi
-          munkaegység-létrehozás még nem támogatott; nyújtsa be az AEAT Sede G320
-          felületen.
+        modelo_210_sede_only: A 210-es nyomtatvány IRNR-felderítéshez látható, de
+          a helyi munkaegység-létrehozás még nem támogatott; nyújtsa be az AEAT Sede
+          G320 felületen.
         repair_storage: Futtassa a tároló-diagnosztikát a részletekért. Ne helyezzen
           sorokat karanténba, hacsak nem szándékosan archiválja az olvashatatlan régi
           helyi adatokat.
         resume_work_unit: Folytasson egy meglévő munkaegységet.
         review_ledger: Tekintse át az importált sorokat.
         start_another_work_unit: Indítson egy másik munkaegységet egy eltérő modelóhoz.
-        start_work_unit_from_ledger: Indítson modelo bevallást a főkönyvi adataiból.
+        start_work_unit_from_ledger: Indítson nyomtatvány bevallást a főkönyvi adataiból.
       profile_active: A(z) `%{profile}` profilban dolgozik.
       profile_missing: Nincs beállítva aktív profil. Hozzon létre egyet az adatok
         importálása előtt.
@@ -3567,18 +3573,19 @@ cli:
       transactions_empty: Még nem importáltak banki tranzakciókat.
       transactions_present: '%{count} banki tranzakció érhető el a főkönyvben.'
       work_units_empty: Még nem indítottak modellómunka-egységet.
-      work_units_present: '%{count} modelo munkaegység van folyamatban ebben a helyi
-        tárolóban; a modelo munkája mentve van és folytatható.'
-      work_units_present_with_discarded: '%{count} aktív modelo munkaegység (%{discarded}
-        elvetve) ebben a helyi tárolóban; az aktív modelo munkája mentve van és folytatható.'
+      work_units_present: '%{count} nyomtatvány munkaegység van folyamatban ebben
+        a helyi tárolóban; a nyomtatvány munkája mentve van és folytatható.'
+      work_units_present_with_discarded: '%{count} aktív nyomtatvány munkaegység (%{discarded}
+        elvetve) ebben a helyi tárolóban; az aktív nyomtatvány munkája mentve van
+        és folytatható.'
     status_help: Profil, főkönyv és nyomtatvány-készültség megjelenítése.
     taxpayer_model_undeclared: Az aktív profil nem tartalmaz adózói modellt; frissítse
       a profilt, vagy futtassa újra a hiányos profil felülbírálásával.
     verbose_help: Részletek és következő lépés megjelenítése, ha elérhető.
     warning:
-      m303_simplificado_forfait_unavailable: A Modelo 303 alkalmazandó, de a simplificado
-        forfait számítási motor még nem elérhető; beadás előtt ellenőrizze az egyszerűsített
-        rezsim casillait.
+      m303_simplificado_forfait_unavailable: A 303-as nyomtatvány alkalmazandó, de
+        a simplificado forfait számítási motor még nem elérhető; beadás előtt ellenőrizze
+        az egyszerűsített rezsim rovatait.
     year_help: Bevallási év a --period kapcsolóhoz (pl. 2024).
   review:
     app_help: 'Üzemeltetői felülvizsgálati sor: főkönyvi tranzakciók, vásárlási bizonylatok
