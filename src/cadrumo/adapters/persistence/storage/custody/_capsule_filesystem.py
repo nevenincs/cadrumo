@@ -114,89 +114,118 @@ def renameat2_noreplace(*, source_fd: int, source_name: str, destination_fd: int
 
 
 def rename_windows_directory_by_handle(staging_handle: int, destination: Path, *, root_handle: int) -> None:
-    """Rename the exact open stage while the complete destination ancestry is locked."""
-    import ctypes
-    from ctypes import wintypes
+    """Rename the exact open stage while the complete destination ancestry is locked.
 
-    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    The ``sys.platform == "win32"`` block, rather than a guard at the call
+    site or an early return, is what establishes the platform for the Windows
+    API below: it is the only guard shape every checker this project runs
+    narrows on, so those references resolve when the tree is analysed for a
+    platform that does not ship them.
+    """
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
 
-    class _FileRenameInfo(ctypes.Structure):
-        _fields_ = [
-            ("replace_if_exists", wintypes.BOOLEAN),
-            ("root_directory", wintypes.HANDLE),
-            ("file_name_length", wintypes.DWORD),
-            ("file_name", wintypes.WCHAR * 1),
-        ]
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
 
-    # A mapped/network volume may reject a non-null RootDirectory.  The source
-    # is still renamed by its already-open handle, while the component-wise
-    # root anchor makes this absolute destination immutable for the call.
-    encoded_name = str(destination).encode("utf-16-le")
-    name_offset = _FileRenameInfo.file_name.offset
-    rename_buffer = ctypes.create_string_buffer(
-        ctypes.sizeof(_FileRenameInfo) + len(encoded_name) - ctypes.sizeof(wintypes.WCHAR)
-    )
-    rename = _FileRenameInfo.from_buffer(rename_buffer)
-    rename.replace_if_exists = False
-    rename.root_directory = wintypes.HANDLE()
-    rename.file_name_length = len(encoded_name)
-    ctypes.memmove(ctypes.addressof(rename_buffer) + name_offset, encoded_name, len(encoded_name))
-    set_information = kernel32.SetFileInformationByHandle
-    set_information.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
-    set_information.restype = wintypes.BOOL
-    if set_information(wintypes.HANDLE(staging_handle), 3, ctypes.byref(rename), len(rename_buffer)):
-        return
-    error = ctypes.get_last_error()
-    if error in {80, 183}:
-        raise ProfileCustodyRecordError("profile capsule destination already exists") from None
-    raise ProfileCustodyRecordError("atomic no-replace profile capsule publication failed") from OSError(
-        error, "SetFileInformationByHandle(FileRenameInfo)"
-    )
+        class _FileRenameInfo(ctypes.Structure):
+            _fields_ = [
+                ("replace_if_exists", wintypes.BOOLEAN),
+                ("root_directory", wintypes.HANDLE),
+                ("file_name_length", wintypes.DWORD),
+                ("file_name", wintypes.WCHAR * 1),
+            ]
+
+        # A mapped/network volume may reject a non-null RootDirectory.  The source
+        # is still renamed by its already-open handle, while the component-wise
+        # root anchor makes this absolute destination immutable for the call.
+        encoded_name = str(destination).encode("utf-16-le")
+        name_offset = _FileRenameInfo.file_name.offset
+        rename_buffer = ctypes.create_string_buffer(
+            ctypes.sizeof(_FileRenameInfo) + len(encoded_name) - ctypes.sizeof(wintypes.WCHAR)
+        )
+        rename = _FileRenameInfo.from_buffer(rename_buffer)
+        rename.replace_if_exists = False
+        rename.root_directory = wintypes.HANDLE()
+        rename.file_name_length = len(encoded_name)
+        ctypes.memmove(ctypes.addressof(rename_buffer) + name_offset, encoded_name, len(encoded_name))
+        set_information = kernel32.SetFileInformationByHandle
+        set_information.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+        set_information.restype = wintypes.BOOL
+        if set_information(wintypes.HANDLE(staging_handle), 3, ctypes.byref(rename), len(rename_buffer)):
+            return
+        error = ctypes.get_last_error()
+        if error in {80, 183}:
+            raise ProfileCustodyRecordError("profile capsule destination already exists") from None
+        raise ProfileCustodyRecordError("atomic no-replace profile capsule publication failed") from OSError(
+            error, "SetFileInformationByHandle(FileRenameInfo)"
+        )
+    raise ProfileCustodyRecordError("handle-relative profile capsule publication is not available on this platform")
 
 
 def write_through_windows_publication_fence(destination: Path, *, root_handle: int | None) -> None:
-    """Commit the prior handle-relative rename through Windows' supported fence."""
+    """Commit the prior handle-relative rename through Windows' supported fence.
+
+    The ``sys.platform == "win32"`` block, rather than a guard at the call
+    site or an early return, is what establishes the platform for the Windows
+    API below: it is the only guard shape every checker this project runs
+    narrows on, so those references resolve when the tree is analysed for a
+    platform that does not ship them.
+    """
     if root_handle is None:
         raise ProfileCustodyRecordError("profile capsule root is not identity-anchored for durability")
-    import ctypes
-    from ctypes import wintypes
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
 
-    move_file = ctypes.WinDLL("kernel32", use_last_error=True).MoveFileExW
-    move_file.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p, wintypes.DWORD]
-    move_file.restype = wintypes.BOOL
-    if not move_file(str(destination), str(destination), 0x00000008):
-        error = ctypes.get_last_error()
-        if error == 109:  # ERROR_BROKEN_PIPE from a mapped/server volume.
-            fsync_windows_published_commit(destination)
-            return
-        raise ProfileCustodyRecordError("profile capsule root durability fence failed") from OSError(
-            error, "MoveFileExW(MOVEFILE_WRITE_THROUGH)"
-        )
+        move_file = ctypes.WinDLL("kernel32", use_last_error=True).MoveFileExW
+        move_file.argtypes = [ctypes.c_wchar_p, ctypes.c_wchar_p, wintypes.DWORD]
+        move_file.restype = wintypes.BOOL
+        if not move_file(str(destination), str(destination), 0x00000008):
+            error = ctypes.get_last_error()
+            if error == 109:  # ERROR_BROKEN_PIPE from a mapped/server volume.
+                fsync_windows_published_commit(destination)
+                return
+            raise ProfileCustodyRecordError("profile capsule root durability fence failed") from OSError(
+                error, "MoveFileExW(MOVEFILE_WRITE_THROUGH)"
+            )
+        return
+    raise ProfileCustodyRecordError("the Windows publication durability fence is not available on this platform")
 
 
 def fsync_windows_published_commit(destination: Path) -> None:
-    """Use the server-backed commit record as the remote-volume durability fence."""
-    try:
-        descriptor = os.open(
-            destination / PROFILE_CUSTODY_COMMIT_FILENAME,
-            os.O_RDWR | getattr(os, "O_BINARY", 0),
-        )
-    except OSError as exc:
-        raise ProfileCustodyRecordError("published profile capsule commit cannot be durability-fenced") from exc
-    try:
-        import ctypes
-        import msvcrt
-        from ctypes import wintypes
+    """Use the server-backed commit record as the remote-volume durability fence.
 
-        flush = ctypes.WinDLL("kernel32", use_last_error=True).FlushFileBuffers
-        flush.argtypes = [wintypes.HANDLE]
-        flush.restype = wintypes.BOOL
-        if not flush(wintypes.HANDLE(msvcrt.get_osfhandle(descriptor))):
-            raise OSError(ctypes.get_last_error(), "FlushFileBuffers")
-    except OSError as exc:
-        raise ProfileCustodyRecordError("published profile capsule commit durability fence failed") from exc
-    finally:
-        os.close(descriptor)
+    The ``sys.platform == "win32"`` block, rather than a guard at the call
+    site or an early return, is what establishes the platform for the Windows
+    API below: it is the only guard shape every checker this project runs
+    narrows on, so those references resolve when the tree is analysed for a
+    platform that does not ship them.
+    """
+    if sys.platform == "win32":
+        try:
+            descriptor = os.open(
+                destination / PROFILE_CUSTODY_COMMIT_FILENAME,
+                os.O_RDWR | os.O_BINARY,
+            )
+        except OSError as exc:
+            raise ProfileCustodyRecordError("published profile capsule commit cannot be durability-fenced") from exc
+        try:
+            import ctypes
+            import msvcrt
+            from ctypes import wintypes
+
+            flush = ctypes.WinDLL("kernel32", use_last_error=True).FlushFileBuffers
+            flush.argtypes = [wintypes.HANDLE]
+            flush.restype = wintypes.BOOL
+            if not flush(wintypes.HANDLE(msvcrt.get_osfhandle(descriptor))):
+                raise OSError(ctypes.get_last_error(), "FlushFileBuffers")
+        except OSError as exc:
+            raise ProfileCustodyRecordError("published profile capsule commit durability fence failed") from exc
+        finally:
+            os.close(descriptor)
+        return
+    raise ProfileCustodyRecordError("the Windows commit durability fence is not available on this platform")
 
 
 def windows_stage_snapshot(staging: Path) -> dict[str, tuple[int, int, bool]]:
@@ -265,15 +294,26 @@ def windows_delete_exact_entry(target: Path, expected: tuple[int, int, bool]) ->
 
 
 def windows_mark_handle_for_deletion(handle: int) -> None:
-    import ctypes
-    from ctypes import wintypes
+    """Mark the exact open handle for deletion on close.
 
-    class _FileDispositionInfo(ctypes.Structure):
-        _fields_ = [("delete_file", wintypes.BOOLEAN)]
+    The ``sys.platform == "win32"`` block, rather than a guard at the call
+    site or an early return, is what establishes the platform for the Windows
+    API below: it is the only guard shape every checker this project runs
+    narrows on, so those references resolve when the tree is analysed for a
+    platform that does not ship them.
+    """
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
 
-    disposition = _FileDispositionInfo(True)
-    set_information = ctypes.WinDLL("kernel32", use_last_error=True).SetFileInformationByHandle
-    set_information.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
-    set_information.restype = wintypes.BOOL
-    if not set_information(wintypes.HANDLE(handle), 4, ctypes.byref(disposition), ctypes.sizeof(disposition)):
-        raise ProfileCustodyRecordError("unpublished profile capsule entry cannot be safely removed")
+        class _FileDispositionInfo(ctypes.Structure):
+            _fields_ = [("delete_file", wintypes.BOOLEAN)]
+
+        disposition = _FileDispositionInfo(True)
+        set_information = ctypes.WinDLL("kernel32", use_last_error=True).SetFileInformationByHandle
+        set_information.argtypes = [wintypes.HANDLE, ctypes.c_int, ctypes.c_void_p, wintypes.DWORD]
+        set_information.restype = wintypes.BOOL
+        if not set_information(wintypes.HANDLE(handle), 4, ctypes.byref(disposition), ctypes.sizeof(disposition)):
+            raise ProfileCustodyRecordError("unpublished profile capsule entry cannot be safely removed")
+        return
+    raise ProfileCustodyRecordError("handle-relative deletion is not available on this platform")

@@ -95,7 +95,9 @@ def _current_capsule_input(
 
 def _crash_between_label_record_and_head(root_text: str, profile_id_text: str) -> None:
     """Durably replace the label after its pending head witness, then terminate."""
-    from cadrumo.entrypoints.adapter_composition import composed_profile_persistence_ports
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
+        composed_profile_persistence_ports,
+    )
 
     root = Path(root_text)
     profile_id = UUID(profile_id_text)
