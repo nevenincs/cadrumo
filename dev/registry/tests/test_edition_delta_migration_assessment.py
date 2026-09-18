@@ -153,7 +153,8 @@ def test_nested_family_override_detector_is_independent_and_exact(
 def test_removal_clearing_ordering_and_source_defaults_are_separate_operations(tmp_path: Path) -> None:
     declaration = (
         'formula_source_refs = ["successor-source"]\n'
-        'cleared_families = ["constructs"]\n'
+        'cleared_families = [{ family = "constructs", cause = "official_structure_withdraws", '
+        'reason = "The document governing this edition lays out no construct, so the earlier one is withdrawn." }]\n'
         '[[revisions."2025".family_removals]]\n'
         'family = "formulas"\n'
         'selector = { revision = "2024", id = "modelo-999-cuota" }\n'
