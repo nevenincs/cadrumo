@@ -79,25 +79,26 @@ modelo:
           is-pf-grupo-mod-40-2-lis-a-ingresar:
             help: Az adócsoport részletfizetési elszámolásának 03. rovata (Mod. 40.2
               LIS).
-            label: Mod. 40.2 LIS - Fizetendő
+            label: A LIS 40.2. cikke szerinti módszer - Fizetendő
           is-pf-grupo-mod-40-2-lis-base-del-pago-fraccionado:
             help: Az adócsoport részletfizetési elszámolásának 01. rovata (Mod. 40.2
               LIS).
-            label: Mod. 40.2 LIS - A részletfizetés alapja
+            label: A LIS 40.2. cikke szerinti módszer - Az előlegfizetés alapja
           is-pf-grupo-mod-40-2-lis-resultado-de-la-declaracion-anterior:
             help: Az adócsoport részletfizetési elszámolásának 02. rovata (Mod. 40.2
               LIS).
-            label: Mod. 40.2 LIS - Az előző bevallás eredménye (csak ha az kiegészítő)
+            label: A LIS 40.2. cikke szerinti módszer - Az előző bevallás eredménye
+              (csak ha az kiegészítő)
           is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-disminuciones:
             help: Az adócsoport részletfizetési elszámolásának 60. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - A csoport adóalapjának megállapításához szükséges
-              kiigazítások (LIS 19. kiegészítő rendelkezés) - Csökkentések
+            label: A LIS 40.3. cikke szerinti módszer - A csoport adóalapjának megállapításához
+              szükséges kiigazítások (LIS 19. kiegészítő rendelkezés) - Csökkenések
           is-pf-grupo-mod-40-3-lis-ajustes-para-la-determinacion-de-la-base-imponible-del-grup-aumentos:
             help: Az adócsoport részletfizetési elszámolásának 59. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - A csoport adóalapjának megállapításához szükséges
-              kiigazítások (LIS 19. kiegészítő rendelkezés) - Növelések
+            label: A LIS 40.3. cikke szerinti módszer - A csoport adóalapjának megállapításához
+              szükséges kiigazítások (LIS 19. kiegészítő rendelkezés) - Növekedések
           is-pf-grupo-mod-40-3-lis-b-1-caso-general-base-del-pago-fraccionado:
             help: Az adócsoport részletfizetési elszámolásának 16. rovata (Mod. 40.3
               LIS).
@@ -253,95 +254,101 @@ modelo:
           is-pf-grupo-mod-40-3-lis-base-imponible-previa:
             help: Az adócsoport részletfizetési elszámolásának 13. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Előzetes adóalap
+            label: A LIS 40.3. cikke szerinti módszer - Előzetes adóalap
           is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-de-entidades-o-de-grupos:
             help: Az adócsoport részletfizetési elszámolásának 15. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - A csoporthoz csatlakozás előtti szervezetek vagy
-              csoportok negatív adóalapjainak beszámítása (LIS 67. és 74.3. cikk)
+            label: A LIS 40.3. cikke szerinti módszer - A csoporthoz csatlakozás előtti
+              szervezetek vagy csoportok negatív adóalapjainak beszámítása (LIS 67.
+              és 74.3. cikk)
           is-pf-grupo-mod-40-3-lis-compensacion-de-bases-imponibles-negativas-del-grupo-de-periodos-an:
             help: Az adócsoport részletfizetési elszámolásának 14. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - A csoport korábbi időszaki negatív adóalapjainak
-              beszámítása
+            label: A LIS 40.3. cikke szerinti módszer - A csoport korábbi időszaki
+              negatív adóalapjainak beszámítása
           is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-aumentos:
             help: Az adócsoport részletfizetési elszámolásának 05. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Társasági adó (IS) korrekció - Növelések
+            label: A LIS 40.3. cikke szerinti módszer - Társasági adó (IS) korrekció
+              - Növekedések
           is-pf-grupo-mod-40-3-lis-correccion-por-impuesto-sobre-sociedades-disminuciones:
             help: Az adócsoport részletfizetési elszámolásának 06. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Társasági adó (IS) korrekció - Csökkentések
+            label: A LIS 40.3. cikke szerinti módszer - Társasági adó (IS) korrekció
+              - Csökkenések
           is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-corre-aumentos:
             help: Az adócsoport részletfizetési elszámolásának 11. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Belső eredmények halasztásának korrekciói és egyéb
-              konszolidációs korrekciók - Növelések
+            label: A LIS 40.3. cikke szerinti módszer - Belső eredmények halasztásának
+              korrekciói és egyéb konszolidációs korrekciók - Növekedések
           is-pf-grupo-mod-40-3-lis-correcciones-diferimiento-resultados-internos-y-otras-disminuciones:
             help: Az adócsoport részletfizetési elszámolásának 12. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Belső eredmények halasztásának korrekciói és egyéb
-              konszolidációs korrekciók - Csökkentések
+            label: A LIS 40.3. cikke szerinti módszer - Belső eredmények halasztásának
+              korrekciói és egyéb konszolidációs korrekciók - Csökkenések
           is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-del-grupo:
             help: Az adócsoport részletfizetési elszámolásának 44. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - A csoport LIS 11.12. cikke szerinti céltartalékai
+            label: A LIS 40.3. cikke szerinti módszer - A csoport LIS 11.12. cikke
+              szerinti céltartalékai
           is-pf-grupo-mod-40-3-lis-dotaciones-del-art-11-12-de-la-lis-generados-a-nivel-individual-o-d:
             help: Az adócsoport részletfizetési elszámolásának 45. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - A csoporthoz csatlakozás előtt egyedi vagy csoportszinten
-              keletkezett LIS 11.12. cikk szerinti céltartalékok (LIS 67. és 74.3.
-              cikk)
+            label: A LIS 40.3. cikke szerinti módszer - A csoporthoz csatlakozás előtt
+              egyedi vagy csoportszinten keletkezett LIS 11.12. cikk szerinti céltartalékok
+              (LIS 67. és 74.3. cikk)
           is-pf-grupo-mod-40-3-lis-remanente-reserva-de-capitalizacion-no-aplicada-por-insuficiencia-d:
             help: Az adócsoport részletfizetési elszámolásának 46. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - A tőkésítési tartalék elégtelen alap miatt fel
-              nem használt maradványa
+            label: A LIS 40.3. cikke szerinti módszer - A tőkésítési tartalék elégtelen
+              adóalap miatt fel nem használt maradványa
           is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-e-disminuciones:
             help: Az adócsoport részletfizetési elszámolásának 48. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Kiegyenlítési tartalék (LIS 105. cikk), csak a
-              kisvállalkozói kedvezményekre jogosult és a különös kulcsot alkalmazó
-              csoportoknak (LIS 101. cikk) - Csökkentések
+            label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
+              105. cikk), csak a kisvállalkozói kedvezményekre jogosult és a különös
+              kulcsot alkalmazó csoportoknak (LIS 101. cikk) - Csökkenések
           is-pf-grupo-mod-40-3-lis-reserva-de-nivelacion-y-apliquen-el-tipo-de-gravamen-especi-aumentos:
             help: Az adócsoport részletfizetési elszámolásának 47. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Kiegyenlítési tartalék (LIS 105. cikk), csak a
-              kisvállalkozói kedvezményekre jogosult és a különös kulcsot alkalmazó
-              csoportoknak (LIS 101. cikk)
+            label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
+              105. cikk), csak a kisvállalkozói kedvezményekre jogosult és a különös
+              kulcsot alkalmazó csoportoknak (LIS 101. cikk). Növekedések
           is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-bi-ne-aumentos:
             help: Az adócsoport részletfizetési elszámolásának 07. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - A számviteli eredmény további korrekciói, a korábbi
-              évek negatív adóalapjának beszámítása kivételével - Növelések
+            label: A LIS 40.3. cikke szerinti módszer - A számviteli eredmény további
+              korrekciói, a korábbi évek negatív adóalapjának beszámítása kivételével
+              - Növekedések
           is-pf-grupo-mod-40-3-lis-resto-correcciones-al-resultado-contable-excepto-comp-disminuciones:
             help: Az adócsoport részletfizetési elszámolásának 08. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - A számviteli eredmény további korrekciói, a korábbi
-              évek negatív adóalapjának beszámítása kivételével - Csökkentések
+            label: A LIS 40.3. cikke szerinti módszer - A számviteli eredmény további
+              korrekciói, a korábbi évek negatív adóalapjának beszámítása kivételével
+              - Csökkenések
           is-pf-grupo-mod-40-3-lis-reversion-del-30-del-importe-de-los-gastos-amortiz-disminuciones:
             help: Az adócsoport részletfizetési elszámolásának 37. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Az értékcsökkenési ráfordítás 30%-ának visszafordítása
-              (a kisvállalkozások kivételével) - Csökkentések
+            label: A LIS 40.3. cikke szerinti módszer - Az értékcsökkenési ráfordítás
+              30%-ának visszafordítása (a kisvállalkozások kivételével) - Csökkenések
           is-pf-grupo-mod-40-3-lis-suma-de-bases-imponibles-individuales-antes-de-compensar-bases-nega:
             help: Az adócsoport részletfizetési elszámolásának 10. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Az egyedi adóalapok összege a korábbi időszakok
-              negatív alapjainak beszámítása előtt
+            label: A LIS 40.3. cikke szerinti módszer - Az egyedi adóalapok összege
+              a korábbi időszakok negatív alapjainak beszámítása előtt
           is-pf-grupo-mod-40-3-lis-suma-de-resultados-contables-individuales:
             help: Az adócsoport részletfizetési elszámolásának 04. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - Az egyedi számviteli eredmények összege (IS és
-              IC után)
+            label: A LIS 40.3. cikke szerinti módszer - Az egyedi számviteli eredmények
+              összege (IS és IC után)
           is-pf-grupo-mod-40-3-lis-total-aumentos:
             help: Az adócsoport részletfizetési elszámolásának 38. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - ÖSSZESEN - Növelések
+            label: A LIS 40.3. cikke szerinti módszer - ÖSSZESEN - Növekedések
           is-pf-grupo-mod-40-3-lis-total-disminuciones:
             help: Az adócsoport részletfizetési elszámolásának 39. rovata (Mod. 40.3
               LIS).
-            label: Mod. 40.3 LIS - ÖSSZESEN - Csökkentések
+            label: A LIS 40.3. cikke szerinti módszer - ÖSSZESEN - Csökkenések
           tipo-declaracion:
             label: Részletfizetés módja (40.2. cikk teljes adóösszeg / 40.3. cikk
               adóalap)
@@ -390,6 +397,7 @@ modelo:
             '67':
               help: Az adócsoport részletfizetési elszámolásának 67. rovata (Mod.
                 40.3 LIS).
-              label: Mod. 40.3 LIS - Kiegészítő adó (IC) korrekció - Növelések
+              label: A LIS 40.3. cikke szerinti módszer - Kiegészítő adó (IC) korrekció
+                - Növekedések
           field:
             label: HFP/227/2017 rendelet (222-es modelo), 2025. adóévtől

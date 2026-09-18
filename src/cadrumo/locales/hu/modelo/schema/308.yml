@@ -45,7 +45,7 @@ modelo:
               label: Új közlekedési eszközök (ÚKE) - Beszerző - NIF
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
               help: A 308-es modelo 179-198. rovata, 2009. adóév.
-              label: ÚKE - Beszerző - Név
+              label: ÚKE - Beszerző - Utónév
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
               help: A 308-es modelo 199-200. rovata, 2009. adóév.
               label: ÚKE - Beszerző - Ország
@@ -127,7 +127,7 @@ modelo:
               label: ÚKE - Járművek - Típus
             x-chim6r1edpnmqojick:
               help: A 308-es modelo 83-102. rovata, 2009. adóév.
-              label: Azonosítás - Név
+              label: Azonosítás - Utónév
             x-chim6r1ee9in2bb2c5pmab9g70:
               help: A 308-es modelo 798-814. rovata, 2009. adóév.
               label: Különleges egyenértékűségi felár rendszer (KEF) - Elszámolás

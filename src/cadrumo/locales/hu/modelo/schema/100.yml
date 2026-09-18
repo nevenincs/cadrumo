@@ -804,7 +804,7 @@ modelo:
           irpf-ascendiente-discapacidad-fecha-inicio:
             label: A fogyatékosság kezdetének dátuma
           irpf-ascendiente-discapacidad-nombre:
-            label: Név
+            label: Utónév
           irpf-ascendiente-nif-nif2r:
             label: Annak a felmenőnek az adóazonosító száma, akinek a levonását rendezik
           irpf-ascendiente-nif-nifdafas2:
@@ -900,7 +900,7 @@ modelo:
           irpf-conyuge-discapacidad-nif:
             label: A házastárs adóazonosító száma
           irpf-conyuge-discapacidad-nombre:
-            label: Név
+            label: Utónév
           irpf-conyuge-discapacidad-otro-contribuyente-flag:
             label: Jelölje meg "X"-szel, ha másik adózó jogosult a fogyatékkal élő
               házastárs tekintetében az eltartott fogyatékkal élő leszármazott vagy
@@ -922,7 +922,7 @@ modelo:
             label: A személyi jövedelemadó összege, amely az adózó lakóhelye szerinti
               autonóm közösséget illeti ([0671] - [0672])
           irpf-cuota-diferencial:
-            label: Differenciál adó
+            label: Különbözeti adó
           irpf-cuota-integra-autonomica:
             label: 'Autonóm közösségi teljes adó: autonóm közösségi rész'
           irpf-cuota-integra-estatal:
@@ -2049,7 +2049,7 @@ modelo:
           irpf-descendiente-discapacidad-fecha-inicio:
             label: A fogyatékosság kezdetének dátuma
           irpf-descendiente-discapacidad-nombre:
-            label: Név
+            label: Utónév
           irpf-descendiente-num-contribuyentes-derecho:
             label: Adja meg a leszármazottak utáni minimumra jogosult személyek számát
           irpf-discrepancia-criterio-administrativo:
@@ -2378,10 +2378,6 @@ modelo:
             label: A nagycsaládi igazolvány azonosítószáma
           irpf-feac-elemento-descripcion:
             label: Leírás
-          irpf-feac-entidad-nif-c2nifafeac:
-            label: Adóazonosító szám
-          irpf-feac-entidad-nif-c2nifefeac:
-            label: Adóazonosító szám
           irpf-feac-entidad-receptora-denominacion:
             label: Cégnév
           irpf-feac-entidad-receptora-sin-nif-flag:
@@ -3719,7 +3715,7 @@ modelo:
                 biztosításokhoz. Az adózónak betudott összegek
             '0010':
               label: Hozzájárulások fogyatékossággal élő személyek védett vagyonához,
-                amelynek tulajdonosa az adózó - beszámítható összeg
+                amelynek tulajdonosa az adózó - Beszámítható összeg
             '0011':
               label: Csökkentések az adótörvény 18. cikkének 2. és 3. bekezdése, valamint
                 11., 12. és 25. átmeneti rendelkezése alapján
@@ -3879,7 +3875,7 @@ modelo:
               label: Rokonság esetén beszámítandó minimumjövedelem (a személyi jövedelemadóról
                 szóló törvény 24. cikke)
             '0153':
-              label: Levonások és előlegfizetések
+              label: Forrásadó és részletfizetés
             '0154':
               label: 'Ingatlantőkéből származó csökkentett nettó jövedelem: a ([0149]
                 - [0150] - [0151]) és [0152] közül a nagyobb összeg'
@@ -4354,10 +4350,10 @@ modelo:
                 ugyanezen mezők összegeit az A.2 mellékletből): autonóm közösségi
                 rész'
             '0562':
-              label: 'Lakóhelyül szolgáló saját lakás bérlése miatt. Átmeneti szabályozás
+              label: 'A szokásos lakóingatlan bérbevétele után. Átmeneti szabályozás
                 (vigye át ugyanezen mező összegét az A.1 mellékletből): állami rész'
             '0563':
-              label: 'Lakóhelyül szolgáló saját lakás bérlése miatt. Átmeneti szabályozás
+              label: 'A szokásos lakóingatlan bérbevétele után. Átmeneti szabályozás
                 (vigye át ugyanezen mező összegét az A.1 mellékletből): autonóm közösségi
                 rész'
             '0564':
@@ -5966,9 +5962,9 @@ modelo:
               label: A 2021. évben bírósági határozat alapján kifizetett nyugdíj vagy
                 járadék összege
             0493:
-              label: A házastárs által részt vevőként, tagként vagy jogosultként igénybe
-                vett szociális előgondoskodási rendszerekhez teljesített hozzájárulások
-                miatt. A [0437] casilla alkalmazott összege
+              label: A házastárs résztvevőjeként, biztosítópénztár-tagjaként vagy
+                tulajdonosaként fennálló szociális előrelátási rendszerekbe fizetett
+                hozzájárulások után. A [0437] casilla alkalmazott összege
             '0501':
               label: 'Kiegyenlítés (ha a casilla [0500] pozitív, az összeg felső határáig):
                 2017-2020 közötti negatív általános nettó adóalapok (töltse ki a C.4
@@ -8265,7 +8261,7 @@ modelo:
               label: A 2023. évben kapott életbiztosításokból származó, halasztott
                 tőkék teljes összege, amelynek hozamára a D.T.4.ª rendelkezést alkalmazzák
             '0057':
-              label: Csökkentés a XXXVII America’s Cup Barcelona adórendszere alá
+              label: Csökkentés a XXXVII America's Cup Barcelona adórendszere alá
                 tartozó jövedelmekre (a 2023. évi állami költségvetésről szóló 31/2022.
                 törvény harminchatodik záró rendelkezése)
             '0070':

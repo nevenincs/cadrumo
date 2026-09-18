@@ -103,7 +103,7 @@ modelo:
           resultado-anteriores-autoliquidaciones:
             label: Korábbi önadózásokból befizetendő eredmény
           retenciones-ingresos-a-cuenta:
-            label: Forrásadó és előlegfizetés
+            label: Forrásadó és részletfizetés
       field:
         official_name: Modelo 131. IRPF. Objektív megállapítás alá tartozó vállalkozók
           és szakemberek. Részletfizetés.

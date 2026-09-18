@@ -42,7 +42,7 @@ modelo:
           ingreso-devolucion-bic-swift:
             label: Befizetés vagy visszatérítés. BIC/SWIFT-kód
           ingreso-devolucion-iban:
-            label: Befizetés vagy visszatérítés. IBAN-szám
+            label: Befizetés vagy visszatérítés. IBAN kód
           intermediacion-subyacente-base-imponible:
             label: Elszámolás. 2.A. Online közvetítő szolgáltatások mögöttes termékértékesítéssel
               vagy szolgáltatásnyújtással. Adóalap [05]
@@ -588,7 +588,7 @@ modelo:
             label: Elszámolás. 3. Adatátviteli szolgáltatások. Adóalap-helyesbítés
               (10.3. cikk) [12]
           tributacion-territorio-alava:
-            label: Területi adózás. Álava [20]
+            label: Területi adómegosztás. Álava [20]
           tributacion-territorio-alava-regularizacion-1t:
             label: Területi adózás. Álava. A helyesbített időszak százaléka. 1. negyedév
               [38]
@@ -602,7 +602,7 @@ modelo:
             label: Területi adózás. Álava. A helyesbített időszak százaléka. 4. negyedév
               [101]
           tributacion-territorio-comun:
-            label: Területi adózás. Közös terület [24]
+            label: Területi adómegosztás. Közös terület [24]
           tributacion-territorio-comun-regularizacion-1t:
             label: Területi adózás. Közös terület. A helyesbített időszak százaléka.
               1. negyedév [46]
@@ -628,7 +628,7 @@ modelo:
             label: Területi adózás. Közös terület. Százalék a helyesbítéssel együtt.
               4. negyedév [110]
           tributacion-territorio-guipuzcoa:
-            label: Területi adózás. Gipuzkoa [21]
+            label: Területi adómegosztás. Gipuzkoa [21]
           tributacion-territorio-guipuzcoa-regularizacion-1t:
             label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka. 1.
               negyedév [40]
@@ -642,7 +642,7 @@ modelo:
             label: Területi adózás. Gipuzkoa. A helyesbített időszak százaléka. 4.
               negyedév [103]
           tributacion-territorio-vizcaya:
-            label: Területi adózás. Bizkaia [22]
+            label: Területi adómegosztás. Bizkaia [22]
           tributacion-territorio-vizcaya-regularizacion-1t:
             label: Területi adózás. Bizkaia. A helyesbített időszak százaléka. 1.
               negyedév [42]
@@ -1408,7 +1408,7 @@ modelo:
             resultado-liquidacion-26:
               label: Az elszámolás eredménye [26]
             terr-navarra-23:
-              label: Területi adózás. Navarra [23]
+              label: Területi adómegosztás. Navarra [23]
             terr-navarra-con-reg-108:
               label: Területi adózás. Navarra. Százalék a helyesbítéssel együtt. 4.
                 negyedév [108]

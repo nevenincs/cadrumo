@@ -18,7 +18,7 @@ modelo:
           domicilio-fiscal-espana-calificador-numero:
             label: Tax domicile in Spanish territory. Number qualifier
           domicilio-fiscal-espana-codigo-postal:
-            label: Tax domicile in Spanish territory. Postcode
+            label: Tax domicile in Spanish territory. Postal code
           domicilio-fiscal-espana-codigo-provincia:
             label: Tax domicile in Spanish territory. Province code
           domicilio-fiscal-espana-complemento:

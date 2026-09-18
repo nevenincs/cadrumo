@@ -119,9 +119,9 @@ modelo:
           iva-anual-regimen-simplificado-inversion-sujeto-pasivo-cuota-devengada:
             label: IVA meritat per inversió del subjecte passiu
           iva-anual-regimen-simplificado-iva-soportado-activos-fijos:
-            label: Deduccions - IVA suportat en adquisició de actius fixos
+            label: Deduccions - IVA suportat en adquisició de actius fixos.
           iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
-            label: Deduccions - Regularització de béns de inversió
+            label: Deduccions - Regularització de béns de inversió.
           iva-anual-regimen-simplificado-resultado:
             label: Resultat règim simplificat
           iva-anual-regimen-simplificado-suma-deducciones:
@@ -221,15 +221,15 @@ modelo:
           iva-cuota-recargo-equivalencia-tipo-0-26:
             label: Recàrrec d'equivalència al 0,26% - quota
           iva-cuota-recargo-equivalencia-tipo-0-5:
-            label: Recàrrec d'equivalència al 0,5% - quota
+            label: Recàrrec d'equivalència al tipus 0,5% - quota
           iva-cuota-recargo-equivalencia-tipo-0-62:
             label: Recàrrec d'equivalència al 0,62% - quota
           iva-cuota-recargo-equivalencia-tipo-1:
             label: Recàrrec d'equivalència al 1% - quota
           iva-cuota-recargo-equivalencia-tipo-1-4:
-            label: Recàrrec d'equivalència al 1,4% - quota
+            label: Recàrrec d'equivalència al tipus 1,4% - quota
           iva-cuota-recargo-equivalencia-tipo-5-2:
-            label: Recàrrec d'equivalència al 5,2% - quota
+            label: Recàrrec d'equivalència al tipus 5,2% - quota
           iva-cuota-repercutida-general:
             label: Quota IVA repercutit al tipus general (21%)
           iva-cuota-repercutida-reducido:
@@ -1601,11 +1601,9 @@ modelo:
               help: 'Consulteu la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'Consulteu la informació de la casella: Deduccions - IVA suportat
-                en adquisició de actius fixos.'
+              help: Deduccions - IVA suportat en adquisició de actius fixos.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'Consulteu la informació de la casella: Deduccions - Regularització
-                de béns de inversió.'
+              help: Deduccions - Regularització de béns de inversió.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
               help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
@@ -1713,11 +1711,11 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj2c5pma:
               help: Recàrrec d'equivalència al tipus 0,5% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: Recàrrec d'equivalència al 0,5% - quota
+              help: Recàrrec d'equivalència al tipus 0,5% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: Recàrrec d'equivalència al tipus 1,4% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: Recàrrec d'equivalència al 1,4% - quota
+              help: Recàrrec d'equivalència al tipus 1,4% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ec9gn6p8:
               help: Recàrrec d'equivalència al tipus 1,75% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ecdqmut31:
@@ -1725,7 +1723,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj2c5pma:
               help: Recàrrec d'equivalència al tipus 5,2% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: Recàrrec d'equivalència al 5,2% - quota
+              help: Recàrrec d'equivalència al tipus 5,2% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: Quota d'IVA repercutit al tipus reduït (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
@@ -2480,11 +2478,9 @@ modelo:
               help: 'Consulteu la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'Consulteu la informació de la casella: Deduccions - IVA suportat
-                en adquisició de actius fixos.'
+              help: Deduccions - IVA suportat en adquisició de actius fixos.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'Consulteu la informació de la casella: Deduccions - Regularització
-                de béns de inversió.'
+              help: Deduccions - Regularització de béns de inversió.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
               help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
@@ -2592,11 +2588,11 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj2c5pma:
               help: Recàrrec d'equivalència al tipus 0,5% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: Recàrrec d'equivalència al 0,5% - quota
+              help: Recàrrec d'equivalència al tipus 0,5% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: Recàrrec d'equivalència al tipus 1,4% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: Recàrrec d'equivalència al 1,4% - quota
+              help: Recàrrec d'equivalència al tipus 1,4% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ec9gn6p8:
               help: Recàrrec d'equivalència al tipus 1,75% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ecdqmut31:
@@ -2604,7 +2600,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj2c5pma:
               help: Recàrrec d'equivalència al tipus 5,2% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: Recàrrec d'equivalència al 5,2% - quota
+              help: Recàrrec d'equivalència al tipus 5,2% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: Quota d'IVA repercutit al tipus reduït (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
@@ -3379,11 +3375,9 @@ modelo:
               help: 'Consulteu la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'Consulteu la informació de la casella: Deduccions - IVA suportat
-                en adquisició de actius fixos.'
+              help: Deduccions - IVA suportat en adquisició de actius fixos.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'Consulteu la informació de la casella: Deduccions - Regularització
-                de béns de inversió.'
+              help: Deduccions - Regularització de béns de inversió.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
               help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
@@ -3491,11 +3485,11 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj2c5pma:
               help: Recàrrec d'equivalència al tipus 0,5% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: Recàrrec d'equivalència al 0,5% - quota
+              help: Recàrrec d'equivalència al tipus 0,5% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: Recàrrec d'equivalència al tipus 1,4% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: Recàrrec d'equivalència al 1,4% - quota
+              help: Recàrrec d'equivalència al tipus 1,4% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ec9gn6p8:
               help: Recàrrec d'equivalència al tipus 1,75% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ecdqmut31:
@@ -3503,7 +3497,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj2c5pma:
               help: Recàrrec d'equivalència al tipus 5,2% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: Recàrrec d'equivalència al 5,2% - quota
+              help: Recàrrec d'equivalència al tipus 5,2% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: Quota d'IVA repercutit al tipus reduït (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:

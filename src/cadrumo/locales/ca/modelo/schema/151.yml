@@ -52,7 +52,7 @@ modelo:
           p01-contribuyente-57-codigo-de-municipio:
             label: Contribuent. 57 - Codi de municipi.
           p01-devengo-periodo:
-            label: Meritació - període
+            label: Meritació - Període
           p01-representante-57-codigo-de-municipio:
             label: Representant. 57 - Codi de municipi.
           p01-representante-apellidos:
@@ -339,14 +339,14 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqor1dlh6irpdchiiqp3fdlkm6qbcd5ng:
               label: Contribuent. Canvi de domicili
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmm2r1de9imcpbicln66qb15lhm2t31edq74obc:
-              label: Contribuent dades addicionals habitatge actual. Referència cadastral
+              label: Contribuent Dades Addicionals habitatge actual. Referència cadastral
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmarj4c4mm2orkelgmobbkd5q7ar31e9km8ob4:
-              label: Contribuent dades addicionals habitatge actual. Titularitat
+              label: Contribuent Dades Addicionals habitatge actual. Titularitat
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmusj3cln78obackmn0obiehkm6qbgc5hmirre:
-              label: Contribuent dades addicionals habitatge actual. Percentatge de
+              label: Contribuent Dades Addicionals habitatge actual. Percentatge de
                 participació
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmncqb5dpi62bb1cdq7aobc5lpmit3lc5hmirre:
-              label: Contribuent dades addicionals habitatge actual. Situació
+              label: Contribuent Dades Addicionals habitatge actual. Situació
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mm2rjaclp6ub9n60mn8pbcclj6urjf5lj6iqjf:
               label: Contribuent domicili estranger. 70 - Telèfon fix
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmasjf5kr38bbgdth6oob3d5nmsbb3d5qm8ob4:
@@ -411,28 +411,28 @@ modelo:
             x-e0o32bjiclo74pbjcln78obeehiiqrj9co:
               label: Representant. NIF
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
-              label: Dades addicionals rendiment del treball. Impost satisfet a l'estranger
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
                 [9]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
-              label: Dades addicionals rendiment del treball. Impost satisfet a l'estranger
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
                 [9]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko36:
-              label: Dades addicionals rendiment del treball. Impost satisfet a l'estranger
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
                 [9]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko38:
-              label: Dades addicionals rendiment del treball. Impost satisfet a l'estranger
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
                 [9]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko32:
-              label: Dades addicionals rendiment del treball. Rendiment íntegre obtingut
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
                 i gravat a l'estranger [8]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko34:
-              label: Dades addicionals rendiment del treball. Rendiment íntegre obtingut
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
                 i gravat a l'estranger [8]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko36:
-              label: Dades addicionals rendiment del treball. Rendiment íntegre obtingut
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
                 i gravat a l'estranger [8]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko38:
-              label: Dades addicionals rendiment del treball. Rendiment íntegre obtingut
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
                 i gravat a l'estranger [8]
             x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
               label: Ingressos a compte [4]
@@ -507,28 +507,28 @@ modelo:
             x-e0o34bjmc5m6usj1cdkmurhd6cmj0d0:
               label: Valoració [3]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
-              label: Dades addicionals rendiment del treball. Impost satisfet a l'estranger
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
                 [9]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
-              label: Dades addicionals rendiment del treball. Impost satisfet a l'estranger
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
                 [9]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko36:
-              label: Dades addicionals rendiment del treball. Impost satisfet a l'estranger
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
                 [9]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko38:
-              label: Dades addicionals rendiment del treball. Impost satisfet a l'estranger
+              label: Dades Addicionals Rendiment del Treball. Impost satisfet a l'estranger
                 [9]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko32:
-              label: Dades addicionals rendiment del treball. Rendiment íntegre obtingut
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
                 i gravat a l'estranger [8]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko34:
-              label: Dades addicionals rendiment del treball. Rendiment íntegre obtingut
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
                 i gravat a l'estranger [8]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko36:
-              label: Dades addicionals rendiment del treball. Rendiment íntegre obtingut
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
                 i gravat a l'estranger [8]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmncob4dsmmarhdclm2qpboehp62rjaclp6ub9o5ko38:
-              label: Dades addicionals rendiment del treball. Rendiment íntegre obtingut
+              label: Dades Addicionals Rendiment del Treball. Rendiment íntegre obtingut
                 i gravat a l'estranger [8]
             x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj8b9g64:
               label: Ingressos a compte [4]

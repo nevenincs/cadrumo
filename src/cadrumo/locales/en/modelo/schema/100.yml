@@ -799,7 +799,7 @@ modelo:
           irpf-ascendiente-discapacidad-fecha-inicio:
             label: Start date of the disability
           irpf-ascendiente-discapacidad-nombre:
-            label: Name
+            label: Given name
           irpf-ascendiente-nif-nif2r:
             label: Tax ID (NIF) of the ascendant whose deduction is being regularised
           irpf-ascendiente-nif-nifdafas2:
@@ -895,7 +895,7 @@ modelo:
           irpf-conyuge-discapacidad-nif:
             label: Spouse's tax identification number
           irpf-conyuge-discapacidad-nombre:
-            label: Name
+            label: Given name
           irpf-conyuge-discapacidad-otro-contribuyente-flag:
             label: Mark with an "X" if another taxpayer is entitled, in respect of
               the spouse with a disability, to the deduction for a dependent descendant
@@ -955,9 +955,9 @@ modelo:
           irpf-deduccion-andalucia-empleada-hogar-ccc-2:
             label: 'Social Security contribution account code:'
           irpf-deduccion-andalucia-empleada-hogar-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-andalucia-empleada-hogar-importe-1:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-andalucia-familia-monoparental:
             label: For a single parent and, where applicable, with ascendants over
               75 years old
@@ -1064,7 +1064,7 @@ modelo:
             label: For taxpayers who move their tax domicile to the Principality of
               Asturias for employment reasons
           irpf-deduccion-asturias-vehiculo-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-asturias-vehiculo-matricula:
             label: 'Vehicle registration number:'
           irpf-deduccion-asturias-vivienda-discapacitados:
@@ -1534,7 +1534,7 @@ modelo:
           irpf-deduccion-castilla-y-leon-gastos-adopcion:
             label: For adoption expenses
           irpf-deduccion-castilla-y-leon-importe-general:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-castilla-y-leon-importe-pendiente-aplicacion-cl11ea14:
             label: Amount generated in 2022 pending application
           irpf-deduccion-castilla-y-leon-nacimiento-adopcion:
@@ -1547,7 +1547,7 @@ modelo:
             label: For amounts invested in the recovery of historical, cultural, and
               natural heritage
           irpf-deduccion-castilla-y-leon-rehabilitacion-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-castilla-y-leon-rehabilitacion-rural:
             help: Enter the deduction for rehabilitation of dwellings in rural areas
               intended for rental.
@@ -1584,7 +1584,7 @@ modelo:
             label: 'For employer contributions to social-welfare schemes (third additional
               provision of Royal Decree-Law 13/2022): Applied in this return'
           irpf-deduccion-cuota-general-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-cuotas-afiliacion-partidos:
             label: 'Amount qualifying for the deduction (maximum limit EUR 600) (**):
               membership fees and contributions to political parties, federations,
@@ -1764,14 +1764,14 @@ modelo:
             label: For each minor under a temporary or permanent emergency foster-care
               arrangement, or guardianship for adoption purposes
           irpf-deduccion-la-rioja-adecuacion-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-la-rioja-adecuacion-municipio-codigo:
             label: 'Municipality code:'
           irpf-deduccion-la-rioja-adecuacion-vivienda-discapacidad:
             label: For amounts invested in adaptation works to the primary residence
               for persons with a disability
           irpf-deduccion-la-rioja-arrendamiento-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-la-rioja-arrendamiento-municipio-codigo:
             label: Municipality code
           irpf-deduccion-la-rioja-bicicletas:
@@ -1828,7 +1828,7 @@ modelo:
           irpf-deduccion-la-rioja-vivienda-jovenes:
             label: For the primary-residence investment by young people under 36
           irpf-deduccion-la-rioja-vivienda-municipio-importe:
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-madrid-acogimiento-mayores:
             label: For unpaid fostering of persons over 65 and/or with a disability
           irpf-deduccion-madrid-acogimiento-menores:
@@ -1841,7 +1841,7 @@ modelo:
             label: For care of ascendants
           irpf-deduccion-madrid-cuidado-hijos-dependientes:
             help: Enter the amount of the deduction.
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-madrid-donativos-fundaciones-deportivos:
             label: For donations to foundations and sports clubs
           irpf-deduccion-madrid-dos-mas-descendientes-ingresos-reducidos:
@@ -1886,7 +1886,7 @@ modelo:
             label: Year of acquisition
           irpf-deduccion-madrid-vivienda-nacimiento-adopcion-importe:
             help: Enter the amount of the deduction.
-            label: Amount of the deduction
+            label: Deduction amount
           irpf-deduccion-madrid-vivienda-nacimiento-adopcion-m20:
             label: For acquisition of the habitual residence due to the birth or adoption
               of children
@@ -2016,7 +2016,7 @@ modelo:
           irpf-descendiente-discapacidad-fecha-inicio:
             label: Start date of the disability
           irpf-descendiente-discapacidad-nombre:
-            label: Name
+            label: Given name
           irpf-descendiente-num-contribuyentes-derecho:
             label: State the number of persons entitled to the minimum for descendants
           irpf-discrepancia-criterio-administrativo:
@@ -2341,10 +2341,6 @@ modelo:
             label: Identification number of the large-family certificate
           irpf-feac-elemento-descripcion:
             label: Description
-          irpf-feac-entidad-nif-c2nifafeac:
-            label: Tax ID (NIF)
-          irpf-feac-entidad-nif-c2nifefeac:
-            label: Tax ID (NIF)
           irpf-feac-entidad-receptora-denominacion:
             label: Company name
           irpf-feac-entidad-receptora-sin-nif-flag:
@@ -3470,7 +3466,7 @@ modelo:
           irpf-reduccion-tributacion-conjunta-importe:
             help: This computed field records the amount of the reduction for family
               units that opt for joint taxation.
-            label: Reduction for family units opting for joint filing. Amount
+            label: Reduction for family units opting for joint taxation. Amount
           irpf-reestructuracion-empresarial-feac-contribuyente-titular:
             label: Taxpayer holder of the asset transferred
           irpf-regularizacion-autoliquidaciones-anteriores-ingresar:
@@ -3679,7 +3675,7 @@ modelo:
                 allocated to the taxpayer
             '0010':
               label: Contributions to protected assets of persons with disabilities
-                owned by the taxpayer - countable amount
+                owned by the taxpayer - Computable amount
             '0011':
               label: Reductions under article 18, subsections 2 and 3, and the 11th,
                 12th, and 25th transitional provisions of the Income Tax Law
@@ -3934,7 +3930,7 @@ modelo:
             '0247':
               label: Last full month of 2020 in which the marriage was in effect
             0248:
-              label: Amount of the deduction
+              label: Deduction amount
             0249:
               label: Amount of the advance payment of the deduction for 2020 (*)
             0268:
@@ -3956,9 +3952,9 @@ modelo:
               label: Grants for the purchase of officially protected housing or price-capped
                 housing. Amount attributable to 2020
             '0300':
-              label: Other grants or aid for the purchase or renovation of a primary
-                residence or the repair of structural defects in it. Amount attributable
-                to 2020
+              label: Other subsidies or aid intended for acquiring or rehabilitating
+                the habitual residence or repairing structural defects in it. Amount
+                attributable to 2020
             '0301':
               label: Other capital gains arising from public aid. Amount attributable
                 to 2020
@@ -4387,7 +4383,7 @@ modelo:
               label: Total payments on account (sum of boxes [0592] + [0593] + [0594]
                 + [0596] to [0606])
             '0611':
-              label: Amount of the deduction
+              label: Deduction amount
             '0612':
               label: Amount of the advance payment of the deduction for 2020
             '0613':
@@ -4396,11 +4392,11 @@ modelo:
             '0614':
               label: Tax ID (NIF) of the dependent descendant
             '0623':
-              label: Amount of the deduction
+              label: Deduction amount
             '0624':
               label: Amount of the advance payment of the deduction for 2020
             '0636':
-              label: Amount of the deduction
+              label: Deduction amount
             '0637':
               label: Amount of the advance payment of the deduction for 2020
             0638:
@@ -4408,11 +4404,11 @@ modelo:
             '0641':
               label: Tax ID (NIF) of landlord 2
             '0660':
-              label: Amount of the deduction
+              label: Deduction amount
             '0661':
               label: Amount of the advance payment of the deduction for 2020
             '0662':
-              label: Amount of the deduction
+              label: Deduction amount
             '0663':
               label: Amount of the advance payment of the deduction for 2020 (*)
             '0664':
@@ -4815,7 +4811,7 @@ modelo:
               label: 'For improvement works: amounts generated in 2017 and/or 2018
                 pending application'
             0950:
-              label: Amount of the deduction
+              label: Deduction amount
             0953:
               label: For investment in the purchase of shares or equity interests
                 in new or recently created entities (this amount is transferred to
@@ -4941,11 +4937,11 @@ modelo:
               label: For investments made in entities listed on the Alternative Stock
                 Market (this amount is transferred to box [1142] of Annex B.7)
             '1069':
-              label: Amount of the deduction
+              label: Deduction amount
             '1070':
               label: 'Municipality code:'
             '1071':
-              label: Amount of the deduction
+              label: Deduction amount
             '1072':
               label: For amounts invested in adaptation works to the primary residence
                 for persons with a disability
@@ -4979,7 +4975,7 @@ modelo:
               label: For amounts from public aid granted by the Generalitat under
                 Law 6/2009, of 30 June, of the Generalitat, on maternity protection.
             '1108':
-              label: Amount of the deduction
+              label: Deduction amount
             '1110':
               label: For obtaining income from the lease of a dwelling whose rent
                 does not exceed the reference price for private rentals
@@ -5640,13 +5636,13 @@ modelo:
             '0253':
               label: For donations promoting and encouraging patronage-fostering activities
             '0266':
-              label: Public aid to holders of assets forming part of Spain's Historical
-                Heritage for conservation or restoration purposes. Amount attributable
+              label: Public aid to holders of assets forming part of Spanish Historical
+                Heritage for their conservation or rehabilitation. Amount attributable
                 to 2021 (complete Annex C.1)
             0279:
               label: Public aid for the first establishment of young farmers provided
                 for in the National Rural Development Framework, intended for the
-                acquisition of a shareholding in the capital of agricultural companies.
+                acquisition of a shareholding in the capital of agricultural businesses.
                 Amount attributable to 2021 (complete Annex C.1) (*)
             0299:
               label: Grants for the purchase of officially protected housing or price-capped
@@ -5654,7 +5650,7 @@ modelo:
             '0300':
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2021 (complete Annex C.1) (*)
+                attributable to 2021 (complete Annex C.1) (*)
             '0301':
               label: Other capital gains arising from public aid. (*)
             '0302':
@@ -5840,9 +5836,8 @@ modelo:
             0485:
               label: Amount of the pension or annuity paid in 2021 under a court decision
             0493:
-              label: For contributions to social welfare schemes in which the spouse
-                is a member, mutual-fund holder or policyholder. Amount from box [0437]
-                applied
+              label: For contributions to social-welfare schemes in which the spouse
+                is a participant, member, or holder. Amount from box [0437] applied
             '0501':
               label: 'Offset (if box [0500] is positive and up to the maximum limit
                 of its amount): General negative net taxable bases from 2017 to 2020
@@ -6110,7 +6105,7 @@ modelo:
               label: For investment in social economy entities (transfer the amount
                 from box [1179] of Annex B.8
             0886:
-              label: Amount of the deduction
+              label: Deduction amount
             0887:
               label: For the renting of a primary residence (this amount is transferred
                 to box [1130] of Annex B.8)
@@ -6254,7 +6249,7 @@ modelo:
             '1182':
               label: Amount generated in 2021
             '1183':
-              label: Amount of the deduction
+              label: Deduction amount
             '1184':
               label: Amount generated in 2021 pending application
             '1185':
@@ -6859,8 +6854,8 @@ modelo:
             0249:
               label: Amount of the advance payment of the deduction for 2022 (*)
             '0266':
-              label: Public aid to holders of assets forming part of Spain's Historical
-                Heritage for conservation or restoration purposes. Amount attributable
+              label: Public aid to holders of assets forming part of Spanish Historical
+                Heritage for their conservation or rehabilitation. Amount attributable
                 to 2022 (complete Annex C.1)
             0279:
               label: Public aid for the first establishment of young farmers provided
@@ -6875,7 +6870,7 @@ modelo:
             '0300':
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2022 (complete Annex C.1) (*)
+                attributable to 2022 (complete Annex C.1) (*)
             '0302':
               label: Capital gains obtained by local residents in 2022 from forestry
                 use of public woodlands
@@ -7234,7 +7229,8 @@ modelo:
             '0745':
               label: 'Canary Islands Investment Reserve 2021: pending materialization'
             '0746':
-              label: 'Reserva for Investments in Canarias 2022 : Amount of the allocations'
+              label: 'Reserve for Investments in the Canary Islands 2022: Amount of
+                the allocations'
             '0747':
               label: 'Canary Islands Investment Reserve 2022: investments provided
                 for in points A, B, B bis and D (1st) of Article 27.4'
@@ -7362,7 +7358,7 @@ modelo:
               label: For investment in social economy entities (transfer the amount
                 from box [1179] of Annex B.8
             0886:
-              label: Amount of the deduction
+              label: Deduction amount
             0887:
               label: For the renting of a primary residence (this amount is transferred
                 to box [1130] of Annex B.8)
@@ -7483,7 +7479,7 @@ modelo:
               label: For renting the primary residence (this amount is transferred
                 to box [1130] of Annex B.8)
             '1110':
-              label: Amount of the deduction
+              label: Deduction amount
             '1114':
               label: For investment in electricity self-consumption or renewable-energy
                 installations at the dwelling or building where they are located (amount
@@ -7508,8 +7504,7 @@ modelo:
               label: Total amount of the sums invested with right to a deduction (sum
                 of the boxes [1175] + [1177])
             '1182':
-              label: Amount generated in 2022(amount of the box [1136] of the anexo
-                B.8 )
+              label: Amount generated in 2022 (amount of box [1136] of Annex B.8)
             '1183':
               label: For investment in the purchase of shares or equity interests
                 in new or recently created entities (sum of boxes [0808] + [1117])
@@ -8160,8 +8155,8 @@ modelo:
             0249:
               label: Amount of the advance payment of the deduction for 2023 (*)
             '0266':
-              label: Public aid to holders of assets forming part of Spain's Historical
-                Heritage for conservation or restoration purposes. Amount attributable
+              label: Public aid to holders of assets forming part of Spanish Historical
+                Heritage for their conservation or rehabilitation. Amount attributable
                 to 2023 (complete Annex C.1)
             0279:
               label: Public aid for the first establishment of young farmers provided
@@ -8176,7 +8171,7 @@ modelo:
             '0300':
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2023 (complete Annex C.1) (*)
+                attributable to 2023 (complete Annex C.1) (*)
             '0302':
               label: Capital gains obtained by local residents in 2023 from forestry
                 use of public woodlands
@@ -8826,9 +8821,9 @@ modelo:
               label: Amount reinvested up to 31-12-2023 in the acquisition of shares
                 or holdings in a new or recently created entity
             '1235':
-              label: Amount that the taxpayer is undertakes to reinvertir in 2024,
-                in the year following to the transfer, in shares or holdings of a
-                entity new or of recent creation
+              label: Amount that the taxpayer undertakes to reinvest in 2024, in the
+                year following the transfer, in shares or holdings of a new or recently
+                created entity
             '1240':
               label: Amount reinvested by 31-12-2023 in life annuities
             '1241':
@@ -10215,15 +10210,15 @@ modelo:
               help: Report subsidies for acquiring officially protected or price-limited
                 housing, with the amount imputable to 2024, and complete Annex C.1
                 where required.
-              label: Subsidies for acquiring officially protected or price-limited
-                housing. Amount imputable to 2024 (complete Annex C.1) (*)
+              label: Grants for the purchase of officially protected housing or price-capped
+                housing. Amount attributable to 2024 (complete Annex C.1) (*)
             '0300':
               help: Report other subsidies or aid for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it, for
                 the amount attributable to 2024 (complete Annex C.1).
               label: Other subsidies or aid intended for acquiring or rehabilitating
                 the habitual residence or repairing structural defects in it. Amount
-                imputable to 2024 (complete Annex C.1) (*)
+                attributable to 2024 (complete Annex C.1) (*)
             '0301':
               help: Report other capital gains derived from public aid.
               label: Other capital gains arising from public aid.
@@ -15708,9 +15703,9 @@ modelo:
             '0255':
               label: For the purchase of new electric vehicles
             '0266':
-              label: Public aid to owners of assets forming part of the Spanish Historical
-                Heritage for their conservation or restoration. Amount imputable to
-                2025 (complete Annex C.1) (*)
+              label: Public aid to holders of assets forming part of Spanish Historical
+                Heritage for their conservation or rehabilitation. Amount imputable
+                to 2025 (complete Annex C.1) (*)
             0279:
               label: Public aid for the first establishment of young farmers provided
                 for in the National Rural Development Framework, intended for the
@@ -15725,12 +15720,12 @@ modelo:
               label: 'Sum of capital gains arising from prizes: (sum of boxes [0292]
                 + [0296] + [0361])'
             0299:
-              label: Grants for the acquisition of publicly subsidised or price-capped
-                housing. Amount imputable to 2025 (complete Annex C.1) (*)
+              label: Grants for the purchase of officially protected housing or price-capped
+                housing. Amount attributable to 2025 (complete Annex C.1) (*)
             '0300':
-              label: Other grants or aid for the acquisition or renovation of the
-                primary residence, or for repairing structural defects in it. Amount
-                imputable to 2025 (complete Annex C.1) (*)
+              label: Other subsidies or aid intended for acquiring or rehabilitating
+                the habitual residence or repairing structural defects in it. Amount
+                attributable to 2025 (complete Annex C.1) (*)
             '0301':
               label: Other capital gains arising from public aid.
             '0302':
@@ -16013,11 +16008,11 @@ modelo:
               label: 'For income obtained in Ceuta or Melilla (amounts from these
                 boxes of Annex A.2): Regional portion'
             '0562':
-              label: 'For the rental of the primary residence. Transitional regime
-                (amounts from these boxes of Annex A.1): State portion'
+              label: 'For rental of the habitual residence. Transitional regime (amounts
+                from these boxes of Annex A.1): State portion'
             '0563':
-              label: 'For the rental of the primary residence. Transitional regime
-                (amounts from these boxes of Annex A.1): Regional portion'
+              label: 'For rental of the habitual residence. Transitional regime (amounts
+                from these boxes of Annex A.1): Regional portion'
             '0564':
               label: 'Sum of regional deductions (amount from the applicable box of
                 Annex B.1, B.2, B.3, B.4, B.5, B.6, B.7, B.8, B.9, or B.10): Regional
@@ -16112,7 +16107,7 @@ modelo:
             0609:
               label: Total payments on account
             '0611':
-              label: Maternity deduction. Amount of the deduction
+              label: Maternity deduction. Deduction amount
             '0612':
               label: Maternity deduction. Advance payment
             '0613':
@@ -17378,7 +17373,7 @@ modelo:
             '2154':
               label: 'Vehicle registration number:'
             '2155':
-              label: Amount of the deduction
+              label: Deduction amount
             '2156':
               label: Amount generated in 2025
             '2157':

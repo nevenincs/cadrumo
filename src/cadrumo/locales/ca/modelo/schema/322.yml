@@ -251,7 +251,7 @@ modelo:
             help: Dada declarada al model 322, autoliquidació mensual individual del
               grup d'entitats.
             label: Adquisicions de béns i serveis afectades pel règim especial del
-              criteri de caixa. Base imposable
+              criteri de caixa. base imposable
           m322-informacion-adicional-criterio-caja-cuota-soportada:
             help: Dada declarada al model 322, autoliquidació mensual individual del
               grup d'entitats.
@@ -1096,7 +1096,7 @@ modelo:
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
               label: Liquidació. IVA meritat. Resta d'operacions en règim general.
-                Base imposable
+                base imposable
             '166':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
@@ -1106,11 +1106,11 @@ modelo:
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
               label: Liquidació. IVA meritat. Resta d'operacions en règim general.
-                Quota
+                quota
             '168':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
-              label: Liquidació. IVA meritat. Recàrrec d'equivalència. Base imposable
+              label: Liquidació. IVA meritat. Recàrrec d'equivalència. base imposable
             '169':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
@@ -1120,11 +1120,11 @@ modelo:
             '170':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
-              label: Liquidació. IVA meritat. Recàrrec d'equivalència. Quota
+              label: Liquidació. IVA meritat. Recàrrec d'equivalència. quota
             '171':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
-              label: Liquidació. IVA meritat. Operacions intragrup. Base imposable
+              label: Liquidació. IVA meritat. Operacions intragrup. base imposable
             '172':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
@@ -1132,7 +1132,7 @@ modelo:
             '173':
               help: Dada declarada al model 322, autoliquidació mensual individual
                 del grup d'entitats.
-              label: Liquidació. IVA meritat. Operacions intragrup. Quota
+              label: Liquidació. IVA meritat. Operacions intragrup. quota
             '18':
               help: Casella 18 del model 322, exercici 2024.
             '19':

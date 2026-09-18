@@ -268,12 +268,12 @@ modelo:
             help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
               adat.
             label: A pénzforgalmi különös rendszer alá tartozó termék- és szolgáltatásbeszerzések.
-              Adóalap
+              adóalap
           m322-informacion-adicional-criterio-caja-cuota-soportada:
             help: A 322-es modelón, a szervezetcsoport egyedi havi önadózásán bevallott
               adat.
-            label: A pénzforgalmi különös rendszer alá tartozó beszerzések. Előzetesen
-              felszámított adó
+            label: A pénzforgalmi különös rendszer alá tartozó termék- és szolgáltatásbeszerzések.
+              Előzetesen felszámított adó
           m322-informacion-adicional-entregas-intracomunitarias-bienes-servicios:
             label: Kiegészítő információ. Közösségen belüli termék- és szolgáltatásértékesítések
               [71]
@@ -482,7 +482,7 @@ modelo:
             label: Az adóévben végzett ügyletek. Ügyletek az egyszerűsített szabályozás
               szerint [86]
           m322-operaciones-ejercicio-total-volumen-operaciones:
-            label: Az évben teljesített ügyletek. Teljes ügyleti forgalom (a IVA-törvény
+            label: Az adóévben végzett ügyletek. Teljes ügyleti forgalom (a IVA-törvény
               121. cikke) (80 + 81 + 93 + 94 + 83 + 84 + 125 + 126 + 127 + 128 + 86
               + 95 + 96 + 97 + 98 - 79 - 99) [88]
           m322-operaciones-intragrupo-valoradas-arts-78-79-liva:

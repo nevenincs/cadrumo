@@ -279,7 +279,7 @@ modelo:
           decl-nombre:
             label: Nom, en el cas de persones físiques
           ep-avisos-email:
-            label: Establiment permanent. Avisos. Correu electronic
+            label: Establiment permanent. Avisos. Correu electrònic
           ep-avisos-prefijo-pais-movil:
             label: Establiment permanent. Avisos. Prefix de país del telèfon mòbil
           ep-avisos-telefono-movil:
@@ -300,14 +300,14 @@ modelo:
             label: Establiment permanent. Domicili fiscal a Espanya. Escala
           ep-domicilio-fiscal-indicador-referencia-catastral:
             label: Establiment permanent. Domicili fiscal a Espanya. Indicador de
-              referencia cadastral del domicili fiscal
+              referència cadastral del domicili fiscal
           ep-domicilio-fiscal-localidad:
             label: Establiment permanent. Domicili fiscal a Espanya. Localitat o població
           ep-domicilio-fiscal-municipio:
             label: Establiment permanent. Domicili fiscal a Espanya. Nom del municipi
           ep-domicilio-fiscal-nombre-via:
             label: Establiment permanent. Domicili fiscal a Espanya. Nom de la via
-              publica
+              pública
           ep-domicilio-fiscal-numero-casa:
             label: Establiment permanent. Domicili fiscal a Espanya. Número de casa
           ep-domicilio-fiscal-planta:
@@ -317,7 +317,7 @@ modelo:
           ep-domicilio-fiscal-puerta:
             label: Establiment permanent. Domicili fiscal a Espanya. Porta
           ep-domicilio-fiscal-referencia-catastral:
-            label: Establiment permanent. Domicili fiscal a Espanya. Referencia cadastral
+            label: Establiment permanent. Domicili fiscal a Espanya. Referència cadastral
           ep-domicilio-fiscal-tipo-numero:
             label: Establiment permanent. Domicili fiscal a Espanya. Tipus de número
           ep-domicilio-fiscal-tipo-via:
@@ -336,7 +336,7 @@ modelo:
               d'apartat de correus
           ep-domicilio-notificaciones-apartado-destinatario:
             label: Establiment permanent. Domicili a efectes de notificacions. Destinatari
-              de l'apartat de correus, si es diferent del declarant
+              de l'apartat de correus, si és diferent del declarant
           ep-domicilio-notificaciones-apartado-poblacion:
             label: Establiment permanent. Domicili a efectes de notificacions. Població
               o ciutat de l'apartat de correus
@@ -363,7 +363,7 @@ modelo:
               de domicili (domicili 1)
           ep-domicilio-notificaciones-destinatario:
             label: Establiment permanent. Domicili a efectes de notificacions. Destinatari,
-              si es diferent del declarant (domicili 1)
+              si és diferent del declarant (domicili 1)
           ep-domicilio-notificaciones-escalera:
             label: Establiment permanent. Domicili a efectes de notificacions. Escala
               (domicili 1)
@@ -641,7 +641,7 @@ modelo:
           persona-juridica-domicilio-social-numero-casa:
             label: Persona jurídica o entitat. Domicili social. Número de casa
           pf-avisos-email:
-            label: Avisos. Correu electronic
+            label: Avisos. Correu electrònic
           pf-avisos-telefono-movil:
             label: Avisos. Telèfon mòbil
           pf-domicilio-fiscal-bloque:
@@ -657,14 +657,14 @@ modelo:
           pf-domicilio-fiscal-escalera:
             label: Domicili fiscal a Espanya. Escala
           pf-domicilio-fiscal-indicador-referencia-catastral:
-            label: Domicili fiscal a Espanya. Indicador de referencia cadastral del
+            label: Domicili fiscal a Espanya. Indicador de referència cadastral del
               domicili fiscal
           pf-domicilio-fiscal-localidad:
             label: Domicili fiscal a Espanya. Localitat o població
           pf-domicilio-fiscal-municipio:
             label: Domicili fiscal a Espanya. Nom del municipi
           pf-domicilio-fiscal-nombre-via:
-            label: Domicili fiscal a Espanya. Nom de la via publica
+            label: Domicili fiscal a Espanya. Nom de la via pública
           pf-domicilio-fiscal-numero-casa:
             label: Domicili fiscal a Espanya. Número de casa
           pf-domicilio-fiscal-planta:
@@ -674,7 +674,7 @@ modelo:
           pf-domicilio-fiscal-puerta:
             label: Domicili fiscal a Espanya. Porta
           pf-domicilio-fiscal-referencia-catastral:
-            label: Domicili fiscal a Espanya. Referencia cadastral
+            label: Domicili fiscal a Espanya. Referència cadastral
           pf-domicilio-fiscal-tipo-numero:
             label: Domicili fiscal a Espanya. Tipus de número
           pf-domicilio-fiscal-tipo-via:
@@ -725,7 +725,7 @@ modelo:
             label: Domicili a efectes de notificacions. Número d'apartat de correus
           pf-domicilio-notificaciones-apartado-destinatario:
             label: Domicili a efectes de notificacions. Destinatari de l'apartat de
-              correus, si es diferent del declarant
+              correus, si és diferent del declarant
           pf-domicilio-notificaciones-apartado-poblacion:
             label: Domicili a efectes de notificacions. Població o ciutat de l'apartat
               de correus
@@ -747,7 +747,7 @@ modelo:
             label: Domicili a efectes de notificacions. Complement de domicili (domicili
               1)
           pf-domicilio-notificaciones-destinatario:
-            label: Domicili a efectes de notificacions. Destinatari, si es diferent
+            label: Domicili a efectes de notificacions. Destinatari, si és diferent
               del declarant (domicili 1)
           pf-domicilio-notificaciones-escalera:
             label: Domicili a efectes de notificacions. Escala (domicili 1)
@@ -776,17 +776,17 @@ modelo:
           pf-domicilio-residencia-extranjero-codigo-pais:
             label: Domicili a l'Estat de residència. Codi de país
           pf-domicilio-residencia-extranjero-codigo-postal:
-            label: Domicili a l'Estat de residencia. Codi postal
+            label: Domicili a l'Estat de residència. Codi postal
           pf-domicilio-residencia-extranjero-complemento-domicilio:
-            label: Domicili a l'Estat de residencia. Complement de domicili
+            label: Domicili a l'Estat de residència. Complement de domicili
           pf-domicilio-residencia-extranjero-domicilio:
-            label: Domicili a l'Estat de residencia. Domicili
+            label: Domicili a l'Estat de residència. Domicili
           pf-domicilio-residencia-extranjero-pais:
             label: Domicili a l'Estat de residència. País
           pf-domicilio-residencia-extranjero-poblacion:
             label: Domicili a l'Estat de residència. Població o ciutat
           pf-domicilio-residencia-extranjero-provincia-region:
-            label: Domicili a l'Estat de residencia. Província, regió o estat
+            label: Domicili a l'Estat de residència. Província, regió o estat
           pf-establecimientos-permanentes-cuantos:
             label: Establiments permanents. Nombre d'establiments permanents
           pf-establecimientos-permanentes-denominacion-1:
@@ -799,7 +799,7 @@ modelo:
             label: Establiments permanents. Denominació de l'establiment permanent
               3
           pf-establecimientos-permanentes-opera-establecimiento-permanente:
-            label: Establiments permanents. Opera a Espanya a traves d'establiment
+            label: Establiments permanents. Opera a Espanya a través d'establiment
               permanent
           pf-identificacion-apellido-1:
             label: Identificació. Primer cognom
@@ -1375,7 +1375,7 @@ modelo:
               label: Establiment permanent. Avisos. Alta o modificació del correu
                 electrònic d'avisos
             x-clo2sobmd5pmuspdclmm2qbc5lh62qj1:
-              label: Establiment permanent. Avisos. Baixa del correu electronic d'avisos
+              label: Establiment permanent. Avisos. Baixa del correu electrònic d'avisos
             x-clo2sobmd5pmuspddlnncqbc5lgmot31:
               label: Establiment permanent. Avisos. Alta o modificació del telèfon
                 mòbil
@@ -1500,7 +1500,7 @@ modelo:
             x-e1j2sobmd5pmuspdclmm2qbc5lgmot31:
               label: Avisos. Alta o modificació del correu electrònic d'avisos
             x-e1j2sobmd5pmuspdclmm2qbc5lh62qj1:
-              label: Avisos. Baixa del correu electronic d'avisos
+              label: Avisos. Baixa del correu electrònic d'avisos
             x-e1j2sobmd5pmuspddlnncqbc5lgmot31:
               label: Avisos. Alta o modificació del telèfon mòbil
             x-e1j2sobmd5pmuspddlnncqbc5lh62qj1:

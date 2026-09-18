@@ -16,7 +16,7 @@ modelo:
             '01':
               label: A levonások és előlegfizetések alapja
             '02':
-              label: Levonások és előlegfizetések
+              label: Forrásadó és részletfizetés
             '03':
               label: 'Időbeli elhatárolás: a levonások és előlegfizetések alapja'
             '04':

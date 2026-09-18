@@ -58,7 +58,7 @@ modelo:
             vinculada-1-tipo-vinculacion:
               help: A 232-es modelón bevallott 1. kapcsolt ügylet adata.
               label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
-                1 - A kapcsolat típusa
+                1 - Kapcsolat típusa
             vinculada-2-fjo:
               help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
               label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
@@ -94,7 +94,7 @@ modelo:
             vinculada-2-tipo-vinculacion:
               help: A 232-es modelón bevallott 2. kapcsolt ügylet adata.
               label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
-                2 - A kapcsolat típusa
+                2 - Kapcsolat típusa
             vinculada-3-fjo:
               help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
               label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
@@ -130,7 +130,7 @@ modelo:
             vinculada-3-tipo-vinculacion:
               help: A 232-es modelón bevallott 3. kapcsolt ügylet adata.
               label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
-                3 - A kapcsolat típusa
+                3 - Kapcsolat típusa
             vinculada-4-fjo:
               help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
               label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
@@ -166,7 +166,7 @@ modelo:
             vinculada-4-tipo-vinculacion:
               help: A 232-es modelón bevallott 4. kapcsolt ügylet adata.
               label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
-                4 - A kapcsolat típusa
+                4 - Kapcsolat típusa
             vinculada-5-fjo:
               help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
               label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
@@ -202,7 +202,7 @@ modelo:
             vinculada-5-tipo-vinculacion:
               help: A 232-es modelón bevallott 5. kapcsolt ügylet adata.
               label: Kapcsolt személyekkel vagy szervezetekkel folytatott ügyletek
-                5 - A kapcsolat típusa
+                5 - Kapcsolat típusa
           field:
             label: 232-es modelo, 2016-2017. adóévek (HFP/816/2017 rendelet, v13)
         2018-y-siguientes:

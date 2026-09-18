@@ -22,7 +22,7 @@ modelo:
           capitalizacion-seguros-resumen-retenciones:
             help: A bevallott jövedelmek után teljesített levonások és elszámolt előlegek
               összege.
-            label: Levonások és előlegfizetések
+            label: Forrásadó és részletfizetés
       field:
         official_name: Modelo 188. Adóelőleg-levonások és -befizetések. Tőkésítési
           műveletekből, valamint élet- vagy rokkantsági biztosítási szerződésekből

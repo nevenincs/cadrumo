@@ -218,9 +218,9 @@ modelo:
           : label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 1. Adjustment of deductions. Deductible tax amount [715]
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-suma-de-deducciones-cuota-deducible:
-            label: 'Activities under differentiated deduction regimes. Deductible
-              IVA: Group 1. Total deductions (701 + 703 + 705 + 707 + 709 + 711 +
-              713 + 715 + 716). Deductible amount [717]'
+            label: 'Activities with differentiated deduction regimes. Deductible IVA:
+              Group 1. Total deductions (701 + 703 + 705 + 707 + 709 + 711 + 713 +
+              715 + 716). Deductible amount [717]'
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-compensaciones-en-regimen-especial-de-la:
             label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 2. Compensation under the special agriculture, livestock and fisheries
@@ -246,9 +246,9 @@ modelo:
           : label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 2. Adjustment of deductions. Deductible tax amount [733]
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-suma-de-deducciones-cuota-deducible:
-            label: 'Activities under differentiated deduction regimes. Deductible
-              IVA: Group 2. Total deductions (719 + 721 + 723 + 725 + 727 + 729 +
-              731 + 733 + 734). Deductible amount [735]'
+            label: 'Activities with differentiated deduction regimes. Deductible IVA:
+              Group 2. Total deductions (719 + 721 + 723 + 725 + 727 + 729 + 731 +
+              733 + 734). Deductible amount [735]'
           m322-actividades-deduccion-diferenciadas-grupo-1-regularizacion-bienes-inversion-cuota:
             label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 1. Capital-goods regularisation. Deductible tax amount [716]
@@ -406,10 +406,10 @@ modelo:
           m322-liquidacion-iva-devengado-operaciones-intragrupo-tipo:
             label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [02]
           m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias:
-            label: Liquidación. IVA DEVENGADO. Other transactions under the reverse
+            label: Settlement. IVA DEVENGADO. Other transactions under the reverse
               charge (except intra-Community acquisitions) [23]
           ? m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias-cuota
-          : label: Liquidación. IVA DEVENGADO. Other transactions under the reverse
+          : label: Settlement. IVA DEVENGADO. Other transactions under the reverse
               charge (except intra-Community acquisitions). Cuota [24]
           m322-liquidacion-iva-devengado-recargo-de-equivalencia-base-imponible:
             label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base [27]
