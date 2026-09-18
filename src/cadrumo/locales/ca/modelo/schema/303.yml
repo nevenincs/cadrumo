@@ -38,6 +38,8 @@ modelo:
           dr303-111:
             label: Rectificativa - import de la rectificació
           dr303-112:
+            help: Pagament a compte per lliuraments de gasolines, gasoils i biocarburants
+              atribuït a l'Estat
             label: Pagament a compte per lliuraments de gasolines, gasoils i biocarburants
               atribuït a l'Estat
           dr303-12:
@@ -228,6 +230,7 @@ modelo:
             help: Suma la base imposable autorepercutida meritada en adquisicions
               intracomunitàries.
             label: Base imposable autorepercutida meritada en adquisicions intracomunitàries
+              (LIVA art. 13 + art. 15 + art. 84.Uno.2; caselles oficials 10/11)
           iva-compensacion-aplicada-periodo:
             label: Compensacions de períodes anteriors aplicades en aquest període
           iva-compensacion-disponible-fin-periodo:
@@ -239,15 +242,20 @@ modelo:
           iva-compensacion-pendiente-posteriores:
             label: Compensacions de períodes anteriors pendents per a períodes posteriors
           iva-cuota-autorepercutida-interior-deducible:
-            label: IVA autorepercutit deduïble en operacions interiors
+            label: IVA autorepercutit deduïble en operacions interiors (LIVA art.
+              84.Uno.2 + art. 92; casella oficial 37)
           iva-cuota-autorepercutida-interior-devengado:
-            label: IVA autorepercutit meritat en operacions interiors
+            label: IVA autorepercutit meritat en operacions interiors (LIVA art. 84.Uno.2;
+              casella oficial 13)
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+            label: Quota d'IVA autorepercutit en adquisicions intracomunitàries (LIVA
+              art. 84.Uno.2)
           iva-cuota-autorepercutida-intracomunitaria-deducible:
-            label: IVA autorepercutit deduïble en adquisicions intracomunitàries
+            label: IVA autorepercutit deduïble en adquisicions intracomunitàries (LIVA
+              art. 13 + art. 15 + art. 84.Uno.2 + art. 92; caselles oficials 36/37)
           iva-cuota-autorepercutida-intracomunitaria-devengado:
-            label: IVA autorepercutit meritat en adquisicions intracomunitàries
+            label: IVA autorepercutit meritat en adquisicions intracomunitàries (LIVA
+              art. 13 + art. 15 + art. 84.Uno.2; caselles oficials 10/11)
           iva-cuota-deducible-total:
             label: Total quota d'IVA deduïble
           iva-cuota-devengada-total:
@@ -260,25 +268,27 @@ modelo:
           iva-cuota-repercutida-reducido-transitorio:
             help: Casella transitòria del RD-ley 4/2024 per al tipus reduït, que conviu
               amb el tipus reduït ordinari del 10%.
-            label: Quota d’IVA repercutit al tipus reduït transitori (5%/7,5%)
+            label: Quota d'IVA repercutit al tipus reduït transitori (5%/7,5%)
           iva-cuota-repercutida-super-reducido:
             label: Quota d'IVA repercutit al tipus superreduït (4%)
           iva-cuota-repercutida-super-reducido-transitorio:
             help: Casella transitòria del RD-ley 4/2024 per al tipus superreduït,
               que conviu amb el tipus superreduït ordinari del 4%.
-            label: Quota d’IVA repercutit al tipus superreduït transitori (2%)
+            label: Quota d'IVA repercutit al tipus superreduït transitori (2%)
           iva-cuota-soportada-importaciones:
             label: Quota d'IVA suportat deduïble en importacions de béns corrents
+              (LIVA art. 17 + art. 92; casella oficial 33)
           iva-cuota-soportada-interiores:
             label: Quota IVA suportat en operacions interiors corrents
           iva-prorrata-porcentaje:
-            label: Percentatge de prorrata general
+            label: Percentatge de prorrata general (volum amb dret / volum total ×
+              100)
           iva-prorrata-volumen-con-derecho:
             label: Volum anual d'operacions que originen dret a deducció
           iva-prorrata-volumen-total:
             label: Volum anual total d'operacions
           iva-regularizacion-inversiones:
-            label: Regularització de béns d'inversió
+            label: Regularització de béns d'inversió (LIVA arts. 107-110)
           iva-resultado-regimen-general:
             label: Resultat del règim general
           m303-deducciones-sector-1-domestic-current-base:
@@ -682,17 +692,267 @@ modelo:
             label: Modelo 303, exercici 2025
         2026-y-siguientes:
           casilla:
+            '01':
+              help: 'Casella 01: base imposable de l''IVA meritat en el règim general
+                al tipus superreduït del 4%.'
+            '02':
+              help: 'Casella 02: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus superreduït del 4%.'
+            '03':
+              help: 'Casella 03: quota de l''IVA meritat en el règim general al tipus
+                superreduït del 4%.'
+            '04':
+              help: 'Casella 04: base imposable de l''IVA meritat en el règim general
+                al tipus reduït del 10%.'
+            '05':
+              help: 'Casella 05: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus reduït del 10%.'
+            '06':
+              help: 'Casella 06: quota de l''IVA meritat en el règim general al tipus
+                reduït del 10%.'
+            '07':
+              help: 'Casella 07: base imposable de l''IVA meritat en el règim general
+                al tipus general del 21%.'
+            08:
+              help: 'Casella 08: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus general del 21%.'
+            09:
+              help: 'Casella 09: quota de l''IVA meritat en el règim general al tipus
+                general del 21%.'
+            '10':
+              help: 'Casella 10: base de l''IVA meritat per adquisicions intracomunitàries
+                de béns i serveis.'
+            '108':
+              help: 'Casella 108: altres ajustaments en una autoliquidació rectificativa
+                per a supòsits determinats per discrepància de criteri administratiu.'
+            '109':
+              help: 'Casella 109: devolucions acordades per l''AEAT en autoliquidacions
+                anteriors del mateix exercici i període.'
+            '11':
+              help: 'Casella 11: quota de l''IVA meritat per adquisicions intracomunitàries
+                de béns i serveis.'
+            '111':
+              help: 'Casella 111: import de la rectificació declarat en una autoliquidació
+                rectificativa.'
+            '12':
+              help: 'Casella 12: base de l''IVA meritat per altres operacions amb
+                inversió del subjecte passiu, excloses les intracomunitàries.'
+            '120':
+              help: 'Casella 120: informació addicional sobre operacions no subjectes
+                per regles de localització, exclosa la casella 123.'
+            '122':
+              help: 'Casella 122: informació addicional sobre operacions subjectes
+                a inversió del subjecte passiu.'
+            '123':
+              help: 'Casella 123: informació addicional sobre operacions no subjectes
+                per regles de localització en règims especials de finestreta única.'
+            '124':
+              help: 'Casella 124: informació addicional sobre operacions subjectes
+                en règims especials de finestreta única.'
+            '13':
+              help: 'Casella 13: quota de l''IVA meritat per altres operacions amb
+                inversió del subjecte passiu, excloses les intracomunitàries.'
+            '14':
+              help: 'Casella 14: base imposable de la modificació de bases i quotes
+                de l''IVA meritat.'
+            '15':
+              help: 'Casella 15: quota de la modificació de bases i quotes de l''IVA
+                meritat.'
+            '150':
+              help: 'Casella 150: base imposable de l''IVA meritat en el règim general
+                del nou tipus, tram 1.'
+            '151':
+              help: 'Casella 151: percentatge del tipus de l''IVA meritat en el règim
+                general del nou tipus, tram 1.'
+            '152':
+              help: 'Casella 152: quota de l''IVA meritat en el règim general del
+                nou tipus, tram 1.'
+            '153':
+              help: 'Casella 153: base imposable de l''IVA meritat en el règim general
+                del nou tipus, tram 2.'
+            '154':
+              help: 'Casella 154: percentatge del tipus de l''IVA meritat en el règim
+                general del nou tipus, tram 2.'
+            '155':
+              help: 'Casella 155: quota de l''IVA meritat en el règim general del
+                nou tipus, tram 2.'
+            '156':
+              help: 'Casella 156: base imposable del recàrrec d''equivalència al 0,5%.'
+            '157':
+              help: 'Casella 157: percentatge del tipus del recàrrec d''equivalència
+                al 0,5%.'
+            '158':
+              help: 'Casella 158: quota del recàrrec d''equivalència al 0,5%.'
+            '16':
+              help: 'Casella 16: base imposable del recàrrec d''equivalència a l''1,0%.'
+            '165':
+              help: 'Casella 165: base imposable de l''IVA meritat en el règim general
+                al tipus del 2% des del 2024.'
+            '166':
+              help: 'Casella 166: percentatge del tipus de l''IVA meritat en el règim
+                general al tipus del 2% des del 2024.'
+            '167':
+              help: 'Casella 167: quota de l''IVA meritat en el règim general al tipus
+                del 2% des del 2024.'
+            '168':
+              help: 'Casella 168: base imposable del nou tipus de recàrrec d''equivalència
+                des del 2024.'
+            '169':
+              help: 'Casella 169: percentatge del nou tipus del recàrrec d''equivalència
+                des del 2024.'
+            '17':
+              help: 'Casella 17: percentatge del tipus del recàrrec d''equivalència
+                a l''1,0%.'
+            '170':
+              help: 'Casella 170: quota del nou recàrrec d''equivalència des del 2024.'
+            '18':
+              help: 'Casella 18: quota del recàrrec d''equivalència a l''1,0%.'
+            '19':
+              help: 'Casella 19: base imposable del recàrrec d''equivalència a l''1,4%.'
+            '20':
+              help: 'Casella 20: percentatge del tipus del recàrrec d''equivalència
+                a l''1,4%.'
+            '21':
+              help: 'Casella 21: quota del recàrrec d''equivalència a l''1,4%.'
+            '22':
+              help: 'Casella 22: base imposable del recàrrec d''equivalència al 5,2%.'
+            '23':
+              help: 'Casella 23: percentatge del tipus del recàrrec d''equivalència
+                al 5,2%.'
+            '24':
+              help: 'Casella 24: quota del recàrrec d''equivalència al 5,2%.'
+            '25':
+              help: 'Casella 25: base imposable de la modificació de bases i quotes
+                del recàrrec d''equivalència.'
+            '26':
+              help: 'Casella 26: quota de la modificació de bases i quotes del recàrrec
+                d''equivalència.'
+            '27':
+              help: 'Casella 27: total de la quota meritada.'
+            '28':
+              help: 'Casella 28: base de l''IVA deduïble en operacions interiors corrents.'
+            '29':
+              help: 'Casella 29: quota de l''IVA deduïble en operacions interiors
+                corrents.'
+            '30':
+              help: 'Casella 30: base de l''IVA deduïble en operacions interiors de
+                béns d''inversió.'
+            '31':
+              help: 'Casella 31: quota de l''IVA deduïble en operacions interiors
+                de béns d''inversió.'
+            '32':
+              help: 'Casella 32: base de l''IVA deduïble en importacions de béns corrents.'
+            '33':
+              help: 'Casella 33: quota de l''IVA deduïble en importacions de béns
+                corrents.'
+            '34':
+              help: 'Casella 34: base de l''IVA deduïble en importacions de béns d''inversió.'
+            '35':
+              help: 'Casella 35: quota de l''IVA deduïble en importacions de béns
+                d''inversió.'
+            '36':
+              help: 'Casella 36: base de l''IVA deduïble en adquisicions intracomunitàries
+                corrents.'
+            '37':
+              help: 'Casella 37: quota de l''IVA deduïble en adquisicions intracomunitàries
+                corrents.'
+            '38':
+              help: 'Casella 38: base de l''IVA deduïble en adquisicions intracomunitàries
+                de béns d''inversió.'
+            '39':
+              help: 'Casella 39: quota de l''IVA deduïble en adquisicions intracomunitàries
+                de béns d''inversió.'
+            '40':
+              help: 'Casella 40: base de la rectificació de deduccions.'
+            '41':
+              help: 'Casella 41: quota de la rectificació de deduccions.'
+            '42':
+              help: 'Casella 42: quota de compensacions del règim especial d''agricultura,
+                ramaderia i pesca.'
+            '43':
+              help: 'Casella 43: quota de regularització de béns d''inversió.'
+            '44':
+              help: 'Casella 44: quota de regularització de prorrata per percentatge
+                definitiu.'
+            '45':
+              help: 'Casella 45: total de la quota d''IVA a deduir.'
+            '47':
+              help: 'Casella 47: suma d''ingressos a compte del conjunt d''activitats
+                en règim simplificat en el 1T, 2T o 3T.'
+            '48':
+              help: 'Casella 48: suma de quotes derivades del conjunt d''activitats
+                en règim simplificat en el 4T.'
+            '49':
+              help: 'Casella 49: suma d''ingressos a compte realitzats durant l''exercici
+                en règim simplificat en el 4T.'
+            '50':
+              help: 'Casella 50: resultat del règim simplificat en el 4T, calculat
+                com la casella 48 menys la casella 49 ([48]-[49]).'
+            '51':
+              help: 'Casella 51: quotes d''IVA meritades per adquisicions intracomunitàries
+                de béns en règim simplificat.'
+            '52':
+              help: 'Casella 52: quotes d''IVA meritades per lliuraments d''actius
+                fixos en règim simplificat.'
+            '53':
+              help: 'Casella 53: quotes d''IVA meritades en règim simplificat per
+                operacions amb inversió del subjecte passiu.'
+            '54':
+              help: 'Casella 54: total de la quota resultant en règim simplificat.'
+            '55':
+              help: 'Casella 55: IVA deduïble per adquisició o importació d''actius
+                fixos en règim simplificat.'
+            '56':
+              help: 'Casella 56: IVA deduïble per regularització de béns d''inversió
+                en règim simplificat.'
+            '57':
+              help: 'Casella 57: total d''IVA deduïble en règim simplificat, calculat
+                com la casella 55 més la casella 56 ([55]+[56]).'
+            '58':
+              help: 'Casella 58: resultat del règim simplificat, calculat com la casella
+                54 menys la casella 57 ([54]-[57]).'
+            '59':
+              help: 'Casella 59: informació addicional sobre lliuraments intracomunitaris
+                de béns i serveis.'
+            '60':
+              help: 'Casella 60: informació addicional sobre exportacions i operacions
+                assimilades.'
+            '62':
+              help: 'Casella 62: base imposable de lliuraments de criteri de caixa
+                meritades segons l''article 75 LIVA.'
+            '63':
+              help: 'Casella 63: quota de lliuraments de criteri de caixa meritades
+                segons l''article 75 LIVA.'
             '64':
               help: 'Informació fiscal sobre informació fiscal de la casella 64 del
                 Modelo 303 Referències: [46], [58], [76].'
               label: Resultat - Suma de resultats ([46]+[58]+[76])
+            '65':
+              help: 'Casella 65: percentatge del resultat atribuïble a l''Administració
+                de l''Estat.'
             '66':
               help: 'Informació fiscal sobre informació fiscal de la casella 66 del
                 Modelo 303 Referències: [64], [65].'
               label: Resultat - Import atribuïble a l'Administració de l'Estat ([64]×[65]/100)
+            '68':
+              help: 'Casella 68: resultat de regularització anual de tributació conjunta.'
+            '70':
+              help: 'Casella 70: resultats a ingressar procedents d''autoliquidacions
+                anteriors del mateix exercici i període.'
             '71':
               help: 'Consulteu la informació de la casella: Resultat final ([69]-[70]+[109]).'
               label: Resultat final ([69]-[70]+[109])
+            '74':
+              help: 'Casella 74: base imposable d''adquisicions en el règim de criteri
+                de caixa.'
+            '75':
+              help: 'Casella 75: quota d''adquisicions en el règim de criteri de caixa.'
+            '76':
+              help: 'Casella 76: ajust del resultat per regularització de quotes segons
+                l''article 80.cinco.5ª LIVA.'
+            '77':
+              help: 'Casella 77: IVA a la importació liquidat per la Duana que està
+                pendent d''ingrés.'
             x-chim6r1ecll6asj3d5hmiro:
               help: Exercici fiscal al qual es refereix l'autoliquidació.
             x-chim6r1ee1in4qbfchng:

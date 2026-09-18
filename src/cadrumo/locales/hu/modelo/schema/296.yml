@@ -8,7 +8,7 @@ modelo:
             label: A levonások és előlegfizetések alapja
           irnr-resumen-retenciones:
             help: A kedvezményezetti rekordok levonásainak és előlegfizetéseinek összege.
-            label: Levonások és előlegfizetések
+            label: Forrásadó és részletfizetés
           irnr-resumen-retenciones-ingresadas:
             help: 'A ténylegesen befizetett levonások része: csak a 3-25 kulcsú kedvezményezettek,
               valamint az 1 vagy 2 kulcsúak, ahol a fizetés értéke 1. Alacsonyabb

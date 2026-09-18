@@ -31,6 +31,7 @@ from cadrumo.domain.calculations.registry.schema import ModeloDefinition, Modelo
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaConstraints, CasillaDefinition
 
+from ..compiler.authority import bundled_validation_verdicts
 from ..compiler.loader import load_modelo_directory
 from ..compiler.registry_scope import validate_registry_scope
 from ..compiler.validate_cross_revision import (
@@ -1206,9 +1207,21 @@ def test_committed_m100_strict_continuity_surface_rejects_covered_label_drift(
 def test_backend_registry_validation_accepts_committed_corpus_drift_gate(
     committed_registry: tuple[tuple[ModeloDefinition, ...], RegistryCatalogues],
 ) -> None:
+    """The validator accepts the committed corpus, re-proving only what changed.
+
+    Carries the bundled compile's own verdict scope, so a modelo whose content
+    is unchanged takes its recorded per-modelo verdict and an edited one
+    validates afresh. Without it this gate re-proved all of it in every
+    process -- 19.4s -- because the authority's validation had been served from
+    the disk verdict, leaving the validator's in-process memo empty for the
+    identical objects this fixture hands back.
+    """
     modelos, catalogues = committed_registry
     RegistryValidator(
-        catalogues, source_root=bundled_path(), user_profile_schema=load_user_profile_schema()
+        catalogues,
+        source_root=bundled_path(),
+        user_profile_schema=load_user_profile_schema(),
+        verdicts=bundled_validation_verdicts(),
     ).validate_registry(modelos)
 
 

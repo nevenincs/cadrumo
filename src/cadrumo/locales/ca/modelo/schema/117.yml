@@ -4,7 +4,7 @@ modelo:
       construct:
         modelo-117-total-liquidacion-calculation:
           field:
-            title: Modelo 117 total liquidació / resultat a ingresar
+            title: Modelo 117 total liquidació / resultat a ingressar
       field:
         official_name: Modelo 117. Retencions i ingressos a compte. Rendes o guanys
           patrimonials obtinguts com a conseqüència de les transmissions o reemborsaments

@@ -27,7 +27,6 @@ def _rows(root: Path) -> tuple[tuple[str, int, int, str], ...]:
 def _scope(root: Path, rows: tuple[tuple[str, int, int, str], ...], *, compiler: str = "code"):
     return validation_verdict_scope(
         registry_root=root,
-        registry_identity_digest="tree",
         fingerprints=rows,
         source_receipt="evidence",
         compiler_identity_digest=compiler,

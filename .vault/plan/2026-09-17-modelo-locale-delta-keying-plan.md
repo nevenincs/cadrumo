@@ -6,9 +6,9 @@ date: '2026-09-17'
 tier: L2
 related:
   - '[[2026-09-17-modelo-locale-delta-keying-adr]]'
-modified: '2026-09-17'
+modified: '2026-09-18'
 body_schema: body-v2
-body_hash: 'sha256:74cda50cfe6df371d6799fa05ae3e3ae315cde4ec7e739d3afd366c1d164e281'
+body_hash: 'sha256:c2eb7a1bba432ea24c7b86c624d3497d6df2b44b6e6a7819ca4b5f10fd1fa794'
 ---
 
 # `modelo-locale-delta-keying` plan
@@ -81,6 +81,7 @@ Measure the catalogue against the official record designs, repair what the captu
 - [x] `P05.S15` - Restore full Spanish label text from the official record designs and dictionaries; `src/cadrumo/_data/registry/authority`.
 - [x] `P05.S16` - Complete the en ca hu translations of the repaired labels and harmonise divergent renderings; `src/cadrumo/locales`.
 - [x] `P05.S17` - Refuse an authored edition split that the registry continuity contract forbids and support authored removals; `dev/locales/modelo_casilla_catalogue.py`.
+- [x] `P05.S18` - Prove the delta-keyed collapse is invisible to the product's own catalogue reader; `dev/locales/tests/test_shipped_casilla_catalogue.py`.
 
 ## Parallelization
 

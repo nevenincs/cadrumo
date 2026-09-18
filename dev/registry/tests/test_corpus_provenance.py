@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 
 import pytest
@@ -10,6 +11,7 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 
 from ..compiler.corpus_provenance import (
+    _classified_normative_corpus_file,
     classify_normative_corpus_provenance,
     resolve_normative_corpus_path,
 )
@@ -204,3 +206,50 @@ def test_packaged_normatives_directory_symlinked_to_data_root_is_rejected(tmp_pa
 
     with pytest.raises(RegistryValidationError):
         resolve_normative_corpus_path(tmp_path, "corpus/normatives/attested.html")
+
+
+def test_one_file_cited_at_several_anchors_is_classified_once(tmp_path: Path) -> None:
+    """References sharing a file share its classification rather than re-reading it.
+
+    Provenance is decided by the file's bytes but asked per REFERENCE, and the
+    corpus is cited at many anchors per file. Re-reading per reference made one
+    validation pass scan 415 MB of a 36.8 MB corpus.
+    """
+    _write_corpus_fixture(tmp_path, "ley.html", "<!-- Official BOE consolidated source excerpt -->")
+    _classified_normative_corpus_file.cache_clear()
+
+    for anchor in ("art-1", "art-2", "art-3"):
+        assert (
+            classify_normative_corpus_provenance(tmp_path, f"corpus/normatives/html/ley.html#{anchor}")
+            is NormativeCorpusProvenance.BOE_ATTESTED
+        )
+
+    info = _classified_normative_corpus_file.cache_info()
+    assert info.misses == 1, "one file must be read exactly once however many anchors cite it"
+    assert info.hits == 2
+
+
+def test_an_edited_corpus_file_is_reclassified(tmp_path: Path) -> None:
+    """The memo keys on the file's stat identity, so a rewrite is not served a stale verdict."""
+    path = _write_corpus_fixture(tmp_path, "ley.html", "<!-- Official BOE consolidated source excerpt -->")
+    _classified_normative_corpus_file.cache_clear()
+    ref = "corpus/normatives/html/ley.html#art-1"
+
+    assert classify_normative_corpus_provenance(tmp_path, ref) is NormativeCorpusProvenance.BOE_ATTESTED
+
+    path.write_bytes(b"<p>hand written summary</p>")
+    stat = path.stat()
+    os.utime(path, ns=(stat.st_atime_ns, stat.st_mtime_ns + 1_000_000))
+
+    assert classify_normative_corpus_provenance(tmp_path, ref) is NormativeCorpusProvenance.AUTHORED
+
+
+def test_an_out_of_scope_reference_reads_nothing(tmp_path: Path) -> None:
+    """A path outside the normative tree is classified without consulting the memo."""
+    _classified_normative_corpus_file.cache_clear()
+
+    assert (
+        classify_normative_corpus_provenance(tmp_path, "corpus/manuals/renta/2025/part1/source.pdf")
+        is NormativeCorpusProvenance.OUT_OF_SCOPE
+    )
+    assert _classified_normative_corpus_file.cache_info().misses == 0

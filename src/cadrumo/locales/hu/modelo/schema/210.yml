@@ -4,7 +4,7 @@ modelo:
       casilla:
         continuidad:
           irnr-base-imponible:
-            label: Adóalap
+            label: adóalap
           irnr-base-imponible-directa-g:
             label: Adóalap (210 G)
           irnr-base-imponible-directa-i:
@@ -14,7 +14,7 @@ modelo:
           irnr-convenio-indicador:
             label: Egyezmény
           irnr-cuota-diferencial:
-            label: Differenciál adó
+            label: Különbözeti adó
           irnr-cuota-integra:
             label: Bruttó adó
           irnr-cuota-integra-reducida:

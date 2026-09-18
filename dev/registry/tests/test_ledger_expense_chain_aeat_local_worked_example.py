@@ -47,13 +47,18 @@ to produce, and what the assertions check.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
-from cadrumo.application.aggregation.renta_ledger import aggregate_renta_ledger_expenses
+from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
+from cadrumo.application.aggregation.renta_ledger import (
+    RentaLedgerAggregationIssueReason,
+    aggregate_renta_ledger_expenses,
+)
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -180,6 +185,15 @@ def _aggregated(*, suministros_category: SpendingCategory = _SUMINISTROS_CATEGOR
     """Drive the example's purchase facts through the production aggregation."""
     rows = [_expense_row(reference, amount, suministros_category) for reference, amount in _SUMINISTRO_ROWS]
     rows.extend(_expense_row(reference, amount, category) for reference, amount, category in _OTHER_ROWS)
+    # The aggregation reads the profile record for its health-insurance person
+    # counts, and that reaches the login-session port. The port is composed by
+    # the entrypoint in production, so a test driving the aggregation directly
+    # composes it too rather than meeting an uncomposed-infrastructure refusal.
+    with composed_profile_persistence_ports():
+        return _aggregate(rows)
+
+
+def _aggregate(rows: Sequence[Transaction]):
     return aggregate_renta_ledger_expenses(
         TransactionCatalogue.from_transactions(tuple(rows)),
         InvoiceCatalogue(),
@@ -220,19 +234,26 @@ def test_the_home_office_carve_out_is_not_applied_to_a_local() -> None:
 
     This is the defect the new category closes, pinned as a live contrast
     rather than described. Art. 30.2.5.a b) grants 30 % of the affected
-    floor-area proportion of a VIVIENDA HABITUAL; applying it to a dedicated
-    local costs this taxpayer 5.460 of deductible expense. Asserting both
-    branches in one place is what stops a future edit from quietly routing the
-    local case back through the dwelling rule.
+    floor-area proportion of a VIVIENDA HABITUAL, and this taxpayer's premises
+    are a dedicated local.
+
+    The two branches are asserted at the boundary each actually reaches. The
+    local category resolves to the printed figure with no ratio supplied. The
+    home-office category cannot resolve at all here: it is bound to the censo
+    vivienda-area invariant, so without a censo snapshot every row is refused
+    as ineligible rather than silently carved down to 30 %. Either way the
+    local case is not routed through the dwelling rule, which is what this
+    guards.
     """
     local = _resolved()[_SUMINISTROS_BINDING]
-    home_office = _resolved(suministros_category=SpendingCategory.from_registry("suministros_home_office_luz"))[
-        _SUMINISTROS_BINDING
-    ]
+    home_office = _aggregated(suministros_category=SpendingCategory.from_registry("suministros_home_office_luz"))
 
     assert local == _SUMINISTROS_TOTAL
-    assert home_office == (_SUMINISTROS_TOTAL * Decimal("0.30")).quantize(Decimal("0.01"))
-    assert local - home_office == Decimal("5460.00")
+    assert home_office.issues, "the home-office branch resolved without censo data, so the invariant is not binding"
+    assert {issue.reason for issue in home_office.issues} == {
+        RentaLedgerAggregationIssueReason.INELIGIBLE_DEDUCTIBILITY
+    }
+    assert all(issue.detail == "missing usage ratio" for issue in home_office.issues)
 
 
 def test_the_suministros_binding_targets_the_casilla_this_module_claims() -> None:
@@ -303,13 +324,8 @@ def test_moving_one_bill_moves_the_published_subtotal() -> None:
             for reference, amount in _SUMINISTRO_ROWS[1:]
         ),
     ]
-    aggregation = aggregate_renta_ledger_expenses(
-        TransactionCatalogue.from_transactions(tuple(nudged_rows)),
-        InvoiceCatalogue(),
-        bucket_id=_BUCKET,
-        period=_PERIOD,
-        modelo="100",
-    )
+    with composed_profile_persistence_ports():
+        aggregation = _aggregate(nudged_rows)
     nudged = resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
         _modelo_100_revision(),
         aggregation.observations,

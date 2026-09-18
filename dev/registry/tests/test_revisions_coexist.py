@@ -410,4 +410,4 @@ class TestCrossRevisionBoundaryReachesMeetingEditions:
         failures = declared_cross_revision_continuity_semantic_linkage_failures((modelo,))
         assert len(failures) == 1
         assert "continuity chain 'base'" in failures[0]
-        assert "semantic-role-derived id base-gate" in failures[0]
+        assert "semantic-role-derived id 'base-gate'" in failures[0]

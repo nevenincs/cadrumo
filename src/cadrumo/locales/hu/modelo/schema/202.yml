@@ -43,7 +43,7 @@ modelo:
             label: Kiegészítő információ (5) - A Kanári-szigeteki beruházási tartaléknak
               megfelelő összeg
           is-pf-mod-40-2-a-ingresar:
-            label: A LIS 40.2. cikke szerinti módszer - Befizetendő
+            label: A LIS 40.2. cikke szerinti módszer - Fizetendő összeg
           is-pf-mod-40-2-base-pago-fraccionado:
             label: A LIS 40.2. cikke szerinti módszer - Az előlegfizetés alapja
           is-pf-mod-40-2-resultado-declaracion-anterior:
@@ -133,9 +133,9 @@ modelo:
             label: A LIS 40.3. cikke szerinti módszer - Kiegyenlítési tartalék (LIS
               105. cikk) - Csökkenések
           is-pf-mod-40-3-resto-correcciones-aumentos:
-            label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Növekedések
+            label: A LIS 40.3. cikke szerinti módszer - Fennmaradó korrekciók - Növekedések
           is-pf-mod-40-3-resto-correcciones-disminuciones:
-            label: A LIS 40.3. cikke szerinti módszer - Egyéb korrekciók - Csökkenések
+            label: A LIS 40.3. cikke szerinti módszer - Fennmaradó korrekciók - Csökkenések
           is-pf-mod-40-3-resultado:
             label: A LIS 40.3. cikke szerinti módszer - Eredmény
           is-pf-mod-40-3-resultado-contable:

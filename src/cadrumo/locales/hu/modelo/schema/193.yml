@@ -84,7 +84,7 @@ modelo:
           payee-reducciones-193:
             label: Csökkentések összege
           payee-retenciones-193:
-            label: Levonások és előlegfizetések
+            label: Forrásadó és részletfizetés
           payee-retenciones-forales-araba:
             label: Befizetett levonások és előlegfizetések. Araba/Álava Tartományi
               Tanácsa
@@ -107,7 +107,7 @@ modelo:
           retenciones-ingresadas-total:
             label: BEFIZETETT LEVONÁSOK ÉS ELŐLEGFIZETÉSEK
           retenciones-ingresos-a-cuenta:
-            label: Levonások és előlegfizetések
+            label: Forrásadó és részletfizetés
           total-perceptores-count:
             label: A KEDVEZMÉNYEZETTEK SZÁMA
       construct:

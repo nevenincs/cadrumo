@@ -1,0 +1,499 @@
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.tipo-solicitud"
+continuidad_origin = "not_on_form"
+continuidad_evidence = "The complete M30800 and M30801 records in AEAT aeat-dr-308-2016 and aeat-dr-308-2019 contain no separate Tipo de solicitud field. The application declares this informational request selector in its declarant construct; the actual official Tipo de declaracion and Tipo de tributacion fields are separately represented by decl.tipo-declaracion and decl.tipo-tributacion. No official predecessor identity is asserted for this application-only selector."
+number = "tipo-solicitud"
+section = ["declarante"]
+data_type = "text"
+semantic_role = "tipo_solicitud"
+required = true
+input_kind = "informational"
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "ley-37-1992:art-161"]
+# Modelo 308 casillas: the AD-HOC declaracion's operator values. Every
+# value is the operator's own per-operation datum -- the modelo consumes
+# no Cadrumo store, which is why the binding family stays empty.
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.devolucion-iban"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 51 Devolucion - IBAN. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "932-965"
+section = ["declarante", "liquidacion"]
+data_type = "iban"
+semantic_role = "devolucion_iban"
+# Design devolucion IBAN.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.devolucion-bic"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 52 Devolucion - SWIFT-BIC. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "966-976"
+section = ["declarante", "liquidacion"]
+data_type = "bic"
+semantic_role = "devolucion_bic"
+# Design devolucion SWIFT-BIC.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.tipo-declaracion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 6 Tipo de declaracion (D, Devolucion). Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "13"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "declaracion_tipo"
+# Design tipo de declaracion.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.nombre"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 9 Identificacion - Nombre. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "83-102"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "declarante_nombre"
+# The person declarante's given name; blank for companies.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.tipo-tributacion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 12 Tipo de tributacion segun el sujeto pasivo, with the four MTN, recargo, transport and art.21.4 categories. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "109"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "tipo_tributacion_sujeto_pasivo"
+# Design tipo de tributacion segun el sujeto pasivo.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-adquirente-nif"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 13 MTN - Adquirente - NIF. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "110-118"
+section = ["declarante", "liquidacion"]
+data_type = "nif"
+semantic_role = "mtn_adquirente_nif"
+# MTN adquirente NIF.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-adquirente-apellidos"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 14 MTN - Adquirente - Apellidos o Razon social. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "119-178"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "mtn_adquirente_apellidos"
+# MTN adquirente apellidos o razon social.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-adquirente-nombre"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 15 MTN - Adquirente - Nombre. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "179-198"
+section = ["declarante", "liquidacion"]
+data_type = "name"
+semantic_role = "mtn_adquirente_nombre"
+# MTN adquirente nombre.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-adquirente-pais"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 16 MTN - Adquirente - Pais. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "199-200"
+section = ["declarante", "liquidacion"]
+data_type = "country_code"
+semantic_role = "mtn_adquirente_pais"
+# MTN adquirente pais.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-vehiculo-marca"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 17 MTN - Vehiculos - Marca. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "201-240"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_vehiculo_marca"
+# MTN vehiculo marca.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-vehiculo-tipo"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 18 MTN - Vehiculos - Tipo. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "241-280"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_vehiculo_tipo"
+# MTN vehiculo tipo.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-vehiculo-modelo"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 19 MTN - Vehiculos - Modelo (denominacion comercial). Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "281-320"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_vehiculo_modelo"
+# MTN vehiculo denominacion comercial.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-vehiculo-bastidor"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 20 MTN - Vehiculos - No Id. Bastidor. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "321-342"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_vehiculo_bastidor"
+# MTN vehiculo numero de identificacion del bastidor.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-vehiculo-clasificacion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 21 MTN - Vehiculos - Clasificacion. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "343-348"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_vehiculo_clasificacion"
+# MTN vehiculo clasificacion.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-embarcacion-fabricante"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 22 MTN - Embarcaciones - Fabricante. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "349-388"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_embarcacion_fabricante"
+# MTN embarcacion fabricante.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-embarcacion-tipo"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 23 MTN - Embarcaciones - Tipo. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "389-468"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_embarcacion_tipo"
+# MTN embarcacion tipo.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-embarcacion-identificacion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 24 MTN - Embarcaciones - Identificacion. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "469-490"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_embarcacion_identificacion"
+# MTN embarcacion identificacion.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-embarcacion-eslora"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 25 MTN - Embarcaciones - Eslora maxima, with three integer and two decimal digits. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "491-495"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_embarcacion_eslora"
+# MTN embarcacion eslora maxima.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-aeronave-fabricante"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 26 MTN - Aeronaves - Fabricante. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "496-535"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_aeronave_fabricante"
+# MTN aeronave fabricante.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-aeronave-marca"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 27 MTN - Aeronaves - Marca. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "536-615"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_aeronave_marca"
+# MTN aeronave marca.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-aeronave-serie"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 28 MTN - Aeronaves - No serie. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "616-637"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_aeronave_serie"
+# MTN aeronave numero de serie.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-aeronave-ano"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 29 MTN - Aeronaves - Ano fabricacion. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "638-641"
+section = ["declarante", "liquidacion"]
+data_type = "year"
+semantic_role = "mtn_aeronave_ano"
+# MTN aeronave ano de fabricacion.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-aeronave-peso"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 30 MTN - Aeronaves - Peso maximo despegue. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "642-651"
+section = ["declarante", "liquidacion"]
+data_type = "text"
+semantic_role = "mtn_aeronave_peso"
+# MTN aeronave peso maximo al despegue.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-precio-adquisicion"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 31 MTN - Liquidacion - Precio Adquisicion [01]. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "652-668"
+section = ["declarante", "liquidacion"]
+semantic_role = "mtn_precio_adquisicion"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# MTN liquidacion [01] precio de adquisicion.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-tipo-01"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 32 MTN - Liquidacion - Tipo (%) [02], the rate after acquisition price and before input VAT. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "669-673"
+form_number = "02"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "mtn_tipo_01"
+# MTN liquidacion [02] tipo (%).
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-iva-soportado"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 33 MTN - Liquidacion - IVA soportado [03]. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "674-690"
+section = ["declarante", "liquidacion"]
+semantic_role = "mtn_iva_soportado"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# MTN liquidacion [03] IVA soportado.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-precio-venta"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 34 MTN - Liquidacion - Precio de venta [04]. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "691-707"
+section = ["declarante", "liquidacion"]
+semantic_role = "mtn_precio_venta"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# MTN liquidacion [04] precio de venta.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-tipo-04"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 35 MTN - Liquidacion - Tipo (%) [05], the rate after sale price and before the refund maximum. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "708-712"
+form_number = "05"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "mtn_tipo_04"
+# MTN liquidacion [05] tipo (%).
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-maximo-devolver"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 36 MTN - Liquidacion - Maximo a devolver [06]. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "713-729"
+section = ["declarante", "liquidacion"]
+semantic_role = "mtn_maximo_devolver"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# MTN liquidacion [06] maximo a devolver.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-iva-devolver-eib"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 37 MTN - Liquidacion - IVA a devolver por entregas intracomunitarias [07]. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "730-746"
+section = ["declarante", "liquidacion"]
+semantic_role = "mtn_iva_devolver_eib"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# MTN liquidacion [07] IVA a devolver por entregas intracomunitarias.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-iva-devolver-transporte"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 38 MTN - Liquidacion - IVA a devolver actividad de transporte [18]. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "747-763"
+section = ["declarante", "liquidacion"]
+semantic_role = "mtn_iva_devolver_transporte"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# MTN liquidacion [18] IVA a devolver actividad de transporte.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-iva-soportado-art21"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 39 MTN - Liquidacion - IVA soportado art.21.4, parrafo 2 LIVA [19]. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "764-780"
+section = ["declarante", "liquidacion"]
+semantic_role = "mtn_iva_soportado_art21"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# MTN liquidacion [19] IVA soportado art. 21.4 parrafo 2 LIVA.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.mtn-iva-devolver-art21"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 40 MTN - Liquidacion - IVA a devolver art.21.4, parrafo 2 LIVA [20]. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "781-797"
+section = ["declarante", "liquidacion"]
+semantic_role = "mtn_iva_devolver_art21"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# MTN liquidacion [20] IVA a devolver art. 21.4 parrafo 2 LIVA.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-base-08"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 41 REQ - Liquidacion - Base Imponible [08], first base/rate/quota triple. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "798-814"
+form_number = "08"
+section = ["declarante", "liquidacion"]
+semantic_role = "req_base_08"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# REQ liquidacion [08] base imponible.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-tipo-09"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 42 REQ - Liquidacion - Tipo (%) [09], first base/rate/quota triple. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "815-819"
+form_number = "09"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "req_tipo_09"
+# REQ liquidacion [09] tipo (%).
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-cuota-10"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 43 REQ - Liquidacion - Cuota [10], first base/rate/quota triple. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "820-836"
+form_number = "10"
+section = ["declarante", "liquidacion"]
+semantic_role = "req_cuota_10"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# REQ liquidacion [10] cuota.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-base-11"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 44 REQ - Liquidacion - Base Imponible [11], second base/rate/quota triple. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "837-853"
+form_number = "11"
+section = ["declarante", "liquidacion"]
+semantic_role = "req_base_11"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# REQ liquidacion [11] base imponible.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-tipo-12"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 45 REQ - Liquidacion - Tipo (%) [12], second base/rate/quota triple. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "854-858"
+form_number = "12"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "req_tipo_12"
+# REQ liquidacion [12] tipo (%).
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-cuota-13"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 46 REQ - Liquidacion - Cuota [13], second base/rate/quota triple. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "859-875"
+form_number = "13"
+section = ["declarante", "liquidacion"]
+semantic_role = "req_cuota_13"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# REQ liquidacion [13] cuota.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-base-14"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 47 REQ - Liquidacion - Base Imponible [14], third base/rate/quota triple. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "876-892"
+form_number = "14"
+section = ["declarante", "liquidacion"]
+semantic_role = "req_base_14"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# REQ liquidacion [14] base imponible.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-tipo-15"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 48 REQ - Liquidacion - Tipo (%) [15], third base/rate/quota triple. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "893-897"
+form_number = "15"
+section = ["declarante", "liquidacion"]
+data_type = "ratio"
+semantic_role = "req_tipo_15"
+# REQ liquidacion [15] tipo (%).
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-cuota-16"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 49 REQ - Liquidacion - Cuota [16], third base/rate/quota triple. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "898-914"
+form_number = "16"
+section = ["declarante", "liquidacion"]
+semantic_role = "req_cuota_16"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# REQ liquidacion [16] cuota.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+
+[[revisions."2019-y-siguientes".casillas]]
+id = "decl.req-iva-devolver-17"
+continuidad_origin = "predecessor_edition_silent"
+continuidad_evidence = "AEAT aeat-dr-308-2016 and aeat-dr-308-2019, M30801 campo 50 REQ - Liquidacion - IVA a devolver [17], total following the three base/rate/quota triples. Both official designs already declare this concept under Orden EHA/3786/2008 art.2; the corpus predecessor 2016-2018 declares only filing year and period. This is a missing predecessor declaration, not a new form field. The 2019 signed/unsigned encoding changes do not establish a new legal concept."
+number = "915-931"
+form_number = "17"
+section = ["declarante", "liquidacion"]
+semantic_role = "req_iva_devolver_17"
+constraints = { sign = "non_negative", legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"] }
+# REQ liquidacion [17] IVA a devolver.
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]

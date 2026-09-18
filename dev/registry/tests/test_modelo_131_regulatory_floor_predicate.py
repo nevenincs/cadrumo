@@ -55,8 +55,11 @@ def test_modelo_131_regulatory_floor_predicates_use_data_base_lane(revision_id: 
 def test_modelo_131_regulatory_floor_predicates_carry_revision_evidence(revision_id: str) -> None:
     modelo, catalogues = _committed_modelo_131()
     revision = modelo.revisions[revision_id]
-    verification_id = f"modelo-131-{revision_id}-calculation-verification"
-    verification = next(item for item in revision.verification_expectations if item.id == verification_id)
+    # The expectation is named for the modelo, not for the edition carrying it;
+    # every edition declares its own under that one id.
+    verification = next(
+        item for item in revision.verification_expectations if str(item.id) == "modelo-131-calculation-verification"
+    )
 
     assert _ORDEN_EHA_672_ART_3 in tuple(str(ref) for ref in revision.legal_refs)
     assert _M131_INSTRUCTIONS_SOURCE in tuple(str(ref) for ref in revision.source_refs)

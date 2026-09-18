@@ -289,12 +289,8 @@ def resolve_modelo_localization(
     translates the other text, and serving it would render a different
     meaning.  Past that barrier the Spanish value itself is returned.
     """
-    source = modelo_localization_source(keys, locale=locale)
-    if source is None:
-        return None
-    key, source_locale = source
-    value = lookup_translation(key, locale=source_locale)
-    return None if value is None else _format_year(value, year)
+    served = _served_modelo_localization(keys, locale=locale)
+    return None if served is None else _format_year(served[2], year)
 
 
 def modelo_localization_source(
@@ -314,15 +310,39 @@ def modelo_localization_source(
     where Spanish text resolves or a more specific one. A chain with no Spanish
     text has nothing to translate and is served by no locale.
     """
+    served = _served_modelo_localization(keys, locale=locale, lookup=lookup)
+    return None if served is None else (served[0], served[1])
+
+
+def _served_modelo_localization(
+    keys: tuple[str, ...],
+    *,
+    locale: str,
+    lookup: LocalizationLookup | None = None,
+) -> tuple[str, str, str] | None:
+    """Return the ``(key, locale, value)`` that serves a chain, or ``None``.
+
+    Carries the VALUE the selection already read. Selecting a tier means
+    reading it, and the renderer then looked the very same coordinate up a
+    second time to obtain what the selection had just discarded -- one wasted
+    catalogue read per resolved text, which is every label in the registry.
+    """
     read = _catalogue_lookup if lookup is None else lookup
-    spanish_tier = next((index for index, key in enumerate(keys) if read(key, _SOURCE_LOCALE) is not None), None)
-    if spanish_tier is None:
+    spanish_tier: int | None = None
+    spanish_value: str | None = None
+    for index, key in enumerate(keys):
+        candidate = read(key, _SOURCE_LOCALE)
+        if candidate is not None:
+            spanish_tier, spanish_value = index, candidate
+            break
+    if spanish_tier is None or spanish_value is None:
         return None
     if locale != _SOURCE_LOCALE:
         for key in keys[: spanish_tier + 1]:
-            if read(key, locale) is not None:
-                return key, locale
-    return keys[spanish_tier], _SOURCE_LOCALE
+            translated = read(key, locale)
+            if translated is not None:
+                return key, locale, translated
+    return keys[spanish_tier], _SOURCE_LOCALE, spanish_value
 
 
 type LocalizationLookup = Callable[[str, str], str | None]

@@ -45,6 +45,7 @@ from dev.registry.compiler.authority_state import source_root_for
 
 from ..compiler.loader_fingerprints import clear_fingerprint_cache
 from ..compiler.validator import RegistryValidator
+from .profile_schema_support import load_user_profile_schema
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -125,6 +126,7 @@ def test_m303_public_registry_validation_still_refuses_the_partial_shape() -> No
             authority.catalogues,
             source_root=source_root_for(authority),
             justificante_corpus_root=_JUSTIFICANTE_CORPUS_ROOT,
+            user_profile_schema=load_user_profile_schema(),
         ).validate_modelo(partial_modelo)
 
 

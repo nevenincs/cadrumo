@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.facts.resolution import (
     ResolvedScalarFact,
     ScalarFactQuery,
@@ -168,17 +169,24 @@ def test_equivalence_surcharge_rates_resolve_from_their_exact_boe_legal_window(
         ),
     ),
 )
-def test_equivalence_surcharge_rates_back_project_before_their_first_citable_window(
+def test_equivalence_surcharge_rates_do_not_precede_their_first_citable_window(
     fact_id: str,
     before_first_window: date,
     first_authored_date: date,
     value: Decimal,
     source_ref: str,
 ) -> None:
-    resolved = _resolve(fact_id, before_first_window)
+    """The first redaction states when it entered into force, and that is a legal boundary.
 
-    assert resolved.projection_direction == "backward"
-    assert resolved.projected_from_date == first_authored_date
+    A variant declaring an explicit ``valid_from`` is not projected behind it:
+    the surcharge did not exist in that form the day before, so resolution
+    refuses rather than answering with a rate nothing authorises.
+    """
+    with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
+        _resolve(fact_id, before_first_window)
+
+    resolved = _resolve(fact_id, first_authored_date)
+
     assert resolved.variant_id.endswith(first_authored_date.isoformat())
     assert resolved.payload.value == value
     assert resolved.payload.unit == "fraction"

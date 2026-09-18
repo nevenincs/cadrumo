@@ -12,10 +12,44 @@ from __future__ import annotations
 import pytest
 
 from ..analysis.corpus import bundled_modelo_ids
-from ..analysis.filing_exposure import ConditionExposure, condition_exposure, filing_grade_revisions
+from ..analysis.filing_exposure import (
+    ConditionExposure,
+    RevisionPressure,
+    condition_exposure,
+    filing_grade_revisions,
+)
 from ..compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+
+@pytest.fixture(scope="module")
+def live_exposures() -> tuple[ConditionExposure, ...]:
+    """The live exposure report, walked once for the whole module.
+
+    Every test below reads the SAME report over the same bundled authority and
+    the same modelo ids, and the walk costs about 24s: recomputing it per test
+    spent roughly 96s re-deriving an identical answer. Module-scoped rather
+    than memoised in the analysis layer, because the repetition is this
+    module's, not the report's.
+
+    Read-only for every consumer here; nothing below mutates what it is given.
+    """
+    return tuple(condition_exposure(compiled_bundled_authority(), bundled_modelo_ids()))
+
+
+@pytest.fixture(scope="module")
+def live_filing_revisions() -> frozenset[tuple[str, str]]:
+    """The filing-grade revision set, derived once for the whole module."""
+    return frozenset(filing_grade_revisions(compiled_bundled_authority(), bundled_modelo_ids()))
+
+
+@pytest.fixture(scope="module")
+def live_revision_pressure() -> tuple[RevisionPressure, ...]:
+    """The ranked revision pressure, derived once for the whole module."""
+    from ..analysis.filing_exposure import revision_pressure
+
+    return tuple(revision_pressure(compiled_bundled_authority(), bundled_modelo_ids()))
 
 
 def test_an_unmeasurable_condition_is_not_reported_as_below_filing() -> None:
@@ -54,16 +88,14 @@ def test_any_filing_exposure_defeats_the_deferral() -> None:
 _MINIMUM_MEASURED_CONDITIONS = 24
 
 
-def test_the_live_report_separates_the_three_populations() -> None:
+def test_the_live_report_separates_the_three_populations(live_exposures: tuple[ConditionExposure, ...]) -> None:
     """The corpus carries exposed, measured-safe and unmeasurable conditions.
 
     All three must occur, or the report is not discriminating and its ordering
     means nothing. Held as presence rather than by figure: every count here
     moves when a screen is added or a revision changes grade.
     """
-    authority = compiled_bundled_authority()
-    modelo_ids = bundled_modelo_ids()
-    exposures = condition_exposure(authority, modelo_ids)
+    exposures = live_exposures
     # A floor, not an existence check. The three claims below are all
     # non-emptiness, so a walk that narrowed to a fraction would still satisfy
     # every one of them -- live the populations are 24 / 4 / 8, and each would
@@ -93,23 +125,26 @@ def test_the_live_report_separates_the_three_populations() -> None:
     assert not ({id(x) for x in measured_safe} & {id(x) for x in unmeasurable})
 
 
-def test_every_filing_finding_names_a_revision_declaring_filing_grade() -> None:
+def test_every_filing_finding_names_a_revision_declaring_filing_grade(
+    live_exposures: tuple[ConditionExposure, ...],
+    live_filing_revisions: frozenset[tuple[str, str]],
+) -> None:
     """The exposure count is grounded in the authority's own grade, not inferred.
 
     Asserted by rebuilding the filing set independently and checking that no
     condition claims more filing findings than it has findings at all.
     """
-    authority = compiled_bundled_authority()
-    modelo_ids = bundled_modelo_ids()
-    filing = filing_grade_revisions(authority, modelo_ids)
+    filing = live_filing_revisions
     assert filing, "no revision declares filing grade, so this proves nothing"
-    for item in condition_exposure(authority, modelo_ids):
+    for item in live_exposures:
         assert item.filing_findings <= item.findings
         assert item.filing_revisions <= item.revisions
         assert item.unmeasured <= item.findings
 
 
-def test_a_census_entry_point_is_visible_beside_its_runner_count() -> None:
+def test_a_census_entry_point_is_visible_beside_its_runner_count(
+    live_exposures: tuple[ConditionExposure, ...],
+) -> None:
     """A screen returning a census is not reported as if it returned findings.
 
     The wire-type screen's entry point returns every casilla-to-wire transition
@@ -119,9 +154,7 @@ def test_a_census_entry_point_is_visible_beside_its_runner_count() -> None:
     reader's signal. The first version of this report carried only the first and
     overstated that screen by a factor of nearly five hundred.
     """
-    authority = compiled_bundled_authority()
-    modelo_ids = bundled_modelo_ids()
-    exposures = condition_exposure(authority, modelo_ids)
+    exposures = live_exposures
     by_screen = {item.screen: item for item in exposures if item.screen == "wire_type_compatibility"}
     assert by_screen, "the wire-type screen reported nothing, so this proves nothing"
     census = by_screen["wire_type_compatibility"]
@@ -132,7 +165,9 @@ def test_a_census_entry_point_is_visible_beside_its_runner_count() -> None:
     assert any(item.findings == item.runner_findings for item in exposures)
 
 
-def test_the_report_reads_the_declared_shape_rather_than_inferring_it() -> None:
+def test_the_report_reads_the_declared_shape_rather_than_inferring_it(
+    live_exposures: tuple[ConditionExposure, ...],
+) -> None:
     """Census or findings comes from the table's declaration, not from a ratio.
 
     Inferring it from the gap between the two counts would work today and fail
@@ -146,18 +181,20 @@ def test_the_report_reads_the_declared_shape_rather_than_inferring_it() -> None:
     declared.update({entry.name: entry.entry_returns for entry in CORPUS_SCREENS})
     assert "census" in declared.values(), "no screen declares a census, so this proves nothing"
 
-    for item in condition_exposure(compiled_bundled_authority(), bundled_modelo_ids()):
+    for item in live_exposures:
         assert item.entry_returns == declared[item.screen]
 
 
-def test_a_census_is_not_added_to_the_filing_defect_total() -> None:
+def test_a_census_is_not_added_to_the_filing_defect_total(
+    live_exposures: tuple[ConditionExposure, ...],
+) -> None:
     """Rows examined are counted apart from defects met.
 
     A census's rows are transitions the screen looked at, and most are fine.
     Summing them into the filing-exposure figure is the error the declaration
     exists to prevent, and it inflated that figure by eleven thousand.
     """
-    exposures = condition_exposure(compiled_bundled_authority(), bundled_modelo_ids())
+    exposures = live_exposures
     census = [item for item in exposures if item.entry_returns == "census"]
     findings = [item for item in exposures if item.entry_returns == "findings"]
     assert census and findings, "both shapes must occur or this proves nothing"
@@ -178,16 +215,16 @@ def test_a_census_is_not_added_to_the_filing_defect_total() -> None:
     assert honest < naive
 
 
-def test_revision_pressure_names_the_conditions_rather_than_only_counting_them() -> None:
+def test_revision_pressure_names_the_conditions_rather_than_only_counting_them(
+    live_revision_pressure: tuple[RevisionPressure, ...],
+) -> None:
     """A count of conditions is not a severity, so the row carries their names.
 
     A revision with one filing-correctness defect is worse than one with four
     declaration untidinesses, and nothing here weighs them. The names are what
     let a reader see which they are instead of trusting the number.
     """
-    from ..analysis.filing_exposure import revision_pressure
-
-    ranked = revision_pressure(compiled_bundled_authority(), bundled_modelo_ids())
+    ranked = live_revision_pressure
     assert ranked, "no fileable revision carries a condition, so this proves nothing"
     assert ranked[0].count >= ranked[-1].count
     for item in ranked:
@@ -195,19 +232,20 @@ def test_revision_pressure_names_the_conditions_rather_than_only_counting_them()
         assert all("." in kind for kind in item.conditions)
 
 
-def test_revision_pressure_ranks_only_revisions_that_can_be_filed() -> None:
+def test_revision_pressure_ranks_only_revisions_that_can_be_filed(
+    live_filing_revisions: frozenset[tuple[str, str]],
+    live_revision_pressure: tuple[RevisionPressure, ...],
+) -> None:
     """The ranking exists to order repair of filings, so it holds nothing else."""
-    from ..analysis.filing_exposure import filing_grade_revisions, revision_pressure
-
-    authority = compiled_bundled_authority()
-    modelo_ids = bundled_modelo_ids()
-    filing = filing_grade_revisions(authority, modelo_ids)
-    ranked = revision_pressure(authority, modelo_ids)
+    filing = live_filing_revisions
+    ranked = live_revision_pressure
     assert {(item.modelo, item.revision) for item in ranked} <= filing
     assert len(ranked) < len(filing) + 1
 
 
-def test_revision_pressure_excludes_census_screens() -> None:
+def test_revision_pressure_excludes_census_screens(
+    live_revision_pressure: tuple[RevisionPressure, ...],
+) -> None:
     """A census would rank a revision by how many fields it has.
 
     Its rows are transitions examined rather than defects, so including them
@@ -215,11 +253,10 @@ def test_revision_pressure_excludes_census_screens() -> None:
     which is the error the entry-point declaration exists to prevent, arriving
     by a second route.
     """
-    from ..analysis.filing_exposure import revision_pressure
     from ..analysis.screens import CORPUS_SCREENS, SCREENS
 
     census = {entry.name for entry in (*SCREENS, *CORPUS_SCREENS) if entry.entry_returns == "census"}
     assert census, "no screen declares a census, so this proves nothing"
-    ranked = revision_pressure(compiled_bundled_authority(), bundled_modelo_ids())
+    ranked = live_revision_pressure
     named = {kind.split(".", 1)[0] for item in ranked for kind in item.conditions}
     assert not (named & census)

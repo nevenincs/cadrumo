@@ -10,9 +10,10 @@ binding and formula families already carry.
 The enrolment is the pairing table, so the proofs here are that the table is
 what the loader reads: every declared key reaches the typed revision, a key
 outside the table is still refused, and a member INHERITED from a predecessor
-takes the successor edition's default rather than the predecessor's -- source
-references are declared per edition, and the defaults run on the materialised
-edition for exactly that reason.
+keeps the default effective where it was stated rather than taking the
+successor's -- a source that never saw the row cannot be made to attest it, so
+inheritance pins the grounding and the successor's default fills only the rows
+the successor states.
 
 Every test drives the real directory loader over an on-disk TOML tree.
 """
@@ -147,8 +148,20 @@ def test_a_manifest_key_outside_the_enrolment_is_still_refused(tmp_path: Path) -
         load_modelo_directory(modelo_dir)
 
 
-def test_an_inherited_member_takes_the_successors_family_default(tmp_path: Path) -> None:
-    """Source references are declared per edition: the row arrives from 2024 and is grounded by 2025."""
+def test_an_inherited_member_keeps_the_grounding_effective_at_its_origin(tmp_path: Path) -> None:
+    """An inherited row keeps the source default of the edition that stated it.
+
+    The successor's default fills the rows the successor states; it does not
+    re-ground a row it inherited unchanged. Re-grounding would assert that the
+    successor's source attests a row that source never saw, which is inventing
+    evidence from shared payload. ``_pin_family_source_default`` binds the row
+    to its origin's default during inheritance, so the edition default later
+    finds it already grounded and leaves it alone.
+
+    This asserted the opposite while only casillas were inherited, and casillas
+    are still not pinned: they carry their own lineage and are re-grounded by
+    the edition they land in.
+    """
     modelo_dir = _modelo(tmp_path)
     predecessor_default = ("aeat-procedimiento-2024",)
     successor_default = ("aeat-procedimiento-2025",)
@@ -173,21 +186,27 @@ def test_an_inherited_member_takes_the_successors_family_default(tmp_path: Path)
 
     (inherited,) = revision.application_links
     assert str(inherited.id) == "enlace-filing"
-    assert tuple(str(ref) for ref in inherited.source_refs) == successor_default
+    assert tuple(str(ref) for ref in inherited.source_refs) == predecessor_default
     assert tuple(str(ref) for ref in revision.application_link_source_refs or ()) == successor_default
     # The row states no legal_refs default of its own: these families carry no
     # orden_aplicabilidad fill, so its authored legal grounding survives whole.
     assert tuple(str(ref) for ref in inherited.legal_refs) == (_ARTICLE,)
 
 
-def test_without_the_successors_default_an_inherited_member_stating_no_source_is_refused(tmp_path: Path) -> None:
-    """Nothing is inferred and nothing carries forward: the predecessor's default does not reach the successor."""
+def test_a_member_no_edition_ever_grounded_is_refused(tmp_path: Path) -> None:
+    """Pinning carries a stated grounding forward; it never invents one.
+
+    The origin declares no default either, so the inherited row reaches typed
+    construction with no ``source_refs`` at all and is refused there. This is
+    the tooth of the pin above: without it, "keeps its origin's grounding"
+    would be satisfiable by a row that has none.
+    """
     modelo_dir = _modelo(tmp_path)
     _write_edition(
         modelo_dir,
         "2024",
         year=2024,
-        defaults=_stated(_APPLICATION_LINK_DEFAULT, ("aeat-procedimiento-2024",)),
+        defaults="",
         casilla_ids=("01",),
         application_links=(_application_link("enlace-filing", ""),),
     )
@@ -200,5 +219,7 @@ def test_without_the_successors_default_an_inherited_member_stating_no_source_is
         extra='predecessor = "2024"\n',
     )
 
-    with pytest.raises(RegistryLoadError, match=r"(?s)invalid revision '2025'.*application_links\.0\.source_refs"):
+    # Refused on 2024, where the ungrounded row is stated, rather than on the
+    # edition that inherits it: the defect is the statement, not the inheritance.
+    with pytest.raises(RegistryLoadError, match=r"(?s)invalid revision '2024'.*application_links\.0\.source_refs"):
         load_modelo_directory(modelo_dir)

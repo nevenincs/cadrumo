@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import os
 import re
+import sys
 from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
@@ -540,20 +541,24 @@ def _install_validated_authority_database(
         return descriptor
 
 
-def _cleanup_retired_authority_databases(destination: Path, *, current_database: str) -> None:
-    """Best-effort retirement after cutover, deferring files held by readers.
+def _cleanup_retired_authority_databases(destination: Path, *, current_database: str) -> tuple[Path, ...]:
+    """Retire every superseded generation after cutover, reporting what survived.
 
-    Windows refuses deletion while SQLite still holds a generation open.  That
-    refusal is the lease signal available across processes: leave the exact
-    content-addressed file in place and let a later successful publication try
-    again.  Unrelated files and the newly selected database are never targets.
+    A file this targets is one the published descriptor does not name, so no
+    reader that resolved through the current descriptor can be using it. A
+    reader still holding a superseded descriptor is reading authority that has
+    been withdrawn, and losing its file makes that loud instead of letting it
+    continue on retired bytes. Unrelated files and the newly selected database
+    are never targets.
+
+    Retirement is not optional housekeeping: the whole directory ships in the
+    wheel, so a generation left behind is ~80MB of superseded authority in a
+    release artefact. Windows still refuses deletion while SQLite holds a
+    generation open, and that refusal is the only cross-process lease signal
+    available, so the file is left for a later publication to retire and named
+    in the return value rather than passing silently.
     """
-    if os.name != "nt":
-        # POSIX unlink can remove a file that another process still has open;
-        # without a cross-process reader lease that is not a safe cleanup
-        # signal.  Retaining a content-addressed generated file is preferable
-        # to making a still-leased pathname disappear.
-        return
+    leased: list[Path] = []
     for candidate in destination.glob("authority-*.sqlite3"):
         if candidate.name == current_database:
             continue
@@ -562,7 +567,15 @@ def _cleanup_retired_authority_databases(destination: Path, *, current_database:
         try:
             candidate.unlink()
         except OSError:
-            continue
+            leased.append(candidate)
+    if leased:
+        names = ", ".join(sorted(path.name for path in leased))
+        print(
+            f"authority retirement deferred for {len(leased)} superseded generation(s), still open by a reader: "
+            f"{names}. They remain in {destination} and in the built wheel until a later publication retires them.",
+            file=sys.stderr,
+        )
+    return tuple(leased)
 
 
 def promote_accepted_authority_database(

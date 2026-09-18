@@ -55,7 +55,7 @@ from .candidate_staging import (
     write_complete_edition,
 )
 from .export_fragment_provenance import SHA256_PATTERN, ExportFragmentTarget
-from .generated_tree_dispositions import record_drift_dispositions
+from .generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from .render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
@@ -481,8 +481,17 @@ def require_republication_eligibility(
     invocation: GeneratedTreeInvocation,
     target_state: GeneratedExportTreeTargetStateReceipt,
     comparison: RenderComparison,
+    *,
+    dispositions: tuple[GeneratedTreeRecordDriftDisposition, ...] | None = None,
 ) -> None:
-    """Admit one explicitly digest-bound manifest repair and nothing broader."""
+    """Admit one explicitly digest-bound manifest repair and nothing broader.
+
+    ``dispositions`` defaults to the pipeline's own ledger, which is what every
+    caller uses. It is a parameter so the admission rules can be proven against
+    a stated row: a row retires as soon as its cause is repaired, so a proof
+    that reaches into the live ledger for "some row with this remedy" passes or
+    fails on whichever corrections happen to be outstanding.
+    """
     expected = invocation.expected_manifest_sha256
     if expected is None or re.fullmatch(SHA256_PATTERN, expected) is None:
         raise ValueError("republish requires an exact lowercase 64-character target manifest sha256")
@@ -516,7 +525,7 @@ def require_republication_eligibility(
     # ledger's own gate fails when its cause is gone. An unexplained record
     # change is refused exactly as before.
     subject = f"{invocation.modelo}/{invocation.revision}"
-    rows = {row.subject: row for row in record_drift_dispositions()}
+    rows = {row.subject: row for row in (record_drift_dispositions() if dispositions is None else dispositions)}
     disposition = rows.get(subject)
     if disposition is None:
         raise ValueError(

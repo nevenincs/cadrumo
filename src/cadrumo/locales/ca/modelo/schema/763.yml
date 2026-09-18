@@ -10,7 +10,7 @@ modelo:
       construct:
         modelo-763-autoliquidacion:
           field:
-            title: Modelo 763 autoliquidació del Impuesto sobre activitats de juego
+            title: Modelo 763 autoliquidació del Impuesto sobre activitats de joc
       field:
         official_name: Modelo 763. Impost sobre activitats de joc en els supòsits
           d'activitats anuals o pluriennals. Autoliquidació.

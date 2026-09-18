@@ -96,3 +96,65 @@ def test_untranslated_spanish_words_are_reported_outside_quotations() -> None:
     found = {(item.key, item.words) for item in spanish_leftovers(values, sources)}
 
     assert found == {("modelo.schema.100.casilla.continuidad.a.label", ("obras", "realizadas"))}
+
+
+@pytest.mark.integration
+@pytest.mark.external_tool
+def test_the_shipped_interface_domains_keep_their_diacritics() -> None:
+    """Every shipped non-Modelo value spells its language with diacritics.
+
+    Repair with `python -m dev.locales casilla-orthography`, which reports the
+    same finding over the interface domains and the casilla catalogue together.
+    """
+    from dev.locales._paths import LOCALES_DIR, SRC_DIR
+    from dev.locales.manager import LocaleManager, _flatten_raw_locale_leaves
+
+    manager = LocaleManager(src_dir=SRC_DIR, locales_dir=LOCALES_DIR)
+    values: Values = {}
+    for locale in ("es", "en", "ca", "hu"):
+        leaves = _flatten_raw_locale_leaves(manager._load_raw_locale(LOCALES_DIR / locale))
+        values[locale] = {
+            key: value
+            for key, value in leaves.items()
+            if not key.startswith("modelo.schema.") and isinstance(value, str)
+        }
+    assert values["es"], "no interface values were read; the gate below would be vacuous"
+
+    found = [
+        f"{item.locale} {item.key} {item.word} -> {'/'.join(item.candidates)}" for item in unaccented_words(values)
+    ]
+
+    assert not found, found[:5]
+
+
+@pytest.mark.integration
+@pytest.mark.external_tool
+def test_no_shipped_casilla_text_is_half_translated() -> None:
+    """A translation states its label in its own language, apart from reviewed Spanish terms.
+
+    Repair with `python -m dev.locales casilla-orthography`, which reports the
+    same finding; record a term the product keeps in Spanish in
+    ``REVIEWED_SPANISH_TERMS`` with its reason instead.
+    """
+    from dev.locales._paths import LOCALES_DIR
+    from dev.locales.modelo_casilla_catalogue import ModeloCasillaCatalogue
+
+    catalogue = ModeloCasillaCatalogue.published(LOCALES_DIR)
+    sources = {locale: catalogue.served_sources(locale) for locale in catalogue.locales}
+    assert sources["en"], "no English source was read; the gate below would be vacuous"
+
+    found = [
+        f"{item.locale} {item.key} {' '.join(item.words)}" for item in spanish_leftovers(catalogue.values, sources)
+    ]
+
+    assert not found, found[:5]
+
+
+@pytest.mark.integration
+@pytest.mark.external_tool
+def test_the_spanish_word_for_a_box_is_reported_in_a_translation() -> None:
+    """Every locale states the box in its own word, so `casilla` is a leftover."""
+    values: Values = {"en": {_KEY: "Transfer the amount to casilla [1142] of annex B.7"}}
+    sources = {"en": {_KEY: frozenset({"Traslade el importe a la casilla [1142] del anexo B.7"})}}
+
+    assert [item.words for item in spanish_leftovers(values, sources)] == [("casilla",)]

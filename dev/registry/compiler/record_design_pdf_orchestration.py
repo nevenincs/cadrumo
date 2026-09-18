@@ -34,6 +34,7 @@ from .record_design_pdf_visual import (
     extract_pdf_text_lines,
     extract_pdfplumber_text_lines,
     extract_visual_record_design_chart,
+    quiet_pdf_text_backend_logging,
     snapshot_pdf_page,
     uses_page_record_layout,
 )
@@ -76,25 +77,29 @@ def extract_record_design_pdf_stream(
             and visual reading strategy fails to produce a usable extraction.
     """
     pdf_bytes = stream.read()
-    lines = _prepare_record_design_pdf_lines(
-        pdf_bytes,
-        source_label=source_label,
-        corrections=corrections,
-    )
-    if not any(line.strip() for line in lines):
-        raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
-    try:
-        return _read_with_reversed_column_repair(lines, source_label=source_label, corrections=corrections)
-    except (ValueError, RegistryValidationError) as pdfium_exc:
-        recovered = _recover_after_pdf_text_failure(
+    # Brackets every backend entry for one source -- the base read, the
+    # pdfplumber page pass and both recovery fallbacks -- rather than each
+    # call site, so no later path can reopen the token-level DEBUG stream.
+    with quiet_pdf_text_backend_logging():
+        lines = _prepare_record_design_pdf_lines(
             pdf_bytes,
             source_label=source_label,
             corrections=corrections,
-            pdfium_error=pdfium_exc,
         )
-        if recovered is not None:
-            return recovered
-        raise
+        if not any(line.strip() for line in lines):
+            raise RegistryValidationError(f"no text extracted from record-design PDF {source_label}")
+        try:
+            return _read_with_reversed_column_repair(lines, source_label=source_label, corrections=corrections)
+        except (ValueError, RegistryValidationError) as pdfium_exc:
+            recovered = _recover_after_pdf_text_failure(
+                pdf_bytes,
+                source_label=source_label,
+                corrections=corrections,
+                pdfium_error=pdfium_exc,
+            )
+            if recovered is not None:
+                return recovered
+            raise
 
 
 def _prepare_record_design_pdf_lines(

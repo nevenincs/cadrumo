@@ -23,11 +23,13 @@ exercise directly, not through that module-level switch.
 
 from __future__ import annotations
 
+import shutil
 from pathlib import Path
 
 import pytest
 
 from cadrumo.core.modelo import Modelo
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.applicability import (
     ApplicabilityVerdict,
     ModeloApplicabilityRule,
@@ -38,14 +40,28 @@ from cadrumo.domain.contribuyente.renta_codes import FiscalResidency
 from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
 
 from ..compiler.authority import compile_validated_authority
-from ..conformance.loader_directory_mode_support import (
-    write_extracted_corpus_sidecar,
-    write_fragmented_revision,
-)
+from ..conformance.loader_directory_mode_support import write_fragmented_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
-_LEGAL_ID = "test-ley-001:art-1"
+#: A legal reference the bundled tree already carries. The planted rule cites
+#: it so the staged copy needs no synthetic legal entry and no corpus of its
+#: own, which lets the compilation read sources from the bundled root.
+_LEGAL_ID = "ley-35-2006:art-17"
+
+#: The modelo this fixture plants into the copied tree. A NEW id, because the
+#: real modelos already declare their own applicability rule and a second one
+#: on the same revision is refused.
+_PLANTED_MODELO = "999"
+
+#: A layout-authority source the bundled tree carries, so the planted modelo
+#: satisfies the evidence tier the validator requires without a corpus of its
+#: own.
+_BUNDLED_SOURCE_ID = "boe-modelo-100-2020-form"
+
+#: An official-guidance source the bundled tree carries; an application link
+#: requires that tier specifically.
+_BUNDLED_GUIDANCE_SOURCE_ID = "aeat-modelo-184-procedure"
 _SOURCE_ID = "test-source-001"
 _GUIDANCE_SOURCE_ID = "test-source-002"
 
@@ -87,12 +103,12 @@ review_status = "pending_review"
 
 _MANIFEST_TOML = f"""\
 [modelo]
-id = "100"
+id = "{_PLANTED_MODELO}"
 tax_domain = "irpf"
 cadence = "annual"
 jurisdiction = "ES-AEAT"
 legal_refs = ["{_LEGAL_ID}"]
-source_refs = ["{_SOURCE_ID}"]
+source_refs = ["{_BUNDLED_SOURCE_ID}"]
 """
 
 
@@ -107,7 +123,7 @@ period_selector = {{ year_from = 2025, periods = ["0A"] }}
 # lands before the applicability assertions run.
 authority_grade = "applicability"
 legal_refs = ["{_LEGAL_ID}"]
-source_refs = ["{_SOURCE_ID}"]
+source_refs = ["{_BUNDLED_SOURCE_ID}"]
 orden_aplicabilidad = ["{_LEGAL_ID}"]
 
 [[revisions."2025".application_links]]
@@ -116,7 +132,7 @@ surface = "filing"
 consumer = "cli.app"
 requires_snapshot = true
 legal_refs = ["{_LEGAL_ID}"]
-source_refs = ["{_GUIDANCE_SOURCE_ID}"]
+source_refs = ["{_BUNDLED_GUIDANCE_SOURCE_ID}"]
 
 [[revisions."2025".casillas]]
 id = "01"
@@ -124,20 +140,20 @@ number = "01"
 section = ["test"]
 data_type = "integer"
 legal_refs = ["{_LEGAL_ID}"]
-source_refs = ["{_SOURCE_ID}"]
+source_refs = ["{_BUNDLED_SOURCE_ID}"]
 
 [[revisions."2025".workbook_parity_refs]]
 id = "test-workbook-001"
-workbook_source = "{_SOURCE_ID}"
+workbook_source = "{_BUNDLED_SOURCE_ID}"
 fixture_id = "test-fixture-001"
 formula_coverage = "record_design_layout"
 runner_required = false
 tolerance = "0.00"
 legal_refs = ["{_LEGAL_ID}"]
-source_refs = ["{_SOURCE_ID}"]
+source_refs = ["{_BUNDLED_SOURCE_ID}"]
 
 [[revisions."2025".applicability]]
-id = "m100-cutover-test"
+id = "m999-cutover-test"
 applicable_entity_types = ["{entity_type}"]
 applicable_fiscal_residencies = ["resident_irpf"]
 applicable_reason = "{applicable_reason}"
@@ -148,34 +164,29 @@ legal_refs = ["{_LEGAL_ID}"]
 
 
 def _write_scratch_tree(root: Path, *, applicable_reason: str) -> None:
+    """Stage a compilable tree carrying one planted applicability rule.
+
+    The bundled registry is copied and the planted modelo written into it,
+    rather than a narrow tree built from nothing. A compilation validates a
+    COMPLETE tree - the profile schema, the governed facts resolved by name,
+    the runtime catalogues under ``legal`` and ``iva``, and every legal
+    reference those cite - so a tree carrying only this modelo refuses long
+    before the rule under test is reached. These cases need a real compilation
+    (they prove a tree edit reaches the NEXT one), so the tree has to be real.
+
+    Sources still resolve from the copy's own corpus below, which is why the
+    corpus files are written here as before.
+    """
     registry_root = root / "registry" / "aeat"
+    shutil.copytree(bundled_path("registry"), root / "registry", dirs_exist_ok=True)
     legal_dir = registry_root / "legal"
-    revision_dir = registry_root / "modelos" / "100" / "revisions" / "2025"
-    revision_dir.mkdir(parents=True)
-    legal_dir.mkdir(parents=True)
-    corpus_file = root / "corpus" / "test" / "test-source-001.pdf"
-    corpus_file.parent.mkdir(parents=True)
-    corpus_file.write_bytes(b"x" * 1000)
-    (corpus_file.parent / "test-source-002.pdf").write_bytes(b"x" * 1000)
-    legal_corpus = corpus_file.parent / "test-ley-001.html"
-    legal_corpus.write_text("<html>test provision text</html>", encoding="utf-8")
-    write_extracted_corpus_sidecar(legal_corpus, anchor="a1", text="test provision text")
-
-    (legal_dir / "catalogue.toml").write_text(_CATALOGUE_TOML, encoding="utf-8")
-    # The loader requires every authoring tree to declare its supported
-    # filing years, so a scratch tree omitting it fails to load before the
-    # applicability rule this test mutates can be observed at all.
-    (legal_dir / "supported-filing-years.toml").write_text(
-        "[supported_filing_years]\nfloor = 2025\nhorizon = 2025\n\n"
-        "[sociedades_annual_manual_coverage]\n"
-        'dispositions = [{ year = 2025, status = "unpublished", '
-        'official_locator = "https://example.com/manuals", observed_at = 2026-09-10, '
-        "acquisition_condition_key = "
-        '"application.registry.manuals.coverage.recheck_aeat_publication" }]\n',
-        encoding="utf-8",
-    )
-    (registry_root / "modelos" / "100" / "manifest.toml").write_text(_MANIFEST_TOML, encoding="utf-8")
-
+    revision_dir = registry_root / "modelos" / _PLANTED_MODELO / "revisions" / "2025"
+    revision_dir.mkdir(parents=True, exist_ok=True)
+    legal_dir.mkdir(parents=True, exist_ok=True)
+    # Nothing else is written: the copied tree carries its own legal catalogue,
+    # supported-filing-years declaration and corpus, and adding a second copy of
+    # any of them is a duplicate declaration the load refuses.
+    (registry_root / "modelos" / _PLANTED_MODELO / "manifest.toml").write_text(_MANIFEST_TOML, encoding="utf-8")
     write_fragmented_revision(
         revision_dir,
         _revision_toml(entity_type="natural_person", applicable_reason=applicable_reason),
@@ -185,7 +196,7 @@ def _write_scratch_tree(root: Path, *, applicable_reason: str) -> None:
 def _literal_equivalent_rule() -> ModeloApplicabilityRule:
     """The Python-literal shape the fragment above transcribes, for the equivalence proof."""
     return ModeloApplicabilityRule(
-        modelo=Modelo("100"),
+        modelo=Modelo(_PLANTED_MODELO),
         applicable_entity_types=frozenset({EntityType.from_registry("natural_person")}),
         applicable_fiscal_residencies=frozenset({FiscalResidency.from_registry("resident_irpf")}),
         applicable_reason="applies",
@@ -219,9 +230,9 @@ def test_registry_resolved_rule_matches_the_literal_it_transcribes_per_profile(t
     ``ModeloApplicability`` results the application actually consumes.
     """
     _write_scratch_tree(tmp_path, applicable_reason="applies")
-    authority = compile_validated_authority(tmp_path / "registry" / "aeat", tmp_path)
+    authority = compile_validated_authority(tmp_path / "registry" / "aeat", bundled_path())
 
-    registry_rule = resolve_applicability_rule_from_authority(authority, Modelo("100"))
+    registry_rule = resolve_applicability_rule_from_authority(authority, Modelo(_PLANTED_MODELO))
     literal_rule = _literal_equivalent_rule()
 
     for profile in _representative_profiles():
@@ -257,12 +268,12 @@ def test_a_fresh_authority_sees_a_mutated_applicability_rule(tmp_path: Path) -> 
     _write_scratch_tree(tmp_path, applicable_reason="applies (original)")
     registry_root = tmp_path / "registry" / "aeat"
 
-    original_authority = compile_validated_authority(registry_root, tmp_path)
-    original_rule = resolve_applicability_rule_from_authority(original_authority, Modelo("100"))
+    original_authority = compile_validated_authority(registry_root, bundled_path())
+    original_rule = resolve_applicability_rule_from_authority(original_authority, Modelo(_PLANTED_MODELO))
     assert original_rule.applicable_reason == "applies (original)"
 
     fragment_path = (
-        registry_root / "modelos" / "100" / "revisions" / "2025" / "applicability" / "0001-applicability.toml"
+        registry_root / "modelos" / _PLANTED_MODELO / "revisions" / "2025" / "applicability" / "0001-applicability.toml"
     )
     assert fragment_path.is_file()
     fragment_path.write_text(
@@ -270,14 +281,14 @@ def test_a_fresh_authority_sees_a_mutated_applicability_rule(tmp_path: Path) -> 
         encoding="utf-8",
     )
 
-    mutated_authority = compile_validated_authority(registry_root, tmp_path)
+    mutated_authority = compile_validated_authority(registry_root, bundled_path())
     assert mutated_authority is not original_authority, (
         "the fingerprint-keyed authority cache must key a new instance on the mutated content, or this proof is vacuous"
     )
-    mutated_rule = resolve_applicability_rule_from_authority(mutated_authority, Modelo("100"))
+    mutated_rule = resolve_applicability_rule_from_authority(mutated_authority, Modelo(_PLANTED_MODELO))
     assert mutated_rule.applicable_reason == "applies (mutated)"
 
     # The ORIGINAL authority instance must keep answering what it always did --
     # staleness is seen by resolving fresh, never by an existing instance mutating.
-    replayed_rule = resolve_applicability_rule_from_authority(original_authority, Modelo("100"))
+    replayed_rule = resolve_applicability_rule_from_authority(original_authority, Modelo(_PLANTED_MODELO))
     assert replayed_rule.applicable_reason == "applies (original)"

@@ -21,16 +21,13 @@ modelo:
       revision:
         2009-2011-junio:
           field:
-            label: Modelo 308, tax years 2009 onwards (Order EHA/3786/2008, ad hoc
-              by operator type)
+            label: Modelo 308, tax years 2009 to 2011, to June 2011
         2011-julio-2015:
           field:
-            label: Modelo 308, tax years 2009 onwards (Order EHA/3786/2008, ad hoc
-              by operator type)
+            label: Modelo 308, tax years 2011 to 2015, from July 2011
         2016-2018:
           field:
-            label: Modelo 308, tax years 2009 onwards (Order EHA/3786/2008, ad hoc
-              by operator type)
+            label: Modelo 308, tax years 2016 to 2018
         2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
@@ -47,7 +44,7 @@ modelo:
               label: New means of transport (NMT) - Acquirer - NIF
             x-chim6r1edlq6sbb1chonaqbicln78p9ddpnmqojick:
               help: Box 179-198 of modelo 308, tax year 2009.
-              label: NMT - Acquirer - First name
+              label: NMT - Acquirer - Given name
             x-chim6r1edlq6sbb1chonaqbicln78p9de1gmiso:
               help: Box 199-200 of modelo 308, tax year 2009.
               label: NMT - Acquirer - Country
@@ -127,7 +124,7 @@ modelo:
               label: NMT - Vehicles - Type
             x-chim6r1edpnmqojick:
               help: Box 83-102 of modelo 308, tax year 2009.
-              label: Identification - First name
+              label: Identification - Given name
             x-chim6r1ee9in2bb2c5pmab9g70:
               help: Box 798-814 of modelo 308, tax year 2009.
               label: Special equivalence surcharge regime (SESR) - Settlement - Taxable
@@ -169,5 +166,4 @@ modelo:
               help: Box 109 of modelo 308, tax year 2009.
               label: Taxation type by taxable person
           field:
-            label: Modelo 308, tax years 2009 onwards (Order EHA/3786/2008, ad hoc
-              by operator type)
+            label: Modelo 308, tax years 2019 onwards

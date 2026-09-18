@@ -28,6 +28,8 @@ from cadrumo.application.live.iva_remote_state_ports import IvaRemoteStatePort
 from cadrumo.core.external_constants import load_external_constants
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from cadrumo.domain.iva_compensation.reconciliation import (
@@ -92,7 +94,17 @@ def _wallet_html(*, total: str, rows: str, target_year: int, target_period: str)
 
 @contextmanager
 def _secure_backend(tmp_path: Path):
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SESSION_BUCKET_ID) as profile:
+    """Bind an isolated encrypted profile and the authority scope its records need.
+
+    A persisted IVA compensation row carries a Spanish tax identifier, which is
+    validated against the registry authority rather than a Python pattern, so
+    the scope belongs to every test that writes one.
+    """
+    with (
+        bundled_indexed_authority().operation() as pinned,
+        validating_governed_facts(pinned),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SESSION_BUCKET_ID) as profile,
+    ):
         yield profile.paths.database_file
 
 
@@ -146,7 +158,11 @@ def test_wallet_capture_backend_persists_reloads_reconciles_and_hides_storage_id
 
 
 def test_wallet_reconciliation_uses_runtime_bound_repository_for_decision_persistence(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path / "wallet-profile", bucket_id=_SESSION_BUCKET_ID) as profile:
+    with (
+        bundled_indexed_authority().operation() as pinned,
+        validating_governed_facts(pinned),
+        isolated_runtime_profile(tmp_path=tmp_path / "wallet-profile", bucket_id=_SESSION_BUCKET_ID) as profile,
+    ):
         observation_repo = CalculationObservationRepository(objects=profile.repository)
         decision_repo = IvaWalletDecisionRepository(objects=profile.repository)
         _store_prior_compensation(amount=Decimal("1200.00"))
@@ -282,7 +298,11 @@ def test_iva_wallet_history_report_surfaces_lots_and_authority_decisions(tmp_pat
 
 
 def test_remote_iva_evidence_roundtrips_through_profile_secure_sql(tmp_path: Path) -> None:
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SESSION_BUCKET_ID) as profile:
+    with (
+        bundled_indexed_authority().operation() as pinned,
+        validating_governed_facts(pinned),
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SESSION_BUCKET_ID) as profile,
+    ):
         assert dev_test_database_password(profile.settings)
 
         history_repo = IvaCompensationHistoryRepository()

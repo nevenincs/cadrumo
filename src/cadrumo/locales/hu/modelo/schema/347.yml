@@ -93,7 +93,7 @@ modelo:
           importe-transmisiones-q3:
             help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
               bevallott adat.
-            label: IVA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG HARMADIK NEGYEDÉV
+            label: ÁFA-KÖTELES INGATLANÁTRUHÁZÁSOKBÓL KAPOTT ÖSSZEG HARMADIK NEGYEDÉV
           importe-transmisiones-q4:
             help: A 347-es modelón, a harmadik felekkel folytatott ügyletek éves bevallásán
               bevallott adat.

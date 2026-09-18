@@ -18,7 +18,7 @@ _UTF_8: Final[str] = UTF_8
 VAR_ROOT = REPO_ROOT / "var"
 DEMO_ROOT = VAR_ROOT / "readme-demo"
 DEMO_VALUE = "readme-demo-only-synthetic-passphrase-2026"
-_CLI_BOOTSTRAP = "from cadrumo.entrypoints.cli import main; main()"
+_CLI_BOOTSTRAP = "from cadrumo.entrypoints.cli.bootstrap import main; main()"
 
 
 def _reset_demo_root() -> None:

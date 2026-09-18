@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
+from typing import Final
 
 import pytest
 from typer.testing import CliRunner
@@ -24,6 +26,10 @@ def test_default_manager_targets_the_live_cadrumo_registry_tree() -> None:
 
     assert manager.registry_modelos_root.is_dir()
     assert manager.registry_modelos_root == (REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "aeat" / "modelos")
+
+
+#: Escape sequences Rich writes around the refusal it renders.
+_ANSI: Final = re.compile(r"\[[0-9;]*m")
 
 
 def _scaffold_args(tmp_path: Path, *extra: str) -> list[str]:
@@ -61,7 +67,10 @@ def test_cli_requires_real_applicability_coordinates(tmp_path: Path) -> None:
     )
 
     assert result.exit_code != 0
-    assert "--valid-from" in result.stderr
+    # Rich styles the refusal, and the escape sequences it interleaves break a
+    # literal match on the option name even though the message reads
+    # "Missing option '--valid-from'." on a terminal.
+    assert "--valid-from" in _ANSI.sub("", result.stderr)
 
 
 def test_cli_checklist_command_prints_all_items() -> None:

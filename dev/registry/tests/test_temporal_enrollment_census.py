@@ -51,14 +51,55 @@ def _audit(
     )
 
 
-def test_live_registry_tests_have_no_unaccounted_literal_revision_enrollment(
+def test_live_registry_tests_name_only_revisions_the_registry_declares(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    """A yearless literal list cannot silently replace the derived denominator."""
+    """A yearless literal list cannot go on naming a revision that has stopped existing.
+
+    The sweep used to demand that every literal collection carry the whole
+    law-selectable denominator. No collection in the tree is that enrolment:
+    they are deliberate subsets - the modelos that carry detail records, the
+    revisions that split inside one year - so the demand refused ten honest
+    subsets and found no drift. What holds for a collection this sweep did not
+    author is that the identities it names still exist.
+    """
     assert law_selectable_revision_subjects(authority), "the law-selectable denominator is empty"
     audit = audit_registry_test_enrollment_literals(authority)
 
+    assert audit.declarations, "no literal revision enumeration was detected, so the sweep proves nothing"
     assert audit.clean, "\n".join(finding.detail for finding in audit.findings)
+
+
+def test_a_retired_revision_identity_is_reported_against_the_live_registry(
+    tmp_path: Path,
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """The sweep's tooth: one row naming a revision the registry no longer declares."""
+    (tmp_path / "literal.py").write_text(
+        '_ROWS = (("390", "2022"), ("390", "2099"))\n',
+        encoding="utf-8",
+    )
+
+    audit = audit_registry_test_enrollment_literals(authority, root=tmp_path)
+
+    assert not audit.clean
+    assert audit.findings[0].absent == (RegistryRevisionSubject("390", "2099"),)
+
+
+def test_a_collection_keyed_by_something_other_than_a_revision_is_not_an_enumeration(
+    tmp_path: Path,
+    authority: ValidatedRegistryAuthority,
+) -> None:
+    """A modelo keyed to a design filename reads as a revision row and is not one."""
+    (tmp_path / "designs.py").write_text(
+        '_DESIGNS = {("111", "04-111-ejercicios-anteriores-al-2001.pdf"): "open below"}\n',
+        encoding="utf-8",
+    )
+
+    audit = audit_registry_test_enrollment_literals(authority, root=tmp_path)
+
+    assert audit.declarations == ()
+    assert audit.clean
 
 
 def test_yearless_constructor_collection_is_detected_without_filename_help(
