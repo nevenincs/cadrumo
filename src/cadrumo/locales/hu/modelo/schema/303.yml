@@ -45,8 +45,9 @@ modelo:
           dr303-112:
             help: Az államnak betudott, benzin, gázolaj és bioüzemanyag értékesítése
               utáni elszámolt előleg
-            label: Az államnak tulajdonított benzin-, gázolaj- és bioüzemanyag-szállítások
-              előlege
+            label: Eredmény - Előleg a benzin, gázolaj és bioüzemanyag szállítások
+              után a vámraktározástól eltérő raktározási eljárás lezárását követően
+              (Állami Adóigazgatás)
           dr303-12:
             label: Egyéb fordított adózású ügyletek után keletkezett ÁFA, Közösségen
               belüliek nélkül - Adóalap

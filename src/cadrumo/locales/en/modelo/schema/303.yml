@@ -38,8 +38,9 @@ modelo:
           dr303-112:
             help: Payment on account for supplies of petrol, diesel and biofuels attributed
               to the State
-            label: Advance payment for gasoline, diesel and biofuels supplies allocated
-              to the State
+            label: Result - Advance payment on supplies of petrol, diesel and biofuels
+              after the winding up of the warehousing regime other than customs (State
+              Administration)
           dr303-12:
             label: Accrued VAT on other reverse-charge transactions excluding intra-Community
               acquisitions - Tax base

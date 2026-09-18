@@ -40,8 +40,9 @@ modelo:
           dr303-112:
             help: Pagament a compte per lliuraments de gasolines, gasoils i biocarburants
               atribuït a l'Estat
-            label: Pagament a compte per lliuraments de gasolines, gasoils i biocarburants
-              atribuït a l'Estat
+            label: Resultat - Pagament a compte per lliuraments de gasolines, gasoils
+              i biocarburants després de la ultimació del règim de dipòsit diferent
+              del duaner (Administració de l'Estat)
           dr303-12:
             label: IVA meritat per altres operacions amb inversió del subjecte passiu
               excloses les intracomunitàries - base
