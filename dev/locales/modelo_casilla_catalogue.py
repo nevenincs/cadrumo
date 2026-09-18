@@ -1586,18 +1586,19 @@ class ModeloCasillaCatalogue:
         }
 
     def translation_drift(self, values: Values | None = None) -> dict[str, tuple[str, ...]]:
-        """Return, per locale, the lineages rendering one Spanish text more than one way.
+        """Return, per locale, the lineages rendering one Spanish label or help more than one way.
 
         A lineage is the continuity key when the casilla declares one, else the
         casilla identity within its modelo. Divergent Spanish text is a genuine
         edition difference and is not drift.
         """
-        groups: dict[tuple[str, str, str], list[int]] = defaultdict(list)
+        groups: dict[tuple[str, str, str, str], list[int]] = defaultdict(list)
         for index, occurrence in enumerate(self.occurrences):
             lineage = occurrence.continuidad_id or f"casilla:{occurrence.casilla}"
-            spanish = self.resolve(index, "label", SOURCE_LOCALE, values)
-            if spanish is not None:
-                groups[(occurrence.modelo, lineage, spanish)].append(index)
+            for field_name in _FIELDS:
+                spanish = self.resolve(index, field_name, SOURCE_LOCALE, values)
+                if spanish is not None:
+                    groups[(occurrence.modelo, lineage, field_name, spanish)].append(index)
         drift: dict[str, tuple[str, ...]] = {}
         for locale in self.locales:
             if locale == SOURCE_LOCALE:
@@ -1605,13 +1606,13 @@ class ModeloCasillaCatalogue:
             drift[locale] = tuple(
                 sorted(
                     f"{modelo}/{lineage}"
-                    for (modelo, lineage, _spanish), members in groups.items()
+                    for (modelo, lineage, field_name, _spanish), members in groups.items()
                     if len(
                         {
                             text
                             for index in members
-                            if _served_locale(self, index, "label", locale, values) == locale
-                            and (text := self.resolve(index, "label", locale, values)) is not None
+                            if _served_locale(self, index, field_name, locale, values) == locale
+                            and (text := self.resolve(index, field_name, locale, values)) is not None
                         }
                     )
                     > 1
