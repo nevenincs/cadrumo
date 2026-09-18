@@ -33,11 +33,13 @@ from cadrumo.adapters.persistence.storage.master_key.active_session import (
     close_active_bucket_session,
 )
 from cadrumo.adapters.persistence.storage.master_key.bucket_session import BucketSession
+from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
+    composed_profile_persistence_ports,
+)
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.application.workflow.profile_health import ProfileHealthStatus
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from cadrumo.entrypoints.adapter_composition import composed_profile_persistence_ports
 
 from ...resources import iter_operator_rules, iter_personas, iter_skill_documents, operator_rules_text
 from .._persona_scope import AgentPersona
