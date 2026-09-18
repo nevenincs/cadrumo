@@ -1232,6 +1232,9 @@ errors:
     ambiguous_revision_selection_year_only: 'Más de una revisión del registro coincide
       con el modelo %{modelo_id}: %{candidate_ids}. Indique el periodo de declaración,
       o una fecha de referencia, para seleccionar una de ellas.'
+    filing_year_outside_support_envelope: 'El ejercicio %{filing_year} y el periodo
+      %{period} del modelo %{modelo_id} quedan fuera de los ejercicios admitidos (mínimo
+      %{floor}, horizonte %{horizon}); revisiones que cubren esa coordenada: %{covering_revision_ids}.'
     modelo_not_registered: El modelo no está registrado en el registro.
     no_revision_for_period: 'Ninguna revisión del registro cubre el modelo %{modelo_id}
       del ejercicio %{filing_year} y periodo %{period}; revisiones disponibles: %{available_revision_ids}.'

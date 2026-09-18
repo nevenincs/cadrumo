@@ -1163,6 +1163,10 @@ errors:
     ambiguous_revision_selection_year_only: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}. Adja meg a bevallási időszakot
       vagy egy vonatkozási dátumot az egyik kiválasztásához.'
+    filing_year_outside_support_envelope: 'A(z) %{modelo_id} modell %{filing_year}
+      adóéve és %{period} időszaka a támogatott bevallási éveken kívül esik (alsó
+      határ: %{floor}, horizont: %{horizon}); az adott koordinátát lefedő revíziók:
+      %{covering_revision_ids}.'
     modelo_not_registered: A modell nincs regisztrálva a nyilvántartásban.
     no_revision_for_period: 'A nyilvántartásban nincs a(z) %{modelo_id} modellt %{filing_year}
       adóévben %{period} időszakban lefedő revízió; elérhető revíziók: %{available_revision_ids}.'
