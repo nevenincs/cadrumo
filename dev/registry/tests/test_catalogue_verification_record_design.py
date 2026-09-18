@@ -152,51 +152,6 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
     sit here looking cleared.
     """
     pending: dict[str, str] = {
-        # Two same-ejercicio re-layout PAIRS. A bare year would collide, so each
-        # pair needs the sub-year label ruling (which half is early/late, on
-        # AEAT's own edition boundary) from the campaign that owns the M303
-        # epoch vocabulary -- the same ruling that produced 2024-early/2024-late.
-        "aeat-dr-303-2018": "same-ejercicio pair with aeat-dr-303-2018-salvo-ultimo-periodo",
-        "aeat-dr-303-2018-salvo-ultimo-periodo": "same-ejercicio pair with aeat-dr-303-2018",
-        "aeat-dr-303-2021-hasta-periodo-06": "same-ejercicio pair with aeat-dr-303-2021-desde-periodo-07",
-        "aeat-dr-303-2021-desde-periodo-07": "same-ejercicio pair with aeat-dr-303-2021-hasta-periodo-06",
-        # Mechanically derivable, but these sit in trees another campaign holds
-        # open (the M303/M390 generator-authority work and the designless-modelo
-        # adjudication). Declared here rather than swept, so the omission stays
-        # visible and attributed instead of racing a peer's edit.
-        "aeat-dr-303-2014": "held by the in-flight M303 generator-authority campaign",
-        "aeat-dr-303-2015-2016": "held by the in-flight M303 generator-authority campaign",
-        "aeat-dr-303-2017": "held by the in-flight M303 generator-authority campaign",
-        "aeat-dr-303-2019-2020": "held by the in-flight M303 generator-authority campaign",
-        "aeat-dr-390-2015": "held by the in-flight M390 generator-authority campaign",
-        "aeat-dr-390-2016": "held by the in-flight M390 generator-authority campaign",
-        # Every official manifest artefact is registered so the corpus and
-        # catalogue agree, but this map does not invent selection windows. These source
-        # titles describe versions/updates (or an ATF translation), not a
-        # non-conflicting filing period relative to the actively selected
-        # design. The source rows deliberately remain resolver-unreachable
-        # until the temporal-design owner supplies that authority.
-        "aeat-dr-036-v40": "AEAT's 2023 update to the 2021-y-siguientes design has no selection boundary",
-        "aeat-dr-036-v35": "AEAT's 2021 update has no selection boundary against v40",
-        "aeat-dr-202-2025-mar-update": (
-            "AEAT's March 2026 update has no selection boundary against the active 2025 design"
-        ),
-        "aeat-dr-202-2019-september-update": (
-            "AEAT's September 2019 update has no selection boundary against the active 2019 design"
-        ),
-        "aeat-dr-202-2012-v32": "the official version label does not establish a filing-period window",
-        "aeat-dr-202-2013-v33": "the official version label does not establish the boundary before the 3P 2013 design",
-        "aeat-dr-202-2010-v13": "the official version label does not establish a filing-period window",
-        "aeat-dr-345-2023-archive": (
-            "the archive's 2023 design conflicts with the selected 2023 edition absent an effective boundary"
-        ),
-        "aeat-dr-349-2002": "the historical order title does not establish a bounded filing window",
-        "aeat-dr-604-atf-spanish": (
-            "the Spanish ATF appendix is a translated logical design, not an independently dated epoch"
-        ),
-        "aeat-dr-604-atf-english": (
-            "the English ATF appendix is a translated logical design, not an independently dated epoch"
-        ),
         # The modelo 184 ejercicio-2023 pair. Its revision cites BOTH the AEAT
         # diseno de registro and the BOE publication of the orden that
         # established it, so a bare "2023" would collide with the epoch
@@ -217,13 +172,6 @@ def test_every_record_design_source_declares_a_unique_well_formed_epoch() -> Non
         "boe-dr-184-2016-2018": "raw BOE orden, adjudicated provenance rather than a mapped design",
         "boe-dr-184-2019-2021": "raw BOE orden, adjudicated provenance rather than a mapped design",
         "boe-dr-184-2022": "raw BOE orden, adjudicated provenance rather than a mapped design",
-        # Historical modelo 353 ordenes, registered so corpus and catalogue
-        # agree. Neither declares applies_from/applies_to, and no modelo 353
-        # revision cites either -- the modelo's revisions begin at 2021. There is
-        # therefore no filing period to derive an epoch from, and inventing one
-        # would assert a selection window nothing evidences.
-        "aeat-dr-353-2007-orden": "the historical orden declares no filing window and no revision cites it",
-        "aeat-dr-353-2008-orden": "the historical orden declares no filing window and no revision cites it",
     }
 
     modelos, catalogues = registry_tree()
