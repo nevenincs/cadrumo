@@ -184,11 +184,17 @@ def _resolve_filing_window_with_operation(
     """Resolve one filing window from a single generation-pinned operation."""
     if modelo not in operation.modelo_ids():
         raise RegistrySnapshotError.for_modelo_not_registered(modelo_id=modelo)
+    # The closing coordinate of the filing year, which is how a filing year is
+    # projected onto the date axis the governed catalogue is selected by. It is
+    # the same coordinate for every modelo, so it is derived before the branch
+    # rather than inside a Modelo 210 condition, where it would read as a value
+    # this modelo fixes in code.
+    filing_year_close = date(filing_year, 12, 31)
     if tipo_renta_code is not None and (
         modelo != Modelo("210")
         or tipo_renta_code
         not in m210_tipo_renta_code_projection(
-            effective_date=date(filing_year, 12, 31),
+            effective_date=filing_year_close,
             authority=operation,
         )
     ):
