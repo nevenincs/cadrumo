@@ -26,7 +26,9 @@ validates ``dias_imputacion`` to a strictly positive integer in
 ``[1, days_in_year]`` and the coefficient to equal one of the two
 registry-authored LIRPF art. 85 rates — ``0.011`` (recent revision) or ``0.02``
 (old/no revision), declared in
-``src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/parameters/0003-m210-imputacion-inmobiliaria-2025.toml``
+``src/cadrumo/_data/registry/aeat/modelos/210/revisions/2023/parameters/``, whose
+2025 rate is set by the ``family_overrides`` entry in
+``src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/revision.toml``
 — so a zero ``dias_imputacion`` is refused outright rather than silently producing
 a zero base. The genuine silent-zero this module exercises instead is a positive,
 VALID ``dias_imputacion`` (1 day) applied against a small ``valor_catastral`` (EUR
@@ -113,8 +115,10 @@ _BASE_IMPONIBLE_CASILLA: CasillaId = validated_casilla_id("base_imponible", surf
 
 # The LIRPF art. 85 imputation-rate parameters declare exactly two valid
 # coefficients for the inmobiliaria branch; 0.011 is the "recent revision"
-# rate (m210-imputacion-rate-recent-revision-2025). Read from
-# src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/parameters/0003-m210-imputacion-inmobiliaria-2025.toml.
+# rate (m210-imputacion-rate-recent-revision). Declared in
+# src/cadrumo/_data/registry/aeat/modelos/210/revisions/2023/parameters/ and set
+# to 0.011 for 2025 by the family_overrides entry in
+# src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/revision.toml.
 _VALID_IMPUTACION_COEFFICIENT = Decimal("0.011")
 
 # Grounds both the M210 inmobiliaria base-imponible formula and the
