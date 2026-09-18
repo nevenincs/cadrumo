@@ -185,7 +185,6 @@ from .registry_classification_coherence import (
 
 __all__ = [
     "AnnualCasillaPopulationComparison",
-    "CoverageAuthorityScope",
     "DictionaryLayoutCasillaComparison",
     "LatestRevisionSupportProbe",
     "RegistryConformanceProfile",
