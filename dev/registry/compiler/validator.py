@@ -235,7 +235,7 @@ class RegistryValidator:
             _missing_refs(
                 "runtime catalogues",
                 "published authority",
-                _runtime_legal_reference_ids(self._runtime),
+                runtime_legal_reference_ids(self._runtime),
                 self._legal,
                 "legal",
             )
@@ -472,7 +472,7 @@ class RegistryValidator:
         return failures
 
 
-def _runtime_legal_reference_ids(runtime: RuntimeRegistryCatalogues) -> frozenset[str]:
+def runtime_legal_reference_ids(runtime: RuntimeRegistryCatalogues) -> frozenset[str]:
     """Return every legal identity carried by a published runtime table."""
     return frozenset(
         ref

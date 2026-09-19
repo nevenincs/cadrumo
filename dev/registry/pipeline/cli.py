@@ -24,10 +24,7 @@ import typer
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.i18n.render import locale_map, override_locales_root
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.authority import (
-    ValidatedRegistryAuthority,
-    bundled_authority_descriptor_path,
-)
+from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.calculations.registry.modelo_localization import (
     ModeloLocalizationFieldKind,
@@ -44,7 +41,7 @@ from ._tree_publication import (
     publish_validated_generated_export_tree,
 )
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
-from .authority_publication import publish_sqlite_authority_candidate
+from .authority_publication import authority_publication_destination, publish_sqlite_authority_candidate
 from .candidate_staging import (
     GeneratedExportBootstrapTarget,
     drop_cross_edition_evolutions,
@@ -91,7 +88,7 @@ def publish_authority(
         Path | None,
         typer.Option(
             "--destination",
-            help="Authority directory to update; defaults to the bundled runtime authority directory.",
+            help="Authority directory to update; defaults to the configured authority root.",
         ),
     ] = None,
     profile_schema: Annotated[
@@ -119,7 +116,7 @@ def publish_authority(
             "custom authority candidates require an explicit --profile-schema source",
             param_hint="--profile-schema",
         )
-    destination_path = destination or bundled_authority_descriptor_path().parent
+    destination_path = destination or authority_publication_destination()
     descriptor = publish_sqlite_authority_candidate(
         registry_root=registry_root or bundled_path("registry", "aeat"),
         source_root=source_root or bundled_path(),
