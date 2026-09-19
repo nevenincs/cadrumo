@@ -22,7 +22,7 @@ from ..sync_aeat_record_design_corpus import (
     _PAGES,
     _REQUIRED,
     _STATIC,
-    _UNATTESTED_CORPUS_FILES,
+    UNATTESTED_CORPUS_FILES,
     _Artifact,
     _authority_failures,
     _load_manifests,
@@ -209,7 +209,7 @@ def test_the_recorded_unattested_census_is_a_named_debt_not_a_blanket() -> None:
     still listed. A census that only grows silently would be the same silence it
     was written to end.
     """
-    assert _UNATTESTED_CORPUS_FILES == ("modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx",)
+    assert UNATTESTED_CORPUS_FILES == ("modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx",)
 
 
 def _artefact(stored_path: str, url: str) -> _Artifact:
@@ -290,7 +290,7 @@ def test_shipped_record_design_catalogue_classifies_its_full_sync_payload_bounda
     """
     catalogue, failures = _record_design_catalogue(_load_manifests(), _CORPUS)
     payload_paths = set(_payload_paths(_CORPUS))
-    explicit_debt = {PurePosixPath(path) for path in _UNATTESTED_CORPUS_FILES}
+    explicit_debt = {PurePosixPath(path) for path in UNATTESTED_CORPUS_FILES}
 
     assert failures == []
     assert catalogue is not None
@@ -377,7 +377,7 @@ def _configure_isolated_sync_check(
     (tmp_path / "manifest.json").write_text(json.dumps(aggregate), encoding="utf-8")
     monkeypatch.setattr(record_design_sync, "_CORPUS", tmp_path)
     monkeypatch.setattr(record_design_sync, "_REQUIRED", ())
-    monkeypatch.setattr(record_design_sync, "_UNATTESTED_CORPUS_FILES", ())
+    monkeypatch.setattr(record_design_sync, "UNATTESTED_CORPUS_FILES", ())
     monkeypatch.setattr(record_design_sync, "_EXTRACTION_SIDECAR_DERIVATIONS", ())
     monkeypatch.setattr(record_design_sync, "_load_manifests", lambda: manifests)
     monkeypatch.setattr(

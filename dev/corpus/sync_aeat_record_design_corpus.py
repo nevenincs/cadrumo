@@ -92,7 +92,7 @@ _DERIVED_SUFFIXES: Final[tuple[str, ...]] = (
 #: entry did not. The corpus census therefore reads 248 while 249
 #: provenance-bearing files sit on disk, and the one that is missing is
 #: load-bearing evidence for an AEAT authority check.
-_UNATTESTED_CORPUS_FILES: Final[tuple[str, ...]] = ("modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx",)
+UNATTESTED_CORPUS_FILES: Final[tuple[str, ...]] = ("modelo_200/files/01-200-ejercicio-2025-10-9-mb-xls.xlsx",)
 
 #: Sheet-text extractions of sibling payloads which remain in their historical
 #: manifests.  They are explicitly catalogued as derivatives, rather than
@@ -1897,9 +1897,9 @@ def check() -> None:
         if catalogue is not None
         else unattested_corpus_files(_CORPUS)
     )
-    if observed_unattested != _UNATTESTED_CORPUS_FILES:
-        appeared = sorted(set(observed_unattested) - set(_UNATTESTED_CORPUS_FILES))
-        attested = sorted(set(_UNATTESTED_CORPUS_FILES) - set(observed_unattested))
+    if observed_unattested != UNATTESTED_CORPUS_FILES:
+        appeared = sorted(set(observed_unattested) - set(UNATTESTED_CORPUS_FILES))
+        attested = sorted(set(UNATTESTED_CORPUS_FILES) - set(observed_unattested))
         failures.append(
             "corpus files carrying no manifest entry have changed: "
             f"newly unattested {appeared}, no longer unattested {attested}"
