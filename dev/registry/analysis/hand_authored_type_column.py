@@ -62,6 +62,7 @@ __all__ = [
 
 _SIGNED_TYPE = "N"
 _RECORD_DESIGN_KIND = "record_design"
+_HAND_AUTHORED_TREE = "export_layouts"
 
 
 class Alignment(StrEnum):
@@ -116,12 +117,26 @@ class TypeColumnContradiction:
 
 
 def hand_authored_revisions(authority: ValidatedRegistryAuthority) -> Iterator[tuple[str, str, Path]]:
-    """Yield ``(modelo, revision, revision_root)`` for every hand-authored export revision."""
+    """Yield ``(modelo, revision, revision_root)`` for every hand-authored export revision.
+
+    Eligibility is the RESOLVED layout, never the directory listing. An edition
+    that stores its families against a baseline ships no ``export_layouts``
+    directory of its own and still resolves a full set of records, so reading
+    the listing left twelve such editions -- 41 to 1,210 fields each -- outside
+    this screen entirely. Modelo 490's 2022 2T-4T edition was one of them, and
+    it shipped 112 fields unsigned that its own pinned design types ``N``.
+
+    A layout carrying no record field is skipped instead: a type column types
+    wire slots, and Modelo 100's ``xml_dictionary`` layouts have none, so
+    counting them would credit the screen with revisions it never looked at.
+    """
     for modelo in sorted(authority.modelos, key=lambda item: str(item.id)):
         for revision in sorted(modelo.revisions.values(), key=lambda item: str(item.id)):
             root = bundled_path("registry", "aeat", "modelos", str(modelo.id), "revisions", str(revision.id))
             generated = root / GENERATED_EXPORT_DIRECTORY_NAME / EXPORT_FRAGMENT_PROVENANCE_FILENAME
-            if generated.is_file() or not (root / "export_layouts").is_dir():
+            if generated.is_file():
+                continue
+            if not any(record.fields for layout in revision.export_layouts for record in layout.records):
                 continue
             yield str(modelo.id), str(revision.id), root
 
@@ -168,21 +183,40 @@ def _wire_integer(value: object, *, field_name: str) -> int:
     return value
 
 
-def _shipped_records(revision_root: Path) -> Iterator[tuple[str, dict[str, object]]]:
-    for layout_file in sorted((revision_root / "export_layouts").glob("*.toml")):
-        document = _object_mapping(parse_toml(layout_file.read_text(encoding="utf-8")))
-        if document is None:
-            continue
-        revisions = _object_mapping(document.get("revisions"))
-        if revisions is None:
-            continue
-        for body_value in revisions.values():
-            body = _object_mapping(body_value)
-            if body is None:
+def _shipped_records(
+    authority: ValidatedRegistryAuthority, *, modelo: str, revision: str, revision_root: Path
+) -> Iterator[tuple[str, dict[str, object]]]:
+    """Yield ``(locus, record)`` for every record this revision ships.
+
+    An edition that authors its own tree is read from that tree, so the bytes
+    under ``revision_root`` are what is screened and a planted defect in them is
+    caught. An edition that stores its families against a baseline has no tree
+    of its own, and is read from the compiled layout it resolves -- otherwise
+    the directory listing decides what gets compared, and twelve editions
+    carrying up to 1,210 fields each were compared by nothing.
+    """
+    authored = revision_root / _HAND_AUTHORED_TREE
+    if authored.is_dir():
+        for layout_file in sorted(authored.glob("*.toml")):
+            document = _object_mapping(parse_toml(layout_file.read_text(encoding="utf-8")))
+            if document is None:
                 continue
-            for layout in _object_mappings(body.get("export_layouts")):
-                for record in _object_mappings(layout.get("records")):
-                    yield layout_file.name, record
+            revisions = _object_mapping(document.get("revisions"))
+            if revisions is None:
+                continue
+            for body_value in revisions.values():
+                body = _object_mapping(body_value)
+                if body is None:
+                    continue
+                for layout in _object_mappings(body.get("export_layouts")):
+                    for record in _object_mappings(layout.get("records")):
+                        yield layout_file.name, record
+        return
+    for layout in authority.modelo(modelo).revisions[revision].export_layouts:
+        for record in layout.records:
+            dumped = _object_mapping(record.model_dump(mode="json"))
+            if dumped is not None:
+                yield str(layout.id), dumped
 
 
 def revision_findings(
@@ -192,7 +226,9 @@ def revision_findings(
     design = _design_slots(authority, modelo, revision)
     alignments: list[RecordAlignment] = []
     contradictions: list[TypeColumnContradiction] = []
-    for layout_file, record in _shipped_records(revision_root):
+    for layout_file, record in _shipped_records(
+        authority, modelo=modelo, revision=revision, revision_root=revision_root
+    ):
         fields = [item for item in _object_mappings(record.get("fields")) if item.get("offset") and item.get("length")]
         if not fields:
             continue

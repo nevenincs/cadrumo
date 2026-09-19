@@ -31,7 +31,9 @@ from collections.abc import Iterator, Mapping
 from contextlib import contextmanager
 from dataclasses import dataclass
 from datetime import UTC, datetime
+from functools import lru_cache
 from pathlib import Path
+from types import MappingProxyType
 from typing import Final
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
@@ -93,7 +95,7 @@ def _relative_to_modelos_root(path: Path, modelos_root: Path) -> Path:
         return path.resolve().relative_to(modelos_root)
 
 
-def _content_row(row: tuple[str, int, int, str], registry_root: Path) -> tuple[str, int, str]:
+def _content_row(row: tuple[str, int, int, str], candidate: Path, registry_root: Path) -> tuple[str, int, str]:
     """Reduce one fingerprint row to what decides a validation outcome.
 
     A verdict is a statement about CONTENT: the same declarations validate the
@@ -104,8 +106,7 @@ def _content_row(row: tuple[str, int, int, str], registry_root: Path) -> tuple[s
     temporary root, with fresh mtimes -- shared no verdict with the tree it was
     copied from, so every candidate re-validated the whole corpus.
     """
-    path, size, _modified_ns, digest = row
-    candidate = Path(path)
+    _path, size, _modified_ns, digest = row
     try:
         relative = candidate.relative_to(registry_root)
     except ValueError:
@@ -118,6 +119,7 @@ def _content_row(row: tuple[str, int, int, str], registry_root: Path) -> tuple[s
     return relative.as_posix(), size, digest
 
 
+@lru_cache(maxsize=16)
 def validation_verdict_scope(
     *,
     registry_root: Path,
@@ -125,14 +127,28 @@ def validation_verdict_scope(
     source_receipt: str,
     compiler_identity_digest: str,
 ) -> ValidationVerdictScope:
-    """Derive the verdict keys for one compilation from the inputs that decide its outcome."""
+    """Derive the verdict keys for one compilation from the inputs that decide its outcome.
+
+    Memoized on its whole argument tuple, which is legitimate because every
+    argument is an immutable value and the result is derived from nothing else:
+    no filesystem read decides a key, only the fingerprint rows already collected
+    by the caller. A repeat call therefore cannot observe a tree the first call
+    could not, and the rows change whenever the tree does.
+
+    The memo is what makes a warm compile warm. Deriving this scope over the
+    bundled corpus costs ~0.22 s -- 2,990 rows, each paying two
+    ``Path.relative_to`` walks -- and it was paid again on EVERY
+    :func:`compile_validated_authority` call, including the cache hits, where it
+    was about 70% of the whole hit. With 415 call sites across 194 test modules,
+    that recomputation was the dominant cost of an already-compiled registry.
+    """
     registry_root_resolved = registry_root.resolve()
     modelos_root = (registry_root / "modelos").resolve()
     shared_rows: list[tuple[str, int, str]] = []
     modelo_rows: dict[str, list[tuple[str, int, str]]] = {}
     for row in fingerprints:
         path = Path(row[0])
-        keyed = _content_row(row, registry_root_resolved)
+        keyed = _content_row(row, path, registry_root_resolved)
         try:
             relative = _relative_to_modelos_root(path, modelos_root)
         except (OSError, ValueError):
@@ -169,7 +185,9 @@ def validation_verdict_scope(
         )
         for modelo_id, rows in modelo_rows.items()
     }
-    return ValidationVerdictScope(registry_key=registry_key, modelo_keys=modelo_keys)
+    # Read-only, because the memo above hands the SAME instance to every caller:
+    # a mutable mapping shared that way lets one consumer rewrite another's keys.
+    return ValidationVerdictScope(registry_key=registry_key, modelo_keys=MappingProxyType(modelo_keys))
 
 
 def _verdict_path(key: str) -> Path:
