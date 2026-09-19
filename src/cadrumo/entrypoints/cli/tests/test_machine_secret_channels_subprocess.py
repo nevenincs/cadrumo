@@ -28,14 +28,12 @@ from ._machine_secret_channels_support import (
     _CERTIFICATE_INPUT,
     _HARNESS,
     _NEW_PROFILE_INPUT,
-    _PROFILE_INPUT,
     _WINDOWS_HANDLE_HARNESS,
     _assert_success,
     _base_interpreter_pythonpath,
     _combined,
     _complete_registered_profile,
     _envelope,
-    _register,
     _register_certificate_source,
     _restore_material,
     _run,
@@ -43,7 +41,8 @@ from ._machine_secret_channels_support import (
     bootstrap_interpreter,
     cleanup_keychain,
 )
-from .subprocess_cli import _as_text_completed_process, subprocess_cli_env
+from .password_only_profile import FIXTURE_PROFILE_INPUT, register_password_only_profile
+from .subprocess_cli import as_text_completed_process, subprocess_cli_env
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -66,8 +65,8 @@ def _assert_recovery_code_shape(document: bytes | bytearray) -> None:
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
 def test_login_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
     root = tmp_path / "login"
-    _register(root)
-    payload = json.dumps({"passphrase": _PROFILE_INPUT})
+    register_password_only_profile(root)
+    payload = json.dumps({"passphrase": FIXTURE_PROFILE_INPUT})
     args = ["--format", "json", "config", "login", "s13-operator"]
     result = (
         _run(root, [*args, "--secrets-stdin"], stdin=payload)
@@ -180,14 +179,14 @@ def _run_profile_recovery_enable(root: Path, *, channel: str, payload: str) -> s
         supervisor.join(timeout=5)
     assert not supervisor.is_alive()
     assert supervisor_failure == [], result.stderr
-    return _as_text_completed_process(result)
+    return as_text_completed_process(result)
 
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
 def test_profile_create_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
     """Creation needs only the passphrase payload; a machine caller is never asked about recovery."""
     root = tmp_path / f"create-{channel}"
-    payload = json.dumps({"passphrase": _PROFILE_INPUT, "passphrase_confirmation": _PROFILE_INPUT})
+    payload = json.dumps({"passphrase": FIXTURE_PROFILE_INPUT, "passphrase_confirmation": FIXTURE_PROFILE_INPUT})
     args = ["--format", "json", "config", "profile", "create", f"created-{channel}", "--quiet"]
     result = (
         _run(root, [*args, "--secrets-stdin"], stdin=payload)
@@ -207,8 +206,8 @@ def test_profile_create_succeeds_through_each_leaf_channel(tmp_path: Path, chann
 def test_profile_recovery_enable_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
     """The optional recovery door enrols headlessly over the descriptor pair, after the profile exists."""
     root = tmp_path / f"recovery-{channel}"
-    _register(root)
-    payload = json.dumps({"passphrase": _PROFILE_INPUT})
+    register_password_only_profile(root)
+    payload = json.dumps({"passphrase": FIXTURE_PROFILE_INPUT})
     result = _run_profile_recovery_enable(root, channel=channel, payload=payload)
     document = _assert_success(result, root)
     assert document["command"] == "config.profile.recovery.enable"
@@ -223,10 +222,10 @@ def test_profile_recovery_enable_succeeds_through_each_leaf_channel(tmp_path: Pa
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
 def test_passphrase_change_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str) -> None:
     root = tmp_path / f"rotate-{channel}"
-    _register(root)
+    register_password_only_profile(root)
     payload = json.dumps(
         {
-            "current_passphrase": _PROFILE_INPUT,
+            "current_passphrase": FIXTURE_PROFILE_INPUT,
             "new_passphrase": _NEW_PROFILE_INPUT,
             "new_passphrase_confirmation": _NEW_PROFILE_INPUT,
         }
@@ -256,7 +255,7 @@ def test_restore_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str
         "--file",
         str(capsule),
     ]
-    payload = json.dumps({"passphrase": _PROFILE_INPUT})
+    payload = json.dumps({"passphrase": FIXTURE_PROFILE_INPUT})
     result = (
         _run(root, [*args, "--secrets-stdin"], stdin=payload)
         if channel == "stdin"
@@ -269,11 +268,11 @@ def test_restore_succeeds_through_each_leaf_channel(tmp_path: Path, channel: str
 
 def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path) -> None:
     root = tmp_path / "fd-zero"
-    outcome = _register(root)
+    outcome = register_password_only_profile(root)
     result = _run(
         root,
         ["--format", "json", "config", "login", outcome.profile_id, "--secrets-fd", "0"],
-        stdin=json.dumps({"passphrase": _PROFILE_INPUT}),
+        stdin=json.dumps({"passphrase": FIXTURE_PROFILE_INPUT}),
         assert_closed_fd_zero=True,
     )
     assert _assert_success(result, root)["command"] == "config.login"
@@ -282,11 +281,11 @@ def test_fd_zero_is_a_real_leaf_secret_channel(tmp_path: Path) -> None:
 
 def test_keychain_free_root_auth_succeeds_for_real_read_via_stdin(tmp_path: Path) -> None:
     root = tmp_path / "root-read"
-    _register(root, label="root-reader")
+    register_password_only_profile(root, label="root-reader")
     result = _run(
         root,
         ["--format", "json", "--profile-secrets-stdin", "config", "profile", "history", "root-reader"],
-        stdin=json.dumps({"profile_passphrase": _PROFILE_INPUT}),
+        stdin=json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),
     )
     document = _assert_success(result, root)
     assert document["command"] == "config.bucket.history"
@@ -300,9 +299,9 @@ def test_certificate_write_accepts_every_valid_dual_source_combination(
     tmp_path: Path, sources: tuple[str, str]
 ) -> None:
     root = tmp_path / "certificate"
-    _register(root, label="cert-operator")
+    register_password_only_profile(root, label="cert-operator")
     _register_certificate_source(root, name="s13-cert")
-    profile_payload = json.dumps({"profile_passphrase": _PROFILE_INPUT})
+    profile_payload = json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT})
     leaf_payload = json.dumps({"certificate_passphrase": _CERTIFICATE_INPUT})
     args = ["--format", "json"]
     inherited: list[str] = []
@@ -337,7 +336,7 @@ def test_certificate_write_accepts_every_valid_dual_source_combination(
 def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -> None:
     if sys.platform != "win32":
         root = tmp_path / "posix-descriptor-reader"
-        _register(root, label="posix-reader")
+        register_password_only_profile(root, label="posix-reader")
         result = _run(
             root,
             [
@@ -350,7 +349,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
                 "history",
                 "posix-reader",
             ],
-            inherited_payloads=(json.dumps({"profile_passphrase": _PROFILE_INPUT}),),
+            inherited_payloads=(json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),),
             assert_closed_index=0,
         )
         document = _assert_success(result, root)
@@ -361,10 +360,10 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
     import msvcrt
 
     root = tmp_path / "windows-handle"
-    _register(root, label="windows-reader")
+    register_password_only_profile(root, label="windows-reader")
     reader, writer = os.pipe()
     try:
-        os.write(writer, json.dumps({"profile_passphrase": _PROFILE_INPUT}).encode())
+        os.write(writer, json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}).encode())
         os.close(writer)
         writer = -1
         handle = msvcrt.get_osfhandle(reader)
@@ -411,7 +410,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
         if writer >= 0:
             os.close(writer)
         os.close(reader)
-    document = _assert_success(_as_text_completed_process(result), root)
+    document = _assert_success(as_text_completed_process(result), root)
     assert document["command"] == "config.bucket.history"
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
 
@@ -447,7 +446,7 @@ def _windows_recovery_handle_allowlist(
 def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: Path) -> None:
     """Writable handoff and readable proof HANDLEs survive a real process boundary."""
     root = tmp_path / "windows-recovery-enable"
-    _register(root, label="windows-recovery")
+    register_password_only_profile(root, label="windows-recovery")
     handoff_reader, handoff_writer = os.pipe()
     verification_reader, verification_writer = os.pipe()
     handoff_handle, verification_handle, startup = _windows_recovery_handle_allowlist(
@@ -516,7 +515,7 @@ def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: 
             ],
             cwd=SRC_CADRUMO,
             env=env,
-            input=json.dumps({"passphrase": _PROFILE_INPUT}),
+            input=json.dumps({"passphrase": FIXTURE_PROFILE_INPUT}),
             text=True,
             encoding="utf-8",
             errors="replace",
@@ -541,7 +540,7 @@ def _assert_windows_recovery_handles_complete_real_headless_enrolment(tmp_path: 
 def _assert_posix_recovery_descriptors_complete_real_headless_enrolment(tmp_path: Path) -> None:
     """Writable handoff and readable proof descriptors cross a real POSIX boundary."""
     root = tmp_path / "posix-recovery-enable"
-    _register(root, label="posix-recovery")
+    register_password_only_profile(root, label="posix-recovery")
     handoff_reader, handoff_writer = os.pipe()
     verification_reader, verification_writer = os.pipe()
     supervisor_failure: list[BaseException] = []
@@ -595,7 +594,7 @@ def _assert_posix_recovery_descriptors_complete_real_headless_enrolment(tmp_path
             ],
             cwd=SRC_CADRUMO,
             env=env,
-            input=json.dumps({"passphrase": _PROFILE_INPUT}),
+            input=json.dumps({"passphrase": FIXTURE_PROFILE_INPUT}),
             text=True,
             encoding="utf-8",
             capture_output=True,
@@ -627,7 +626,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
     """The platform descriptor route composes with portable leaf stdin."""
     if sys.platform != "win32":
         root = tmp_path / "posix-descriptor-certificate"
-        _register(root, label="posix-writer")
+        register_password_only_profile(root, label="posix-writer")
         _register_certificate_source(root, name="s13-posix-cert")
         result = _run(
             root,
@@ -646,7 +645,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
                 "--secrets-stdin",
             ],
             stdin=json.dumps({"certificate_passphrase": _CERTIFICATE_INPUT}),
-            inherited_payloads=(json.dumps({"profile_passphrase": _PROFILE_INPUT}),),
+            inherited_payloads=(json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),),
             assert_closed_index=0,
         )
         document = _assert_success(result, root)
@@ -658,11 +657,11 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
     import msvcrt
 
     root = tmp_path / "windows-certificate"
-    _register(root, label="windows-writer")
+    register_password_only_profile(root, label="windows-writer")
     _register_certificate_source(root, name="s13-windows-cert")
     reader, writer = os.pipe()
     try:
-        os.write(writer, json.dumps({"profile_passphrase": _PROFILE_INPUT}).encode())
+        os.write(writer, json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}).encode())
         os.close(writer)
         writer = -1
         handle = msvcrt.get_osfhandle(reader)
@@ -714,14 +713,14 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
         if writer >= 0:
             os.close(writer)
         os.close(reader)
-    document = _assert_success(_as_text_completed_process(result), root)
+    document = _assert_success(as_text_completed_process(result), root)
     assert document["command"] == "config.auth.certificate.secret.set"
     assert document["result"]["has_secret"] is True
     assert [notice["code"] for notice in document["notices"]] == ["config.login.session_not_persisted"]
 
 
-_PROFILE_AUTHENTICATION = json.dumps({"profile_passphrase": _PROFILE_INPUT})
-_LOGIN_AUTHENTICATION = json.dumps({"passphrase": _PROFILE_INPUT})
+_PROFILE_AUTHENTICATION = json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT})
+_LOGIN_AUTHENTICATION = json.dumps({"passphrase": FIXTURE_PROFILE_INPUT})
 
 #: Every profile leaf, as (id, argv after ``--format json``, stdin). ``{archive}``
 #: names the sealed file the export leaf writes and the inspect leaf reads.
@@ -801,8 +800,8 @@ def _cold_profile_templates(tmp_path_factory: pytest.TempPathFactory) -> Iterato
     base = tmp_path_factory.mktemp("cold-profile-templates")
     incomplete = base / "incomplete"
     complete = base / "complete"
-    _register(incomplete)
-    _register(complete)
+    register_password_only_profile(incomplete)
+    register_password_only_profile(complete)
     _complete_registered_profile(complete, flags=COMPLETE_NATURAL_PERSON_FLAGS)
     try:
         yield {"incomplete": incomplete, "complete": complete}

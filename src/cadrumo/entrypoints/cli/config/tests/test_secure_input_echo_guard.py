@@ -28,7 +28,7 @@ import textwrap
 
 import pytest
 
-from cadrumo.entrypoints.cli.tests.subprocess_cli import _as_text_completed_process
+from cadrumo.entrypoints.cli.tests.subprocess_cli import as_text_completed_process
 from cadrumo.tests.audited_process import run_audited_process
 
 from .....core.i18n.render import tr
@@ -67,7 +67,7 @@ async def _wait_for_prompt_probe(*, command: list[str], creationflags: int = 0) 
 
 def _run_probe(body: str) -> dict[str, object]:
     """Run ``body`` in a real interpreter and return its JSON verdict."""
-    completed = _as_text_completed_process(
+    completed = as_text_completed_process(
         run_audited_process(
             [sys.executable, "-c", textwrap.dedent(body)],
             capture_output=True,
@@ -172,7 +172,7 @@ def test_prompt_secret_no_echo_refuses_a_character_device_with_no_console() -> N
 
 def test_prompt_secret_no_echo_refuses_a_plain_redirected_pipe() -> None:
     """A redirected (non-tty) stdin refuses without consuming the planted secret."""
-    completed = _as_text_completed_process(
+    completed = as_text_completed_process(
         run_audited_process(
             [
                 sys.executable,
@@ -368,7 +368,7 @@ def test_the_predicate_predicts_the_refusal_it_names() -> None:
     Both halves are asserted from the one probe, which is what makes this
     a claim about their agreement rather than two separate facts.
     """
-    completed = _as_text_completed_process(
+    completed = as_text_completed_process(
         run_audited_process(
             [
                 sys.executable,

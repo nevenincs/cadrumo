@@ -16,20 +16,17 @@ from uuid import UUID
 
 from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 
-from ....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from ....adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
-from ....application.user_profile.registration import register_profile_with_credentials
-from ....core.config import override_settings
 from ....core.external_constants import OutputLanguage
 from ....tests.inventory import SRC_CADRUMO
-from .subprocess_cli import _as_text_completed_process, subprocess_cli_env
+from .password_only_profile import FIXTURE_PROFILE_INPUT, register_password_only_profile
+from .subprocess_cli import as_text_completed_process, subprocess_cli_env
 
-_PROFILE_INPUT = "s13-profile-passphrase-that-must-never-escape"
 _NEW_PROFILE_INPUT = "s13-new-profile-passphrase-that-must-never-escape"
 _CERTIFICATE_INPUT = "s13-certificate-passphrase-that-must-never-escape"
 _REFUSAL_INPUT = "s14-refusal-secret-that-must-never-escape"
 _OVERSIZE_INPUT = "s14-oversize-secret-that-must-never-escape"
-_ALL_SECRETS = (_PROFILE_INPUT, _NEW_PROFILE_INPUT, _CERTIFICATE_INPUT, _REFUSAL_INPUT)
+_ALL_SECRETS = (FIXTURE_PROFILE_INPUT, _NEW_PROFILE_INPUT, _CERTIFICATE_INPUT, _REFUSAL_INPUT)
 
 
 def bootstrap_interpreter() -> str:
@@ -405,13 +402,13 @@ def _run(
                 *((0,) if assert_closed_fd_zero else ()),
             ],
             "preauthenticate_label": preauthenticate_label,
-            "preauthenticate_secret": _PROFILE_INPUT if preauthenticate_label is not None else None,
+            "preauthenticate_secret": FIXTURE_PROFILE_INPUT if preauthenticate_label is not None else None,
             "assert_dispatch_state_unchanged": assert_dispatch_state_unchanged,
             "assert_unread_descriptors": [readers[index] for index in assert_unread_indices],
             "assert_stdin_unread": assert_stdin_unread,
             "assert_unread_payload": unread_payload,
         }
-        return _as_text_completed_process(
+        return as_text_completed_process(
             run_audited_process(
                 [sys.executable, "-c", _HARNESS, json.dumps(payload), *rendered_args],
                 cwd=SRC_CADRUMO,
@@ -459,13 +456,13 @@ def _run_windows_handles(
             "profile_handle": profile_handle,
             "secrets_handle": secrets_handle,
             "preauthenticate_label": preauthenticate_label,
-            "preauthenticate_secret": _PROFILE_INPUT if preauthenticate_label is not None else None,
+            "preauthenticate_secret": FIXTURE_PROFILE_INPUT if preauthenticate_label is not None else None,
             "assert_dispatch_state_unchanged": assert_dispatch_state_unchanged,
             "assert_descriptors_unread": assert_descriptors_unread,
             "assert_stdin_unread": assert_stdin_unread,
             "assert_unread_payload": unread_payload,
         }
-        return _as_text_completed_process(
+        return as_text_completed_process(
             run_audited_process(
                 [
                     bootstrap_interpreter(),
@@ -579,29 +576,6 @@ def _assert_success(
     return document
 
 
-def _register(storage_root: Path, *, label: str = "s13-operator"):
-    """Register one password-only profile and close its session, as the CLI would.
-
-    Registration validates facts against governed registry vocabularies, which
-    resolve only inside a pinned authority operation. The CLI holds one for the
-    whole invocation; registering outside one raised before any subprocess ran.
-    """
-    from ....domain.calculations.registry.authority import bundled_indexed_authority
-
-    with (
-        override_settings(cadrumo_local_storage_root=storage_root),
-        bundled_indexed_authority().operation() as operation,
-    ):
-        outcome = register_profile_with_credentials(
-            label=label,
-            passphrase=_PROFILE_INPUT,
-            profile_create_context=operation.profile_create_context(),
-            profile_decode_context=operation.profile_decode_context(),
-        )
-        close_active_bucket_session()
-    return outcome
-
-
 def _register_certificate_source(storage_root: Path, *, name: str) -> None:
     certificate_path = storage_root / "s13-certificate.p12"
     certificate_path.write_bytes(b"registered source placeholder")
@@ -620,7 +594,7 @@ def _register_certificate_source(storage_root: Path, *, name: str) -> None:
             "--file",
             str(certificate_path),
         ],
-        stdin=json.dumps({"profile_passphrase": _PROFILE_INPUT}),
+        stdin=json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),
     )
     assert result.returncode == 0, _combined(result)
 
@@ -635,7 +609,7 @@ def cleanup_keychain(tmp_path: Path) -> None:
 def _restore_material(tmp_path: Path) -> Path:
     """Register a profile in a scratch root and return its committed capsule directory."""
     source = tmp_path / "restore-source"
-    outcome = _register(source)
+    outcome = register_password_only_profile(source)
     from ....adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 
     return load_committed_profile_password_material(UUID(outcome.profile_id), root=source).capsule_path
@@ -643,7 +617,7 @@ def _restore_material(tmp_path: Path) -> Path:
 
 def _complete_registered_profile(storage_root: Path, *, flags: Sequence[str]) -> None:
     """Answer every required question and promote the profile, each in its own process."""
-    authentication = json.dumps({"profile_passphrase": _PROFILE_INPUT})
+    authentication = json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT})
     for command in (("edit", "--quiet", *flags), ("complete-setup",)):
         result = _run(
             storage_root,

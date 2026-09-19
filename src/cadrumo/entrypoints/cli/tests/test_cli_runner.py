@@ -15,7 +15,7 @@ import pytest
 from cadrumo.tests.audited_process import run_audited_process
 
 from .cli_runner import ClickInvokeKwargs, invoke_cached_cli, semantic_cli_text
-from .subprocess_cli import _as_text_completed_process
+from .subprocess_cli import as_text_completed_process
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -73,7 +73,7 @@ assert result.exit_code == 0, result.output
 assert "\\x1b[" not in result.output
 assert "--output-language" in semantic_cli_output(result)
 """
-    completed = _as_text_completed_process(
+    completed = as_text_completed_process(
         run_audited_process(
             [sys.executable, "-c", source],
             capture_output=True,
