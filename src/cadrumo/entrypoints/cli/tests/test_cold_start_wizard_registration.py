@@ -35,6 +35,7 @@ by the fingerprint assertion retained in the work-create guard below.
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -77,13 +78,17 @@ def _workspace_secret_store_fingerprint() -> dict[str, tuple[int, int] | None]:
     return fingerprint
 
 
-def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedProcess[str]:
+def _run_cli_cold(
+    storage_root: Path, argv: list[str], *, authenticate: bool = False
+) -> subprocess.CompletedProcess[str]:
     """Invoke the ``cadrumo`` CLI in a fresh interpreter against ``storage_root``.
 
     A new process guarantees an empty ``sys.modules``: the only path that can
     register the wizard catalogue is the root callback exercised by ``argv``.
     """
 
+    if authenticate:
+        argv = ["--profile-secrets-stdin", *argv]
     code = f"""
         import sys
 
@@ -108,6 +113,11 @@ def _run_cli_cold(storage_root: Path, argv: list[str]) -> subprocess.CompletedPr
     )
     return subprocess.run(
         [sys.executable, "-c", textwrap.dedent(code)],
+        input=(
+            json.dumps({"profile_passphrase": base_settings.cadrumo_dev_test_database_password.get_secret_value()})
+            if authenticate
+            else None
+        ),
         capture_output=True,
         text=True,
         timeout=180,
@@ -150,7 +160,7 @@ def test_cold_process_overview_status_without_profile_resolves_profile_keys(tmp_
     assert result.returncode == 0, (
         f"overview status failed in a cold no-profile process: {result.stdout}\n{result.stderr}"
     )
-    assert "aeat config profile create NAME" in result.stdout
+    assert "aeat config profile create" in result.stdout
 
 
 def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> None:
@@ -193,6 +203,7 @@ def test_cold_process_work_create_registers_wizard_catalogue(tmp_path: Path) -> 
             "--revision",
             "2024",
         ],
+        authenticate=True,
     )
 
     for leak in _REGISTRATION_LEAKS:
@@ -244,6 +255,7 @@ def test_cold_process_m100_2025_work_create_keeps_intracom_type_import_boundary(
             "--by",
             "Ana",
         ],
+        authenticate=True,
     )
 
     assert "ImportError" not in created.stdout

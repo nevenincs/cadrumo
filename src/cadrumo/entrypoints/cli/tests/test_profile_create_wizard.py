@@ -118,6 +118,7 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         # deliberate posture for a capability governing off-host transmission: settable,
         # but not offered in the interactive walk-through.
         "country-of-fiscal-residence",
+        "declaration-roles",
         "does-intracomunitario",
         "enrollment-large-company",
         "enrollment-public-administration-budget-gt-6000000",

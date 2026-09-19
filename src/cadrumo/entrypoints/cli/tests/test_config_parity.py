@@ -15,6 +15,7 @@ import pytest
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ....core.config import load_settings
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -33,6 +34,7 @@ def test_config_create_then_config_show_round_trips_iva_regime(
                 "create",
                 "default",
                 "--quiet",
+                "--secrets-stdin",
                 "--tax-id",
                 "00000000T",
                 "--entity-type",
@@ -46,6 +48,12 @@ def test_config_create_then_config_show_round_trips_iva_regime(
                 "--iva-regime",
                 "GENERAL",
             ],
+            input=json.dumps(
+                {
+                    "passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value(),
+                    "passphrase_confirmation": load_settings().cadrumo_dev_test_database_password.get_secret_value(),
+                }
+            ),
         )
         assert created.exit_code == 0, created.output
 
@@ -72,10 +80,10 @@ def test_config_create_then_config_show_round_trips_iva_regime(
             assert fact_value(record, "iva.regime") == "GENERAL"
 
 
-def test_config_create_then_config_status_surfaces_assigned_value(
+def test_config_create_then_config_status_surfaces_profile_readiness(
     tmp_path: Path,
 ) -> None:
-    """A value written during profile create surfaces in profile status."""
+    """A created profile appears in status and retains its assigned IVA regime."""
 
     with isolated_profile_storage_root(tmp_path=tmp_path):
         created = invoke_cached_cli(
@@ -85,6 +93,7 @@ def test_config_create_then_config_status_surfaces_assigned_value(
                 "create",
                 "default",
                 "--quiet",
+                "--secrets-stdin",
                 "--tax-id",
                 "00000000T",
                 "--entity-type",
@@ -98,12 +107,24 @@ def test_config_create_then_config_status_surfaces_assigned_value(
                 "--iva-regime",
                 "SIMPLIFICADO",
             ],
+            input=json.dumps(
+                {
+                    "passphrase": load_settings().cadrumo_dev_test_database_password.get_secret_value(),
+                    "passphrase_confirmation": load_settings().cadrumo_dev_test_database_password.get_secret_value(),
+                }
+            ),
         )
         assert created.exit_code == 0, created.output
 
         status_result = invoke_cached_cli(["config", "profile", "status"])
         assert status_result.exit_code == 0, status_result.output
-        assert "SIMPLIFICADO" in status_result.output
+        assert "profile\tdefault" in status_result.output
+        assert "readiness\t" in status_result.output
+
+        viewed = invoke_cached_cli(["--format", "json", "config", "profile", "view", "default"])
+        assert viewed.exit_code == 0, viewed.output
+        facts = {row["path"]: row["value"] for row in json.loads(viewed.output)["result"]["facts"]}
+        assert facts["iva.regime"] == "SIMPLIFICADO"
 
 
 def test_retired_config_profile_set_is_not_registered(
