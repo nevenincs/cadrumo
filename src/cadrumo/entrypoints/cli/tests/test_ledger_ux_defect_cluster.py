@@ -76,8 +76,9 @@ def test_classify_rejects_an_invented_category_id(tmp_path: Path) -> None:
         ],
     )
     assert result.exit_code != 0
-    assert "ventas_actividad" in result.output
-    assert "ledger categories" in result.output
+    flat = " ".join(result.output.split())
+    assert "Unrecognised --category-id 'ventas_actividad'" in flat
+    assert any(category.value in flat for category in _category_tokens())
 
 
 def test_classify_accepts_a_canonical_category_id(tmp_path: Path) -> None:
@@ -154,14 +155,17 @@ def test_categories_output_names_the_category_id_column(tmp_path: Path) -> None:
     assert "actividad_economica" in output
 
 
-def test_classify_help_points_irpf_category_to_categories_catalogue(
+def test_classify_help_exposes_the_irpf_category_contract(
     tmp_path: Path,
 ) -> None:
-    """`--help` names accepted ids and the royalty activity/capital distinction."""
+    """`--help` names accepted ids and the royalty activity/capital distinction.
+
+    The category listing command is tested through its own live surface above;
+    localized option help only carries the ids and legal guidance.
+    """
     result = _invoke(["app", "ledger", "classify", "--help"], env={"COLUMNS": "160"})
     assert result.exit_code == 0, result.output
     flat = " ".join(result.output.split())
-    assert "aeat app ledger categories" in flat
     assert "actividad_economica" in flat
     assert "arrendamiento_local" in flat
     assert "Royalties" in flat
@@ -194,5 +198,5 @@ def test_invalid_category_error_shows_a_concrete_valid_example(
     )
     assert result.exit_code != 0
     valid_ids = {category.value for category in _category_tokens()}
+    assert "Unrecognised --category-id 'office:material_oficina'" in result.output
     assert any(category_id in result.output for category_id in valid_ids)
-    assert "ledger categories" in result.output

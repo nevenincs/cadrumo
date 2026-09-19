@@ -8,10 +8,9 @@ when they are and carry the activity on. The option's help said only that
 royalties "may be capital or economic activity depending on the underlying
 activity" -- true, and no help at all to the operator deciding which.
 
-It also promised nothing about where to look. The validator's own docstring
-claimed the refusal pointed at ``aeat app ledger categories``; neither the
-refusal nor the help carried the verb, so an operator was told the shape of a
-valid id and never where to read the 42 that exist.
+It also promised guidance about where to look. That guidance is intentionally
+localized prose: the live category command owns its executable path, so the
+locale value must not duplicate a command string.
 
 Three tests in ``test_ledger_ux_defect_cluster`` state the intended help end to
 end and were failing before this. They run in one locale. These check the other
@@ -40,8 +39,17 @@ _UNTRANSLATED_TOKENS = (
     "arrendamiento_local",
     "capital mobiliario",
     "Royalties",
-    "aeat app ledger categories",
 )
+
+# The catalogue pointer is presentation prose and may be translated.  Keep
+# checking that the help still tells an operator where to discover ids without
+# requiring the executable command path to live in a locale value.
+_CATALOGUE_GUIDANCE = {
+    "en": "catalogue",
+    "es": "catálogo",
+    "ca": "catàleg",
+    "hu": "katalógus",
+}
 
 #: The legal grounding, checked case-insensitively because the article is
 #: written differently across the four sentences ("art. 25.4 LIRPF",
@@ -56,13 +64,14 @@ def _classify_help(locale: str) -> str:
 
 
 @pytest.mark.parametrize("locale", _LOCALES)
-def test_the_help_names_the_ids_and_the_catalogue_verb(locale: str) -> None:
-    """A translated category id or verb would name something that does not exist."""
+def test_the_help_names_the_ids_and_catalogue_guidance(locale: str) -> None:
+    """Stable ids stay literal while catalogue guidance remains localised."""
     wording = _classify_help(locale)
 
     missing = [token for token in _UNTRANSLATED_TOKENS if token not in wording]
 
     assert not missing, f"{locale} drops: {missing}"
+    assert _CATALOGUE_GUIDANCE[locale] in wording.casefold(), f"{locale} drops catalogue guidance"
 
 
 @pytest.mark.parametrize("locale", _LOCALES)

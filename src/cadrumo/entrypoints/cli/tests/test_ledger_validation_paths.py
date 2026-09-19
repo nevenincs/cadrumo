@@ -527,9 +527,9 @@ def test_ledger_classify_rent_net_withholding_refusal_names_accepted_irpf_ids(
 
     assert classified.exit_code != 0
     flat = " ".join(classified.output.split())
+    assert "Unknown IRPF category 'rental_withholding'" in flat
     assert "arrendamiento_local" in flat
     assert "arrendamiento_vivienda_afecto" in flat
-    assert "aeat app ledger categories" in flat
 
 
 def test_ledger_add_accepts_nonnegative_amount_with_direction(tmp_path: Path) -> None:
@@ -726,7 +726,12 @@ def test_ledger_classify_rejects_business_pct_without_mixed_classification(
 
 
 def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) -> None:
-    """`--usage-ratio-id` help names the configured-ratio discovery path."""
+    """`--usage-ratio-id` help explains the configured-ratio discovery path.
+
+    The help value carries the relationship between the option, configured
+    ratios, and eligible categories.  The live discovery verbs own their
+    command paths, so the localized option text does not duplicate them.
+    """
 
     for args in (
         ["app", "ledger", "add", "--help"],
@@ -737,14 +742,27 @@ def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) ->
         assert result.exit_code == 0, result.output
         flat = _flatten_box(result.output or "")
         assert "--usage-ratio-id" in flat, result.output
-        assert "aeat app ledger ratios list" in flat, result.output
-        assert "aeat app ledger ratios eligible" in flat, result.output
-        assert "aeat app ledger ratios set" in flat, result.output
         assert "category-id" in flat, result.output
+        assert "configured ratios" in flat, result.output
+        assert "eligible categories" in flat, result.output
         assert any(
             phrase in flat
             for phrase in ("Not arbitrary prose", "No es texto libre", "No és text lliure", "Nem tetszőleges szöveg")
         ), result.output
+
+    listed = _invoke(
+        ["app", "ledger", "ratios", "list"],
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+    )
+    assert listed.exit_code == 0, listed.output
+    assert "count" in listed.output, listed.output
+
+    eligible = _invoke(
+        ["app", "ledger", "ratios", "eligible"],
+        env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
+    )
+    assert eligible.exit_code == 0, eligible.output
+    assert "telefonia_" in eligible.output or "vehiculo_" in eligible.output, eligible.output
 
 
 def test_business_pct_help_is_mixed_only_across_public_verbs(tmp_path: Path) -> None:

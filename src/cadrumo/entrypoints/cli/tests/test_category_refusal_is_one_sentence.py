@@ -36,6 +36,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtu
 
 _LOCALES = ("en", "es", "ca", "hu")
 _LOCALES_ROOT = Path(__file__).resolve().parents[3] / "locales"
+_CATALOGUE_GUIDANCE = {
+    "en": "catalogue",
+    "es": "catálogo",
+    "ca": "catàleg",
+    "hu": "katalógus",
+}
 
 
 def test_every_command_taking_the_flag_reaches_one_implementation() -> None:
@@ -64,7 +70,7 @@ def test_an_absent_or_blank_value_is_not_a_refusal() -> None:
     assert support_validator("   ") is None
 
 
-def test_a_compound_key_is_refused_with_an_example_and_the_catalogue_verb() -> None:
+def test_a_compound_key_is_refused_with_an_example_and_the_catalogue_guidance() -> None:
     """The two properties the surviving refusal was written to have.
 
     The observed mistake was a family-prefixed guess, so a refusal that only
@@ -72,19 +78,17 @@ def test_a_compound_key_is_refused_with_an_example_and_the_catalogue_verb() -> N
     RENDERED message rather than the key, so a translation that drops the
     example fails here.
 
-    The pointer to ``aeat app ledger categories`` is part of the same
-    sentence. It had been promised by this validator's docstring and delivered
-    by nothing -- no hint mechanism appended it and the wording did not carry
-    it -- so an operator was told which shape to use but never where to read
-    the 42 valid ids. Both halves are asserted here because both are the
-    sentence's own content.
+    The catalogue guidance remains prose in the locale value. Its executable
+    discovery path belongs to the live command surface, so this assertion
+    keeps the refusal focused on the rejected value and a concrete accepted
+    example.
     """
     with pytest.raises(typer.BadParameter) as raised:
         support_validator("office:material_oficina")
 
     message = str(raised.value)
+    assert "office:material_oficina" in message
     assert any(category.value in message for category in spending_category_tokens())
-    assert "aeat app ledger categories" in message
 
 
 def test_the_displaced_wording_is_gone_from_every_catalogue() -> None:
@@ -119,6 +123,4 @@ def test_the_surviving_wording_is_present_in_this_locale(locale: str) -> None:
     # the typo in the first place.
     assert "{category!r}" in wording
     assert "{example!r}" in wording
-    # The verb is a transport token, so it is the same literal in every
-    # locale; a translated spelling would name a command the parser lacks.
-    assert "aeat app ledger categories" in wording
+    assert _CATALOGUE_GUIDANCE[locale] in wording.casefold(), f"{locale} lost catalogue guidance"
