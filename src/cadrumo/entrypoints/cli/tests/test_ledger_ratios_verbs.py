@@ -19,7 +19,7 @@ from collections.abc import Sequence
 import pytest
 from click.testing import Result
 
-from cadrumo.domain.categories.proportionality import ProportionalityKind
+from cadrumo.domain.categories.proportionality_catalogue import require_proportionality_kind
 from cadrumo.domain.categories.spending_category import SpendingCategory
 
 from ._isolated_profile_storage_fixtures import (
@@ -96,12 +96,13 @@ def test_ratios_payloads_refuse_unknown_category_and_kind() -> None:
     """
     from pydantic import ValidationError
 
+    from ....domain.categories.errors import CategoryValidationError
     from .._ledger_ratios_payloads import RatiosEligibleRowPayload, RatiosRowPayload
 
     with pytest.raises(ValidationError):
         RatiosRowPayload(category="unknown-category", ratio="0.5")
 
-    with pytest.raises(ValidationError):
+    with pytest.raises(CategoryValidationError):
         RatiosEligibleRowPayload(
             category=SpendingCategory.from_registry("suministros_home_office_luz"),
             proportionality_kind="bogus",
@@ -113,7 +114,7 @@ def test_ratios_payloads_refuse_unknown_category_and_kind() -> None:
     assert row.model_dump(mode="json")["category"] == "suministros_home_office_luz"
     eligible = RatiosEligibleRowPayload(
         category=SpendingCategory.from_registry("suministros_home_office_luz"),
-        proportionality_kind=ProportionalityKind.from_registry("usage_ratio_home_area"),
+        proportionality_kind=require_proportionality_kind("usage_ratio_home_area"),
         override_present=False,
     )
     assert eligible.model_dump(mode="json")["proportionality_kind"] == "usage_ratio_home_area"

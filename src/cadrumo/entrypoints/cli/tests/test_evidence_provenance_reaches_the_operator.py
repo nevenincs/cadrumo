@@ -50,6 +50,7 @@ __all__ = ["_open_bucket_session"]
 _EVIDENCE_CORPUS = Path(__file__).parents[3] / "application" / "ledger" / "tests" / "_evidence_corpus"
 
 _STRUCTURED_INVOICE = "facturae_32_series_and_parties_invoice.xml"
+_CLOSURE_STRUCTURED_INVOICE = "en16931_ubl_two_rate_invoice.xml"
 
 #: What the structured reader recovers from the bundled document, so an override
 #: below is provably a DISPLACEMENT of a read value rather than a fill of a blank.
@@ -122,7 +123,9 @@ def test_a_field_the_operator_left_alone_is_not_stamped_as_asserted(tmp_path: Pa
 
     result = _confirm(evidence_id, "--invoice-number", "OVERRIDDEN-0031")
 
-    stamped_fields = {envelope["field"] for envelope in result["confirmed_provenance"]}
+    stamped_fields = {
+        envelope["field"] for envelope in result["confirmed_provenance"] if envelope["origin"] == "operator"
+    }
     assert "invoice_number" in stamped_fields
     assert "taxable_base" not in stamped_fields, f"an untouched field was stamped as asserted: {stamped_fields}"
     assert "grand_total" not in stamped_fields, f"an untouched field was stamped as asserted: {stamped_fields}"
@@ -168,7 +171,14 @@ def test_every_confirm_carries_a_confirmation_id(tmp_path: Path) -> None:
 # rather than a contract.
 
 
-def _add_edited_structured_evidence(tmp_path: Path, *, old: str, new: str, name: str) -> str:
+def _add_edited_structured_evidence(
+    tmp_path: Path,
+    *,
+    old: str,
+    new: str,
+    name: str,
+    source: str = _STRUCTURED_INVOICE,
+) -> str:
     """Store a copy of the corpus invoice with one edit, and return its id.
 
     The corpus tree is never written to: the edit is applied to a copy staged in
@@ -176,7 +186,7 @@ def _add_edited_structured_evidence(tmp_path: Path, *, old: str, new: str, name:
     that moves the edited text fails loudly instead of silently storing an
     unedited document and passing whichever assertion happened to be lenient.
     """
-    xml = (_EVIDENCE_CORPUS / _STRUCTURED_INVOICE).read_text(encoding="utf-8")
+    xml = (_EVIDENCE_CORPUS / source).read_text(encoding="utf-8")
     assert old in xml, f"corpus no longer contains {old!r}; this edit would be a no-op"
 
     staged = tmp_path / name
@@ -262,9 +272,10 @@ def test_an_arithmetic_disagreement_reaches_the_extract_envelope(tmp_path: Path)
     """A document whose own figures do not close says so to the operator."""
     evidence_id = _add_edited_structured_evidence(
         tmp_path,
-        old="<InvoiceTotal>242.00</InvoiceTotal>",
-        new="<InvoiceTotal>999.00</InvoiceTotal>",
+        old='<cbc:TaxInclusiveAmount currencyID="EUR">176.00</cbc:TaxInclusiveAmount>',
+        new='<cbc:TaxInclusiveAmount currencyID="EUR">999.00</cbc:TaxInclusiveAmount>',
         name="broken-total.xml",
+        source=_CLOSURE_STRUCTURED_INVOICE,
     )
 
     body = _extract(evidence_id)

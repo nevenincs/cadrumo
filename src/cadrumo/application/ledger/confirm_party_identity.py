@@ -221,7 +221,7 @@ def refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
     if not counterparty_is_the_filer(counterparty_tax_id=counterparty_tax_id, profile=profile):
         return
     raise PurchaseInvoiceEvidenceInputError(
-        translated_message="errors.refused.refused_ledger_evidence_input",
+        "--counterparty-nif names the active filer; supply the other party's NIF/NIE/CIF instead",
         precondition_verdict=ledger_no_recovery_verdict(
             LedgerPreconditionCondition.EVIDENCE_COUNTERPARTY_VALID,
             facts={"counterparty_is_filer": True},

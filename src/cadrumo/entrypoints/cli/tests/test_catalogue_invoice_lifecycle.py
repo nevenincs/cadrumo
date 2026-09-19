@@ -25,7 +25,11 @@ from ._cli_text_output_support import _line_value
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("authority_operation"),
+]
 __all__ = ["active_profile_isolated_backend"]
 
 _RECEIVED_COUNTERPARTY_CIF = "A58818501"

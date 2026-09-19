@@ -10,6 +10,7 @@ import pytest
 from click.testing import Result
 
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ._isolated_profile_storage_fixtures import (
     active_profile_isolated_backend as _isolated_backend,
 )
@@ -244,7 +245,7 @@ def test_check_reports_zero_link_inconsistencies_on_a_consistent_bucket() -> Non
     assert payload["notices"] == []
 
 
-def test_check_reports_a_one_sided_invoice_link(tmp_path: Path) -> None:
+def test_check_reports_a_one_sided_invoice_link(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:
     """A half-written link is surfaced as a row, a warning notice, and ready=false.
 
     The link writer commits both catalogues together, so this state is no

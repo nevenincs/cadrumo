@@ -15,7 +15,7 @@ from ....tests.cli_envelope import require_schema_envelope
 from ._iva_wallet_inspector_support import _state
 from .cli_runner import invoke_cached_cli
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 
 @pytest.fixture()
@@ -48,16 +48,16 @@ def test_balance_totals_remaining_after_fifo_applications(
 def test_balance_splits_active_and_expired_lots(
     _runtime_profile: None,
 ) -> None:
-    """Two remaining lots: 2020 is expired, 2023 is still usable at as_of_year=2026."""
+    """Two remaining lots: 2022 is expired, 2025 is still usable at as_of_year=2028."""
     repo = IvaCompensationHistoryRepository()
-    repo.save_period(_state(filing_year=2020, period="4T", generated=Decimal("100.00")))
-    repo.save_period(_state(filing_year=2023, period="2T", generated=Decimal("200.00")))
+    repo.save_period(_state(filing_year=2022, period="4T", generated=Decimal("100.00")))
+    repo.save_period(_state(filing_year=2025, period="2T", generated=Decimal("200.00")))
 
-    report = query_iva_wallet_balance(as_of_year=2026, repository=IvaCompensationHistoryRepository())
+    report = query_iva_wallet_balance(as_of_year=2028, repository=IvaCompensationHistoryRepository())
 
-    # 2020 lot is EXPIRED_REVIEW_REQUIRED (age=6), excluded from next_expiry_year
-    # 2023 lot is ACTIVE (age=3), next_expiry_year = 2023 + 4 = 2027
-    assert report.next_expiry_year == 2027
+    # 2022 lot is EXPIRED_REVIEW_REQUIRED (age=6), excluded from next_expiry_year
+    # 2025 lot is ACTIVE (age=3), next_expiry_year = 2025 + 4 = 2029
+    assert report.next_expiry_year == 2029
     assert report.total_balance == Decimal("300.00")
     assert report.active_balance == Decimal("200.00")
     assert report.expired_balance == Decimal("100.00")
@@ -69,11 +69,11 @@ def test_next_expiry_year_none_when_no_active_lots_with_balance(
 ) -> None:
     """All remaining balance is in expired lots: next_expiry_year is None."""
     repo = IvaCompensationHistoryRepository()
-    repo.save_period(_state(filing_year=2019, period="4T", generated=Decimal("100.00")))
+    repo.save_period(_state(filing_year=2022, period="4T", generated=Decimal("100.00")))
 
-    report = query_iva_wallet_balance(as_of_year=2026, repository=IvaCompensationHistoryRepository())
+    report = query_iva_wallet_balance(as_of_year=2028, repository=IvaCompensationHistoryRepository())
 
-    # age=7, EXPIRED_REVIEW_REQUIRED — not ACTIVE
+    # age=6, EXPIRED_REVIEW_REQUIRED — not ACTIVE
     assert report.next_expiry_year is None
     assert report.total_balance == Decimal("100.00")
     assert report.active_balance == Decimal("0")
@@ -99,11 +99,11 @@ def test_cli_balance_verb_emits_expected_keys(
     """The CLI JSON surface emits gross, active, and expired balances."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="8a2b9f0f-dd5d-4dd9-8d69-c75b3d3d470d"):
         repo = IvaCompensationHistoryRepository()
-        repo.save_period(_state(filing_year=2020, period="4T", generated=Decimal("100.00")))
-        repo.save_period(_state(filing_year=2023, period="2T", generated=Decimal("200.00")))
+        repo.save_period(_state(filing_year=2022, period="4T", generated=Decimal("100.00")))
+        repo.save_period(_state(filing_year=2025, period="2T", generated=Decimal("200.00")))
 
         result = invoke_cached_cli(
-            ["--format", "json", "app", "modelo", "iva-wallet", "balance", "--as-of-year", "2026"],
+            ["--format", "json", "app", "modelo", "iva-wallet", "balance", "--as-of-year", "2028"],
             env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
@@ -113,8 +113,8 @@ def test_cli_balance_verb_emits_expected_keys(
     assert payload["active_balance"] == "200.00"
     assert payload["expired_balance"] == "100.00"
     assert payload["lot_count"] == 2
-    assert payload["next_expiry_year"] == 2027
-    assert payload["as_of_year"] == 2026
+    assert payload["next_expiry_year"] == 2029
+    assert payload["as_of_year"] == 2028
 
 
 def test_cli_balance_verb_text_output_lines(
@@ -123,11 +123,11 @@ def test_cli_balance_verb_text_output_lines(
     """Text-mode output includes tab-separated active and expired metric lines."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="1bc50652-bc61-4376-9ca2-607157d33204"):
         repo = IvaCompensationHistoryRepository()
-        repo.save_period(_state(filing_year=2020, period="4T", generated=Decimal("100.00")))
-        repo.save_period(_state(filing_year=2023, period="2T", generated=Decimal("200.00")))
+        repo.save_period(_state(filing_year=2022, period="4T", generated=Decimal("100.00")))
+        repo.save_period(_state(filing_year=2025, period="2T", generated=Decimal("200.00")))
 
         result = invoke_cached_cli(
-            ["app", "modelo", "iva-wallet", "balance", "--as-of-year", "2026"],
+            ["app", "modelo", "iva-wallet", "balance", "--as-of-year", "2028"],
             env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
@@ -136,4 +136,4 @@ def test_cli_balance_verb_text_output_lines(
     assert "total_balance\t300.00" in result.output
     assert "active_balance\t200.00" in result.output
     assert "expired_balance\t100.00" in result.output
-    assert "next_expiry_year\t2027" in result.output
+    assert "next_expiry_year\t2029" in result.output

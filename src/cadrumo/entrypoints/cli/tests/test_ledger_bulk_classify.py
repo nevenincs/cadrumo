@@ -111,7 +111,7 @@ def _classify_with_tax_facts(transaction_id: str) -> None:
             "--iva-category",
             "domestic_general",
             "--irpf-category",
-            "actividades_economicas_directa_simplificada",
+            "actividad_economica",
         ],
     )
     assert result.exit_code == 0, result.output
@@ -247,7 +247,7 @@ def test_classify_from_csv_accepts_irpf_category_column(tmp_path: Path) -> None:
     tx1, _tx2 = _import_two_transactions(tmp_path)
     csv_file = tmp_path / "irpf_category.csv"
     csv_file.write_text(
-        f"transaction_id,classification,irpf_category\n{tx1},BUSINESS,actividades_economicas_directa_simplificada\n",
+        f"transaction_id,classification,irpf_category\n{tx1},BUSINESS,actividad_economica\n",
         encoding="utf-8",
     )
 
@@ -259,7 +259,7 @@ def test_classify_from_csv_accepts_irpf_category_column(tmp_path: Path) -> None:
     payload = json.loads(result.output)["result"]
     assert payload["applied"] == 1, payload
     assert payload["failures"] == [], payload
-    assert _stored_transaction(tx1).irpf_category == "actividades_economicas_directa_simplificada"
+    assert _stored_transaction(tx1).irpf_category == "actividad_economica"
 
 
 def test_classify_from_csv_accepts_display_id_prefix(tmp_path: Path) -> None:
@@ -623,7 +623,7 @@ def test_classify_from_csv_preserves_existing_tax_facts_when_columns_omitted(tmp
     assert row["iva_rate"] == "0.21"
     assert row["iva_amount"] == "17.36"
     assert row["iva_category"] == "domestic_general"
-    assert row["irpf_category"] == "actividades_economicas_directa_simplificada"
+    assert row["irpf_category"] == "actividad_economica"
 
 
 def test_classify_from_csv_blank_optional_tax_cells_preserve_existing_values(tmp_path: Path) -> None:
@@ -650,7 +650,7 @@ def test_classify_from_csv_blank_optional_tax_cells_preserve_existing_values(tmp
     assert row["iva_rate"] == "0.21"
     assert row["iva_amount"] == "17.36"
     assert row["iva_category"] == "domestic_general"
-    assert row["irpf_category"] == "actividades_economicas_directa_simplificada"
+    assert row["irpf_category"] == "actividad_economica"
 
 
 def test_classify_from_csv_iva_facts_match_single_classify(tmp_path: Path) -> None:

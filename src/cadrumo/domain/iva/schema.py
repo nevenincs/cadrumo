@@ -18,7 +18,7 @@ from collections.abc import Iterator
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Protocol, override
+from typing import TYPE_CHECKING, Annotated, Protocol, override
 
 from pydantic import (
     BaseModel,
@@ -34,8 +34,10 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.validity_window import ValidityWindow
-from ..calculations.registry.governed_fact_scope import GovernedFactSource
 from .errors import IvaValidationError
+
+if TYPE_CHECKING:
+    from ..calculations.registry.governed_fact_scope import GovernedFactSource
 
 
 class _ModuloOrdenAnualLike(Protocol):

@@ -226,6 +226,27 @@ def iter_pdf_embedded_files(pdf_bytes: bytes) -> tuple[tuple[str, bytes], ...]:
         return ()
 
 
+def _pdf_container_is_readable(pdf_bytes: bytes) -> bool:
+    """Return whether *pdf_bytes* form a readable PDF container.
+
+    A header alone is not evidence of a PDF.  The shape probe is the admission
+    boundary for evidence bytes, so accepting a header followed by arbitrary
+    bytes would send a malformed document to model provisioning before the
+    deterministic reader could refuse it.  ``pikepdf`` already backs the
+    embedded-file inspection above; opening the container here gives the same
+    byte-level boundary to PDFs without attachments.
+    """
+    try:
+        import pikepdf
+    except ImportError:  # pragma: no cover - pikepdf is a declared dependency
+        return True
+    try:
+        with pikepdf.Pdf.open(BytesIO(pdf_bytes)):
+            return True
+    except Exception:
+        return False
+
+
 def _rank_embedded(entry: tuple[str, bytes]) -> int:
     """Rank an embedded file so profile-named invoice payloads are tried first."""
     name = entry[0].lower()
@@ -256,6 +277,8 @@ def probe_document_shape(data: bytes, *, has_text_layer: bool | None = None) -> 
     if not data:
         return DocumentShape.UNKNOWN
     if data.startswith(_PDF_MAGIC):
+        if not _pdf_container_is_readable(data):
+            return DocumentShape.UNKNOWN
         for name, payload in sorted(iter_pdf_embedded_files(data), key=_rank_embedded):
             del name
             if _xml_shape(payload) is not None:

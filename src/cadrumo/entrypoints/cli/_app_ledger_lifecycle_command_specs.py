@@ -17,6 +17,7 @@ from ._app_ledger_command_spec_support import (
     _OPTIONAL_YEAR_OPTION,
     _blank_default_text_option,
     _boolean_flag_option,
+    _optional_text_argument,
     _optional_text_option,
     _repeatable_text_option,
     _required_text_argument,
@@ -113,6 +114,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         short_help_key=None,
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
+            _optional_text_argument("record_id", "cli.ledger.view.transaction_id_help"),
             _repeatable_text_option("filters", ("--filter",), "cli.ledger.review.filter_help"),
             _boolean_flag_option("verbose", ("--verbose",), "cli.ledger.review.verbose_help"),
         ),

@@ -707,10 +707,9 @@ def aggregate_ledger_import_results(
     happens to call it more than once.
 
     The invocation-wide fields are ASSERTED rather than assumed. ``dry_run``,
-    ``verify``, ``period``, ``bucket_id`` and ``import_batch_id`` describe the
-    invocation, not the file, so two results disagreeing on any of them did not
-    come from one import and folding them would report the first file's answer
-    for all of them.
+    ``verify``, ``period`` and ``bucket_id`` describe the invocation. Each
+    source file has its own content-derived ``import_batch_id`` in persisted
+    events; a folder with distinct batch ids has no single batch id to report.
 
     Args:
         results: The per-file results, in the order the files were read.
@@ -728,7 +727,7 @@ def aggregate_ledger_import_results(
     if not results:
         raise TransactionValidationError("cannot aggregate an empty set of import results")
     first = results[0]
-    for field in ("dry_run", "verify", "period", "bucket_id", "import_batch_id"):
+    for field in ("dry_run", "verify", "period", "bucket_id"):
         values = {getattr(result, field) for result in results}
         if len(values) > 1:
             raise TransactionValidationError(
@@ -751,7 +750,11 @@ def aggregate_ledger_import_results(
         verify=first.verify,
         period=first.period,
         bucket_id=first.bucket_id,
-        import_batch_id=first.import_batch_id,
+        import_batch_id=(
+            first.import_batch_id
+            if all(result.import_batch_id == first.import_batch_id for result in results)
+            else None
+        ),
         bucket_event_ids=_concat(lambda result: result.bucket_event_ids),
         imported_transaction_refs=_concat(lambda result: result.imported_transaction_refs),
         skipped_transaction_refs=_concat(lambda result: result.skipped_transaction_refs),

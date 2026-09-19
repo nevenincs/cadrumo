@@ -410,9 +410,11 @@ def ledger_invoice_validation_no_recovery(
     if isinstance(error, InvoiceValidationError):
         terminal_error: CadrumoError = error
     elif _is_pydantic_invoice_validation(error):
+        from ...domain.invoices.models import Invoice, InvoiceLine
         from .errors import CliValidationBoundaryError
 
-        terminal_error = CliValidationBoundaryError(error)
+        record = Invoice if error.title == "Invoice" else InvoiceLine
+        terminal_error = CliValidationBoundaryError(error, record=record)
     else:
         return None
     return ledger_cli_no_recovery(
@@ -438,7 +440,10 @@ def _is_pydantic_invoice_validation(error: ValidationError) -> bool:
     for detail in details:
         context = detail.get("ctx")
         nested = context.get("error") if isinstance(context, Mapping) else None
-        if not isinstance(nested, InvoiceValidationError):
+        if not (
+            isinstance(nested, InvoiceValidationError)
+            or isinstance(getattr(nested, "__cause__", None), InvoiceValidationError)
+        ):
             return False
     return True
 

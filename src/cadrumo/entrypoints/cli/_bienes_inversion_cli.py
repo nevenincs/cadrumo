@@ -22,6 +22,7 @@ from ...domain.calculations.registry.bienes_inversion_catalogue import (
     require_bien_inversion_kind,
 )
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ._bienes_inversion_payloads import (
     BienesInversionDeclareResult,
     BienesInversionListResult,
@@ -30,7 +31,7 @@ from ._bienes_inversion_payloads import (
 from ._decimal_parsing import parse_decimal_amount
 from .common import active_bucket_id_or_refuse as _register_bucket_id
 from .common import bad, emit_envelope
-from .state_projection_support import bienes_inversion_repository_factory
+from .state_projection_support import authority_operation, bienes_inversion_repository_factory
 
 
 def _parse_kind(raw: str) -> BienInversionKind:
@@ -82,29 +83,30 @@ def bienes_inversion_declare(
     service = BienesInversionRegisterService(
         repository=bienes_inversion_repository_factory(ctx)(bucket_id=bucket_id),
     )
-    try:
-        outcome = declare_bien_inversion(
-            BienInversionDeclarationCommand(
-                identifier=identifier,
-                description=description,
-                acquisition_year=acquisition_year,
-                acquisition_ledger_id=acquisition_ledger_id,
-                cuota_soportada=parse_decimal_amount(cuota_soportada, label="cuota-soportada"),
-                prorrata_inicial_pct=parse_decimal_amount(prorrata_inicial_pct, label="prorrata-inicial"),
-                kind=_parse_kind(kind),
-                art108_elegible=art108_elegible,
-                prorrata_sector_id=prorrata_sector_id,
-                disposal_year=disposal_year,
-                disposal_regime=_parse_disposal_regime(disposal_regime) if disposal_regime is not None else None,
-            ),
-            service=service,
-        )
-    except BienInversionDisposalIncompleteError as exc:
-        raise bad(
-            tr(
-                "cli.app.ledger.bienes_inversion.disposal_requires_both",
-            ),
-        ) from exc
+    with validating_governed_facts(authority_operation(ctx)):
+        try:
+            outcome = declare_bien_inversion(
+                BienInversionDeclarationCommand(
+                    identifier=identifier,
+                    description=description,
+                    acquisition_year=acquisition_year,
+                    acquisition_ledger_id=acquisition_ledger_id,
+                    cuota_soportada=parse_decimal_amount(cuota_soportada, label="cuota-soportada"),
+                    prorrata_inicial_pct=parse_decimal_amount(prorrata_inicial_pct, label="prorrata-inicial"),
+                    kind=_parse_kind(kind),
+                    art108_elegible=art108_elegible,
+                    prorrata_sector_id=prorrata_sector_id,
+                    disposal_year=disposal_year,
+                    disposal_regime=_parse_disposal_regime(disposal_regime) if disposal_regime is not None else None,
+                ),
+                service=service,
+            )
+        except BienInversionDisposalIncompleteError as exc:
+            raise bad(
+                tr(
+                    "cli.app.ledger.bienes_inversion.disposal_requires_both",
+                ),
+            ) from exc
     record = outcome.record
     register = outcome.updated_register
     payload = BienesInversionDeclareResult(
@@ -132,17 +134,18 @@ def bienes_inversion_declare(
 def bienes_inversion_list(ctx: typer.Context) -> None:
     """List register records via :class:`BienesInversionRegisterService`."""
     bucket_id = _register_bucket_id()
-    register = BienesInversionRegisterService(
-        repository=bienes_inversion_repository_factory(ctx)(bucket_id=bucket_id),
-    ).list_all()
-    rows = [_record_payload(record) for record in register.records]
-    payload = BienesInversionListResult(bucket_id=bucket_id, rows=rows, count=len(rows))
-    lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
-    for record in register.records:
-        lines.append(
-            f"{record.identifier}\t{record.acquisition_year}\t{record.kind.value}\t"
-            f"cuota={record.cuota_soportada}\tprorrata={record.prorrata_inicial_pct}",
-        )
+    with validating_governed_facts(authority_operation(ctx)):
+        register = BienesInversionRegisterService(
+            repository=bienes_inversion_repository_factory(ctx)(bucket_id=bucket_id),
+        ).list_all()
+        rows = [_record_payload(record) for record in register.records]
+        payload = BienesInversionListResult(bucket_id=bucket_id, rows=rows, count=len(rows))
+        lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
+        for record in register.records:
+            lines.append(
+                f"{record.identifier}\t{record.acquisition_year}\t{record.kind.value}\t"
+                f"cuota={record.cuota_soportada}\tprorrata={record.prorrata_inicial_pct}",
+            )
     emit_envelope(
         ctx,
         command="ledger.bienes_inversion.list",

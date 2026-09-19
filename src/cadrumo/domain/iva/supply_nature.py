@@ -13,18 +13,17 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
-from typing import Final, Self
+from typing import TYPE_CHECKING, Final, Self
 
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
-from ..calculations.registry.iva_category_catalogue import require_iva_category
-from ..calculations.registry.schema_base import DateAxis
 from .errors import IvaValidationError
 from .schema import IvaCategory
+
+if TYPE_CHECKING:
+    from ..calculations.registry.governed_fact_scope import GovernedFactSource
 
 __all__ = [
     "CitationCatalogue",
@@ -124,6 +123,11 @@ def registry_citation_catalogue(
     authority: GovernedFactSource | None = None,
 ) -> CitationCatalogue:
     """Project the dated citation mapping fact into generic parser inputs."""
+    from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
+    from ..calculations.registry.iva_category_catalogue import require_iva_category
+    from ..calculations.registry.schema_base import DateAxis
+
     selected_authority = authority or governed_facts_in_scope()
     if selected_authority is None:
         raise IvaValidationError(

@@ -3,9 +3,8 @@
 ``evidence confirm`` DERIVES the invoice total from the taxable base and the
 registry-resolved rate slot; the figure printed on the document never overwrites
 it. When the two disagree the operator must be told, because the difference is
-an amount the record could not represent -- a recargo de equivalencia (LIVA
-art. 161) is the worked case, and before this notice the surcharge simply
-vanished behind a valid-looking invoice.
+an amount the record could not represent. The worked case prints a total above
+its stated base and IVA, with no document component that accounts for the gap.
 
 The diagnostic travels on the typed ``notices`` channel of the shared envelope
 spine (``aeat-cli-contract``), never as a bespoke
@@ -25,14 +24,17 @@ from __future__ import annotations
 
 import json
 import re
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any, override
 
 import pytest
 
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+from ....application.ledger.filer_establishment import FILER_TAX_ID_FACT_PATH
 from ....core.config import override_settings
+from ....domain.user_profile.values import UserProfileFact
 from ....tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -46,6 +48,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_open_bucket_session"]
 
 _SUPPLIER_CIF = "B12345674"
+_FILER_CIF = "B17283946"
 
 _MISMATCH_NOTICE_CODE = "ledger.evidence.confirm.printed_total_mismatch"
 
@@ -54,8 +57,8 @@ _READING_MODEL = "qwen2.5:7b"
 
 # base 100,00 + cuota 21,00 = 121,00; the printed total agrees.
 _COHERENT_INVOICE_LINES = (
-    "Factura de Acme Suministros SL",
-    f"NIF: {_SUPPLIER_CIF}",
+    f"Proveedor: Acme Suministros SL NIF: {_SUPPLIER_CIF}",
+    f"Cliente: Tester SL NIF: {_FILER_CIF}",
     "Numero de factura: 2026-0142",
     "Fecha: 10/03/2026",
     "Base imponible: 100,00",
@@ -64,17 +67,17 @@ _COHERENT_INVOICE_LINES = (
     "Total factura: 121,00",
 )
 
-# A recargo de equivalencia invoice: the document totals 126,20 while
-# base + cuota is 121,00.
-_RECARGO_INVOICE_LINES = (
-    "Factura de Acme Suministros SL",
-    f"NIF: {_SUPPLIER_CIF}",
+# This invoice prints 126,20 while its stated base plus IVA is 121,00. No
+# document component explains the 5,20 difference, so confirm must retain the
+# derived total and report the exact shortfall to the operator.
+_UNEXPLAINED_TOTAL_INVOICE_LINES = (
+    f"Proveedor: Acme Suministros SL NIF: {_SUPPLIER_CIF}",
+    f"Cliente: Tester SL NIF: {_FILER_CIF}",
     "Numero de factura: 2026-0199",
     "Fecha: 11/03/2026",
     "Base imponible: 100,00",
     "IVA 21%",
     "Cuota IVA: 21,00",
-    "Recargo de equivalencia 5,2%: 5,20",
     "Total factura: 126,20",
 )
 
@@ -90,35 +93,13 @@ _RECARGO_INVOICE_LINES = (
 # downstream of the socket is production code. No model is loaded and no
 # inference runs.
 #
-# The reply is keyed off the transcription the reader receives, so each document
-# is answered with its OWN printed figures rather than one canned payload --
-# otherwise the coherent and recargo cases would be indistinguishable to the
-# stub and the mismatch assertion would be testing the fixture.
-
-
-class _LoopbackRequestHandler(SilentLoopbackHandler):
-    """A real local endpoint speaking the reading runtime's ``/api/chat`` shape."""
-
-    @override
-    def do_POST(self) -> None:
-        prompt = json.dumps(read_json_body(self)["messages"])
-        fields = _RECARGO_FIELDS if "2026-0199" in prompt else _COHERENT_FIELDS
-        write_json_response(
-            self,
-            ollama_chat_reply(
-                json.dumps(fields),
-                model=_READING_MODEL,
-                prompt_eval_count=100,
-                eval_count=50,
-            ),
-            status=HTTPStatus.OK,
-        )
-
-
 _COHERENT_FIELDS = {
     "supplier_tax_id": _SUPPLIER_CIF,
     "supplier_tax_id_anchor": _SUPPLIER_CIF,
-    "supplier_tax_id_role_evidence": "Factura de Acme Suministros SL",
+    "supplier_tax_id_role_evidence": "Proveedor:",
+    "customer_tax_id": _FILER_CIF,
+    "customer_tax_id_anchor": _FILER_CIF,
+    "customer_tax_id_role_evidence": "Cliente:",
     "invoice_number": "2026-0142",
     "invoice_number_anchor": "2026-0142",
     "invoice_date": "2026-03-10",
@@ -133,7 +114,7 @@ _COHERENT_FIELDS = {
     "grand_total_anchor": "121,00",
 }
 
-_RECARGO_FIELDS = {
+_UNEXPLAINED_TOTAL_FIELDS = {
     **_COHERENT_FIELDS,
     "invoice_number": "2026-0199",
     "invoice_number_anchor": "2026-0199",
@@ -144,29 +125,72 @@ _RECARGO_FIELDS = {
 }
 
 
+def _loopback_handler(fields: Mapping[str, str]) -> type[SilentLoopbackHandler]:
+    """Build a reading endpoint that consistently returns one test's evidence fields.
+
+    Confirmation can issue more than one reading request, and not each prompt
+    repeats the invoice number. Routing a reply by searching an individual
+    prompt therefore made the fixture depend on call shape and alternate
+    between the coherent and unexplained-total readings. The selected response
+    remains tied to the test document, while every request in that document's
+    reading session receives the same response.
+    """
+
+    class _LoopbackRequestHandler(SilentLoopbackHandler):
+        """A real local endpoint speaking the reading runtime's ``/api/chat`` shape."""
+
+        @override
+        def do_POST(self) -> None:
+            read_json_body(self)
+            write_json_response(
+                self,
+                ollama_chat_reply(
+                    json.dumps(fields),
+                    model=_READING_MODEL,
+                    prompt_eval_count=100,
+                    eval_count=50,
+                ),
+                status=HTTPStatus.OK,
+            )
+
+    return _LoopbackRequestHandler
+
+
+_READER_FIELDS_BY_TEST = {
+    "test_an_unexplained_total_warns_that_the_printed_total_disagrees": _UNEXPLAINED_TOTAL_FIELDS,
+    "test_a_coherent_invoice_emits_no_mismatch_warning": _COHERENT_FIELDS,
+}
+
+
 @pytest.fixture(autouse=True)
-def _loopback_reader() -> Iterator[None]:
+def _loopback_reader(request: pytest.FixtureRequest) -> Iterator[None]:
     """Serve a real reading endpoint on a loopback port for the duration of a test."""
+    fields = _READER_FIELDS_BY_TEST[request.node.originalname or request.node.name]
     with (
-        serving_loopback(_LoopbackRequestHandler, path="/api/chat") as chat_url,
+        serving_loopback(_loopback_handler(fields), path="/api/chat") as chat_url,
         override_settings(cadrumo_llm_ollama_chat_url=chat_url),
     ):
         yield
 
 
-_UNRESOLVED_BLOCKER_ID = re.compile(r"Unresolved: ([0-9a-f]+) \(closure_discrepancy\)")
+@pytest.fixture(autouse=True)
+def _declare_filer_tax_id(_open_bucket_session: None) -> Iterator[None]:
+    """Give the confirm path the profile fact needed to resolve document direction."""
+    set_active_test_profile_facts((UserProfileFact(path=FILER_TAX_ID_FACT_PATH, value=_FILER_CIF),))
+    yield
+
+
+_CLOSURE_BLOCKER_ID = re.compile(r"([0-9a-f]+) \(closure_discrepancy\)")
 
 
 def _confirm(evidence_id: str) -> dict[str, Any]:
-    """Confirm, attesting past the closure-discrepancy blocker the recargo case raises.
+    """Confirm, attesting past the closure-discrepancy blocker the mismatch raises.
 
-    The printed-total mismatch this module tests is exactly the amount the
-    text-extraction contract cannot represent (recargo de equivalencia has no
-    field there), so the arithmetic-closure gate now blocks confirm on it as
-    well as the advisory notice this module was written to check. The blocker
-    is answered with an attestation naming the same gap the notice reports,
-    rather than widened away -- the coherent case raises no such blocker and
-    takes the same call unchanged.
+    The arithmetic-closure gate blocks the unexplained printed total as well as
+    the advisory notice this module checks. The blocker is answered with an
+    attestation naming the same gap the notice reports, rather than widened
+    away -- the coherent case raises no such blocker and takes the same call
+    unchanged.
     """
     args = [
         "--format", "json", "app", "ledger", "evidence", "confirm",
@@ -177,21 +201,24 @@ def _confirm(evidence_id: str) -> dict[str, Any]:
     ]  # fmt: skip
     confirmed = _invoke(args)
     if confirmed.exit_code != 0:
-        blocker_id = _UNRESOLVED_BLOCKER_ID.search(confirmed.output)
+        rejected = json.loads(confirmed.output)
+        context = rejected["error"].get("context") or {}
+        unresolved = context.get("unresolved_blockers", "")
+        blocker_id = _CLOSURE_BLOCKER_ID.search(str(unresolved))
         assert blocker_id, confirmed.output
         confirmed = _invoke(
             [
                 *args,
                 "--resolve",
-                f"{blocker_id.group(1)}=attest:recargo de equivalencia is not a text-extraction field",
+                f"{blocker_id.group(1)}=attest:unexplained document total needs review",
             ],
         )
     assert confirmed.exit_code == 0, confirmed.output
     return json.loads(confirmed.output)
 
 
-def test_a_recargo_invoice_warns_that_the_printed_total_disagrees(tmp_path: Path) -> None:
-    evidence_id = _add_evidence(tmp_path, _RECARGO_INVOICE_LINES, filename="factura_recargo.pdf")
+def test_an_unexplained_total_warns_that_the_printed_total_disagrees(tmp_path: Path) -> None:
+    evidence_id = _add_evidence(tmp_path, _UNEXPLAINED_TOTAL_INVOICE_LINES, filename="factura_total_sin_desglose.pdf")
 
     envelope = _confirm(evidence_id)
 

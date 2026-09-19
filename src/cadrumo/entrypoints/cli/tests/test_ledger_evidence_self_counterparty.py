@@ -26,6 +26,7 @@ import pytest
 
 from ....application.wizard.status import load_active_taxpayer_profile
 from ....application.workflow.persistence import workflow_state_repository
+from ....domain.calculations.registry.authority import bundled_indexed_authority
 from .ledger_ux_support import _add_evidence, _invoke, _open_bucket_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -39,11 +40,11 @@ _SUPPLIER_CIF = "B12345674"
 def _invoice_lines(tax_id: str, *, number: str) -> tuple[str, ...]:
     return (
         "Factura",
-        f"NIF: {tax_id}",
+        f"Proveedor: NIF: {tax_id}",
         f"Numero de factura: {number}",
         "Fecha: 10/03/2026",
         "Base imponible: 100,00",
-        "IVA 21%",
+        "Tipo IVA: 21%",
         "Cuota IVA: 21,00",
         "Total factura: 121,00",
     )
@@ -51,11 +52,16 @@ def _invoice_lines(tax_id: str, *, number: str) -> tuple[str, ...]:
 
 def _own_tax_id() -> str:
     """Return the active profile's own tax id, as the running app sees it."""
-    return str(load_active_taxpayer_profile(workflow_state_repository().load()).tax_id)
+    with bundled_indexed_authority().operation() as operation:
+        profile = load_active_taxpayer_profile(
+            workflow_state_repository().load(),
+            schema=operation.profile_schema(),
+        )
+    return str(profile.tax_id)
 
 
 def test_an_invoice_reading_back_the_filers_own_nif_is_refused(tmp_path: Path) -> None:
-    """The issued-invoice failure: the letterhead identifier is the filer's own.
+    """A supplied issued-invoice counterparty cannot be the filer.
 
     Before this guard the confirm succeeded and recorded the filer as their own
     counterparty -- a fabricated counterparty identity, valid-looking because
@@ -71,6 +77,7 @@ def test_an_invoice_reading_back_the_filers_own_nif_is_refused(tmp_path: Path) -
             "--country-code", "ES",
             "--evidence-id", evidence_id,
             "--kind", "issued",
+            "--counterparty-nif", own,
             "--counterparty-name", "Cliente SL",
         ],
     )  # fmt: skip
@@ -194,7 +201,15 @@ def test_the_direction_gate_declines_to_judge_a_document_with_no_issuer_identity
     """
     evidence_id = _add_evidence(
         tmp_path,
-        ("FACTURA", "Numero: 2026-0600", "Fecha: 10/03/2026", "Base imponible: 100,00", "Total: 121,00"),
+        (
+            "FACTURA",
+            "Numero: 2026-0600",
+            "Fecha: 10/03/2026",
+            "Base imponible: 100,00",
+            "Tipo IVA: 21%",
+            "Cuota IVA: 21,00",
+            "Total: 121,00",
+        ),
         filename="no_issuer.pdf",
     )
 

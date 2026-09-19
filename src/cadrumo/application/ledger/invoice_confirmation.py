@@ -655,6 +655,15 @@ def _build_confirmed_invoice_candidate(
 ) -> Invoice:
     """Resolve operator/document fields and build the exact catalogue candidate."""
     draft = preparation.draft
+    # This document-side contradiction is conclusive and needs only the
+    # supplier identity.  It must run before resolving the counterparty side:
+    # an issued confirmation selects the customer field, which a received
+    # supplier invoice may legitimately omit.  Reporting that omission first
+    # would hide the document's positive evidence that somebody else issued it.
+    refuse_an_issued_document_the_filer_did_not_issue(
+        kind=kind,
+        extracted_supplier_tax_id=draft.supplier_tax_id,
+    )
     counterparty_side = counterparty_draft_side(draft, kind=kind)
     resolved_counterparty_tax_id = agreed_counterparty_tax_id(
         supplied=counterparty_tax_id,
@@ -663,10 +672,6 @@ def _build_confirmed_invoice_candidate(
     )
     if resolved_counterparty_tax_id is None:
         refuse_an_absent_confirmed_field(field="counterparty_tax_id")
-    refuse_an_issued_document_the_filer_did_not_issue(
-        kind=kind,
-        extracted_supplier_tax_id=draft.supplier_tax_id,
-    )
     refuse_a_counterparty_that_is_the_filer(resolved_counterparty_tax_id)
     resolved_invoice_number = operator_value_or_reading(invoice_number, draft.invoice_number)
     if resolved_invoice_number is None:

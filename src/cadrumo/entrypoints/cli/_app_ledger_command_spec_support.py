@@ -227,6 +227,20 @@ def _required_text_argument(name: str, help_key: str) -> ArgumentSpec:
     )
 
 
+def _optional_text_argument(name: str, help_key: str) -> ArgumentSpec:
+    """Declare an optional positional free-text argument defaulting to absent."""
+    return ArgumentSpec(
+        name=name,
+        value=TEXT_VALUE,
+        default=ParameterDefault.value(None),
+        help_key=TranslationKey(help_key),
+        metavar=None,
+        constraint=ParameterConstraint(),
+        show_default=True,
+        hidden=False,
+    )
+
+
 def _option_from_application_contract(contract: OperatorInputContract, help_key: str | None) -> OptionSpec:
     """Project an application-owned operator input into CLI presentation metadata."""
     return OptionSpec(
@@ -408,6 +422,7 @@ __all__ = [
     "_blank_default_text_option",
     "_boolean_flag_option",
     "_option_from_application_contract",
+    "_optional_text_argument",
     "_optional_text_option",
     "_repeatable_text_option",
     "_required_text_argument",

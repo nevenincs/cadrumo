@@ -700,26 +700,34 @@ class Invoice(BaseModel):
         proportion of nothing, and inferring the amount from it would
         manufacture a figure the document never stated.
         """
-        _normalization.require_optional_non_negative(self.retention_amount, "retention_amount must be non-negative")
+        if self.retention_amount is not None and self.retention_amount < Decimal("0"):
+            raise InvoiceValidationError(
+                "retention_amount must be non-negative",
+                context={"fields": ("retention_amount",)},
+            )
         if self.retention_rate is not None:
             if self.retention_rate < Decimal("0") or self.retention_rate > Decimal("1"):
                 raise InvoiceValidationError(
                     "retention_rate must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
+                    context={"fields": ("retention_rate",)},
                 )
             if self.retention_amount is None:
                 raise InvoiceValidationError(
                     "retention_rate requires retention_amount; a rate alone declares no withheld figure",
+                    context={"fields": ("retention_rate", "retention_amount")},
                 )
         if self.retention_amount is not None and self.retention_amount > self.base_total:
             raise InvoiceValidationError(
                 "retention_amount must not exceed base_total; the retención base is the "
                 "base imponible (ingresos íntegros), not the IVA-inclusive total",
+                context={"fields": ("retention_amount", "base_total")},
             )
         if self.retention_rate is not None and self.retention_amount is not None:
             expected_retencion = (self.base_total * self.retention_rate).quantize(Decimal("0.0001"))
             if abs(self.retention_amount - expected_retencion) > CENT:
                 raise InvoiceValidationError(
                     "retention_amount must equal base_total * retention_rate within 1 cent",
+                    context={"fields": ("retention_rate", "retention_amount", "base_total")},
                 )
         return self
 

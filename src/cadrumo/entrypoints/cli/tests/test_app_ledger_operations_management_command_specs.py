@@ -794,6 +794,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
             _TARGET, "cadrumo.entrypoints.cli._ledger_payloads:LedgerReviewResult", "ledger.review"
         ),
         (
+            _expected_argument("record_id", "cli.ledger.view.transaction_id_help", default=_NONE_DEFAULT),
             _expected_option(
                 "filters", "--filter", "cli.ledger.review.filter_help", default=_EMPTY_TUPLE_DEFAULT, multiple=True
             ),

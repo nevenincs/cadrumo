@@ -54,17 +54,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.logging import get_logger
 from ...core.registry_token import StrictRegistryToken
 from ...core.time.clock import today_madrid
-from ..calculations.registry.iva_category_catalogue import (
-    IvaCategoryCatalogue,
-    require_iva_category,
-    resolve_iva_category_catalogue,
-)
-from ..calculations.registry.iva_rate_kind_catalogue import (
-    IvaRateKindCatalogue,
-    resolve_iva_rate_kind_catalogue,
-)
 from .errors import IvaRateNotFoundError, IvaValidationError
-from .lookup import lookup_rate
 from .place_of_supply import IvaPlaceOfSupplyRule, place_of_supply_rule
 from .schema import (
     EUMemberState,
@@ -82,6 +72,8 @@ _logger = get_logger(__name__)
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.facts.resolution import ResolvedMappingFact
+    from ..calculations.registry.iva_category_catalogue import IvaCategoryCatalogue
+    from ..calculations.registry.iva_rate_kind_catalogue import IvaRateKindCatalogue
 
 
 # -- Registry-projected classification vocabulary ------------------------
@@ -704,6 +696,8 @@ class IvaClassificationResult(IvaStrictFrozen):
     @pydantic_validation_boundary
     def _exemption_article_consistent_with_category(self) -> IvaClassificationResult:
         """Keep the Art. 20 discriminator coupled to a domestic-exempt result."""
+        from ..calculations.registry.iva_category_catalogue import require_iva_category
+
         if self.exemption_article is not None and self.category != require_iva_category("domestic_exempt"):
             raise IvaValidationError(
                 f"exemption_article {self.exemption_article.value!r} is only valid when "
@@ -975,6 +969,9 @@ def resolve_iva_classification_inputs(
     operation: PinnedAuthorityOperation,
 ) -> IvaClassificationInputs:
     """Project the dated classification fact into typed evaluator inputs."""
+    from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+    from ..calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
+
     resolved = _registry_iva_classification_catalogue(effective_date, operation=operation)
     entries = _classification_mapping_entries(resolved)
     vocabulary = resolve_iva_classification_catalogue(effective_date, operation=operation)
@@ -1091,6 +1088,9 @@ def classify_iva(
     registry projections; when omitted they are projected from ``operation``
     for the criteria's transaction date.
     """
+    from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+    from ..calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
+
     _registry_iva_classification_catalogue(criteria.transaction_date, operation=operation)
     vocabulary = resolve_iva_classification_catalogue(criteria.transaction_date, operation=operation)
     category_catalogue = resolve_iva_category_catalogue(
@@ -1193,6 +1193,8 @@ def _resolve_rate_for_category(
     operation: PinnedAuthorityOperation,
 ) -> IvaRateRecord | None:
     """Resolve a rate through caller-supplied registry mappings."""
+    from .lookup import lookup_rate
+
     if rate_categories is None or rate_territories is None:
         return None
     tier = next((candidate for candidate, mapped in rate_categories.items() if mapped == category), None)

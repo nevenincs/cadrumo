@@ -16,7 +16,7 @@ with the registered ledger payload contracts.
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import typer
 from pydantic import ValidationError
@@ -35,9 +35,6 @@ from ...core.i18n.render import tr
 from ...core.iva_deduction_fact import IvaDeductionFactKind
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.prorrata_exclusions import Art104TresExclusion
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.prorrata_register_catalogue import especial_prorrata_register_regime
-from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.iva.schema import EUMemberState, IvaCategory
 from ...domain.transactions.enums import (
     BusinessClassification,
@@ -85,6 +82,9 @@ from .ledger_lifecycle_cli import (
     ledger_stash,
 )
 from .state_projection_support import authority_operation, prorrata_register_repository_factory
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = [
     "ledger_archive",
@@ -168,6 +168,8 @@ def _build_manual_add_command(
     source_jurisdiction: str | None,
 ) -> ManualLedgerTransactionCommand:
     """Translate CLI fields into the canonical manual-ledger command model."""
+    from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
+
     effective_date = _parse_iso_date(booked_date, label="date")
     return ManualLedgerTransactionCommand(
         bucket_id=bucket_id,
@@ -303,6 +305,7 @@ def _prorrata_especial_inert_notice(
     if input_classification is None:
         return None
     from ...application.prorrata_register.service import ProrrataRegisterService
+    from ...domain.calculations.registry.prorrata_register_catalogue import especial_prorrata_register_regime
 
     service = ProrrataRegisterService(
         repository=prorrata_register_repository,

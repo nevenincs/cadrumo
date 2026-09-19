@@ -154,7 +154,7 @@ def ratios_unset(
     from ...domain.usage_ratios.errors import UsageRatioValidationError
     from ._ledger_ratios_payloads import RatiosUnsetResult
 
-    category = require_spending_category(category)
+    category = require_spending_category(category, authority=authority_operation(ctx))
     bucket_id = _ratios_bucket_id()
     try:
         clear_usage_ratio_override(bucket_id=bucket_id, category=category, operation=authority_operation(ctx))

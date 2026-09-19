@@ -361,6 +361,8 @@ def test_import_accepts_aeat_token_with_year(
 
     result = invoke_cached_cli(
         [
+            "--language",
+            "en",
             "app",
             "ledger",
             "import",

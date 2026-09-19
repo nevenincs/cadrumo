@@ -930,6 +930,7 @@ def build_calculation_action_ports(
     *,
     bucket_id: str,
     operation: PinnedAuthorityOperation,
+    profile_record: object | None = None,
 ) -> CalculationActionPorts:
     """Compose every persisted authority required by one Modelo calculation."""
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
@@ -998,7 +999,9 @@ def build_calculation_action_ports(
             bucket_id=normalized_bucket_id,
             objects=objects,
             m303_rectificativa_taxpayer_tax_id=_export_taxpayer_tax_id(
-                bucket_id=normalized_bucket_id, operation=operation
+                bucket_id=normalized_bucket_id,
+                operation=operation,
+                profile_record=profile_record,
             ),
         ),
         bucket_event_repository=bucket_event_repository,
@@ -1110,11 +1113,20 @@ def build_amendment_action_ports(
     )
 
 
-def _export_taxpayer_tax_id(*, bucket_id: str, operation: PinnedAuthorityOperation) -> SubjectTaxId | None:
+def _export_taxpayer_tax_id(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile_record: object | None = None,
+) -> SubjectTaxId | None:
     """Return the profile tax id a stored M303 rectificativa revalidates against, when one is declared."""
     from ..application.modelo.profile_export_binding import resolve_export_identity
 
-    export_identity = resolve_export_identity(bucket_id=bucket_id, operation=operation)
+    export_identity = resolve_export_identity(
+        bucket_id=bucket_id,
+        operation=operation,
+        profile_record=profile_record,
+    )
     return export_identity[0].tax_id if export_identity is not None else None
 
 

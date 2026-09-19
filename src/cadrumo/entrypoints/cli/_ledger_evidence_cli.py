@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
+from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Final, Protocol, TypedDict, cast
 
@@ -32,10 +33,11 @@ from ...application.user_profile.capabilities import cloud_evidence_upload_eligi
 from ...core.aggregation import IntracomOperationType
 from ...core.config import load_settings
 from ...core.config_support import LLMProvider
+from ...core.hashing import sha256_hex
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.authority import bundled_indexed_authority
-from ...domain.invoices.enums import InvoiceClass, require_invoice_class
+from ...domain.invoices.enums import InvoiceClass
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.classification import InvoiceKind
 from ...domain.iva.regime_legend import resolve_regime_legends
@@ -759,7 +761,7 @@ def _run_evidence_confirm(
                 operation_type=operation_type,
                 supply_nature=supply_nature,
                 # Leave an omitted class omitted so document-derived defaults survive.
-                **_invoice_class_kwarg(invoice_class),
+                **_invoice_class_kwarg(invoice_class, operation=operation, effective_date=period.end_date),
                 rectifies_invoice_number=rectifies,
                 series=series,
                 notes=notes,
@@ -816,11 +818,32 @@ def _resolved_outcome(result: InvoiceConfirmationResult) -> str | None:
     return result.establishment.category.outcome.value
 
 
-def _invoice_class_kwarg(invoice_class: str | None) -> _InvoiceClassKwarg:
+def _invoice_class_kwarg(
+    invoice_class: str | None,
+    *,
+    operation: PinnedAuthorityOperation,
+    effective_date: date,
+) -> _InvoiceClassKwarg:
     """Keep an omitted invoice class omitted so document-derived defaults survive."""
     if invoice_class is None:
         return {}
-    return {"invoice_class": require_invoice_class(invoice_class)}
+    from ...domain.calculations.registry.errors import RegistryValidationError
+    from ...domain.calculations.registry.invoice_legal_classification import (
+        resolve_invoice_legal_classification_catalogue,
+    )
+
+    catalogue = resolve_invoice_legal_classification_catalogue(
+        authority=operation,
+        effective_date=effective_date,
+    )
+    try:
+        return {"invoice_class": catalogue.require_invoice_class(invoice_class)}
+    except RegistryValidationError:
+        accepted = ", ".join(invoice_class.value for invoice_class in catalogue.invoice_class_choices)
+        raise typer.BadParameter(
+            f"Unknown invoice class {invoice_class!r}. Accepted ids: {accepted}",
+            param_hint="--invoice-class",
+        ) from None
 
 
 def _evidence_service(*, ctx: typer.Context, bucket_id: str) -> PurchaseInvoiceEvidenceService:
@@ -835,6 +858,9 @@ def _evidence_payload(record: PurchaseInvoiceEvidence) -> dict[str, object]:
     # could fire here. (A `RootModel` would differ -- see _root_payloads.py,
     # where the parameter is `type[BaseModel]` and the guard IS live.)
     payload: dict[str, object] = dict(record.model_dump(mode="json"))
+    invoice_number = payload.get("invoice_number")
+    if isinstance(invoice_number, str):
+        payload["invoice_number"] = f"sha256:{sha256_hex(invoice_number.encode('utf-8'))[:8]}"
     return payload
 
 

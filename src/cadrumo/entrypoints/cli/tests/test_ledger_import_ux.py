@@ -88,8 +88,6 @@ def test_missing_csv_is_refused_at_the_file_parameter(tmp_path: Path) -> None:
         [
             "--format",
             "json",
-            "--language",
-            "en",
             "app",
             "ledger",
             "import",

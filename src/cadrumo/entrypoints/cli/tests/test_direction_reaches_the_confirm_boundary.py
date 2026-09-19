@@ -300,7 +300,8 @@ def test_confirming_against_the_documents_own_reading_raises_the_contradiction(l
     with pytest.raises(ConfirmationBlockedError) as raised:
         document.confirm(kind=InvoiceKind.ISSUED)
 
-    assert ConfirmationBlockReason.UNRESOLVED_DIRECTION.value in str(raised.value)
+    context = raised.value.context or {}
+    assert ConfirmationBlockReason.UNRESOLVED_DIRECTION.value in str(context["unresolved_blockers"])
 
 
 def test_confirming_in_the_direction_the_document_supports_raises_no_direction_blocker(

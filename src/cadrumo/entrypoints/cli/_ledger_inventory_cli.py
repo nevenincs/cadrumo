@@ -8,6 +8,8 @@ from :mod:`._ledger_payloads`.
 from __future__ import annotations
 
 import json
+from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import typer
@@ -36,11 +38,20 @@ from .ledger_business_payloads import (
     InventoryMovementAddResult,
     InventoryValuationPreviewPayload,
 )
-from .state_projection_support import inventory_service_ports_factory
+from .state_projection_support import authority_operation, inventory_service_ports_factory
 
 
 def _inventory_service(ctx: typer.Context, *, bucket_id: str) -> InventoryService:
     return InventoryService(ports=inventory_service_ports_factory(ctx)(bucket_id=bucket_id))
+
+
+@contextmanager
+def _inventory_authority_scope(ctx: typer.Context) -> Iterator[None]:
+    """Keep persisted inventory validation inside the CLI's pinned authority."""
+    from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
+
+    with validating_governed_facts(authority_operation(ctx)):
+        yield
 
 
 _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, object])
@@ -103,7 +114,8 @@ def _parse_acquisition_cost(*, from_stdin: bool) -> InventoryAcquisitionCost | N
 def inventory_list(ctx: typer.Context) -> None:
     """List per-actividad ledgers via :meth:`InventoryService.list_all`."""
     bucket_id = _inventory_bucket_id()
-    rows = _inventory_service(ctx, bucket_id=bucket_id).list_all(bucket_id=bucket_id)
+    with _inventory_authority_scope(ctx):
+        rows = _inventory_service(ctx, bucket_id=bucket_id).list_all(bucket_id=bucket_id)
     payload = {
         "bucket_id": bucket_id,
         "rows": [row.model_dump(mode="json") for row in rows],
@@ -132,13 +144,14 @@ def inventory_create(
 ) -> None:
     """Create a ledger via :meth:`InventoryService.create`."""
     bucket_id = _inventory_bucket_id()
-    result = _inventory_service(ctx, bucket_id=bucket_id).create(
-        bucket_id=bucket_id,
-        actividad_id=actividad_id,
-        year=year,
-        valuation_method=valuation_method,
-        opening_stock=parse_decimal_amount(opening_stock, label="opening-stock"),
-    )
+    with _inventory_authority_scope(ctx):
+        result = _inventory_service(ctx, bucket_id=bucket_id).create(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=year,
+            valuation_method=valuation_method,
+            opening_stock=parse_decimal_amount(opening_stock, label="opening-stock"),
+        )
     ledger = result.ledger
     payload = _safe_inventory_ledger_payload(ledger)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
@@ -171,21 +184,22 @@ def inventory_movement_add(
 ) -> None:
     """Append an :class:`InventoryMovementCommand` to an actividad ledger."""
     bucket_id = _inventory_bucket_id()
-    command = InventoryMovementCommand(
-        movement_id=movement_id,
-        movement_date=_parse_iso_date(movement_date, label="--date"),
-        kind=kind,
-        quantity=parse_decimal_amount(quantity, label="quantity"),
-        unit_cost=parse_optional_decimal_amount(unit_cost, label="unit-cost"),
-        taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
-        acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
-    )
-    result = _inventory_service(ctx, bucket_id=bucket_id).movement_add(
-        bucket_id=bucket_id,
-        actividad_id=actividad_id,
-        year=year,
-        movement=command,
-    )
+    with _inventory_authority_scope(ctx):
+        command = InventoryMovementCommand(
+            movement_id=movement_id,
+            movement_date=_parse_iso_date(movement_date, label="--date"),
+            kind=kind,
+            quantity=parse_decimal_amount(quantity, label="quantity"),
+            unit_cost=parse_optional_decimal_amount(unit_cost, label="unit-cost"),
+            taxable_base=parse_optional_decimal_amount(taxable_base, label="taxable-base"),
+            acquisition_cost=_parse_acquisition_cost(from_stdin=acquisition_cost_stdin),
+        )
+        result = _inventory_service(ctx, bucket_id=bucket_id).movement_add(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=year,
+            movement=command,
+        )
     ledger = result.ledger
     payload = _safe_inventory_ledger_payload(ledger)
     payload["bucket_event_ids"] = list(result.bucket_event_ids)
@@ -210,11 +224,12 @@ def inventory_valuation_preview(
 ) -> None:
     """Preview valuation via :meth:`InventoryService.valuation_preview`."""
     bucket_id = _inventory_bucket_id()
-    result = _inventory_service(ctx, bucket_id=bucket_id).valuation_preview(
-        bucket_id=bucket_id,
-        actividad_id=actividad_id,
-        year=year,
-    )
+    with _inventory_authority_scope(ctx):
+        result = _inventory_service(ctx, bucket_id=bucket_id).valuation_preview(
+            bucket_id=bucket_id,
+            actividad_id=actividad_id,
+            year=year,
+        )
     preview = result.preview
     emit_envelope(
         ctx,
@@ -243,13 +258,14 @@ def inventory_closing_authority_record(
 
     bucket_id = _inventory_bucket_id()
     try:
-        record = InventoryClosingAuthorityRecord.model_validate_json(file.read_text(encoding=UTF_8_ENCODING))
-        result = _inventory_service(ctx, bucket_id=bucket_id).closing_authority_record(
-            bucket_id=bucket_id,
-            actividad_id=actividad_id,
-            year=year,
-            authority_record=record,
-        )
+        with _inventory_authority_scope(ctx):
+            record = InventoryClosingAuthorityRecord.model_validate_json(file.read_text(encoding=UTF_8_ENCODING))
+            result = _inventory_service(ctx, bucket_id=bucket_id).closing_authority_record(
+                bucket_id=bucket_id,
+                actividad_id=actividad_id,
+                year=year,
+                authority_record=record,
+            )
     except (OSError, ValidationError) as exc:
         raise typer.BadParameter(
             tr("cli.app.ledger.inventory.authority_invalid"),

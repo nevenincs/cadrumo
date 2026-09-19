@@ -150,14 +150,13 @@ def resolve_invoice_class(
     rectifies_invoice_number: str | None,
 ) -> InvoiceClass:
     """Resolve Facturae class, preserving explicit operator and rectification facts."""
+    if invoice_class is not None:
+        return invoice_class
     declared_class = draft.facturae_invoice_class
     if declared_class is not None and declared_class.kind is StructuredInvoiceClassificationKind.ORDINARY:
         return invoice_class_ordinaria()
     if declared_class is not None and declared_class.kind is StructuredInvoiceClassificationKind.CORRECTIVE:
         return invoice_class_rectificativa()
-    if invoice_class is not None:
-        # Recapitulativa has no domain member; preserve the operator's statement.
-        return invoice_class
     return invoice_class_rectificativa() if rectifies_invoice_number is not None else invoice_class_ordinaria()
 
 

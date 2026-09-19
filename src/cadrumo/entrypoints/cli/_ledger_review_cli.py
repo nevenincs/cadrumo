@@ -29,14 +29,21 @@ def ledger_review(
     """Render rows or a single row using the typed filter spec."""
     spec = _ledger_review_filter_spec(list(filters))
     transaction_repository = transaction_catalogue_repo(current_workflow_state())
+    # Resolve the authority lease before an id lookup.  ``resolve_ledger_transaction_id``
+    # loads the persisted transaction catalogue, whose strict decode requires
+    # the same generation-pinned governed-fact scope as the later projection.
+    # The list branch used to hide this ordering defect because it only loaded
+    # after ``compose_ledger_action_ports`` had entered the operation resource.
+    operation = authority_operation(ctx)
+    ports = compose_ledger_action_ports(
+        bucket_id=transaction_repository.bucket_id,
+        operation=operation,
+    )
     result = query_ledger_review_rows(
         _ledger_review_query(
             transaction_repository, spec=spec, record_id=record_id, resolve_transaction_id=resolve_ledger_transaction_id
         ),
-        ports=compose_ledger_action_ports(
-            bucket_id=transaction_repository.bucket_id,
-            operation=authority_operation(ctx),
-        ),
+        ports=ports,
     )
     _emit_ledger_review_result(ctx, record_id=record_id, verbose=verbose, result=result)
 

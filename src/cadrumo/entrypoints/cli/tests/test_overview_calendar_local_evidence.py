@@ -16,12 +16,15 @@ from ....adapters.outbound.aeat.sede.observation_store import FiledDeclaracionOb
 from ....adapters.outbound.aeat.sede.schema import FiledDeclaracionArtefact, FiledDeclaracionObservation
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
+from ....core.casilla_id import validated_casilla_id
 from ....core.config import load_settings
+from ....core.observed_header_fact import ObservedHeaderFact
 from ....core.period import Period
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....tests.inventory import FIXTURES_DIR
 from .._overview_evidence import local_calendar_filing_evidence
@@ -31,7 +34,6 @@ from ._overview_calendar_support import (
     _isolated_backend,
     _justificante_metadata,
     _modelo_record_with_external_justificante,
-    _observed_casilla_observations,
 )
 
 __all__ = ["_isolated_backend"]
@@ -55,7 +57,12 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
         filing_year=2025,
         period="1T",
         filing_period=Period.from_year_and_code(2025, "1T"),
-        observations=_observed_casilla_observations(Decimal("10.00")),
+        observations=registry_grounded_observations(
+            modelo="303",
+            filing_year=2025,
+            period="1T",
+            casilla_values={validated_casilla_id("iva.resultado"): Decimal("10.00")},
+        ),
     )
     with open_test_profile_session(PRIMARY_PROFILE_ID):
         CalculationObservationRepository().save(
@@ -69,6 +76,14 @@ def test_local_calendar_filing_evidence_is_scoped_to_profile_storage_session() -
                     "aeat_expediente_id": "12345678901234567890",
                     "authenticated_identity": "X1234567L",
                 },
+                source_headers=(
+                    ObservedHeaderFact(
+                        header_key="declaration_type",
+                        value="I",
+                        source_artefact_kind="submitted_file",
+                        source_locator="overview-calendar-local-evidence:declaration-type",
+                    ),
+                ),
             )
         )
         artefact_body = b"modelo-303-2025-1T-justificante"

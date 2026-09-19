@@ -29,8 +29,13 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ....adapters.persistence.profile.purchase_invoice_evidence import (
+    LedgerEvidenceAttachmentIngestor,
+    LedgerEvidenceRepositoryAdapter,
+)
 from ....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ....adapters.persistence.storage.attachment import AttachmentStore
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ....application.aggregation.ledger_filing_snapshot import row_fingerprint
 from ....application.ledger.action_ports import LedgerActionPorts
@@ -40,6 +45,7 @@ from ....application.ledger.actions_manual import (
     update_manual_transaction_fields,
 )
 from ....application.ledger.evidence import PurchaseInvoiceEvidenceService
+from ....application.ledger.evidence_ports import LedgerEvidencePorts
 from ....application.ledger.models import (
     LedgerRemovalBlocker,
     ManualLedgerTransactionCommand,
@@ -50,7 +56,6 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.models import BucketTransactionRef, derive_transaction_id
-from ....entrypoints.adapter_composition import build_ledger_evidence_ports
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -101,7 +106,13 @@ def _ledger_ports(profile: TestRuntimeProfile) -> Iterator[LedgerActionPorts]:
 
 def _mint_evidence_id(profile: TestRuntimeProfile, pdf_file: Path) -> str:
     """Register a PDF through the real evidence service and return its evidence id."""
-    service = PurchaseInvoiceEvidenceService(ports=build_ledger_evidence_ports(bucket_id=profile.bucket_id))
+    service = PurchaseInvoiceEvidenceService(
+        ports=LedgerEvidencePorts(
+            evidence_repository=LedgerEvidenceRepositoryAdapter(objects=profile.repository),
+            attachment_ingestor=LedgerEvidenceAttachmentIngestor(store=AttachmentStore(objects=profile.repository)),
+            bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
+        )
+    )
     return service.add(bucket_id=profile.bucket_id, source_path=pdf_file).record.evidence_id
 
 
@@ -185,12 +196,13 @@ def test_attach_leaves_the_finalized_revision_untouched(
     transaction_id = _deductible_expense_row(profile, idempotency_key="attach-revision-frozen")
     revision_id = _finalize_revision_citing(profile, transaction_id, operation=operation)
     before = _revisions(profile).load().revisions[revision_id]
+    evidence_id = _mint_evidence_id(profile, pdf_file)
 
     with _ledger_ports(profile) as ports:
         attach_manual_transaction_evidence(
             bucket_id=_BUCKET,
             transaction_id=transaction_id,
-            purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
+            purchase_invoice_evidence_id=evidence_id,
             actor="operator-A",
             ports=ports,
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
@@ -264,12 +276,13 @@ def test_attach_without_a_finalized_revision_reports_no_stale_revisions(
     # when nothing finalized cites the row, so a populated channel in the tests
     # above is a real signal rather than a constant.
     transaction_id = _deductible_expense_row(profile, idempotency_key="attach-no-revision")
+    evidence_id = _mint_evidence_id(profile, pdf_file)
 
     with _ledger_ports(profile) as ports:
         attached = attach_manual_transaction_evidence(
             bucket_id=_BUCKET,
             transaction_id=transaction_id,
-            purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
+            purchase_invoice_evidence_id=evidence_id,
             actor="operator-A",
             ports=ports,
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),
@@ -278,7 +291,10 @@ def test_attach_without_a_finalized_revision_reports_no_stale_revisions(
     assert attached.stale_finalized_revisions == ()
 
 
-def test_stale_revision_advisory_names_no_harmful_recovery_verb(profile: TestRuntimeProfile) -> None:
+def test_stale_revision_advisory_names_no_harmful_recovery_verb(
+    profile: TestRuntimeProfile,
+    operation: PinnedAuthorityOperation,
+) -> None:
     # Both plausible recovery verbs were MEASURED against a real stuck profile and
     # both fail: `work calculate` re-derives the same content-addressed revision id
     # and returns the finalized revision untouched, and `work discard` marks the
@@ -325,6 +341,7 @@ def test_stale_revision_advisory_names_no_harmful_recovery_verb(profile: TestRun
 def test_evidence_fields_are_not_transaction_identity_or_tax_facts(
     profile: TestRuntimeProfile,
     pdf_file: Path,
+    operation: PinnedAuthorityOperation,
 ) -> None:
     # The invariant the exemption rests on, pinned directly against the two
     # canonical contracts. If a future change makes evidence part of the id or of
@@ -332,12 +349,13 @@ def test_evidence_fields_are_not_transaction_identity_or_tax_facts(
     transaction_id = _deductible_expense_row(profile, idempotency_key="evidence-not-identity")
     before = _transactions(profile).load().get(transaction_id)
     assert before is not None
+    evidence_id = _mint_evidence_id(profile, pdf_file)
 
     with _ledger_ports(profile) as ports:
         attach_manual_transaction_evidence(
             bucket_id=_BUCKET,
             transaction_id=transaction_id,
-            purchase_invoice_evidence_id=_mint_evidence_id(profile, pdf_file),
+            purchase_invoice_evidence_id=evidence_id,
             actor="operator-A",
             ports=ports,
             occurred_at=datetime(2026, 5, 2, 10, 0, tzinfo=UTC),

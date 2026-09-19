@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
+from uuid import uuid4
 
 import pytest
 
@@ -156,7 +157,7 @@ def scenario(seed_profile: ProfileSeeder, tmp_path: Path, monkeypatch: pytest.Mo
     """A seeded synthetic taxpayer whose AEAT register is the recorded transport."""
     year = _scenario_year()
     seed_profile(
-        label="operator",
+        label=f"filing-chain-{uuid4().hex[:12]}",
         facts={
             **operator_profile_facts(activity_start_date=f"{year}-01-01"),
             "taxpayer_type.entity_type": "natural_person",
