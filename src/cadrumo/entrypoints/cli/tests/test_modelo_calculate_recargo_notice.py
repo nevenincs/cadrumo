@@ -26,7 +26,7 @@ import json
 from datetime import UTC, date, datetime, time, timedelta
 from decimal import Decimal
 from itertools import pairwise
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
@@ -51,6 +51,9 @@ from .._modelo_rendering import _work_unit_deadline_output_from_posture
 from ._m130_source_support import seed_m130_income_transaction
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
+
+if TYPE_CHECKING:
+    from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 __all__ = ["_isolated_storage"]
@@ -149,7 +152,10 @@ def _frozen_madrid_instant(reference_on: date) -> datetime:
     return madrid_noon.astimezone(UTC)
 
 
-def test_overdue_posture_fallback_emits_null_preview_without_rate_wording() -> None:
+def test_overdue_posture_fallback_emits_null_preview_without_rate_wording(
+    *,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
     """The real renderer emits a null preview and no displayed-rate warning."""
     deadline, notices = _work_unit_deadline_output_from_posture(
         ModeloWorkDeadlinePosture(closes_on=date(2026, 1, 30), days_overdue=1),

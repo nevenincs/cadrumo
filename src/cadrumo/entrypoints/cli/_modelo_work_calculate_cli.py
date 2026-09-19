@@ -42,6 +42,7 @@ from ...core.irnr import M210GrossIncomeSourceMode
 from ...core.json_contract import Notice
 from ...core.rescate_type import RescateType
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (
@@ -194,7 +195,8 @@ def _run_work_calculate(
         source_advisory_notices, source_advisory_lines = _work_calculate_source_advisory_output(
             calculation_result.source_diagnostics
         )
-        deadline_payload, deadline_notices = work_unit_deadline_output(unit_for_modality)
+        with validating_governed_facts(calculation_ports.operation):
+            deadline_payload, deadline_notices = work_unit_deadline_output(unit_for_modality)
         result = WorkCalculateResult.model_validate(
             {
                 "saved": True,
