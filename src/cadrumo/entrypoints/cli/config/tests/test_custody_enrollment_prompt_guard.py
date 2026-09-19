@@ -58,7 +58,6 @@ _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(dict[str, obj
 _CHILD_BUDGET_SECONDS = 300.0
 
 _LABEL = "Console Less Login Subject"
-_CREDENTIAL_INPUT = "console-less-login-operator-secret"
 
 _LOGIN_PROBE = """
 import json, sys
@@ -67,7 +66,6 @@ from pathlib import Path
 storage_root = Path(sys.argv[1])
 verdict_path = Path(sys.argv[2])
 label = sys.argv[3]
-passphrase = sys.argv[4]
 verdict = {}
 try:
     from cadrumo.core import config as config_module
@@ -90,14 +88,15 @@ try:
         # A real locked profile, so the login below has a capsule to unwrap
         # and must reach the passphrase channel to do it.
         from cadrumo.application.user_profile.login_session import logout_active_profile
-        from cadrumo.application.user_profile.registration import register_profile_with_credentials
+        from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+        from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 
-        register_profile_with_credentials(
-            label=label,
-            passphrase=passphrase,
-        )
-        logout_active_profile()
+        with composed_profile_persistence_ports():
+            register_cli_profile(label=label, log_in=False)
+            logout_active_profile()
         verdict["profile_registered"] = True
+        pointer_path = storage_root / "active-profile"
+        pointer_before = pointer_path.read_bytes() if pointer_path.is_file() else None
 
         sys.argv = ["cadrumo", "config", "login", label]
         from cadrumo.entrypoints.cli.main import main
@@ -110,6 +109,9 @@ try:
             code = exc.code
             verdict["outcome"] = "exited"
             verdict["exit_code"] = code if isinstance(code, int) else (0 if code is None else 1)
+        verdict["pointer_unchanged"] = (
+            (pointer_path.read_bytes() if pointer_path.is_file() else None) == pointer_before
+        )
     finally:
         config_module.settings_override.reset(token)
 except BaseException as exc:
@@ -128,6 +130,8 @@ def _child_env() -> dict[str, str]:
     silently redirecting the run away from the sandbox.
     """
     env = {key: value for key, value in os.environ.items() if not key.startswith(("CADRUMO_", "AEAT_", "PYTEST_"))}
+    if "CADRUMO_AUTHORITY_ROOT" in os.environ:
+        env["CADRUMO_AUTHORITY_ROOT"] = os.environ["CADRUMO_AUTHORITY_ROOT"]
     env["PYTHONIOENCODING"] = "utf-8"
     env["PYTHONUTF8"] = "1"
     return env
@@ -176,7 +180,6 @@ def _run_console_less_login(storage_root: pathlib.Path) -> dict[str, object]:
                     str(storage_root),
                     str(verdict_path),
                     _LABEL,
-                    _CREDENTIAL_INPUT,
                 ],
                 creationflags=creationflags,
                 env=_child_env(),
@@ -221,7 +224,7 @@ def test_login_refuses_on_a_console_less_host_instead_of_blocking(tmp_path: path
     )
 
     # A refused unlock must not move the operator's selection onto the target.
-    assert not (storage_root / "active-profile").is_file(), "a refused login left an active-profile selection behind"
+    assert verdict["pointer_unchanged"] is True, "a refused login changed the active-profile selection"
 
     if verdict["isatty"] is True:
         # The Windows trap this gate exists for: the verb's cheap interactive

@@ -2,11 +2,23 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
+
+from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+
+
+@pytest.fixture(autouse=True)
+def _active_profile(tmp_path: Path):
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        register_cli_profile(label="review-kind-probe", log_in=False)
+        yield
 
 
 def test_review_queue_unknown_kind_localises_without_raw_selector() -> None:
