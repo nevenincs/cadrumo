@@ -5,14 +5,17 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_runtime_profile
+from ....core.period import Period
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import require_schema_envelope
 from ._iva_wallet_inspector_support import (
     _GUIDANCE_PROFILE,
     _seed_full_autonomo_profile_for_guidance,
 )
+from ._m303_filing_evidence_support import write_m303_filing_evidence
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
@@ -70,10 +73,19 @@ def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
     assert "iva-wallet seed" not in result.output, f"Refusal must not infer a seed command; got:\n{result.output}"
 
 
-def test_m303_in_scope_missing_wallet_surfaces_override_verb_not_seed(
+def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
     tmp_path: Path,
+    *,
+    authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """In-scope missing wallet/local authority is unblocked with explicit override, not seed."""
+    """In-scope missing authority preserves its terminal operator-decision verdict."""
+    filing_year = 2024
+    period_token = "2T"
+    evidence_path = write_m303_filing_evidence(
+        tmp_path / "m303-filing-evidence.json",
+        Period.from_year_and_code(filing_year, period_token),
+        operation=authority_operation,
+    )
     with isolated_cli_runtime_profile(
         tmp_path=tmp_path,
         bucket_id=_GUIDANCE_PROFILE,
@@ -90,11 +102,11 @@ def test_m303_in_scope_missing_wallet_surfaces_override_verb_not_seed(
                 "--modelo",
                 "303",
                 "--year",
-                "2024",
+                str(filing_year),
                 "--period",
-                "2T",
+                period_token,
                 "--revision",
-                _m303_revision_id(filing_year=2024, period="2T"),
+                _m303_revision_id(filing_year=filing_year, period=period_token),
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
@@ -102,14 +114,27 @@ def test_m303_in_scope_missing_wallet_surfaces_override_verb_not_seed(
         work_unit_id = str(work_unit_payload["work_unit_id"])
 
         result = invoke_cached_cli(
-            ["app", "modelo", "work", "calculate", work_unit_id],
+            [
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                work_unit_id,
+                "--m303-filing-evidence",
+                str(evidence_path),
+            ],
             env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
 
     assert result.exit_code != 0, "Expected non-zero exit when in-scope prior IVA authority is missing"
-    assert "iva-wallet override" in result.output, f"Error output must name the override verb; got:\n{result.output}"
-    assert "--amount 0" in result.output, (
-        f"Missing-authority guidance must make the zero override explicit:\n{result.output}"
+    assert 'action.failed_condition_id: "modelo.work.calculate.iva_wallet.ready"' in result.output, result.output
+    assert 'action.action: null' in result.output, result.output
+    assert 'action.no_recovery_outcome: "operator_decision"' in result.output, result.output
+    assert "iva-wallet override" not in result.output, (
+        f"A recovery command needs taxpayer-supplied evidence and cannot be inferred:\n{result.output}"
+    )
+    assert "--amount 0" not in result.output, (
+        f"Missing authority cannot be replaced with an invented zero carry:\n{result.output}"
     )
     assert "iva-wallet seed" not in result.output, (
         f"Blocked decisions must not send the operator back to seed; got:\n{result.output}"

@@ -176,13 +176,12 @@ def _run_work_calculate(
         )
     except RegistryValidationError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
-    except WorkUnitMutationRefusedError:
+    except (WorkUnitMutationRefusedError, ModeloIvaWalletReconciliationBlocked):
         raise
     except (
         WorkUnitNotFoundError,
         CalculationRegistryUnavailableError,
         Modelo100BorradorBindingError,
-        ModeloIvaWalletReconciliationBlocked,
     ) as exc:
         raise deps.bad_parameter_from_error(exc) from exc
     except ValidationError as exc:
