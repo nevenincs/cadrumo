@@ -1057,9 +1057,9 @@ cli:
         casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető).
         ccaa_help: Autonóm közösség kódja a területi vetítéshez.
         no_m130_revisions: Nincs negyedéves 130-as nyomtatvány piszkozat revízió a(z)
-          %{year} adóévre.
+          %{year} adóévre. Előbb futtasd az `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T` parancsot.
         no_m130_units: Nincs 130-as nyomtatvány piszkozat munkaegység a(z) %{year}
-          adóévre.
+          adóévre. Előbb hozd létre az `aeat app modelo work create --modelo 130 --year %{year} --period 1T` paranccsal.
         year_help: Adóév a vetítéshez.
       project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves 130-as nyomtatvány
         összesítés).
@@ -2228,7 +2228,7 @@ cli:
             'aeat config logout' paranccsal, majd próbáld újra.
         yes_help: Kifejezetten megerősíti a törlést
       descendiente:
-        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=ÉÉÉÉ-HH-NN[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=ÉÉÉÉ-HH-NN][,ACOGIMIENTO=ÉÉÉÉ-HH-NN][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Ismételhető. Futtassa az `aeat config profile descendiente` parancsot alparancs
           nélkül a vezetett bevitelhez.
         add_help: Egy vagy több leszármazott hozzáadása az aktív profilhoz.
@@ -2245,6 +2245,8 @@ cli:
         invalid_flag: A --descendiente értéke érvénytelen. Minden sornak tartalmaznia
           kell a NACIMIENTO=YYYY-MM-DD mezőt; a többi kulcs, például RELACION, DISCAPACIDAD
           vagy CONVIVENCIA, opcionális.
+        guarderia_spend_shapes_conflict: Egy leszármazottnál a GASTOS_GUARDERIA vagy a
+          GASTOS_GUARDERIA_MENSUAL értéket adja meg, mindkettőt ne.
         list_help: Az aktív profilon megadott leszármazottak listázása.
         remove_help: Egy leszármazott eltávolítása 0-alapú index szerint az aktív
           profilról.
@@ -2769,10 +2771,9 @@ cli:
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
         vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
-      usage_ratio_help: 'Beállított használatiarány-azonosító. Nem tetszőleges szöveg:
-        a beállított azonosítókat az aeat app ledger ratios list listázza, az elfogadó
-        kategóriákat az aeat app ledger ratios eligible mutatja, újat az aeat app
-        ledger ratios set hoz létre; a tétel --category-id kategóriájához már tartoznia
+      usage_ratio_help: 'Beállított használatiarány-azonosító, nem tetszőleges szöveg.
+        Új arány létrehozása vagy hozzárendelése előtt ellenőrizze a beállított arányokat
+        és a jogosult kategóriákat; a tétel --category-id kategóriájához már tartoznia
         kell ennek az aránynak.'
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
     allocate:
@@ -2882,8 +2883,8 @@ cli:
         nettó bérleti díjakhoz arrendamiento_local vagy arrendamiento_vivienda_afecto.
         A Royalties és az SGAE-bevétel capital mobiliario a LIRPF 25.4. cikke szerint,
         ha az adózó nem a szerző, és gazdasági tevékenység a LIRPF 27. cikke szerint,
-        ha az, és folytatja a tevékenységet. A teljes katalógushoz futtassa: aeat
-        app ledger categories.'
+        ha az, és folytatja a tevékenységet. Az összes azonosítóért tekintse meg
+        a főkönyvi kategóriák katalógusát.'
       iva_amount_help: IVA-összeg.
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -2988,15 +2989,15 @@ cli:
       invalid_decimal: 'Érvénytelen tizedes érték a(z) %{label} mezőhöz: %{raw}. Használjon
         tizedespontot ezreselválasztó nélkül, pl. 1234.56.'
       irpf_category_unknown: 'Ismeretlen IRPF-kategória: ''%{value}''. Elfogadott
-        azonosítók: %{accepted}. A teljes katalógust az aeat app ledger categories
-        mutatja.'
+        azonosítók: %{accepted}.'
       negative_amount: Az --amount %{raw} értéknek nem negatív összegnek kell lennie.
         Add meg az összeget előjel nélkül, és a folyást a --direction kapcsolóval
         állítsd be (OUTGOING kimenő, INCOMING bejövő, INTERNAL_TRANSFER saját számlák
         között).
       unknown_category: 'Ismeretlen --category-id: {category!r}. Egyszerű kategóriaazonosítót
         adjon meg, például {example!r}, ne kategóriacsalád- előtaggal ellátott vagy
-        összetett kulcsot. A felismert katalógushoz futtassa: aeat app ledger categories.'
+        összetett kulcsot. A felismert azonosítókért tekintse meg a főkönyvi
+        kategóriák katalógusát.'
       unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert
         szolgáltatók: {providers}.'
     exclude:

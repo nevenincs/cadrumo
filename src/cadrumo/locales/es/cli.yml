@@ -1073,9 +1073,9 @@ cli:
         casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (repetible).
         ccaa_help: Código de comunidad autónoma para la proyección territorial.
         no_m130_revisions: No existen revisiones borrador trimestrales del Modelo
-          130 para el ejercicio %{year}.
+          130 para el ejercicio %{year}. Ejecuta antes `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`.
         no_m130_units: No existen unidades de trabajo Modelo 130 en borrador para
-          el ejercicio %{year}.
+          el ejercicio %{year}. Crea antes una con `aeat app modelo work create --modelo 130 --year %{year} --period 1T`.
         year_help: Ejercicio fiscal para la proyección.
       project_help: Ejecutar proyecciones agregadas de modelos (p. ej. agregación
         anual del Modelo 130).
@@ -2256,7 +2256,7 @@ cli:
             'aeat config logout' y vuelve a intentarlo.
         yes_help: Confirma explícitamente la eliminación
       descendiente:
-        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
+        add_flag_help: NACIMIENTO=AAAA-MM-DD[,RELACION=descendiente|adoptado|acogimiento_preadoptivo_o_permanente|acogimiento_temporal|tutela][,INSCRIPCION=AAAA-MM-DD][,ACOGIMIENTO=AAAA-MM-DD][,DISCAPACIDAD=0|33|65][,CONVIVENCIA=true|false][,DEPENDENCIA=true|false][,CUSTODIA=true|false][,RENTAS=N][,DECLARACION_PROPIA=true|false][,PRORRATA=true|false][,MESES_TRABAJO=MM|MM-MM[;MM...]][,ALTA_POSTERIOR_MES=1..12][,SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12][,GASTOS_GUARDERIA=N][,GASTOS_GUARDERIA_MENSUAL=MM:N;MM-MM:N][,NIF=XXXXXXXXX].
           Repetible. Ejecute `aeat config profile descendiente` sin subcomando para
           introducirlos de forma guiada.
         add_help: Añadir uno o varios descendientes al perfil activo.
@@ -2274,6 +2274,8 @@ cli:
         invalid_flag: El valor de --descendiente no es válido. Cada fila debe declarar
           NACIMIENTO=YYYY-MM-DD; otras claves como RELACION, DISCAPACIDAD o CONVIVENCIA
           son opcionales.
+        guarderia_spend_shapes_conflict: Para un descendiente, declare GASTOS_GUARDERIA
+          o GASTOS_GUARDERIA_MENSUAL, pero no ambos.
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.
@@ -2814,11 +2816,9 @@ cli:
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED, u omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
-      usage_ratio_help: 'Identificador de una proporción de uso configurada. No es
-        texto libre: consulta los identificadores con aeat app ledger ratios list,
-        comprueba qué categorías la admiten con aeat app ledger ratios eligible y
-        créala con aeat app ledger ratios set; la --category-id del movimiento debe
-        tener ya esa proporción.'
+      usage_ratio_help: 'Identificador de una proporción de uso configurada, no texto
+        libre. Consulta las proporciones y categorías admitidas antes de crearla o
+        asignarla; la --category-id del movimiento debe tener ya esa proporción.'
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
@@ -2926,8 +2926,8 @@ cli:
         usan arrendamiento_local o arrendamiento_vivienda_afecto. Royalties y los
         ingresos de SGAE son capital mobiliario según el art. 25.4 LIRPF cuando el
         contribuyente no es el autor, y actividad económica según el art. 27 LIRPF
-        cuando sí lo es y ejerce la actividad. Ejecute aeat app ledger categories
-        para ver el catálogo completo.
+        cuando sí lo es y ejerce la actividad. Consulte el catálogo de categorías
+        del libro para ver todos los identificadores.
       iva_amount_help: Importe de IVA
       iva_category_help: Categoría de IVA explícita para esta transacción (p. ej.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -3034,15 +3034,14 @@ cli:
       invalid_decimal: 'Valor decimal no válido para %{label}: %{raw}. Use el punto
         como separador decimal y sin separador de miles, p. ej. 1234.56.'
       irpf_category_unknown: 'Categoría IRPF desconocida ''%{value}''. Identificadores
-        aceptados: %{accepted}. Ejecuta aeat app ledger categories para ver el catálogo
-        completo.'
+        aceptados: %{accepted}.'
       negative_amount: El --amount %{raw} debe ser una magnitud no negativa. Indica
         el importe sin signo y define el flujo con --direction (OUTGOING para salidas,
         INCOMING para entradas, INTERNAL_TRANSFER entre tus propias cuentas).
       unknown_category: --category-id {category!r} no reconocido. Indica un identificador
         de categoría sin prefijo, como {example!r}, no una clave compuesta ni con
-        prefijo de familia. Ejecute aeat app ledger categories para ver el catálogo
-        reconocido.
+        prefijo de familia. Consulte el catálogo de categorías del libro para ver
+        los identificadores reconocidos.
       unknown_provider: 'Proveedor de importación --provider {provider!r} desconocido.
         Proveedores reconocidos: {providers}.'
     exclude:
