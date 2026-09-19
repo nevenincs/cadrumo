@@ -4,7 +4,10 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
+
 from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....domain.user_profile.values import UserProfileFact
 from ._modelo_fixtures import active_cli_profile_fixture
 from .cli_runner import invoke_cached_cli
 
@@ -246,6 +249,19 @@ def test_work_create_rejects_out_of_range_year(_active_cli_profile: None) -> Non
 def test_work_create_rejects_unknown_revision(_active_cli_profile: None) -> None:
     """``work create --revision nope`` is refused naming the modelo's revisions."""
 
+    set_active_test_profile_facts(
+        (
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="activities.description", value="Test"),
+            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            UserProfileFact(path="iva.regime", value="GENERAL"),
+            UserProfileFact(path="iva.m303_regime_composition", value="general"),
+            UserProfileFact(path="iva.redeme_enrolled", value=False),
+            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
+            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+        ),
+    )
     result = invoke_cached_cli(
         [
             "app",
