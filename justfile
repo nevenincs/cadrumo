@@ -1122,7 +1122,7 @@ test-resident-service:
 [doc('Run the opt-in registry live-read tests serially outside portable aggregates.')]
 [group('test')]
 test-registry-live:
-    @uv run --no-sync pytest -v -n0 -m aeat_live src/cadrumo
+    @uv run --no-sync pytest -v -n0 -m aeat_live src/cadrumo dev/corpus/tests
 
 # Run the produce, verify, and export end-to-end smoke tests.
 [group('test')]
