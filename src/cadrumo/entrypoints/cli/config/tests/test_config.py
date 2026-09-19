@@ -33,6 +33,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from .....adapters.persistence.storage.sql.engine import dispose_engine
 from .....adapters.persistence.storage.tests.secure_sql import (
@@ -417,7 +418,7 @@ def _record_divergence(profile_name: str) -> None:
         )
 
 
-def test_profile_show_surfaces_the_open_divergence_notice() -> None:
+def test_profile_show_surfaces_the_open_divergence_notice(operation: PinnedAuthorityOperation) -> None:
     """A profile with an open cotejo divergence warns on `config profile view`."""
     _create_profile("divergence-probe")
     _record_divergence("divergence-probe")

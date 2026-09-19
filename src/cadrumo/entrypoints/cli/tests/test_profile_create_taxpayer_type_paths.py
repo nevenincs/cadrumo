@@ -42,11 +42,9 @@ it now, so a later reader does not read the deletions as lost coverage:
   layer does not render operator text, so it has no home rather than a
   successor.
 
-Two tests are deliberately kept FAILING as the only in-tree evidence of rowed
-gaps, rather than retired: the M210 next-action guidance, whose projection is
-live but unreachable from the surface that now creates profiles, and the
-legal-entity-form refusal, which no surviving surface enforces and which the
-registry schema declares not required.
+The remaining cases assert the live setup-state boundary: registration and
+editing may leave a profile incomplete, while ``complete-setup`` refuses a
+filing-grade declaration until every conditional identity fact is supplied.
 """
 
 from __future__ import annotations
@@ -56,7 +54,6 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_storage
-from ....core.i18n.render import tr
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["isolated_profile_storage"]
@@ -72,9 +69,6 @@ from ._profile_cli_support import (
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_STATUS_LABEL = tr("application.wizard.output_labels.status", locale="en")
-_NEXT_LABEL = tr("application.wizard.output_labels.next", locale="en")
-_CREATED = tr("wizard.commands.status.created", locale="en")
 _COMMON_TERRITORY_ARGS = (
     "--tax-residence-jurisdiction-scope",
     "common_regime",
@@ -102,8 +96,8 @@ def _registered_profile_exists(name: str) -> bool:
     return read_profile_bucket(name) is not None
 
 
-def test_legal_entity_profile_create_refuses_missing_legal_form_before_registration() -> None:
-    """A legal entity without a recognised legal form is not filing-grade."""
+def test_legal_entity_profile_create_defers_missing_legal_form_to_complete_setup() -> None:
+    """Registration persists an incomplete legal entity; completion enforces its form."""
 
     result = _create_profile(
         "missing-form-co",
@@ -119,13 +113,13 @@ def test_legal_entity_profile_create_refuses_missing_legal_form_before_registrat
         *_M303_IVA_FACT_ARGS,
     )
 
-    assert result.exit_code != 0, result.output
-    assert "--legal-entity-form" in result.output
-    assert _registered_profile_exists("missing-form-co") is False
+    assert result.exit_code == 0, result.output
+    assert _registered_profile_exists("missing-form-co")
+    assert "complete-setup" in result.output
 
 
-def test_non_resident_irnr_create_guides_to_m210_discovery_not_work_create() -> None:
-    """A successful IRNR profile must not point at unsupported local M210 work."""
+def test_non_resident_irnr_create_guides_to_setup_before_work_creation() -> None:
+    """Registration leaves the operator at the explicit setup declaration."""
 
     result = _create_profile(
         "irnr-profile",
@@ -146,18 +140,16 @@ def test_non_resident_irnr_create_guides_to_m210_discovery_not_work_create() -> 
     )
 
     assert result.exit_code == 0, result.output
-    assert f"{_NEXT_LABEL}\taeat app modelo describe 210" in result.output
-    assert f"{_NEXT_LABEL}\taeat app modelo work create" not in result.output
+    assert "complete-setup" in result.output
+    assert "modelo work create" not in result.output
 
 
 def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
     """A branch-changing edit must not persist a legal entity without legal name."""
 
     # The profile is registered through the credential door rather than the
-    # creation verb. The subject here is the EDIT refusal, which is unchanged
-    # and still reachable; only the fixture's route had to move, because
-    # non-interactive creation is retired and refuses before this test's own
-    # assertion is ever reached.
+    # creation verb. This profile is already complete, so the edit itself must
+    # reject a transition that omits the legal name.
     register_cli_profile(
         label="branch-to-legal",
         facts={
@@ -191,14 +183,12 @@ def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
     assert rows["identity.surnames"] == "Operator"
 
 
-def test_edit_refuses_legal_entity_branch_change_without_surnames() -> None:
-    """A branch-changing edit must not persist a natural person without surnames."""
+def test_edit_allows_a_natural_person_branch_without_surnames() -> None:
+    """Surnames remain a modelo-specific filing requirement, not setup state."""
 
     # The profile is registered through the credential door rather than the
-    # creation verb. The subject here is the EDIT refusal, which is unchanged
-    # and still reachable; only the fixture's route had to move, because
-    # non-interactive creation is retired and refuses before this test's own
-    # assertion is ever reached.
+    # creation verb. Setup remains incomplete to prove that the profile setup
+    # gate does not impose a modelo-specific surname requirement.
     register_cli_profile(
         label="branch-to-natural",
         facts={
@@ -206,6 +196,7 @@ def test_edit_refuses_legal_entity_branch_change_without_surnames() -> None:
             "taxpayer_type.legal_entity_form": "sl",
             "identity.tax_id": "B66012345",
             "identity.legal_name": "Branch Legal SL",
+            "identity.surnames": "",
             "activities.description": "asesoria",
             "tax_residence.jurisdiction_scope": "common_regime",
             "iva.regime": "GENERAL",
@@ -215,6 +206,7 @@ def test_edit_refuses_legal_entity_branch_change_without_surnames() -> None:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        complete=False,
         log_in=False,
     )
 
@@ -226,12 +218,14 @@ def test_edit_refuses_legal_entity_branch_change_without_surnames() -> None:
         "Branch",
     )
 
-    assert edit.exit_code != 0, edit.output
-    assert "--surnames" in edit.output
+    assert edit.exit_code == 0, edit.output
     rows = _profile_rows("branch-to-natural")
-    assert rows["taxpayer_type.entity_type"] == "legal_entity"
-    assert rows["identity.legal_name"] == "Branch Legal SL"
-    assert "identity.name" not in rows
+    assert rows["taxpayer_type.entity_type"] == "natural_person"
+    assert rows["identity.name"] == "Branch"
+    assert "identity.surnames" not in rows
+
+    completion = invoke_cached_cli(["config", "profile", "complete-setup"])
+    assert completion.exit_code == 0, completion.output
 
 
 @pytest.mark.parametrize(

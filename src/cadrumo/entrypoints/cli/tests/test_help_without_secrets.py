@@ -246,6 +246,7 @@ def test_bare_config_profile_renders_subgroup_help_without_passphrase(tmp_path: 
     assert "CADRUMO_SECRET_CREDENTIAL_INPUT" not in combined
 
 
+@pytest.mark.os_keychain
 def test_store_writing_verb_still_demands_the_passphrase(tmp_path: Path) -> None:
     """Anti-tautology: a verb that writes the store still names the secret channel.
 
@@ -279,6 +280,7 @@ def test_store_writing_verb_still_demands_the_passphrase(tmp_path: Path) -> None
     assert "Traceback" not in combined
 
 
+@pytest.mark.os_keychain
 def test_data_verb_still_refuses_without_passphrase(tmp_path: Path) -> None:
     """Anti-tautology: the secret stays load-bearing for real verb execution.
 

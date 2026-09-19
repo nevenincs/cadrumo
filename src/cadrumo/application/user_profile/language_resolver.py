@@ -101,6 +101,12 @@ def active_profile_output_language_from_storage() -> str | None:
     record = workflow_state_repository().load().active_profile_record()
     if record is None:
         return None
+    # The CLI root may scope this record to the invocation that triggered the
+    # language refresh. A calculation command then consumes it once; hosts
+    # without that scope retain their ordinary independent profile reads.
+    from .profile_record_repository import publish_invocation_profile_record
+
+    publish_invocation_profile_record(record)
     return record_to_path_values(record).get(PROFILE_OUTPUT_LANGUAGE_PATH)
 
 

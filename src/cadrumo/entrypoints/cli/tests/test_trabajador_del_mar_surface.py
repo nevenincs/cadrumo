@@ -51,8 +51,8 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 def _rebeca_vessel_registry() -> str:
     """Return the schema-owned spelling used by the maritime test cases."""
     values = published_profile_schema().field("maritime_worker.vessel_registry").enum_values
-    assert "rebeca" in values
-    return "rebeca"
+    assert "REBECA" in values
+    return "REBECA"
 
 
 class TestWorkerClassProfileFactAcceptance:

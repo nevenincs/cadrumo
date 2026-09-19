@@ -226,15 +226,16 @@ def test_global_language_flag_overrides_profile_for_invocation() -> None:
 def test_config_repair_labels_render_in_profile_output_language() -> None:
     """``config repair`` renders its labels in the active profile's language.
 
-    ``config repair`` is bootstrap-exempt, so it skipped the
-    session-open path that drops the cached output language. Under an
-    ``en`` profile the diagnostic labels (Overall, Version, Checks,
-    Next) stayed Spanish. The verb now opens the bucket session
-    opportunistically when a profile exists and re-resolves the
-    language through the active-profile resolver.
+    The test suite pins an explicit output-language setting. This case clears
+    that setting for the invocation so the active profile's ``en`` preference
+    selects the diagnostic labels (Overall, Version, Checks, Next).
     """
 
-    # Seed a profile with output-language "en" through the registration door.
+    from ....core.config import override_settings
+
+    # The CLI conftest pins an explicit English environment setting. Clear that
+    # setting in this invocation so the profile preference is the resolver's
+    # selected source rather than an explicit operator override.
     _seed_profile(
         "default",
         **{
@@ -244,7 +245,8 @@ def test_config_repair_labels_render_in_profile_output_language() -> None:
         },
     )
 
-    result = _invoke(("config", "repair"))
+    with override_settings(cadrumo_output_language=None):
+        result = _invoke(("config", "repair"))
 
     assert result.exit_code == 0, result.output
     # The diagnostic labels render in English.

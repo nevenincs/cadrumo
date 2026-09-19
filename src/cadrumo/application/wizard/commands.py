@@ -836,6 +836,11 @@ def _python_parameter(
             values.extend(resolve_ccaa_catalogue(authority=operation).foral_cli_aliases)
         option.click_type = _choice(values, case_sensitive=question.id != "iva-regime")
         option.metavar = _choice_metavar(values)
+        if question.id == "situacion-familiar":
+            # Typer's generated help currently reduces dynamic Choice metavars
+            # to ``<str>``. Keep this closed input protocol visible at the
+            # boundary instead of making an operator infer it from a refusal.
+            option.help = f"{tr(_help_key(flow, question))} ({', '.join(values)})"
         if question.id == "tax-residence-ccaa":
             option.metavar = "CCAA"
             option.show_choices = False

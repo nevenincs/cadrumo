@@ -89,6 +89,10 @@ _PROBES: dict[str, tuple[str, str]] = {
     "MESES_TRABAJO": ("MESES_TRABAJO=1-6", "meses_madre_trabajo"),
     # The alta month must OPEN the declared span, so the probe declares 5-12.
     "ALTA_POSTERIOR_MES": ("ALTA_POSTERIOR_MES=5,MESES_TRABAJO=5-12", "alta_posterior_nacimiento_mes"),
+    "SEGUNDO_CICLO_INFANTIL_INICIO_MES": (
+        "SEGUNDO_CICLO_INFANTIL_INICIO_MES=9",
+        "segundo_ciclo_infantil_inicio_mes",
+    ),
     "GASTOS_GUARDERIA": ("GASTOS_GUARDERIA=900", "gastos_guarderia_euros"),
     # Probes the RANGE form as well as the map, because the range is the shape a
     # taxpayer reads off a certificate (a constant fee across an enrolment span)

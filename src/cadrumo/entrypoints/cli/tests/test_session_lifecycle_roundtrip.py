@@ -34,7 +34,7 @@ from pathlib import Path
 import pytest
 
 from ....adapters.persistence.storage.errors import SessionExpiredError, StorageValidationError
-from ....adapters.persistence.storage.master_key.active_session import active_session
+from ....adapters.persistence.storage.master_key.active_session import active_session, suspend_active_session
 from ....adapters.persistence.storage.master_key.bucket_session import BucketSession
 from ....adapters.persistence.storage.runtime_readiness import StorageRuntimeReadinessCode
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -81,13 +81,17 @@ def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 @pytest.fixture
-def _inactive_repository(tmp_path: Path) -> SecureObjectRepository:
+def _inactive_repository(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     """A real repository whose bucket session has already closed."""
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="97602740-eaa9-46db-851e-b253171bcaed") as profile:
         repository = profile.repository
-    assert active_session.get() is None
-    return repository
+    # A parallel worker may have inherited an unrelated ambient session. Suspend
+    # it during this assertion so the fixture proves this repository cannot use
+    # a session after its own runtime context closes.
+    with suspend_active_session():
+        assert active_session.get() is None
+        yield repository
 
 
 def _active_bucket_session() -> BucketSession:
@@ -137,7 +141,7 @@ def test_expired_session_refuses_the_next_verb(_runtime_profile: TestRuntimeProf
         _load(repository)
 
     assert exc_info.value.context == {
-        "active_session_current": False,
+        "active_session_fresh": False,
         "session_expired": True,
     }
 

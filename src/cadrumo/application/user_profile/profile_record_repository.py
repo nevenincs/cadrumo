@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Generator, Mapping
 from contextlib import contextmanager
+from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
@@ -83,6 +84,46 @@ one profile is unlocked per process, and a credential surface that
 authenticates inside its own event loop or on a thread worker must be
 observable from the surface that reads facts afterwards.
 """
+
+
+_NO_INVOCATION_PROFILE_SCOPE = object()
+_EMPTY_INVOCATION_PROFILE_RECORD = object()
+_INVOCATION_PROFILE_RECORD: ContextVar[UserProfileRecord | object] = ContextVar(
+    "invocation_profile_record",
+    default=_NO_INVOCATION_PROFILE_SCOPE,
+)
+
+
+@contextmanager
+def invocation_profile_record_handoff() -> Generator[None]:
+    """Scope one authenticated profile record to one CLI invocation.
+
+    CLI composition reads the selected profile once to snapshot its output
+    language. A calculation command can consume that exact authenticated
+    record as its initial profile load. The :class:`ContextVar` is entered by
+    the CLI root and reset when Click closes the invocation, so a live profile
+    session cannot carry plaintext record data into a later command.
+    """
+    token = _INVOCATION_PROFILE_RECORD.set(_EMPTY_INVOCATION_PROFILE_RECORD)
+    try:
+        yield
+    finally:
+        _INVOCATION_PROFILE_RECORD.reset(token)
+
+
+def publish_invocation_profile_record(record: UserProfileRecord) -> None:
+    """Offer a :class:`~cadrumo.domain.user_profile.values.UserProfileRecord` to its current CLI invocation."""
+    if _INVOCATION_PROFILE_RECORD.get() is not _NO_INVOCATION_PROFILE_SCOPE:
+        _INVOCATION_PROFILE_RECORD.set(record)
+
+
+def take_invocation_profile_record(profile_id: str | UUID) -> UserProfileRecord | None:
+    """Consume the invocation record when it belongs to ``profile_id``."""
+    record = _INVOCATION_PROFILE_RECORD.get()
+    if not isinstance(record, UserProfileRecord) or str(record.profile_id) != str(profile_id):
+        return None
+    _INVOCATION_PROFILE_RECORD.set(_EMPTY_INVOCATION_PROFILE_RECORD)
+    return record
 
 
 def _active_record_session() -> ProfileRecordSession | None:
@@ -489,6 +530,9 @@ __all__ = [
     "bound_profile_record_session",
     "clear_active_profile_record_session_binding",
     "close_active_profile_record_session",
+    "invocation_profile_record_handoff",
     "profile_record_session_if_authenticated",
+    "publish_invocation_profile_record",
     "require_profile_record_session",
+    "take_invocation_profile_record",
 ]

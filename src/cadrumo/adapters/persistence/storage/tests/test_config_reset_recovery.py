@@ -27,6 +27,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.application.user_profile.custody_ports import profile_custody_port
 from cadrumo.core.storage_taxonomy import StorageCategory
+from cadrumo.domain.calculations.registry.authority import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.tests.audited_process import ensure_text_completed_process, run_audited_process
 from cadrumo.tests.storage_scope import storage_env_overrides
@@ -221,9 +222,15 @@ _RESUME_HARNESS = _SETTINGS_PREAMBLE + dedent(
 def _child_env(root: Path) -> dict[str, str]:
     from cadrumo.core.config import DEV_TEST_DATABASE_PASSWORD
 
+    # The child deliberately starts without the parent's ambient product
+    # settings, but reset retention resolves the same published authority as
+    # the parent. Carry the resolved descriptor root explicitly so this stays
+    # a fresh-process proof rather than failing before the reset begins.
+    authority_root = bundled_authority_descriptor_path().parent
     env = {key: value for key, value in os.environ.items() if not key.startswith(("AEAT_", "CADRUMO_", "PYTEST_"))}
     env.update(
         {
+            "CADRUMO_AUTHORITY_ROOT": str(authority_root),
             "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
             # Anchored on the root's parent, so the secret substrate stays a
             # sibling of the bucket tree rather than nesting inside it.

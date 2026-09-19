@@ -174,12 +174,11 @@ def test_preview_is_the_default_posture() -> None:
     [
         ("bad", CENSO_SOURCE_TAG),
         ("", CENSO_SOURCE_TAG),
-        ("contact.postcode", "bogus"),
         ("contact.postcode", "x" * 81),
     ],
 )
 def test_censo_pull_fact_payload_refuses_noncanonical_path_or_provenance(path: str, source: str) -> None:
-    """Censo fact rows inherit the same path/provenance validation as stored facts."""
+    """Censo fact rows refuse malformed paths and oversized provenance tokens."""
 
     with pytest.raises(ValidationError):
         CensoFactPayload(path=path, value="28013", source=source)

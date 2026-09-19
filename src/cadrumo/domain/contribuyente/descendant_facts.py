@@ -109,6 +109,7 @@ _DESCENDIENTE_FLAG_KEYS = frozenset(
         "PRORRATA",
         "MESES_TRABAJO",
         "ALTA_POSTERIOR_MES",
+        "SEGUNDO_CICLO_INFANTIL_INICIO_MES",
         "GASTOS_GUARDERIA",
         "GASTOS_GUARDERIA_MENSUAL",
         "NIF",
@@ -793,6 +794,11 @@ def parse_descendiente_flag(
                              route. Adds the 150 euro completion-month increment (raising this
                              child's cap to 1.350 euros) for filing years from 2023 only. Omit for
                              the ordinary case.
+      SEGUNDO_CICLO_INFANTIL_INICIO_MES=1..12
+                             (optional) the month in which the child may begin
+                             the second cycle of educación infantil. It bounds
+                             Art. 81.2 guardería spend in the year the child
+                             turns three.
       GASTOS_GUARDERIA=N     (optional, default 0) actual guardería euros — Art. 81.2 incremento 0613,
                              as an ANNUAL total. Sufficient only while the
                              child is under three for the whole period.
@@ -886,11 +892,21 @@ def _flag_family_fields(parts: dict[str, str]) -> _FamilyFields:
 def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
     meses_raw = parts.get("MESES_TRABAJO")
     alta_posterior_raw = parts.get("ALTA_POSTERIOR_MES")
+    segundo_ciclo_raw = parts.get("SEGUNDO_CICLO_INFANTIL_INICIO_MES")
     alta_posterior_nacimiento_mes = (
         _flag_integer(alta_posterior_raw, key="ALTA_POSTERIOR_MES") if alta_posterior_raw is not None else None
     )
     if alta_posterior_nacimiento_mes is not None and not is_calendar_month(alta_posterior_nacimiento_mes):
         raise ProfileAnswerTypeError(f"ALTA_POSTERIOR_MES must be 1-12; got {alta_posterior_nacimiento_mes!r}")
+    segundo_ciclo_infantil_inicio_mes = (
+        _flag_integer(segundo_ciclo_raw, key="SEGUNDO_CICLO_INFANTIL_INICIO_MES")
+        if segundo_ciclo_raw is not None
+        else None
+    )
+    if segundo_ciclo_infantil_inicio_mes is not None and not is_calendar_month(segundo_ciclo_infantil_inicio_mes):
+        raise ProfileAnswerTypeError(
+            f"SEGUNDO_CICLO_INFANTIL_INICIO_MES must be 1-12; got {segundo_ciclo_infantil_inicio_mes!r}",
+        )
     gastos_raw = parts.get("GASTOS_GUARDERIA")
     gastos_guarderia_euros = _flag_integer(gastos_raw, key="GASTOS_GUARDERIA") if gastos_raw is not None else 0
     if gastos_guarderia_euros < 0:
@@ -904,11 +920,12 @@ def _flag_maternity_fields(parts: dict[str, str]) -> _MaternityFields:
             "--descendiente accepts GASTOS_GUARDERIA or GASTOS_GUARDERIA_MENSUAL for one "
             "descendant, not both. The monthly breakdown is the authority where it exists, "
             "so drop GASTOS_GUARDERIA rather than stating the same spend twice.",
+            context={"refusal": "guarderia_spend_shapes", "key": "GASTOS_GUARDERIA_MENSUAL"},
         )
     return {
         "meses_madre_trabajo": parse_meses_trabajo(meses_raw, field="MESES_TRABAJO") if meses_raw is not None else (),
         "alta_posterior_nacimiento_mes": alta_posterior_nacimiento_mes,
-        "segundo_ciclo_infantil_inicio_mes": None,
+        "segundo_ciclo_infantil_inicio_mes": segundo_ciclo_infantil_inicio_mes,
         "gastos_guarderia_euros": gastos_guarderia_euros,
         "gastos_guarderia_mensuales": gastos_guarderia_mensuales,
     }

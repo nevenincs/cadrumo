@@ -15,11 +15,11 @@ import pytest
 from pydantic import TypeAdapter
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_cli_profile
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
-)
 
-from .....application.user_profile.profile_record_repository import ProfileRecordRepository
+from .....application.user_profile.profile_record_repository import (
+    ProfileRecordRepository,
+    active_profile_record_session,
+)
 from .....domain.user_profile.values import ProfileSetupState
 from ...tests.cli_runner import invoke_cached_cli
 from .isolated_storage_fixture import config_check_backend as config_check_backend
@@ -42,13 +42,12 @@ def _envelope(result) -> dict[str, object]:
 
 def _stored_state(profile_id: str) -> tuple[ProfileSetupState, int]:
     """Read the setup state and record revision straight from the repository."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     from uuid import UUID
 
     identity = UUID(profile_id)
-    record = ProfileRecordRepository.for_current_session(
-        identity, profile_decode_context=_profile_decode_context_for_test
-    ).load(identity)
+    session = active_profile_record_session()
+    assert session is not None and session.profile_id == identity
+    record = ProfileRecordRepository(session=session).load(identity)
     return record.setup_state, record.record_revision
 
 

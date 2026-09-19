@@ -81,7 +81,17 @@ def normalize_ambient_profile(ctx: typer.Context) -> None:
     try:
         pointer = resolve_profile_bucket(active)
     except ProfileLabelAmbiguousError as exc:
-        raise CliRefusedBoundaryError(translated_message="errors.refused.refused_profile_label_ambiguous") from exc
+        from ...application.profile_preconditions import ProfileSelectionFailure, profile_selection_failure_verdict
+
+        common = _common()
+        raise common.attach_cli_policy_verdict(
+            CliRefusedBoundaryError(translated_message="errors.refused.refused_profile_label_ambiguous"),
+            verdict=profile_selection_failure_verdict(
+                ProfileSelectionFailure.AMBIGUOUS,
+                requested_profile=active,
+            ),
+            requested_leaf=common.requested_cli_leaf(ctx),
+        ) from exc
     except CadrumoError:
         return
     if pointer is not None:

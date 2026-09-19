@@ -72,6 +72,14 @@ _LEGAL_ENTITY_FORM_CHOICES: tuple[str, ...] = ()
 _IRPF_ESTIMATION_REGIME_CHOICES: tuple[str, ...] = ()
 _IRPF_SPECIAL_REGIME_CHOICES: tuple[str, ...] = ()
 _FISCAL_RESIDENCY_CHOICES: tuple[str, ...] = ()
+# This public wire vocabulary is shown by the import-pure command graph.  The
+# operation-scoped profile flow remains the validation authority; its registry
+# projection supplies the same values when the handler runs.  Keeping the
+# metavar here lets ``config profile create --help`` describe this closed input
+# without opening an authority generation merely to render help.
+_SITUACION_FAMILIAR_METAVAR: Final = (
+    "<casado|pareja_hecho_registrada|pareja_hecho_no_registrada|soltero|separado_divorciado>"
+)
 
 
 # Every dynamically resolved handler module is named here as a WHOLE dotted path.
@@ -375,6 +383,11 @@ def _wizard_option(field_key: str) -> OptionSpec:
         return _option(name, (f"--{field_key}",), TEXT_VALUE, help_key, default=(), multiple=True)
     if field_key == "taxpayer-marital-status":
         return replace(_option(name, (f"--{field_key}",), TEXT_VALUE, help_key), metavar="<1|2|3|4|5>")
+    if field_key == "situacion-familiar":
+        return replace(
+            _option(name, (f"--{field_key}",), TEXT_VALUE, help_key),
+            metavar=_SITUACION_FAMILIAR_METAVAR,
+        )
     enum_contract = _WIZARD_ENUM_FIELDS.get(field_key)
     if enum_contract is not None:
         return _option(name, (f"--{field_key}",), enum_contract, help_key)

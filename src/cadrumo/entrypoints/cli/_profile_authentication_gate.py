@@ -139,8 +139,14 @@ def _resolve_login_target_or_refuse(raw: str) -> ProfileBucketPointer:
     try:
         return resolve_login_target(raw)
     except ProfileLabelAmbiguousError as error:
-        raise CliRefusedBoundaryError(
-            translated_message="errors.refused.refused_profile_label_ambiguous",
+        raise attach_cli_policy_verdict(
+            CliRefusedBoundaryError(
+                translated_message="errors.refused.refused_profile_label_ambiguous",
+            ),
+            verdict=profile_selection_failure_verdict(
+                ProfileSelectionFailure.AMBIGUOUS,
+                requested_profile=raw,
+            ),
         ) from error
     except ProfileNotFoundError as error:
         # The message already names the next step in prose ("run `aeat config

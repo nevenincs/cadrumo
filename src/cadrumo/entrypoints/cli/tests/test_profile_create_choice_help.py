@@ -43,9 +43,9 @@ def _isolated_env(tmp_path: Path) -> dict[str, str | None]:
 def _choice_tokens_from_invalid_value(output: str) -> set[str]:
     undecorated = re.sub(r"[┌┐└┘─│]", " ", output)
     flat = re.sub(r"\s+", " ", undecorated)
-    match = re.search(r"is not one of (?P<choices>.*?)\.", flat)
+    match = re.search(r"Valid options: (?P<choices>.*?)\.", flat)
     assert match is not None, output
-    return set(re.findall(r"'([^']+)'", match.group("choices")))
+    return set(re.findall(r"[a-z_]+", match.group("choices")))
 
 
 def test_profile_create_help_advertises_situacion_familiar_runtime_choices(
@@ -99,6 +99,7 @@ def test_profile_create_help_advertises_situacion_familiar_runtime_choices(
     assert not missing, f"--situacion-familiar runtime choices are not all visible in profile-create help: {missing}"
 
 
+@pytest.mark.os_keychain
 def test_profile_edit_cli_accepts_objetiva_modulos_facts_and_directa_without_them(
     tmp_path: Path,
 ) -> None:

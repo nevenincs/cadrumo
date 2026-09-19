@@ -219,6 +219,7 @@ def _descendiente_row_lines(descendientes: tuple[DescendantInfo, ...]) -> list[s
                     f"custodia={str(descendant.custodia_compartida).lower()}",
                     f"meses_madre_trabajo={serialise_meses_trabajo(descendant.meses_madre_trabajo) or '-'}",
                     f"alta_posterior_nacimiento_mes={descendant.alta_posterior_nacimiento_mes or '-'}",
+                    f"segundo_ciclo_infantil_inicio_mes={descendant.segundo_ciclo_infantil_inicio_mes or '-'}",
                     f"gastos_guarderia_euros={descendant.gastos_guarderia_euros}",
                     f"gastos_guarderia_mensuales={_guarderia_mensual_or_dash(descendant)}",
                     f"nif={descendant.nif or '-'}",
@@ -351,8 +352,15 @@ def descendiente_add(
             # reads. The translated message carries what they can act on. The KEY
             # does belong there: the message lists every accepted key, which does
             # not tell an automated operator which one of theirs was unreadable.
+            # The mutually-exclusive guarderia spend forms are a known, safe
+            # condition with a dedicated localised refusal. Other parser prose can
+            # include the supplied value, so it stays behind the generic boundary.
             raise _CliRefusedBoundaryError(
-                translated_message="cli.config.profile.descendiente.invalid_flag",
+                translated_message=(
+                    "cli.config.profile.descendiente.guarderia_spend_shapes_conflict"
+                    if (exc.context or {}).get("refusal") == "guarderia_spend_shapes"
+                    else "cli.config.profile.descendiente.invalid_flag"
+                ),
                 context=_offending_flag_key(exc),
             ) from exc
         except ValidationError as exc:

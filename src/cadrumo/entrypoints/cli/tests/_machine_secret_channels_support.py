@@ -17,6 +17,7 @@ from uuid import UUID
 from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 
 from ....adapters.persistence.storage.tests.secure_sql import reap_profile_session_keys
+from ....core.config import load_settings
 from ....core.external_constants import OutputLanguage
 from ....tests.inventory import SRC_CADRUMO
 from .password_only_profile import FIXTURE_PROFILE_INPUT, register_password_only_profile
@@ -267,7 +268,9 @@ _WINDOWS_HANDLE_HARNESS = (
 
 
 def _settings(storage_root: Path, *, output_language: OutputLanguage = OutputLanguage.EN) -> dict[str, object]:
+    authority_root = load_settings().cadrumo_authority_root
     return {
+        "cadrumo_authority_root": None if authority_root is None else str(authority_root),
         "cadrumo_local_storage_root": str(storage_root),
         "cadrumo_secret_store_dir": str(storage_root / "fallback-store"),
         "cadrumo_output_language": output_language.value,

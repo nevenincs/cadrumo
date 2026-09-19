@@ -25,6 +25,7 @@ from ....application.user_profile.preflight import (
     format_profile_selector_requirements,
 )
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.profile_grounding import build_profile_grounding_index
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from .._overview import (
@@ -186,7 +187,8 @@ def _label_for(selector: str) -> str:
 def _profile(**kwargs):
     from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 
-    return TaxpayerProfile(tax_id="00000000T", iva_regime=IVARegime("GENERAL"), **kwargs)
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        return TaxpayerProfile(tax_id="00000000T", iva_regime=IVARegime("GENERAL"), **kwargs)
 
 
 def test_the_taxpayer_model_fields_have_labels_that_differ_from_their_tokens() -> None:
@@ -215,10 +217,11 @@ def test_a_natural_person_without_income_categories_is_told_about_the_categories
     """
     from ....domain.contribuyente.entity_type import EntityType
 
-    refusal = _undeclared_taxpayer_model_refusal(
-        _profile(entity_type=EntityType.from_registry("natural_person")),
-        schema=published_profile_schema(),
-    )
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        refusal = _undeclared_taxpayer_model_refusal(
+            _profile(entity_type=EntityType.from_registry("natural_person")),
+            schema=published_profile_schema(),
+        )
 
     context = refusal.context
     assert context is not None

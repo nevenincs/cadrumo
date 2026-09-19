@@ -22,6 +22,7 @@ from cadrumo.adapters.persistence.storage.recovery_key import (
 )
 from cadrumo.tests.audited_process import WindowsStartupInfo, run_audited_process
 
+from ....core.config import load_settings
 from ....tests.inventory import SRC_CADRUMO
 from ..config.tests.isolated_storage_fixture import COMPLETE_NATURAL_PERSON_FLAGS
 from ._machine_secret_channels_support import (
@@ -60,6 +61,12 @@ def _assert_recovery_code_shape(document: bytes | bytearray) -> None:
     assert len(groups) == RECOVERY_CODE_GROUP_COUNT
     assert all(len(group) == RECOVERY_CODE_GROUP_LENGTH for group in groups)
     assert all(symbol in RECOVERY_CODE_ALPHABET for group in groups for symbol in group)
+
+
+def _authority_root_environment() -> dict[str, str]:
+    """Pass the test host's selected published authority to a filtered child."""
+    authority_root = load_settings().cadrumo_authority_root
+    return {} if authority_root is None else {"CADRUMO_AUTHORITY_ROOT": str(authority_root)}
 
 
 @pytest.mark.parametrize("channel", ("stdin", "fd"))
@@ -378,6 +385,7 @@ def test_platform_descriptor_bootstrap_authenticates_real_read(tmp_path: Path) -
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
                 "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
+                **_authority_root_environment(),
             },
         )
         result = run_audited_process(
@@ -676,6 +684,7 @@ def test_platform_root_descriptor_plus_leaf_stdin_performs_real_certificate_writ
                 "CADRUMO_LOCAL_STORAGE_ROOT": str(root),
                 "CADRUMO_SECRET_STORE_DIR": str(root / "fallback-store"),
                 "CADRUMO_OUTPUT_LANGUAGE": "en",
+                **_authority_root_environment(),
             },
         )
         result = run_audited_process(
