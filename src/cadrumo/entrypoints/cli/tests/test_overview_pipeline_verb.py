@@ -231,7 +231,26 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
         notice for notice in _notices(result.output) if notice["code"] == "overview.pipeline.modelo.calculated"
     ]
     assert readiness_notices
-    assert all(notice["action"] is None for notice in readiness_notices)
+    assert all(
+        notice["action"] == {
+            "action": {
+                "action_id": "operator.modelo.work.verify",
+                "target_command_key": "modelo.work.verify",
+                "cli_path": ["app", "modelo", "work", "verify"],
+            },
+            "argument_bindings": [
+                {
+                    "argument_name": "work_unit_id",
+                    "status": "resolved",
+                    "value": work_unit_id,
+                    "source": "operator_action.verdict_context",
+                    "source_key": "work_unit_id",
+                    "source_evidence_id": None,
+                },
+            ],
+        }
+        for notice in readiness_notices
+    )
 
 
 def test_pipeline_distinguishes_persisted_incomplete_from_never_verified() -> None:
