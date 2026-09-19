@@ -839,8 +839,10 @@ def _python_parameter(
         if question.id == "situacion-familiar":
             # Typer's generated help currently reduces dynamic Choice metavars
             # to ``<str>``. Keep this closed input protocol visible at the
-            # boundary instead of making an operator infer it from a refusal.
-            option.help = f"{tr(_help_key(flow, question))} ({', '.join(values)})"
+            # boundary through the explicit metavar above. The help copy stays
+            # a direct catalogue translation so it cannot bypass the locale
+            # source contract while appending transport tokens.
+            option.help = tr("wizard.setup.flags.situacion-familiar.help")
         if question.id == "tax-residence-ccaa":
             option.metavar = "CCAA"
             option.show_choices = False

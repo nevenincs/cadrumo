@@ -24,6 +24,7 @@ from ...application.modelo.calculate_input import (
     is_detail_casilla_override_key,
 )
 from ...application.modelo.calculation_action_ports import CalculationActionPorts
+from ...application.modelo.calculation_actions import get_calculation_revision
 from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.selectors import (
     ModeloCalculationRevisionSelector,
@@ -66,9 +67,12 @@ from .common import active_bucket_id_or_refuse, active_profile_label
 from .errors import CliRefusedBoundaryError
 
 if TYPE_CHECKING:
+    from ...application.modelo.work_lifecycle_ports import WorkLifecyclePorts
     from ...application.modelo.work_profile import ModeloWorkProfile
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.modelos.calculation_revision import CalculationRevision
     from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
+    from ...domain.modelos.work_unit import WorkUnit
 
 _log = get_logger(__name__)
 
@@ -121,6 +125,25 @@ def validate_calculation_revision_id(value: str) -> CalculationRevisionId:
             ),
         )
     return stripped
+
+
+def load_modelo_calculation_revision(
+    calculation_revision_id: CalculationRevisionId,
+    *,
+    ports: CalculationActionPorts,
+) -> CalculationRevision:
+    """Load a known revision through the application calculation authority.
+
+    Callers use this after target resolution. Keeping the known-ID read here
+    makes that distinction explicit so command modules do not look like they
+    own revision selection policy.
+    """
+    return get_calculation_revision(calculation_revision_id, ports=ports)
+
+
+def load_modelo_work_unit(work_unit_id: str, *, ports: WorkLifecyclePorts) -> WorkUnit:
+    """Load a known work unit through the application lifecycle authority."""
+    return get_work_unit(work_unit_id, ports=ports)
 
 
 def parse_kv_spec[T](
@@ -857,6 +880,8 @@ def resolve_default_actor() -> str:
 __all__ = [
     "bad_parameter_from_error",
     "bad_parameter_from_localized_context",
+    "load_modelo_calculation_revision",
+    "load_modelo_work_unit",
     "optional_decimal_option",
     "parse_binding_override",
     "parse_casilla_override",

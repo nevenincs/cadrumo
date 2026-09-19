@@ -111,12 +111,12 @@ from ...application.modelo.review_package_signing import (
     sign_review_package,
     verify_review_package_signature,
 )
-from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
 from ._modelo_behavior_support import bare_period_error, resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
+    load_modelo_work_unit,
     resolve_default_actor,
     resolve_explicit_or_active_bucket_id,
 )
@@ -189,7 +189,7 @@ def review_package_build(
     )
     target_revision_id = selected_revision.calculation_revision_id
     resolved_actor = operator_input.actor or resolve_default_actor()
-    work_unit = get_work_unit(
+    work_unit = load_modelo_work_unit(
         selected_revision.work_unit_id,
         ports=calculation_ports.work_lifecycle_ports,
     )

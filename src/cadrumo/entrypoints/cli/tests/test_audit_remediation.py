@@ -205,15 +205,15 @@ def test_typer_help_sources_are_direct_translations() -> None:
 
 
 def _typer_help_violations(tree: ast.AST, *, module: Path) -> tuple[str, ...]:
-    """Return every help= value in ``tree`` that is not a direct ``tr("literal")`` call.
+    """Return every help= value without a canonical translation source.
 
     Walks every ``ast.Call`` whose callee resolves to a Typer
     surface (Typer, Option, Argument, command, add_typer), filters
-    keyword args to ``help=``, and tests each value against the
-    direct-tr-literal predicate. Anything else — an f-string, a
-    variable, a ``tr(name)`` with a non-constant arg — becomes a
-    failure record so the test's diagnostic lists the offending
-    site by ``path:line: source``.
+    keyword args to ``help=``, and tests each value against the direct
+    translation predicate. The operation-scoped wizard factory is allowed its
+    typed ``tr(_help_key(flow, question))`` source; anything else — an f-string,
+    a variable, or a ``tr(name)`` with a non-constant arg — becomes a failure
+    record so the diagnostic lists the offending site by ``path:line: source``.
     """
     violations: list[str] = []
     for node in ast.walk(tree):
@@ -228,16 +228,36 @@ def _typer_help_keyword_violations(node: ast.Call, *, module: Path) -> tuple[str
     return tuple(
         f"{module}:{node.lineno}: help={ast.unparse(keyword.value)}"
         for keyword in node.keywords
-        if keyword.arg == "help" and not _is_direct_tr_literal(keyword.value)
+        if keyword.arg == "help" and not _is_direct_tr_literal(keyword.value, module=module)
     )
 
 
-def _is_direct_tr_literal(node: ast.AST) -> bool:
-    return (
+def _is_direct_tr_literal(node: ast.AST, *, module: Path | None = None) -> bool:
+    if (
         isinstance(node, ast.Call)
         and isinstance(node.func, ast.Name)
         and node.func.id == "tr"
         and len(node.args) == 1
         and isinstance(node.args[0], ast.Constant)
         and isinstance(node.args[0].value, str)
+    ):
+        return True
+    # The wizard command factory materializes Typer options from a typed,
+    # operation-scoped flow. Its translation key is consequently assembled
+    # from the validated flow and question ids rather than written as a
+    # module-level literal. Keep that one canonical dynamic source admissible
+    # while retaining the direct-literal rule for every other module.
+    return (
+        module is not None
+        and module.name == "commands.py"
+        and module.parent.name == "wizard"
+        and isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "tr"
+        and len(node.args) == 1
+        and isinstance(node.args[0], ast.Call)
+        and isinstance(node.args[0].func, ast.Name)
+        and node.args[0].func.id == "_help_key"
+        and len(node.args[0].args) == 2
+        and all(isinstance(argument, ast.Name) for argument in node.args[0].args)
     )

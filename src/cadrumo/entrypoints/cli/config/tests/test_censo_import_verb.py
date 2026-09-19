@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import json
 from collections.abc import Iterator
 from pathlib import Path
@@ -110,9 +111,21 @@ def test_apply_routes_through_the_single_cotejo_apply_authority() -> None:
 
     from .. import _censo_transport
 
-    source = inspect.getsource(_censo_transport.censo_import)
-    # The persistence call is apply_cotejo(...), never a bare apply_fact_changes(...)
-    # write that would skip the CENSO_APPLIED emission (the prose comment naming
-    # the bypassed write is not a call, so pin on the call form).
-    assert "apply_cotejo(state" in source
-    assert "apply_fact_changes(" not in source
+    tree = ast.parse(inspect.getsource(_censo_transport.censo_import))
+    apply_calls = [
+        node
+        for node in ast.walk(tree)
+        if isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "apply_cotejo"
+    ]
+    assert len(apply_calls) == 1, "the import door must have exactly one cotejo apply call"
+    apply_call = apply_calls[0]
+    assert apply_call.args and isinstance(apply_call.args[0], ast.Name)
+    assert apply_call.args[0].id == "state"
+    assert not any(
+        isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "apply_fact_changes"
+        for node in ast.walk(tree)
+    )

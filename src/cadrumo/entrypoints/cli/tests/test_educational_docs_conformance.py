@@ -21,6 +21,7 @@ from __future__ import annotations
 import re
 from functools import cache
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 import pytest
 
@@ -104,6 +105,7 @@ def test_command_scanner_does_not_cross_line_boundaries() -> None:
 
 def test_relative_links_resolve() -> None:
     """Every relative markdown link in the doc resolves to an existing file."""
+    generated_cli_links = _generated_cli_reference_links()
     broken: list[str] = []
     for doc in _edu_docs():
         text = doc.read_text(encoding="utf-8")
@@ -121,6 +123,28 @@ def test_relative_links_resolve() -> None:
             resolved = (doc.parent / path_part).resolve()
             # Must resolve to a FILE (a documented page), not a bare directory:
             # myst cannot cross-reference a directory link such as ``../cli/``.
-            if not resolved.is_file():
+            if resolved.is_file():
+                continue
+            try:
+                generated_target = resolved.relative_to((REPO_ROOT / "docs").resolve()).as_posix()
+            except ValueError:
+                generated_target = ""
+            if generated_target not in generated_cli_links:
                 broken.append(f"{doc.relative_to(REPO_ROOT)}: {target}")
     assert not broken, "educational docs have unresolved relative links:\n" + "\n".join(broken)
+
+
+@cache
+def _generated_cli_reference_links() -> frozenset[str]:
+    """Return the paths the build-time CLI reference generator owns.
+
+    ``docs/cli`` is intentionally gitignored: Sphinx creates it from the live
+    command graph in ``builder-inited``.  Validate links to that generated
+    surface against the generator in an isolated temporary docs root so this
+    gate checks the current output contract without mutating the worktree.
+    """
+    from dev.docs.cli_reference import generate_cli_reference
+
+    with TemporaryDirectory(prefix="cadrumo-doc-link-check-") as temporary_root:
+        generated = generate_cli_reference(Path(temporary_root))
+    return frozenset(generated)

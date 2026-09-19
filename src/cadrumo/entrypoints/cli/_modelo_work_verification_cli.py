@@ -23,13 +23,11 @@ from ...application.calculations.cross_period_models import (
     CrossPeriodExpectedMemberSet,
 )
 from ...application.calculations.m111_no_retenciones import m111_no_retenciones_periods_for_bucket
-from ...application.modelo.calculation_actions import get_calculation_revision
 from ...application.modelo.filing_actions import file_modelo_revision
 from ...application.modelo.profile_readiness_gate import require_profile_ready_for_work_unit
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ...application.modelo.verify_selector import ModeloVerifySelector
-from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.modelo.work_plazo import calculated_m210_plazo_resolution
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.external_constants import OutputLanguage
@@ -43,7 +41,12 @@ from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ._modelo_behavior_support import require_active_profile, resolve_revision_for_cli
-from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
+from ._modelo_cli_support import (
+    bad_parameter_from_error,
+    load_modelo_calculation_revision,
+    load_modelo_work_unit,
+    resolve_default_actor,
+)
 from ._modelo_payloads import (
     CrossPeriodCleanStatePayload,
     CrossPeriodDependencyEvidencePayload,
@@ -236,7 +239,7 @@ def work_verify(
         default_for="verify",
         calculation_ports=calculation_ports,
     )
-    selected_work_unit = get_work_unit(
+    selected_work_unit = load_modelo_work_unit(
         selected_revision.work_unit_id,
         ports=calculation_ports.work_lifecycle_ports,
     )
@@ -270,7 +273,7 @@ def work_verify(
     ]
     notices = verification_report_notices(report)
     plazo_resolution = calculated_m210_plazo_resolution(
-        work_unit=get_work_unit(
+        work_unit=load_modelo_work_unit(
             selected_revision.work_unit_id,
             ports=calculation_ports.work_lifecycle_ports,
         ),
@@ -297,7 +300,7 @@ def work_verify(
         lines.append(noop_message)
     notices.extend(
         m184_socio_handoff_notices(
-            get_calculation_revision(selected_revision.calculation_revision_id, ports=calculation_ports)
+            load_modelo_calculation_revision(selected_revision.calculation_revision_id, ports=calculation_ports)
         )
     )
     emit_envelope(ctx, command="modelo.work.verify", result=result, lines=lines, notices=notices)
@@ -402,7 +405,7 @@ def work_file(
         default_for="file",
         calculation_ports=calculation_ports,
     )
-    selected_work_unit = get_work_unit(
+    selected_work_unit = load_modelo_work_unit(
         selected_revision.work_unit_id,
         ports=calculation_ports.work_lifecycle_ports,
     )
@@ -450,6 +453,8 @@ def work_file(
         )
         lines.append(noop_message)
     notices.extend(
-        m184_socio_handoff_notices(get_calculation_revision(record.calculation_revision_id, ports=calculation_ports))
+        m184_socio_handoff_notices(
+            load_modelo_calculation_revision(record.calculation_revision_id, ports=calculation_ports)
+        )
     )
     emit_envelope(ctx, command="modelo.work.file", result=result, lines=lines, notices=notices or None)

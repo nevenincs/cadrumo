@@ -47,7 +47,6 @@ from ...application.modelo.local_observation_spreadsheet import (
     parse_casilla_lexical_spreadsheet,
     parse_casilla_value_spreadsheet,
 )
-from ...application.modelo.work_lifecycle import get_work_unit
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.i18n.render import tr
@@ -66,6 +65,7 @@ from ._filing_chain_payloads import (
 )
 from ._modelo_cli_support import (
     bad_parameter_from_error,
+    load_modelo_work_unit,
     parse_casilla_override,
     resolve_default_actor,
     validate_work_unit_id,
@@ -169,7 +169,7 @@ def _import_record(
             bucket_id=active_bucket_id_or_refuse(),
             operation=authority_operation(ctx),
         )
-        work_unit = get_work_unit(work_unit_id, ports=calculation_ports.work_lifecycle_ports)
+        work_unit = load_modelo_work_unit(work_unit_id, ports=calculation_ports.work_lifecycle_ports)
         calculation_ports = calculation_action_ports_factory(ctx)(
             bucket_id=work_unit.bucket_id,
             operation=authority_operation(ctx),

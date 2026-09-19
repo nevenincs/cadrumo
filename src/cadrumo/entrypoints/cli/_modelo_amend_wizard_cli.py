@@ -69,7 +69,6 @@ from ...application.modelo.action_errors import (
     amendment_evidence_missing_precondition,
 )
 from ...application.modelo.amendment_actions import amend_modelo_revision
-from ...application.modelo.calculation_actions import get_calculation_revision
 from ...application.modelo.filing_actions import get_filing_record
 from ...application.modelo.registry_discovery import registry_casillas_for_registry_scope
 from ...core.decimal.grammar import try_parse_canonical_decimal
@@ -89,7 +88,7 @@ from ...domain.modelos.calculation_revision_amendment import (
 )
 from ._modelo_amend_wizard_payloads import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
-from ._modelo_cli_support import bad_parameter_from_error, resolve_default_actor
+from ._modelo_cli_support import bad_parameter_from_error, load_modelo_calculation_revision, resolve_default_actor
 from ._modelo_rendering import filing_record_lines
 from ._modelo_work_wizard_cli import resolve_modelo_work_unit_for_wizard
 from .common import activate_subcommand_output_language, emit_envelope
@@ -236,7 +235,7 @@ def run_modelo_work_amend_wizard(
         casilla_rows = _baseline_casilla_rows(unit, operation=authority_operation(ctx))
     except RegistrySnapshotError as exc:
         raise deps.bad_parameter_from_error(exc) from exc
-    baseline_revision: CalculationRevision = get_calculation_revision(
+    baseline_revision: CalculationRevision = load_modelo_calculation_revision(
         baseline.calculation_revision_id,
         ports=calculation_action_ports_factory(ctx)(
             bucket_id=unit.bucket_id,
