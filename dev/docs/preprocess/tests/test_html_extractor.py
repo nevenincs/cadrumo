@@ -482,3 +482,35 @@ def test_derived_anchor_is_recorded_indistinguishably_from_a_declared_one() -> N
     assert set(article_one.model_fields_set) >= {"anchor"}
     assert set(derived_unit.model_dump()) == set(article_one.model_dump())
     assert not any("deriv" in name.lower() for name in derived_unit.model_dump())
+
+
+def test_block_noise_is_stripped_when_its_end_tag_carries_whitespace(tmp_path: Path) -> None:
+    """`</script >` closes a script element, and the stripper must agree.
+
+    HTML permits whitespace before the `>` of an end tag and browsers honour
+    it, so a pattern anchored on `</script>` alone leaves the whole element
+    standing. Its body is then carried into the extracted article prose and
+    into every sidecar and citation built from it: the script's source, the
+    stylesheet's rules, and the jurisprudence form's control labels all
+    become quotable "legal text".
+    """
+    source = tmp_path / "spaced-end-tags.html"
+    source.write_text(
+        '<html><body><div id="textoxslt">\n'
+        '<h2 class="articulo">Artículo 1. Naturaleza.</h2>\n'
+        "<p>tributo de naturaleza indirecta</p>\n"
+        '<script >var tracker = "script-body-canary";</script >\n'
+        "<style >.linkSubir{color:red}</style >\n"
+        "<form ><p>Jurisprudencia</p></form >\n"
+        "</div></body></html>",
+        encoding="utf-8",
+    )
+
+    output = build_outputs(source, repo_root=tmp_path)[0]
+    body = "\n".join(unit.text for unit in output.units)
+
+    assert "script-body-canary" not in body
+    assert "color:red" not in body
+    assert "Jurisprudencia" not in body
+    # Positive control: the article prose the stripper must not touch survives.
+    assert "tributo de naturaleza indirecta" in body
