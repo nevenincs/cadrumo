@@ -79,4 +79,3 @@ related:
 
 - `S20` phase-close review fixes: scoped exclusions, sigpipe, prove commit binding, docs gating, release-please permissions
 - `S04` probe PR 679 failed at setup: actionlint download did not follow the GitHub asset redirect
-

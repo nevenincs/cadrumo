@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#registry-edition-authoring'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-09-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e09b11b38698fe74f79f7710810459f7248a7b7c5ecd00869eb6b7f8e6bf67e'
+body_hash: 'sha256:e196d2d39fe7a085765230f952a234dcde3675445683a623a17e4d6fda71cd32'
 related: []
 ---
 # `registry-edition-authoring` reference: `Modelo 100 remeasurement`

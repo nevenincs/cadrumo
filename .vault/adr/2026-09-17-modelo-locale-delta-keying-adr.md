@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#modelo-locale-delta-keying'
 date: '2026-09-17'
-modified: '2026-09-17'
+modified: '2026-09-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:f7ae0090ea32b645bb6191034772e95c3253745b688e451e574707cc3f6e645e'
+body_hash: 'sha256:7533eace79766259c03a41f746149668a808ebee732ce08d49864f73c3c17507'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-research]]"
   - "[[2026-09-09-registry-edition-authoring-adr]]"

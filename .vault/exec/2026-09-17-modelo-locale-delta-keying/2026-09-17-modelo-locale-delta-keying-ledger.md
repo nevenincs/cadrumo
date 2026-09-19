@@ -3,42 +3,17 @@ tags:
   - '#exec'
   - '#modelo-locale-delta-keying'
 date: '2026-09-17'
-modified: '2026-09-18'
+modified: '2026-09-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:c62d59f24a9aa5c7b93d099722b36430d7fab96860836bb246d3ef2645d93b6c'
+body_hash: 'sha256:c1c049f5df0cc464581c51b5c3edb7d30895d495e0c5d7044823e228391bbe8a'
 related:
   - "[[2026-09-17-modelo-locale-delta-keying-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `modelo-locale-delta-keying` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S01` `M` `src/cadrumo/domain/calculations/registry/modelo_localization.py`
 - `S01` `M` `src/cadrumo/domain/calculations/registry/tests/test_localization_continuity_tier_is_reached.py`
 - `S01` `M` `dev/registry/tests/test_isolated_edition_staging.py`
@@ -176,4 +151,3 @@ related:
 - `S17` A generic detector - a Spanish word the catalogue translates in the large majority of rows but keeps in a few - found 1,224 rows, of which 765 values were genuine leaks and the rest were proper names, citations and registry identifiers correctly kept. Widening the dropped-content check from labels to help then exposed a broken generator: 728 help rows across three locales stated no transaction number, read tax information about tax information, or had lost their LIVA citations. Repair peels, because collapsing a repaired value uncovers the edition keys beneath it, so the audit was re-run after every collapse until it read zero. Five checks were corrected rather than the data: parentheses are read by the half-translation check, help by the dropped-content check, Hungarian numerals inside compounds and as teen words, and one Hungarian label now composes the segments its Spanish composes
 - `S17` Help is now judged by every check that judges a label. Widening translation drift to help exposed 600 lineages storing one meaning twice - 61 were the old template surviving beside correct text, 183 were one Catalan case split, and 356 were reviewer judgements - after which the collapse folded 1,019 values onto lineage keys. Widening copied, stale, stranded and shared translations then reported only eight further cases: seven equivalent Spanish wordings now recorded with the difference seen, and one genuine defect no earlier check could see, a Modelo 303 label carrying its own help text in all three locales and so losing the result line, the winding up of the non-customs warehousing regime and the State Administration share
 - `S17` The Hungarian interface now uses the same legal terms as the casilla catalogue: 258 of 269 strings say rovat and nyomtatvany where they said casilla and modelo. Machine tokens were left exactly as they were - every brace placeholder, percent key and option name survives byte for byte across all 269 rows, and the Spanish words remain only where a user types them, in the aeat app modelo command examples, the modelo command group name in help, and a relation id. Placeholder parity and cross-surface coverage were re-verified after the install
-

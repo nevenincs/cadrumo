@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#registry-edition-authoring'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-09-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:8b83789852baeee01480534e43748a84e8d81824b3da35ee963539da7d1dfceb'
+body_hash: 'sha256:077b8ba71e3cdc7b453550102c4f19ca1894532ae75b9a0d686f7db536406c30'
 related: []
 ---
 # `registry-edition-authoring` reference: `registry-wide collapse survey`

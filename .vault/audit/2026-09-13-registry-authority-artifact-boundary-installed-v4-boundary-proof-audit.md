@@ -3,9 +3,9 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-13'
-modified: '2026-09-13'
+modified: '2026-09-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:0e9cbe7689fd92622aeec3a0c14cb02e1085317cefe2e5ac3f96d3f4e9b18444'
+body_hash: 'sha256:f9e1e4944b5626f39353a165a8087bf2570a00e921ca426a59d304a68e040245'
 related:
   - "[[2026-09-10-registry-authority-artifact-boundary-plan]]"
 ---
