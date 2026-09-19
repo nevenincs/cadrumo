@@ -34,6 +34,7 @@ value already present in your shell always wins.
 | `CADRUMO_AUTH_PROVIDER` | AuthProviderKind | unset | Default auth provider for `aeat config auth status` / `test` when --provider is omitted. When None, the CLI auto-selects the first configured provider from the canonical registry order. |
 | `CADRUMO_AUTH_TIMEOUT_MS` | int | `30000` | Playwright navigation timeout for protected AEAT authentication in milliseconds |
 | `CADRUMO_AUTHORITATIVE_LANGUAGE_PROJECT_DOCS` | str | `en` | Authoritative language for internal code and documentation |
+| `CADRUMO_AUTHORITY_ROOT` | Path | unset | Directory holding the published registry authority descriptor ``authority.current.json`` and the content-addressed SQLite generation it selects. The ``None`` default is the installed posture: the authority ships inside the distribution and resolves through the bundled-data boundary, so an unset ``CADRUMO_AUTHORITY_ROOT`` leaves resolution exactly as the packaged product performs it. A development checkout sets it to the generated authority tree it keeps outside the packaged location; the descriptor must exist under the named directory. |
 | `CADRUMO_BLOB_STORE_DIR` | Path | (derived) | Directory containing the encrypted blob store (content-addressed, classification-aware) |
 | `CADRUMO_BROWSER_BUSCAR_SETTLE_MS` | int | `3000` | Settle delay (ms) after the AEAT 'Buscar' button before reading the results table |
 | `CADRUMO_BROWSER_CHANNEL` | str | `chrome` | Playwright browser channel to use (e.g., 'chrome', 'chromium', 'msedge') |

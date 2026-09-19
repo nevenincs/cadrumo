@@ -61,6 +61,7 @@ Submodules
    cadrumo.domain.calculations.registry.censo_modelos
    cadrumo.domain.calculations.registry.checker_oracle_flow
    cadrumo.domain.calculations.registry.citation_blocklist
+   cadrumo.domain.calculations.registry.cleared_families
    cadrumo.domain.calculations.registry.concepto_ingreso
    cadrumo.domain.calculations.registry.condition_mode
    cadrumo.domain.calculations.registry.convenio
