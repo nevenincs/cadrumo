@@ -56,6 +56,14 @@ errors:
     clave_movil_identity_checksum: The Cl@ve Móvil identifier has a valid shape but
       its checksum letter does not match its digits. Check the final letter on your
       document and try again.
+  authority:
+    descriptor_absent: No registry authority is published at %{searched_path}. Publish
+      it with `%{publish_command}`, or set CADRUMO_AUTHORITY_ROOT to a published authority
+      tree.
+    descriptor_missing_under_configured_root: CADRUMO_AUTHORITY_ROOT points at a directory
+      that holds no registry authority descriptor at %{searched_path}. Publish the
+      authority with `%{publish_command}` or point the variable at a published authority
+      tree.
   calc:
     age_at_year_end_no_filing_year: 'Internal error: age-at-year-end calculation has
       no filing year.'

@@ -50,7 +50,7 @@ from .authority_artifact import (
     SnapshotGlobalsComponentQuery,
 )
 from .authority_store import SQLiteAuthorityReader
-from .errors import RegistrySnapshotError, RegistryValidationError
+from .errors import AuthorityDescriptorUnavailableError, RegistrySnapshotError, RegistryValidationError
 from .facts.resolution import (
     GovernedFactQuery,
     MappingFactQuery,
@@ -937,5 +937,34 @@ def bundled_indexed_authority() -> IndexedRegistryAuthority:
 
 
 def bundled_authority_descriptor_path() -> Path:
-    """Return the installed selector for the content-addressed SQLite generation."""
-    return _bundled_path(*_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS)
+    """Return the selector for the content-addressed SQLite generation.
+
+    Resolution has two arms and no fallback between them. When
+    ``cadrumo_authority_root`` is set it is the whole answer: the descriptor
+    is read from that directory, and its absence there is a refusal rather
+    than a silent slide back to the packaged copy, which would let a
+    development checkout answer from a stale generation it believed it had
+    replaced. When the setting is unset -- the installed posture -- the
+    packaged resource resolves exactly as it always has.
+
+    Returns:
+        The descriptor path, which is guaranteed to exist at the moment of
+        the call.
+
+    Raises:
+        AuthorityDescriptorUnavailableError: When the selected arm carries no
+            descriptor. Fail-closed: every registry read follows this
+            selector, so an absent authority cannot be answered partially.
+    """
+    from ....core.config import load_settings
+
+    authority_root = load_settings().cadrumo_authority_root
+    if authority_root is not None:
+        configured = authority_root / _BUNDLED_AUTHORITY_DESCRIPTOR_PARTS[-1]
+        if not configured.is_file():
+            raise AuthorityDescriptorUnavailableError.for_configured_root(descriptor_path=configured)
+        return configured
+    packaged = _bundled_path(*_BUNDLED_AUTHORITY_DESCRIPTOR_PARTS)
+    if not packaged.is_file():
+        raise AuthorityDescriptorUnavailableError.for_packaged_location(descriptor_path=packaged)
+    return packaged

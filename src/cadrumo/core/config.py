@@ -422,6 +422,22 @@ class Settings(CadrumoLlmSettings):
         ),
     )
 
+    # ── Registry authority artifact ─────────────────────────────────────────
+    cadrumo_authority_root: Path | None = Field(
+        default=None,
+        description=(
+            "Directory holding the published registry authority descriptor "
+            "``authority.current.json`` and the content-addressed SQLite "
+            "generation it selects. The ``None`` default is the installed "
+            "posture: the authority ships inside the distribution and "
+            "resolves through the bundled-data boundary, so an unset "
+            "``CADRUMO_AUTHORITY_ROOT`` leaves resolution exactly as the "
+            "packaged product performs it. A development checkout sets it to "
+            "the generated authority tree it keeps outside the packaged "
+            "location; the descriptor must exist under the named directory."
+        ),
+    )
+
     # ── Browser Automation ──────────────────────────────────────────────────
     cadrumo_browser_channel: str = Field(
         default="chrome",
@@ -954,6 +970,7 @@ class Settings(CadrumoLlmSettings):
         "aeat_manuals_root",
         "aeat_normatives_root",
         "cadrumo_corpus_search_cache_dir",
+        "cadrumo_authority_root",
         "cadrumo_certificate_path",
         "cadrumo_llm_cache_dir",
         "cadrumo_llm_usage_dir",
