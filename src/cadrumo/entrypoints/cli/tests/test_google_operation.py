@@ -5,6 +5,7 @@ from __future__ import annotations
 import ast
 import asyncio
 import json
+from contextvars import copy_context
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from threading import Event, Thread
@@ -226,12 +227,13 @@ def test_cli_command_submits_supervised_export_and_resolves_public_result(tmp_pa
     from ... import operation_composition
     from .. import modelo_spreadsheet_cli as cli_module
 
-    entered = Event()
+    entered_or_failed = Event()
     release = Event()
+    worker_errors: list[BaseException] = []
 
     class Prepared:
         def execute(self, plan: SheetExportPlan, dry_run: bool) -> GoogleSheetsExportRemoteResult:
-            entered.set()
+            entered_or_failed.set()
             assert release.wait(timeout=10)
             return GoogleSheetsExportRemoteResult(
                 dry_run=dry_run,
@@ -253,13 +255,23 @@ def test_cli_command_submits_supervised_export_and_resolves_public_result(tmp_pa
         monkeypatch.setattr(supervisor_module, "new_operation_id", lambda: "b" * 64)
 
         outcome = []
+
+        def run_command() -> None:
+            try:
+                outcome.append(execute_google_sheets_export(modelo="130", period="1T", year=2025, dry_run=True))
+            except BaseException as exc:
+                worker_errors.append(exc)
+                entered_or_failed.set()
+
+        worker_context = copy_context()
         command = Thread(
-            target=lambda: outcome.append(
-                execute_google_sheets_export(modelo="130", period="1T", year=2025, dry_run=True)
-            )
+            target=lambda: worker_context.run(run_command)
         )
         command.start()
-        assert entered.wait(timeout=80)
+        assert entered_or_failed.wait(timeout=80), worker_errors
+        if worker_errors:
+            command.join(timeout=20)
+        assert not worker_errors, worker_errors
         scope_ref = operation_conflict_scope_reference(
             definition_id=GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID,
             subject_ref=f"profile:{profile.bucket_id}",
