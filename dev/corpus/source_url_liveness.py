@@ -37,13 +37,13 @@ Run the live census with::
 
 from __future__ import annotations
 
-import urllib.error
-import urllib.request
 from collections.abc import Callable, Iterable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from enum import Enum
 from typing import Final
+
+import httpx
 
 from .fetch_boe_normative import CONSOLIDATED_TEXT_API_HEADERS, CONSOLIDATED_TEXT_API_URL
 
@@ -109,26 +109,26 @@ def classify_response(status: int | None) -> UrlLiveness:
     return UrlLiveness.REFUSED
 
 
-def _open(url: str, *, method: str, timeout: float) -> tuple[int | None, str]:
-    request = urllib.request.Request(  # noqa: S310 - registry URLs are https publisher addresses
-        url,
-        method=method,
-        headers=dict(request_headers_for(url)),
-    )
+def _ask(url: str, *, method: str, timeout: float) -> tuple[int | None, str]:
+    """Return the status the publisher answered, or why it did not answer.
+
+    Redirects are followed, because an address that now redirects is still
+    being served -- the whole question here is whether the publisher still
+    answers for it at all.
+    """
     try:
-        with urllib.request.urlopen(request, timeout=timeout) as response:  # noqa: S310 - as above
-            return response.status, ""
-    except urllib.error.HTTPError as error:
-        return error.code, ""
-    except OSError as error:
+        with httpx.Client(follow_redirects=True, timeout=timeout) as client:
+            response = client.request(method, url, headers=dict(request_headers_for(url)))
+    except httpx.HTTPError as error:
         return None, f"{type(error).__name__}: {error}"
+    return response.status_code, ""
 
 
 def probe_source_url(url: str, *, timeout: float = 30.0) -> LivenessOutcome:
     """Ask the publisher whether it still serves ``url``."""
-    status, detail = _open(url, method="HEAD", timeout=timeout)
+    status, detail = _ask(url, method="HEAD", timeout=timeout)
     if status is None or status in _METHOD_REFUSALS:
-        status, detail = _open(url, method="GET", timeout=timeout)
+        status, detail = _ask(url, method="GET", timeout=timeout)
     return LivenessOutcome(url=url, liveness=classify_response(status), status=status, detail=detail)
 
 
@@ -164,12 +164,15 @@ WITHDRAWN_SOURCE_URLS: Final[Mapping[str, str]] = {
     "archivos_20/128v01e2020_v1.07.xlsx": (
         "AEAT withdrew the modelo 128 design workbook from its static file tree after capture"
     ),
-    "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/"
-    "DR202e25.xlsx": ("AEAT replaced the modelo 202 ejercicio-2025 workbook at a different address"),
-    "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/"
-    "archivos/303_2025.xlsx": ("AEAT replaced the modelo 303 ejercicio-2025 workbook at a different address"),
-    "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/"
-    "archivos/390_2025.xlsx": ("AEAT replaced the modelo 390 ejercicio-2025 workbook at a different address"),
+    "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/DR202e25.xlsx": (
+        "AEAT replaced the modelo 202 ejercicio-2025 workbook at a different address"
+    ),
+    "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/303_2025.xlsx": (
+        "AEAT replaced the modelo 303 ejercicio-2025 workbook at a different address"
+    ),
+    "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos/390_2025.xlsx": (
+        "AEAT replaced the modelo 390 ejercicio-2025 workbook at a different address"
+    ),
     "https://sede.agenciatributaria.gob.es/static_files/Sede/Tema/Procedimientos_tributarios/"
     "Declaraciones_informativas/Modelos_200_299/289/XSD/289_XSD_2.0_WSDL_2.0.1.zip": (
         "AEAT withdrew the modelo 289 XSD/WSDL bundle at this version-pinned address"
