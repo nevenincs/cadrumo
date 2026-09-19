@@ -85,9 +85,13 @@ def _register_profile(storage_root: Path, label: str, **facts: str) -> str:
         # runs in a child. Release the parent's real SQLite engine so Windows
         # observes the same process boundary as an operator's completed create
         # command and can rename the capsule during deletion.
-        from ....adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
+        from ....adapters.persistence.storage.sql.engine import dispose_engine
+        from ....application.user_profile.lifecycle import ProfileCapsuleLifecycle
+        from ....application.user_profile.login_session import logout_active_profile
 
-        dispose_engines_for_bucket(profile_id)
+        logout_active_profile()
+        dispose_engine()
+        ProfileCapsuleLifecycle().select(profile_id)
         return profile_id
 
 

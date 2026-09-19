@@ -121,9 +121,11 @@ def test_cold_start_verbs_refuse_without_leaks_and_surface_profile_guidance(tmp_
 
     for index, verb in enumerate(_cold_start_verbs()):
         label = _verb_label(verb)
+        empty_parent = tmp_path / f"cold-start-{index}"
+        empty_parent.mkdir()
         with (
             override_settings(cadrumo_output_language="en"),
-            isolated_sessionless_storage_root(tmp_path=tmp_path / f"cold-start-{index}"),
+            isolated_sessionless_storage_root(tmp_path=empty_parent),
         ):
             result = invoke_cached_cli(list(verb))
 

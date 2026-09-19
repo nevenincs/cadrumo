@@ -373,6 +373,8 @@ def _wizard_option(field_key: str) -> OptionSpec:
         )
     if field_key in _WIZARD_CHECKBOX_FIELDS:
         return _option(name, (f"--{field_key}",), TEXT_VALUE, help_key, default=(), multiple=True)
+    if field_key == "taxpayer-marital-status":
+        return replace(_option(name, (f"--{field_key}",), TEXT_VALUE, help_key), metavar="<1|2|3|4|5>")
     enum_contract = _WIZARD_ENUM_FIELDS.get(field_key)
     if enum_contract is not None:
         return _option(name, (f"--{field_key}",), enum_contract, help_key)
