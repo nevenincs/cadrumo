@@ -18,7 +18,7 @@ from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
-from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation, IvaLedgerObservationRole
+from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.invoices.enums import iva_rate_percentage
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -31,7 +31,7 @@ from ...domain.iva.flow import (
 )
 from ...domain.iva.invoice_classification import classify_invoice_line_for_iva, invoice_line_to_iva_observation
 from ...domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate, resolve_recargo_rate_for_applied_rate
-from ...domain.iva.schema import IvaCategory
+from ...domain.iva.schema import IvaCategory, IvaLedgerObservationRole
 from ...domain.transactions.models import OutOfWindowTransactionSummary
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from .errors import AggregationValidationError
