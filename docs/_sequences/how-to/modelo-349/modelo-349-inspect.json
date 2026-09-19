@@ -159,9 +159,10 @@
             "iva-349-declarante-numero-operadores": "2",
             "iva-349-declarante-numero-operadores-adquisicion": "0",
             "iva-349-declarante-numero-rectificaciones": "0",
-            "iva-349-declarante-numero-rectificaciones-adquisicion": "0"
+            "iva-349-declarante-numero-rectificaciones-adquisicion": "0",
+            "modelo-349-ledger-intracommunity-guard": "0"
           },
-          "calculation_revision_id": "93b630831f3720776442f88a32b13e8f8e436ea357ce0fcf31109be6006ec7d0",
+          "calculation_revision_id": "569676efbb928505e1ddc3e7b690208a7a5e59b68fe09dacffa03c0665b2044c",
           "casilla_values": {
             "decl.cambio-periodicidad": "0",
             "decl.complementaria-sustitutiva": "0",
@@ -426,6 +427,12 @@
             }
           ],
           "operation": "modelo.work.calculate",
+          "registry_snapshot_ref": {
+            "modelo": "349",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2020-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -442,7 +449,31 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 93b630831f3720776442f88a32b13e8f8e436ea357ce0fcf31109be6006ec7d0 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 349 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 93b630831f3720776442f88a32b13e8f8e436ea357ce0fcf31109be6006ec7d0`.",
+          "saved_confirmation": "Saved as draft calculation revision 569676efbb928505e1ddc3e7b690208a7a5e59b68fe09dacffa03c0665b2044c (state: draft). It is persisted and can be resumed later.",
+          "source_provenance": [
+            {
+              "contributor_binding_source": "collectible_invoice",
+              "contributor_source_kind": "collectible_invoice",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:c0d40a10d081f27b894a9331e6c5b11170b057c6f8add475e7fc6e797762818b",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "collectible_invoice",
+              "resolver_id": "invoice_catalogue",
+              "source_ref": "collectible_invoice:86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b"
+            },
+            {
+              "contributor_binding_source": "collectible_invoice",
+              "contributor_source_kind": "collectible_invoice",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:4b81059e54a8209054823e305edb4f67fd381090cb85dffde334982206b73932",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "collectible_invoice",
+              "resolver_id": "invoice_catalogue",
+              "source_ref": "collectible_invoice:0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -482,8 +513,36 @@
         "command": "modelo.bindings.list",
         "notices": [],
         "result": {
-          "binding_count": 34,
+          "binding_count": 35,
           "bindings": [
+            {
+              "binding_id": "modelo-349-ledger-intracommunity-guard",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2026,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "orden-eha-769-2010:art-1",
+                "ley-58-2003:art-93",
+                "rd-1624-1992:art-79",
+                "rd-1624-1992:art-80",
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-25"
+              ],
+              "modelo": "349",
+              "period": "1T",
+              "readiness": "ledger data",
+              "relation_inputs": [],
+              "revision": "2020-y-siguientes",
+              "source": "ledger_iva_aggregation",
+              "source_refs": [
+                "aeat-dr-349-2020-current",
+                "aeat-modelo-349-instructions",
+                "aeat-modelo-349-procedure"
+              ],
+              "typed_enum": null
+            },
             {
               "binding_id": "iva-349-declarante-numero-operadores",
               "borrador_capable": false,
@@ -1762,9 +1821,10 @@
             "iva-349-declarante-numero-operadores": "2",
             "iva-349-declarante-numero-operadores-adquisicion": "0",
             "iva-349-declarante-numero-rectificaciones": "0",
-            "iva-349-declarante-numero-rectificaciones-adquisicion": "0"
+            "iva-349-declarante-numero-rectificaciones-adquisicion": "0",
+            "modelo-349-ledger-intracommunity-guard": "0"
           },
-          "calculation_revision_id": "93b630831f3720776442f88a32b13e8f8e436ea357ce0fcf31109be6006ec7d0",
+          "calculation_revision_id": "569676efbb928505e1ddc3e7b690208a7a5e59b68fe09dacffa03c0665b2044c",
           "casilla_values": {
             "decl.cambio-periodicidad": "0",
             "decl.complementaria-sustitutiva": "0",
@@ -2023,6 +2083,12 @@
             }
           ],
           "operation": "modelo.work.revision",
+          "registry_snapshot_ref": {
+            "modelo": "349",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2020-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -2043,7 +2109,7 @@
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:d58ff4cdfaa0d6949bd20dcd72cb3e98d7c2812898bf64a5a34483e9dc8cb0c3",
+              "fingerprint": "sha256:c0d40a10d081f27b894a9331e6c5b11170b057c6f8add475e7fc6e797762818b",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "collectible_invoice",
@@ -2054,7 +2120,7 @@
               "contributor_binding_source": "collectible_invoice",
               "contributor_source_kind": "collectible_invoice",
               "dependency_treatment": "",
-              "fingerprint": "sha256:42d8d8aa85c458c4a05729ad324a0ddf16633b4ecd62def9dc401e1f9269d09b",
+              "fingerprint": "sha256:4b81059e54a8209054823e305edb4f67fd381090cb85dffde334982206b73932",
               "lineage_role": "primary",
               "parent_source_ref": null,
               "resolved_binding_source": "collectible_invoice",

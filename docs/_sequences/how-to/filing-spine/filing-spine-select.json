@@ -289,7 +289,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "selected_revision_id",
-          "value": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08"
+          "value": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80"
         }
       ],
       "envelope": {
@@ -334,7 +334,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
+          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -596,7 +596,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -664,7 +664,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -732,7 +732,7 @@
                 "231"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -762,7 +762,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -848,7 +848,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1082,7 +1082,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1227,7 +1227,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -1254,7 +1254,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1380,7 +1380,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -1407,7 +1407,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1698,7 +1698,7 @@
                 "231.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1746,7 +1746,7 @@
                 "105"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1834,7 +1834,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1922,7 +1922,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -2093,7 +2093,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -2449,7 +2449,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -2496,7 +2496,7 @@
                 "100"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -3221,7 +3221,7 @@
                 "126.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3254,7 +3254,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3284,7 +3284,7 @@
                 "126.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3341,7 +3341,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3382,7 +3382,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3456,7 +3456,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3484,7 +3484,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3676,7 +3676,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -3706,7 +3706,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -3751,6 +3751,12 @@
             }
           ],
           "operation": "modelo.work.calculate",
+          "registry_snapshot_ref": {
+            "modelo": "303",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2026-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -3773,37 +3779,37 @@
             },
             {
               "casilla_id": "64",
-              "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
+              "label": "Result - Sum of results ([46]+[58]+[76])",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "66",
-              "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
+              "label": "Result - Amount attributable to the State Tax Administration ([64]×[65]/100)",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
-              "label": "Prior-period offsets applied in this period",
+              "label": "VAT credit from previous periods applied in this period",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
-              "label": "Prior-period offsets pending for later periods",
+              "label": "VAT credit from previous periods carried forward to later periods",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.resultado",
-              "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
+              "label": "Result of the self-assessment ([66]+[77]+[68]-[78])",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "71",
-              "label": "Resultado final ([69]-[70]+[109])",
+              "label": "Result final ([69]-[70]+[109])",
               "role": "key_figure",
               "value": "126.00"
             },
@@ -3815,7 +3821,7 @@
             },
             {
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
-              "label": "Offset balance available at period end",
+              "label": "Offset balance available for later periods",
               "role": "key_figure",
               "value": "0.00"
             },
@@ -3833,7 +3839,53 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08`.",
+          "saved_confirmation": "Saved as draft calculation revision dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80 (state: draft). It is persisted and can be resumed later.",
+          "source_provenance": [
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:5af95d20b7e333671071443238f6f542ae06ee734bfe59f1815d035b2ee8de31"
+            },
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+            },
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+            },
+            {
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
+              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -3910,7 +3962,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
+          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -4166,7 +4218,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4234,7 +4286,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4302,7 +4354,7 @@
                 "231"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4332,7 +4384,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4418,7 +4470,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4652,7 +4704,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4797,7 +4849,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -4824,7 +4876,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4950,7 +5002,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -4977,7 +5029,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -5268,7 +5320,7 @@
                 "231.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -5316,7 +5368,7 @@
                 "105"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -5404,7 +5456,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -5492,7 +5544,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -5663,7 +5715,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -6019,7 +6071,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -6066,7 +6118,7 @@
                 "100"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -6791,7 +6843,7 @@
                 "126.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -6824,7 +6876,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -6854,7 +6906,7 @@
                 "126.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -6911,7 +6963,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -6952,7 +7004,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -7026,7 +7078,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -7054,7 +7106,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -7246,7 +7298,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -7276,7 +7328,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -7321,6 +7373,12 @@
             }
           ],
           "operation": "modelo.work.revision",
+          "registry_snapshot_ref": {
+            "modelo": "303",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2026-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -7343,37 +7401,37 @@
             },
             {
               "casilla_id": "64",
-              "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
+              "label": "Result - Sum of results ([46]+[58]+[76])",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "66",
-              "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
+              "label": "Result - Amount attributable to the State Tax Administration ([64]×[65]/100)",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
-              "label": "Prior-period offsets applied in this period",
+              "label": "VAT credit from previous periods applied in this period",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
-              "label": "Prior-period offsets pending for later periods",
+              "label": "VAT credit from previous periods carried forward to later periods",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.resultado",
-              "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
+              "label": "Result of the self-assessment ([66]+[77]+[68]-[78])",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "71",
-              "label": "Resultado final ([69]-[70]+[109])",
+              "label": "Result final ([69]-[70]+[109])",
               "role": "key_figure",
               "value": "126.00"
             },
@@ -7385,7 +7443,7 @@
             },
             {
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
-              "label": "Offset balance available at period end",
+              "label": "Offset balance available for later periods",
               "role": "key_figure",
               "value": "0.00"
             },
@@ -7499,24 +7557,7 @@
               "source_period": "4T",
               "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
             },
-            "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding).",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.verify.finding.advisory",
-            "context": {
-              "activity_start_date": "2026-01-01",
-              "kind": "advisory",
-              "legal_refs": "rd-1065-2007:art-9",
-              "origin_code": "registry_relation",
-              "severity": "warning",
-              "source_filing_year": "2025",
-              "source_modelo": "303",
-              "source_period": "4T",
-              "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
-            },
-            "message": "Modelo 303 2025 4T is suppressed by operator declaration (registry_relation).",
+            "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
             "severity": "warning"
           },
           {
@@ -7529,9 +7570,9 @@
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
               "severity": "warning",
               "source_kind_code": "output_iva_evidence",
-              "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
+              "source_refs": "aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2024-late"
             },
-            "message": "An output transaction has no supporting evidence.",
+            "message": "An output transaction has no supporting evidence (binding 5af95d20b7e333671071443238f6f542ae06ee734bfe59f1815d035b2ee8de31, source output_iva_evidence, reason missing_transaction_evidence).",
             "severity": "warning"
           },
           {
@@ -7544,14 +7585,14 @@
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
               "severity": "warning",
               "source_kind_code": "output_iva_evidence",
-              "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
+              "source_refs": "aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2024-late"
             },
-            "message": "An output transaction has no supporting evidence.",
+            "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
             "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
+          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
           "completeness_status": "complete",
           "findings": [
             {
@@ -7562,23 +7603,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding).",
-              "severity": "warning",
-              "source_refs": [
-                "aeat-dr-303-2026",
-                "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form"
-              ]
-            },
-            {
-              "action": null,
-              "casilla_id": null,
-              "expectation_id": null,
-              "kind": "advisory",
-              "legal_refs": [
-                "rd-1065-2007:art-9"
-              ],
-              "message": "Modelo 303 2025 4T is suppressed by operator declaration (registry_relation).",
+              "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -7595,12 +7620,14 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence.",
+              "message": "An output transaction has no supporting evidence (binding 5af95d20b7e333671071443238f6f542ae06ee734bfe59f1815d035b2ee8de31, source output_iva_evidence, reason missing_transaction_evidence).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form"
+                "boe-modelo-303-2008-form",
+                "aeat-dr-303-2024-late"
               ]
             },
             {
@@ -7612,21 +7639,29 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence.",
+              "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form"
+                "boe-modelo-303-2008-form",
+                "aeat-dr-303-2024-late"
               ]
             }
           ],
           "granted_verificado_completo": true,
           "missing_required_casilla_ids": [],
           "operation": "modelo.work.verify",
+          "registry_snapshot_ref": {
+            "modelo": "303",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2026-y-siguientes"
+          },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "842b4dd79ba708673efd9e956eed1ae01ea03167852f0aaf17af042da91b7b17",
+          "verification_report_id": "a7795493ec60983190e2e7961c00b5c7e4b94061c10fa1fb4df522c37b09f77d",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -7698,7 +7733,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
+          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -7954,7 +7989,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -8022,7 +8057,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -8090,7 +8125,7 @@
                 "231"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -8120,7 +8155,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -8206,7 +8241,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -8440,7 +8475,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -8585,7 +8620,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -8612,7 +8647,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -8738,7 +8773,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -8765,7 +8800,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -9056,7 +9091,7 @@
                 "231.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -9104,7 +9139,7 @@
                 "105"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -9192,7 +9227,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -9280,7 +9315,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -9451,7 +9486,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -9807,7 +9842,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -9854,7 +9889,7 @@
                 "100"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -10579,7 +10614,7 @@
                 "126.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -10612,7 +10647,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -10642,7 +10677,7 @@
                 "126.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -10699,7 +10734,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -10740,7 +10775,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -10814,7 +10849,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -10842,7 +10877,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -11034,7 +11069,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -11064,7 +11099,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -11109,6 +11144,12 @@
             }
           ],
           "operation": "modelo.work.revision",
+          "registry_snapshot_ref": {
+            "modelo": "303",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2026-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -11131,37 +11172,37 @@
             },
             {
               "casilla_id": "64",
-              "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
+              "label": "Result - Sum of results ([46]+[58]+[76])",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "66",
-              "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
+              "label": "Result - Amount attributable to the State Tax Administration ([64]×[65]/100)",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
-              "label": "Prior-period offsets applied in this period",
+              "label": "VAT credit from previous periods applied in this period",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
-              "label": "Prior-period offsets pending for later periods",
+              "label": "VAT credit from previous periods carried forward to later periods",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.resultado",
-              "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
+              "label": "Result of the self-assessment ([66]+[77]+[68]-[78])",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "71",
-              "label": "Resultado final ([69]-[70]+[109])",
+              "label": "Result final ([69]-[70]+[109])",
               "role": "key_figure",
               "value": "126.00"
             },
@@ -11173,7 +11214,7 @@
             },
             {
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
-              "label": "Offset balance available at period end",
+              "label": "Offset balance available for later periods",
               "role": "key_figure",
               "value": "0.00"
             },
@@ -11275,19 +11316,24 @@
         "notices": [],
         "result": {
           "aeat_accepted": false,
+          "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
+          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
+          "confirmation": "pendiente",
+          "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "8185a76f89a43efdcbd584031662c28a62ee490fcc6f4c21eb67e49a9e6b827a",
+          "filing_record_id": "75ab698040790a66da253ec89c333d51c242b0a334bb83a47bdd350d2127cff7",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
+          "member_nif": null,
           "modelo": "303",
           "notes": null,
           "operation": "modelo.work.file",
+          "origin": "local",
           "period": {
             "code": "1T",
             "filing_year": 2026
@@ -11315,7 +11361,7 @@
         "modelo",
         "work",
         "revision",
-        "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08"
+        "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80"
       ],
       "captures": [],
       "envelope": {
@@ -11359,7 +11405,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
+          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -11615,7 +11661,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -11683,7 +11729,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -11751,7 +11797,7 @@
                 "231"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -11781,7 +11827,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -11867,7 +11913,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -12101,7 +12147,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -12246,7 +12292,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -12273,7 +12319,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -12399,7 +12445,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -12426,7 +12472,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -12717,7 +12763,7 @@
                 "231.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -12765,7 +12811,7 @@
                 "105"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -12853,7 +12899,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -12941,7 +12987,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -13112,7 +13158,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -13468,7 +13514,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -13515,7 +13561,7 @@
                 "100"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -14240,7 +14286,7 @@
                 "126.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -14273,7 +14319,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -14303,7 +14349,7 @@
                 "126.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -14360,7 +14406,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -14401,7 +14447,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -14475,7 +14521,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -14503,7 +14549,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -14695,7 +14741,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -14725,7 +14771,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -14770,6 +14816,12 @@
             }
           ],
           "operation": "modelo.work.revision",
+          "registry_snapshot_ref": {
+            "modelo": "303",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2026-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -14792,37 +14844,37 @@
             },
             {
               "casilla_id": "64",
-              "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
+              "label": "Result - Sum of results ([46]+[58]+[76])",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "66",
-              "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
+              "label": "Result - Amount attributable to the State Tax Administration ([64]×[65]/100)",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
-              "label": "Prior-period offsets applied in this period",
+              "label": "VAT credit from previous periods applied in this period",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
-              "label": "Prior-period offsets pending for later periods",
+              "label": "VAT credit from previous periods carried forward to later periods",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.resultado",
-              "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
+              "label": "Result of the self-assessment ([66]+[77]+[68]-[78])",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "71",
-              "label": "Resultado final ([69]-[70]+[109])",
+              "label": "Result final ([69]-[70]+[109])",
               "role": "key_figure",
               "value": "126.00"
             },
@@ -14834,7 +14886,7 @@
             },
             {
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
-              "label": "Offset balance available at period end",
+              "label": "Offset balance available for later periods",
               "role": "key_figure",
               "value": "0.00"
             },
@@ -14973,7 +15025,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "a0673a43b330bfbbf7a4b5420dab676adb38c713218dde0b322f4d814de25a08",
+          "calculation_revision_id": "dbbe0169927786b7be62260563880bb1ebb6b8460086647dd6ee74fd085d3f80",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -15229,7 +15281,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -15297,7 +15349,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -15365,7 +15417,7 @@
                 "231"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -15395,7 +15447,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -15481,7 +15533,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -15715,7 +15767,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -15860,7 +15912,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -15887,7 +15939,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -16013,7 +16065,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -16040,7 +16092,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -16331,7 +16383,7 @@
                 "231.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -16379,7 +16431,7 @@
                 "105"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -16467,7 +16519,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -16555,7 +16607,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -16726,7 +16778,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -17082,7 +17134,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -17129,7 +17181,7 @@
                 "100"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -17854,7 +17906,7 @@
                 "126.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -17887,7 +17939,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -17917,7 +17969,7 @@
                 "126.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -17974,7 +18026,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -18015,7 +18067,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -18089,7 +18141,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -18117,7 +18169,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -18309,7 +18361,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -18339,7 +18391,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -18384,6 +18436,12 @@
             }
           ],
           "operation": "modelo.work.revision",
+          "registry_snapshot_ref": {
+            "modelo": "303",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2026-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -18406,37 +18464,37 @@
             },
             {
               "casilla_id": "64",
-              "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
+              "label": "Result - Sum of results ([46]+[58]+[76])",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "66",
-              "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
+              "label": "Result - Amount attributable to the State Tax Administration ([64]×[65]/100)",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
-              "label": "Prior-period offsets applied in this period",
+              "label": "VAT credit from previous periods applied in this period",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
-              "label": "Prior-period offsets pending for later periods",
+              "label": "VAT credit from previous periods carried forward to later periods",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.resultado",
-              "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
+              "label": "Result of the self-assessment ([66]+[77]+[68]-[78])",
               "role": "key_figure",
               "value": "126.00"
             },
             {
               "casilla_id": "71",
-              "label": "Resultado final ([69]-[70]+[109])",
+              "label": "Result final ([69]-[70]+[109])",
               "role": "key_figure",
               "value": "126.00"
             },
@@ -18448,7 +18506,7 @@
             },
             {
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
-              "label": "Offset balance available at period end",
+              "label": "Offset balance available for later periods",
               "role": "key_figure",
               "value": "0.00"
             },

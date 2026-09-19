@@ -61,7 +61,10 @@
           "linked_transaction_ids": [],
           "notes": "",
           "operation_type": "E",
-          "payment_status": "PENDING"
+          "payment_status": "PENDING",
+          "recargo_amount": null,
+          "retention_amount": null,
+          "retention_rate": null
         },
         "schema_version": "2",
         "status": "success"
@@ -111,7 +114,10 @@
           "linked_transaction_ids": [],
           "notes": "",
           "operation_type": "E",
-          "payment_status": "PENDING"
+          "payment_status": "PENDING",
+          "recargo_amount": null,
+          "retention_amount": null,
+          "retention_rate": null
         },
         "schema_version": "2",
         "status": "success"

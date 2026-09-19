@@ -58,6 +58,7 @@
             "description": "Cobro factura F-2026-001 servicios de consultoria",
             "direction": "INCOMING",
             "fx_rate": null,
+            "invoice_id": null,
             "irpf_category": null,
             "iva_amount": null,
             "iva_category": null,

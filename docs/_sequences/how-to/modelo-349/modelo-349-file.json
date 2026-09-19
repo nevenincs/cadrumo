@@ -180,9 +180,10 @@
             "iva-349-declarante-numero-operadores": "2",
             "iva-349-declarante-numero-operadores-adquisicion": "0",
             "iva-349-declarante-numero-rectificaciones": "0",
-            "iva-349-declarante-numero-rectificaciones-adquisicion": "0"
+            "iva-349-declarante-numero-rectificaciones-adquisicion": "0",
+            "modelo-349-ledger-intracommunity-guard": "0"
           },
-          "calculation_revision_id": "93b630831f3720776442f88a32b13e8f8e436ea357ce0fcf31109be6006ec7d0",
+          "calculation_revision_id": "569676efbb928505e1ddc3e7b690208a7a5e59b68fe09dacffa03c0665b2044c",
           "casilla_values": {
             "decl.cambio-periodicidad": "0",
             "decl.complementaria-sustitutiva": "0",
@@ -447,6 +448,12 @@
             }
           ],
           "operation": "modelo.work.calculate",
+          "registry_snapshot_ref": {
+            "modelo": "349",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2020-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -463,7 +470,31 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 93b630831f3720776442f88a32b13e8f8e436ea357ce0fcf31109be6006ec7d0 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 349 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 93b630831f3720776442f88a32b13e8f8e436ea357ce0fcf31109be6006ec7d0`.",
+          "saved_confirmation": "Saved as draft calculation revision 569676efbb928505e1ddc3e7b690208a7a5e59b68fe09dacffa03c0665b2044c (state: draft). It is persisted and can be resumed later.",
+          "source_provenance": [
+            {
+              "contributor_binding_source": "collectible_invoice",
+              "contributor_source_kind": "collectible_invoice",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:c0d40a10d081f27b894a9331e6c5b11170b057c6f8add475e7fc6e797762818b",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "collectible_invoice",
+              "resolver_id": "invoice_catalogue",
+              "source_ref": "collectible_invoice:86f7f4a0abb1ddec95074d9ba002cddce7bd6b3a879ddc74d6ed424eb2094d2b"
+            },
+            {
+              "contributor_binding_source": "collectible_invoice",
+              "contributor_source_kind": "collectible_invoice",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:4b81059e54a8209054823e305edb4f67fd381090cb85dffde334982206b73932",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "collectible_invoice",
+              "resolver_id": "invoice_catalogue",
+              "source_ref": "collectible_invoice:0af0b63e6244ac6a3cc3f4365945d1835730d2985ada6dd9652df59143371209"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -502,12 +533,18 @@
         "command": "modelo.work.verify",
         "notices": [],
         "result": {
-          "calculation_revision_id": "93b630831f3720776442f88a32b13e8f8e436ea357ce0fcf31109be6006ec7d0",
+          "calculation_revision_id": "569676efbb928505e1ddc3e7b690208a7a5e59b68fe09dacffa03c0665b2044c",
           "completeness_status": "complete",
           "findings": [],
           "granted_verificado_completo": true,
           "missing_required_casilla_ids": [],
           "operation": "modelo.work.verify",
+          "registry_snapshot_ref": {
+            "modelo": "349",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2020-y-siguientes"
+          },
           "resolved_casilla_ids": [
             "op.codigo-pais",
             "op.nif-comunitario",
@@ -520,7 +557,7 @@
             "rect.base-anterior"
           ],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "693026ff47b1100001a9bb38fb2f80009088fff152ca06a247155b8c29f1d852",
+          "verification_report_id": "d82013fc6f584e5e60941f707cd38e3a8c84fd8bf990667ebf2f3ebeb48ca0ca",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -555,19 +592,24 @@
         "notices": [],
         "result": {
           "aeat_accepted": false,
+          "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "93b630831f3720776442f88a32b13e8f8e436ea357ce0fcf31109be6006ec7d0",
+          "calculation_revision_id": "569676efbb928505e1ddc3e7b690208a7a5e59b68fe09dacffa03c0665b2044c",
+          "confirmation": "pendiente",
+          "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "0f65c2fd1747a6c6404e2a1548ce1d4d5acf4578e50f38f8202b3128a8a19be6",
+          "filing_record_id": "74dbdc037bfe055601bc19b6c93df689f0f488761b1457cebad94b4560a2be7d",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
+          "member_nif": null,
           "modelo": "349",
           "notes": null,
           "operation": "modelo.work.file",
+          "origin": "local",
           "period": {
             "code": "1T",
             "filing_year": 2026

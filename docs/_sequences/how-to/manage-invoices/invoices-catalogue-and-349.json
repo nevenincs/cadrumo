@@ -61,7 +61,10 @@
           "linked_transaction_ids": [],
           "notes": "",
           "operation_type": "E",
-          "payment_status": "PENDING"
+          "payment_status": "PENDING",
+          "recargo_amount": null,
+          "retention_amount": null,
+          "retention_rate": null
         },
         "schema_version": "2",
         "status": "success"
@@ -126,7 +129,10 @@
           "linked_transaction_ids": [],
           "notes": "",
           "operation_type": "E",
-          "payment_status": "PENDING"
+          "payment_status": "PENDING",
+          "recargo_amount": null,
+          "retention_amount": null,
+          "retention_rate": null
         },
         "schema_version": "2",
         "status": "success"
@@ -246,9 +252,10 @@
             "iva-349-declarante-numero-operadores": "1",
             "iva-349-declarante-numero-operadores-adquisicion": "0",
             "iva-349-declarante-numero-rectificaciones": "0",
-            "iva-349-declarante-numero-rectificaciones-adquisicion": "0"
+            "iva-349-declarante-numero-rectificaciones-adquisicion": "0",
+            "modelo-349-ledger-intracommunity-guard": "0"
           },
-          "calculation_revision_id": "b1fb81e8f73a2c32298546f15a87a354286ca7a3a2fc4c2665ae2aa1fb1650e4",
+          "calculation_revision_id": "457438fde19c986c6e759c496965856b1141a8aaf23c3f9eb6ca82967b7daf43",
           "casilla_values": {
             "decl.cambio-periodicidad": "0",
             "decl.complementaria-sustitutiva": "0",
@@ -509,6 +516,12 @@
             }
           ],
           "operation": "modelo.work.calculate",
+          "registry_snapshot_ref": {
+            "modelo": "349",
+            "modelo_year": 2026,
+            "period": "02",
+            "revision_id": "2020-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -525,7 +538,20 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision b1fb81e8f73a2c32298546f15a87a354286ca7a3a2fc4c2665ae2aa1fb1650e4 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 349 --year 2026 --period 02` and re-inspect this one with `aeat app modelo work revision b1fb81e8f73a2c32298546f15a87a354286ca7a3a2fc4c2665ae2aa1fb1650e4`.",
+          "saved_confirmation": "Saved as draft calculation revision 457438fde19c986c6e759c496965856b1141a8aaf23c3f9eb6ca82967b7daf43 (state: draft). It is persisted and can be resumed later.",
+          "source_provenance": [
+            {
+              "contributor_binding_source": "collectible_invoice",
+              "contributor_source_kind": "collectible_invoice",
+              "dependency_treatment": "",
+              "fingerprint": "sha256:72748ea0133a321a0f267c1a26c97cb74e46e173732201ddd72a3c2edfd3c890",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "collectible_invoice",
+              "resolver_id": "invoice_catalogue",
+              "source_ref": "collectible_invoice:5f6226984e838fa553b9647364c5e3199cb833d79c8932072b9a67bc39eabc17"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",

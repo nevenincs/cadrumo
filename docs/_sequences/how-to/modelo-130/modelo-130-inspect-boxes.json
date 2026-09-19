@@ -271,7 +271,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "b94a7a72d60831f7f008e48a7ea62bfb3a155a8043b6e5ddc8353be78faf228f",
+          "calculation_revision_id": "07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -822,6 +822,12 @@
             }
           ],
           "operation": "modelo.work.calculate",
+          "registry_snapshot_ref": {
+            "modelo": "130",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2019-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -886,7 +892,42 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision b94a7a72d60831f7f008e48a7ea62bfb3a155a8043b6e5ddc8353be78faf228f (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision b94a7a72d60831f7f008e48a7ea62bfb3a155a8043b6e5ddc8353be78faf228f`.",
+          "saved_confirmation": "Saved as draft calculation revision 07d9ed8eec846976eac02aeae13217e835e000f8a460d053909b33d9a3995fec (state: draft). It is persisted and can be resumed later.",
+          "source_provenance": [
+            {
+              "contributor_binding_source": "ledger_renta_income_aggregation",
+              "contributor_source_kind": "ledger_renta_income_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_renta_income_aggregation",
+              "resolver_id": "ledger_renta_income_aggregation",
+              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+            },
+            {
+              "contributor_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "contributor_source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "resolver_id": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+            },
+            {
+              "contributor_binding_source": "previous_filing",
+              "contributor_source_kind": "previous_filing",
+              "dependency_treatment": "factual_evidence",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "previous_filing",
+              "resolver_id": "previous_filing",
+              "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -1511,9 +1552,9 @@
             },
             {
               "casilla_id": "saldo-negativo-fin-periodo",
-              "help_text": "Computed carry-forward seed when casilla 17 is negative, used as deductible casilla 15 in a later quarter.",
+              "help_text": "Computed carry-forward seed when box 17 is negative, used as deductible box 15 in a later quarter.",
               "input_kind": "computed",
-              "label": "Negative balance transferable to later periods (max 0, -casilla 17)",
+              "label": "Negative balance transferable to later periods (max 0, -box 17)",
               "legal_refs": [
                 "rd-439-2007:art-110",
                 "orden-eha-672-2007:art-1",

@@ -78,6 +78,7 @@
             "description": "equipo informatico",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "invoice_id": null,
             "irpf_category": null,
             "iva_amount": "315",
             "iva_category": null,

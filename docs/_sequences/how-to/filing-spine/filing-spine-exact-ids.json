@@ -295,7 +295,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "revision_id",
-          "value": "8a7768dceaadc2b05a75703e2380a265b0e3a5146b3f6d01808d7aafe2bbe00c"
+          "value": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
         }
       ],
       "envelope": {
@@ -340,7 +340,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "8a7768dceaadc2b05a75703e2380a265b0e3a5146b3f6d01808d7aafe2bbe00c",
+          "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -602,7 +602,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -670,7 +670,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -738,7 +738,7 @@
                 "220.50"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -768,7 +768,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -854,7 +854,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1088,7 +1088,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1233,7 +1233,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -1260,7 +1260,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1386,7 +1386,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -1413,7 +1413,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1704,7 +1704,7 @@
                 "220.50"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1752,7 +1752,7 @@
                 "105"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1840,7 +1840,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -1928,7 +1928,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -2099,7 +2099,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -2455,7 +2455,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -2502,7 +2502,7 @@
                 "100"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -3227,7 +3227,7 @@
                 "115.50"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3260,7 +3260,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3290,7 +3290,7 @@
                 "115.50"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3347,7 +3347,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3388,7 +3388,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3462,7 +3462,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3490,7 +3490,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -3682,7 +3682,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -3712,7 +3712,7 @@
                 "105.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -3757,6 +3757,12 @@
             }
           ],
           "operation": "modelo.work.calculate",
+          "registry_snapshot_ref": {
+            "modelo": "303",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2026-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -3779,37 +3785,37 @@
             },
             {
               "casilla_id": "64",
-              "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
+              "label": "Result - Sum of results ([46]+[58]+[76])",
               "role": "key_figure",
               "value": "115.50"
             },
             {
               "casilla_id": "66",
-              "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
+              "label": "Result - Amount attributable to the State Tax Administration ([64]×[65]/100)",
               "role": "key_figure",
               "value": "115.50"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
-              "label": "Prior-period offsets applied in this period",
+              "label": "VAT credit from previous periods applied in this period",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
-              "label": "Prior-period offsets pending for later periods",
+              "label": "VAT credit from previous periods carried forward to later periods",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.resultado",
-              "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
+              "label": "Result of the self-assessment ([66]+[77]+[68]-[78])",
               "role": "key_figure",
               "value": "115.50"
             },
             {
               "casilla_id": "71",
-              "label": "Resultado final ([69]-[70]+[109])",
+              "label": "Result final ([69]-[70]+[109])",
               "role": "key_figure",
               "value": "115.50"
             },
@@ -3821,7 +3827,7 @@
             },
             {
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
-              "label": "Offset balance available at period end",
+              "label": "Offset balance available for later periods",
               "role": "key_figure",
               "value": "0.00"
             },
@@ -3839,7 +3845,53 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 8a7768dceaadc2b05a75703e2380a265b0e3a5146b3f6d01808d7aafe2bbe00c (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision 8a7768dceaadc2b05a75703e2380a265b0e3a5146b3f6d01808d7aafe2bbe00c`.",
+          "saved_confirmation": "Saved as draft calculation revision 703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed (state: draft). It is persisted and can be resumed later.",
+          "source_provenance": [
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+            },
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:bf64e35fb5ecb5fa5bb10d7053d2506eab6adc12441bdf97c3bc09a288b6d063"
+            },
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+            },
+            {
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
+              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",
@@ -3865,7 +3917,7 @@
         "modelo",
         "work",
         "verify",
-        "8a7768dceaadc2b05a75703e2380a265b0e3a5146b3f6d01808d7aafe2bbe00c"
+        "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
       ],
       "captures": [],
       "envelope": {
@@ -3886,24 +3938,7 @@
               "source_period": "4T",
               "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
             },
-            "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding).",
-            "severity": "warning"
-          },
-          {
-            "action": null,
-            "code": "modelo.work.verify.finding.advisory",
-            "context": {
-              "activity_start_date": "2026-01-01",
-              "kind": "advisory",
-              "legal_refs": "rd-1065-2007:art-9",
-              "origin_code": "registry_relation",
-              "severity": "warning",
-              "source_filing_year": "2025",
-              "source_modelo": "303",
-              "source_period": "4T",
-              "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
-            },
-            "message": "Modelo 303 2025 4T is suppressed by operator declaration (registry_relation).",
+            "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
             "severity": "warning"
           },
           {
@@ -3916,9 +3951,9 @@
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
               "severity": "warning",
               "source_kind_code": "output_iva_evidence",
-              "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
+              "source_refs": "aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2024-late"
             },
-            "message": "An output transaction has no supporting evidence.",
+            "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
             "severity": "warning"
           },
           {
@@ -3931,14 +3966,14 @@
               "legal_refs": "ley-37-1992:art-97, rd-1619-2012:art-2",
               "severity": "warning",
               "source_kind_code": "output_iva_evidence",
-              "source_refs": "aeat-dr-303-2026, aeat-modelo-303-procedure, boe-modelo-303-2008-form"
+              "source_refs": "aeat-dr-303-2026, aeat-dr-303-2024-early, aeat-modelo-303-procedure, boe-modelo-303-2008-form, aeat-dr-303-2024-late"
             },
-            "message": "An output transaction has no supporting evidence.",
+            "message": "An output transaction has no supporting evidence (binding bf64e35fb5ecb5fa5bb10d7053d2506eab6adc12441bdf97c3bc09a288b6d063, source output_iva_evidence, reason missing_transaction_evidence).",
             "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "8a7768dceaadc2b05a75703e2380a265b0e3a5146b3f6d01808d7aafe2bbe00c",
+          "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
           "completeness_status": "complete",
           "findings": [
             {
@@ -3949,23 +3984,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding).",
-              "severity": "warning",
-              "source_refs": [
-                "aeat-dr-303-2026",
-                "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form"
-              ]
-            },
-            {
-              "action": null,
-              "casilla_id": null,
-              "expectation_id": null,
-              "kind": "advisory",
-              "legal_refs": [
-                "rd-1065-2007:art-9"
-              ],
-              "message": "Modelo 303 2025 4T is suppressed by operator declaration (registry_relation).",
+              "message": "Modelo 303 2025 4T is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-303-2026",
@@ -3982,12 +4001,14 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence.",
+              "message": "An output transaction has no supporting evidence (binding 71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518, source output_iva_evidence, reason missing_transaction_evidence).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form"
+                "boe-modelo-303-2008-form",
+                "aeat-dr-303-2024-late"
               ]
             },
             {
@@ -3999,21 +4020,29 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence.",
+              "message": "An output transaction has no supporting evidence (binding bf64e35fb5ecb5fa5bb10d7053d2506eab6adc12441bdf97c3bc09a288b6d063, source output_iva_evidence, reason missing_transaction_evidence).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
-                "boe-modelo-303-2008-form"
+                "boe-modelo-303-2008-form",
+                "aeat-dr-303-2024-late"
               ]
             }
           ],
           "granted_verificado_completo": true,
           "missing_required_casilla_ids": [],
           "operation": "modelo.work.verify",
+          "registry_snapshot_ref": {
+            "modelo": "303",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2026-y-siguientes"
+          },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "1f972a896721addad7e3334faa5d159226ad67acb7ceb240d7a84747aea4e029",
+          "verification_report_id": "e55136e9efc8a73cac623ceb483b9a764240fc929c103760167fd753f4935a55",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -4034,7 +4063,7 @@
         "modelo",
         "work",
         "file",
-        "8a7768dceaadc2b05a75703e2380a265b0e3a5146b3f6d01808d7aafe2bbe00c"
+        "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
       ],
       "captures": [],
       "envelope": {
@@ -4043,19 +4072,24 @@
         "notices": [],
         "result": {
           "aeat_accepted": false,
+          "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "8a7768dceaadc2b05a75703e2380a265b0e3a5146b3f6d01808d7aafe2bbe00c",
+          "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
+          "confirmation": "pendiente",
+          "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "224f42fbcb06c76dfb53211ca2e456fdca386c565c1d5a0e5695b6b502a7ddd5",
+          "filing_record_id": "e6d810f1fe077e8f156fc1cd0c09e94a73a32c10fbe274899afb74345b87579f",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
+          "member_nif": null,
           "modelo": "303",
           "notes": null,
           "operation": "modelo.work.file",
+          "origin": "local",
           "period": {
             "code": "1T",
             "filing_year": 2026
@@ -4084,7 +4118,7 @@
         "export",
         "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
         "--revision",
-        "8a7768dceaadc2b05a75703e2380a265b0e3a5146b3f6d01808d7aafe2bbe00c",
+        "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
         "--output",
         "./modelo-303.boe"
       ],
@@ -4097,7 +4131,7 @@
           "category": "FAIL",
           "code": "FAIL_MODELO_EXPORT",
           "context": {
-            "calculation_revision_id": "8a7768dceaadc2b05a75703e2380a265b0e3a5146b3f6d01808d7aafe2bbe00c"
+            "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
           },
           "message": "Modelo 303 export requires explicit product/software identity authority",
           "retryable": false,
