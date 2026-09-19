@@ -25,6 +25,25 @@ PyPI is the primary target. Homebrew and Scoop are downstream of what it serves.
 
 The workflow runs and their logs are the authoritative operational record.
 
+## The authority is staged, never committed
+
+The runtime authority is generated output that the distributions nevertheless
+ship: a released package carries the descriptor and the one database it names
+at `cadrumo/_data/registry/authority/`, and resolves it there with no
+environment variable set. It is not in the repository. A checkout publishes its
+own into the gitignored `.authority/` directory, and the build stages that
+descriptor-selected pair into the isolated build root, so what ships is the
+pair the builder published rather than anything read from the working tree.
+
+This has one consequence for a local release build: publish before you build.
+`just build-distributions` cannot produce a complete distribution from a
+checkout that has never run `just registry-publish-authority`, and it refuses
+rather than emitting a package without its only registry payload.
+
+Selection is descriptor-driven. A superseded content-addressed database that a
+checkout retains, the publisher's lock sidecar, and any in-flight staging
+directory are not members of the release cohort.
+
 ## One-time setup
 
 Publication authenticates with PyPI Trusted Publishing over OIDC. No token is stored

@@ -102,7 +102,7 @@ jobs:
       - name: Registry gate
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         shell: bash
-        run: just check-registry-gate base="$GATE_BASE"
+        run: just check-registry-gate
 
       - name: Import boundaries
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}

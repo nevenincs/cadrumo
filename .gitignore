@@ -498,8 +498,16 @@ cache/
 # work, and are reclaimed on the next attempt if their holder died.
 /src/cadrumo/_data/registry/aeat/.*.lock
 /src/cadrumo/_data/registry/aeat/.*.lock.lock
-# The runtime authority publisher's destination lock; the artifact beside it is tracked.
-/src/cadrumo/_data/registry/authority/authority.current.json.lock
+
+# The published registry authority: a content-addressed SQLite generation, its
+# descriptor, the publisher's retained destination lock and any staging
+# directory left by a publication in flight. It is generated output rebuilt
+# from the registry sources by `python -m dev.registry.pipeline
+# publish-authority`, and roughly eighty megabytes of it changes whenever those
+# sources do, so it is kept out of history and resolved through
+# CADRUMO_AUTHORITY_ROOT instead. Packaging still ships it at its distribution
+# path; it is staged there at build time rather than read from the checkout.
+/.authority/
 
 # Generated export publication transactions: locks, journals, rollback
 # siblings. Never tracked -- they are live-process state, not content.

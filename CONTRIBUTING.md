@@ -53,6 +53,84 @@ certificate is personal, per-machine data — it is never baked into the image.
 Mount it or set `CADRUMO_CERTIFICATE_PATH` after the container starts if you need
 `aeat app live ...` inside the container.
 
+## Publish the runtime authority
+
+A fresh clone cannot calculate or file anything until you publish the runtime
+authority once. The authority is the compiled, digest-checked publication of
+the tax-rule registry, and it is the only registry source an installed Cadrumo
+process reads. A released package carries one; a checkout builds its own.
+
+```console
+just registry-publish-authority
+```
+
+The publication lands in `.authority/` at the repository root. It is roughly
+eighty megabytes, it takes a few minutes, and it is excluded from version
+control: it is regenerated output, it changes whenever the registry sources
+do, and carrying it in history would add that much binary to every clone.
+Commit the registry change on its own; never commit the result of this
+command.
+
+Republish whenever you change registry declarations or legal evidence, and
+after a dependency or interpreter change — the publication records the
+identity of the sources and the compiler that produced it, so either kind of
+change makes it stale. `just check-registry` tells you when it has.
+
+### Where the tooling looks for it
+
+`CADRUMO_AUTHORITY_ROOT` names the directory to resolve the authority from,
+and whether you set it depends on how you start the process:
+
+| How you run | The variable |
+| --- | --- |
+| `just` recipes, `python -m dev.*`, `pytest` | Set for you, to this checkout's `.authority/`. |
+| The `aeat` command from your checkout | You set it yourself. |
+
+That split is deliberate and will not be closed. Cadrumo's runtime never
+imports its development tooling and never searches upwards for a repository
+root, so nothing in the product can discover a checkout's `.authority/` on its
+own. The development tooling knows where the repository is and seeds the
+variable; the product does not and cannot. To run the `aeat` command against
+your checkout's authority, name it yourself:
+
+```powershell
+$env:CADRUMO_AUTHORITY_ROOT = "$PWD\.authority"
+```
+
+An explicit value always wins over the seeded one, so a run pointed at another
+authority tree is never overridden by the checkout's own.
+
+### The two refusals you will meet
+
+Both name the command that fixes them. Which one you see says where the
+process was looking.
+
+Before you have published, `just`, `pytest` and the `dev` tooling report:
+
+```text
+CADRUMO_AUTHORITY_ROOT points at a directory that holds no registry authority
+descriptor at <repo>\.authority\authority.current.json. Publish the authority
+with `python -m dev.registry.pipeline publish-authority` or point the variable
+at a published authority tree.
+```
+
+The `aeat` command with the variable unset looks in the packaged location
+instead, finds nothing there in a checkout, and reports:
+
+```text
+No registry authority is published at <...>\cadrumo\_data\registry\authority\authority.current.json.
+Publish it with `python -m dev.registry.pipeline publish-authority`, or set
+CADRUMO_AUTHORITY_ROOT to a published authority tree.
+```
+
+Neither falls back to the other. A configured root is the whole answer, so a
+checkout cannot silently answer from packaged bytes it believed it had
+replaced.
+
+For the publication format, the verification steps, and the release-only
+candidate directory, see
+[Publish a validated runtime authority](docs/how-to/publish-runtime-authority.md).
+
 ## Check the workstation
 
 `just doctor-check` runs `aeat config check` against the checkout's environment. The

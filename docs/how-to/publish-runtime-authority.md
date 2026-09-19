@@ -34,27 +34,79 @@ For an ordinary installed-command failure, use [Diagnose and repair](troubleshoo
    export layout, and legal/source evidence projection into one complete
    authority, materializes authoring deltas into complete typed revisions,
    runs full registry conformance against the exact evidence closure, and
-   installs a content-addressed SQLite candidate under
-   `src/cadrumo/_data/registry/authority/authority-<database_sha256>.sqlite3`.
+   installs a content-addressed SQLite candidate at
+   `.authority/authority-<database_sha256>.sqlite3`.
    Only after the database has been independently admitted and traversed does
-   it atomically replace
-   `src/cadrumo/_data/registry/authority/authority.current.json`.
+   it atomically replace `.authority/authority.current.json`.
    The command prints the descriptor path and logical generation it recorded.
    `--registry-root`, `--source-root`, `--profile-schema`, and `--destination`
    select other inputs or an isolated candidate destination. Custom registry or
-   source roots must provide `--profile-schema` explicitly.
+   source roots must provide `--profile-schema` explicitly. Without
+   `--destination` the publication writes to the configured authority root and
+   refuses rather than guessing a location when none is configured.
    There is no facts-only publication command and no component-selective reuse:
    every successful publication is a fresh, full generation.
-3. Commit the regenerated `authority.current.json` and its exact
-   content-addressed `authority-<database_sha256>.sqlite3` together with the
-   registry change that required them. Do not rename a database or edit the
-   descriptor by hand.
+3. Do not commit the result. The descriptor and its content-addressed
+   database are generated output, and the directory they are published into
+   is excluded from version control: the registry change is committed on its
+   own, and every checkout publishes its own authority from it. Do not rename
+   a database or edit the descriptor by hand.
+
+## Where the authority lives
+
+The published authority is generated output, so a checkout keeps it outside
+the packaged tree, in `.authority/` at the repository root. That directory is
+excluded from version control: it is regenerated from the committed registry,
+it is large, and it changes with every registry edit.
+
+`CADRUMO_AUTHORITY_ROOT` names the directory to resolve it from. Whether you
+set it depends on how you start the process:
+
+| How you run | The variable |
+| --- | --- |
+| `just` recipes, `python -m dev.*`, `pytest` | Set for you, to `.authority/` in the repository you are in. |
+| The `aeat` command from a checkout | You set it yourself. |
+| The `aeat` command from an installed Cadrumo | Never set. The distribution carries the authority. |
+
+The seeding is deliberate rather than incidental: the development tooling
+knows where a repository is, and the product does not. Cadrumo's runtime never
+imports its development tooling and never searches upwards for a repository
+root, so nothing in the installed code can discover a checkout's `.authority/`
+on its own. To run the `aeat` command against a checkout's own authority, name
+it in the environment:
+
+```powershell
+$env:CADRUMO_AUTHORITY_ROOT = "$PWD\.authority"
+```
+
+An explicit value always wins, so a release verification pointed at another
+authority tree is never overridden by the checkout's own.
+
+An installed Cadrumo needs no variable at all. The distribution carries the
+descriptor and the exact database it names at
+`cadrumo/_data/registry/authority/`, and an unset `CADRUMO_AUTHORITY_ROOT`
+resolves there.
+
+### The candidate directory is not the runtime location
 
 For an isolated package or installed-cohort check, set
-`CADRUMO_AUTHORITY_CANDIDATE_DIR` to the directory containing the accepted
-descriptor and its selected database. The packaging checks copy only those
-two bytes into a private source snapshot; they never mutate the checkout or
-read the authored registry as a runtime fallback.
+`CADRUMO_AUTHORITY_CANDIDATE_DIR` to the directory holding an accepted but
+not yet promoted candidate: its descriptor and the database that descriptor
+selects. The packaging checks copy only those two files into a private source
+snapshot; they never mutate the checkout, and they never fall back to a
+promoted pair when the variable is set.
+
+This is a development and release-verification variable. A product operator
+never sets it, and it is deliberately not part of the application's
+configuration, so it does not appear in the environment reference.
+
+It is not an alternative spelling of `CADRUMO_AUTHORITY_ROOT`, and the two
+must not be pointed at the same directory. `CADRUMO_AUTHORITY_ROOT` names
+where the product resolves the authority it may read;
+`CADRUMO_AUTHORITY_CANDIDATE_DIR` names bytes the runtime must *not* resolve
+until they are promoted. Aiming the runtime root at an unpromoted candidate
+during a release build is exactly the confusion the second variable exists to
+prevent.
 
 Publication holds the destination lock while it captures the input receipt,
 validates and serializes the complete component set, stages and flushes the
