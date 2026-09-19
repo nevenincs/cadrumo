@@ -54,17 +54,55 @@ _INVALID_HEX64 = (
 )
 
 
+#: The package the aliases are read from, and its public modules, named as
+#: literals so the set of modules this suite loads is finite and readable
+#: without running it. The list is NOT the authority on the package's
+#: contents: :func:`test_the_named_modules_are_the_identity_package` reads the
+#: package directory and fails the moment the two disagree, so a module added
+#: or removed cannot slip past unnoticed.
+_IDENTITY_PACKAGE = "cadrumo.core.identity"
+_IDENTITY_MODULES = (
+    ".aeat_box",
+    ".aeat_certificado",
+    ".aeat_clave_liquidacion",
+    ".aeat_csv",
+    ".aeat_expediente",
+    ".aeat_presentation",
+    ".bucket",
+    ".continuidad",
+    ".digest",
+    ".documents",
+    ".hex_ids",
+    ".nif_iva",
+    ".profile",
+    ".profile_label",
+    ".tax_id",
+    ".transaction_ids",
+)
+
+
+def _public_identity_modules() -> tuple[str, ...]:
+    """Return the identity package's public modules, read from the package."""
+    return tuple(
+        sorted(
+            f".{module_info.name}"
+            for module_info in pkgutil.iter_modules(_identity_package.__path__)
+            if not module_info.name.startswith("_") and module_info.name != "tests"
+        )
+    )
+
+
 def _hex64_aliases() -> dict[str, object]:
     """Every public alias bound to the canonical primitive, DERIVED not listed.
 
-    This set was hand-written, and a hand-written set is a second register of a
-    fact the package already states. It drifted exactly as such a register does:
-    it named three aliases while ``core.identity`` exported eight, so the five
-    relocated into this package during the identity consolidation were never
-    proven to have stayed on the shared shape -- by the suite whose stated
-    purpose is proving precisely that. The comment even instructed authors to
-    add new concepts by hand, which is the maintenance burden that produced the
-    gap.
+    The ALIAS set was hand-written, and a hand-written set is a second register
+    of a fact the package already states. It drifted exactly as such a register
+    does: it named three aliases while ``core.identity`` exported eight, so the
+    five relocated into this package during the identity consolidation were
+    never proven to have stayed on the shared shape -- by the suite whose
+    stated purpose is proving precisely that. The comment even instructed
+    authors to add new concepts by hand, which is the maintenance burden that
+    produced the gap.
 
     Deriving by identity (``value is Hex64Str``) makes the set complete BY
     CONSTRUCTION: a new alias is covered the moment it is declared, and one that
@@ -75,10 +113,8 @@ def _hex64_aliases() -> dict[str, object]:
     them rather than from the package namespace.
     """
     aliases: dict[str, object] = {"Hex64Str": Hex64Str}
-    for module_info in pkgutil.iter_modules(_identity_package.__path__):
-        if module_info.name.startswith("_") or module_info.name == "tests":
-            continue
-        module = importlib.import_module(f"{_identity_package.__name__}.{module_info.name}")
+    for module_name in _IDENTITY_MODULES:
+        module = importlib.import_module(module_name, _IDENTITY_PACKAGE)
         for name, value in vars(module).items():
             if not name.startswith("_") and name != "Hex64Str" and _primitive_of(value) is Hex64Str:
                 aliases[name] = value
@@ -107,6 +143,17 @@ _KNOWN_ALIASES = frozenset(
         "WorkUnitId",
     }
 )
+
+
+def test_the_named_modules_are_the_identity_package() -> None:
+    """DETECTOR: the literal module list cannot drift from the package silently.
+
+    The import target set is written out so it can be read statically, which
+    reintroduces exactly the kind of second register that let the alias set
+    drift. This reads the package directory and fails the moment a public
+    module is added, removed, or renamed without the list following it.
+    """
+    assert _public_identity_modules() == _IDENTITY_MODULES
 
 
 def test_the_alias_set_is_derived_and_not_empty() -> None:
