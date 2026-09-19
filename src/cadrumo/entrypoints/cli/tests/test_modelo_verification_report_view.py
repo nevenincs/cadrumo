@@ -146,6 +146,7 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
     from .._modelo_rendering import (
         verification_report_payload as _verification_report_payload,
     )
+    from ..common import resolve_cli_precondition_action
 
     calculation_revision_id = "e" * 64
     findings = (
@@ -187,11 +188,14 @@ def test_verification_report_payload_resolves_the_exact_registry_recovery_verdic
         precondition_failure=precondition_failure,
     )
     payload = _verification_report_payload(report, finding_preconditions=(projection,))
-    assert payload.findings[0].action is None
+    expected_action = resolve_cli_precondition_action(precondition_failure.verdict)
+    assert payload.findings[0].action == expected_action
+    assert expected_action.action is None
 
-    lines = _verification_report_lines(report, finding_actions=(None,))
+    lines = _verification_report_lines(report, finding_actions=(expected_action,))
     finding_line = next(line for line in lines if line.startswith("finding\t"))
-    assert finding_line.rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(None)
+    assert finding_line.rsplit("\t", 1)[-1] == resolved_precondition_action_json_cell(expected_action)
+    assert '"failed_condition_id"' in finding_line
     assert '"action_id"' not in finding_line
     assert "aeat app " not in finding_line
 
