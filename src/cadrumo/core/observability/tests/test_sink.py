@@ -49,6 +49,10 @@ from ..store import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+# What central redaction leaves of a URL: the origin, with the path and the
+# query dropped. Asserting the origin under its own key (rather than as a bare
+# substring of the whole rendering) is what proves the path and query went.
+_REDACTED_URL_ORIGIN = "https://example.test"
 
 
 class TestJsonlStoreRoundTrip:
@@ -81,7 +85,7 @@ class TestJsonlStoreRoundTrip:
                 # Path-stripped URL ("https://example.test/0") survives as
                 # "https://example.test" — the host stays intact.
                 assert restored.payload.navigation is not None
-                assert restored.payload.navigation.url.startswith("https://example.test")
+                assert restored.payload.navigation.url == _REDACTED_URL_ORIGIN
 
     def test_load_rejects_corrupted_line(
         self,

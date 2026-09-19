@@ -28,6 +28,10 @@ from ..error_codes import ErrorEnvelope, build_error_envelope, render_error_json
 from ..hierarchy import ActiveProfilePointerError, CadrumoError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+# What central redaction leaves of a URL: the origin, with the path and the
+# query dropped. Asserting the origin under its own key (rather than as a bare
+# substring of the whole rendering) is what proves the path and query went.
+_REDACTED_URL_ORIGIN = "https://example.test"
 
 
 def _output_language(language: str):
@@ -191,7 +195,7 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
     assert "X1234567L" not in rendered_text
     assert "sha256:2a000539" in rendered_json
     assert "https://example.test/private/path?token=secret" not in rendered_json
-    assert "https://example.test" in rendered_json
+    assert f'"{_REDACTED_URL_ORIGIN}"' in rendered_json
     assert "private/path" not in rendered_json
     assert jwt not in rendered_json
     assert "token:sha256:0a2c77ea" in rendered_json

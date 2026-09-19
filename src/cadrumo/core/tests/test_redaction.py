@@ -49,6 +49,10 @@ _HEX_DIGEST = "EB58612F0394953A4B516B938AD3FEB1"
 _BOE_CITATION = "BOE-A-2024-26694"
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 _URL = "https://example.test/private/path?token=secret"
+#: What central redaction leaves of a URL: the origin, with the path and the
+#: query dropped. Asserting the origin under its own key (rather than as a
+#: bare substring of the whole rendering) is what proves the path went.
+_REDACTED_URL_ORIGIN = "https://example.test"
 _OBJECT_KEY = "wallet:2026-secret"
 _OTHER_OBJECT_KEY = "wallet:2026-other"
 
@@ -81,7 +85,7 @@ def test_cli_output_text_redacts_sensitive_canaries() -> None:
     assert "active_profile=operator" in rendered
     assert f"bucket_id={CLI_BUCKET_ID_PLACEHOLDER}" in rendered
     assert f"object_key={CLI_OBJECT_KEY_PLACEHOLDER}" in rendered
-    assert "https://example.test" in rendered
+    assert f"url={_REDACTED_URL_ORIGIN}" in rendered
     assert "private/path" not in rendered
     assert "sha256:" in rendered
     assert "token:sha256:" in rendered
