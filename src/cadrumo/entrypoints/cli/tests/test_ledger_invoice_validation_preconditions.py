@@ -57,7 +57,7 @@ def _assert_invoice_terminal(error: InvoiceValidationError | ValidationError) ->
     assert refusal.precondition_action.model_dump(mode="json") == _EXPECTED_ACTION
 
 
-def _invoice_line_validation(*, description: str, quantity: object) -> ValidationError:
+def _invoice_line_validation(*, description: object, quantity: object) -> ValidationError:
     """Produce a real Pydantic invoice-line validation transport."""
     with bundled_indexed_authority().operation(), pytest.raises(ValidationError) as raised:
         InvoiceLine.model_validate(
@@ -150,11 +150,13 @@ def test_invoice_projection_does_not_reclassify_catalogue_load_corruption() -> N
 
 def test_invoice_projection_does_not_hide_ordinary_coercion_in_a_mixed_invoice_line() -> None:
     """A mixed wrapper retains the ordinary coercion owner rather than projecting it."""
-    error = _invoice_line_validation(description="   ", quantity="not-a-decimal")
+    error = _invoice_line_validation(description=123, quantity=Decimal("-1"))
 
     assert error.title == "InvoiceLine"
     assert len(error.errors(include_url=False)) == 2
-    assert _nested_invoice_error_count(error) == 1
+    details = error.errors(include_url=False)
+    assert {detail["loc"] for detail in details} == {("description",), ("quantity",)}
+    assert "quantity must be strictly positive" in str(error)
     assert ledger_invoice_validation_no_recovery(error) is None
 
 
