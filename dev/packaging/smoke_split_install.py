@@ -9,7 +9,7 @@ namespace package.
 
 This lane consumes the prebuilt immutable cohort, installs all three wheels
 together into a fresh stdlib venv, proves their versions and root metadata form
-one exact cohort, and runs full byte-exact registry verification. There is no
+one exact cohort, and reads the installed published authority. There is no
 supported command-bearing installation without both data distributions.
 
 The root wheel's corpus-binary shedding and each companion's sub-cap size are
@@ -42,7 +42,7 @@ from .python_cohort import assert_installed_cohort, load_python_cohort
 
 _COHORT_PROBE = """
 from importlib.metadata import requires, version
-from dev.registry.compiler.authority import compiled_bundled_authority
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
 
 root_version = version("cadrumo")
@@ -59,8 +59,9 @@ for distribution in ("cadrumo-data-manuals", "cadrumo-data-official"):
     if observed != root_version:
         raise SystemExit(f"{distribution} version {observed!r} != root version {root_version!r}")
 
-authority = compiled_bundled_authority()
-authority.validate_registry()
+with bundled_indexed_authority().operation() as authority:
+    if not authority.modelo_directory("100").revisions:
+        raise SystemExit("installed authority has no modelo 100 revisions")
 print(f"three-wheel-cohort-ok: {root_version}")
 """
 

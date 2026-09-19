@@ -26,9 +26,10 @@ incidental transitive satisfies and the reason this defect is invisible without
 a gate.
 
 Only shipped modules are scanned. Both build targets exclude
-``src/cadrumo/**/tests/**``, so a test module's ``import pytest`` is not a
-shipped reliance; folding those in would force the dev groups back into the
-declared set and reopen the hole above.
+``src/cadrumo/**/tests/**`` and every source ``conftest.py``, so test
+infrastructure's ``import pytest`` is not a shipped reliance; folding those in
+would force the dev groups back into the declared set and reopen the hole
+above.
 
 Import names are mapped to distribution names through
 :func:`importlib.metadata.packages_distributions` rather than a hand-kept table,
@@ -109,7 +110,8 @@ def _third_party_imports_under(root: Path) -> dict[str, list[str]]:
     stdlib_and_local = _NOT_THIRD_PARTY | _stdlib_names()
     found: dict[str, list[str]] = {}
     for path in scan_directory(root, pattern="*.py", recursive=True):
-        if "tests" in path.relative_to(root).parts:
+        relative = path.relative_to(root)
+        if "tests" in relative.parts or path.name == "conftest.py":
             # Not shipped by either build target, so not a shipped reliance.
             continue
         for name in _top_level_imports(path):

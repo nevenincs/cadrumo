@@ -98,5 +98,5 @@ def test_real_wheels_form_one_complete_authority_cohort(
     )
 
     assert 'requires("cadrumo")' in _COHORT_PROBE
-    assert "bundled_authority" in _COHORT_PROBE
+    assert "bundled_indexed_authority" in _COHORT_PROBE
     assert venv_cadrumo_path(venv).name == ("aeat.exe" if os.name == "nt" else "aeat")

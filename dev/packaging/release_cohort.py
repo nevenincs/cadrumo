@@ -14,6 +14,7 @@ import sys
 import tempfile
 import uuid
 import zipfile
+from dataclasses import replace
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Final
@@ -45,6 +46,7 @@ _COHORT_MANIFEST = importlib.import_module("dev.packaging.cohort_manifest")
 ArtifactKind = _COHORT_MANIFEST.ArtifactKind
 BuildIdentity = _COHORT_MANIFEST.BuildIdentity
 LoadedReleaseCohort = _COHORT_MANIFEST.LoadedReleaseCohort
+ReleaseCohortManifest = _COHORT_MANIFEST.CohortManifest
 SourceIdentity = _COHORT_MANIFEST.SourceIdentity
 create_manifest = _COHORT_MANIFEST.create_manifest
 load_release_cohort = _COHORT_MANIFEST.load_release_cohort
@@ -53,6 +55,7 @@ sha256_path = importlib.import_module("dev.packaging.hashing").sha256_path
 _PYTHON_COHORT = importlib.import_module("dev.packaging.python_cohort")
 PythonCohort = _PYTHON_COHORT.PythonCohort
 build_python_cohort = _PYTHON_COHORT.build_python_cohort
+build_python_cohort_from_clean_snapshot = _PYTHON_COHORT.build_python_cohort_from_clean_snapshot
 
 _UTF_8: Final[str] = UTF_8
 _ZIP_TIMESTAMP: Final[tuple[int, int, int, int, int, int]] = (1980, 1, 1, 0, 0, 0)
@@ -128,9 +131,79 @@ def _copy_python_cohort(cohort: PythonCohort, destination: Path) -> PythonCohort
     if destination.exists():
         raise FileExistsError(destination)
     shutil.copytree(cohort.directory, destination)
-    from .python_cohort import load_python_cohort
+    source_root = cohort.directory.resolve(strict=True)
+    copied_root = destination.resolve(strict=True)
+    source_manifest = cohort.manifest.resolve(strict=True)
+    copied_manifest = (copied_root / source_manifest.relative_to(source_root)).resolve(strict=True)
+    if copied_manifest.read_bytes() != source_manifest.read_bytes():
+        raise SystemExit("copied Python cohort manifest bytes drifted")
 
-    return load_python_cohort(destination)
+    artifacts = {
+        "cadrumo": cohort.root_wheel,
+        "cadrumo-sdist": cohort.root_sdist,
+        "source-archive": cohort.source_archive,
+        "runtime-wheelhouse": cohort.runtime_wheelhouse,
+        "cadrumo-data-manuals": cohort.manuals_wheel,
+        "cadrumo-data-manuals-sdist": cohort.manuals_sdist,
+        "cadrumo-data-official": cohort.official_wheel,
+        "cadrumo-data-official-sdist": cohort.official_sdist,
+    }
+    declared = {
+        source_manifest.relative_to(source_root).as_posix(),
+        *(artifact.resolve(strict=True).relative_to(source_root).as_posix() for artifact in artifacts.values()),
+    }
+    observed = {
+        path.relative_to(copied_root).as_posix()
+        for path in scan_directory(copied_root, recursive=True)
+        if path.is_file()
+    }
+    if observed != declared:
+        raise SystemExit(
+            "copied Python cohort file inventory drifted: "
+            f"declared={sorted(declared)!r}, observed={sorted(observed)!r}",
+        )
+
+    copied_artifacts: dict[str, Path] = {}
+    for name, source in artifacts.items():
+        copied = (copied_root / source.resolve(strict=True).relative_to(source_root)).resolve(strict=True)
+        actual = sha256_path(copied)
+        if actual != cohort.sha256[name]:
+            raise SystemExit(
+                f"copied Python cohort artifact digest mismatch for {name!r}: "
+                f"expected {cohort.sha256[name]}, got {actual}",
+            )
+        copied_artifacts[name] = copied
+
+    return replace(
+        cohort,
+        directory=copied_root,
+        manifest=copied_manifest,
+        root_wheel=copied_artifacts["cadrumo"],
+        root_sdist=copied_artifacts["cadrumo-sdist"],
+        source_archive=copied_artifacts["source-archive"],
+        runtime_wheelhouse=copied_artifacts["runtime-wheelhouse"],
+        manuals_wheel=copied_artifacts["cadrumo-data-manuals"],
+        manuals_sdist=copied_artifacts["cadrumo-data-manuals-sdist"],
+        official_wheel=copied_artifacts["cadrumo-data-official"],
+        official_sdist=copied_artifacts["cadrumo-data-official-sdist"],
+    )
+
+
+def _complete_release_cohort(
+    *,
+    output: Path,
+    manifest_path: Path,
+    manifest: ReleaseCohortManifest,
+    validate_output: bool,
+) -> LoadedReleaseCohort:
+    """Return the staged authority, fully validating unless its parent will move it."""
+    if validate_output:
+        return load_release_cohort(output)
+    return LoadedReleaseCohort(
+        directory=output.resolve(strict=True),
+        manifest_path=manifest_path.resolve(strict=True),
+        manifest=manifest,
+    )
 
 
 def _generate_channel_artifacts(
@@ -257,11 +330,19 @@ def build_from_clean_source(
     expected_source_digest: str,
     requested_tag: str | None,
     requested_commit: str | None = None,
+    use_prepared_source: bool = False,
+    validate_output: bool = True,
 ) -> LoadedReleaseCohort:
-    """Assemble every member in one clean process without rebuilding a lane."""
+    """Assemble every member in one clean process without rebuilding a lane.
+
+    ``use_prepared_source`` is reserved for the parent release builder after
+    it has made and verified an immutable source snapshot. Direct callers keep
+    the Python builder's own snapshot and the default full output validation.
+    """
     root = clean_root.resolve(strict=True)
     commit = _source_commit(requested_commit)
-    observed_digest = content_digest(root, repository_files(root))
+    source_files = repository_files(root)
+    observed_digest = content_digest(root, source_files)
     if observed_digest != expected_source_digest:
         raise SystemExit(
             f"clean source digest drifted: expected {expected_source_digest}, got {observed_digest}",
@@ -283,7 +364,16 @@ def build_from_clean_source(
     env["PYTHONPATH"] = os.pathsep.join((str(root / "src"), str(root)))
 
     python_work = root / "var" / f"release-python-{uuid.uuid4().hex}"
-    python_cohort = build_python_cohort(root, python_work)
+    python_cohort = (
+        build_python_cohort_from_clean_snapshot(
+            root,
+            python_work,
+            source_files=source_files,
+            source_digest=expected_source_digest,
+        )
+        if use_prepared_source
+        else build_python_cohort(root, python_work)
+    )
     cohort = _copy_python_cohort(python_cohort, output / "python")
     scoop, homebrew = _generate_channel_artifacts(
         clean_root=root,
@@ -343,7 +433,7 @@ def build_from_clean_source(
             ("homebrew-formula", ArtifactKind.HOMEBREW_FORMULA, homebrew),
         ),
     )
-    write_manifest(output, manifest)
+    manifest_path = write_manifest(output, manifest)
     declared = {record.path for record in manifest.artifacts} | {"release-cohort.json"}
     observed = {
         path.relative_to(output).as_posix() for path in scan_directory(output, recursive=True) if path.is_file()
@@ -353,7 +443,20 @@ def build_from_clean_source(
             "release cohort contains undeclared or missing files: "
             f"declared={sorted(declared)!r}, observed={sorted(observed)!r}",
         )
-    return load_release_cohort(output)
+    if use_prepared_source:
+        final_source_files = repository_files(root)
+        final_source_digest = content_digest(root, final_source_files)
+        if final_source_files != source_files or final_source_digest != expected_source_digest:
+            raise SystemExit(
+                "prepared release source drifted while assembling the cohort: "
+                f"expected {expected_source_digest}, got {final_source_digest}",
+            )
+    return _complete_release_cohort(
+        output=output,
+        manifest_path=manifest_path,
+        manifest=manifest,
+        validate_output=validate_output,
+    )
 
 
 def build_release_cohort(
@@ -407,6 +510,8 @@ def build_release_cohort(
             str(staging),
             "--expected-source-digest",
             digest,
+            "--use-prepared-source",
+            "--defer-output-validation",
         ]
         if source_tag is not None:
             argv.extend(("--source-tag", source_tag))
@@ -443,6 +548,8 @@ def _parser() -> argparse.ArgumentParser:
     clean.add_argument("--expected-source-digest", required=True)
     clean.add_argument("--source-tag")
     clean.add_argument("--source-commit")
+    clean.add_argument("--use-prepared-source", action="store_true", help=argparse.SUPPRESS)
+    clean.add_argument("--defer-output-validation", action="store_true", help=argparse.SUPPRESS)
     return parser
 
 
@@ -463,6 +570,8 @@ def main() -> int:
             expected_source_digest=args.expected_source_digest,
             requested_tag=args.source_tag,
             requested_commit=args.source_commit,
+            use_prepared_source=args.use_prepared_source,
+            validate_output=not args.defer_output_validation,
         )
     else:
         cohort = load_release_cohort(args.cohort_dir)

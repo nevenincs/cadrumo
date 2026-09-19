@@ -46,7 +46,7 @@ from dev.source_tree import repository_files, snapshot
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
-from .authority_staging import stage_published_authority
+from .authority_staging import selected_published_authority, stage_published_authority
 from .command_execution import CommandResult, run_command
 from .evidence import PackagingSmokeManifest
 from .proof_ledger import (
@@ -659,7 +659,7 @@ def _is_configured_exclusion(path: str, patterns: tuple[str, ...]) -> bool:
 
 
 def _expected_wheel_data_paths(repo_root: Path, source_paths: set[str]) -> set[str]:
-    """Project one already-sealed source-data inventory into wheel member paths."""
+    """Project source data and the selected published authority into wheel paths."""
     suffixes = _configured_corpus_binary_suffixes(repo_root)
     split_owned = {path for path in source_paths if "/tests/" not in path and _is_corpus_source_binary(path, suffixes)}
     _assert_split_files_have_companion_owners(repo_root, split_owned)
@@ -673,6 +673,8 @@ def _expected_wheel_data_paths(repo_root: Path, source_paths: set[str]) -> set[s
         if _is_configured_exclusion(path, exclusions):
             continue
         expected.add(f"{_WHEEL_DATA_PREFIX}/{path.removeprefix(_SOURCE_DATA_PREFIX)}")
+    descriptor, database = selected_published_authority(repo_root)
+    expected.update(f"{_WHEEL_DATA_PREFIX}/registry/authority/{path.name}" for path in (descriptor, database))
     return expected
 
 

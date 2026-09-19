@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 import pytest
@@ -71,10 +72,15 @@ def test_real_clean_source_build_is_complete_and_reproducible() -> None:
             source / "var" / "first",
             source / "var" / "second",
         )
-        # Neither build is told which content to use: each enumerates the
-        # source itself, exactly as a release does. Both must land on the same one.
-        first = build_release_cohort(repo_root=source, output_dir=outputs[0])
-        second = build_release_cohort(repo_root=source, output_dir=outputs[1])
+        # Each build enumerates and snapshots the same fixed source on its own.
+        # Their outputs and clean child processes are independent, so running
+        # both now lets the digest comparison retain its two-build proof while
+        # using the available build time in parallel.
+        with ThreadPoolExecutor(max_workers=2) as builders:
+            first_build = builders.submit(build_release_cohort, repo_root=source, output_dir=outputs[0])
+            second_build = builders.submit(build_release_cohort, repo_root=source, output_dir=outputs[1])
+            first = first_build.result()
+            second = second_build.result()
 
         assert first.manifest.source.source_digest == second.manifest.source.source_digest
         assert first.manifest.cohort_id == second.manifest.cohort_id

@@ -52,17 +52,17 @@ propagate := if os_family() == "windows" { "; exit $LASTEXITCODE" } else { "" }
 [doc('Converge a checkout with Python, repository tooling, and local environment configuration.')]
 [group('setup')]
 setup:
-    uv run --no-project --python 3.13.11 -- python -m dev.init all{{propagate}}
+    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init all{{propagate}}
 
 [doc('Synchronize the pinned Python environment from uv.lock.')]
 [group('setup')]
 setup-python:
-    uv run --no-project --python 3.13.11 -- python -m dev.init python{{propagate}}
+    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init python{{propagate}}
 
 [doc('Install repository tooling, including pinned actionlint, after the Python environment is available.')]
 [group('setup')]
 setup-repository-tools:
-    uv run --no-project --python 3.13.11 -- python -m dev.init tools{{propagate}}
+    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init tools{{propagate}}
 
 [doc('Install the pinned Hunspell dictionaries used by check-locales.')]
 [group('setup')]
@@ -72,7 +72,7 @@ setup-locale-spelling:
 [doc('Check checkout setup state without writing a report or changing files.')]
 [group('setup')]
 setup-check:
-    uv run --no-project --python 3.13.11 -- python -m dev.init check{{propagate}}
+    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init check{{propagate}}
 
 # Optional workstation CLI prerequisites for non-Python audit recipes. This is
 # deliberately outside the minimal checkout setup.
@@ -453,7 +453,7 @@ test-packaging-source:
 [doc('Run portable non-serial packaging contract tests with explicit marker boundaries.')]
 [group('test')]
 test-packaging-contracts:
-    @uv run --no-sync pytest -v -n auto -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests
+    @uv run --no-sync pytest -v -n auto --no-loadscope-reorder -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests
 
 [doc('Run packaging dependency, source, and contract preflight as independent verdicts.')]
 [group('test')]
@@ -925,10 +925,6 @@ _test-registry-calculations-parallel:
     @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
 
 [private]
-_test-registry-calculations-serial:
-    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" src/cadrumo/application/calculations src/cadrumo/domain/calculations/registry/tests
-
-[private]
 _test-registry-conformance:
     @uv run --no-sync pytest -v -n {{ pytest_workers }} -m "(unit or integration) and not serial and not perf and not resident_service and not external_tool and not os_keychain and not windows_only and not tui_render" --timeout=300 dev/registry/tests dev/registry/analysis/tests dev/registry/compiler/tests dev/registry/conformance/tests dev/registry/aeip/tests dev/registry/newmodelo/tests dev/registry/parity/tests dev/registry/pipeline dev/tests/test_no_casilla_is_routed_to_a_valueless_slot.py dev/tests/test_registry_conformance_gate.py dev/tests/test_registry_identity_enrolment.py
 
@@ -936,7 +932,7 @@ _test-registry-conformance:
 [group('test')]
 [no-exit-message]
 test-registry:
-    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label test-registry --signal pytest-summary --expected-lane _test-registry-collect --expected-lane _test-registry-load --expected-lane _test-registry-calculations-parallel --expected-lane _test-registry-calculations-serial --expected-lane _test-registry-conformance -- uv run --no-sync python -m dev.test_runs lanes --json-events --no-evidence --preflight-count 2 --lane-kind _test-registry-collect=collection --lane-kind _test-registry-load=load _test-registry-collect _test-registry-load _test-registry-calculations-parallel _test-registry-calculations-serial _test-registry-conformance
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label test-registry --signal pytest-summary --expected-lane _test-registry-collect --expected-lane _test-registry-load --expected-lane _test-registry-calculations-parallel --expected-lane _test-registry-conformance -- uv run --no-sync python -m dev.test_runs lanes --json-events --no-evidence --preflight-count 2 --lane-kind _test-registry-collect=collection --lane-kind _test-registry-load=load _test-registry-collect _test-registry-load _test-registry-calculations-parallel _test-registry-conformance
 
 [doc('Run the tooling-owned test-policy, repository-contract, and CI-contract populations.')]
 [group('test')]

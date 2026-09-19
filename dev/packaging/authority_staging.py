@@ -51,6 +51,7 @@ __all__ = [
     "AUTHORING_AUTHORITY_DIRECTORY",
     "AUTHORITY_ROOT_ENV",
     "authoring_authority_root",
+    "selected_published_authority",
     "stage_published_authority",
 ]
 
@@ -78,15 +79,8 @@ def authoring_authority_root(repo_root: Path) -> Path:
     return repo_root / AUTHORING_AUTHORITY_DIRECTORY
 
 
-def stage_published_authority(source_root: Path, destination_root: Path) -> tuple[Path, Path]:
-    """Copy the descriptor-selected authority pair into a staged build root.
-
-    Returns the staged descriptor and database. Raises when the source tree has
-    no published authority, because a build root missing it yields a
-    distribution that installs without the only registry payload a product
-    process may consume — a failure that would otherwise surface as a confusing
-    runtime refusal in a lane far from its cause.
-    """
+def selected_published_authority(source_root: Path) -> tuple[Path, Path]:
+    """Return the descriptor and database selected for a source-tree build."""
     source = authoring_authority_root(source_root)
     descriptor_source = source / _DESCRIPTOR_NAME
     if not descriptor_source.is_file():
@@ -98,6 +92,19 @@ def stage_published_authority(source_root: Path, destination_root: Path) -> tupl
     database_source = source / selected.database
     if not database_source.is_file():
         raise FileNotFoundError(f"authority descriptor selects a missing database: {database_source}")
+    return descriptor_source, database_source
+
+
+def stage_published_authority(source_root: Path, destination_root: Path) -> tuple[Path, Path]:
+    """Copy the descriptor-selected authority pair into a staged build root.
+
+    Returns the staged descriptor and database. Raises when the source tree has
+    no published authority, because a build root missing it yields a
+    distribution that installs without the only registry payload a product
+    process may consume — a failure that would otherwise surface as a confusing
+    runtime refusal in a lane far from its cause.
+    """
+    descriptor_source, database_source = selected_published_authority(source_root)
 
     destination = destination_root / AUTHORING_AUTHORITY_DIRECTORY
     destination.mkdir(parents=True, exist_ok=True)

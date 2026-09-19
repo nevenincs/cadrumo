@@ -216,6 +216,7 @@ selected_contracts = {
     "aeat app modelo work calculate": (
         "compute",
         {
+            "cadrumo.core.irnr",
             "cadrumo.core.rescate_type",
         },
     ),
@@ -981,33 +982,79 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     wheelhouse resolved from it.
     """
     root = repo_root.resolve(strict=True)
-    output = output_dir.resolve()
-    _safe_recreate(output, repo_root=root)
     source_files = repository_files(root)
     source_digest = content_digest(root, source_files)
-
+    output = output_dir.resolve()
+    _safe_recreate(output, repo_root=root)
     build_root = output.parent / var_scratch_name(COHORT_BUILD_TREE_FAMILY, output.name)
     if build_root.exists():
         shutil.rmtree(build_root)
+    try:
+        snapshot(root, source_files, build_root)
+        return _build_python_cohort_from_snapshot(
+            build_root=build_root,
+            output=output,
+            source_files=source_files,
+            source_digest=source_digest,
+            authority_source_root=root,
+            remove_build_root=True,
+        )
+    except BaseException:
+        if build_root.exists():
+            shutil.rmtree(build_root)
+        raise
+
+
+def build_python_cohort_from_clean_snapshot(
+    clean_root: Path,
+    output_dir: Path,
+    *,
+    source_files: Sequence[str],
+    source_digest: str,
+) -> PythonCohort:
+    """Build from a release-verified clean source without copying it again.
+
+    Only the release builder calls this path, after it has compared the supplied
+    file set and digest with ``clean_root`` and staged the generated authority.
+    The ordinary builder above retains its independent snapshot boundary for
+    callers whose source directory may still be changing.
+    """
+    root = clean_root.resolve(strict=True)
+    output = output_dir.resolve()
+    _safe_recreate(output, repo_root=root)
+    return _build_python_cohort_from_snapshot(
+        build_root=root,
+        output=output,
+        source_files=source_files,
+        source_digest=source_digest,
+        authority_source_root=None,
+        remove_build_root=False,
+    )
+
+
+def _build_python_cohort_from_snapshot(
+    *,
+    build_root: Path,
+    output: Path,
+    source_files: Sequence[str],
+    source_digest: str,
+    authority_source_root: Path | None,
+    remove_build_root: bool,
+) -> PythonCohort:
+    """Build a cohort from a source tree whose identity was already verified."""
     archive = output.parent / var_scratch_name(COHORT_SOURCE_ARCHIVE_FAMILY, output.name)
     if archive.exists():
         archive.unlink()
     retained_source_archive = output / f"cadrumo-source-{source_digest}.zip"
     try:
-        # `snapshot` creates `build_root` and copies exactly the enumerated
-        # files with the repository's own line-ending rules applied -- what a
-        # checkout of this exact content would carry, without touching the
-        # live tree the rest of the process may still be editing. The archive
-        # is written from this same copy, so the retained source archive carries
-        # only tracked source content.
-        snapshot(root, source_files, build_root)
+        # The ordinary builder made this snapshot just before entering here;
+        # the release builder has already verified its clean snapshot. The
+        # retained archive is written from those same normalized source bytes.
         _archive_source_snapshot(build_root, source_files, archive)
-        # The published authority is gitignored generated output, so it is
-        # absent from `source_files` and from the retained source archive that
-        # deliberately carries tracked content only. The build still needs it:
-        # stage it after the archive is written, so the archive's contract is
-        # unchanged and the distributions below can carry the pair.
-        stage_published_authority(root, build_root)
+        if authority_source_root is not None:
+            # The published authority is absent from the source archive but is
+            # staged into the private build root after that archive is sealed.
+            stage_published_authority(authority_source_root, build_root)
         uv = shutil.which("uv")
         if uv is None:
             raise SystemExit("uv is required to build the Python cohort")
@@ -1115,7 +1162,7 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
     finally:
         if archive.exists():
             archive.unlink()
-        if build_root.exists():
+        if remove_build_root and build_root.exists():
             shutil.rmtree(build_root)
 
     manifest = output / _MANIFEST_NAME

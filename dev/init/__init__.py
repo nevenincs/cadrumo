@@ -10,7 +10,7 @@ three constraints the rest of ``dev/`` is not:
 
 It runs BEFORE the virtual environment exists.
     So it is invoked on an ephemeral interpreter
-    (``uv run --no-project --python <pin> -- python -m dev.init``) and imports
+    (``uv run --isolated --no-project --python <pin> -- python -m dev.init``) and imports
     only the standard library plus :mod:`dev.exit_codes`, which is itself
     stdlib-only. It must never import :mod:`dev.toolchain`, :mod:`dev.runner`,
     or anything reached through ``uv run --no-sync python -m dev``: those

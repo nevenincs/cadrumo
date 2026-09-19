@@ -30,6 +30,20 @@ from dev._paths import REPO_ROOT
 
 from .build_scratch_reclaim import sweep_var_scratch
 
+_RELEASE_PROOF_FILE = "dev/packaging/tests/test_release_cohort_integration.py"
+_RELEASE_PROOF_NODEID = f"{_RELEASE_PROOF_FILE}::test_real_clean_source_build_is_complete_and_reproducible"
+
+
+@pytest.hookimpl(trylast=True)
+def pytest_collection_modifyitems(items: list[pytest.Item]) -> None:
+    """Start the long release proof before shorter xdist loadfile groups.
+
+    The two real cohort builds are the lane's critical path. The stable sort
+    preserves every other test's order and changes only when this proof is
+    selected, so an ordinary focused invocation keeps its natural ordering.
+    """
+    items.sort(key=lambda item: item.nodeid != _RELEASE_PROOF_NODEID)
+
 
 def pytest_sessionstart(session: pytest.Session) -> None:
     """Reclaim scratch left by a run that was killed rather than torn down.

@@ -235,6 +235,10 @@ def _normalise(raw: bytes, *, text: _TextState, eol: _LineEnding) -> bytes:
     if text == "binary" or (text == "auto" and b"\0" in raw[:_BINARY_PROBE_BYTES]):
         return raw
     lf = raw.replace(b"\r\n", b"\n")
+    # A repeated carriage return before LF needs more than one pass; otherwise
+    # snapshotting a snapshot changes its digest even though neither file moved.
+    while b"\r\n" in lf:
+        lf = lf.replace(b"\r\n", b"\n")
     return lf.replace(b"\n", b"\r\n") if eol == "crlf" else lf
 
 

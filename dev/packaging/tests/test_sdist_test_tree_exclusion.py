@@ -1,13 +1,14 @@
-"""The published source distribution ships no test tree.
+"""The published source distribution ships no test tree or ``conftest.py``.
 
 The wheel's test exclusion is asserted post-build elsewhere; the sdist's is not
 asserted anywhere. That asymmetry matters more than it looks -- a test tree is a
 distribution surface nobody reviews, and this project's fixtures carry document
-specimens. The build configuration excludes ``src/cadrumo/**/tests`` from the
-sdist target, but an exclude is a declaration that can rot silently: hatchling
-matches include and exclude patterns with gitwildmatch semantics, so an
-unanchored or mistyped entry changes what ships without changing what the
-configuration appears to say.
+specimens. Package-level ``conftest.py`` files are the same kind of development
+surface even when they sit outside a ``tests`` directory. The build
+configuration excludes both from the sdist target, but an exclude is a
+declaration that can rot silently: hatchling matches include and exclude
+patterns with gitwildmatch semantics, so an unanchored or mistyped entry changes
+what ships without changing what the configuration appears to say.
 
 So this gate reads the members of a real ``uv build --sdist`` archive. It is
 floored: an archive that listed nothing, or a build that produced no archive,
@@ -39,6 +40,11 @@ _MINIMUM_SDIST_MEMBERS = 100
 def _test_members(members: frozenset[str]) -> list[str]:
     """Return every member that lives under a ``tests`` package directory."""
     return sorted(name for name in members if "tests" in PurePosixPath(name).parts)
+
+
+def _conftest_members(members: frozenset[str]) -> list[str]:
+    """Return every source member named ``conftest.py``."""
+    return sorted(name for name in members if PurePosixPath(name).name == "conftest.py")
 
 
 def _assert_populated(members: frozenset[str]) -> None:
@@ -86,6 +92,16 @@ def test_sdist_ships_no_test_member(sdist_members: frozenset[str]) -> None:
     )
 
 
+def test_sdist_ships_no_conftest_member(sdist_members: frozenset[str]) -> None:
+    """No source ``conftest.py`` reaches the source distribution."""
+    _assert_populated(sdist_members)
+    offenders = _conftest_members(sdist_members)
+    assert not offenders, (
+        f"the source distribution ships {len(offenders)} conftest.py member(s) the sdist exclude should have shed; "
+        f"first ten: {offenders[:10]!r}"
+    )
+
+
 def test_the_detector_reports_a_planted_test_member() -> None:
     """The offender scan is asserted against a deliberately wrong expectation.
 
@@ -97,6 +113,14 @@ def test_the_detector_reports_a_planted_test_member() -> None:
     members = frozenset({"src/cadrumo/domain/calculations.py", "src/cadrumo/py.typed", planted})
     assert _test_members(members) == [planted]
     assert _test_members(frozenset({"src/cadrumo/domain/calculations.py"})) == []
+
+
+def test_the_detector_reports_a_planted_conftest_member() -> None:
+    """The conftest scan is proved against a member the sdist must reject."""
+    planted = "src/cadrumo/adapters/outbound/llm/conftest.py"
+    members = frozenset({"src/cadrumo/adapters/outbound/llm/runtime.py", planted})
+    assert _conftest_members(members) == [planted]
+    assert _conftest_members(frozenset({"src/cadrumo/adapters/outbound/llm/runtime.py"})) == []
 
 
 def test_an_unmeasured_archive_cannot_read_as_clean() -> None:

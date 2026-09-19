@@ -278,6 +278,12 @@ exclude = [
   "src/cadrumo_harness/**/tests/**",
   "src/cadrumo/**/tests",
   "src/cadrumo/**/tests/**",
+  # Pytest configuration is development-only, including package-root
+  # conftests that sit outside the excluded test directories.
+  "src/cadrumo/conftest.py",
+  "src/cadrumo/**/conftest.py",
+  "src/cadrumo_harness/conftest.py",
+  "src/cadrumo_harness/**/conftest.py",
   # Registry TOML, source manifests, and cached compiler receipts are
   # development authoring inputs.  A released product consumes exactly one
   # published authority artifact, so no authored registry tree may reach an
@@ -319,6 +325,12 @@ exclude = [
   "src/cadrumo_harness/tests/**",
   "src/cadrumo_harness/**/tests",
   "src/cadrumo_harness/**/tests/**",
+  # Pytest configuration is development-only, including package-root
+  # conftests that sit outside the excluded test directories.
+  "src/cadrumo/conftest.py",
+  "src/cadrumo/**/conftest.py",
+  "src/cadrumo_harness/conftest.py",
+  "src/cadrumo_harness/**/conftest.py",
   # The immutable published authority is the only registry payload a product
   # process may consume.  Its evidence projection is digest-verified inside the
   # same frame, so it needs no parallel corpus-quality or registry-source

@@ -16,7 +16,9 @@ from dev._paths import REPO_ROOT
 from dev.source_tree import content_digest, repository_files
 
 from .. import release_cohort as release_cohort_module
-from ..cohort_manifest import SourceIdentity
+from ..cohort_manifest import CohortManifest, SourceIdentity
+from ..hashing import sha256_path
+from ..python_cohort import PythonCohort
 from ..release_cohort import (
     REQUIRED_PYTHON_VERSION,
     build_from_clean_source,
@@ -48,6 +50,8 @@ def _assert_clean_builder_invocation(
     assert env is not None
     assert env["PYTHONPATH"] == os.pathsep.join((str(cwd / "src"), str(cwd)))
     assert argv[argv.index("--expected-source-digest") + 1] == expected_source_digest
+    assert "--use-prepared-source" in argv
+    assert "--defer-output-validation" in argv
 
 
 def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
@@ -99,6 +103,135 @@ def test_clean_builder_subprocess_is_package_correct_and_detector_bites(
             env=env,
             expected_source_digest=expected_source_digest,
         )
+
+
+def test_direct_clean_builder_keeps_validation_and_snapshot_defaults() -> None:
+    """Only the release parent can opt into its already-verified source path."""
+    parser = release_cohort_module._parser()
+    direct = parser.parse_args(
+        [
+            "build-clean",
+            "--output",
+            "staging",
+            "--expected-source-digest",
+            "a" * 64,
+        ],
+    )
+    parent = parser.parse_args(
+        [
+            "build-clean",
+            "--output",
+            "staging",
+            "--expected-source-digest",
+            "a" * 64,
+            "--use-prepared-source",
+            "--defer-output-validation",
+        ],
+    )
+
+    assert direct.use_prepared_source is False
+    assert direct.defer_output_validation is False
+    assert parent.use_prepared_source is True
+    assert parent.defer_output_validation is True
+
+
+def test_parent_defers_only_the_validation_it_repeats_after_the_move(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """Direct clean builds load their output; parent builds defer to the final load."""
+    output = tmp_path / "staging"
+    output.mkdir()
+    manifest_path = output / "release-cohort.json"
+    manifest_path.write_text("{}", encoding="utf-8")
+    manifest = CohortManifest.model_construct()
+    loaded = release_cohort_module.LoadedReleaseCohort(output, manifest_path, manifest)
+    calls: list[Path] = []
+
+    def fake_load(directory: Path) -> object:
+        calls.append(directory)
+        return loaded
+
+    monkeypatch.setattr(release_cohort_module, "load_release_cohort", fake_load)
+
+    assert (
+        release_cohort_module._complete_release_cohort(
+            output=output,
+            manifest_path=manifest_path,
+            manifest=manifest,
+            validate_output=True,
+        )
+        is loaded
+    )
+    deferred = release_cohort_module._complete_release_cohort(
+        output=output,
+        manifest_path=manifest_path,
+        manifest=manifest,
+        validate_output=False,
+    )
+
+    assert calls == [output]
+    assert deferred.directory == output.resolve()
+    assert deferred.manifest_path == manifest_path.resolve()
+    assert deferred.manifest is manifest
+
+
+def test_python_cohort_copy_checks_artifacts_without_reloading_metadata(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    """A copy is bound to the source cohort's digests without another archive parse."""
+    source = tmp_path / "source"
+    source.mkdir()
+    filenames = {
+        "cadrumo": "cadrumo-1.0.0-py3-none-any.whl",
+        "cadrumo-sdist": "cadrumo-1.0.0.tar.gz",
+        "source-archive": "cadrumo-source.zip",
+        "runtime-wheelhouse": "cadrumo-runtime-wheelhouse.zip",
+        "cadrumo-data-manuals": "cadrumo_data_manuals-1.0.0-py3-none-any.whl",
+        "cadrumo-data-manuals-sdist": "cadrumo_data_manuals-1.0.0.tar.gz",
+        "cadrumo-data-official": "cadrumo_data_official-1.0.0-py3-none-any.whl",
+        "cadrumo-data-official-sdist": "cadrumo_data_official-1.0.0.tar.gz",
+    }
+    artifacts = {name: source / filename for name, filename in filenames.items()}
+    for name, artifact in artifacts.items():
+        artifact.write_text(name, encoding="utf-8")
+    manifest = source / "python-cohort.json"
+    manifest.write_text("not parsed during transfer", encoding="utf-8")
+    cohort = PythonCohort(
+        directory=source,
+        manifest=manifest,
+        source_digest="a" * 64,
+        version="1.0.0",
+        root_wheel=artifacts["cadrumo"],
+        root_sdist=artifacts["cadrumo-sdist"],
+        source_archive=artifacts["source-archive"],
+        runtime_wheelhouse=artifacts["runtime-wheelhouse"],
+        runtime_wheelhouse_manifest={},
+        manuals_wheel=artifacts["cadrumo-data-manuals"],
+        manuals_sdist=artifacts["cadrumo-data-manuals-sdist"],
+        official_wheel=artifacts["cadrumo-data-official"],
+        official_sdist=artifacts["cadrumo-data-official-sdist"],
+        sha256={name: sha256_path(artifact) for name, artifact in artifacts.items()},
+    )
+
+    copied = release_cohort_module._copy_python_cohort(cohort, tmp_path / "copied")
+
+    assert copied.directory == (tmp_path / "copied").resolve()
+    assert copied.manifest.read_text(encoding="utf-8") == "not parsed during transfer"
+    assert copied.sha256 == cohort.sha256
+    assert all(path.parent == copied.directory for path in copied.product_wheels)
+
+    real_copytree = release_cohort_module.shutil.copytree
+
+    def corrupting_copytree(origin: Path, destination: Path) -> Path:
+        copied_directory = real_copytree(origin, destination)
+        (destination / filenames["cadrumo"]).write_text("changed", encoding="utf-8")
+        return copied_directory
+
+    monkeypatch.setattr(release_cohort_module.shutil, "copytree", corrupting_copytree)
+    with pytest.raises(SystemExit, match="copied Python cohort artifact digest mismatch"):
+        release_cohort_module._copy_python_cohort(cohort, tmp_path / "corrupted")
 
 
 _COMMIT: Final[str] = "0123456789abcdef0123456789abcdef01234567"

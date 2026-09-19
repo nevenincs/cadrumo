@@ -11,11 +11,13 @@ from pathlib import Path, PurePosixPath
 
 import pytest
 
-from cadrumo.core.directory_scan import iter_directory
+from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import load_toml
+from cadrumo.domain.calculations.registry.authority_store import AuthorityDescriptor
 from dev._paths import REPO_ROOT
 
 from .._distribution_limits import PYPI_FILE_CAP_BYTES
+from ..authority_staging import authoring_authority_root
 from ..cohort_attestation import (
     add_test_runtime_wheelhouse,
     add_test_source_archive,
@@ -35,7 +37,6 @@ from ..lane_verification_core import (
     build_source_data_paths,
     build_wheel,
     expected_wheel_data_paths,
-    run_checked,
     source_data_paths,
 )
 from ..proof_ledger import recorded_proofs, reset_proof_ledger
@@ -102,6 +103,13 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
         for path in source_paths - split_owned
         if "/tests/" not in path and not _excluded(path)
     }
+    authority_root = authoring_authority_root(build_root)
+    descriptor = authority_root / "authority.current.json"
+    selected_database = authority_root / AuthorityDescriptor.read(descriptor).database
+    assert descriptor.is_file() and selected_database.is_file()
+    independently_expected.update(
+        f"cadrumo/_data/registry/authority/{path.name}" for path in (descriptor, selected_database)
+    )
     assert expected_wheel_data_paths(_REPO_ROOT) == independently_expected
     assert actual_runtime == independently_expected
     assert not {f"cadrumo/_data/corpus/{path.removeprefix(_CORPUS_SOURCE_PREFIX)}" for path in split_owned} & members
@@ -144,17 +152,15 @@ def test_core_wheel_contains_every_runtime_member_and_no_split_owned_binary(tmp_
 
     cohort_dir = tmp_path / "real-cohort"
     cohort_dir.mkdir()
-    companion_sdists_dir = tmp_path / "companion-sdists"
-    run_checked(
-        [uv, "build", "--sdist", "--out-dir", str(companion_sdists_dir)],
-        cwd=build_root / "packaging" / "cadrumo_data_manuals",
-    )
-    run_checked(
-        [uv, "build", "--sdist", "--out-dir", str(companion_sdists_dir)],
-        cwd=build_root / "packaging" / "cadrumo_data_official",
-    )
-    manuals_sdist = next(iter_directory(companion_sdists_dir, pattern="cadrumo_data_manuals-*.tar.gz"))
-    official_sdist = next(iter_directory(companion_sdists_dir, pattern="cadrumo_data_official-*.tar.gz"))
+    # build_companion_wheels runs `uv build` without --wheel, which already
+    # produced both sdists from this same fixed source. Rebuilding them here
+    # repeated two backend invocations without exercising a second contract.
+    companion_artifacts_dir = tmp_path / "companion-wheels"
+    manuals_sdists = scan_directory(companion_artifacts_dir, pattern="cadrumo_data_manuals-*.tar.gz")
+    official_sdists = scan_directory(companion_artifacts_dir, pattern="cadrumo_data_official-*.tar.gz")
+    assert len(manuals_sdists) == len(official_sdists) == 1
+    manuals_sdist = manuals_sdists[0]
+    official_sdist = official_sdists[0]
     artifacts = {
         "cadrumo": wheel,
         "cadrumo-sdist": sdist,

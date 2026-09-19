@@ -254,7 +254,6 @@ def packaging_pytest_invocations(test_workers: int | None = None) -> tuple[Recip
     return packaging_pytest_recipes() + campaign_pytest_passes(test_workers)
 
 
-@functools.cache
 def _collection_transcript(stdout: str) -> str:
     """Return the collect-only listing, wherever the test-run harness sent it.
 
@@ -268,6 +267,7 @@ def _collection_transcript(stdout: str) -> str:
     return Path(match.group("path")).read_text(encoding="utf-8", errors="replace")
 
 
+@functools.cache
 def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     """Boot a real pytest collection and return the node ids it selected.
 

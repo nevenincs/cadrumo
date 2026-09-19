@@ -88,6 +88,22 @@ def test_text_content_is_named_as_the_repository_records_it_on_every_platform(tm
     assert content_digest(windows, repository_files(windows)) == content_digest(posix, repository_files(posix))
 
 
+def test_snapshot_digest_is_stable_with_repeated_carriage_returns(tmp_path: Path) -> None:
+    """A malformed text line ending cannot change content on each snapshot pass."""
+    source = tmp_path / "source"
+    _write(source, ".gitattributes", "* text=auto eol=lf\n*.bat text eol=crlf\n")
+    _write(source, "declarations.toml", b"key = 1\r\r\n")
+    _write(source, "run.bat", b"echo ready\r\r\n")
+    files = repository_files(source)
+    destination = tmp_path / "snapshot"
+
+    snapshot(source, files, destination)
+
+    assert (destination / "declarations.toml").read_bytes() == b"key = 1\n"
+    assert (destination / "run.bat").read_bytes() == b"echo ready\r\n"
+    assert content_digest(source, files) == content_digest(destination, repository_files(destination))
+
+
 def test_a_path_marked_binary_or_minus_text_keeps_every_byte(tmp_path: Path) -> None:
     """Corpus files are content-addressed evidence; a translated byte breaks their declared digest."""
     _write(tmp_path, ".gitattributes", "* text=auto eol=lf\ncorpus/** -text\n*.pdf binary\n")
