@@ -352,8 +352,18 @@ def _completed_off_any_loop[T](coroutine: Coroutine[object, object, T]) -> T:
         asyncio.get_running_loop()
     except RuntimeError:
         return asyncio.run(coroutine)
+
+    # Submitted as a closure rather than as `submit(asyncio.run, coroutine)`:
+    # both run the same call on the worker thread, but `asyncio.run` is itself
+    # generic, and nesting it inside `submit`'s own generic signature leaves the
+    # result variable unsolved -- so the future came back carrying `asyncio.run`'s
+    # type variable instead of this function's. The closure is concrete, so the
+    # future is a `Future[T]` and the returned value is the `T` promised above.
+    def run_to_completion() -> T:
+        return asyncio.run(coroutine)
+
     with ThreadPoolExecutor(max_workers=1, thread_name_prefix="cadrumo-mcp-blocking") as worker:
-        return worker.submit(asyncio.run, coroutine).result()
+        return worker.submit(run_to_completion).result()
 
 
 def run_captured(

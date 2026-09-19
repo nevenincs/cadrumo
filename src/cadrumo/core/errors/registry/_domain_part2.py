@@ -148,6 +148,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.calculations.registry.errors.GovernedFactNotApplicableError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_GOVERNED_FACT_NOT_APPLICABLE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_snapshot",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.calculations.registry.errors.EjercicioOrdenNotYetPublishedError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_EJERCICIO_ORDEN_NOT_YET_PUBLISHED",

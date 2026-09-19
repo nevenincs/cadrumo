@@ -603,7 +603,13 @@ def _current_field_names(model_type: type[BaseModel]) -> frozenset[str]:
     for every instance; rebuilding it per instance was work proportional to the
     payload rather than to the schema.
     """
-    return frozenset(model_type.model_fields)
+    # `model_fields` is published through a custom descriptor rather than a
+    # plain annotation, so a type checker reads it as untyped and a frozenset
+    # built straight off it comes out unparameterised. The keys are field names
+    # and pydantic builds them as strings, so spelling that out narrows the set
+    # by construction rather than by an assertion the checker has to be told to
+    # trust. The @cache above means this runs once per model class.
+    return frozenset(str(field_name) for field_name in model_type.model_fields)
 
 
 def _has_current_pydantic_shape(values: Iterable[object]) -> bool:
