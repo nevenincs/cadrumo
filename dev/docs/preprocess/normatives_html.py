@@ -95,15 +95,17 @@ _CANONICAL_LINK = re.compile(
 
 # Block-level noise stripped before article splitting: jurisprudence forms,
 # scripts, styles, and the per-article "Subir" (back-to-top) nav paragraph.
-# An end tag may carry whitespace before its `>` (`</script >`), which a parser
-# honours and a bare `</script>` literal misses. Missing the close here does not
-# leave tidy noise behind: the strip runs before article splitting, so an
-# unclosed `<script>` swallows the prose after it or leaves the script body in
-# the extracted text.
-_FORM = re.compile(r"<form\b.*?</form\s*>", re.IGNORECASE | re.DOTALL)
-_SCRIPT = re.compile(r"<script\b.*?</script\s*>", re.IGNORECASE | re.DOTALL)
-_STYLE = re.compile(r"<style\b.*?</style\s*>", re.IGNORECASE | re.DOTALL)
-_SUBIR = re.compile(r'<p[^>]*class="linkSubir"[^>]*>.*?</p\s*>', re.IGNORECASE | re.DOTALL)
+# An end tag closes at the first `>` after its name, and a parser ignores
+# whatever sits between the two: `</script >`, `</script\t\nfoo>` and
+# `</script/>` all close the element that a bare `</script>` literal alone
+# misses. Missing the close here does not leave tidy noise behind: the strip
+# runs before article splitting, so an unclosed `<script>` swallows the prose
+# after it or leaves the script body in the extracted text. The `\b` keeps the
+# name whole, so `</scripting>` is still a different tag.
+_FORM = re.compile(r"<form\b.*?</form\b[^>]*>", re.IGNORECASE | re.DOTALL)
+_SCRIPT = re.compile(r"<script\b.*?</script\b[^>]*>", re.IGNORECASE | re.DOTALL)
+_STYLE = re.compile(r"<style\b.*?</style\b[^>]*>", re.IGNORECASE | re.DOTALL)
+_SUBIR = re.compile(r'<p[^>]*class="linkSubir"[^>]*>.*?</p\b[^>]*>', re.IGNORECASE | re.DOTALL)
 
 # The unit-heading delimiter and the bloque markers. The anchor matcher
 # preserves every BOE fragment assigned to an extracted unit, including
