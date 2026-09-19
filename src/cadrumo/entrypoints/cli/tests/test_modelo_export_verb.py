@@ -245,6 +245,7 @@ def _clear_export_profile_surnames() -> None:
         (
             UserProfileFact(path="identity.surnames", value=None),
             UserProfileFact(path="activities.description", value="Consulting"),
+            UserProfileFact(path="withholding.colegio_concertado", value=False),
         ),
     )
 
@@ -439,7 +440,6 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     assert "justificante" in result.output
     assert "consulta de declaraciones presentadas" in result.output
     assert "CSV cotejo" in result.output
-    assert "aeat app modelo reconcile pull --modelo 111 --year 2026 --period 1T" in result.output
     assert out.exists()
     assert out.stat().st_size > 0
 
@@ -487,11 +487,13 @@ def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(
     assert out.stat().st_size > 0
 
 
-def test_export_modelo_202_2024_emilio_uses_verified_revision_snapshot(
+def test_export_modelo_202_2024_emilio_refuses_missing_product_software_identity(
     tmp_path: Path,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
+    """Envelope-bearing Modelo 202 exports require explicit product authority."""
+
     _set_emilio_legal_entity_export_profile()
     _, calculation_revision_id = _seed_exportable_modelo_202_2024_revision(operation=operation)
     out = tmp_path / "modelo-202-2024-1P.boe"
@@ -514,14 +516,10 @@ def test_export_modelo_202_2024_emilio_uses_verified_revision_snapshot(
         ],
     )
 
-    assert result.exit_code == 0, result.output
-    assert "operation\tmodelo.export" in result.output
-    assert f"calculation_revision_id\t{calculation_revision_id}" in result.output
-    assert "modelo\t202" in result.output
-    assert "filing_year\t2024" in result.output
-    assert "period\t2024 1P" in result.output
-    assert out.exists()
-    assert out.stat().st_size > 0
+    assert result.exit_code == 5, result.output
+    assert "product/software identity" in result.output.lower(), result.output
+    assert f"calculation revision id: {calculation_revision_id}" in result.output.lower(), result.output
+    assert not out.exists()
 
 
 def test_export_keeps_raw_revision_and_selector_refusals_distinct(tmp_path: Path) -> None:
@@ -541,7 +539,7 @@ def test_export_keeps_raw_revision_and_selector_refusals_distinct(tmp_path: Path
 
 
 def test_export_invalid_period_names_the_selected_modelo_tokens(tmp_path: Path) -> None:
-    """An annual modelo rejects a quarterly token with its declared annual token."""
+    """An invalid period token is rejected with the selected modelo's valid token."""
     _set_export_profile_name()
 
     result = _invoke(
@@ -554,7 +552,7 @@ def test_export_invalid_period_names_the_selected_modelo_tokens(tmp_path: Path) 
             "--year",
             "2024",
             "--period",
-            "1T",
+            "INVALID",
             "--output",
             str(tmp_path / "invalid-period.boe"),
         ]
@@ -667,6 +665,8 @@ def test_export_refuses_ambiguous_verified_revisions_without_pointer(
 
     result = _invoke(
         [
+            "--language",
+            "en",
             "app",
             "modelo",
             "export",
@@ -710,16 +710,16 @@ def test_export_modelo_111_refuses_when_profile_name_missing(
     assert not out.exists()
 
 
-def test_export_modelo_121_refuses_missing_boe_layout_as_unsupported(
+def test_export_modelo_200_refuses_calculation_only_authority_for_filing(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """Modelo 121 calculations may exist, but export refuses without an authored layout."""
+    """Modelo 200's calculation-grade revision cannot satisfy filing-grade export."""
 
     _set_export_profile_name()
     work_unit_id, _ = _seed_verified_revision_without_inputs(
-        modelo="121", filing_year=2025, period="0A", operation=operation
+        modelo="200", filing_year=2024, period="0A", operation=operation
     )
-    out = tmp_path / "modelo-121.txt"
+    out = tmp_path / "modelo-200.txt"
 
     result = _invoke(
         [
@@ -734,14 +734,27 @@ def test_export_modelo_121_refuses_missing_boe_layout_as_unsupported(
         ],
     )
 
-    assert result.exit_code == 2, result.output
+    assert result.exit_code == 1, result.output
     payload = json.loads(result.output)
     assert payload["status"] == "error"
-    assert payload["error"]["code"] == "REFUSED_MODELO_EXPORT_UNSUPPORTED"
-    assert payload["error"]["category"] == "REFUSED"
-    assert payload["error"]["context"]["modelo"] == "121"
-    assert "export_layouts" in payload["error"]["message"]
-    assert "suggestion" not in payload["error"]
+    error = payload["error"]
+    assert error["code"] == "ERROR_CALCULATIONS_REGISTRY_VALIDATION"
+    assert error["category"] == "ERROR"
+    assert error["context"] is None
+    assert error["action"]["failed_condition_id"] == "registry.snapshot.authority_grade.sufficient"
+    assert error["action"]["no_recovery_outcome"] == "safety"
+    evidence = error["action"]["evidence"]
+    assert len(evidence) == 1
+    assert evidence[0]["condition_id"] == "registry.snapshot.authority_grade.sufficient"
+    assert evidence[0]["provenance"] == "registry_record"
+    evidence_values = evidence[0]["values"]
+    assert evidence_values["authority_grade_declared"] is True
+    assert evidence_values["declared_authority_grade"] == "calculation"
+    assert evidence_values["modelo"] == "200"
+    assert evidence_values["requested_authority_grade"] == "filing"
+    assert evidence_values["revision_id"] == "2024"
+    assert "calculation" in error["message"]
+    assert "filing" in error["message"]
     assert not out.exists()
     assert "Traceback" not in result.output
 

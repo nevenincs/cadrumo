@@ -13,11 +13,12 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
@@ -39,12 +40,8 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 def _seed_m100_2025_profile(runtime_profile: TestRuntimeProfile) -> None:
-    record = UserProfileRecord(
-        schema_id="cadrumo.user_profile",
-        # Sourced from the schema, never pinned: a literal goes stale the moment
-        # the profile schema is revised, and the record then refuses to validate
-        # against its own canonical version.
-        schema_version=published_profile_schema().version,
+    record = create_user_profile_record(
+        context=profile_authority_contexts()[0],
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(

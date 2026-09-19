@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import json
-import os
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -22,10 +21,14 @@ from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.operator_surface.command_ports import cli_argv_for
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ....core.config import load_settings, override_settings
+from ....tests.os_keychain_hook import require_os_credential_store
 from ..verb_input_schema import build_verb_input_schemas
-from .subprocess_cli import as_text_completed_process
+from .subprocess_cli import as_text_completed_process, subprocess_cli_env
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+# Each journey crosses from in-process registration into a fresh installed
+# console process.  That second process can resume the profile only through a
+# persisted OS-keychain acceleration receipt.
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.os_keychain]
 
 _LOCALES = ("en", "es", "ca", "hu")
 _CONSOLE = Path(__file__).resolve().parents[5] / ".venv" / "Scripts" / "aeat.exe"
@@ -35,9 +38,9 @@ def _console_environment(tmp_path: Path) -> tuple[dict[str, str], Path, Path]:
     """Build one subprocess-only encrypted profile environment."""
     storage_root = tmp_path / "storage"
     secret_store_dir = tmp_path / "secret-store"
-    environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
-    environment.update(
-        {
+    environment = subprocess_cli_env(
+        strip_prefixes=("AEAT_", "PYTEST_", "CADRUMO_"),
+        extra={
             "CADRUMO_LOCAL_STORAGE_ROOT": str(storage_root),
             "CADRUMO_SECRET_STORE_DIR": str(secret_store_dir),
             "CADRUMO_SECRET_PASSPHRASE": load_settings().cadrumo_dev_test_database_password.get_secret_value(),
@@ -157,7 +160,8 @@ def _dispatch_action(
 
 def _create_natural_profile(environment: dict[str, str]) -> None:
     """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
+    _register_profile(
+        environment,
         label="operadora-s27",
         facts={
             "taxpayer_type.entity_type": "natural_person",
@@ -173,7 +177,8 @@ def _create_natural_profile(environment: dict[str, str]) -> None:
 
 def _create_legal_profile(environment: dict[str, str]) -> None:
     """Register the profile through the shared CLI registration door."""
-    register_cli_profile(
+    _register_profile(
+        environment,
         label="entidad-s27",
         facts={
             "taxpayer_type.entity_type": "legal_entity",
@@ -193,6 +198,37 @@ def _create_legal_profile(environment: dict[str, str]) -> None:
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
     )
+
+
+def _register_profile(
+    environment: dict[str, str],
+    *,
+    label: str,
+    facts: dict[str, str],
+) -> None:
+    """Seed the encrypted profile under the same isolated route as the console.
+
+    ``register_cli_profile`` is intentionally an in-process test setup door.
+    The installed console is a fresh process, so both must receive the same
+    storage root and secret-store route.  Otherwise registration uses the
+    suite's shared fallback database while the console correctly sees no
+    active profile in this test's temporary route.
+    """
+    storage_root = Path(environment["CADRUMO_LOCAL_STORAGE_ROOT"])
+    secret_store_dir = Path(environment["CADRUMO_SECRET_STORE_DIR"])
+    with override_settings(
+        cadrumo_local_storage_root=storage_root,
+        cadrumo_secret_store_dir=secret_store_dir,
+        cadrumo_secret_passphrase=load_settings().cadrumo_dev_test_database_password,
+        cadrumo_active_profile=None,
+    ):
+        profile_id = register_cli_profile(label=label, facts=facts)
+        # Match the actual process boundary before the installed console
+        # opens the capsule, especially on Windows where an open engine can
+        # retain the SQLite file handle after in-process registration.
+        from ....adapters.persistence.storage.sql.engine import dispose_engines_for_bucket
+
+        dispose_engines_for_bucket(profile_id)
 
 
 def _create_work_unit(
@@ -308,6 +344,7 @@ def _assert_action_id(action: dict[str, Any], action_id: str) -> None:
 
 
 def test_installed_console_verify_calculate_retry_persists_verification(tmp_path: Path) -> None:
+    require_os_credential_store()
     environment, storage_root, secret_store_dir = _console_environment(tmp_path)
     _create_natural_profile(environment)
     work_unit_id = _create_calculable_m111_work(environment)
@@ -335,6 +372,7 @@ def test_installed_console_verify_calculate_retry_persists_verification(tmp_path
 
 
 def test_installed_console_file_calculate_verify_retry_persists_filing(tmp_path: Path) -> None:
+    require_os_credential_store()
     environment, storage_root, secret_store_dir = _console_environment(tmp_path)
     _create_natural_profile(environment)
     work_unit_id = _create_calculable_m111_work(environment)
@@ -388,6 +426,7 @@ def test_installed_console_file_calculate_verify_retry_persists_filing(tmp_path:
 
 
 def test_installed_console_required_bindings_action_is_decision_support_then_honest_retry(tmp_path: Path) -> None:
+    require_os_credential_store()
     environment, storage_root, secret_store_dir = _console_environment(tmp_path)
     _create_legal_profile(environment)
     work_unit_id = _create_work_unit(
@@ -417,6 +456,7 @@ def test_installed_console_required_bindings_action_is_decision_support_then_hon
 
 
 def test_installed_console_discarded_work_is_terminal_in_every_locale(tmp_path: Path) -> None:
+    require_os_credential_store()
     environment, storage_root, secret_store_dir = _console_environment(tmp_path)
     _create_natural_profile(environment)
     work_unit_id = _create_work_unit(

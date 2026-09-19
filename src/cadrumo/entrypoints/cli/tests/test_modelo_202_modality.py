@@ -46,7 +46,7 @@ from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 __all__ = ["_isolated_storage"]
 
 

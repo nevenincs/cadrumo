@@ -27,7 +27,7 @@ os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
 os.environ["CADRUMO_SECRET_CREDENTIAL_INPUT"] = "s423-selected-language-passphrase"
 sys.argv = ["aeat", *sys.argv[3:]]
 
-from ..main import main
+from cadrumo.entrypoints.cli.main import main
 
 try:
     main()
@@ -46,8 +46,9 @@ os.environ["CADRUMO_LOCAL_STORAGE_ROOT"] = sys.argv[1]
 os.environ["CADRUMO_SECRET_STORE_DIR"] = sys.argv[2]
 os.environ["CADRUMO_SECRET_CREDENTIAL_INPUT"] = "s423-selected-language-passphrase"
 
-from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
-from ....core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 
 bucket_id = resolve_active_bucket_id()
 assert bucket_id is not None
@@ -187,6 +188,28 @@ def _create_modelo_revision(
     return revision_id
 
 
+@pytest.mark.parametrize(
+    "language,missing_option,invalid_value",
+    [
+        ("ca", "Falta l'opci", "Valor no v"),
+        ("hu", "kapcsol", "ehhez: '--year'"),
+    ],
+)
+def test_selected_languages_render_parser_refusals_without_keychain(
+    tmp_path: Path, language: str, missing_option: str, invalid_value: str
+) -> None:
+    storage_root = tmp_path / language
+    root = ["--language", language]
+    missing = _run_cli(storage_root, [*root, "app", "modelo", "work", "create", "--year", "2026", "--period", "1T"])
+    invalid = _run_cli(
+        storage_root,
+        [*root, "app", "modelo", "work", "create", "--modelo", "130", "--year", "abc", "--period", "1T"],
+    )
+    assert missing.returncode != 0 and missing_option in _combined_output(missing)
+    assert invalid.returncode != 0 and invalid_value in _combined_output(invalid)
+
+
+@pytest.mark.os_keychain
 @pytest.mark.parametrize(
     (
         "language",
@@ -367,6 +390,7 @@ def test_selected_languages_cover_parser_calculation_and_verification_without_s1
     assert "verification requires borrador" not in already_verified_output
 
 
+@pytest.mark.os_keychain
 def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_projection(tmp_path: Path) -> None:
     """One revision and actor retain their report identity across selected languages."""
     # Every later invocation resumes the profile session from the OS credential
@@ -444,6 +468,7 @@ def test_cross_locale_verify_reuses_one_persisted_report_and_localizes_its_proje
     assert "next_action" not in finding
 
 
+@pytest.mark.os_keychain
 def test_cross_locale_non_granted_m390_verify_reuses_one_report_for_one_draft(tmp_path: Path) -> None:
     """A non-granted draft can be verified in both languages without history drift."""
     # Every later invocation resumes the profile session from the OS credential

@@ -47,6 +47,11 @@ _SEGUNDO_CICLO_SOURCE_KIND = "guarderia_segundo_ciclo_month_undeclared"
 _COTIZACIONES_FACT_KEY = "renta_family.cotizaciones_ss_madre_2024"
 _COTIZACIONES_CEILING_SOURCE_KIND = "guarderia_cotizaciones_ceiling_unbounded"
 _GUARDERIA_MADRE_MESES_SOURCE_KIND = "guarderia_madre_meses_undeclared"
+_MINIMO_ESTATAL_SEMANTIC_ROLE = "irpf_minimo_descendientes_estatal"
+_DESCENDANT_FACT_PREFIX = "renta_family.descendiente."
+_DESCENDANTS_COUNT_PATH = "renta_family.descendientes_count"
+_UNDECLARED_SOURCE_KIND = "minimo_descendientes_undeclared"
+_RENTAS_UNDECLARED_SOURCE_KIND = "minimo_descendientes_rentas_undeclared"
 
 #: The Art. 81.2 guardería increase (Modelo 100 casilla 0613).
 _INCREMENTO_GUARDERIA_SEMANTIC_ROLE = "irpf_incremento_maternidad_guarderia"
@@ -204,18 +209,42 @@ def collect_minimo_descendientes_undeclared_diagnostics(
     filing_year: int,
     period_token: str,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate descendant verification declarations to the selected revision.
-
-    Core types:
-    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
-    """
-    del casilla_values, bucket_id
-    return _registry_minimo_descendientes_diagnostics(
+    """Disclose the ambiguous zero for the selected :class:`ModeloRevision`."""
+    scope = _selected_registry_scope(
         revision,
         modelo=modelo,
         filing_year=filing_year,
         period_token=period_token,
+    )
+    if scope is None:
+        return ()
+    _validate_binding_report(scope)
+    casilla_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _MINIMO_ESTATAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
+    if casilla_id is None or casilla_values.get(casilla_id, Decimal("0")) != 0:
+        return ()
+    facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
+    if facts is None:
+        return ()
+    if any(key.startswith(_DESCENDANT_FACT_PREFIX) or key == _DESCENDANTS_COUNT_PATH for key in facts):
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_UNDECLARED_SOURCE_KIND,
+            message=(
+                f"casilla {casilla_id!r} (mínimo por descendientes, parte estatal) resolved to zero and "
+                "the active profile declares no descendant facts"
+            ),
+            remedy="Declare the family situation with `descendiente add --descendiente NACIMIENTO=YYYY-MM-DD`.",
+            casilla_id=casilla_id,
+        ),
     )
 
 
@@ -408,18 +437,49 @@ def collect_minimo_descendientes_rentas_undeclared_diagnostics(
     filing_year: int,
     period_token: str,
     bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """Delegate descendant income verification declarations to the registry.
-
-    Core types:
-    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
-    """
-    del casilla_values, bucket_id
-    return _registry_minimo_descendientes_diagnostics(
+    """Disclose an absent rentas figure for the selected :class:`ModeloRevision`."""
+    scope = _selected_registry_scope(
         revision,
         modelo=modelo,
         filing_year=filing_year,
         period_token=period_token,
+    )
+    if scope is None:
+        return ()
+    _validate_binding_report(scope)
+    casilla_id = casilla_id_for_unambiguous_revision_semantic_role(
+        revision,
+        _MINIMO_ESTATAL_SEMANTIC_ROLE,
+        modelo_id=modelo,
+    )
+    if casilla_id is None or casilla_values.get(casilla_id, Decimal("0")) == 0:
+        return ()
+    facts = _profile_fact_strings(bucket_id, operation=operation, profile=profile)
+    if facts is None:
+        return ()
+    context = _family_fact_context(filing_year, operation=operation)
+    undeclared = [
+        index
+        for index, descendant in enumerate(descendant_list_from_facts(facts))
+        if descendant.rentas_anuales_euros is None
+        and descendant.meets_non_income_conditions(filing_year, context=context)
+    ]
+    if not undeclared:
+        return ()
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind=_RENTAS_UNDECLARED_SOURCE_KIND,
+            message=(
+                f"casilla {casilla_id!r} claims a mínimo por descendientes for "
+                f"{_name_indices(undeclared, scope)} with no annual-rentas figure on record"
+            ),
+            remedy="Declare the figure with `descendiente add --descendiente RENTAS=N`; RENTAS=0 is explicit.",
+            casilla_id=casilla_id,
+        ),
     )
 
 

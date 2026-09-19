@@ -93,6 +93,7 @@ def _set_export_profile_name() -> None:
             UserProfileFact(path="identity.name", value="Ana"),
             UserProfileFact(path="identity.surnames", value="Feedback Round Trip Test"),
             UserProfileFact(path="activities.description", value="Consulting"),
+            UserProfileFact(path="withholding.colegio_concertado", value=False),
         ),
     )
 
@@ -235,7 +236,6 @@ def test_encrypt_feedback_then_import_feedback_attaches_countersign_to_journal(
             "review-package",
             "import-feedback",
             str(feedback_envelope_path),
-            "--package",
             str(package_path),
             "--operator-public-key",
             operator_public_key_hex,
@@ -305,7 +305,6 @@ def test_import_feedback_without_receipt_is_unstructured_no_journal_attach(
             "review-package",
             "import-feedback",
             str(feedback_envelope_path),
-            "--package",
             str(package_path),
             "--operator-public-key",
             operator_public_key_hex,
@@ -366,7 +365,6 @@ def test_import_feedback_refuses_tampered_feedback_envelope(
             "review-package",
             "import-feedback",
             str(feedback_envelope_path),
-            "--package",
             str(package_path),
             "--operator-public-key",
             operator_public_key_hex,

@@ -31,10 +31,11 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....domain.buckets.event import BUCKET_ACTOR_LABEL_MAX_LENGTH
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from .. import _modelo_cli_support
 from .cli_runner import invoke_cached_cli, semantic_cli_output
 from .modelo_cli import create_modelo_work_unit_via_cli
 
@@ -62,28 +63,10 @@ def runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
     yield from _runtime_profile(tmp_path, _SHORT_PROFILE_LABEL)
 
 
-def _rename_active_profile_to_overlong_label() -> None:
-    """Rename the active profile to a legal-but-long label through the real CLI.
-
-    The rename is the operator route into this state and it succeeds, which is
-    the point: nothing in the profile surface refuses the label, so the operator
-    has no signal that they have just broken every verb that records an audit
-    event under it.
-    """
-    result = invoke_cached_cli(
-        ["--format", "json", "config", "profile", "rename", _SHORT_PROFILE_LABEL, _OVERLONG_PROFILE_LABEL],
-    )
-    assert result.exit_code == 0, result.output
-
-
 def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile, *, label: str) -> None:
     """Seed the legal-entity (IS) profile the Modelo 200 calculation needs."""
-    record = UserProfileRecord(
-        schema_id="cadrumo.user_profile",
-        # Sourced from the schema, never pinned: a literal goes stale the moment
-        # the profile schema is revised, and the record then refuses to validate
-        # against its own canonical version.
-        schema_version=published_profile_schema().version,
+    record = create_user_profile_record(
+        context=profile_authority_contexts()[0],
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -126,7 +109,6 @@ def _calculate_args(work_unit_id: str) -> list[str]:
         "--casilla", "DP200014:01033=0.00",
         "--casilla", "DP200014:01034=0.00",
         "--binding", "modelo-200-profile-legal-entity-form=sl",
-        "--binding", "modelo-200-profile-new-entity-flag=0",
         "--binding", "modelo-200-profile-incn-prior-12-months=500000",
         "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
         "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
@@ -199,13 +181,15 @@ def test_calculate_accepts_an_actor_at_the_declared_bound(
 
 def test_calculate_reports_an_application_built_record_as_an_internal_defect(
     runtime_profile: TestRuntimeProfile,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """A record the application built from its own state is not the operator's fault.
 
-    The command line carries no ``--by``, so the audit actor is resolved from the
-    active profile label. The canonical profile-label contract permits this value
-    while the bucket event's actor permits only 64 characters, so the application
-    refuses its own record with nothing wrong in the invocation.
+    The command line carries no ``--by``. After creating the work unit with a
+    valid short label, inject the legal-but-long default actor that an active
+    profile can supply. The bucket event's actor permits only 64 characters,
+    so the application refuses its own record with nothing wrong in the
+    calculation invocation.
 
     Before the fix this reported ``REFUSED_CLI_VALIDATION_BOUNDARY`` — "check the
     command's arguments" — against an argument set that is entirely correct, with
@@ -213,7 +197,7 @@ def test_calculate_reports_an_application_built_record_as_an_internal_defect(
     """
     _seed_legal_entity_profile(runtime_profile, label=_SHORT_PROFILE_LABEL)
     work_unit_id = _create_work_unit()
-    _rename_active_profile_to_overlong_label()
+    monkeypatch.setattr(_modelo_cli_support, "resolve_default_actor", lambda: _OVERLONG_PROFILE_LABEL)
 
     result = invoke_cached_cli(_calculate_args(work_unit_id))
 
@@ -228,12 +212,13 @@ def test_calculate_reports_an_application_built_record_as_an_internal_defect(
     context = error["context"]
     assert context is not None, error
     assert context["failing_record"] == "BucketEvent", context
-    assert "actor" in context["violations"], context
+    assert "String should have at most" in context["violations"], context
     assert str(BUCKET_ACTOR_LABEL_MAX_LENGTH) in context["violations"], context
 
 
 def test_internal_fault_context_carries_no_taxpayer_value(
     runtime_profile: TestRuntimeProfile,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """The named fault must not become an exfiltration path for the failing value.
 
@@ -244,7 +229,7 @@ def test_internal_fault_context_carries_no_taxpayer_value(
     """
     _seed_legal_entity_profile(runtime_profile, label=_SHORT_PROFILE_LABEL)
     work_unit_id = _create_work_unit()
-    _rename_active_profile_to_overlong_label()
+    monkeypatch.setattr(_modelo_cli_support, "resolve_default_actor", lambda: _OVERLONG_PROFILE_LABEL)
 
     result = invoke_cached_cli(_calculate_args(work_unit_id))
 

@@ -19,9 +19,12 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from ._m303_filing_evidence_support import write_m303_filing_evidence
 from ._modelo_work_ux_support import _create_m303_work_unit
 from .cli_runner import invoke_cached_cli
 
@@ -57,12 +60,8 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
     (which re-provisions the bucket and conflicts with the live session).
     """
 
-    record = UserProfileRecord(
-        schema_id="cadrumo.user_profile",
-        # Sourced from the schema, never pinned: a literal goes stale the moment
-        # the profile schema is revised, and the record then refuses to validate
-        # against its own canonical version.
-        schema_version=published_profile_schema().version,
+    record = create_user_profile_record(
+        context=profile_authority_contexts()[0],
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -82,6 +81,16 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
     seed_test_profile_record(record, root=runtime_profile.storage_root, label="Casilla canonical-id test profile")
 
 
+def _filing_evidence_arg(tmp_path: Path) -> list[str]:
+    with bundled_indexed_authority().operation() as operation:
+        path = write_m303_filing_evidence(
+            tmp_path / "m303-filing-evidence.json",
+            Period.from_year_and_code(2025, "1T"),
+            operation=operation,
+        )
+    return ["--m303-filing-evidence", str(path)]
+
+
 # ---------------------------------------------------------------------------
 # Printed-number metadata tokens are refused
 # ---------------------------------------------------------------------------
@@ -89,6 +98,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
 
 def test_printed_number_metadata_token_is_refused(
     runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
 ) -> None:
     """A printed number is not accepted when it differs from ``casilla.id``."""
 
@@ -97,7 +107,9 @@ def test_printed_number_metadata_token_is_refused(
 
     result = invoke_cached_cli(
         [
+            "--language", "en",
             "app", "modelo", "work", "calculate", work_unit_id,
+            *_filing_evidence_arg(tmp_path),
             "--casilla", "69=0",
         ],
     )  # fmt: skip
@@ -111,6 +123,7 @@ def test_printed_number_metadata_token_is_refused(
 
 def test_export_ref_metadata_token_is_refused(
     runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
 ) -> None:
     """An export field id is not accepted as an alternate casilla reference."""
 
@@ -119,8 +132,10 @@ def test_export_ref_metadata_token_is_refused(
 
     result = invoke_cached_cli(
         [
+            "--language", "en",
             "app", "modelo", "work", "calculate", work_unit_id,
-            "--casilla", "modelo-303-page-01-casilla-46=0",
+            *_filing_evidence_arg(tmp_path),
+            "--casilla", "m303-2025.dp30301.f079=0",
         ],
     )  # fmt: skip
     assert result.exit_code != 0, result.output
@@ -128,7 +143,7 @@ def test_export_ref_metadata_token_is_refused(
     output = result.output.replace("\n", " ")
     assert "export reference" in output
     assert "iva.resultado-regimen-general" in output
-    assert "modelo-303-page-01-casilla-46" in output
+    assert "m303-2025.dp30301.f079" in output
 
 
 # ---------------------------------------------------------------------------
@@ -138,6 +153,7 @@ def test_export_ref_metadata_token_is_refused(
 
 def test_bare_numeric_unknown_casilla_surfaces_helpful_message(
     runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
 ) -> None:
     """An unresolvable token raises a helpful BadParameter.
 
@@ -150,7 +166,9 @@ def test_bare_numeric_unknown_casilla_surfaces_helpful_message(
 
     result = invoke_cached_cli(
         [
+            "--language", "en",
             "app", "modelo", "work", "calculate", work_unit_id,
+            *_filing_evidence_arg(tmp_path),
             "--casilla", "99999=10.00",
         ],
     )  # fmt: skip
@@ -168,6 +186,7 @@ def test_bare_numeric_unknown_casilla_surfaces_helpful_message(
 
 def test_qualified_casilla_key_passes_validation_unchanged(
     runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
 ) -> None:
     """A canonical semantic casilla id reaches the engine unchanged.
 
@@ -183,6 +202,7 @@ def test_qualified_casilla_key_passes_validation_unchanged(
         [
             "--language", "en",
             "app", "modelo", "work", "calculate", work_unit_id,
+            *_filing_evidence_arg(tmp_path),
             "--casilla", "iva.resultado=0",
         ],
     )  # fmt: skip

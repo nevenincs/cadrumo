@@ -87,6 +87,7 @@ def _set_export_profile_name() -> None:
             UserProfileFact(path="identity.name", value="Ana"),
             UserProfileFact(path="identity.surnames", value="Recipient Encryption Test"),
             UserProfileFact(path="activities.description", value="Consulting"),
+            UserProfileFact(path="withholding.colegio_concertado", value=False),
         ),
     )
 

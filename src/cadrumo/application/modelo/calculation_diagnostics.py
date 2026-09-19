@@ -147,6 +147,26 @@ def collect_bucket_aggregation_advisory_diagnostics(
             bucket aggregation result.
     """
     with bundled_indexed_authority().operation() as operation:
+        minimo_descendientes_undeclared_diagnostics = collect_minimo_descendientes_undeclared_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
+            bucket_id=bucket_id,
+            operation=operation,
+            profile=profile,
+        )
+        minimo_descendientes_rentas_undeclared_diagnostics = collect_minimo_descendientes_rentas_undeclared_diagnostics(
+            revision,
+            casilla_values,
+            modelo=modelo,
+            period_token=period_token,
+            filing_year=filing_year,
+            bucket_id=bucket_id,
+            operation=operation,
+            profile=profile,
+        )
         guarderia_spend_shape_diagnostics = collect_guarderia_spend_shape_diagnostics(
             revision,
             casilla_values,
@@ -186,14 +206,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             observation_repository=observation_repository,
         )
         + collect_settlement_not_computed_diagnostics(revision)
-        + collect_minimo_descendientes_undeclared_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-        )
+        + minimo_descendientes_undeclared_diagnostics
         + collect_minimo_descendientes_prorrata_inferred_diagnostics(
             revision,
             casilla_values,
@@ -202,14 +215,7 @@ def collect_bucket_aggregation_advisory_diagnostics(
             filing_year=filing_year,
             bucket_id=bucket_id,
         )
-        + collect_minimo_descendientes_rentas_undeclared_diagnostics(
-            revision,
-            casilla_values,
-            modelo=modelo,
-            period_token=period_token,
-            filing_year=filing_year,
-            bucket_id=bucket_id,
-        )
+        + minimo_descendientes_rentas_undeclared_diagnostics
         + collect_minimo_descendientes_entry_date_missing_diagnostics(
             revision,
             casilla_values,

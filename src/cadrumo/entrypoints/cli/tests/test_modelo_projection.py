@@ -56,11 +56,12 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 
+from ....adapters.persistence.storage.tests.profile_capsule_runtime import profile_authority_contexts
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....domain.calculations.registry.formula_runtime import calculate_registry_snapshot
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_income_transaction
 from .cli_runner import invoke_cached_cli
@@ -235,12 +236,8 @@ def runtime_profile(
 def _seed_autónomo_profile(runtime_profile: TestRuntimeProfile) -> None:
     """Seed an autónomo (estimación directa) IRPF profile."""
 
-    record = UserProfileRecord(
-        schema_id="cadrumo.user_profile",
-        # Sourced from the schema, never pinned: a literal goes stale the moment
-        # the profile schema is revised, and the record then refuses to validate
-        # against its own canonical version.
-        schema_version=published_profile_schema().version,
+    record = create_user_profile_record(
+        context=profile_authority_contexts()[0],
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -546,18 +543,17 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
         # explicit zero defaults). The oracle must supply the same keys so
         # the comparison exercises an identical engine input set.
         binding_values={
-            f"renta-{_FILING_YEAR}-modelo-100-estimacion-directa-es-normal": Decimal("1"),
-            f"renta-{_FILING_YEAR}-modelo-111-retenciones-periodicas": Decimal("0"),
-            f"renta-{_FILING_YEAR}-modelo-123-retenciones-periodicas": Decimal("0"),
-            f"renta-{_FILING_YEAR}-modelo-193-retenciones-anuales": Decimal("0"),
-            f"renta-{_FILING_YEAR}-profile-declaration-type": Decimal("1"),
-            f"renta-{_FILING_YEAR}-profile-family-minor-children-in-unit": Decimal("0"),
-            f"renta-{_FILING_YEAR}-profile-descendientes-guarderia": Decimal("0"),
-            f"renta-{_FILING_YEAR}-profile-guarderia-gastos-reales": Decimal("0"),
-            f"renta-{_FILING_YEAR}-profile-cotizaciones-ss-madre": Decimal("0"),
+            "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
+            "renta-modelo-111-retenciones-periodicas": Decimal("0"),
+            "renta-modelo-123-retenciones-periodicas": Decimal("0"),
+            "renta-modelo-193-retenciones-anuales": Decimal("0"),
+            "renta-profile-declaration-type": Decimal("1"),
+            "renta-profile-descendientes-guarderia": Decimal("0"),
+            "renta-profile-guarderia-gastos-reales": Decimal("0"),
+            "renta-profile-cotizaciones-ss-madre": Decimal("0"),
             # Art. 81.1 follows the same derived-profile protocol: with no
             # declared descendants the resolved per-child fold is zero.
-            f"renta-{_FILING_YEAR}-profile-deduccion-maternidad": Decimal("0"),
+            "renta-profile-deduccion-maternidad": Decimal("0"),
             # The Art. 81.2 increment is DERIVED, not read from a stored fact:
             # the verb's profile resolver folds it per child and injects the
             # result. This seeded profile declares no descendientes, so that
@@ -569,23 +565,26 @@ def test_modelo_project_m130_to_m100_full_year_aggregation(
             # here would mask that refusal if it ever fired. Both resolve for
             # this snapshot (cap 1000, ceilings present), so the verb's own
             # value is zero and the oracle matches it.
-            f"renta-{_FILING_YEAR}-profile-incremento-guarderia": Decimal("0"),
-            f"renta-{_FILING_YEAR}-profile-marriage-full-year": Decimal("0"),
-            f"renta-{_FILING_YEAR}-profile-marriage-month-start": Decimal("0"),
-            f"renta-{_FILING_YEAR}-profile-marriage-month-end": Decimal("0"),
-            f"renta-{_FILING_YEAR}-base-liquidable-negativa-general-anterior": Decimal("0"),
-            f"renta-{_FILING_YEAR}-profile-minimo-descendientes-estatal": Decimal("0"),
-            f"renta-{_FILING_YEAR}-profile-minimo-descendientes-autonomico": Decimal("0"),
+            "renta-profile-incremento-guarderia": Decimal("0"),
+            "renta-profile-marriage-month-start": Decimal("0"),
+            "renta-profile-marriage-month-end": Decimal("0"),
+            "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-profile-minimo-descendientes-estatal": Decimal("0"),
+            "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         },
         enum_binding_values={
-            f"renta-{_FILING_YEAR}-profile-tax-residence-ccaa": _CCAA,
+            "renta-profile-tax-residence-ccaa": _CCAA,
         },
         relation_values={
-            f"renta-{_FILING_YEAR}-rel-130-pagos-fraccionados": _TOTAL_PAGOS_FRACCIONADOS,
-            f"renta-{_FILING_YEAR}-rel-131-pagos-fraccionados": Decimal("0"),
+            "renta-modelo-130-pagos-fraccionados": _TOTAL_PAGOS_FRACCIONADOS,
+            "renta-modelo-131-pagos-fraccionados": Decimal("0"),
         },
         date_binding_values={
-            f"renta-{_FILING_YEAR}-profile-taxpayer-birth-date": date(1980, 1, 1),
+            "renta-profile-taxpayer-birth-date": date(1980, 1, 1),
+        },
+        boolean_binding_values={
+            "renta-profile-family-minor-children-in-unit": False,
+            "renta-profile-marriage-full-year": False,
         },
     )
 

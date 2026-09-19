@@ -193,7 +193,7 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
     assert result.exit_code == 0, result.output
     assert "missing_filter\tTrue" in result.output
     assert "\tmodelo-200-pagos-fraccionados-anuales\trelation_prefill\trelation input\t" in result.output
-    assert "\tmodelo-200-2024-pagos-fraccionados-anuales-40-2\trelation_prefill\trelation input\t" in result.output
+    assert "\tmodelo-200-pagos-fraccionados-anuales-40-2\trelation_prefill\trelation input\t" in result.output
     assert "relation_guidance\tSome bindings below are fed by registry relations" in result.output
     assert "--relation RELATION_ID=VALUE before calculating." in result.output
     assert (
@@ -202,7 +202,7 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
         "use --relation modelo-200-pagos-fraccionados-anuales=VALUE"
     ) in result.output
     assert (
-        "relation_input\tmodelo-200-2024-pagos-fraccionados-anuales-40-2\t"
+        "relation_input\tmodelo-200-pagos-fraccionados-anuales-40-2\t"
         "fed by relation modelo-200-pagos-fraccionados-anuales-40-2\t"
         "use --relation modelo-200-pagos-fraccionados-anuales-40-2=VALUE"
     ) in result.output
@@ -231,8 +231,6 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
     assert one_p.exit_code == 0, one_p.output
     assert "binding_count\t0" in one_p.output
     assert "modelo-202-pagos-fraccionados-anteriores" not in one_p.output
-    assert "modelo-202-pagos-fraccionados-anteriores" not in one_p.output
-    assert "modelo-202-pagos-fraccionados-anteriores" not in one_p.output
 
     two_p = invoke_cached_cli(
         [
@@ -253,7 +251,7 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
     )
     assert two_p.exit_code == 0, two_p.output
     assert "modelo-202-pagos-fraccionados-anteriores" in two_p.output
-    assert "modelo-202-pagos-fraccionados-anteriores" not in two_p.output
+    assert two_p.output.count("relation_input\tmodelo-202-pagos-fraccionados-anteriores\t") == 1
 
     three_p = invoke_cached_cli(
         [
@@ -273,8 +271,15 @@ def test_bindings_list_missing_m202_scopes_self_relation_guidance_by_target_peri
         ],
     )
     assert three_p.exit_code == 0, three_p.output
-    assert "modelo-202-pagos-fraccionados-anteriores" not in three_p.output
     assert "modelo-202-pagos-fraccionados-anteriores" in three_p.output
+    assert three_p.output.count("relation_input\tmodelo-202-pagos-fraccionados-anteriores\t") == 1
+
+    two_p_snapshot = published_snapshot("202", filing_year=2024, period="2P")
+    three_p_snapshot = published_snapshot("202", filing_year=2024, period="3P")
+    ((_, two_p_provider),) = relation_prefill_bindings_for_period(two_p_snapshot.revision, period="2P")
+    ((_, three_p_provider),) = relation_prefill_bindings_for_period(three_p_snapshot.revision, period="3P")
+    assert two_p_provider.required_period_anchors_for_target("2P") == ((0, "1P"),)
+    assert three_p_provider.required_period_anchors_for_target("3P") == ((0, "1P"), (0, "2P"))
 
 
 def test_bindings_list_without_missing_does_not_append_m200_relation_guidance() -> None:

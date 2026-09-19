@@ -104,7 +104,13 @@ class CalculationActionPorts:
 class CalculationActionPortsFactory(Protocol):
     """Construct the calculation authorities for one profile bucket."""
 
-    def __call__(self, *, bucket_id: str, operation: PinnedAuthorityOperation) -> CalculationActionPorts:
+    def __call__(
+        self,
+        *,
+        bucket_id: str,
+        operation: PinnedAuthorityOperation,
+        profile_record: object | None = None,
+    ) -> CalculationActionPorts:
         """Return the complete calculation bundle for ``bucket_id``."""
         ...
 

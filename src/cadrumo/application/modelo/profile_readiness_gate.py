@@ -54,7 +54,7 @@ from ..user_profile.preflight import (
     build_profile_preflight_requirement,
     format_profile_preflight_requirement,
 )
-from ..user_profile.profile_record_repository import ProfileRecordRepository
+from ..user_profile.profile_record_repository import ProfileRecordRepository, take_invocation_profile_record
 from ..user_profile.projections import projection_for_taxpayer, record_to_path_values
 from ..user_profile.validation import MODELO_WORK_PROFILE_BASELINE_MISSING_CODE, ProfileValidationService
 from .action_errors import ModeloProfileReadinessError
@@ -540,7 +540,7 @@ def load_modelo_work_profile(
             profile_decode_context=profile_decode_context,
         )
         return ModeloWorkProfile(
-            record=repository.load(bucket_id),
+            record=take_invocation_profile_record(bucket_id) or repository.load(bucket_id),
             profile_decode_context=repository.session.profile_decode_context,
         )
     except ProfileNotFoundError:

@@ -53,6 +53,7 @@ _log = get_logger(__name__)
 
 if TYPE_CHECKING:
     from ...application.modelo.calculation_action_ports import CalculationActionPorts
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
 def _captured_work_catalogue(bucket_id: str | None) -> tuple[WorkUnitCatalogue, str]:
@@ -224,7 +225,9 @@ def require_active_profile() -> None:
         raise no_active_profile_refusal()
 
 
-def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
+def _declared_period_tokens(
+    modelo: str | None, *, operation: PinnedAuthorityOperation | None = None
+) -> tuple[str, ...]:
     """Return the registry-declared period tokens for one modelo.
 
     Pulls ``period_selector.declared_periods`` from every revision of the modelo
@@ -237,6 +240,8 @@ def _declared_period_tokens(modelo: str | None) -> tuple[str, ...]:
     if not modelo or not modelo.strip():
         return ()
     try:
+        if operation is not None:
+            return declared_modelo_period_tokens(modelo, operation=operation)
         from ...domain.calculations.registry.authority import bundled_indexed_authority
 
         with bundled_indexed_authority().operation() as operation:
@@ -315,7 +320,13 @@ def _period_token_error(
     )
 
 
-def bare_period_error(modelo: str, period: str, *, fallback: str = "") -> str:
+def bare_period_error(
+    modelo: str,
+    period: str,
+    *,
+    fallback: str = "",
+    operation: PinnedAuthorityOperation | None = None,
+) -> str:
     """Build an operator-facing error for an invalid bare ``--period`` token.
 
     Used by surfaces (``describe``, ``casillas``) that take a bare
@@ -323,7 +334,7 @@ def bare_period_error(modelo: str, period: str, *, fallback: str = "") -> str:
     modelo's declared period tokens are known the error enumerates them;
     otherwise it falls back to the raw registry shape hint.
     """
-    declared = _declared_period_tokens(modelo)
+    declared = _declared_period_tokens(modelo, operation=operation)
     if not declared:
         return fallback
     return tr(

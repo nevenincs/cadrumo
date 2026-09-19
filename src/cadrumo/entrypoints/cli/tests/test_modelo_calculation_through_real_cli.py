@@ -29,11 +29,14 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts,
+    seed_test_profile_record,
+)
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema, published_snapshot
-from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from ....domain.calculations.registry.tests.published_authority import published_snapshot
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
 from .cli_runner import invoke_cached_cli
@@ -77,12 +80,9 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     populated so the work-unit applicability guard passes.
     """
 
-    record = UserProfileRecord(
-        schema_id="cadrumo.user_profile",
-        # Sourced from the schema, never pinned: a literal goes stale the moment
-        # the profile schema is revised, and the record then refuses to validate
-        # against its own canonical version.
-        schema_version=published_profile_schema().version,
+    create_context, _ = profile_authority_contexts()
+    record = create_user_profile_record(
+        context=create_context,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -150,12 +150,9 @@ def _seed_legal_entity_profile(
         UserProfileFact(path="tax_residence.ccaa", value="madrid"),
         UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
     ]
-    record = UserProfileRecord(
-        schema_id="cadrumo.user_profile",
-        # Sourced from the schema, never pinned: a literal goes stale the moment
-        # the profile schema is revised, and the record then refuses to validate
-        # against its own canonical version.
-        schema_version=published_profile_schema().version,
+    create_context, _ = profile_authority_contexts()
+    record = create_user_profile_record(
+        context=create_context,
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=tuple(facts),
@@ -240,7 +237,6 @@ def test_modelo_200_micro_empresa_pyme_cuota_2024(
             "--casilla", "DP200014:01033=0.00",
             "--casilla", "DP200014:01034=0.00",
             "--binding", "modelo-200-profile-legal-entity-form=sl",
-            "--binding", "modelo-200-profile-new-entity-flag=0",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
             # Estado-share porcentaje for IS cuota; 100 means full estado share
             # (no foral/territorial adjustment) which is the common-regime case
@@ -319,11 +315,11 @@ def test_modelo_202_art_40_2_cuota_incn_below_threshold(
             "app", "modelo", "work", "calculate", work_unit_id,
             "--casilla", "02=0.00",
             # INCN binding: routes Art. 40.2 vs Art. 40.3 lane.
-            "--binding", "modelo-202-2025-y-siguientes-incn-prior-12-months=500000",
+            "--binding", "modelo-202-incn-prior-12-months=500000",
             # Prior M200 cuota-base binding: source-owned input for casilla 01.
-            "--binding", "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior=10000.00",
+            "--binding", "modelo-202-cuota-base-ejercicio-anterior=10000.00",
             # Prior pagos-fraccionados (casilla 30): zero for first period.
-            "--binding", "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+            "--binding", "modelo-202-pagos-fraccionados-anteriores=0",
         ],
     )  # fmt: skip
     assert result.exit_code == 0, result.output
@@ -613,7 +609,6 @@ def test_modelo_200_enum_binding_accepts_non_numeric_value(
             "--casilla", "DP200014:01033=0.00",
             "--casilla", "DP200014:01034=0.00",
             "--binding", "modelo-200-profile-legal-entity-form=sl",
-            "--binding", "modelo-200-profile-new-entity-flag=0",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",

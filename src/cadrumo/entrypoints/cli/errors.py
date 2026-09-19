@@ -126,16 +126,19 @@ class CliValidationBoundaryError(CadrumoError):
         original_exception: The underlying :exc:`~pydantic.ValidationError`.
     """
 
-    def __init__(self, error: ValidationError) -> None:
+    def __init__(self, error: ValidationError, *, record: type[BaseModel] | None = None) -> None:
         """Wrap ``error`` in the structured CLI boundary contract.
 
         Args:
             error: The pydantic validation error raised inside the
                 Typer callback.
+            record: The model being validated, when the raising site knows it.
+                Supplying it allows the operator-safe context to name declared
+                field paths while keeping unproven path components redacted.
         """
         super().__init__(
             translated_message="errors.refused.refused_cli_validation_boundary",
-            context=internal_record_fault_context(error),
+            context=internal_record_fault_context(error, record=record),
         )
         self.original_exception: ValidationError = error
 
@@ -278,6 +281,48 @@ def _violation_path(loc: tuple[object, ...], declared: frozenset[str]) -> str:
     return ".".join(parts)
 
 
+def _safe_violation_field_hints(
+    item: Mapping[str, object],
+    declared: frozenset[str],
+) -> tuple[str, ...]:
+    """Return validator-supplied field names only when the model declares them.
+
+    Model-level validators have an empty pydantic location, even when their
+    registered domain error knows which fields form the invariant. The narrow
+    ``fields`` metadata is carried on that domain error and survives the
+    pydantic ``ValueError`` bridge as its cause. Treat it as an allowlisted
+    diagnostic: every name must be a declared field of the supplied model, so
+    arbitrary validator prose or input values cannot cross this boundary.
+    """
+    context = item.get("ctx")
+    typed_context = cast(Mapping[str, object], context) if isinstance(context, Mapping) else None
+    raised = typed_context.get("error") if typed_context is not None else None
+    candidates = (raised, getattr(raised, "__cause__", None))
+    for candidate in candidates:
+        nested_context = getattr(candidate, "context", None)
+        if not isinstance(nested_context, Mapping):
+            continue
+        raw_fields = nested_context.get("fields")
+        if isinstance(raw_fields, str):
+            fields = tuple(part.strip() for part in raw_fields.split(",") if part.strip())
+        elif isinstance(raw_fields, (tuple, list)):
+            fields = tuple(raw_fields)
+        else:
+            continue
+        if fields and all(isinstance(field, str) and field in declared for field in fields):
+            return cast(tuple[str, ...], fields)
+    return ()
+
+
+def _violation_location(item: Mapping[str, object], declared: frozenset[str]) -> str:
+    """Render a pydantic location, or safe field hints for a model-level error."""
+    location = tuple(item.get("loc", ()))
+    if location:
+        return _violation_path(location, declared)
+    hints = _safe_violation_field_hints(item, declared)
+    return ", ".join(hints) if hints else _ROOT_PATH
+
+
 def _violation_rule(item: Mapping[str, object]) -> str:
     """Return the rule an error broke, with no text the validator authored.
 
@@ -357,7 +402,7 @@ def internal_record_fault_context(
     violations = error.errors()
     reported = violations[:_INTERNAL_FAULT_VIOLATION_LIMIT]
     declared = _declared_field_names(record)
-    named = tuple(f"{_violation_path(tuple(item['loc']), declared)}: {_violation_rule(item)}" for item in reported)
+    named = tuple(f"{_violation_location(item, declared)}: {_violation_rule(item)}" for item in reported)
     withheld = sum(1 for item in reported if str(item.get("type", "")) in _VALIDATOR_AUTHORED_MESSAGE_TYPES)
     context: dict[str, object] = {
         "failing_record": error.title,

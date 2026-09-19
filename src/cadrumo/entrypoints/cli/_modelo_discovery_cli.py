@@ -34,7 +34,7 @@ from ...core.i18n.render import tr
 from ...core.period import Period
 from ...core.tax_domain import TaxDomain
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.query_reports import (
     ModeloBindingsReport,
     ModeloCasillasReport,
@@ -232,10 +232,12 @@ def describe_modelo(
             report = registry_describe_modelo(
                 modelo, period=period, as_of=_as_of(as_of), operation=authority_operation(ctx)
             )
-    except (ValueError, RegistrySnapshotError) as exc:
+    except (ValueError, RegistrySnapshotError, RegistryValidationError) as exc:
         message = str(exc)
         if period is not None and "period" in message.lower():
-            raise typer.BadParameter(deps.bare_period_error(modelo, period, fallback=message)) from exc
+            raise typer.BadParameter(
+                deps.bare_period_error(modelo, period, fallback=message, operation=authority_operation(ctx))
+            ) from exc
         raise typer.BadParameter(tr("cli.app.modelo.describe.period_error", message=message)) from exc
     result = ModeloDescribeResult.from_report(report)
     lines = [

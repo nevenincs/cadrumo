@@ -62,7 +62,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() ->
             "--period", _PERIOD,
         ],
     )  # fmt: skip
-    assert readiness.exit_code == 0, readiness.output
+    assert readiness.exit_code == 2, readiness.output
     readiness_payload = _payload(readiness.output)
 
     missing = invoke_cached_cli(
@@ -122,7 +122,7 @@ def test_modelo_100_readiness_filters_ledger_bindings_after_clean_preflight() ->
             _PERIOD,
         ],
     )
-    assert text_readiness.exit_code == 0, text_readiness.output
+    assert text_readiness.exit_code == 2, text_readiness.output
     assert "ready\tFalse" in text_readiness.output
     assert "source_binding_ready\tFalse" in text_readiness.output
     assert "ledger_ready_scope\ttransaction_preflight_only" in text_readiness.output

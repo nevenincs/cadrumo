@@ -81,9 +81,9 @@ def _calculate_202_work_unit(work_unit_id: str) -> dict[str, object]:
             "calculate",
             work_unit_id,
             "--binding",
-            "modelo-202-2025-y-siguientes-pagos-fraccionados-anteriores=0",
+            "modelo-202-pagos-fraccionados-anteriores=0",
             "--binding",
-            "modelo-202-2025-y-siguientes-cuota-base-ejercicio-anterior=0",
+            "modelo-202-cuota-base-ejercicio-anterior=0",
         ],
     )
     assert result.exit_code == 0, result.output

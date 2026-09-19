@@ -416,7 +416,7 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUAL=1-4:150;5-7:200,MESES_TRABAJO=1-12",
+            "--descendiente", "NACIMIENTO=2021-04-15,GASTOS_GUARDERIA_MENSUAL=1-4:150;5-7:200,MESES_TRABAJO=1-12,SEGUNDO_CICLO_INFANTIL_INICIO_MES=8",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output
@@ -425,6 +425,7 @@ def test_monthly_guarderia_map_declared_via_the_flag_reaches_casilla_0613(
     # expanded and month-sorted regardless of the ranges typed above.
     list_payload = _payload(invoke_cached_cli(["--format", "json", "config", "profile", "descendiente", "list"]).output)
     months = list_payload["descendientes"][0]["gastos_guarderia_mensuales"]
+    assert list_payload["descendientes"][0]["segundo_ciclo_infantil_inicio_mes"] == 8
     assert [(row["month"], row["amount_euros"]) for row in months] == [
         (1, 150),
         (2, 150),
@@ -545,7 +546,7 @@ def test_the_manual_worked_guarderia_case_reaches_casilla_0613(
         [
             "--format", "json",
             "config", "profile", "descendiente", "add",
-            "--descendiente", "NACIMIENTO=2021-09-02,GASTOS_GUARDERIA_MENSUAL=1-6:500,MESES_TRABAJO=5-8",
+            "--descendiente", "NACIMIENTO=2021-09-02,GASTOS_GUARDERIA_MENSUAL=1-6:500,MESES_TRABAJO=5-8,SEGUNDO_CICLO_INFANTIL_INICIO_MES=9",
         ],
     )  # fmt: skip
     assert add_result.exit_code == 0, add_result.output

@@ -70,6 +70,7 @@ from ...adapters.persistence.profile.recipient_replay_guard import (
 from ...application.modelo.action_errors import CalculationRevisionNotFoundError
 from ...application.modelo.operator_inputs import ModeloReviewPackageBuildOperatorInput
 from ...application.modelo.recipient_encryption import RecipientEncryptedPackage
+from ...application.modelo.registry_discovery import declared_modelo_period_tokens
 from ...application.modelo.review_package import (
     ReviewPackageError,
     ReviewPackageIntegrityError,
@@ -114,7 +115,7 @@ from ...application.modelo.work_lifecycle import get_work_unit
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.external_constants import UTF_8_ENCODING
 from ...core.i18n.render import tr
-from ._modelo_behavior_support import resolve_exportable_revision_for_cli
+from ._modelo_behavior_support import bare_period_error, resolve_exportable_revision_for_cli
 from ._modelo_cli_support import (
     resolve_default_actor,
     resolve_explicit_or_active_bucket_id,
@@ -152,6 +153,13 @@ def review_package_build(
     from ._modelo_cli_support import bad_parameter_from_error
 
     operator_input = ModeloReviewPackageBuildOperatorInput.model_validate(input_values)
+    if operator_input.modelo is not None and operator_input.period is not None:
+        operation = authority_operation(ctx)
+        declared_periods = declared_modelo_period_tokens(operator_input.modelo, operation=operation)
+        if declared_periods and operator_input.period.upper() not in declared_periods:
+            raise typer.BadParameter(
+                bare_period_error(operator_input.modelo, operator_input.period, operation=operation)
+            )
     workflow_state = workflow_state_repository().load()
     workflow_profile = filing_taxpayer_or_refuse(workflow_state)
     if (

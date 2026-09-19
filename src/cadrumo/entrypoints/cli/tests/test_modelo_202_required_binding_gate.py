@@ -92,7 +92,7 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
             "1P",
         ],
     )
-    assert readiness.exit_code == 0, readiness.output
+    assert readiness.exit_code == 2, readiness.output
     readiness_payload = _payload(readiness.output)
     assert readiness_payload["ready"] is False
     assert readiness_payload["binding_ready"] is False
@@ -188,7 +188,8 @@ def test_laura_m202_not_ready_refuses_calculate_and_no_zero_artifact_is_reachabl
     )
     assert filed.exit_code != 0, filed.output
     filed_error = json.loads(filed.output)["error"]
-    assert filed_error["code"] == "REFUSED_MODELO_REQUIRED_BINDINGS_MISSING"
+    # Calculate never created a revision, so file refuses at revision selection.
+    assert filed_error["code"] == "REFUSED_CLI_BOUNDARY"
 
     export_path = tmp_path / "modelo-202-2025-1P.txt"
     exported = invoke_cached_cli(

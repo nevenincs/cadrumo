@@ -16,7 +16,7 @@ from ....core.modelo import Modelo
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._modelo_work_ux_support import (
-    _PROFILE_ID,
+    _PROFILE_LABEL,
     _create_attribution_entity_intracom_profile,
     _create_de_nonresident_legal_entity_profile,
     _create_gb_non_resident_profile,
@@ -44,7 +44,7 @@ def _remove_representante_fields_from_operator_profile() -> None:
 
     from ....application.workflow.profile_bucket_scan import read_profile_bucket
 
-    pointer = read_profile_bucket(_PROFILE_ID)
+    pointer = read_profile_bucket(_PROFILE_LABEL)
     assert pointer is not None
     with open_test_profile_session(pointer.bucket_id):
         record = load_test_profile_record(pointer.bucket_id)
@@ -59,14 +59,16 @@ def _remove_representante_fields_from_operator_profile() -> None:
 
 def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
     register_cli_profile(
-        label=_PROFILE_ID,
+        label=_PROFILE_LABEL,
         facts={
             "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
             "identity.tax_id": "12345678Z",
             "identity.name": "Operator",
             "identity.surnames": "Readiness",
+            "activities.description": "",
         },
+        complete=False,
         log_in=False,
     )
 
@@ -114,7 +116,7 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
             "--period", "2T",
         ],
     )  # fmt: skip
-    assert readiness.exit_code == 0, readiness.output
+    assert readiness.exit_code == 2, readiness.output
     readiness_payload = _payload(readiness.output)
     assert readiness_payload["profile_ready"] is False
     assert readiness_payload["ready"] is False
@@ -147,7 +149,7 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
             "--period", "2T",
         ],
     )  # fmt: skip
-    assert after.exit_code == 0, after.output
+    assert after.exit_code == 2, after.output
     assert _payload(after.output)["profile_ready"] is True
 
 
@@ -192,7 +194,7 @@ def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None
         ],
     )  # fmt: skip
 
-    assert result.exit_code == 0, result.output
+    assert result.exit_code == 2, result.output
     assert "ready\tFalse" in result.output
     assert "profile_ready\tFalse" in result.output
     assert "profile_refusal\tModelo 303 2026 1T is before the profile activity-start date 2026-05-01" in result.output
@@ -237,7 +239,7 @@ def test_m210_work_create_refuses_legacy_non_eea_irnr_missing_representante() ->
 
 def test_work_create_not_applicable_m130_wins_over_pre_activity_for_irnr_profile() -> None:
     register_cli_profile(
-        label=_PROFILE_ID,
+        label=_PROFILE_LABEL,
         facts={
             "taxpayer_type.entity_type": "natural_person",
             "taxpayer_type.irpf_income_categories": "actividad_economica",
@@ -303,7 +305,7 @@ def test_modelo_349_readiness_allows_attribution_entity_before_work_create() -> 
         ],
     )  # fmt: skip
 
-    assert readiness.exit_code == 0, readiness.output
+    assert readiness.exit_code == 2, readiness.output
     readiness_payload = _payload(readiness.output)
     assert readiness_payload["registry_ready"] is True
     assert readiness_payload["profile_ready"] is True
@@ -341,13 +343,13 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
             "--format", "json",
             "app", "modelo", "readiness",
             "--modelo", "200",
-            "--revision-id", "2024",
+            "--revision-id", str(published_snapshot("200", filing_year=2026, period="0A").revision.id),
             "--year", "2026",
             "--period", "0A",
         ],
     )  # fmt: skip
 
-    assert readiness.exit_code == 0, readiness.output
+    assert readiness.exit_code == 2, readiness.output
     readiness_payload = _payload(readiness.output)
     assert readiness_payload["ready"] is False
     assert readiness_payload["profile_ready"] is False
@@ -362,7 +364,7 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
             "--modelo", "200",
             "--year", "2026",
             "--period", "0A",
-            "--revision", "2024",
+            "--revision", str(published_snapshot("200", filing_year=2026, period="0A").revision.id),
         ],
     )  # fmt: skip
 
@@ -380,7 +382,7 @@ def test_nonresident_legal_entity_m200_readiness_and_create_refuse_wrong_path() 
             "--modelo", "200",
             "--year", "2026",
             "--period", "0A",
-            "--revision", "2024",
+            "--revision", str(published_snapshot("200", filing_year=2026, period="0A").revision.id),
             "--allow-not-applicable",
         ],
     )  # fmt: skip

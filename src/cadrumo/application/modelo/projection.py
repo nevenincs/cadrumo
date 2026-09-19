@@ -566,13 +566,13 @@ def _profile_projection_bindings(
     extra_bindings: Mapping[BindingId, Decimal],
     extra_enum_bindings: Mapping[BindingId, str],
     operation: PinnedAuthorityOperation,
-) -> tuple[dict[BindingId, Decimal], dict[BindingId, date], dict[BindingId, str]]:
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, date], dict[BindingId, str], dict[BindingId, bool]]:
     """Resolve the active bucket's profile-sourced projection bindings (empty when no bucket)."""
     from ...core.bucket_pointer import resolve_active_bucket_id
 
     bucket_id = resolve_active_bucket_id()
     if bucket_id is None:
-        return {}, {}, {}
+        return {}, {}, {}, {}
     input_bound_binding_ids = {
         casilla.binding
         for casilla in m100_snapshot.revision.casillas
@@ -589,6 +589,7 @@ def _profile_projection_bindings(
         dict(profile_result.binding_values),
         dict(profile_result.date_binding_values),
         dict(profile_result.enum_binding_values),
+        dict(profile_result.boolean_binding_values),
     )
 
 
@@ -643,17 +644,31 @@ def project_modelo_100_from_m130(
     verb_baseline_bindings, verb_baseline_enum_bindings, verb_baseline_boolean_bindings = (
         _verb_baseline_projection_bindings(ccaa, declared_binding_ids)
     )
-    profile_decimal_bindings, profile_date_bindings, profile_enum_bindings = _profile_projection_bindings(
-        m100_snapshot,
-        m100_inputs=m100_inputs,
-        extra_bindings=extra_bindings,
-        extra_enum_bindings=extra_enum_bindings,
-        operation=operation,
+    profile_decimal_bindings, profile_date_bindings, profile_enum_bindings, profile_boolean_bindings = (
+        _profile_projection_bindings(
+            m100_snapshot,
+            m100_inputs=m100_inputs,
+            extra_bindings=extra_bindings,
+            extra_enum_bindings=extra_enum_bindings,
+            operation=operation,
+        )
     )
 
     merged_bindings = {**verb_baseline_bindings, **profile_decimal_bindings, **extra_bindings}
     merged_enum_bindings = {**verb_baseline_enum_bindings, **profile_enum_bindings, **extra_enum_bindings}
     merged_date_bindings = dict(profile_date_bindings)
+    merged_boolean_bindings = {**verb_baseline_boolean_bindings, **profile_boolean_bindings}
+    maritime_path = _binding_id("renta-maritime-path-rebeca", surface="project modelo 100 maritime path")
+    maritime_gross = _binding_id("renta-maritime-gross-navigation-income", surface="project modelo 100 maritime gross")
+    maritime_salary = _binding_id("renta-maritime-annual-salary", surface="project modelo 100 maritime salary")
+    if (
+        maritime_path in declared_binding_ids
+        and maritime_path not in merged_boolean_bindings
+        and merged_bindings.get(maritime_gross) == Decimal("0")
+        and merged_bindings.get(maritime_salary) == Decimal("0")
+    ):
+        # Either statutory path yields zero when there is no maritime income.
+        merged_boolean_bindings[maritime_path] = False
 
     try:
         engine_result = calculate_registry_snapshot(
@@ -664,7 +679,7 @@ def project_modelo_100_from_m130(
             enum_binding_values=merged_enum_bindings,
             relation_values=m100_relations,
             date_binding_values=merged_date_bindings or None,
-            boolean_binding_values=verb_baseline_boolean_bindings or None,
+            boolean_binding_values=merged_boolean_bindings or None,
         )
     except RegistryValidationError:
         _LOG.exception(

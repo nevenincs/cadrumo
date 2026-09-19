@@ -129,18 +129,20 @@ def _run_work_calculate(
     )
     from .state_projection_support import authority_operation, calculation_action_ports_factory
 
+    # One decrypted record serves every gate, resolver and advisory this command runs.
+    operation = authority_operation(ctx)
+    profile = load_modelo_work_profile(
+        bucket_id=unit.bucket_id,
+        profile_decode_context=operation.profile_decode_context(),
+    )
     calculation_ports = calculation_action_ports_factory(ctx)(
         bucket_id=unit.bucket_id,
-        operation=authority_operation(ctx),
+        operation=operation,
+        profile_record=profile.record if profile is not None else None,
     )
     resolved_work_unit_id = unit.work_unit_id
     filing_instance_evidence = m303_filing_instance_evidence_from_cli(
         modelo=str(unit.modelo), period=unit.period, evidence_file=m303_filing_evidence
-    )
-    # One decrypted record serves every gate, resolver and advisory this command runs.
-    profile = load_modelo_work_profile(
-        bucket_id=unit.bucket_id,
-        profile_decode_context=calculation_ports.operation.profile_decode_context(),
     )
     calculation_inputs = deps.calculate_input_bundle_from_cli(
         work_unit_id=resolved_work_unit_id,
