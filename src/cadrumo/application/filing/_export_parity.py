@@ -70,6 +70,8 @@ from ...core.modelo import Modelo
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_requires_bank_account
 from ...domain.calculations.registry.export import fixed_width_record_casilla_ids
+from ...domain.calculations.registry.binding_aggregation import BindingAggregationOp, binding_aggregation_op
+from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.export_parse import xml_dictionary_entries
 from ...domain.calculations.registry.rate_box_partition import (
     RateBoxPartition,
@@ -240,6 +242,13 @@ def rendered_casilla_ids(
     # membership in draft.values is NOT value presence: an EMPTY casilla would
     # render as a blank slot. Filter to real values (value is None iff EMPTY).
     valued_casillas = {value.casilla_id for value in draft.values if value.value is not None}
+    rendered_row_casillas = _rendered_row_binding_casilla_ids(
+        layout,
+        draft=draft,
+        headers=headers,
+        prior_domiciliation_election=prior_domiciliation_election,
+        schema_provider=schema_provider,
+    )
     return frozenset(
         boe_representable_casilla_ids(
             layout,
@@ -248,8 +257,50 @@ def rendered_casilla_ids(
             prior_domiciliation_election=prior_domiciliation_election,
             schema_provider=schema_provider,
         )
-        & valued_casillas
+        & (valued_casillas | rendered_row_casillas)
     )
+
+
+def _rendered_row_binding_casilla_ids(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    headers: Mapping[FilingProducerKey, object],
+    prior_domiciliation_election: PriorDomiciliationElection,
+    schema_provider: RegistrySchemaAccessor,
+) -> set[CasillaId]:
+    """Return row-field casillas whose active binding value reaches a rendered record."""
+    bindings = {str(binding.id): binding for binding in schema_provider.get_snapshot(draft.modelo).revision.bindings}
+    active_binding_ids = {
+        str(value.binding_id)
+        for value in draft.binding_values
+        if value.value is not None and value.value != ""
+    }
+    rendered: set[CasillaId] = set()
+    for record in layout.records:
+        if _did_page_suppressed(
+            record,
+            draft=draft,
+            headers=headers,
+            prior_domiciliation_election=prior_domiciliation_election,
+        ):
+            continue
+        for field in record.fields:
+            if field.binding is None or str(field.binding) not in active_binding_ids:
+                continue
+            binding = bindings.get(str(field.binding))
+            if binding is None:
+                continue
+            # Row-field casillas are meaningful only for the registry's typed
+            # row aggregation. Other bindings can share a record field without
+            # naming a row-set projection and must retain their normal scalar
+            # completeness path.
+            if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
+                continue
+            selector = binding_row_set_selector(binding)
+            if selector is not None and (casilla_id := record.row_field_casilla_ids.get(selector.row_field)) is not None:
+                rendered.add(casilla_id)
+    return rendered
 
 
 def required_applicable_casilla_ids(

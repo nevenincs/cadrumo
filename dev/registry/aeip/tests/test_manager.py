@@ -350,9 +350,9 @@ def test_oversize_slug_is_refused_by_the_real_constraint() -> None:
         _CHAIN_ID_ADAPTER.validate_python(oversize)
 
 
-def test_scheme_reproduces_the_already_landed_chain(inventory) -> None:
-    """The scheme must not silently supersede a chain already stamped."""
-    plan = plan_chains(inventory)
+def test_scheme_reproduces_the_already_landed_chain(adjudicated) -> None:
+    """The shipped identity judgments must reproduce every already stamped chain."""
+    inventory, plan, _ = adjudicated
     planned = {entry.chain_id for entry in plan.entries}
     assert _LANDED_CHAIN_ID in planned, (
         "the event-keyed scheme must reproduce the chain already stamped in the "

@@ -20,7 +20,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler import validate_revision_rules as rules
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_domain, pytest.mark.usefixtures("authority_operation")]
 
 
 def _m210_definition():

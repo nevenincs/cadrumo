@@ -499,7 +499,14 @@ def test_every_selected_filing_revision_refuses_each_unenrolled_proof_channel() 
         )
     }
 
-    assert selected_coordinates == materialized_coordinates | residue_coordinates
+    # Enrollment reports every authored revision, including historical rows
+    # below the product support envelope.  This proof selects only filing-grade
+    # coordinates inside that envelope, so compare it with that same slice of
+    # the residue inventory.  The global inventory remains asserted below for
+    # complete ownership and provenance; admitting its out-of-envelope entries
+    # into this equality would turn them into false public candidates.
+    selected_residue_coordinates = residue_coordinates & selected_coordinates
+    assert selected_coordinates == materialized_coordinates | selected_residue_coordinates
     assert candidate_coordinates <= selected_coordinates
     assert materialized_coordinates <= canonical_vector_coordinates
     assert candidate_coordinates - materialized_coordinates <= residue_coordinates

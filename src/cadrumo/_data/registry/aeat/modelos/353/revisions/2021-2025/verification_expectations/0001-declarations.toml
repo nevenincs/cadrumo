@@ -1,6 +1,7 @@
 [[revisions."2021-2025".verification_expectations]]
 id = "modelo-353-iva-chain-verification"
 computed_casilla_ids = ["iva.cuota-devengada-total", "iva.cuota-deducible-total", "iva.resultado-regimen-general"]
+reconcile_when_present_casilla_ids = ["03", "05", "09"]
 tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1"

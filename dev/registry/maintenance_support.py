@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import logging
 from collections.abc import Callable, Iterable, Iterator, Mapping
@@ -19,7 +18,6 @@ from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo.core.filing_year import FilingYear
-from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.period import RegistrySelectorPeriodCode
@@ -59,6 +57,7 @@ from .compiler.identity import (
     REGISTRY_IDENTITY_SCHEMA_VERSION,
     FingerprintTuples,
     RegistryIdentityStamp,
+    compute_installed_tree_digest,
     registry_identity_stamp_location,
 )
 from .compiler.loader import (
@@ -894,59 +893,6 @@ def _attribute_oracle_payload(
     )
 
 
-def compute_installed_tree_digest(
-    fingerprints: FingerprintTuples, *, registry_root: Path, package_version: str = PACKAGE_VERSION
-) -> str:
-    """Digest a tree into the install-stable identity the build stamps.
-
-    The walked digest folds absolute paths and ``mtime_ns``, and neither
-    survives packaging: the cohort builds the wheel from a snapshot of the
-    enumerated source tree and installation rewrites mtimes and directory sizes. This
-    derivation keys on the package version plus the sorted
-    ``(relative-path, size, content-digest)`` of every registry FILE, all three
-    byte-stable from the build machine to every install because the bundled tree
-    is identical per release. Directory entries are dropped for the same
-    packaging-instability reason.
-
-    The CONTENT digest is what makes this an identity rather than a shape: path
-    and size alone cannot separate two files of equal length, so a same-size edit
-    anywhere in an installed tree would be invisible to a stamp that omitted it.
-    It is not cheap -- measured at roughly 24 seconds over the real 17,548-file
-    tree, dominated by first-touch reads rather than by hashing -- and that is
-    affordable only because it is paid ONCE on the build machine per release
-    while the runtime never pays it at all: a stamped install reads the digest in
-    about two milliseconds, and an unstamped tree takes
-    :func:`compute_walked_tree_digest`, which folds the tuples the caller already
-    collected and reads nothing. The trade works in exactly one direction, which
-    is why the walked derivation cannot borrow it and why the per-file bundled
-    fingerprint leaves its content slot empty.
-
-    This stats and reads every entry, so it is a BUILD-TIME derivation only.
-
-    Returns:
-        The hex SHA-256 install-stable identity of the tree.
-    """
-    resolved_root = registry_root.resolve()
-    entries: list[tuple[str, int, str]] = []
-    for path, size, _mtime_ns, _content_digest in fingerprints:
-        candidate = Path(path)
-        if not candidate.is_file():
-            continue
-        try:
-            relative = candidate.resolve().relative_to(resolved_root).as_posix()
-        except ValueError:
-            relative = candidate.name
-        entries.append((relative, size, _file_content_digest(candidate)))
-    hasher = hashlib.sha256()
-    hasher.update(_INSTALLED_DIGEST_LABEL)
-    hasher.update(package_version.encode("utf-8"))
-    for relative, size, content in sorted(entries):
-        hasher.update(relative.encode("utf-8"))
-        hasher.update(content.encode("utf-8"))
-        hasher.update(str(size).encode("utf-8"))
-    return hasher.hexdigest()
-
-
 _COMPATIBLE_SURFACE_PAIRS: frozenset[tuple[str, str]] = frozenset(
     {
         ("open_simulator", "open_simulator"),
@@ -1210,28 +1156,6 @@ class UnattributedOraclePayload(ExternalGroundingModel):
     payload_name: str = Field(min_length=1, max_length=255)
     gap: OracleAttributionGap
     detail: _GroundingDetail
-
-
-_INSTALLED_DIGEST_LABEL = b"registry-identity-installed-v1"
-
-
-def _file_content_digest(path: Path) -> str:
-    """Return a content digest for one registry file, or a marker when unreadable.
-
-    An unreadable file yields a stable per-path marker rather than raising: the
-    stamp is a description of what the build packaged, and a file it could not
-    read is a fact about that tree, not a reason to abort a release. The marker
-    differs from any real digest, so such a tree can never match one whose files
-    all read cleanly.
-
-    Returns:
-        The hex BLAKE2b digest of the file's bytes, or an ``unreadable:`` marker.
-    """
-    try:
-        return blake2b_hex(path.read_bytes())
-    except OSError:
-        _LOGGER.debug("Registry file %s could not be read while stamping identity", path, exc_info=True)
-        return "unreadable"
 
 
 def _validate_oracle_id(value: str) -> OracleId:

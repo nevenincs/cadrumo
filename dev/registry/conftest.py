@@ -33,6 +33,10 @@ import pytest
 from cadrumo import conftest as runtime_conftest
 
 compose_runtime_ports = runtime_conftest.compose_runtime_ports
+# Development-registry tests can exercise application services that retain
+# governed facts.  Re-export the runtime host's one-operation lease instead of
+# creating a second fixture with subtly different generation semantics.
+authority_operation = runtime_conftest.authority_operation
 
 
 @pytest.fixture(scope="session", autouse=True)

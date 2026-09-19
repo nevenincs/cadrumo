@@ -29,6 +29,7 @@ from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 
 _M210_TIPO_RENTA_CODE_PARAMETER_PREFIX = "m210-tipo-renta-code-"
+_M210_TIPO_RENTA_CODE_PARAMETER_ID = "m210-tipo-renta-code"
 
 
 def validate_revision_windows(modelo: ModeloDefinition) -> list[str]:
@@ -286,7 +287,9 @@ def validate_m210_tipo_renta_code_projection_parity(
     projected = set(projected_codes) if projected_codes is not None else None
     for revision in modelo.revisions.values():
         for parameter in revision.parameters:
-            if not parameter.id.startswith(_M210_TIPO_RENTA_CODE_PARAMETER_PREFIX):
+            if parameter.id != _M210_TIPO_RENTA_CODE_PARAMETER_ID and not parameter.id.startswith(
+                _M210_TIPO_RENTA_CODE_PARAMETER_PREFIX
+            ):
                 continue
             if projected is None:
                 projected = set(m210_tipo_renta_code_projection())

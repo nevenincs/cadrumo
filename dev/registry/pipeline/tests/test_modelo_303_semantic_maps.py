@@ -1126,39 +1126,40 @@ def _epoch_width_pairs() -> list[tuple[str, int]]:
     return pairs
 
 
-@pytest.mark.parametrize(("design_epoch", "width"), _epoch_width_pairs())
-@pytest.mark.parametrize(
-    "suffix",
-    [
-        "",
-        # A bare terminator with no annotation behind it. The 2025 and 2026
-        # designs write their money slots this way, and no test covered the
-        # shape until it refused a real epoch.
-        ".",
-        # Every separator form below is present in the bundled Modelo 303
-        # corpus: dot-space dominates, comma-space carries Nota 3, and a bare
-        # space carries Nota 2 after a quoted enumeration token.
-        ". Nota 6",
-        ", Nota 6",
-        " Nota 6",
-        # The note NUMBER is a per-design vocabulary fact, not a wire-grammar
-        # fact. The 2024-late design annotates numeric and enumeration anchors
-        # with notes 8, 9 and 10, which a six-keyed tolerance could not admit,
-        # and its note table defines 1 through 10.
-        ". Nota 5",
-        ". Nota 10",
-        ". Nota 8. Nota 7",
-    ],
+_TRAILING_NOTE_SUFFIXES: Final[tuple[str, ...]] = (
+    "",
+    # A bare terminator with no annotation behind it. The 2025 and 2026
+    # designs write their money slots this way, and no test covered the
+    # shape until it refused a real epoch.
+    ".",
+    # Every separator form below is present in the bundled Modelo 303
+    # corpus: dot-space dominates, comma-space carries Nota 3, and a bare
+    # space carries Nota 2 after a quoted enumeration token.
+    ". Nota 6",
+    ", Nota 6",
+    " Nota 6",
+    # The note NUMBER is a per-design vocabulary fact, not a wire-grammar
+    # fact. The 2024-late design annotates numeric and enumeration anchors
+    # with notes 8, 9 and 10, which a six-keyed tolerance could not admit,
+    # and its note table defines 1 through 10.
+    ". Nota 5",
+    ". Nota 10",
+    ". Nota 8. Nota 7",
 )
-def test_integer_source_grammar_peels_any_trailing_note_reference(
-    design_epoch: str,
-    width: int,
-    suffix: str,
-) -> None:
+
+
+def test_integer_source_grammar_peels_any_trailing_note_reference() -> None:
     """A trailing note reference annotates official content without changing its wire fact."""
-    epoch = _authorities(design_epoch)
-    field_id = _integer_field_of_width(epoch, width)
-    _render_with_integer_content(epoch, field_id=field_id, content=f"{width} enteros{suffix}")
+    failures: list[str] = []
+    for design_epoch, width in _epoch_width_pairs():
+        epoch = _authorities(design_epoch)
+        field_id = _integer_field_of_width(epoch, width)
+        for suffix in _TRAILING_NOTE_SUFFIXES:
+            try:
+                _render_with_integer_content(epoch, field_id=field_id, content=f"{width} enteros{suffix}")
+            except Exception as error:
+                failures.append(f"{design_epoch}/{width}/{suffix!r}: {type(error).__name__}: {error}")
+    assert not failures, "\n".join(failures)
 
 
 def _epochs_declaring_width(width: int) -> list[str]:
@@ -1173,33 +1174,30 @@ def _epochs_declaring_width(width: int) -> list[str]:
 #: width -- those are the Regimen Simplificado actividad modules the 2023 design
 #: introduced -- so it was asking `_integer_field_of_width` for a field that
 #: design has never carried.
-@pytest.mark.parametrize("design_epoch", _epochs_declaring_width(4))
-@pytest.mark.parametrize(
-    "content",
-    [
-        "4 enteros. Nota",
-        "4 enteros. Nota 6 y siguientes",
-        "4 enteros. Véase la nota",
-        "cuatro enteros. Nota 6",
-        "4 enteros y 2 decimales. Nota 6",
-    ],
+_MALFORMED_INTEGER_CONTENTS: Final[tuple[str, ...]] = (
+    "4 enteros. Nota",
+    "4 enteros. Nota 6 y siguientes",
+    "4 enteros. Véase la nota",
+    "cuatro enteros. Nota 6",
+    "4 enteros y 2 decimales. Nota 6",
 )
-def test_integer_source_grammar_refuses_malformed_or_mismatched_content(
-    design_epoch: str,
-    content: str,
-) -> None:
+
+
+def test_integer_source_grammar_refuses_malformed_or_mismatched_content() -> None:
     """A numberless, trailing-prose, non-numeric or width-mismatched form still fails closed."""
-    epoch = _authorities(design_epoch)
-    field_id = _integer_field_of_width(epoch, 4)
-    # A bare refusal was satisfied by ANY grammar error, so a parser that
-    # rejected every content on one unrelated ground would keep all
-    # twenty-five cases green. Both expectations are derived, not
-    # transcribed: production echoes the offending text, and the width
-    # branch is identified by the decimals it declares rather than by a
-    # copied byte count that would go stale with the field.
-    expected = "bytes, but content declares" if "decimales" in content else f"ambiguous content '{content}'"
-    with pytest.raises(RegistryValidationError, match=re.escape(expected)):
-        _render_with_integer_content(epoch, field_id=field_id, content=content)
+    for design_epoch in _epochs_declaring_width(4):
+        epoch = _authorities(design_epoch)
+        field_id = _integer_field_of_width(epoch, 4)
+        for content in _MALFORMED_INTEGER_CONTENTS:
+            # A bare refusal was satisfied by ANY grammar error, so a parser that
+            # rejected every content on one unrelated ground would keep all
+            # twenty-five cases green. Both expectations are derived, not
+            # transcribed: production echoes the offending text, and the width
+            # branch is identified by the decimals it declares rather than by a
+            # copied byte count that would go stale with the field.
+            expected = "bytes, but content declares" if "decimales" in content else f"ambiguous content '{content}'"
+            with pytest.raises(RegistryValidationError, match=re.escape(expected)):
+                _render_with_integer_content(epoch, field_id=field_id, content=content)
 
 
 def test_the_note_form_sweep_reaches_every_bundled_design_and_all_three_shapes() -> None:

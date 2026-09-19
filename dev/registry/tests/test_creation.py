@@ -17,7 +17,10 @@ from typing import Any
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
+from cadrumo.adapters.persistence.profile.catalogue_creation import (
+    CatalogueCreationRateProviderAdapter,
+    build_catalogue_creation_ports,
+)
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.invoice_devengo import (
@@ -28,6 +31,7 @@ from cadrumo.application.aggregation.invoice_devengo import (
 from cadrumo.application.aggregation.source_mesh import (
     CalculationSourceContext,
 )
+from cadrumo.application.exchange_rate_provider import exchange_rate_provider
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from cadrumo.application.invoices.source_resolver import InvoiceCatalogueSourceResolver
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
@@ -47,11 +51,21 @@ from ..maintenance_support import load_modelo_path
 
 def _build_catalogue_invoice(**kwargs: Any) -> Invoice:
     """Compose the canonical rate capability for invoice test builders."""
-    kwargs.setdefault("rate_provider", build_catalogue_creation_ports(bucket_id=_BUCKET_ID).rate_provider)
+    # Building an invoice requires the production exchange-rate adapter but no
+    # active encrypted bucket.  Full port composition made domain-only checks
+    # fail because storage was intentionally not provisioned for them.
+    kwargs.setdefault(
+        "rate_provider",
+        CatalogueCreationRateProviderAdapter(provider=exchange_rate_provider()),
+    )
     return build_catalogue_invoice(**kwargs)
 
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_application,
+    pytest.mark.usefixtures("authority_operation"),
+]
 
 
 class _CanonicalOnlyRateProvider:

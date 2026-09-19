@@ -77,7 +77,7 @@ _READER_SOURCE = f"""
 import json, os, sys, time
 from pathlib import Path
 
-from ..compiler.identity import read_registry_identity_stamp
+from dev.registry.compiler.identity import read_registry_identity_stamp
 
 root = Path(os.environ[{_CHILD_ROOT_ENV_VAR!r}])
 observed = []

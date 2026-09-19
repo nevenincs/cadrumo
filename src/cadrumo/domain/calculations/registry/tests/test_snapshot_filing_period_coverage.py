@@ -18,6 +18,8 @@ is pinned as carrying one that agrees with its coordinates.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
@@ -26,12 +28,13 @@ from ..authority import PinnedAuthorityOperation
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 #: Revision coordinates addressed by a token that names no filing period.
-_ADMINISTRATIVE_COORDINATES: tuple[tuple[str, int, str], ...] = (
-    ("036", 2025, "alta"),
-    ("036", 2025, "modificacion"),
-    ("036", 2025, "baja"),
-    ("145", 2025, "comunicacion"),
-    ("145", 2025, "variacion"),
+_ADMINISTRATIVE_COORDINATES: tuple[tuple[str, int, str, date | None], ...] = (
+    ("036", 2025, "alta", date(2025, 2, 2)),
+    ("036", 2025, "alta", date(2025, 2, 3)),
+    ("036", 2025, "modificacion", date(2025, 2, 3)),
+    ("036", 2025, "baja", date(2025, 2, 3)),
+    ("145", 2025, "comunicacion", None),
+    ("145", 2025, "variacion", None),
 )
 
 #: Coordinates addressed by a real filing period, as the positive control.
@@ -41,16 +44,17 @@ _FILING_COORDINATES: tuple[tuple[str, int, str], ...] = (
 )
 
 
-@pytest.mark.parametrize(("modelo", "filing_year", "period"), _ADMINISTRATIVE_COORDINATES)
+@pytest.mark.parametrize(("modelo", "filing_year", "period", "on"), _ADMINISTRATIVE_COORDINATES)
 def test_an_administrative_coordinate_carries_no_filing_period(
     registry_authority: PinnedAuthorityOperation,
     modelo: str,
     filing_year: int,
     period: str,
+    on: date | None,
 ) -> None:
     """An administrative token builds a snapshot with no filing period."""
     snapshot = registry_authority.snapshot(
-        modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.APPLICABILITY
+        modelo, filing_year=filing_year, period=period, on=on, grade=RegistryAuthorityGrade.APPLICABILITY
     )
 
     assert snapshot.filing_period is None, (
@@ -86,9 +90,9 @@ def test_the_two_classes_are_both_represented(
     """Both branches are exercised, so neither list can quietly empty out."""
     absent = [
         (modelo, period)
-        for modelo, filing_year, period in _ADMINISTRATIVE_COORDINATES
+        for modelo, filing_year, period, on in _ADMINISTRATIVE_COORDINATES
         if registry_authority.snapshot(
-            modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.APPLICABILITY
+            modelo, filing_year=filing_year, period=period, on=on, grade=RegistryAuthorityGrade.APPLICABILITY
         ).filing_period
         is None
     ]

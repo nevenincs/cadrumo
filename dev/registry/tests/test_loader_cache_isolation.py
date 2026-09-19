@@ -413,11 +413,15 @@ def test_bundled_root_disk_cache_survives_across_separate_real_pytest_sessions(
                 "unit",
                 node_id,
             ],
-            cwd=scratch_pkg,
-            # The scratch package imports the real dev-tree fixture, and the
-            # session runs from a directory outside the checkout, where ``dev``
-            # is not importable; the checkout root is handed over explicitly
-            # rather than relying on the cwd that the rootdir pin moves away.
+            # Keep the process CWD on the live checkout. The scratch package
+            # is deliberately disposable and can be reclaimed by a concurrent
+            # pytest/temp cleanup while this child is being created; it remains
+            # the explicit rootdir and node path, so collection stays confined
+            # to that package without making it the process CWD.
+            cwd=REPO_ROOT,
+            # The scratch package imports the real dev-tree fixture; the
+            # checkout root is handed over explicitly because the child
+            # rootdir is pinned to the disposable package.
             environment={**os.environ, "PYTHONPATH": str(REPO_ROOT)},
             errors="replace",
             timeout_seconds=_SUBPROCESS_TIMEOUT_SECONDS,

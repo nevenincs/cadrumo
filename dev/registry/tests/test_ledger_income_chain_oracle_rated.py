@@ -77,7 +77,6 @@ from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.transactions.retencion_facts import load_retencion_actividades_rates
 
-from ..compiler.authority import compiled_bundled_authority
 from ._ledger_income_chain_oracle_support import modelo_130_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -329,14 +328,11 @@ def test_the_unrecorded_invoice_is_surfaced_rather_than_silently_folded() -> Non
 # differ, which is what a real practitioner in their first years actually
 # invoices.
 
-_INICIO_RETENCION = (
-    _BASE
-    * load_retencion_actividades_rates(
-        effective_date=_VALUE_DATE,
-        authority=compiled_bundled_authority(),
-    ).inicio_actividad_rate
-).quantize(Decimal("0.01"))
-_INICIO_CASH = _TOTAL - _INICIO_RETENCION
+
+def _inicio_retencion() -> Decimal:
+    return (_BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).inicio_actividad_rate).quantize(
+        Decimal("0.01")
+    )
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
@@ -350,8 +346,9 @@ def test_the_inicio_de_actividad_rate_is_genuinely_below_the_general_rate() -> N
     rates = load_retencion_actividades_rates(effective_date=_VALUE_DATE)
 
     assert rates.inicio_actividad_rate < rates.general_rate
-    assert _INICIO_RETENCION < _RETENCION
-    assert _INICIO_CASH > _CASH
+    inicio_retencion = _inicio_retencion()
+    assert inicio_retencion < _RETENCION
+    assert _TOTAL - inicio_retencion > _CASH
 
 
 @pytest.mark.usefixtures("governed_fact_scope")
@@ -364,11 +361,12 @@ def test_a_sub_cap_withholding_is_inferred_at_its_own_rate_not_clamped_to_the_bo
     strictly below the ceiling, and returning the ceiling is wrong by 80 euros
     on a single invoice -- an over-claimed credit against the pago fraccionado.
     """
-    aggregation = _aggregated(declares_substrate=True, cash=_INICIO_CASH)
+    inicio_retencion = _inicio_retencion()
+    aggregation = _aggregated(declares_substrate=True, cash=_TOTAL - inicio_retencion)
 
     observation = aggregation.observations[0]
 
-    assert observation.withheld_amount == _INICIO_RETENCION
+    assert observation.withheld_amount == inicio_retencion
     assert observation.withheld_amount != _RETENCION, "the bound is a ceiling, never the answer"
     assert observation.taxable_base_amount == _BASE
 
@@ -384,7 +382,7 @@ def test_the_sub_cap_invoice_reaches_the_retenciones_casilla_at_its_own_statutor
     integros the article names as the base.
     """
     revision = modelo_130_revision()
-    aggregation = _aggregated(declares_substrate=True, cash=_INICIO_CASH)
+    aggregation = _aggregated(declares_substrate=True, cash=_TOTAL - _inicio_retencion())
 
     resolved = resolve_ledger_renta_income_aggregation_binding_values(revision, aggregation.observations)
     statutory = (_BASE * load_retencion_actividades_rates(effective_date=_VALUE_DATE).inicio_actividad_rate).quantize(

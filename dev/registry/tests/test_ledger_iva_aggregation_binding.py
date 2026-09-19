@@ -17,7 +17,6 @@ from cadrumo.domain.calculations.registry.binding_value_contract import (
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
-    IvaLedgerObservation,
     LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
@@ -135,103 +134,109 @@ def _minimal_revision_with_bindings(*bindings: BindingDefinition) -> ModeloRevis
     )
 
 
-with validating_governed_facts(compiled_bundled_authority()):
-    _MALFORMED_EXEMPTION_ARTICLE_SELECTOR_CASES = (
-        pytest.param({"exemption_articles": ()}, id="empty-exemption-articles"),
-        pytest.param({"exemption_articles": ("bogus",)}, id="unknown-exemption-article"),
-        pytest.param(
-            {
-                "categories": (_category("domestic_general"),),
-                "exemption_articles": (_exemption("art_20_uno_14"),),
-            },
-            id="exemption-article-without-domestic-exempt-category",
-        ),
-    )
+def _malformed_exemption_article_selector_cases() -> tuple[object, ...]:
+    """Build governed selector cases only when this proof executes."""
+    with validating_governed_facts(compiled_bundled_authority()):
+        return (
+            pytest.param({"exemption_articles": ()}, id="empty-exemption-articles"),
+            pytest.param({"exemption_articles": ("bogus",)}, id="unknown-exemption-article"),
+            pytest.param(
+                {
+                    "categories": (_category("domestic_general"),),
+                    "exemption_articles": (_exemption("art_20_uno_14"),),
+                },
+                id="exemption-article-without-domestic-exempt-category",
+            ),
+        )
 
 
-@pytest.mark.parametrize("selector_updates", _MALFORMED_EXEMPTION_ARTICLE_SELECTOR_CASES)
 @pytest.mark.usefixtures("governed_fact_scope")
-def test_validate_rejects_malformed_exemption_article_selector_without_registry_resources(
-    selector_updates: dict[str, object],
-) -> None:
-    with pytest.raises(ValidationError, match="exemption_articles"):
-        _article_filter_binding(**selector_updates)
+def test_validate_rejects_malformed_exemption_article_selector_without_registry_resources() -> None:
+    for case in _malformed_exemption_article_selector_cases():
+        with pytest.raises(ValidationError, match="exemption_articles"):
+            _article_filter_binding(**case.values[0])
 
 
-with validating_governed_facts(compiled_bundled_authority()):
-    _SINGLE_BINDING_SELECTOR_CASES = (
-        pytest.param(
-            "modelo-303-iva-repercutido-general-cuota",
-            (
-                _observation(applied_rate=Decimal("0.21"), flow=_flow("repercutido"), iva=Decimal("210")),
-                _observation(
-                    applied_rate=Decimal("0.21"),
-                    flow=_flow("soportado"),
-                    iva=Decimal("105"),
-                    deduction_fact_kind=_deduction_kind("domestic_current"),
-                    deduction_authority=_deduction_authority("invoice_evidence"),
+def _single_binding_selector_cases() -> tuple[object, ...]:
+    """Build governed observation cases only when their resolver proof executes."""
+    with validating_governed_facts(compiled_bundled_authority()):
+        return (
+            pytest.param(
+                "modelo-303-iva-repercutido-general-cuota",
+                (
+                    _observation(applied_rate=Decimal("0.21"), flow=_flow("repercutido"), iva=Decimal("210")),
+                    _observation(
+                        applied_rate=Decimal("0.21"),
+                        flow=_flow("soportado"),
+                        iva=Decimal("105"),
+                        deduction_fact_kind=_deduction_kind("domestic_current"),
+                        deduction_authority=_deduction_authority("invoice_evidence"),
+                    ),
+                    _observation(
+                        applied_rate=Decimal("0.21"),
+                        flow=_flow("inversion_sujeto_pasivo"),
+                        iva=Decimal("90"),
+                        deduction_fact_kind=_deduction_kind("domestic_current"),
+                        deduction_authority=_deduction_authority("invoice_evidence"),
+                    ),
                 ),
-                _observation(
-                    applied_rate=Decimal("0.21"),
-                    flow=_flow("inversion_sujeto_pasivo"),
-                    iva=Decimal("90"),
-                    deduction_fact_kind=_deduction_kind("domestic_current"),
-                    deduction_authority=_deduction_authority("invoice_evidence"),
-                ),
+                Decimal("210"),
+                id="repercutido",
             ),
-            Decimal("210"),
-            id="repercutido",
-        ),
-        pytest.param(
-            "modelo-303-iva-soportado-interiores-cuota",
-            (
-                _observation(applied_rate=Decimal("0.21"), flow=_flow("repercutido"), iva=Decimal("210")),
-                _observation(
-                    applied_rate=Decimal("0.21"),
-                    flow=_flow("soportado"),
-                    iva=Decimal("105"),
-                    deduction_fact_kind=_deduction_kind("domestic_current"),
-                    deduction_authority=_deduction_authority("invoice_evidence"),
+            pytest.param(
+                "modelo-303-iva-soportado-interiores-cuota",
+                (
+                    _observation(applied_rate=Decimal("0.21"), flow=_flow("repercutido"), iva=Decimal("210")),
+                    _observation(
+                        applied_rate=Decimal("0.21"),
+                        flow=_flow("soportado"),
+                        iva=Decimal("105"),
+                        deduction_fact_kind=_deduction_kind("domestic_current"),
+                        deduction_authority=_deduction_authority("invoice_evidence"),
+                    ),
                 ),
+                Decimal("105"),
+                id="soportado",
             ),
-            Decimal("105"),
-            id="soportado",
-        ),
-        pytest.param(
-            "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
-            (
-                _observation(
-                    applied_rate=Decimal("0.21"),
-                    category=_category("intra_community_acquisition_reverse_charge"),
-                    flow=_flow("inversion_sujeto_pasivo"),
-                    iva=Decimal("42"),
-                    deduction_fact_kind=_deduction_kind("intra_eu_current"),
-                    deduction_authority=_deduction_authority("intra_eu_self_assessment"),
+            pytest.param(
+                "modelo-303-iva-autorepercutido-intracomunitaria-cuota",
+                (
+                    _observation(
+                        applied_rate=Decimal("0.21"),
+                        category=_category("intra_community_acquisition_reverse_charge"),
+                        flow=_flow("inversion_sujeto_pasivo"),
+                        iva=Decimal("42"),
+                        deduction_fact_kind=_deduction_kind("intra_eu_current"),
+                        deduction_authority=_deduction_authority("intra_eu_self_assessment"),
+                    ),
+                    _observation(
+                        applied_rate=Decimal("0.21"),
+                        category=_category("domestic_general"),
+                        flow=_flow("soportado"),
+                        iva=Decimal("99"),
+                        deduction_fact_kind=_deduction_kind("domestic_current"),
+                        deduction_authority=_deduction_authority("invoice_evidence"),
+                    ),
                 ),
-                _observation(
-                    applied_rate=Decimal("0.21"),
-                    category=_category("domestic_general"),
-                    flow=_flow("soportado"),
-                    iva=Decimal("99"),
-                    deduction_fact_kind=_deduction_kind("domestic_current"),
-                    deduction_authority=_deduction_authority("invoice_evidence"),
-                ),
+                Decimal("42"),
+                id="autorepercutido-intracomunitaria",
             ),
-            Decimal("42"),
-            id="autorepercutido-intracomunitaria",
-        ),
-    )
+        )
 
 
-@pytest.mark.parametrize(("binding_id", "observations", "expected_amount"), _SINGLE_BINDING_SELECTOR_CASES)
-def test_resolve_filters_by_binding_selector(
-    binding_id: str,
-    observations: tuple[IvaLedgerObservation, ...],
-    expected_amount: Decimal,
-) -> None:
-    revision = _revision_with_bindings(_binding(binding_id))
-    result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
-    assert result == {binding_id: expected_amount}
+def test_resolve_filters_by_binding_selector() -> None:
+    failures: list[str] = []
+    for case in _single_binding_selector_cases():
+        binding_id, observations, expected_amount = case.values
+        try:
+            revision = _revision_with_bindings(_binding(binding_id))
+            result = resolve_ledger_iva_aggregation_binding_values(revision, observations)
+        except Exception as error:
+            failures.append(f"{case.id}: {type(error).__name__}: {error}")
+            continue
+        if result != {binding_id: expected_amount}:
+            failures.append(f"{case.id}: expected {expected_amount!r}, got {result!r}")
+    assert not failures, "\n".join(failures)
 
 
 @pytest.mark.usefixtures("governed_fact_scope")

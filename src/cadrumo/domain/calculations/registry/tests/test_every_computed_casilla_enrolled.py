@@ -1,13 +1,14 @@
-"""Completeness gate: every computed casilla is enrolled in a verification contract.
+"""Completeness gate: every filing-grade computed casilla is enrolled in verification.
 
 The verification contract reconciles a filed casilla value against the engine.
 A computed casilla (``input_kind == "computed"``) that is enrolled in NEITHER a
 coverage-gated ``computed_casilla_ids`` contract NOR the exhaustive
 ``reconcile_when_present_casilla_ids`` class is a silent verification hole: the
 operator's relayed value for it is never reconciled. This gate asserts the hole
-is closed across every modelo revision and stays closed - a newly-authored
+is closed across every filing-grade modelo revision and stays closed - a newly-authored
 computed casilla must be enrolled (coverage-gated if it is an always-present
-final, reconcile-when-present otherwise) or this gate fails.
+final, reconcile-when-present otherwise) or this gate fails. Calculation-only
+revisions do not claim a filed-value comparison and are outside this contract.
 
 The reconcile-when-present class is excluded from the coverage denominator
 (``RegistryVerificationPolicy``), so enrolling a situational casilla here can
@@ -19,6 +20,7 @@ from __future__ import annotations
 
 import pytest
 
+from .....core.authority_grade import RegistryAuthorityGrade
 from .....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from ..schema_input_kind import InputKind
 
@@ -31,6 +33,8 @@ def test_every_computed_casilla_is_enrolled_in_a_verification_contract() -> None
     checked = 0
     for modelo in modelos:
         for revision in modelo.revisions.values():
+            if revision.effective_authority_grade != RegistryAuthorityGrade.FILING:
+                continue
             computed = {c.id for c in revision.casillas if c.input_kind == InputKind.COMPUTED}
             if not computed:
                 continue

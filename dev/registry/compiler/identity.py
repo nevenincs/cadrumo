@@ -52,6 +52,7 @@ from typing import override
 from pydantic import BaseModel
 
 from cadrumo.core.external_constants import UTF_8_ENCODING
+from cadrumo.core.hashing import blake2b_hex
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
 from cadrumo.core.package_version import PACKAGE_VERSION
 
@@ -67,6 +68,7 @@ REGISTRY_IDENTITY_SCHEMA_VERSION = "registry-identity-v1"
 """Bumped when the stamp's shape changes; a foreign version falls back to the walk."""
 
 _WALKED_DIGEST_LABEL = b"registry-identity-walked-v1"
+_INSTALLED_DIGEST_LABEL = b"registry-identity-installed-v1"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -167,6 +169,49 @@ def compute_walked_tree_digest(fingerprints: Iterable[Iterable[object]]) -> str:
     return hasher.hexdigest()
 
 
+def compute_installed_tree_digest(
+    fingerprints: FingerprintTuples, *, registry_root: Path, package_version: str = PACKAGE_VERSION
+) -> str:
+    """Digest a packaged registry tree into its install-stable identity.
+
+    Unlike :func:`compute_walked_tree_digest`, this release-build derivation
+    excludes mutable absolute paths and mtimes.  It folds package version plus
+    sorted relative paths, sizes and content digests for registry files, which
+    survive packaging and installation unchanged.
+
+    Returns:
+        The hex SHA-256 identity stamped beside the packaged registry tree.
+    """
+    resolved_root = registry_root.resolve()
+    entries: list[tuple[str, int, str]] = []
+    for path, size, _mtime_ns, _content_digest in fingerprints:
+        candidate = Path(path)
+        if not candidate.is_file():
+            continue
+        try:
+            relative = candidate.resolve().relative_to(resolved_root).as_posix()
+        except ValueError:
+            relative = candidate.name
+        entries.append((relative, size, _file_content_digest(candidate)))
+    hasher = hashlib.sha256()
+    hasher.update(_INSTALLED_DIGEST_LABEL)
+    hasher.update(package_version.encode("utf-8"))
+    for relative, size, content in sorted(entries):
+        hasher.update(relative.encode("utf-8"))
+        hasher.update(content.encode("utf-8"))
+        hasher.update(str(size).encode("utf-8"))
+    return hasher.hexdigest()
+
+
+def _file_content_digest(path: Path) -> str:
+    """Return a stable content fact for a file, including unreadability."""
+    try:
+        return blake2b_hex(path.read_bytes())
+    except OSError:
+        _LOGGER.debug("Registry file %s could not be read while stamping identity", path, exc_info=True)
+        return "unreadable"
+
+
 def read_registry_identity_stamp(registry_root: Path) -> RegistryIdentityStamp | None:
     """Read the shipped identity stamp for ``registry_root``, or ``None``.
 
@@ -262,6 +307,7 @@ __all__ = [
     "RegistryIdentityOrigin",
     "RegistryIdentityStamp",
     "compute_walked_tree_digest",
+    "compute_installed_tree_digest",
     "read_registry_identity_stamp",
     "registry_identity_stamp_location",
     "resolve_registry_identity",

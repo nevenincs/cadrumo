@@ -38,19 +38,29 @@ _CHILD = textwrap.dedent(
     )
 
     key, barrier, validations, locked = sys.argv[1], Path(sys.argv[2]), Path(sys.argv[3]), sys.argv[4] == "1"
-    Path(sys.argv[5]).touch()
+    ready, checked = Path(sys.argv[5]), Path(sys.argv[6])
+    ready.touch()
     while not barrier.exists():
         time.sleep(0.01)
-    with verdict_validation_lock(key) if locked else nullcontext():
-        if not is_validated(key):
+    if not locked:
+        # Take the observation before synchronizing.  Waiting inside the `if`
+        # left a scheduler gap in which one child could publish before its
+        # sibling ever inspected the verdict.
+        needs_validation = not is_validated(key)
+        checked.touch()
+        deadline = time.monotonic() + 5.0
+        while len(list(checked.parent.glob("checked-*"))) < 2 and time.monotonic() < deadline:
+            time.sleep(0.05)
+        if needs_validation:
             with validations.open("a", encoding="utf-8") as sink:
                 sink.write("validated\\n")
-            # Hold the verdict back until the sibling has also checked, or a
-            # bounded wait says it cannot (because the lock is keeping it out).
-            deadline = time.monotonic() + 5.0
-            while len(validations.read_text(encoding="utf-8").splitlines()) < 2 and time.monotonic() < deadline:
-                time.sleep(0.05)
             record_validated(key, subject="registry")
+    else:
+        with verdict_validation_lock(key):
+            if not is_validated(key):
+                with validations.open("a", encoding="utf-8") as sink:
+                    sink.write("validated\\n")
+                record_validated(key, subject="registry")
     print("hit" if is_validated(key) else "miss")
     """
 )
@@ -63,10 +73,21 @@ def _race(tmp_path: Path, *, locked: bool) -> tuple[int, list[str]]:
     env = {**os.environ, VERDICT_CACHE_DIR_ENV: str(cache)}
     repo_root = Path(__file__).resolve().parents[4]
     ready = [tmp_path / f"ready-{index}" for index in range(2)]
+    checked = [tmp_path / f"checked-{index}" for index in range(2)]
 
-    def run(marker: Path) -> str:
+    def run(marker: Path, checked_marker: Path) -> str:
         completed = run_audited_process(
-            [sys.executable, "-c", _CHILD, _KEY, str(barrier), str(validations), "1" if locked else "0", str(marker)],
+            [
+                sys.executable,
+                "-c",
+                _CHILD,
+                _KEY,
+                str(barrier),
+                str(validations),
+                "1" if locked else "0",
+                str(marker),
+                str(checked_marker),
+            ],
             cwd=repo_root,
             env=env,
             capture_output=True,
@@ -77,7 +98,9 @@ def _race(tmp_path: Path, *, locked: bool) -> tuple[int, list[str]]:
         return str(completed.stdout).strip()
 
     with ThreadPoolExecutor(max_workers=2) as pool:
-        futures = [pool.submit(run, marker) for marker in ready]
+        futures = [
+            pool.submit(run, marker, checked_marker) for marker, checked_marker in zip(ready, checked, strict=True)
+        ]
         deadline = time.monotonic() + 60
         # Release both only once both are parked, so the race is real.
         while not all(marker.exists() for marker in ready):

@@ -42,7 +42,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 _ANUALIDADES_BINDING = "renta-profile-anualidades-sin-minimo-descendientes"
 _ECONOMIC_ACTIVITY_BINDING = "renta-profile-has-economic-activity"
-_MODELO_100_YEARS = (2020, 2021, 2022, 2023, 2024, 2025)
+_MODELO_100_YEARS = (2022, 2023, 2024, 2025)
 
 
 def _snapshot(year: int) -> RegistrySnapshot:

@@ -28,7 +28,11 @@ from ..maintenance_support import load_modelo_path
 
 __all__ = ["isolated_profile_storage"]
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [
+    pytest.mark.integration,
+    pytest.mark.hex_entrypoint,
+    pytest.mark.usefixtures("authority_operation"),
+]
 
 
 def _invoke(args: Sequence[str]) -> Result:
@@ -179,7 +183,7 @@ def test_m349_business_invoices_persist_and_export_operador_rows(tmp_path: Path)
     assert len(detail_lines) == 4
     assert any(
         "codigo_pais=DE" in line
-        and "nif_comunitario=DE123456789" in line
+        and "nif_comunitario=sha256:" in line
         and "clave_operacion=E" in line
         and "importe=1000.00" in line
         for line in detail_lines

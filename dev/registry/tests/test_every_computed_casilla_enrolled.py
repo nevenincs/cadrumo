@@ -19,14 +19,21 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+
+from ..compiler.loader import load_registry_tree
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 
 
 def test_every_computed_casilla_is_enrolled_in_a_verification_contract() -> None:
-    modelos, _catalogues = bundled_registry_tree()
+    # This is an authoring invariant: a newly declared computed casilla must
+    # be assessed before the source has been published as a runtime authority.
+    # Loading the published generation here made the gate silently inspect the
+    # preceding authority after a source edit, precisely when it needed to
+    # detect the new declaration.
+    modelos, _catalogues = load_registry_tree(bundled_path("registry", "aeat"))
     holes: list[str] = []
     checked = 0
     for modelo in modelos:

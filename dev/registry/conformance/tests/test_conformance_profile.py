@@ -92,10 +92,9 @@ _M100_DICTIONARY_CASILLA_COUNTS = {
 
 
 @pytest.fixture(scope="module")
-def tree_modelos() -> tuple[ModeloDefinition, ...]:
-    """Every compiled modelo in the bundled tree, read without validation."""
-    modelos, _catalogues = bundled_registry_tree()
-    return modelos
+def tree_modelos(registry_authority: ValidatedRegistryAuthority) -> tuple[ModeloDefinition, ...]:
+    """Every modelo from the authority that produced the validated profile."""
+    return registry_authority.modelos
 
 
 def _compose(

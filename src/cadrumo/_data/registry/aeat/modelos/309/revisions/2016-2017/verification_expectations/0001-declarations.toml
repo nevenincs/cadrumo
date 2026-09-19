@@ -1,6 +1,7 @@
 [[revisions."2016-2017".verification_expectations]]
 id = "modelo-309-iva-chain-verification"
 computed_casilla_ids = ["iva.cuota-no-periodica-total"]
+reconcile_when_present_casilla_ids = ["decl.cuota-devengada-22", "decl.resultado-24"]
 tolerance = "0.00"
 rounding = "money-2"
 min_coverage = "1"

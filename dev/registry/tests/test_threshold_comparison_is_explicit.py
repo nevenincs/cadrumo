@@ -58,21 +58,37 @@ def registry_authority() -> ValidatedRegistryAuthority:
     return compiled_bundled_authority()
 
 
-def _declared_values_in_source(revision_id: str, parameter_id: str) -> list[dict[str, object]]:
-    """Return the raw declared values for one parameter, read from the TOML source.
+def _declared_values_in_source(revision_id: str, parameter_id: str) -> tuple[str, list[dict[str, object]]]:
+    """Return a parameter's raw source values and the revision that owns them.
 
     Source is read here rather than the compiled revision precisely because the
     question is whether a key was WRITTEN. Once compiled, a defaulted field and
-    a declared one are indistinguishable.
+    a declared one are indistinguishable. A revision may correctly inherit an
+    unchanged parameter from its explicit predecessor, so inspect its source
+    owner rather than demanding a duplicated declaration in every delta.
     """
-    found: list[dict[str, object]] = []
-    for path in sorted((_M303_REVISIONS_ROOT / revision_id / "parameters").glob("*.toml")):
-        raw = parse_toml(path.read_text(encoding="utf-8"))
-        for revision in raw.get("revisions", {}).values():
-            for parameter in revision.get("parameters", []):
-                if parameter.get("id") == parameter_id:
-                    found.extend(parameter.get("values", []))
-    return found
+    current = revision_id
+    visited: set[str] = set()
+    while current not in visited:
+        visited.add(current)
+        found: list[dict[str, object]] = []
+        for path in sorted((_M303_REVISIONS_ROOT / current / "parameters").glob("*.toml")):
+            raw = parse_toml(path.read_text(encoding="utf-8"))
+            for revision in raw.get("revisions", {}).values():
+                for parameter in revision.get("parameters", []):
+                    if parameter.get("id") == parameter_id:
+                        found.extend(parameter.get("values", []))
+        if found:
+            return current, found
+
+        revision_source = parse_toml((_M303_REVISIONS_ROOT / current / "revision.toml").read_text(encoding="utf-8"))
+        revisions = revision_source.get("revisions", {})
+        declared = revisions.get(current, {}) if isinstance(revisions, dict) else {}
+        predecessor = declared.get("predecessor") if isinstance(declared, dict) else None
+        if not isinstance(predecessor, str):
+            break
+        current = predecessor
+    return revision_id, []
 
 
 @pytest.mark.parametrize("parameter_id", _THRESHOLD_PARAMETER_IDS)
@@ -100,11 +116,11 @@ def test_the_comparison_direction_is_explicitly_declared(
     The assertion is about the KEY being written, never about which direction it
     names -- that is the registry's claim to make, not this file's.
     """
-    values = _declared_values_in_source(revision_id, parameter_id)
-    assert values, f"{parameter_id} not found in modelo 303 revision {revision_id} source"
+    owner_revision, values = _declared_values_in_source(revision_id, parameter_id)
+    assert values, f"{parameter_id} not found in modelo 303 revision {revision_id} source or its predecessors"
     for value in values:
         assert "comparison" in value, (
-            f"{parameter_id} in modelo 303 revision {revision_id} declares a dated value with no "
+            f"{parameter_id} source owner modelo 303 revision {owner_revision} declares a dated value with no "
             "explicit 'comparison'. DatedValue.comparison defaults to EXCLUSIVE, so an omitted key "
             "here silently changes whether a value landing exactly on the threshold qualifies. "
             "Declare the direction the governing redaction states."

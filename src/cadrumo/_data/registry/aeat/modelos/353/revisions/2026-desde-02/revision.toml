@@ -865,7 +865,7 @@ family = "verification_expectations"
 selector = {revision = "2021-2025", id = "modelo-353-iva-chain-verification"}
 removed_fields = ["externally_grounded_casilla_ids"]
 sequence_additions = {computed_casilla_ids = ["03", "05", "09"], source_refs = ["aeat-dr-353-2026"]}
-sequence_removals = {computed_casilla_ids = [0, 1, 2], source_refs = [0]}
+sequence_removals = {computed_casilla_ids = [0, 1, 2], reconcile_when_present_casilla_ids = [0, 1, 2], source_refs = [0]}
 sequence_order = {source_refs = [1, 0]}
 
 [[revisions."2026-desde-02".family_overrides]]

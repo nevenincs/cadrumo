@@ -65,7 +65,9 @@ def _published_multi_field_groups():
     return groups
 
 
-_GROUPS = _published_multi_field_groups()
+@pytest.fixture(scope="module")
+def groups():
+    return _published_multi_field_groups()
 
 
 def _policies(fields: list[ExportFieldDefinition]) -> tuple[ExportValuePolicy | None, ...]:
@@ -86,66 +88,58 @@ def _amount_samples(fields) -> tuple[Decimal, ...]:
     )
 
 
-def test_the_published_corpus_still_contains_multi_field_casillas() -> None:
+def test_the_published_corpus_still_contains_multi_field_casillas(groups) -> None:
     """A fixture anchor: these gates are vacuous if the shape stops existing."""
-    assert _GROUPS, "no published layout writes one casilla into several fields"
-    split = [group for group in _GROUPS if set(_policies(group[3])) & set(_AMOUNT_PART_POLICIES)]
+    assert groups, "no published layout writes one casilla into several fields"
+    split = [group for group in groups if set(_policies(group[3])) & set(_AMOUNT_PART_POLICIES)]
     assert split, "no published layout declares a split amount, so the reconstruction gate is vacuous"
 
 
-_SPLIT_AMOUNTS = [group for group in _GROUPS if _policies(group[3]) == _AMOUNT_PART_POLICIES]
-
-
-@pytest.mark.parametrize(
-    "modelo_id,record_id,casilla_id,fields",
-    _SPLIT_AMOUNTS,
-    ids=[f"{m}-{r}-{c}" for m, r, c, _ in _SPLIT_AMOUNTS],
-)
-def test_a_split_amount_reproduces_the_undivided_quantity(
-    modelo_id: str,
-    record_id: str,
-    casilla_id: str,
-    fields,
-) -> None:
+def test_a_split_amount_reproduces_the_undivided_quantity(groups) -> None:
     """The parts concatenated must be the digits the whole quantity would occupy.
 
     The expectation is scaled here from the value and the declared widths, never
     read back from the renderer, so a renderer that agrees with itself but not
     with the quantity still fails.
     """
-    decimal_digits = fields[1].length
-    total = fields[0].length + decimal_digits
-    for value in _amount_samples(fields):
-        rendered = "".join(render_fixed_width_export_field(field, value) for field in fields)
-        expected = str(int(value.scaleb(decimal_digits))).rjust(total, "0")
-        assert rendered == expected, (
-            f"{modelo_id}/{record_id}/{casilla_id} rendered {value} as {rendered!r}, expected {expected!r}"
-        )
+    split_amounts = [group for group in groups if _policies(group[3]) == _AMOUNT_PART_POLICIES]
+    assert split_amounts, "no published layout declares a complete split amount"
+    failures = []
+    for modelo_id, record_id, casilla_id, fields in split_amounts:
+        decimal_digits = fields[1].length
+        total = fields[0].length + decimal_digits
+        for value in _amount_samples(fields):
+            try:
+                rendered = "".join(render_fixed_width_export_field(field, value) for field in fields)
+            except RegistryValidationError as exc:
+                failures.append(f"{modelo_id}/{record_id}/{casilla_id} refused {value}: {exc}")
+                continue
+            expected = str(int(value.scaleb(decimal_digits))).rjust(total, "0")
+            if rendered != expected:
+                failures.append(
+                    f"{modelo_id}/{record_id}/{casilla_id} rendered {value} as {rendered!r}, expected {expected!r}"
+                )
+    assert not failures, "\n".join(failures)
 
 
-_SPLIT_DATES = [group for group in _GROUPS if _policies(group[3]) == _DATE_PART_POLICIES]
-
-
-@pytest.mark.parametrize(
-    "modelo_id,record_id,casilla_id,fields",
-    _SPLIT_DATES,
-    ids=[f"{m}-{r}-{c}" for m, r, c, _ in _SPLIT_DATES],
-)
-def test_a_split_date_reproduces_the_undivided_date(
-    modelo_id: str,
-    record_id: str,
-    casilla_id: str,
-    fields,
-) -> None:
+def test_a_split_date_reproduces_the_undivided_date(groups) -> None:
     """Year, month and day slots concatenate to the same eight digits as one date field."""
-    for value in (date(2025, 3, 14), date(1999, 12, 31), date(2000, 1, 1)):
-        rendered = "".join(render_fixed_width_export_field(field, value) for field in fields)
-        assert rendered == value.strftime("%Y%m%d"), (
-            f"{modelo_id}/{record_id}/{casilla_id} rendered {value} as {rendered!r}"
-        )
+    split_dates = [group for group in groups if _policies(group[3]) == _DATE_PART_POLICIES]
+    assert split_dates, "no published layout declares a complete split date"
+    failures = []
+    for modelo_id, record_id, casilla_id, fields in split_dates:
+        for value in (date(2025, 3, 14), date(1999, 12, 31), date(2000, 1, 1)):
+            try:
+                rendered = "".join(render_fixed_width_export_field(field, value) for field in fields)
+            except RegistryValidationError as exc:
+                failures.append(f"{modelo_id}/{record_id}/{casilla_id} refused {value}: {exc}")
+                continue
+            if rendered != value.strftime("%Y%m%d"):
+                failures.append(f"{modelo_id}/{record_id}/{casilla_id} rendered {value} as {rendered!r}")
+    assert not failures, "\n".join(failures)
 
 
-def test_an_absent_optional_split_slot_fills_with_zeros() -> None:
+def test_an_absent_optional_split_slot_fills_with_zeros(groups) -> None:
     """An optional casilla the taxpayer lacks still has to occupy its bytes.
 
     Every projector refuses ``None`` -- the right answer to "is this a quantity?"
@@ -153,7 +147,11 @@ def test_an_absent_optional_split_slot_fills_with_zeros() -> None:
     projection. A record cannot be short a field because a figure is legitimately
     missing.
     """
-    optional = [group for group in _SPLIT_AMOUNTS if not any(field.required for field in group[3])]
+    optional = [
+        group
+        for group in groups
+        if _policies(group[3]) == _AMOUNT_PART_POLICIES and not any(field.required for field in group[3])
+    ]
     assert optional, "no optional split amount to assert on"
     modelo_id, record_id, casilla_id, fields = optional[0]
     rendered = "".join(render_fixed_width_export_field(field, None) for field in fields)
@@ -162,7 +160,7 @@ def test_an_absent_optional_split_slot_fills_with_zeros() -> None:
     )
 
 
-def test_reverting_a_split_part_to_a_whole_value_policy_reds_this_gate() -> None:
+def test_reverting_a_split_part_to_a_whole_value_policy_reds_this_gate(groups) -> None:
     """Break it on purpose: the shape these gates forbid must actually fail.
 
     Restores exactly the declaration every split half carried before the part
@@ -170,8 +168,9 @@ def test_reverting_a_split_part_to_a_whole_value_policy_reds_this_gate() -> None
     published pair, and requires the render to refuse. If this ever passes, the
     reconstruction gates above are asserting nothing.
     """
-    assert _SPLIT_AMOUNTS, "no split amount to mutate"
-    _, _, _, fields = _SPLIT_AMOUNTS[0]
+    split_amounts = [group for group in groups if _policies(group[3]) == _AMOUNT_PART_POLICIES]
+    assert split_amounts, "no split amount to mutate"
+    _, _, _, fields = split_amounts[0]
     reverted = [field.model_copy(update={"value_policy": ExportValuePolicy.UNSIGNED_INTEGER}) for field in fields]
     value = Decimal("1234.56")
     with pytest.raises(RegistryValidationError):

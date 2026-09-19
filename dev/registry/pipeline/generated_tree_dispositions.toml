@@ -39,14 +39,3 @@ supported_filing_years_floor = 2022
 revision_last_filing_year = 2017
 reason = '''Every filing year this revision declares (2016 and 2017) lies below the registry-wide supported-filing-years floor of 2022 declared in the legal tree's supported-filing-years declaration, so revision selection admits no coordinate for it: the publisher refuses with "modelo 232: no revision for year=... period='0A' revision='2016-2017'" before it renders or compares anything. Its shipped records still quote binding identifier spellings that were re-spelled to drop record-design span and offset segments - the identifiers are semantic and the record layout, offsets and widths are unchanged - but that difference cannot be regenerated away while the revision is unreachable, so it is a listed non-issue rather than an unexplained one.'''
 reconsideration_condition = 'The supported-filing-years floor is lowered to admit this revision, or the revision is retired.'
-
-[[dispositions]]
-kind = 'record_drift'
-modelo = '200'
-revision = '2025-y-siguientes'
-source_ref = 'aeat-dr-200-2025'
-source_sha256 = '92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509'
-remedy = 'republish'
-differing_records = 1
-reason = '''One record differs, and the difference is a casilla reference resolving to the wrong page's instance of the same official box. Casilla 00588 is printed on three Modelo 200 pages, so the revision declares DP200011:00588, DP200014B:00588 and DP200018B:00588. The shipped 0050-record-m200-page-018b.toml names DP200014B:00588 for a field on page 018B; a fresh render from the current semantic map names DP200018B:00588, which is the instance that page carries. Every other one of the 140 files reproduces byte for byte, and the only other difference is the generation manifest, which pins the earlier semantic map. The inputs are the side that is right here, which is why the remedy is republication rather than an input repair.'''
-reconsideration_condition = 'The tree is republished from the current semantic map, which retires this row; the gate then fails if it is left behind.'

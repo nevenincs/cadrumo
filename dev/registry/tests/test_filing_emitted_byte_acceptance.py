@@ -24,7 +24,7 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 from ..compiler.authority import compiled_bundled_authority
-from ..conformance.closure_models import RegistryClosureLimb
+from ..conformance.closure_models import RegistryClosureLimb, RegistryClosureLimbOutcomeKind
 from ..conformance.filing_export_coverage import compose_filing_export_coverage
 from ..filing_export_proof import canonical_two_channel_filing_export_proof_authority
 from ..maintenance_support import coverage_assessment_floor, coverage_assessment_horizon, revision_selection_coordinates
@@ -114,11 +114,20 @@ def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_hon
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     assessment_floor = coverage_assessment_floor(authority.catalogues)
     for modelo, revision in filing_revisions:
-        for filing_year, period in revision_selection_coordinates(
+        coordinates_for_revision = revision_selection_coordinates(
             revision,
             assessment_horizon=assessment_horizon,
             assessment_floor=assessment_floor,
-        ):
+        )
+        limb = limbs[(modelo.id, revision.id)]
+        if not coordinates_for_revision:
+            # A historical filing-grade declaration below the product support
+            # floor has no coordinate this product can file.  Its retained limb
+            # must remain explicitly non-applicable rather than impersonating
+            # an evidence refusal for a filing that cannot be selected.
+            assert limb.outcome is RegistryClosureLimbOutcomeKind.NOT_APPLICABLE
+            continue
+        for filing_year, period in coordinates_for_revision:
             inspection = authority.inspect_revision(
                 modelo.id,
                 filing_year=filing_year,
@@ -126,7 +135,6 @@ def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_hon
             )
             assert inspection.revision_id == revision.id
 
-        limb = limbs[(modelo.id, revision.id)]
         assert limb.name == "filing_export"
         if limb.outcome == "satisfied":
             evidence_by_authority = {evidence.authority: evidence.locator for evidence in limb.evidence}
@@ -146,15 +154,16 @@ def test_every_filing_grade_revision_has_one_law_selected_export_limb_and_an_hon
 def test_missing_secure_replay_cannot_turn_a_declared_layout_into_emitted_byte_evidence() -> None:
     """A real layout without operator-custodied replay stays visibly refused."""
     authority, proof_authority = _canonical_filing_authority()
-    modelo, revision = next(
-        (modelo, revision) for modelo, revision in _filing_revisions(authority) if revision.export_layouts
-    )
-    narrowed = _narrow_authority(authority, modelo=modelo, revision=revision)
     report = compose_filing_export_coverage(
-        authority=narrowed,
+        authority=authority,
         proof_authority=proof_authority,
     )
-    limb = report.limbs[0]
+    limb = next(
+        limb
+        for limb in report.limbs
+        if limb.refusal is not None
+        and limb.refusal.disposition.work_item == f"{_EXPORT_OWNER}:production-emission-proof"
+    )
 
     assert limb.outcome == "refused"
     assert limb.refusal is not None
@@ -176,19 +185,24 @@ def test_modelo_353_revisions_keep_distinct_law_coordinates_and_each_require_pro
     """A later M353 revision cannot mask its predecessor's proof outcome."""
     authority, proof_authority = _canonical_filing_authority()
     modelo = authority.modelo("353")
-    revision_limbs = tuple(
-        (
-            revision,
-            compose_filing_export_coverage(
-                authority=_narrow_authority(authority, modelo=modelo, revision=revision),
-                proof_authority=proof_authority,
-            ).limbs[0],
-        )
-        for revision in modelo.revisions.values()
+    report = compose_filing_export_coverage(
+        authority=authority,
+        proof_authority=proof_authority,
     )
+    limbs = _limbs_by_coordinate(report)
     assessment_horizon = coverage_assessment_horizon(authority.catalogues)
     assessment_floor = coverage_assessment_floor(authority.catalogues)
-    # A revision wholly below the supported floor has no coordinate to select.
+    revision_limbs = tuple(
+        (revision, limbs[(modelo.id, revision.id)])
+        for revision in modelo.revisions.values()
+        if revision.authority_grade is RegistryAuthorityGrade.FILING
+        and revision_selection_coordinates(
+            revision,
+            assessment_horizon=assessment_horizon,
+            assessment_floor=assessment_floor,
+        )
+    )
+    assert revision_limbs, "Modelo 353 has no filing-grade revision inside the support envelope"
     coordinates_by_revision = {
         revision.id: coordinates
         for revision, _limb in revision_limbs

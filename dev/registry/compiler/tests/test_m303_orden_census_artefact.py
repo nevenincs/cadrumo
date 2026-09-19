@@ -47,7 +47,7 @@ from ..m303_orden_manifest import (
 )
 from ..m303_orden_raw_models import M303AnnualOrdenSourceCensus
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 CensusArtefactPayload = dict[str, object]
 

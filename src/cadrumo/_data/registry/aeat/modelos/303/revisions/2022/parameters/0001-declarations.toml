@@ -135,7 +135,7 @@ value = "10"
 date_axis = "filing_period"
 valid_from = 2022-01-01
 valid_to = 2022-12-31
-# Implicit schema default: comparison = "exclusive"  # art. 107 "superior a diez puntos"
+comparison = "exclusive"  # LIVA art. 107.Uno: "superior a diez puntos"
 # LIVA art. 103.Dos.2 mandatory prorrata especial margin, declared as registry
 # data so neither the figure nor the COMPARISON DIRECTION lives in Python.
 #

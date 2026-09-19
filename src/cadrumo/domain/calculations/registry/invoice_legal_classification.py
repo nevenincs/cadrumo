@@ -76,21 +76,26 @@ class InvoiceLegalClassificationCatalogue:
 
     def require_invoice_class(self, value: object) -> InvoiceClass:
         """Project an invoice class only when the selected fact declares it."""
+        accepted = ", ".join(str(choice) for choice in self.invoice_class_choices)
         if isinstance(value, InvoiceClass):
             token = value
         elif isinstance(value, str):
             raw = value.strip()
             if not raw:
-                raise RegistryValidationError("invoice class must be a non-empty string token")
+                raise RegistryValidationError(
+                    f"invoice class must be a non-empty string token; accepted values: {accepted}",
+                )
             try:
                 token = InvoiceClass.from_registry(raw)
             except (TypeError, ValueError) as exc:
-                raise RegistryValidationError("invoice class must be a non-empty string token") from exc
+                raise RegistryValidationError(
+                    f"invoice class must be a registry token; accepted values: {accepted}",
+                ) from exc
         else:
-            raise RegistryValidationError("invoice class must be a string token")
+            raise RegistryValidationError(f"invoice class must be a string token; accepted values: {accepted}")
         if token not in self.invoice_class_choices:
             raise RegistryValidationError(
-                f"invoice class {str(token)!r} is not declared by fact {_FACT_ID!r}",
+                f"invoice class {str(token)!r} is not declared by fact {_FACT_ID!r}; accepted values: {accepted}",
             )
         return token
 

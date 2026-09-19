@@ -54,8 +54,13 @@ def test_the_shipped_pin_materializes_against_the_current_generated_tree() -> No
         (str(vector.evidence.coordinate.modelo), str(vector.evidence.coordinate.revision))
         for vector in enrollment.materializable_vectors
     }
-    assert ("200", "2025-y-siguientes") in materialized
-    assert not [residue for residue in enrollment.residues if str(residue.modelo) == "200"]
+    m200_residues = [
+        (residue.reason, residue.owner, residue.detail)
+        for residue in enrollment.residues
+        if str(residue.modelo) == "200"
+    ]
+    assert ("200", "2025-y-siguientes") in materialized, m200_residues
+    assert not m200_residues
 
 
 def test_a_manifest_digest_that_drifts_from_the_pin_is_refused(tmp_path: Path) -> None:

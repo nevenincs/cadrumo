@@ -77,8 +77,7 @@ def _layoutless_revisions() -> list[tuple[str, str]]:
     )
 
 
-@pytest.mark.parametrize(("modelo_id", "revision_id"), _layoutless_revisions())
-def test_layoutless_revision_is_explicitly_undefined(modelo_id: str, revision_id: str) -> None:
+def test_layoutless_revisions_are_explicitly_undefined() -> None:
     """A revision with no export layout classifies every casilla as UNDEFINED.
 
     This pinned modelo 130 as its layoutless subject. The subject later gained
@@ -87,12 +86,22 @@ def test_layoutless_revision_is_explicitly_undefined(modelo_id: str, revision_id
     regression. The subject is now derived from the property it needs, so a
     revision leaves this gate exactly when it gains a layout.
     """
-    revision = bundled_modelo_components(modelo_id)[0].revisions[revision_id]
-
-    statuses = clasificar_casillas_oficiales(revision)
-
-    assert statuses
-    assert set(statuses.values()) == {EstadoCasillaOficial.UNDEFINED}
+    layoutless = _layoutless_revisions()
+    assert layoutless, "the bundled registry no longer declares a layoutless revision"
+    failures: list[str] = []
+    for modelo_id, revision_id in layoutless:
+        identity = f"{modelo_id}/{revision_id}"
+        try:
+            revision = bundled_modelo_components(modelo_id)[0].revisions[revision_id]
+            statuses = clasificar_casillas_oficiales(revision)
+        except Exception as error:
+            failures.append(f"{identity}: {type(error).__name__}: {error}")
+            continue
+        if not statuses:
+            failures.append(f"{identity}: has no casillas to classify")
+        elif set(statuses.values()) != {EstadoCasillaOficial.UNDEFINED}:
+            failures.append(f"{identity}: expected only UNDEFINED statuses, got {set(statuses.values())!r}")
+    assert not failures, "\n".join(failures)
 
 
 def test_revision_with_a_layout_addresses_at_least_one_casilla() -> None:
