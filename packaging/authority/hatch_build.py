@@ -1,0 +1,163 @@
+"""Hatchling build hook: force-include the published authority pair.
+
+The published registry authority — the ``authority.current.json`` descriptor and
+the single content-addressed ``authority-<sha256>.sqlite3`` it names — is
+generated output that is nevertheless shipped runtime input. It therefore lives
+outside the package source tree, in a gitignored ``.authority/`` directory at the
+repository root, while the distributions must continue to publish it at
+``cadrumo/_data/registry/authority/`` byte for byte.
+
+A static ``include``/``only-include`` pattern cannot express that. Those patterns
+narrow the builder's file selection, and the selection never offers a path the
+repository's ignore rules exclude: pointing them at ``.authority/`` produces an
+archive carrying no authority member at all, and no error. ``force_include`` is
+the only selection-independent admission path, which is why this is a hook.
+
+A *static* ``force-include`` table is equally unusable, because the mapping would
+have to name two different source layouts at once. In a source-tree build the
+pair sits at ``.authority/``; an sdist instead carries it already at the mapped
+destination, and a table naming ``.authority/`` raises ``FileNotFoundError:
+Forced include not found`` the moment a wheel is built from that sdist.
+:func:`_authority_root` resolves the two layouts, mirroring the
+source-tree-versus-embedded-sdist split of
+``packaging/cadrumo_data_manuals/hatch_build.py``.
+
+Selection is descriptor-driven: exactly the descriptor and the one database it
+names, never the directory. Retirement of a superseded generation is deferred
+while a reader still holds it open, so the directory may legitimately carry a
+second database, and a whole-directory include would add its full weight to
+every artifact. The directory also always carries the publication lock sidecar
+``authority.current.json.lock``, and carries a transient
+``authority-candidate-*`` staging directory while a publication is in flight.
+Neither is distribution payload. Naming the two selected files admits the
+payload and nothing else, without the hook having to enumerate what to reject.
+
+See Also:
+    :class:`CustomBuildHook`
+        Hatchling hook that injects the selected pair into the build
+        ``force_include`` map for whichever target is building.
+    :func:`_authority_root`
+        Source-tree versus embedded-sdist resolver.
+    :func:`_selected_pair`
+        Descriptor parse and content verification performed before admission.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import os
+import re
+from pathlib import Path
+from typing import Any, TypeGuard, override
+
+from hatchling.builders.config import BuilderConfig
+from hatchling.builders.hooks.plugin.interface import BuildHookInterface
+from hatchling.plugin.manager import PluginManager
+
+#: Overrides where a source-tree build reads the published authority from.
+#: Unset, the pair is read from ``.authority/`` at the build root.
+_AUTHORITY_ROOT_ENV = "CADRUMO_AUTHORITY_ROOT"
+
+#: The gitignored authoring location, relative to the repository root.
+_SOURCE_TREE_DIRECTORY = ".authority"
+
+#: Where every distribution publishes the pair, relative to its own archive
+#: root. The wheel installs ``src/cadrumo`` as ``cadrumo``; the sdist keeps the
+#: ``src`` layout so a wheel built from it lands the pair at the same place.
+_WHEEL_DESTINATION = "cadrumo/_data/registry/authority"
+_SDIST_DESTINATION = "src/cadrumo/_data/registry/authority"
+
+_DESCRIPTOR_NAME = "authority.current.json"
+
+#: A published database is named for the SHA-256 of its own bytes. Admitting
+#: only this shape keeps a hand-placed or partially written file out of the
+#: archive even when a descriptor names it.
+_DATABASE_NAME = re.compile(r"authority-[0-9a-f]{64}\.sqlite3")
+
+
+def _is_string_mapping(value: object) -> TypeGuard[dict[str, str]]:
+    """Recognize Hatch's force-include mapping without trusting its Any payload."""
+    return isinstance(value, dict) and all(
+        isinstance(key, str) and isinstance(item, str) for key, item in value.items()
+    )
+
+
+def _authority_root(build_root: Path) -> Path | None:
+    """Return the directory holding the published pair, or ``None`` when absent.
+
+    A source-tree build reads the gitignored ``.authority/`` beside the project,
+    or the directory ``CADRUMO_AUTHORITY_ROOT`` names. A build from an extracted
+    sdist finds the pair already embedded at the published path and must read it
+    from there, because the sdist carries no ``.authority/``.
+    """
+    override = os.environ.get(_AUTHORITY_ROOT_ENV)
+    if override:
+        candidate = Path(override)
+        return candidate if candidate.is_dir() else None
+    source_tree = build_root / _SOURCE_TREE_DIRECTORY
+    if source_tree.is_dir():
+        return source_tree
+    embedded = build_root / _SDIST_DESTINATION
+    if embedded.is_dir():
+        return embedded
+    return None
+
+
+def _selected_pair(root: Path) -> tuple[Path, Path]:
+    """Return the descriptor and the verified database it selects.
+
+    The descriptor is the publication edge, so its claim about the payload is
+    checked here rather than trusted. A build that shipped a descriptor naming
+    bytes the archive does not carry would install an authority the runtime
+    refuses to open, and that failure would surface at first use rather than at
+    build time.
+    """
+    descriptor = root / _DESCRIPTOR_NAME
+    if not descriptor.is_file():
+        raise FileNotFoundError(f"published authority has no descriptor: {descriptor}")
+    document = json.loads(descriptor.read_text(encoding="utf-8"))
+    if not isinstance(document, dict):
+        raise TypeError(f"authority descriptor is not a mapping: {descriptor}")
+    name = document.get("database")
+    if not isinstance(name, str) or _DATABASE_NAME.fullmatch(name) is None:
+        raise ValueError(f"authority descriptor names an invalid database: {name!r}")
+    database = root / name
+    if database.resolve().parent != root.resolve():
+        raise ValueError(f"authority descriptor escapes its directory: {name!r}")
+    if not database.is_file():
+        raise FileNotFoundError(f"authority descriptor selects a missing database: {database}")
+    payload = database.read_bytes()
+    digest = hashlib.sha256(payload).hexdigest()
+    if name != f"authority-{digest}.sqlite3":
+        raise ValueError(f"authority database contents do not match its content-addressed name: {name!r}")
+    if document.get("database_sha256") != digest:
+        raise ValueError("authority descriptor digest does not match the selected database bytes")
+    if document.get("database_size") != len(payload):
+        raise ValueError("authority descriptor size does not match the selected database bytes")
+    return descriptor, database
+
+
+class CustomBuildHook(BuildHookInterface[BuilderConfig[PluginManager], PluginManager]):
+    """Force-include the descriptor-selected authority pair at the published path."""
+
+    PLUGIN_NAME = "cadrumo-authority"
+
+    @override
+    def initialize(self, version: str, build_data: dict[str, Any]) -> None:
+        """Inject the selected descriptor and database into the force-include map."""
+        build_root = Path(self.root)
+        root = _authority_root(build_root)
+        if root is None:
+            raise FileNotFoundError(
+                "no published registry authority to package: expected "
+                f"{build_root / _SOURCE_TREE_DIRECTORY} (or ${_AUTHORITY_ROOT_ENV}) in a source-tree build, "
+                f"or {build_root / _SDIST_DESTINATION} in a build from an sdist",
+            )
+        descriptor, database = _selected_pair(root)
+        destination = _SDIST_DESTINATION if self.target_name == "sdist" else _WHEEL_DESTINATION
+        force_include = build_data.setdefault("force_include", {})
+        if not _is_string_mapping(force_include):
+            raise TypeError("hatch build_data force_include must map string paths to string destinations")
+        for path in (descriptor, database):
+            force_include[str(path)] = f"{destination}/{path.name}"

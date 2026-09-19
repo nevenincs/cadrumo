@@ -89,6 +89,23 @@ never referenced again once overwritten.
 """
 os.environ.setdefault("CADRUMO_LOCAL_STORAGE_ROOT", str(_PURE_STDLIB_COLLECTION_ROOT))
 
+_PURE_STDLIB_AUTHORITY_ROOT = Path(__file__).resolve().parent / ".authority"
+"""This checkout's published authority, kept outside the packaged tree.
+
+Mirrors ``dev._paths.DEFAULT_AUTHORITY_ROOT`` exactly. That module seeds the
+same variable for every ``python -m dev.*`` entry point, but it is private to
+``dev`` and nothing this conftest already imports reaches it, so the value is
+spelled out here in pure stdlib for the same reason the collection storage root
+above is: a test run must not depend on a transitive import to find its
+authority. The two definitions cross-reference each other so a future edit to
+one is not made deaf to the other.
+
+``setdefault`` keeps a real ambient variable authoritative, so a run that points
+at another authority tree -- a release verification against staged bytes, say --
+is not overridden by the checkout's own.
+"""
+os.environ.setdefault("CADRUMO_AUTHORITY_ROOT", str(_PURE_STDLIB_AUTHORITY_ROOT))
+
 _collection_storage_root = import_module("cadrumo.tests.collection_storage_root")
 collection_storage_root = _collection_storage_root.collection_storage_root
 register_collection_storage_root_cleanup = _collection_storage_root.register_collection_storage_root_cleanup

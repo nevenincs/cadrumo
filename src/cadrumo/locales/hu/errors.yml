@@ -59,6 +59,14 @@ errors:
     clave_movil_identity_checksum: A Cl@ve Móvil azonosító alakja érvényes, de az
       ellenőrző betűje nem egyezik a számjegyekkel. Ellenőrizze az okmány utolsó betűjét,
       és próbálja újra.
+  authority:
+    descriptor_absent: A(z) %{searched_path} helyen nincs közzétett nyilvántartási
+      hatóság. Tegye közzé a `%{publish_command}` paranccsal, vagy állítsa a CADRUMO_AUTHORITY_ROOT
+      változót egy közzétett hatósági fára.
+    descriptor_missing_under_configured_root: 'A CADRUMO_AUTHORITY_ROOT olyan könyvtárra
+      mutat, amely nem tartalmaz nyilvántartási hatósági leírót: %{searched_path}.
+      Tegye közzé a hatóságot a `%{publish_command}` paranccsal, vagy állítsa a változót
+      egy közzétett hatósági fára.'
   calc:
     age_at_year_end_no_filing_year: 'Belső hiba: az életkor-számítás nem rendelkezik
       bevallási évvel.'

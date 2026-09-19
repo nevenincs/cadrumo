@@ -602,8 +602,12 @@ def _current_field_names(model_type: type[BaseModel]) -> frozenset[str]:
     ``model_fields`` is a mapping on the class, so the set it yields is the same
     for every instance; rebuilding it per instance was work proportional to the
     payload rather than to the schema.
+
+    The key type is spelled out rather than taken from ``model_fields``
+    directly, whose element type the type checker cannot see through Pydantic's
+    class-level descriptor.
     """
-    return frozenset(model_type.model_fields)
+    return frozenset(str(name) for name in model_type.model_fields)
 
 
 def _has_current_pydantic_shape(values: Iterable[object]) -> bool:

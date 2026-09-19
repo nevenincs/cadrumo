@@ -60,6 +60,14 @@ errors:
     clave_movil_identity_checksum: L'identificador de Cl@ve Móvil té una forma vàlida
       però la seva lletra de control no coincideix amb els dígits. Revisa l'última
       lletra del document i torna-ho a provar.
+  authority:
+    descriptor_absent: No hi ha cap autoritat del registre publicada a %{searched_path}.
+      Publiqueu-la amb `%{publish_command}` o definiu CADRUMO_AUTHORITY_ROOT amb un
+      arbre d'autoritat publicat.
+    descriptor_missing_under_configured_root: CADRUMO_AUTHORITY_ROOT apunta a un directori
+      sense descriptor d'autoritat del registre a %{searched_path}. Publiqueu l'autoritat
+      amb `%{publish_command}` o feu que la variable apunti a un arbre d'autoritat
+      publicat.
   calc:
     age_at_year_end_no_filing_year: 'Error intern: el càlcul de l''edat a final d''exercici
       no té exercici de declaració.'

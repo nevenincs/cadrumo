@@ -150,15 +150,22 @@ def censo_modelo_ownership(modelo: str) -> CensoModeloOwnership:
     modelo = _require_modelo_string(modelo)
     with bundled_indexed_authority().operation() as operation:
         if modelo == _ACTIVE_CENSO_MODELO:
-            return _active_036_ownership_from_registry(operation)
+            return active_036_ownership_from_registry(operation)
         if modelo == _HISTORICAL_CENSO_MODELO:
             return _historical_037_ownership_from_registry(operation)
         raise RegistryValidationError(f"unknown censo modelo code {modelo!r}; expected '036' or '037'")
 
 
-def _active_036_ownership_from_registry(
+def active_036_ownership_from_registry(
     authority: PinnedAuthorityOperation | ValidatedRegistryAuthority,
 ) -> CensoModeloOwnership:
+    """Return modelo 036 ownership as the given authority declares it.
+
+    The authority is supplied explicitly so a caller holding a published
+    generation and a caller holding a separately validated authority reach the
+    same ownership derivation. :func:`censo_modelo_ownership` passes the
+    bundled published operation.
+    """
     if isinstance(authority, PinnedAuthorityOperation):
         try:
             directory = authority.modelo_directory(_ACTIVE_CENSO_MODELO)

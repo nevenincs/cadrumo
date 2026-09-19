@@ -10,6 +10,9 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
 
+from ..authority_staging import AUTHORITY_ROOT_ENV
+from ..lane_verification_core import clean_product_env
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SHIPPED_ROOT = REPO_ROOT / "src" / "cadrumo"
@@ -118,6 +121,26 @@ def _authored_registry_accesses(tree: ast.AST, *, include_corpus: bool = False) 
             or (include_corpus and _call_name(node) in path_reader_methods and _receiver_calls(node, "bundled_path"))
         )
     )
+
+
+def test_installed_cohort_environment_carries_no_authority_root_override(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Installed-cohort probes run with the authority-root override unset.
+
+    The authoring override exists so a development tree can keep its generated
+    authority outside the package. An installed cohort must not benefit from it:
+    the proof that the shipped path works is that the packaged resource resolves
+    with nothing pointing at a checkout. A leaked override would let a lane pass
+    while reading the contributor's own tree — the exact failure these lanes
+    exist to exclude — so the environment is asserted here rather than assumed
+    from the variable happening to be unset on one machine.
+    """
+
+    monkeypatch.setenv(AUTHORITY_ROOT_ENV, str(REPO_ROOT / ".authority"))
+
+    environment = clean_product_env()
+
+    assert AUTHORITY_ROOT_ENV not in environment
+    assert not [name for name in environment if name.startswith("CADRUMO_")]
 
 
 def test_raw_reader_census_resolves_indirect_path_composition() -> None:

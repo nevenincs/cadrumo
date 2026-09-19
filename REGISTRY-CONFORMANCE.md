@@ -15,6 +15,24 @@ Run every command from the repository root:
 uv run --no-sync python -m dev.registry.conformance --help
 ```
 
+## Publish the authority before you run it
+
+Every command here reads the published runtime authority, so a fresh clone
+must publish once before the tool answers anything:
+
+```console
+just registry-publish-authority
+```
+
+The publication lands in the gitignored `.authority/` directory at the
+repository root, and `python -m dev.*` invocations and `just` recipes resolve
+it there without any environment setup. Until it exists, the tool refuses with
+a message naming that directory and the publication command; the refusal is
+not a conformance finding. `integrity` additionally refuses a publication that
+no longer records the identity of the registry and source evidence as they
+stand, so republish after changing either. See
+[CONTRIBUTING.md](CONTRIBUTING.md#publish-the-runtime-authority).
+
 ## Read what the tool measures, and what it does not
 
 The tool reports **coverage of checking**. It does not report correctness.

@@ -229,7 +229,9 @@ all = [
 ]
 
 [build-system]
-requires = ["hatchling"]
+# Floored at the release whose BuildHookInterface takes both type parameters,
+# which the authority build hook subscripts; an older backend cannot load it.
+requires = ["hatchling>=1.32.3,<2"]
 build-backend = "hatchling.build"
 
 # Deny-by-default. Without an explicit target, hatchling packs every
@@ -240,13 +242,11 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.sdist]
 only-include = [
   "src/cadrumo",
-  # The source archive retains only the release authority selector and its
-  # content-addressed SQLite payload.  The selector is the sole mutable
-  # publication edge; its database member names the exact bytes the runtime
-  # admits.  The legacy eager JSON frame is deliberately excluded below.
-  "src/cadrumo/_data/registry/authority/authority.current.json",
-  "src/cadrumo/_data/registry/authority/authority-*.sqlite3",
   "src/cadrumo_harness",
+  # The build hook that admits the published authority. It must travel in the
+  # sdist: a wheel built from the sdist runs the same hook, and without the
+  # hook module that rebuild would produce an authority-less wheel.
+  "packaging/authority/hatch_build.py",
   "pyproject.toml",
   "README.md",
   "CHANGELOG.md",
@@ -263,6 +263,13 @@ exclude = [
   ".vaultspec/**",
   "dev",
   "dev/**",
+  # Publication lock sidecars and in-flight candidate staging are publication
+  # machinery, never distributable content. Excluded explicitly rather than
+  # left to the repository's ignore rules, so an unrelated ignore edit cannot
+  # silently change what ships.
+  "**/*.lock",
+  "src/cadrumo/_data/registry/authority/authority-candidate-*",
+  "src/cadrumo/_data/registry/authority/authority-candidate-*/**",
   "src/cadrumo/tests",
   "src/cadrumo/tests/**",
   "src/cadrumo_harness/tests",
@@ -329,6 +336,14 @@ exclude = [
   # runtime resources.
   "src/cadrumo/_data/registry/cadrumo",
   "src/cadrumo/_data/registry/cadrumo/**",
+  # Publication lock sidecars and in-flight candidate staging are publication
+  # machinery, never distributable content. Excluded explicitly rather than
+  # left to the repository's ignore rules: those exist to keep bytes out of
+  # history, and treating them as a packaging boundary means an unrelated
+  # ignore edit silently changes what ships.
+  "**/*.lock",
+  "src/cadrumo/_data/registry/authority/authority-candidate-*",
+  "src/cadrumo/_data/registry/authority/authority-candidate-*/**",
   # Corpus source binaries (the AEAT/BOE manuals and workbooks) are 94% of the
   # wheel's compressed weight and serve only the always-on registry integrity
   # hash chain at runtime.
@@ -352,17 +367,31 @@ exclude = [
 # `py.typed` marks the package PEP 561 typed so consumers read the inline
 # types; `external_constants.toml` carries the curated leaf constants.
 include = [
-  # Release tooling creates these only after the full development compiler has
-  # validated the authored registry and published the resulting authority.
-  # The wildcard is intentionally bounded to content-addressed SQLite files;
-  # no development source or legacy JSON fallback is package data.
-  "src/cadrumo/_data/registry/authority/authority.current.json",
-  "src/cadrumo/_data/registry/authority/authority-*.sqlite3",
   "src/cadrumo/py.typed",
   "src/cadrumo/core/external_constants.toml",
   "src/cadrumo_harness/py.typed",
   "src/cadrumo_harness/_data/**",
 ]
+
+# The published authority — the `authority.current.json` descriptor and the one
+# content-addressed SQLite database it names — is generated output that is also
+# shipped runtime input, so it lives in a gitignored `.authority/` at the
+# repository root rather than in the package source tree. A static `include` or
+# `only-include` pattern cannot admit it: those patterns narrow the builder's
+# file selection, and the selection never offers a path the repository's ignore
+# rules exclude, so naming `.authority/` there yields an archive with no
+# authority member and no error. `force_include` is the only selection-independent
+# admission path, and a static force-include table cannot serve both layouts at
+# once — in an sdist the pair already sits at the published path, and a table
+# naming `.authority/` fails the sdist-to-wheel rebuild outright. Hence a hook
+# on both targets. It selects exactly the descriptor and the database it names,
+# never the directory, which always also holds the retained publication lock
+# sidecar and may hold a superseded database whose retirement was deferred.
+[tool.hatch.build.targets.wheel.hooks.custom]
+path = "packaging/authority/hatch_build.py"
+
+[tool.hatch.build.targets.sdist.hooks.custom]
+path = "packaging/authority/hatch_build.py"
 
 # ── uv ───────────────────────────────────────────────────────────────────────
 [tool.uv]

@@ -166,11 +166,14 @@ doctor-browser:
 #     INFERRED from 72h of silence on two activity signals, not observed. A
 #     colleague or agent whose session has been idle over a long weekend is
 #     indistinguishable from an abandoned one, and this command will take it.
-#   * `.logs/test-runs/`, where a completed run's directory is reclaimed at ANY
-#     age -- it is that invocation's output, nothing reads it back, and there is
-#     no retention window. Only a run still being written is spared, decided by
-#     resolving its owning PID, or by 10 minutes of mtime silence when the name
-#     carries no readable one. Read a failing run's log before the next clean.
+#   * test run directories, under BOTH the checkout and the OS temp directory
+#     (a pytest controller roots its run outside the checkout). A completed run's
+#     directory is reclaimed at ANY age -- it is that invocation's output,
+#     nothing reads it back, and there is no retention window. Only a run that
+#     may still be writing is spared: its PID must resolve to a live process AND
+#     it must have been silent for under 24 hours, because an id gets recycled
+#     and would otherwise spare dead output forever. Read a failing run's log
+#     before the next clean.
 #   * `var/`, where the sweep removes only names matching a REGISTERED scratch
 #     family. A name carrying its owner is removed when that process is
 #     OBSERVED gone; a name carrying no readable owner is removed on 24h of
@@ -283,44 +286,23 @@ check-bindings:
 check-registry-target-current MODELO REVISION SOURCE_REF FILING_YEAR PERIOD:
     @uv run --no-sync python -m dev.registry.pipeline target-current {{MODELO}} {{REVISION}} {{SOURCE_REF}} {{FILING_YEAR}} {{PERIOD}}
 
-# Validity and runtime-load are cheap and always run. Integrity walks the full
-# registry, legal-corpus and authority-artifact fail-closed surface, so it only
-# runs when the diff since BASE actually touches registry source or tooling.
-[doc('Run registry validity and runtime-load gates; also run integrity when the diff touches registry sources.')]
+# Validity, runtime-load and integrity all run, every time. Integrity walks the
+# full registry, legal-corpus and authority-artifact fail-closed surface, and it
+# begins by refusing a published authority that does not record the identity of
+# the registry and source evidence as they stand, so it is the check that proves
+# the gate's subject. It used to be skipped unless `git diff` since a base ref
+# named a path under a hard-coded prefix. A quality gate may not take its
+# authority from the Git index, a diff or branch state: the answer depends on
+# which base ref the runner chose and on what happens to be committed, not on
+# the source tree being verified, and the prefixes silently stopped matching
+# when the published authority moved out of the packaged tree. A gate that
+# quietly verifies nothing is worse than a slow one.
+[doc('Run the registry validity, runtime-load and integrity gates.')]
 [group('check')]
-[unix]
-check-registry-gate base="origin/main":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    uv run --no-sync python -m dev.registry.conformance valid
-    uv run --no-sync python -m dev.registry.conformance runtime-load
-    changed=$(git diff --name-only {{base}}...HEAD)
-    if grep -qE '^(src/cadrumo/_data/registry/|dev/registry/)' <<< "$changed"; then
-        echo "check-registry-gate: registry sources changed since {{base}} -- running integrity"
-        uv run --no-sync python -m dev.registry.conformance integrity
-    else
-        echo "check-registry-gate: no registry sources changed since {{base}} -- skipping integrity"
-    fi
-
-[doc('Run registry validity and runtime-load gates; also run integrity when the diff touches registry sources.')]
-[group('check')]
-[windows]
-check-registry-gate base="origin/main":
-    #!pwsh
-    $ErrorActionPreference = 'Stop'
-    uv run --no-sync python -m dev.registry.conformance valid
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    uv run --no-sync python -m dev.registry.conformance runtime-load
-    if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    $changed = git diff --name-only {{base}}...HEAD
-    $touchesRegistry = $changed | Where-Object { $_ -match '^(src/cadrumo/_data/registry/|dev/registry/)' }
-    if ($touchesRegistry) {
-        Write-Host "check-registry-gate: registry sources changed since {{base}} -- running integrity"
-        uv run --no-sync python -m dev.registry.conformance integrity
-        if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
-    } else {
-        Write-Host "check-registry-gate: no registry sources changed since {{base}} -- skipping integrity"
-    }
+check-registry-gate:
+    @uv run --no-sync python -m dev.registry.conformance valid
+    @uv run --no-sync python -m dev.registry.conformance runtime-load
+    @uv run --no-sync python -m dev.registry.conformance integrity
 
 # Verify every Sphinx cross-reference in a docstring names a symbol that
 # still exists; a dangling target fails the build.
@@ -1301,10 +1283,12 @@ docs-locales-set-batch MANIFEST:
 docs-locales-set-batch-dry-run MANIFEST:
     uv run --no-sync python -m dev.docs.i18n set-batch {{quote(MANIFEST)}} --dry-run
 
-# Regenerate the committed terminology coverage report through its generator.
-[doc('Generate the committed terminology coverage report through its owning generator.')]
-[group('docs')]
-docs-generate-terminology-coverage:
+# Measure terminology coverage. The report is run output, not committed state:
+# it lands in a fresh `.logs/audit-runs/` directory the next clean reclaims, and
+# the command prints the path it wrote.
+[doc('Measure terminology coverage and write the report under .logs, which the next clean reclaims.')]
+[group('report')]
+report-terminology-coverage:
     uv run --no-sync python -m dev.docs.terminology.coverage report
 
 # Build changed narrative and API reference documents into disposable local output.

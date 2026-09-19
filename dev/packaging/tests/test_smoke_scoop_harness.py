@@ -242,7 +242,7 @@ def test_process_reap_is_separator_anchored_to_the_app_root(tmp_path: Path) -> N
         # set on the copy. The mode bits copy carries are all this needs -- the
         # chmod below adds the execute bit either way.
         shutil.copy(source, target)
-        if not sys.platform == "win32":
+        if sys.platform != "win32":
             target.chmod(target.stat().st_mode | stat.S_IEXEC)
     driver = f"""
 $source = Get-Content -Raw -LiteralPath '{_SCRIPT}'

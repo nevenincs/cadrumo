@@ -17,6 +17,7 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from enum import StrEnum
+from pathlib import Path
 from typing import Self
 
 from ....core.casilla_id import CasillaId
@@ -79,6 +80,85 @@ class RegistryError(TerminalPreconditionErrorMixin[object], CadrumoError):
 
 class RegistryLoadError(RegistryError):
     """Raised when registry files cannot be parsed into strict schema objects."""
+
+
+_PUBLISH_AUTHORITY_COMMAND = "python -m dev.registry.pipeline publish-authority"
+
+
+class AuthorityDescriptorUnavailableError(RegistryError):
+    """Raised when no published authority descriptor resolves for this process.
+
+    The descriptor is the selector for the content-addressed SQLite
+    generation every registry read follows, so its absence is not a
+    degraded mode: nothing downstream can be answered, and a caller that
+    received an empty or partial authority instead of a refusal would
+    publish an under-declared filing figure. Both arms therefore fail
+    closed and name the location that was consulted.
+
+    Two arms exist because the remedies differ. An operator who set
+    ``CADRUMO_AUTHORITY_ROOT`` pointed at a directory that holds no
+    descriptor and needs to know which directory was read; an operator who
+    set nothing is running against a distribution or checkout whose
+    authority has never been published.
+
+    Structured attributes: ``searched_path``, ``authority_root_configured``.
+    """
+
+    def __init__(
+        self,
+        *,
+        searched_path: Path,
+        authority_root_configured: bool,
+        translated_message: str,
+        detail: str,
+    ) -> None:
+        """Construct the descriptor-absent refusal.
+
+        Args:
+            searched_path: The descriptor location that was consulted.
+            authority_root_configured: Whether ``cadrumo_authority_root``
+                selected that location, carried structurally because it
+                decides which remedy applies.
+            translated_message: Locale key for the arm being raised.
+            detail: Locale-neutral fallback text.
+        """
+        self.searched_path: Path = searched_path
+        self.authority_root_configured: bool = authority_root_configured
+        super().__init__(
+            detail,
+            translated_message=translated_message,
+            context={
+                "searched_path": str(searched_path),
+                "publish_command": _PUBLISH_AUTHORITY_COMMAND,
+            },
+        )
+
+    @classmethod
+    def for_configured_root(cls, *, descriptor_path: Path) -> Self:
+        """``cadrumo_authority_root`` names a directory carrying no descriptor."""
+        return cls(
+            searched_path=descriptor_path,
+            authority_root_configured=True,
+            translated_message="errors.authority.descriptor_missing_under_configured_root",
+            detail=(
+                f"cadrumo_authority_root selects {descriptor_path} but no authority descriptor "
+                f"exists there; publish one with {_PUBLISH_AUTHORITY_COMMAND}"
+            ),
+        )
+
+    @classmethod
+    def for_packaged_location(cls, *, descriptor_path: Path) -> Self:
+        """No authority ships at the packaged location and no root was configured."""
+        return cls(
+            searched_path=descriptor_path,
+            authority_root_configured=False,
+            translated_message="errors.authority.descriptor_absent",
+            detail=(
+                f"no authority descriptor is present at the packaged location {descriptor_path} "
+                f"and cadrumo_authority_root is unset; publish one with {_PUBLISH_AUTHORITY_COMMAND} "
+                f"or point cadrumo_authority_root at a published authority tree"
+            ),
+        )
 
 
 def _csv(items: Iterable[str]) -> str:

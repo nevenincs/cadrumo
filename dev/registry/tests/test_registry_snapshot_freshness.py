@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.application.filing.draft_construction import _load_registry_snapshot
 from cadrumo.application.filing.runtime import RegistrySchemaAccessor, schema_provider_from_authority
 from cadrumo.core.period import Period
 
@@ -37,9 +36,9 @@ def test_snapshot_resolution_uses_only_the_authority_private_cache() -> None:
     """
     authority = compiled_bundled_authority()
 
-    first = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD, schema_provider=_schema_provider(_PERIOD))
+    first = _schema_provider(_PERIOD).get_snapshot(_MODELO)
     cache_size = len(authority._snapshots)
-    warm = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD, schema_provider=_schema_provider(_PERIOD))
+    warm = _schema_provider(_PERIOD).get_snapshot(_MODELO)
 
     assert warm == first
     assert warm is first
@@ -57,7 +56,7 @@ def test_law_determined_resolution_is_preserved() -> None:
 
     for filing_year in (2023, 2024):
         period = Period(filing_year=filing_year, code="1T")
-        resolved = _load_registry_snapshot(modelo=_MODELO, period=period, schema_provider=_schema_provider(period))
+        resolved = _schema_provider(period).get_snapshot(_MODELO)
         expected = authority.snapshot(_MODELO, filing_year=filing_year, period="1T")
         assert resolved.revision.id == expected.revision.id, (
             f"filing year {filing_year} resolved revision {resolved.revision.id!r}, but the "

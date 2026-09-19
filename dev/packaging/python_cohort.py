@@ -26,6 +26,7 @@ from dev.source_tree import content_digest, repository_files, snapshot
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
+from .authority_staging import stage_published_authority
 from .build_scratch_reclaim import (
     COHORT_BUILD_TREE_FAMILY,
     COHORT_SOURCE_ARCHIVE_FAMILY,
@@ -1001,6 +1002,12 @@ def build_python_cohort(repo_root: Path, output_dir: Path) -> PythonCohort:
         # only tracked source content.
         snapshot(root, source_files, build_root)
         _archive_source_snapshot(build_root, source_files, archive)
+        # The published authority is gitignored generated output, so it is
+        # absent from `source_files` and from the retained source archive that
+        # deliberately carries tracked content only. The build still needs it:
+        # stage it after the archive is written, so the archive's contract is
+        # unchanged and the distributions below can carry the pair.
+        stage_published_authority(root, build_root)
         uv = shutil.which("uv")
         if uv is None:
             raise SystemExit("uv is required to build the Python cohort")

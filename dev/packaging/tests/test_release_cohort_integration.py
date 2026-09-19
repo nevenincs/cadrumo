@@ -10,6 +10,7 @@ import pytest
 from dev._paths import REPO_ROOT
 from dev.source_tree import repository_files, snapshot
 
+from ..authority_staging import stage_published_authority
 from ..build_scratch_reclaim import (
     RELEASE_COHORT_INTEGRATION_FAMILY,
     matching_family,
@@ -46,6 +47,11 @@ def _stable_source_snapshot(repo_root: Path, destination: Path) -> Path:
     same content twice" really does build the same thing twice.
     """
     snapshot(repo_root, repository_files(repo_root), destination)
+    # The published authority is gitignored generated output, so the
+    # enumeration omits it and a snapshot alone could only build an
+    # authority-less cohort. Staged once here, both builds read identical
+    # bytes, which is what this proof requires of every input.
+    stage_published_authority(repo_root, destination)
     (destination / "var").mkdir(exist_ok=True)
     return destination
 
