@@ -64,6 +64,7 @@ from cadrumo.core.link_safety import is_link_like
 from dev._paths import REPO_ROOT
 from dev.packaging.build_scratch_reclaim import report_var_scratch
 from dev.packaging.command_execution import run_command
+from dev.test_runs.reaper import assess_run_directories
 
 from .temp_reaper import report_temporary_storage
 
@@ -149,9 +150,10 @@ captured command output, downloaded BOE payloads, draft vault bodies staged on
 their way into ``.vault/``, and a cache: output of runs, written by a run and
 read back by nothing. ``.logs`` is a scratch root, the boundary is one-way --
 code may write there and must not read from there -- and a tool that spares it
-asserts a durability the tree does not have. :data:`LOGS_TEST_RUNS` is the one
-child with a liveness question, and it is deferred to the section that can
-answer it rather than protected here.
+asserts a durability the tree does not have. No child of it is excepted. A
+family a run is still writing is deferred to the section that can observe that
+run's owner, which is a question about one live process rather than a claim
+about the tree.
 """
 
 VAR_SCRATCH_OWNER: Final = "var"
@@ -181,19 +183,15 @@ something a run wrote; nothing in the product or the development tooling is
 entitled to read one back, so the whole root is regenerable by definition.
 """
 
-LOGS_TEST_RUNS: Final = ".logs/test-runs"
-"""The one child of :data:`LOGS_SCRATCH_OWNER` with a liveness question.
-
-A pytest invocation writes its run directory while it runs, so removing this
-subtree on name alone would truncate output still being produced.
-:mod:`dev.env.temp_reaper` owns it, delegating to :mod:`dev.test_runs.reaper`,
-which resolves a run's owning PID against the OS; this module cannot. The
-question is liveness and only liveness -- a finished run's directory is reclaimed
-there at any age, with no retention window anywhere in the path.
-
-Deferred rather than protected: a deferral names the mechanism that will answer,
-where a protection asserts there is no question.
-"""
+# `.logs` has no privileged child and no exception. Every family under it is
+# run output, reapable at any age, with no retention window anywhere in the
+# path. The ONE question a family can raise is liveness -- a run writing its
+# directory right now -- and that question is answered by observing the owning
+# pid, never by recognising a name. `LOGS_TEST_RUNS` used to sit here as a
+# name-keyed spare, and it was wrong in both directions at once: it spared
+# FINISHED test runs from this section, so `--only worktree` left them
+# indefinitely, and it protected nothing else, so a live `audit-runs` or
+# `lane-runs` directory was reaped mid-write by the branch below.
 
 MIXED_ROOTS: Final[frozenset[str]] = frozenset({VAR_SCRATCH_OWNER, VAR_APPLICATION_STORAGE, LOGS_SCRATCH_OWNER})
 """Ignored directories whose children are classified individually.
@@ -204,9 +202,9 @@ several unrelated things: ``var`` carries the release cohort's working trees,
 an operator's long-lived probe trees, and a cache, and no single verdict is
 right for all three. The packaging sweep that owns ``var`` says the same thing
 in its own words -- it is a mixed directory, so the rule cannot be keyed on the
-parent. ``.logs`` is here for the narrower version of the same reason: its
-children are uniformly reapable except :data:`LOGS_TEST_RUNS`, and splitting the
-root is what lets that one subtree reach the section that can judge it.
+parent. ``.logs`` is here for the narrower version of the same reason: every
+child is reapable, but a child a run is still writing has to reach the section
+that can observe its owner, and splitting the root is what lets it.
 
 Expansion is one level per entry and recurses only while the child is itself
 named here, so this stays a short, readable list rather than a general walk of
@@ -556,6 +554,35 @@ def expand(repo_root: Path, relative: str) -> list[str]:
     return expanded
 
 
+def _live_run_count(repo_root: Path, relative: str) -> int:
+    """Return how many run directories under this ``.logs`` entry an owner is still writing.
+
+    The only question ``.logs`` can raise, and it is asked of the operating
+    system rather than of the path. :func:`assess_run_directories` resolves each
+    run's owning pid from the marker in the run's own name; a directory whose
+    owner is gone, or which wrote the completion record a run writes last, is
+    reclaimable at any age. So an entry reads as live only while a process is
+    actually inside it, and reads as reapable the moment that stops being true
+    -- including for a run family this module has never heard of.
+
+    ``relative`` is either the root itself, in which case every family below it
+    is asked, or one family. The assessor expects a family root (it scans
+    ``<date>/<run>`` beneath what it is given), so handing it the wrong depth
+    would have it read date directories as runs and spare them all; the depth is
+    therefore normalised here rather than assumed by the caller.
+    """
+    parts = relative.strip("/").split("/")
+    root = repo_root / LOGS_SCRATCH_OWNER
+    if len(parts) == 1:
+        try:
+            families = [child for child in sorted(root.iterdir()) if child.is_dir() and not child.is_symlink()]
+        except OSError:
+            return 0
+    else:
+        families = [root / parts[1]]
+    return sum(1 for family in families for verdict in assess_run_directories(family) if not verdict.reclaimable)
+
+
 def classify(repo_root: Path, relative: str, *, promoted: frozenset[str] = frozenset()) -> tuple[Verdict, str]:
     """Decide one ignored entry, protection first.
 
@@ -571,9 +598,10 @@ def classify(repo_root: Path, relative: str, *, promoted: frozenset[str] = froze
     stripped = relative.strip("/")
     if stripped.startswith(f"{VAR_SCRATCH_OWNER}/") and not stripped.startswith(VAR_APPLICATION_STORAGE):
         return Verdict.KEEP, "release-build scratch, judged by its owning section below"
-    if stripped == LOGS_TEST_RUNS or stripped.startswith(f"{LOGS_TEST_RUNS}/"):
-        return Verdict.KEEP, "run directories, judged on owner liveness by their section below"
     if stripped == LOGS_SCRATCH_OWNER or stripped.startswith(f"{LOGS_SCRATCH_OWNER}/"):
+        live = _live_run_count(repo_root, stripped)
+        if live:
+            return Verdict.KEEP, f"{live} run directory(s) whose owner is still writing; reaped by their section below"
         return Verdict.REAP, f"'{LOGS_SCRATCH_OWNER}' is scratch output that no code may read back"
     reason = _reapable(relative)
     if reason is not None:

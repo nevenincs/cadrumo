@@ -20,7 +20,7 @@ LOGS_STEM = ".logs"
 """The one directory name every run family lives under, whatever the base."""
 
 TEST_RUNS_FAMILY = "test-runs"
-"""The family a pytest controller invocation writes, and the only one with an owner."""
+"""The family a pytest controller invocation writes."""
 
 
 def run_log_bases() -> tuple[Path, ...]:
@@ -52,6 +52,34 @@ def run_log_roots(family: str, *, bases: tuple[Path, ...] | None = None) -> tupl
     candidates = run_log_bases() if bases is None else bases
     roots = tuple(dict.fromkeys(base / LOGS_STEM / family for base in candidates))
     return tuple(root for root in roots if root.is_dir())
+
+
+def run_log_families(*, bases: tuple[Path, ...] | None = None) -> tuple[str, ...]:
+    """Return every run family that exists under any ``.logs`` base.
+
+    DISCOVERED, never enumerated. A family named in a constant list is a list
+    someone has to remember to extend, and the cost of forgetting is not
+    symmetric: a family the reaper does not know about is reaped by name alone
+    elsewhere, with no owner check, so a run still writing into it is deleted
+    mid-write. ``audit-runs`` and ``lane-runs`` reached the tree exactly that
+    way, both allocated by :func:`allocate_run_directory` with a live owner's
+    pid in the marker, and neither was ever assessed.
+
+    Returns:
+        Each family's directory name, sorted and deduplicated across bases.
+    """
+    candidates = run_log_bases() if bases is None else bases
+    families: dict[str, None] = {}
+    for base in candidates:
+        root = base / LOGS_STEM
+        try:
+            children = sorted(root.iterdir())
+        except OSError:
+            continue
+        for child in children:
+            if child.is_dir() and not child.is_symlink():
+                families[child.name] = None
+    return tuple(sorted(families))
 
 
 def allocate_run_directory(

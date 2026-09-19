@@ -28,10 +28,13 @@ default and reclaimed only under an explicit ``--apply``, because automating a
 deletion decided by inference is a different risk from automating one decided
 by observation.
 
-**Test run directories carry their owner too**, in the PID embedded in the
+**Run directories carry their owner too**, in the PID embedded in the
 directory name, so the same observed-liveness rule applies and a finished run's
-output is reclaimed at any age -- there is no retention window. They are swept
-across BOTH bases that can hold them: the checkout, where repository tooling
+output is reclaimed at any age -- there is no retention window. EVERY family
+under ``.logs`` is swept, discovered rather than named: ``test-runs``,
+``audit-runs``, ``lane-runs`` and whatever the next one is called all allocate
+through the same function and all carry the same pid. They are swept across BOTH
+bases that can hold them: the checkout, where repository tooling
 writes, and the OS temp directory, where a pytest controller writes because
 ``conftest.py`` roots its run outside the checkout. Sweeping only the checkout
 left the busier of the two unbounded, which is this module's own opening story.
@@ -57,7 +60,7 @@ from cadrumo.tests.collection_storage_root import (
     pytest_numbered_dir_root,
     reap_abandoned_numbered_dirs,
 )
-from dev.test_runs.paths import TEST_RUNS_FAMILY, run_log_roots
+from dev.test_runs.paths import run_log_families, run_log_roots
 from dev.test_runs.reaper import assess_run_directories, reclaim_run_directories
 
 CLAUDE_TEMP_STEM = "claude"
@@ -471,11 +474,15 @@ def report_temporary_storage(
 
     # Both bases, because a pytest controller roots its run under the OS temp
     # directory rather than the checkout (see conftest.py) and the repository base
-    # alone left that one growing without bound.
-    run_roots = run_log_roots(TEST_RUNS_FAMILY)
+    # alone left that one growing without bound. EVERY family, because `.logs` has
+    # no privileged child: `audit-runs` and `lane-runs` carry an owner's pid in the
+    # same marker `test-runs` does, and assessing only the family this section was
+    # first written for left the others to be judged by name alone, with no owner
+    # check, while a run was still writing into them.
+    run_roots = tuple(root for family in run_log_families() for root in run_log_roots(family))
     run_verdicts = tuple(verdict for run_root in run_roots for verdict in assess_run_directories(run_root))
     named_roots = ", ".join(str(root) for root in run_roots) or "no run root exists yet"
-    print(f"\nTest run directories under {named_roots}", file=stream)
+    print(f"\nRun directories under {named_roots}", file=stream)
     for verdict in run_verdicts:
         if verdict.reclaimable or verbose:
             print(

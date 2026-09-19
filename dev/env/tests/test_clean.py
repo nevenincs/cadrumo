@@ -14,6 +14,7 @@ A rule that spared everything would pass one half and fail the other.
 
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 
@@ -156,31 +157,52 @@ def test_the_mixed_var_root_is_split_rather_than_judged_whole(repository: Path) 
     assert bucket.exists(), "an encrypted bucket under var/ was removed"
 
 
-def test_the_logs_scratch_root_is_reaped_except_the_subtree_with_a_liveness_owner(
+def test_the_logs_scratch_root_is_reaped_and_only_a_live_owner_defers_it(
     repository: Path,
 ) -> None:
-    """`.logs/` is scratch, and the one-way boundary is what makes reaping it safe.
+    """`.logs/` is scratch with no excepted child; only a live owner defers a family.
 
     Everything there is output of a run -- captured stdout, downloaded payloads,
-    draft vault bodies, a cache -- so a verdict of KEEP on the root asserts a
-    durability the tree does not have. ``test-runs`` is the single exception, and
-    it survives here by DEFERRAL rather than protection: the liveness section
-    knows whether a run's owner is still alive, and this one does not. A rule
-    that reaped the root whole would take a failing run's evidence with it, and a
-    rule that protected the root whole would leave the other 2 GB standing.
+    draft vault bodies, a cache -- so a verdict of KEEP asserts a durability the
+    tree does not have. `test-runs` used to be spared by NAME, and that was
+    wrong in both directions at once: finished test runs survived this section
+    forever, while a live `audit-runs` directory was reaped mid-write because it
+    was not the name being recognised. The question is liveness, it is asked of
+    the owning pid, and it is asked of every family alike.
     """
     captured = _write(repository / ".logs" / "authority-provenance.err", "captured stderr")
-    audit_run = _write(repository / ".logs" / "audit-runs" / "2026-09-08" / "report.json", "{}")
     logs_cache = _write(repository / ".logs" / "cache" / "payload.bin", "derived")
-    test_run = _write(repository / ".logs" / "test-runs" / "run.log", "evidence")
+    finished = _write(
+        repository
+        / ".logs"
+        / "test-runs"
+        / "2026-09-08"
+        / f"20260908T000000.0Z-pytest-{os.getpid()}-abcd1234"
+        / "run.json",
+        "{}",
+    )
+    live = _write(
+        repository
+        / ".logs"
+        / "audit-runs"
+        / "2026-09-08"
+        / f"20260908T000000.0Z-audit-{os.getpid()}-beef5678"
+        / "run.log",
+        "still being written",
+    )
 
     entries = assess(repository)
     reclaim(repository, entries)
 
-    assert _verdict_for(entries, ".logs/test-runs")[0] is Verdict.KEEP
-    assert test_run.exists(), "test-run evidence was removed by the section that cannot judge its owner"
-    for name, path in (("captured output", captured), ("audit run", audit_run), ("cache", logs_cache)):
-        assert not path.exists(), f"{name} under .logs/ survived, so the root is still being spared"
+    assert _verdict_for(entries, ".logs/audit-runs")[0] is Verdict.KEEP
+    assert live.exists(), "a run whose owner is alive was removed mid-write"
+    assert _verdict_for(entries, ".logs/test-runs")[0] is Verdict.REAP
+    for name, path in (
+        ("captured output", captured),
+        ("cache", logs_cache),
+        ("a finished run", finished),
+    ):
+        assert not path.exists(), f"{name} under .logs/ survived, so something there is still excepted"
 
 
 def test_a_directory_named_cache_is_reaped_wherever_it_is_not_protected(repository: Path) -> None:

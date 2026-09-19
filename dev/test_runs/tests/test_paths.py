@@ -8,7 +8,7 @@ import pytest
 
 from dev._paths import REPO_ROOT
 
-from ..paths import allocate_run_directory, run_log_bases, run_log_roots
+from ..paths import allocate_run_directory, run_log_bases, run_log_families, run_log_roots
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -51,3 +51,21 @@ def test_a_family_root_is_reported_only_where_it_exists(tmp_path: Path) -> None:
 
     assert run_log_roots("test-runs", bases=(tmp_path, tmp_path / "absent")) == (present,)
     assert run_log_roots("never-written", bases=(tmp_path,)) == ()
+
+
+def test_every_run_family_is_discovered_rather_than_named(tmp_path: Path) -> None:
+    """A family nobody enumerated is still found, which is the whole point.
+
+    The reaper judged one family by name and left the rest to be deleted by name
+    alone, with no owner check. Discovery is what makes the next family safe
+    without anyone remembering to add it: it is found because it exists, across
+    every base, and a loose file beside the families is not mistaken for one.
+    """
+    other = tmp_path / "second-base"
+    for family in ("audit-runs", "lane-runs", "test-runs"):
+        (tmp_path / ".logs" / family).mkdir(parents=True)
+    (other / ".logs" / "test-runs").mkdir(parents=True)
+    (other / ".logs" / "unfinished-capture.err").write_text("captured", encoding="utf-8")
+
+    assert run_log_families(bases=(tmp_path, other)) == ("audit-runs", "lane-runs", "test-runs")
+    assert run_log_families(bases=(tmp_path / "absent",)) == ()
