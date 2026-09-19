@@ -210,10 +210,11 @@ def _typer_help_violations(tree: ast.AST, *, module: Path) -> tuple[str, ...]:
     Walks every ``ast.Call`` whose callee resolves to a Typer
     surface (Typer, Option, Argument, command, add_typer), filters
     keyword args to ``help=``, and tests each value against the direct
-    translation predicate. The operation-scoped wizard factory is allowed its
-    typed ``tr(_help_key(flow, question))`` source; anything else — an f-string,
-    a variable, or a ``tr(name)`` with a non-constant arg — becomes a failure
-    record so the diagnostic lists the offending site by ``path:line: source``.
+    translation predicate. The operation-scoped wizard factory and the lazy
+    command-spec runtime are allowed their typed translation sources; anything
+    else — an f-string, a variable, or a ``tr(name)`` with a non-constant arg —
+    becomes a failure record so the diagnostic lists the offending site by
+    ``path:line: source``.
     """
     violations: list[str] = []
     for node in ast.walk(tree):
@@ -247,7 +248,7 @@ def _is_direct_tr_literal(node: ast.AST, *, module: Path | None = None) -> bool:
     # from the validated flow and question ids rather than written as a
     # module-level literal. Keep that one canonical dynamic source admissible
     # while retaining the direct-literal rule for every other module.
-    return (
+    if (
         module is not None
         and module.name == "commands.py"
         and module.parent.name == "wizard"
@@ -260,4 +261,24 @@ def _is_direct_tr_literal(node: ast.AST, *, module: Path | None = None) -> bool:
         and node.args[0].func.id == "_help_key"
         and len(node.args[0].args) == 2
         and all(isinstance(argument, ast.Name) for argument in node.args[0].args)
+    ):
+        return True
+    # The command runtime builds the lazy Typer tree from the immutable
+    # ``CommandSpecGraph``. ``spec.help_key.value`` is the typed translation
+    # source for that graph and must be resolved at materialization time; it is
+    # the runtime equivalent of a literal catalogue key.
+    return (
+        module is not None
+        and module.name == "_command_runtime.py"
+        and module.parent.name == "cli"
+        and isinstance(node, ast.Call)
+        and isinstance(node.func, ast.Name)
+        and node.func.id == "tr"
+        and len(node.args) == 1
+        and isinstance(node.args[0], ast.Attribute)
+        and node.args[0].attr == "value"
+        and isinstance(node.args[0].value, ast.Attribute)
+        and node.args[0].value.attr == "help_key"
+        and isinstance(node.args[0].value.value, ast.Name)
+        and node.args[0].value.value.id in {"spec", "child"}
     )
