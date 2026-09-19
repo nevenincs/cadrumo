@@ -88,46 +88,73 @@ def test_a_registered_design_states_its_coverage_on_its_own_axis() -> None:
     Modelo 210's pair is registered with an explicit epoch, so its coverage IS
     stated -- on the devengo axis AEAT used. Without this, the back-fill guard
     above would also pass on a design nobody had documented at all.
+
+    The demand falls on the designs the registry may actually SELECT, and
+    selection needs an ``applies_from``: a record design with no window start is
+    never resolved for a filing coordinate, so it states no coverage because it
+    governs none. A superseded draft is exactly that -- its bytes are pinned as
+    evidence and the catalogue withholds any claim that it applies to anything.
+    Each half is asserted in its own direction, so neither reading can be
+    reached by leaving a field blank.
     """
     _modelos, catalogues = _committed_registry_tree()
     registered = _registered_designs(catalogues)
 
-    checked = 0
+    selectable = 0
+    pinned = 0
     for name in sorted(_NON_EJERCICIO_AXIS):
         source_id = registered.get(name)
         if source_id is None:
             continue
         source = catalogues.sources[source_id]
-        assert getattr(source, "record_design_epoch", None), (
+        if source.applies_from is None:
+            assert source.record_design_epoch is None, (
+                f"{name} is registered as {source_id} with no applies_from, so nothing can select "
+                f"it, yet it declares the epoch {source.record_design_epoch!r}"
+            )
+            pinned += 1
+            continue
+        assert source.record_design_epoch, (
             f"{name} is registered as {source_id} but declares no record_design_epoch, so its "
             "coverage is stated on no axis at all"
         )
-        checked += 1
+        selectable += 1
 
-    assert checked, "none of these designs is registered, so this asserts nothing"
+    assert selectable, "no selectable design among these is registered, so this asserts nothing"
+    assert pinned, "no pinned-evidence design among these is registered, so its half asserts nothing"
 
 
-def test_only_the_provisional_design_is_left_unregistered() -> None:
-    """Exactly one of these four is not registered as a source, and it is the draft.
+def test_only_the_provisional_design_is_pinned_rather_than_selectable() -> None:
+    """Exactly one of these four governs nothing, and it is the draft.
 
     AEAT published Modelo 036's 2025 design twice: a definitive file and a
-    PROVISIONAL one alongside it. The definitive design is registered and
-    carries its epoch; the provisional is a superseded draft, so it governs no
-    window and has nothing to declare. Being bundled without being registered is
-    the right outcome for it -- the corpus keeps the draft, the catalogue does
-    not claim it applies to anything.
+    PROVISIONAL one alongside it. The definitive design carries its epoch and its
+    window; the provisional is a superseded draft, so it governs neither. It is
+    still registered, because the corpus holds its bytes and a registration is
+    what hash-pins them -- what the catalogue withholds is the claim that it
+    applies to anything, and the absent ``applies_from`` is that withholding:
+    record-design selection needs a window start, so a row without one is
+    evidence the catalogue holds and never resolves.
 
-    Pinned as an equality so the set cannot grow silently: a second unregistered
-    design would be a new gap wearing this one's explanation.
+    Pinned as an equality so the set cannot grow silently: a second design
+    demoted out of selection would be a new gap wearing this one's explanation.
     """
     _modelos, catalogues = _committed_registry_tree()
     registered = _registered_designs(catalogues)
 
-    unregistered = {name for name in _NON_EJERCICIO_AXIS if name not in registered}
+    assert not set(_NON_EJERCICIO_AXIS) - set(registered), (
+        f"these designs are bundled but registered by no source, so nothing hash-pins them: "
+        f"{sorted(set(_NON_EJERCICIO_AXIS) - set(registered))}"
+    )
+    pinned = {
+        name
+        for name, source_id in registered.items()
+        if name in _NON_EJERCICIO_AXIS and catalogues.sources[source_id].applies_from is None
+    }
 
-    assert unregistered == {
+    assert pinned == {
         "02-036-diseno-de-registro-del-modelo-m036-03-02-2025-y-siguientes-provisional-107-kb-xlsx.xlsx",
-    }, sorted(unregistered)
+    }, sorted(pinned)
 
 
 def test_the_bundled_corpus_still_attributes_the_ordinary_designs() -> None:

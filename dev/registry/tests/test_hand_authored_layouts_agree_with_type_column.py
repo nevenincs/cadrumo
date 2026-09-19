@@ -40,8 +40,16 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 #: value that can exist, and refuses a negative rather than mis-writing it.
 #: Signing them would need a signed integer the schema does not have, for a
 #: value no filing can carry, so they are declared here rather than changed.
+#: The 2022-2025 editions carry the same twelve cells: each stores its families
+#: against the edition before it and restates none of them, so the declaration
+#: is the SAME one, resolved at five coordinates rather than five separate
+#: judgements.
 _BLOCKED_PER_REVISION: dict[str, tuple[int, str]] = {
     "714/2021": (12, "data type 'integer' cannot be signed; only money can"),
+    "714/2022": (12, "data type 'integer' cannot be signed; only money can"),
+    "714/2023": (12, "data type 'integer' cannot be signed; only money can"),
+    "714/2024": (12, "data type 'integer' cannot be signed; only money can"),
+    "714/2025": (12, "data type 'integer' cannot be signed; only money can"),
 }
 
 #: Records that cannot be joined to exactly one sheet of their revision's design.
@@ -55,17 +63,23 @@ _UNCHECKED_PER_REVISION: dict[str, dict[str, int]] = {
     "117/2019-y-siguientes": {"unmatched": 1},
     "122/2017-y-siguientes": {"unmatched": 1},
     "123/2019-2023": {"unmatched": 1},
+    "123/2024-y-siguientes": {"unmatched": 1},
     "126/2019-y-siguientes": {"no_design": 3},
     "128/2019-y-siguientes": {"no_design": 3},
     "130/2019-y-siguientes": {"unmatched": 1},
     "131/2019-2023": {"unmatched": 1},
+    "131/2024": {"unmatched": 1},
+    "131/2025": {"unmatched": 1},
     "131/2026": {"unmatched": 1},
     "180/2019-2022": {"unmatched": 2},
     "180/2023-y-siguientes": {"unmatched": 2},
     "190/2024": {"unmatched": 2},
+    "190/2025-y-siguientes": {"unmatched": 2},
     "193/2024": {"unmatched": 2},
+    "193/2025-y-siguientes": {"unmatched": 2},
     "216/2024-y-siguientes": {"unmatched": 1},
     "270/2013-2022": {"unmatched": 1},
+    "270/2023-y-siguientes": {"unmatched": 1},
     "322/2026-y-siguientes": {"unmatched": 1},
     "341/2016-y-siguientes": {"unmatched": 1},
     "349/2020-y-siguientes": {"unmatched": 3},
@@ -73,11 +87,17 @@ _UNCHECKED_PER_REVISION: dict[str, dict[str, int]] = {
     "369/esquema-importacion": {"ambiguous": 2},
     "369/esquema-union": {"ambiguous": 3},
     "490/2021": {"unmatched": 1},
+    "490/2022-1t": {"unmatched": 1},
+    "490/2022-2t-4t": {"unmatched": 1},
     "490/2023-y-siguientes": {"unmatched": 1},
     "576/2008-y-siguientes": {"unmatched": 1},
     "604/2021-2023": {"unmatched": 1},
     "604/2024-y-siguientes": {"unmatched": 1},
     "714/2021": {"unmatched": 1},
+    "714/2022": {"unmatched": 1},
+    "714/2023": {"unmatched": 1},
+    "714/2024": {"unmatched": 1},
+    "714/2025": {"unmatched": 1},
 }
 
 

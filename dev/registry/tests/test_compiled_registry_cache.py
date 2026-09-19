@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.core.frozen_mapping import FrozenMapping
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.env_scope import scoped_env_var
 
@@ -141,16 +142,32 @@ def test_a_nested_pre_qualifier_deadline_window_is_deleted_not_served(tmp_path: 
         for index, modelo in enumerate(modelos)
         if any(revision.deadline_windows for revision in modelo.revisions.values())
     )
-    stale_modelo = modelos[modelo_index].model_copy(deep=True)
-    revision = next(revision for revision in stale_modelo.revisions.values() if revision.deadline_windows)
+    live_modelo = modelos[modelo_index]
+    revision_key = next(key for key, revision in live_modelo.revisions.items() if revision.deadline_windows)
+    revision = live_modelo.revisions[revision_key]
     window = revision.deadline_windows[0]
     # A field the current shape REQUIRES, chosen from the live model rather than
     # named here: an optional field can be absent legitimately, so popping one
     # would plant no pre-qualifier object at all and the walk would rightly
     # serve the cache.
     missing = next(name for name, field in type(window).model_fields.items() if field.is_required())
-    window.__dict__.pop(missing)
-    modelos[modelo_index] = stale_modelo
+    # Rebuilt member by member rather than mutated through a deep copy.
+    # ``model_copy(deep=True)`` does NOT reach this window: ``revisions`` is a
+    # ``FrozenMapping``, whose ``__deepcopy__`` returns itself on the premise
+    # that its entries are immutable, so the "copy" shares every revision with
+    # the live tree. Popping through ``__dict__`` then walks around the frozen
+    # guard and strips the required field off the registry the in-process loader
+    # memo is still serving, and every later test in the process pickles that
+    # corrupted payload and is refused by the very gate under test here.
+    stale_window = window.model_copy()
+    stale_window.__dict__.pop(missing)
+    stale_revision = revision.model_copy(update={"deadline_windows": (stale_window, *revision.deadline_windows[1:])})
+    modelos[modelo_index] = live_modelo.model_copy(
+        update={"revisions": FrozenMapping({**dict(live_modelo.revisions), revision_key: stale_revision})},
+    )
+    assert missing in live_modelo.revisions[revision_key].deadline_windows[0].__dict__, (
+        "the planted defect must not reach the live registry the loader memo still serves"
+    )
 
     with scoped_env_var("CADRUMO_REGISTRY_DISK_CACHE_DIR", str(cache_dir)):
         path = compiled_cache_path(root, fingerprints)
@@ -207,3 +224,71 @@ def test_mutating_the_cache_through_the_loader_rebuilds_byte_equivalently_from_t
         assert reloaded is not None
         assert reloaded[0] == reference_modelos
         assert reloaded[1] == reference_catalogues
+
+
+def _with_bumped_mtimes(
+    fingerprints: tuple[tuple[str, int, int, str], ...],
+) -> tuple[tuple[str, int, int, str], ...]:
+    """Restate every row with a later timestamp and identical path, size and digest.
+
+    This is what a branch switch, a checkout or a rewrite of identical bytes
+    leaves behind: the tree's CONTENT is untouched and only the stat timestamps
+    moved.
+    """
+    return tuple((path, size, modified_ns + 1_000_000_000, digest) for path, size, modified_ns, digest in fingerprints)
+
+
+def test_an_mtime_only_touch_reuses_the_compiled_payload(tmp_path: Path) -> None:
+    """A tree whose bytes are unchanged must not pay a second compile.
+
+    Keyed on mtime, the same declarations stored a SECOND 51 MB pickle under a
+    new key and evicted a genuinely distinct entry out of the count-bound store,
+    while every process that met the touched tree paid a full cold compile.
+    """
+    root, fingerprints, payload = _bundled_payload()
+    touched = _with_bumped_mtimes(fingerprints)
+    assert touched != fingerprints, "sanity: the perturbation must change the fingerprint rows"
+
+    cache_dir = tmp_path / "compiled-cache"
+    cache_dir.mkdir()
+    with scoped_env_var("CADRUMO_REGISTRY_DISK_CACHE_DIR", str(cache_dir)):
+        store_compiled_registry_cache(root, fingerprints, payload)
+
+        # One file, one key: the touched tree addresses the payload already held.
+        assert compiled_cache_path(root, touched) == compiled_cache_path(root, fingerprints)
+        served = load_compiled_registry_cache(root, touched)
+        assert served is not None
+        assert served[0] == payload[0]
+        assert served[1] == payload[1]
+        assert len(list(cache_dir.glob("*.pkl"))) == 1, "an mtime touch must not store a second copy"
+
+
+def test_a_content_change_under_an_unchanged_timestamp_is_still_a_miss(tmp_path: Path) -> None:
+    """Detector teeth: dropping mtime must not blind the key to content.
+
+    Both perturbations below leave every timestamp alone, so a key that leaned
+    on mtime would serve the stale payload for either.
+    """
+    root, fingerprints, payload = _bundled_payload()
+    first_path, first_size, first_modified_ns, first_digest = fingerprints[0]
+
+    edited_bytes = ((first_path, first_size, first_modified_ns, f"{first_digest[:-1]}0"), *fingerprints[1:])
+    edited_size = ((first_path, first_size + 1, first_modified_ns, first_digest), *fingerprints[1:])
+    removed_row = fingerprints[1:]
+
+    cache_dir = tmp_path / "compiled-cache"
+    cache_dir.mkdir()
+    with scoped_env_var("CADRUMO_REGISTRY_DISK_CACHE_DIR", str(cache_dir)):
+        store_compiled_registry_cache(root, fingerprints, payload)
+        for label, perturbed in (
+            ("content digest", edited_bytes),
+            ("byte size", edited_size),
+            ("tree membership", removed_row),
+        ):
+            assert perturbed != fingerprints, f"sanity: the {label} perturbation must change the rows"
+            assert compiled_cache_path(root, perturbed) != compiled_cache_path(root, fingerprints), (
+                f"a changed {label} must key to a different cache entry"
+            )
+            assert load_compiled_registry_cache(root, perturbed) is None, (
+                f"a changed {label} must be a cold miss, never the stale payload"
+            )
