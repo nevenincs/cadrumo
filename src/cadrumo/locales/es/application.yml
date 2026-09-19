@@ -838,8 +838,8 @@ application:
       amendment_kind_not_permitted: 'El tipo de rectificación solicitado {requested_kind}
         no está legalmente disponible para el modelo {modelo}, ejercicio {filing_year},
         período {period}. Tipos aceptados para este período: {accepted_kinds}.'
-      amendment_registry_root_missing: Falta la raíz del registro {registry_root};
-        no se pueden validar las sobrescrituras de rectificación.
+      amendment_registry_root_missing: Falta la generación publicada de la autoridad
+        %{missing_path}; no se pueden validar las sobrescrituras de rectificación.
       amendment_registry_snapshot_unresolved: No se pudo resolver el snapshot de registro
         para el modelo {modelo}, ejercicio {filing_year}, periodo {period}; no se
         pueden validar las sobrescrituras de rectificación.
@@ -912,8 +912,8 @@ application:
         de texto y no puede estar vacío.
       calculate_typed_text_input_invalid: El valor de --casilla no es válido para
         el tipo declarado de esa casilla.
-      calculation_registry_root_missing: Falta la raíz del registro {registry_root};
-        el cálculo del modelo no puede continuar.
+      calculation_registry_root_missing: Falta la generación publicada de la autoridad
+        %{missing_path}; el cálculo del modelo no puede continuar.
       calculation_registry_snapshot_unresolved: No se pudo resolver el snapshot de
         registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period}.
       calculation_revision_id_is_discarded_work_unit: El identificador %{calculation_revision_id}
@@ -970,8 +970,8 @@ application:
       external_import_m303_filing_evidence_required: La importación externa del modelo
         303 requiere evidencia tipada completa de la instancia de declaración y no
         puede inferirla de los valores de casillas.
-      external_import_registry_root_missing: Falta la raíz del registro {registry_root};
-        no se pueden validar los ids de casilla importados.
+      external_import_registry_root_missing: Falta la generación publicada de la autoridad
+        %{missing_path}; no se pueden validar los ids de casilla importados.
       external_import_registry_snapshot_unresolved: No se pudo resolver el snapshot
         de registro para el modelo {modelo}, ejercicio {filing_year}, periodo {period};
         no se pueden validar los ids de casilla importados.
