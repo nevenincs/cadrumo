@@ -2,14 +2,16 @@
 
 A dev / maintenance CLI mirroring the sibling ``sweep`` verb: a thin Typer app
 that derives the corpus coverage of the committed relevance mapping and writes
-the report as reviewed, committed JSON. ``report`` regenerates
-``coverage-report.json`` -- the widening backlog: every derivable target
-(concept card, casilla, CLI surface, legal provision) with no inbound entry in
-the committed mapping.
+the report as run output. ``report`` measures the widening backlog: every
+derivable target (concept card, casilla, CLI surface, legal provision) with no
+inbound entry in the committed mapping.
 
-The report is deterministic (no timestamp, no machine path), so its committed
-diff is read on every sweep cadence exactly like the relevance mapping it
-measures.
+The MEASUREMENT is deterministic -- no timestamp, no machine path in the
+payload -- so two runs over one tree produce byte-identical JSON and the sweep
+cadence compares them directly. Its DESTINATION is not: the report is run
+output, so it lands in a fresh ``.logs/audit-runs/`` run directory that the
+next ``just clean-apply`` reclaims, and the command prints where it wrote.
+Pass ``--output`` to place it somewhere a reviewer has chosen instead.
 """
 
 from __future__ import annotations
@@ -47,6 +49,7 @@ def report(
     """Compute the coverage report, write it, and print a per-kind summary."""
     destination = output if output is not None else coverage_report_path()
     result = compute_coverage_report()
+    destination.parent.mkdir(parents=True, exist_ok=True)
     destination.write_text(result.model_dump_json(indent=2) + "\n", encoding=_UTF_8, newline="")
     _print_summary(result)
     typer.echo(f"wrote coverage report -> {destination}")
