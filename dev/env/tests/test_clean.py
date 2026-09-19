@@ -21,7 +21,7 @@ import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
-from dev.test_runs.reaper import COMPLETED_RETENTION_SECONDS
+from dev.test_runs.reaper import INTERRUPTED_GRACE_SECONDS
 
 from ..clean import (
     FAMILIES,
@@ -164,7 +164,7 @@ def test_the_logs_scratch_root_is_reaped_except_the_subtree_with_a_liveness_owne
     Everything there is output of a run -- captured stdout, downloaded payloads,
     draft vault bodies, a cache -- so a verdict of KEEP on the root asserts a
     durability the tree does not have. ``test-runs`` is the single exception, and
-    it survives here by DEFERRAL rather than protection: the retention section
+    it survives here by DEFERRAL rather than protection: the liveness section
     knows whether a run's owner is still alive, and this one does not. A rule
     that reaped the root whole would take a failing run's evidence with it, and a
     rule that protected the root whole would leave the other 2 GB standing.
@@ -398,8 +398,12 @@ def test_the_justfile_severity_notice_still_matches_the_code_it_describes() -> N
     assert f"{int(IDLE_CEILING_SECONDS / 3600)}h of silence" in notice, (
         "the documented session idle ceiling no longer matches IDLE_CEILING_SECONDS"
     )
-    assert f"{int(COMPLETED_RETENTION_SECONDS / 86400)}" in justfile or "retention window" in notice, (
-        "the documented test-run retention no longer matches COMPLETED_RETENTION_SECONDS"
+    assert "no retention window" in notice, (
+        "the notice must state that a completed run directory is reclaimed at any age; a reader who"
+        " believes a retention window exists will leave a failing run's log unread until it is gone"
+    )
+    assert f"{int(INTERRUPTED_GRACE_SECONDS / 60)} minutes of mtime silence" in notice, (
+        "the documented grace for an unowned in-flight run no longer matches INTERRUPTED_GRACE_SECONDS"
     )
     for family in FAMILIES:
         assert family in notice, f"the --only selector {family} is undocumented in the severity notice"
