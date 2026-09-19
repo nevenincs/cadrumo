@@ -26,6 +26,25 @@ from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.link_safety import is_link_like
 from cadrumo.tests.collection_storage_root import process_is_live
 
+PID_TRUST_CEILING_SECONDS = 24 * 60 * 60
+"""Mtime silence after which a directory's PID stops being believed.
+
+An operating system reuses process ids, so ``process_is_live`` answers a
+different question than the one being asked: it says some process holds that id
+now, not that THIS run still holds it. The failure is silent and permanent --
+a recycled id spares a dead run's output forever -- and it was doing exactly
+that, measured here: 28 directories with no completion record, idle up to 168
+hours, every one spared because its id had been handed to something else.
+
+So the PID is the fast path and this is the bound on trusting it. A pytest
+invocation adds entries to its run directory throughout, so a full day of total
+silence is beyond what any run of this suite produces by a wide margin; past it,
+the id is evidence about another process and the output is reclaimed.
+
+This bounds how long unowned output can persist. It is not a retention period --
+it never applies to a run that finished, which goes at any age.
+"""
+
 INTERRUPTED_GRACE_SECONDS = 10 * 60
 """Mtime silence after which a run with no owner and no ``run.json`` is reclaimed.
 
@@ -84,11 +103,14 @@ def assess_run_directories(root: Path, *, now: float | None = None) -> tuple[Run
             if (run / "run.json").is_file():
                 reclaimable = True
                 reason = "completed run output, which nothing reads back"
+            elif age > PID_TRUST_CEILING_SECONDS:
+                reclaimable = True
+                reason = "silent past the ceiling; no run of this suite is still writing"
             else:
                 pid = _owner_pid(run)
                 owner_live = pid is None or process_is_live(pid)
                 reclaimable = not owner_live and age > INTERRUPTED_GRACE_SECONDS
-                reason = "interrupted owner is gone" if reclaimable else "owner is running or unknown"
+                reason = "interrupted owner is gone" if reclaimable else "owner may still be writing"
             verdicts.append(RunVerdict(run, reclaimable, reason))
     return tuple(verdicts)
 
