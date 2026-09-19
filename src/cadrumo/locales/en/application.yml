@@ -758,8 +758,8 @@ application:
       amendment_kind_not_permitted: 'The requested amendment kind {requested_kind}
         is not legally available for modelo {modelo} filing year {filing_year} period
         {period}. Accepted kinds for this period: {accepted_kinds}.'
-      amendment_registry_root_missing: Registry root %{registry_root} is missing;
-        amendment overrides cannot be validated.
+      amendment_registry_root_missing: The published authority generation %{missing_path}
+        is missing; amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved; amendment
         overrides cannot be validated.
@@ -828,8 +828,8 @@ application:
         be a non-empty string.
       calculate_typed_text_input_invalid: The --casilla value is not valid for that
         casilla's declared type.
-      calculation_registry_root_missing: Registry root %{registry_root} is missing;
-        modelo calculation cannot continue.
+      calculation_registry_root_missing: The published authority generation %{missing_path}
+        is missing; modelo calculation cannot continue.
       calculation_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved.
       calculation_revision_id_is_discarded_work_unit: Identifier %{calculation_revision_id}
@@ -882,8 +882,8 @@ application:
         (%{evidence_kind}) is not registered as a persisted justificante artifact.
       external_import_m303_filing_evidence_required: Modelo 303 external import requires
         complete typed filing-instance evidence and cannot infer it from casilla values.
-      external_import_registry_root_missing: Registry root %{registry_root} is missing;
-        imported casilla ids cannot be validated.
+      external_import_registry_root_missing: The published authority generation %{missing_path}
+        is missing; imported casilla ids cannot be validated.
       external_import_registry_snapshot_unresolved: Registry snapshot for modelo %{modelo},
         filing year %{filing_year}, period %{period} could not be resolved; imported
         casilla ids cannot be validated.

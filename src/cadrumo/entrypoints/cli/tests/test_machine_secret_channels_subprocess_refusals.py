@@ -11,18 +11,17 @@ from ....core.external_constants import OutputLanguage
 from ._machine_secret_channels_support import (
     _NEW_PROFILE_INPUT,
     _OVERSIZE_INPUT,
-    _PROFILE_INPUT,
     _PROMPTS,
     _REFUSAL_INPUT,
     _assert_refused,
     _combined,
-    _register,
     _register_certificate_source,
     _restore_material,
     _run,
     _storage_snapshot,
     cleanup_keychain,
 )
+from .password_only_profile import FIXTURE_PROFILE_INPUT, register_password_only_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -88,7 +87,7 @@ def test_root_refuses_same_scope_channel_conflict_before_state_or_read(tmp_path:
 @pytest.mark.parametrize("collision", ("two-stdin", "root-fd0", "leaf-fd0", "same-fd"))
 def test_cross_scope_collision_refuses_before_read_authentication_or_mutation(tmp_path: Path, collision: str) -> None:
     root = tmp_path / f"cross-scope-{collision}"
-    _register(root, label="collision-operator")
+    register_password_only_profile(root, label="collision-operator")
     _register_certificate_source(root, name="collision-cert")
     before = _storage_snapshot(root)
     args = ["--format", "json"]
@@ -176,7 +175,7 @@ def test_root_descriptor_refusals_are_typed_secret_free_and_non_mutating(
     tmp_path: Path, descriptor: int, expected: str
 ) -> None:
     root = tmp_path / f"root-fd-{descriptor}"
-    _register(root, label="root-fd-operator")
+    register_password_only_profile(root, label="root-fd-operator")
     before = _storage_snapshot(root)
     result = _run(
         root,
@@ -275,7 +274,7 @@ def test_root_strict_payload_refusals_close_descriptor_without_mutation(
     planted_secrets: tuple[str, ...],
 ) -> None:
     root = tmp_path / "malformed-root"
-    _register(root, label="malformed-root-operator")
+    register_password_only_profile(root, label="malformed-root-operator")
     before = _storage_snapshot(root)
     result = _run(
         root,
@@ -318,14 +317,14 @@ def test_retired_restore_password_field_is_refused_without_publication(tmp_path:
             str(capsule),
             "--secrets-stdin",
         ],
-        stdin=json.dumps({"password": _PROFILE_INPUT}),
+        stdin=json.dumps({"password": FIXTURE_PROFILE_INPUT}),
     )
     assert "unexpected ones" in _assert_refused(result, root, before={})
 
 
 def test_retired_certificate_secret_field_is_refused_without_mutation(tmp_path: Path) -> None:
     root = tmp_path / "legacy-certificate"
-    _register(root, label="legacy-cert-operator")
+    register_password_only_profile(root, label="legacy-cert-operator")
     _register_certificate_source(root, name="legacy-cert")
     before = _storage_snapshot(root)
     result = _run(
@@ -345,7 +344,7 @@ def test_retired_certificate_secret_field_is_refused_without_mutation(tmp_path: 
             "--secrets-stdin",
         ],
         stdin=json.dumps({"secret": _REFUSAL_INPUT}),
-        inherited_payloads=(json.dumps({"profile_passphrase": _PROFILE_INPUT}),),
+        inherited_payloads=(json.dumps({"profile_passphrase": FIXTURE_PROFILE_INPUT}),),
         assert_closed_index=0,
     )
     assert "unexpected ones" in _assert_refused(result, root, before=before)
@@ -367,7 +366,7 @@ def test_live_session_makes_root_source_unused_and_leaves_it_unread(
     tmp_path: Path,
 ) -> None:
     root = tmp_path / "live-session-unused"
-    _register(root, label="live-session-operator")
+    register_password_only_profile(root, label="live-session-operator")
     result = _run(
         root,
         [
@@ -396,19 +395,19 @@ def test_live_session_makes_root_source_unused_and_leaves_it_unread(
     (
         (
             ("config", "profile", "history", "missing-profile"),
-            {"profile_passphrase": _PROFILE_INPUT},
+            {"profile_passphrase": FIXTURE_PROFILE_INPUT},
             False,
             "Unknown profile",
         ),
         (
             ("config", "profile", "history", ""),
-            {"profile_passphrase": _PROFILE_INPUT},
+            {"profile_passphrase": FIXTURE_PROFILE_INPUT},
             False,
             "Unknown profile",
         ),
         (
             ("config", "profile", "history"),
-            {"profile_passphrase": _PROFILE_INPUT},
+            {"profile_passphrase": FIXTURE_PROFILE_INPUT},
             False,
             "requires an exact profile target",
         ),
@@ -436,7 +435,7 @@ def test_root_wrong_blank_target_or_secret_refuses_without_secret_disclosure(
 ) -> None:
     root = tmp_path / "wrong-blank-root"
     if command[-1] in {"wrong-secret-target", "wrong-nonblank-secret-target"}:
-        _register(root, label=command[-1])
+        register_password_only_profile(root, label=command[-1])
     before = _storage_snapshot(root)
     serialized_payload = json.dumps(payload)
     result = _run(
@@ -457,11 +456,11 @@ def test_root_source_is_inapplicable_to_self_authenticating_rotation_and_unread(
     tmp_path: Path,
 ) -> None:
     root = tmp_path / "self-auth-exemption"
-    _register(root, label="self-auth-operator")
+    register_password_only_profile(root, label="self-auth-operator")
     before = _storage_snapshot(root)
     leaf_payload = json.dumps(
         {
-            "current_passphrase": _PROFILE_INPUT,
+            "current_passphrase": FIXTURE_PROFILE_INPUT,
             "new_passphrase": _NEW_PROFILE_INPUT,
             "new_passphrase_confirmation": _NEW_PROFILE_INPUT,
         }

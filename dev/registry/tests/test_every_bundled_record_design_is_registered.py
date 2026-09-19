@@ -65,7 +65,7 @@ import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
-from dev.corpus.sync_aeat_record_design_corpus import _UNATTESTED_CORPUS_FILES
+from dev.corpus.sync_aeat_record_design_corpus import UNATTESTED_CORPUS_FILES
 
 from .catalogue_verification_support import authored_catalogues
 
@@ -116,7 +116,7 @@ def _unattested_corpus_paths() -> frozenset[str]:
     could drift away from it.
     """
     prefix = "/".join(_DESIGN_ROOT_PARTS)
-    return frozenset(f"{prefix}/{relative}" for relative in _UNATTESTED_CORPUS_FILES)
+    return frozenset(f"{prefix}/{relative}" for relative in UNATTESTED_CORPUS_FILES)
 
 
 def test_the_unattested_census_still_names_only_bundled_design_files() -> None:

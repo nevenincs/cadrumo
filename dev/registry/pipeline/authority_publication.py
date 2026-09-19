@@ -94,6 +94,7 @@ __all__ = [
     "ValidatedAuthorityCandidate",
     "authority_candidate_identity",
     "authority_database_currency",
+    "authority_publication_destination",
     "install_validated_authority_database",
     "promote_accepted_authority_database",
     "publish_sqlite_authority_candidate",
@@ -396,6 +397,35 @@ def _capture_receipt(
         component_dependency_digest=build_identity.component_dependency_digest,
         identity_digest=build_identity.identity_digest,
     )
+
+
+def authority_publication_destination() -> Path:
+    """Resolve the directory a publication writes into, from configuration alone.
+
+    The publisher cannot resolve its destination through the descriptor
+    selector: that selector refuses a directory holding no descriptor, so a
+    first publication into an empty authority tree would fail before it could
+    create the descriptor that would have made the selector succeed. The
+    configured root is therefore read directly, and the directory is not
+    required to exist or to hold anything yet.
+
+    Returns:
+        The configured authority root.
+
+    Raises:
+        RegistryValidationError: When no root is configured. Publication writes
+            generated output whose location is a deliberate choice, so an
+            unconfigured destination is a refusal rather than a guess at the
+            packaged location, which callers must treat as read-only.
+    """
+    from cadrumo.core.config import load_settings
+
+    configured = load_settings().cadrumo_authority_root
+    if configured is None:
+        raise RegistryValidationError(
+            "authority publication has no destination; set CADRUMO_AUTHORITY_ROOT or pass an explicit destination"
+        )
+    return configured
 
 
 def publish_sqlite_authority_candidate(

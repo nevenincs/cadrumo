@@ -66,7 +66,7 @@ def _verify_process(process: subprocess.Popen[bytes], *, job: _WindowsJob | None
 
 
 def _expected_windows_limits() -> dict[str, int]:
-    from ._kdf_windows_job import (
+    from ._kdf_worker_limits import (
         PROFILE_CUSTODY_KDF_WORKER_CPU_SECONDS,
         PROFILE_CUSTODY_KDF_WORKER_MAX_PROCESSES,
         PROFILE_CUSTODY_KDF_WORKER_MEMORY_BYTES,

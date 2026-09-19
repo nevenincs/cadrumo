@@ -801,8 +801,8 @@ application:
       amendment_kind_not_permitted: 'A kért módosítási típus ({requested_kind}) jogilag
         nem elérhető a(z) {modelo} nyomtatványhoz, {filing_year} adóévhez, {period}
         időszakhoz. Az ehhez az időszakhoz elfogadott típusok: {accepted_kinds}.'
-      amendment_registry_root_missing: A(z) %{registry_root} registry gyökér hiányzik;
-        a módosítási felülírások nem érvényesíthetők.
+      amendment_registry_root_missing: A(z) %{missing_path} közzétett hatósági generáció
+        hiányzik; a módosítási felülírások nem érvényesíthetők.
       amendment_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
         bevallási év, %{period} időszak registry-pillanatképe nem oldható fel; a módosítási
         felülírások nem érvényesíthetők.
@@ -873,8 +873,8 @@ application:
         és nem lehet üres.
       calculate_typed_text_input_invalid: A --casilla érték nem érvényes a rovat deklarált
         típusához.
-      calculation_registry_root_missing: A(z) %{registry_root} registry gyökér hiányzik;
-        a modell számítás nem folytatható.
+      calculation_registry_root_missing: A(z) %{missing_path} közzétett hatósági generáció
+        hiányzik; a modell számítás nem folytatható.
       calculation_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
         bevallási év, %{period} időszak registry-pillanatképe nem oldható fel.
       calculation_revision_id_is_discarded_work_unit: A(z) %{calculation_revision_id}
@@ -933,8 +933,8 @@ application:
       external_import_m303_filing_evidence_required: A 303-es nyomtatvány külső importjához
         teljes, típusos bevallási bizonyíték szükséges; ez nem következtethető ki
         a mezőértékekből.
-      external_import_registry_root_missing: A(z) %{registry_root} registry gyökér
-        hiányzik; az importált rovat-azonosítók nem érvényesíthetők.
+      external_import_registry_root_missing: A(z) %{missing_path} közzétett hatósági
+        generáció hiányzik; az importált rovat-azonosítók nem érvényesíthetők.
       external_import_registry_snapshot_unresolved: A(z) %{modelo} modell, %{filing_year}
         bevallási év, %{period} időszak registry-pillanatképe nem oldható fel; az
         importált rovat-azonosítók nem érvényesíthetők.

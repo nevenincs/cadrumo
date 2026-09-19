@@ -25,7 +25,8 @@ from .....core.redaction.rules import (
     redact_for_log,
     redact_structured,
 )
-from ....persistence.llm.cache import _CACHE_NAMESPACE, _CACHE_SENSITIVITY, _CACHE_VERSION, LLMCache
+from ....persistence.llm.cache import LLMCache
+from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE
 from ..models import CachedEntry, LLMRequest, LLMResponse
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -79,10 +80,10 @@ def _seed_legacy_row(cache: LLMCache, request: LLMRequest, response: LLMResponse
     assert isinstance(redacted, dict)
     object_key = cache._object_key_for(key)
     secure_object_repository_for_active_bucket().save(
-        namespace=_CACHE_NAMESPACE,
+        namespace=LLM_CACHE_NAMESPACE.namespace,
         object_key=object_key,
-        classification=_CACHE_SENSITIVITY,
-        schema_version=_CACHE_VERSION,
+        classification=LLM_CACHE_NAMESPACE.sensitivity,
+        schema_version=LLM_CACHE_NAMESPACE.schema_version,
         written_at=response.created_at,
         payload=cache._payload_for_entry({str(k): v for k, v in redacted.items()}),
     )
@@ -92,10 +93,10 @@ def _seed_legacy_row(cache: LLMCache, request: LLMRequest, response: LLMResponse
 def _stored(object_key: str) -> bool:
     return (
         secure_object_repository_for_active_bucket().load(
-            _CACHE_NAMESPACE,
+            LLM_CACHE_NAMESPACE.namespace,
             object_key,
-            expected_class=_CACHE_SENSITIVITY,
-            max_supported_version=_CACHE_VERSION,
+            expected_class=LLM_CACHE_NAMESPACE.sensitivity,
+            max_supported_version=LLM_CACHE_NAMESPACE.schema_version,
         )
         is not None
     )

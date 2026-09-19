@@ -17,6 +17,7 @@ import pytest
 
 from dev.source_tree import repository_files, snapshot
 
+from ..authority_staging import stage_published_authority
 from ..command_execution import run_command
 from ..python_cohort import _FORBIDDEN_COMMAND_ARTIFACT_NAMES
 
@@ -171,6 +172,11 @@ def _run(command: list[str], *, cwd: Path) -> None:
 def _tracked_checkout(tmp_path: Path) -> Path:
     checkout = tmp_path / "checkout"
     snapshot(_REPOSITORY, repository_files(_REPOSITORY), checkout)
+    # This lane builds a wheel and an sdist, then rebuilds a wheel from that
+    # sdist. The published authority is gitignored generated output the
+    # enumeration omits, so it is staged explicitly or all three artifacts
+    # would be built without the registry payload they must carry.
+    stage_published_authority(_REPOSITORY, checkout)
     return checkout
 
 

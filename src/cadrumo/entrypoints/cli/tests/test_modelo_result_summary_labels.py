@@ -145,7 +145,7 @@ def test_result_summary_row_refuses_an_unknown_role() -> None:
     from pydantic import ValidationError
 
     from ....application.modelo.result_summary import ResultSummaryRow
-    from .._modelo_revision_payload_parts import ResultSummaryRowPayload
+    from ....application.modelo.result_summary_payload import ResultSummaryRowPayload
 
     with pytest.raises(ValidationError):
         ResultSummaryRow(casilla_id="03", label="Rendimiento neto", value=Decimal("123.45"), role="bogus")
@@ -174,7 +174,7 @@ def test_headline_revision_rendering_refuses_to_silently_omit_its_work_unit(
 def test_result_summary_row_accepts_every_canonical_role() -> None:
     """Every canonical role round-trips through both the application row and the CLI payload."""
     from ....application.modelo.result_summary import ResultSummaryRole, ResultSummaryRow
-    from .._modelo_revision_payload_parts import ResultSummaryRowPayload
+    from ....application.modelo.result_summary_payload import ResultSummaryRowPayload
 
     for role in ResultSummaryRole:
         row = ResultSummaryRow(casilla_id="03", label="Rendimiento neto", value=Decimal("123.45"), role=role)

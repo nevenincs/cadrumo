@@ -46,6 +46,7 @@ from dev.source_tree import repository_files, snapshot
 
 from ._distribution_limits import PYPI_FILE_CAP_BYTES
 from ._distribution_names import normalise_distribution_name
+from .authority_staging import stage_published_authority
 from .command_execution import CommandResult, run_command
 from .evidence import PackagingSmokeManifest
 from .proof_ledger import (
@@ -242,10 +243,16 @@ def build_root_snapshot(repo_root: Path, work_dir: Path) -> Path:
     isolated copy of the enumerated tree rather than the live one, so a
     concurrent edit to ``repo_root`` cannot land inside a build already in
     flight.
+
+    The enumeration omits the published registry authority, which is gitignored
+    generated output, so it is staged separately; see
+    :mod:`dev.packaging.authority_staging` for why that is the enumeration
+    behaving correctly rather than a gap to patch in the seam itself.
     """
     work_dir.mkdir(parents=True, exist_ok=True)
     destination = work_dir / "source"
     snapshot(repo_root, repository_files(repo_root), destination)
+    stage_published_authority(repo_root, destination)
     return destination
 
 

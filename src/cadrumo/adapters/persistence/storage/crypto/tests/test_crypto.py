@@ -8,15 +8,8 @@ from operator import methodcaller
 import pytest
 
 from ...errors import DecryptionError, EncryptionError, KeyDerivationError
-from ..aead import (
-    GCM_TAG_SIZE,
-    KEY_SIZE,
-    NONCE_SIZE,
-    EncryptedBlob,
-    decrypt_record,
-    derive_key,
-    encrypt_record,
-)
+from ..aead import EncryptedBlob, decrypt_record, derive_key, encrypt_record
+from ..aes_gcm import GCM_TAG_SIZE, KEY_SIZE, NONCE_SIZE
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

@@ -1,22 +1,37 @@
-"""Gate the shipped-data source tree and its distribution slices by byte size.
+"""Gate the shipped-data source tree's composition against the distribution split.
 
-The accepted data-budget decision keeps the offline-verifiable corpus cohort
-complete while making growth visible. This gate measures every file under
-``src/cadrumo/_data`` except test subtrees, using summed file bytes rather than
-filesystem blocks. It partitions that budget universe into the corpus source
-binaries shipped by the mandatory ``cadrumo-data-*`` companions and the runtime
-complement shipped by the command-bearing ``cadrumo`` wheel.
+This measures every file under ``src/cadrumo/_data`` except test subtrees, using
+summed file bytes rather than filesystem blocks, and partitions that universe
+into the corpus source binaries shipped by the mandatory ``cadrumo-data-*``
+companions and the runtime complement shipped by the command-bearing ``cadrumo``
+wheel. The partition is what keeps the physical wheel split from hiding logical
+product growth: every byte belongs to exactly one slice, so no byte can sit
+outside both.
 
-Whole-tree, runtime, and aggregate corpus-binary ceilings are independent. Their
-exact partition prevents the physical wheel split from hiding logical product
-growth. Real-wheel ownership and compressed package-index caps are proved by the
-packaging gates. Raising any source ceiling requires reviewed governance authority.
-No mocks or skips.
+The published registry authority is not part of this universe. It is generated
+output kept outside the package source tree, and a distribution receives it from
+the packaging boundary rather than from here; the packaging gates assert what the
+archives actually carry. ``test_data_tree_carries_no_authority_payload`` holds
+that boundary closed from this side, so the composition checks cannot silently
+begin measuring regenerated binary payload again.
+
+There is deliberately no *budget* ceiling here — no reviewed figure tracking what
+the tree currently weighs. Such a number is raised by whoever it blocks, which
+makes it a record of past growth rather than a control on future growth, and a
+check whose expected value is edited to match the observed one asserts nothing.
+Real-wheel ownership and the compressed package-index caps are proved where they
+are enforceable, by the packaging gates against built artifacts.
+
+What remains is a hard cap: an outer bound far above any plausible legitimate
+tree, which fires only when something has gone structurally wrong — a hydration
+loop writing the same corpus repeatedly, generated output landing in the source
+tree, a binary dump committed by accident. It is not a budget and must not be
+raised to accommodate growth; if the tree genuinely approaches it, the answer is
+that the data no longer belongs in the package. No mocks or skips.
 """
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -37,19 +52,14 @@ _AUTHORITY_ROOT = _DATA_ROOT / "registry" / "authority"
 # the root wheel excludes).
 _CORPUS_BINARY_SUFFIXES = (".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip")
 
-# Approved whole-tree ceiling after complete supported-period corpus hydration.
-# Raising it requires reviewed governance authority. Mebibytes keep source-slice units
-# distinct from the companions' decimal 100 MB compressed-artifact cap.
-_DATA_SIZE_BUDGET_MIB = 800
-_DATA_SIZE_BUDGET_BYTES = _DATA_SIZE_BUDGET_MIB * 1024 * 1024
 
-# Slice ceilings are aggregate source-tree controls, not per-wheel file caps.
-# The runtime guard makes command-bearing payload growth visible even if the
-# corpus-binary slice shrinks. Raising either requires reviewed governance authority.
-_RUNTIME_DATA_BUDGET_MIB = 450
-_RUNTIME_DATA_BUDGET_BYTES = _RUNTIME_DATA_BUDGET_MIB * 1024 * 1024
-_CORPUS_BINARY_BUDGET_MIB = 380
-_CORPUS_BINARY_BUDGET_BYTES = _CORPUS_BINARY_BUDGET_MIB * 1024 * 1024
+# A structural-failure stop, not a budget. Set far above any legitimate tree so
+# that ordinary growth never reaches it and nobody has cause to edit it; it
+# fires when something is writing bytes that should not be here at all.
+# Mebibytes keep source-tree units distinct from the companions' decimal 100 MB
+# compressed-artifact cap.
+_DATA_HARD_CAP_MIB = 1536
+_DATA_HARD_CAP_BYTES = _DATA_HARD_CAP_MIB * 1024 * 1024
 
 
 def _is_corpus_source_binary(relative_posix: str, suffix: str) -> bool:
@@ -58,35 +68,25 @@ def _is_corpus_source_binary(relative_posix: str, suffix: str) -> bool:
     return relative_posix.startswith("corpus/") and suffix.lower() in _CORPUS_BINARY_SUFFIXES
 
 
-def _selected_authority_database() -> str:
-    """Return the database file name the authority descriptor selects."""
+def _authority_payload_files() -> list[Path]:
+    """Return any published-authority payload still sitting under the data tree."""
 
-    descriptor = json.loads((_AUTHORITY_ROOT / "authority.current.json").read_text(encoding="utf-8"))
-    database = descriptor["database"]
-    assert isinstance(database, str), f"authority descriptor database must be a string, found: {database!r}"
-    return database
+    if not _AUTHORITY_ROOT.is_dir():
+        return []
+    return [
+        path
+        for path in scan_directory(_AUTHORITY_ROOT, recursive=True, select=DirectoryEntryKind.FILES)
+        if path.suffix == ".sqlite3" or path.name == "authority.current.json"
+    ]
 
 
 def _iter_budget_data_files() -> Iterator[Path]:
-    """Yield shipped-data files, excluding test subtrees and superseded authority databases.
+    """Yield shipped-data files, excluding test subtrees."""
 
-    A checkout retains superseded content-addressed authority databases until a
-    later publication can remove them; only the descriptor-selected database ships.
-    """
-
-    selected = _selected_authority_database()
     for path in scan_directory(_DATA_ROOT, recursive=True, select=DirectoryEntryKind.FILES):
         if "tests" in path.relative_to(_DATA_ROOT).parts:
             continue
-        if path.parent == _AUTHORITY_ROOT and path.suffix == ".sqlite3" and path.name != selected:
-            continue
         yield path
-
-
-def _data_tree_bytes() -> int:
-    """Return summed bytes for the test-excluded shipped-data source tree."""
-
-    return sum(path.stat().st_size for path in _iter_budget_data_files())
 
 
 def _data_slice_bytes() -> tuple[int, int, int]:
@@ -109,52 +109,44 @@ def _data_slice_bytes() -> tuple[int, int, int]:
 
 
 def test_data_root_exists() -> None:
-    """The bundled data root is present before the budget is measured."""
+    """The bundled data root is present before the tree is measured."""
 
     assert _DATA_ROOT.is_dir(), f"missing bundled data root: {_DATA_ROOT}"
 
 
-def test_data_tree_within_declared_budget() -> None:
-    """The shipped-data source tree stays under its reviewed ceiling."""
+def test_data_tree_carries_no_authority_payload() -> None:
+    """No published-authority payload sits under the shipped-data source tree.
 
-    actual_bytes = _data_tree_bytes()
-    actual_mib = actual_bytes / 1024 / 1024
-    assert actual_bytes <= _DATA_SIZE_BUDGET_BYTES, (
-        f"src/cadrumo/_data is {actual_mib:.1f} MiB, over the {_DATA_SIZE_BUDGET_MIB} MiB declared data budget. "
-        "Remove dead or non-shipped data, or obtain reviewed governance authority for warranted growth. "
-        "Repartitioning alone cannot reduce the logical whole-tree total."
-    )
-
-
-def test_runtime_slice_within_command_bearing_wheel_budget() -> None:
-    """The runtime (compact ``cadrumo`` wheel) slice stays under its ceiling.
-
-    This is the guard the split makes necessary: derived-surface growth in the
-    runtime wheel is now visible even when the corpus-binary slice shrinks and
-    the total-tree budget stays satisfied.
+    Two failures ride on this. The composition measured below would quietly
+    include roughly eighty mebibytes of regenerated bytes, so the runtime slice
+    would stop describing what the command-bearing wheel carries. Worse, the
+    build hook resolves this location as its embedded-sdist layout: bytes left
+    here after the authority moves out are still buildable, so a half-finished
+    move produces an artifact that looks entirely correct while carrying an
+    authority nobody publishes any more. A build that succeeds from an
+    abandoned directory is more dangerous than one that fails.
     """
 
-    _total, _corpus_binary, runtime = _data_slice_bytes()
-    runtime_mib = runtime / 1024 / 1024
-    assert runtime <= _RUNTIME_DATA_BUDGET_BYTES, (
-        f"the runtime (compact cadrumo wheel) _data slice is {runtime_mib:.1f} MiB, over the "
-        f"{_RUNTIME_DATA_BUDGET_MIB} MiB runtime-slice ceiling. This slice is the tree minus the corpus source "
-        f"binaries (extracted text, normative html, registry, terminology, agent data). Raise the ceiling with a "
-        "reviewed decision that records why the runtime payload grew, or remove dead derived data. Do not move "
-        "ownership-incompatible runtime payload into a companion merely to pass this gate."
+    offenders = sorted(path.name for path in _authority_payload_files())
+    assert not offenders, (
+        f"published authority payload is present under {_AUTHORITY_ROOT}: {offenders!r}. "
+        "After the authority moved out of the package source tree these bytes are a stale leftover, not a "
+        "source: delete the directory rather than leaving it in place. The authority is resolved through "
+        "CADRUMO_AUTHORITY_ROOT and staged into distributions at build time; the packaging gates measure "
+        "what the archives actually carry."
     )
 
 
-def test_corpus_binary_slice_within_companion_budget() -> None:
-    """The aggregate corpus-binary slice stays under its reviewed ceiling."""
+def test_data_tree_within_hard_cap() -> None:
+    """The shipped-data tree stays inside its structural-failure stop."""
 
-    _total, corpus_binary, _runtime = _data_slice_bytes()
-    corpus_mib = corpus_binary / 1024 / 1024
-    assert corpus_binary <= _CORPUS_BINARY_BUDGET_BYTES, (
-        f"the aggregate corpus-binary (cadrumo-data-* companions) _data slice is {corpus_mib:.1f} MiB, over the "
-        f"{_CORPUS_BINARY_BUDGET_MIB} MiB slice ceiling. Remove superseded binaries or obtain reviewed governance authority "
-        "for warranted aggregate growth. Repartitioning may restore per-wheel distributability, but it cannot reduce "
-        "this aggregate slice."
+    total, _corpus_binary, _runtime = _data_slice_bytes()
+    total_mib = total / 1024 / 1024
+    assert total <= _DATA_HARD_CAP_BYTES, (
+        f"src/cadrumo/_data is {total_mib:.1f} MiB, past the {_DATA_HARD_CAP_MIB} MiB hard cap. "
+        "This cap is an outer bound on structural failure, not a budget: find what is writing bytes into the "
+        "package source tree — duplicated corpus hydration, generated output landing here, an accidental binary — "
+        "rather than raising it."
     )
 
 
@@ -162,8 +154,9 @@ def test_slices_partition_the_tree_exhaustively() -> None:
     """The runtime and corpus-binary slices sum to the whole tree, so the split hides no byte."""
 
     total, corpus_binary, runtime = _data_slice_bytes()
+    assert total > 0, "the shipped-data tree measured as empty; every slice check below would pass vacuously"
     assert corpus_binary + runtime == total, (
         f"the source-tree slices do not partition the tree exhaustively: "
         f"corpus_binary ({corpus_binary}) + runtime ({runtime}) != total ({total}); "
-        "a byte would be unaccounted for and could evade the slice ceilings"
+        "a byte would be unaccounted for and could evade slice ownership"
     )

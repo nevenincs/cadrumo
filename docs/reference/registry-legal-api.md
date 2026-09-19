@@ -23,11 +23,23 @@ identify the exact rule set.
 
 The runtime authority is the digest-checked publication of the validated AEAT
 registry intended for installed calculations and filing exports. It is
-generated output with two files: `registry/authority/authority.current.json`
-is a small canonical descriptor, and its `database` member names the exact
+generated output with two files: `authority.current.json` is a small canonical
+descriptor, and its `database` member names the exact
 `authority-<database_sha256>.sqlite3` payload beside it. The descriptor and
 database are admitted together; the database is opened read-only and is not
 hydrated into one process-wide model graph.
+
+The pair is resolved from one directory, and where that directory is depends
+on how Cadrumo was installed. An installed distribution carries it at
+`cadrumo/_data/registry/authority/` and resolves it there with no
+configuration. A checkout publishes its own into `.authority/` at the
+repository root, which is excluded from version control, and names it with the
+`CADRUMO_AUTHORITY_ROOT` environment variable. When that variable is set it is
+the whole answer: resolution reads the named directory and does not fall back
+to the packaged location, so a checkout cannot silently answer from packaged
+bytes it believed it had replaced. A directory holding no descriptor is a
+refusal naming the publication command, not an empty authority. See
+[Publish a validated runtime authority](../how-to/publish-runtime-authority.md).
 
 | Term | Meaning |
 | --- | --- |
@@ -48,9 +60,11 @@ descriptor's admission check and the content-addressed filename, so a changed
 or colliding payload is refused before runtime work begins.
 
 The development publication command is
-`python -m dev.registry.pipeline publish-authority`. Its `--destination`
-option selects an isolated authority directory; custom `--registry-root` or
-`--source-root` values must be paired with an explicit `--profile-schema`.
+`python -m dev.registry.pipeline publish-authority`. It writes to the
+configured authority root, and refuses rather than choosing a location when
+none is configured; its `--destination` option selects an isolated authority
+directory instead. Custom `--registry-root` or `--source-root` values must be
+paired with an explicit `--profile-schema`.
 The command-bearing product package has no command that compiles or repairs
 this publication.
 

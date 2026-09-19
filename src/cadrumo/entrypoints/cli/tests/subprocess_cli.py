@@ -62,13 +62,15 @@ if TYPE_CHECKING:
     from ....core.config_support import StorageRouteKind
 
 __all__ = [
+    "as_bytes_completed_process",
+    "as_text_completed_process",
     "run_cadrumo_subprocess",
     "run_subprocess_cli_harness",
     "subprocess_cli_env",
 ]
 
 
-def _as_text_completed_process(
+def as_text_completed_process(
     result: subprocess.CompletedProcess[str | bytes],
 ) -> subprocess.CompletedProcess[str]:
     """Validate and retain the text-output contract of an audited process."""
@@ -77,7 +79,7 @@ def _as_text_completed_process(
     return subprocess.CompletedProcess(result.args, result.returncode, result.stdout, result.stderr)
 
 
-def _as_bytes_completed_process(
+def as_bytes_completed_process(
     result: subprocess.CompletedProcess[str | bytes],
 ) -> subprocess.CompletedProcess[bytes]:
     """Validate and retain the binary-output contract of an audited process."""
@@ -188,7 +190,7 @@ def run_subprocess_cli_harness(
     :data:`_CONTEXTVAR_HARNESS_SOURCE`) controls how those positions are
     interpreted.
     """
-    return _as_text_completed_process(
+    return as_text_completed_process(
         run_audited_process(
             [sys.executable, "-c", harness_source, *args],
             cwd=cwd or SRC_CADRUMO,

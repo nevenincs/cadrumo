@@ -10,7 +10,7 @@ import pytest
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.provenance import NormativeCorpusProvenance
 
-from ..compiler.corpus_provenance import (
+from ..corpus_provenance import (
     _classified_normative_corpus_file,
     classify_normative_corpus_provenance,
     resolve_normative_corpus_path,

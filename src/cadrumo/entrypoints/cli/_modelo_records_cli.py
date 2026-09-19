@@ -15,6 +15,7 @@ from typing import Literal
 
 import typer
 
+from ...application.calculations.observations_repository import ObservationSourceKind
 from ...application.modelo.action_errors import (
     ExternalModeloImportError,
     ModeloLocalObservationError,
@@ -36,7 +37,6 @@ from ...application.modelo.filing_actions import (
     list_verification_reports,
 )
 from ...application.modelo.local_observation_actions import (
-    OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND,
     LocalObservationPorts,
     ModeloLocalObservationClearResult,
     ModeloLocalObservationResult,
@@ -451,7 +451,7 @@ def _observe_local_notice(action: Literal["recorded", "cleared"]) -> Notice:
         else "modelo.filing_record.observe_local.cleared",
         message,
         context={
-            "source_kind": OPERATOR_MANUAL_OBSERVATION_SOURCE_KIND.value,
+            "source_kind": ObservationSourceKind.OPERATOR_MANUAL.value,
             "official_evidence": "false",
             "filing_record_created": "false",
         },

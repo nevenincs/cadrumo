@@ -16,7 +16,7 @@ from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind
 from cadrumo.domain.calculations.registry.source_byte_availability import source_bytes_are_embedded
 from dev.registry.compiler.authority import compiled_bundled_authority
 
-from ..pipeline.authority_publication import _project_evidence, _project_source_evidence, require_evidence_closure
+from ..authority_publication import _project_evidence, _project_source_evidence, require_evidence_closure
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 

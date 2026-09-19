@@ -59,6 +59,13 @@ errors:
     clave_movil_identity_checksum: El identificador de Cl@ve Móvil tiene una forma
       válida pero su letra de control no coincide con los dígitos. Revisa la última
       letra del documento e inténtalo de nuevo.
+  authority:
+    descriptor_absent: No hay ninguna autoridad del registro publicada en %{searched_path}.
+      Publique la autoridad con `%{publish_command}` o defina CADRUMO_AUTHORITY_ROOT
+      con un árbol de autoridad publicado.
+    descriptor_missing_under_configured_root: CADRUMO_AUTHORITY_ROOT apunta a un directorio
+      sin descriptor de autoridad del registro en %{searched_path}. Publique la autoridad
+      con `%{publish_command}` o apunte la variable a un árbol de autoridad publicado.
   calc:
     age_at_year_end_no_filing_year: 'Error interno: el cálculo de edad a fin de ejercicio
       no tiene ejercicio de declaración.'

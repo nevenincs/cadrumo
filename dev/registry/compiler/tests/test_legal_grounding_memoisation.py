@@ -19,7 +19,7 @@ import pytest
 from cadrumo.core.corpus_text import corpus_redaction_marks
 from cadrumo.core.hashing import blake2b_hex
 
-from ..compiler.legal_grounding import (
+from ..legal_grounding import (
     _corpus_file_digest,
     _corpus_redaction_mark_count,
     _resolved_corpus_paths,
