@@ -28,6 +28,14 @@ default and reclaimed only under an explicit ``--apply``, because automating a
 deletion decided by inference is a different risk from automating one decided
 by observation.
 
+**Test run directories carry their owner too**, in the PID embedded in the
+directory name, so the same observed-liveness rule applies and a finished run's
+output is reclaimed at any age -- there is no retention window. They are swept
+across BOTH bases that can hold them: the checkout, where repository tooling
+writes, and the OS temp directory, where a pytest controller writes because
+``conftest.py`` roots its run outside the checkout. Sweeping only the checkout
+left the busier of the two unbounded, which is this module's own opening story.
+
 This module is a library. Its operator surface is ``just clean`` (report) and
 ``just clean-apply`` (act), which drive :func:`report_temporary_storage` as one
 section of the wider reclamation report.
@@ -49,7 +57,7 @@ from cadrumo.tests.collection_storage_root import (
     pytest_numbered_dir_root,
     reap_abandoned_numbered_dirs,
 )
-from dev._paths import REPO_ROOT
+from dev.test_runs.paths import TEST_RUNS_FAMILY, run_log_roots
 from dev.test_runs.reaper import assess_run_directories, reclaim_run_directories
 
 CLAUDE_TEMP_STEM = "claude"
@@ -461,9 +469,13 @@ def report_temporary_storage(
             file=stream,
         )
 
-    run_root = REPO_ROOT / ".logs" / "test-runs"
-    run_verdicts = assess_run_directories(run_root)
-    print(f"\nRepository test runs under {run_root}", file=stream)
+    # Both bases, because a pytest controller roots its run under the OS temp
+    # directory rather than the checkout (see conftest.py) and the repository base
+    # alone left that one growing without bound.
+    run_roots = run_log_roots(TEST_RUNS_FAMILY)
+    run_verdicts = tuple(verdict for run_root in run_roots for verdict in assess_run_directories(run_root))
+    named_roots = ", ".join(str(root) for root in run_roots) or "no run root exists yet"
+    print(f"\nTest run directories under {named_roots}", file=stream)
     for verdict in run_verdicts:
         if verdict.reclaimable or verbose:
             print(

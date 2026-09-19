@@ -21,7 +21,7 @@ import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
-from dev.test_runs.reaper import INTERRUPTED_GRACE_SECONDS
+from dev.test_runs.reaper import PID_TRUST_CEILING_SECONDS
 
 from ..clean import (
     FAMILIES,
@@ -402,8 +402,8 @@ def test_the_justfile_severity_notice_still_matches_the_code_it_describes() -> N
         "the notice must state that a completed run directory is reclaimed at any age; a reader who"
         " believes a retention window exists will leave a failing run's log unread until it is gone"
     )
-    assert f"{int(INTERRUPTED_GRACE_SECONDS / 60)} minutes of mtime silence" in notice, (
-        "the documented grace for an unowned in-flight run no longer matches INTERRUPTED_GRACE_SECONDS"
+    assert f"{int(PID_TRUST_CEILING_SECONDS / 3600)} hours" in notice, (
+        "the documented ceiling on trusting a run's PID no longer matches PID_TRUST_CEILING_SECONDS"
     )
     for family in FAMILIES:
         assert family in notice, f"the --only selector {family} is undocumented in the severity notice"
