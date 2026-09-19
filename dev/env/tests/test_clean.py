@@ -46,6 +46,8 @@ IGNORE_RULES = """\
 __pycache__/
 *.pyc
 .ruff_cache/
+.cache/
+cache/
 build/
 .env
 env/*
@@ -108,7 +110,6 @@ def test_a_cache_is_removed_while_every_protected_family_beside_it_survives(repo
         "local storage": _write(repository / "var" / "storage" / "buckets" / "ledger.db", "encrypted"),
         "vault": _write(repository / ".vault" / "adr" / "decision.md", "# decision\n"),
         "vaultspec": _write(repository / ".vaultspec" / "rules" / "rule.md", "# rule\n"),
-        "logs": _write(repository / ".logs" / "test-runs" / "run.log", "evidence"),
     }
 
     entries = assess(repository)
@@ -153,6 +154,52 @@ def test_the_mixed_var_root_is_split_rather_than_judged_whole(repository: Path) 
     assert probe_tree.exists(), "a release-cohort tree was removed by a rule keyed on its parent"
     assert key_material.exists(), "key material under var/ was removed"
     assert bucket.exists(), "an encrypted bucket under var/ was removed"
+
+
+def test_the_logs_scratch_root_is_reaped_except_the_subtree_with_a_liveness_owner(
+    repository: Path,
+) -> None:
+    """`.logs/` is scratch, and the one-way boundary is what makes reaping it safe.
+
+    Everything there is output of a run -- captured stdout, downloaded payloads,
+    draft vault bodies, a cache -- so a verdict of KEEP on the root asserts a
+    durability the tree does not have. ``test-runs`` is the single exception, and
+    it survives here by DEFERRAL rather than protection: the retention section
+    knows whether a run's owner is still alive, and this one does not. A rule
+    that reaped the root whole would take a failing run's evidence with it, and a
+    rule that protected the root whole would leave the other 2 GB standing.
+    """
+    captured = _write(repository / ".logs" / "authority-provenance.err", "captured stderr")
+    audit_run = _write(repository / ".logs" / "audit-runs" / "2026-09-08" / "report.json", "{}")
+    logs_cache = _write(repository / ".logs" / "cache" / "payload.bin", "derived")
+    test_run = _write(repository / ".logs" / "test-runs" / "run.log", "evidence")
+
+    entries = assess(repository)
+    reclaim(repository, entries)
+
+    assert _verdict_for(entries, ".logs/test-runs")[0] is Verdict.KEEP
+    assert test_run.exists(), "test-run evidence was removed by the section that cannot judge its owner"
+    for name, path in (("captured output", captured), ("audit run", audit_run), ("cache", logs_cache)):
+        assert not path.exists(), f"{name} under .logs/ survived, so the root is still being spared"
+
+
+def test_a_directory_named_cache_is_reaped_wherever_it_is_not_protected(repository: Path) -> None:
+    """`cache` and `.cache` state their role, and holding out for a generic name cost 2.3 GB.
+
+    The pair matters because the reversal must not reach through a protection:
+    the root-level tree goes, and the identically named one inside `secrets/`
+    stays, which is the ordering in :func:`classify` rather than the name rule.
+    """
+    root_cache = _write(repository / ".cache" / "registry-validation-verdicts" / "verdict.json", "{}")
+    nested_cache = _write(repository / "scratch" / "run" / "cache" / "compiled.pkl", "derived")
+    protected_cache = _write(repository / "secrets" / "cache" / "unwrapped.key", "key-material")
+
+    entries = assess(repository)
+    reclaim(repository, entries)
+
+    assert not root_cache.exists(), "a root-level .cache tree survived"
+    assert not nested_cache.exists(), "a nested cache directory survived"
+    assert protected_cache.exists(), "the cache rule reached inside a protected tree"
 
 
 def test_untracked_work_that_is_not_ignored_is_counted_and_never_touched(repository: Path) -> None:
