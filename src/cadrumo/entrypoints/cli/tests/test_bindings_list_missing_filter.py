@@ -39,11 +39,13 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 # defaults for the anualidades eligibility and Madrid nacimiento/adopción
 # operands. The remaining profile bindings (spouse, descendants, marriage
 # deltas, ...) and every non-profile binding (ledger aggregations,
-# prior-filing pulls) stay unresolved, i.e. still "missing".
+# prior-filing pulls) stay unresolved, i.e. still "missing". New registry
+# declarations may add further profile-derived defaults, so the assertions
+# below pin the seeded facts without freezing the complete authority set.
 _MODELO = "100"
 _YEAR = 2025
 _PERIOD = "0A"
-_RESOLVED_BINDING_IDS = frozenset(
+_KNOWN_RESOLVED_BINDING_IDS = frozenset(
     {
         "renta-profile-tax-residence-ccaa",
         "renta-profile-declaration-type",
@@ -71,8 +73,8 @@ def _seed_partial_modelo_100_profile() -> None:
     )
 
 
-def _binding_ids_in_listing(output: str) -> set[str]:
-    """Extract the binding ids from a ``bindings list`` text envelope.
+def _binding_rows_in_listing(output: str) -> dict[str, tuple[str, ...]]:
+    """Extract binding rows from a ``bindings list`` text envelope.
 
     Each binding row is tab-separated as
     ``modelo<TAB>revision<TAB>period<TAB>binding_id<TAB>source<TAB>...``;
@@ -80,24 +82,29 @@ def _binding_ids_in_listing(output: str) -> set[str]:
     have a different leading token) carry no registry binding id, so a row
     qualifies only when its fourth column looks like a binding id.
     """
-    ids: set[str] = set()
+    rows: dict[str, tuple[str, ...]] = {}
     for line in output.splitlines():
         columns = line.split("\t")
         if len(columns) < 5:
             continue
         if columns[0] == _MODELO:
-            ids.add(columns[3])
-    return ids
+            rows[columns[3]] = tuple(columns)
+    return rows
+
+
+def _binding_ids_in_listing(output: str) -> set[str]:
+    """Extract binding ids from a ``bindings list`` text envelope."""
+    return set(_binding_rows_in_listing(output))
 
 
 def test_bindings_list_missing_returns_strict_subset_of_unfiltered() -> None:
-    """``--missing`` removes EXACTLY the profile-resolved bindings.
+    """``--missing`` removes the profile-resolved bindings.
 
     With an active profile that satisfies a proper subset of Modelo 100's
     ``source = "profile"`` bindings, the ``--missing`` listing must be a
-    strict subset of the unfiltered listing whose removed rows are exactly
-    those resolved binding ids — proving the filter actually narrows the
-    set rather than echoing the flag while returning everything.
+    strict subset of the unfiltered listing and remove every binding backed
+    by the seeded facts. The authority may add further derived profile
+    bindings, so the test does not freeze that complete set.
     """
     _seed_partial_modelo_100_profile()
     scope = ["app", "modelo", "bindings", "list", "--modelo", _MODELO, "--year", str(_YEAR), "--period", _PERIOD]
@@ -107,18 +114,22 @@ def test_bindings_list_missing_returns_strict_subset_of_unfiltered() -> None:
     filtered = invoke_cached_cli([*scope, "--missing"])
     assert filtered.exit_code == 0, filtered.output
 
-    all_ids = _binding_ids_in_listing(unfiltered.output)
-    missing_ids = _binding_ids_in_listing(filtered.output)
+    all_rows = _binding_rows_in_listing(unfiltered.output)
+    missing_rows = _binding_rows_in_listing(filtered.output)
+    all_ids = set(all_rows)
+    missing_ids = set(missing_rows)
+    removed_ids = all_ids - missing_ids
 
     # The unfiltered listing must contain every binding the profile resolves
     # (otherwise the fixture is not exercising the filter at all).
-    assert all_ids >= _RESOLVED_BINDING_IDS, sorted(_RESOLVED_BINDING_IDS - all_ids)
+    assert all_ids >= _KNOWN_RESOLVED_BINDING_IDS, sorted(_KNOWN_RESOLVED_BINDING_IDS - all_ids)
     # --missing is a STRICT subset: strictly fewer rows.
     assert missing_ids < all_ids
-    # The removed rows are EXACTLY the profile-resolved bindings.
-    assert all_ids - missing_ids == _RESOLVED_BINDING_IDS
-    # None of the profile-resolved bindings survive the filter.
-    assert missing_ids.isdisjoint(_RESOLVED_BINDING_IDS)
+    # Every binding backed by the seeded facts is removed, while additional
+    # authority-derived profile defaults may also be removed as they resolve.
+    assert removed_ids >= _KNOWN_RESOLVED_BINDING_IDS
+    assert all(all_rows[binding_id][4] == "profile" for binding_id in removed_ids)
+    assert missing_ids.isdisjoint(_KNOWN_RESOLVED_BINDING_IDS)
     # The filter echo line still reflects the flag.
     assert "missing_filter\tTrue" in filtered.output
 
@@ -139,5 +150,5 @@ def test_bindings_list_without_missing_retains_profile_resolved_rows() -> None:
     assert unfiltered.exit_code == 0, unfiltered.output
 
     all_ids = _binding_ids_in_listing(unfiltered.output)
-    assert all_ids >= _RESOLVED_BINDING_IDS, sorted(_RESOLVED_BINDING_IDS - all_ids)
+    assert all_ids >= _KNOWN_RESOLVED_BINDING_IDS, sorted(_KNOWN_RESOLVED_BINDING_IDS - all_ids)
     assert "missing_filter\tFalse" in unfiltered.output
