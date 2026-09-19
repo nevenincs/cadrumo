@@ -1318,7 +1318,7 @@ bytes = 57238
 retrieved_at = 2026-05-05
 published_at = 2017-08-30
 applies_from = 2017-08-31
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2017-10042"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2017-10042"
 review_status = "pending_review"
 
 [legal."ley-27-2014:art-41"]

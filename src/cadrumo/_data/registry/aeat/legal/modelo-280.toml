@@ -193,7 +193,7 @@ bytes = 79921
 retrieved_at = 2026-07-01
 published_at = 2015-10-15
 applies_from = 2016-01-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-11074"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2015-11074"
 review_status = "pending_review"
 
 [sources."boe-modelo-280-2016-amendment-hfp-1822"]
