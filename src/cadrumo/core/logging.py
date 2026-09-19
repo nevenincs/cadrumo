@@ -190,6 +190,41 @@ _MAX_LOGGED_BYTES = 256
 
 _PAYLOAD_REDACTION_MARKER = "<redacted:payload>"
 
+#: Stand-in for the operator's home directory in a logged path.
+_HOME_DIRECTORY_MARKER = "~"
+
+
+def _home_directory_prefixes() -> tuple[str, ...]:
+    """Return the spellings of this machine's home directory, longest first.
+
+    Both separators are produced because a path reaches a log line as whatever
+    spelling its producer built -- ``Path`` renders native separators, while a
+    URI, a config value, or a string-joined path can carry the other one on the
+    same machine. Longest first so the drive-qualified form is replaced before
+    a prefix of it.
+    """
+    home = Path.home()
+    spellings = {str(home), str(home).replace("\\", "/"), home.as_posix()}
+    return tuple(sorted((spelling for spelling in spellings if spelling), key=len, reverse=True))
+
+
+def _mask_home_directory(value: str) -> str:
+    """Replace this machine's home directory with ``~`` wherever it appears.
+
+    A diagnostic path is worth keeping -- it is the only identity a failed
+    write, fsync, or lock acquisition has -- but its leading segments are the
+    operator's account name and local layout, which the diagnostic never needed.
+    Masking the prefix keeps the part that answers "which file" and drops the
+    part that answers "whose machine", so a log file attached to a bug report
+    does not carry an identity with it.
+    """
+    for prefix in _HOME_DIRECTORY_PREFIXES:
+        value = value.replace(prefix, _HOME_DIRECTORY_MARKER)
+    return value
+
+
+_HOME_DIRECTORY_PREFIXES: tuple[str, ...] = _home_directory_prefixes()
+
 
 def _redact_payloads(value: str) -> str:
     """Redact encoded document payloads from ``value``.
@@ -273,7 +308,7 @@ def _scrub_text(value: str, *, key: str | None = None) -> str:
     )
     scrubbed = _BEARER_TOKEN_RE.sub("Bearer <redacted>", scrubbed)
     scrubbed = _LLM_KEY_RE.sub("<redacted>", scrubbed)
-    return scrubbed
+    return _mask_home_directory(scrubbed)
 
 
 @overload
@@ -369,14 +404,20 @@ def _scrub_opaque_object(value: object) -> Any:  # ANY-RETURN-RATIONALE-OPAQUE-L
     becomes text when the handler formats the record, downstream of every
     filter. Rendering the object here is what lets the payload rules see it.
 
-    The original object is returned untouched when it holds no payload, so
-    the formatted record is unchanged for the overwhelming majority of
-    arguments; only a rendering that actually matched is substituted.
+    The same reasoning covers the home directory in a logged path: a
+    :class:`~pathlib.Path` argument is not a ``str`` either, so masking it in
+    :func:`_scrub_text` alone would leave ``target=%s`` carrying the operator's
+    account name into the formatted line.
+
+    The original object is returned untouched when it holds no payload and no
+    home prefix, so the formatted record is unchanged for the overwhelming
+    majority of arguments; only a rendering that actually matched is
+    substituted.
     """
     if value is None or isinstance(value, int | float | complex):
         return value
     rendered = str(value)
-    redacted = _redact_payloads(rendered)
+    redacted = _mask_home_directory(_redact_payloads(rendered))
     return redacted if redacted != rendered else value
 
 
