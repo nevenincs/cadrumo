@@ -1,8 +1,8 @@
 [revisions."2015"]
 casilla_source_refs = ["boe-dr-184-2015"]
 authority_grade = "applicability"
-# The 2015 BOE record-design PDF is hash-pinned for its own exercise.  Its
-# first detected field starts at position 160, so it carries no selectable
+# The 2015 BOE record-design PDF is hash-pinned for its own exercise.  Three
+# record sheets read and one body is dropped, so it carries no selectable
 # record-design epoch and must not inherit the later 2023-2024 map.
 valid_from = 2015-01-01
 valid_to = 2015-12-31
@@ -11,5 +11,5 @@ orden_aplicabilidad = ["orden-hap-2250-2015:art-1"]
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-184-2015", "boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]
 review_status = "agent_reviewed"
-reviewed_by = "agent: applicability-only historical epoch. The raw BOE-A-2015-11596 record-design PDF is source-pinned, but the canonical strict parser starts its first field at position 160 rather than position 1. No casillas, bindings, export layout, or continuity claim is declared. Reconsider only after a strict parse yields complete record sheets from position 1 and the resulting geometry is independently compared with this exercise."
-reviewed_at = 2026-08-26
+reviewed_by = "agent: applicability-only historical epoch. BOE-A-2015-11596 is Orden HAP/2250/2015, the orden that APPROVES modelo 184, so unlike the amending ordenes behind the 2016-2018, 2019-2021 and 2022 epochs its anexo carries the whole design. Strict parsing reads three record sheets and drops one body, which declares 170 positions and leaves 1-77, 84-142 and 144-156 unread, so the extraction is partial and no record-design map is selectable. This epoch alone is a parser gap on a complete document rather than a source that omits the coordinates. No casillas, bindings, export layout, or continuity claim is declared. Reconsider only after a strict parse yields complete record sheets from position 1 and the resulting geometry is independently compared with this exercise."
+reviewed_at = 2026-09-19
