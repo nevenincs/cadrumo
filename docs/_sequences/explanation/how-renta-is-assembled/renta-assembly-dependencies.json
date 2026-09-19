@@ -230,6 +230,78 @@
                 "observation_source_kind": null,
                 "observed_member_nifs": [],
                 "period": {
+                  "code": "1T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "2T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "3T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
+                  "code": "4T",
+                  "filing_year": 2025
+                },
+                "source_modelo": "111",
+                "unexpected_member_nifs": []
+              },
+              {
+                "blockers": [],
+                "calculation_revision_id": null,
+                "clean": true,
+                "expected_member_nifs": [],
+                "external_evidence_kind": null,
+                "filing_record_id": null,
+                "filing_year": 2025,
+                "missing_member_nifs": [],
+                "observation_source_kind": null,
+                "observed_member_nifs": [],
+                "period": {
                   "code": "01",
                   "filing_year": 2025
                 },
@@ -449,78 +521,6 @@
                   "code": "1T",
                   "filing_year": 2025
                 },
-                "source_modelo": "111",
-                "unexpected_member_nifs": []
-              },
-              {
-                "blockers": [],
-                "calculation_revision_id": null,
-                "clean": true,
-                "expected_member_nifs": [],
-                "external_evidence_kind": null,
-                "filing_record_id": null,
-                "filing_year": 2025,
-                "missing_member_nifs": [],
-                "observation_source_kind": null,
-                "observed_member_nifs": [],
-                "period": {
-                  "code": "2T",
-                  "filing_year": 2025
-                },
-                "source_modelo": "111",
-                "unexpected_member_nifs": []
-              },
-              {
-                "blockers": [],
-                "calculation_revision_id": null,
-                "clean": true,
-                "expected_member_nifs": [],
-                "external_evidence_kind": null,
-                "filing_record_id": null,
-                "filing_year": 2025,
-                "missing_member_nifs": [],
-                "observation_source_kind": null,
-                "observed_member_nifs": [],
-                "period": {
-                  "code": "3T",
-                  "filing_year": 2025
-                },
-                "source_modelo": "111",
-                "unexpected_member_nifs": []
-              },
-              {
-                "blockers": [],
-                "calculation_revision_id": null,
-                "clean": true,
-                "expected_member_nifs": [],
-                "external_evidence_kind": null,
-                "filing_record_id": null,
-                "filing_year": 2025,
-                "missing_member_nifs": [],
-                "observation_source_kind": null,
-                "observed_member_nifs": [],
-                "period": {
-                  "code": "4T",
-                  "filing_year": 2025
-                },
-                "source_modelo": "111",
-                "unexpected_member_nifs": []
-              },
-              {
-                "blockers": [],
-                "calculation_revision_id": null,
-                "clean": true,
-                "expected_member_nifs": [],
-                "external_evidence_kind": null,
-                "filing_record_id": null,
-                "filing_year": 2025,
-                "missing_member_nifs": [],
-                "observation_source_kind": null,
-                "observed_member_nifs": [],
-                "period": {
-                  "code": "1T",
-                  "filing_year": 2025
-                },
                 "source_modelo": "123",
                 "unexpected_member_nifs": []
               },
@@ -647,515 +647,881 @@
               "dependencies": [
                 {
                   "filing_year": 2024,
+                  "legal_refs": [
+                    "ley-35-2006:art-50",
+                    "orden-hac-277-2026:art-3"
+                  ],
                   "origin": "previous_filing_binding",
                   "origin_ids": [
-                    "renta-2025-base-liquidable-negativa-general-anterior"
+                    "renta-base-liquidable-negativa-general-anterior"
                   ],
                   "period": {
                     "code": "0A",
                     "filing_year": 2024
                   },
+                  "required_source_casilla_ids": [
+                    "1391"
+                  ],
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "1391"
                   ],
-                  "source_modelo": "100"
+                  "source_modelo": "100",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-100-2025-dictionary",
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
+                  ],
+                  "period": {
+                    "code": "1T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-111-retenciones-periodicas"
+                  ],
+                  "period": {
+                    "code": "2T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-111-retenciones-periodicas"
+                  ],
+                  "period": {
+                    "code": "3T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-111-retenciones-periodicas"
+                  ],
+                  "period": {
+                    "code": "4T",
+                    "filing_year": 2025
+                  },
+                  "required_source_casilla_ids": null,
+                  "requires_member_fan_in": false,
+                  "source_casilla_ids": [
+                    "28"
+                  ],
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
+                },
+                {
+                  "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
+                  "origin": "registry_relation",
+                  "origin_ids": [
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "01",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "02",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "03",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "04",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "05",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "06",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "07",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "08",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "09",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "10",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "11",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-mensuales"
+                    "renta-modelo-111-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "12",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "28"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "111",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-eha-3435-2007:anexo-ii",
+                    "orden-hac-277-2026:art-3",
+                    "orden-hac-56-2024:art-1",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-trimestrales"
+                    "renta-modelo-123-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "1T",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "28"
+                    "09"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "123",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-eha-3435-2007:anexo-ii",
+                    "orden-hac-277-2026:art-3",
+                    "orden-hac-56-2024:art-1",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-trimestrales"
+                    "renta-modelo-123-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "2T",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "28"
+                    "09"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "123",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-eha-3435-2007:anexo-ii",
+                    "orden-hac-277-2026:art-3",
+                    "orden-hac-56-2024:art-1",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-trimestrales"
+                    "renta-modelo-123-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "3T",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "28"
+                    "09"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "123",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-eha-3435-2007:anexo-ii",
+                    "orden-hac-277-2026:art-3",
+                    "orden-hac-56-2024:art-1",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-111-retenciones-trimestrales"
+                    "renta-modelo-123-retenciones-periodicas"
                   ],
                   "period": {
                     "code": "4T",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "28"
+                    "09"
                   ],
-                  "source_modelo": "111"
+                  "source_modelo": "123",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-1",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-123-retenciones-trimestrales"
+                    "renta-modelo-130-pagos-fraccionados"
                   ],
                   "period": {
                     "code": "1T",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "09"
+                    "19"
                   ],
-                  "source_modelo": "123"
+                  "source_modelo": "130",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-1",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-123-retenciones-trimestrales"
+                    "renta-modelo-130-pagos-fraccionados"
                   ],
                   "period": {
                     "code": "2T",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "09"
+                    "19"
                   ],
-                  "source_modelo": "123"
+                  "source_modelo": "130",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-1",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-123-retenciones-trimestrales"
+                    "renta-modelo-130-pagos-fraccionados"
                   ],
                   "period": {
                     "code": "3T",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "09"
+                    "19"
                   ],
-                  "source_modelo": "123"
+                  "source_modelo": "130",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-1",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-123-retenciones-trimestrales"
+                    "renta-modelo-130-pagos-fraccionados"
                   ],
                   "period": {
                     "code": "4T",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "09"
+                    "19"
                   ],
-                  "source_modelo": "123"
+                  "source_modelo": "130",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-3",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-130-pagos-fraccionados"
+                    "renta-modelo-131-pagos-fraccionados"
                   ],
                   "period": {
                     "code": "1T",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "19"
+                    "15"
                   ],
-                  "source_modelo": "130"
+                  "source_modelo": "131",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-3",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-130-pagos-fraccionados"
+                    "renta-modelo-131-pagos-fraccionados"
                   ],
                   "period": {
                     "code": "2T",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "19"
+                    "15"
                   ],
-                  "source_modelo": "130"
+                  "source_modelo": "131",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-3",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-130-pagos-fraccionados"
+                    "renta-modelo-131-pagos-fraccionados"
                   ],
                   "period": {
                     "code": "3T",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
-                    "19"
+                    "15"
                   ],
-                  "source_modelo": "130"
+                  "source_modelo": "131",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "orden-eha-672-2007:art-3",
+                    "orden-hac-277-2026:art-3",
+                    "rd-439-2007:art-109"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-130-pagos-fraccionados"
+                    "renta-modelo-131-pagos-fraccionados"
                   ],
                   "period": {
                     "code": "4T",
                     "filing_year": 2025
                   },
-                  "requires_member_fan_in": false,
-                  "source_casilla_ids": [
-                    "19"
-                  ],
-                  "source_modelo": "130"
-                },
-                {
-                  "filing_year": 2025,
-                  "origin": "registry_relation",
-                  "origin_ids": [
-                    "renta-2025-rel-131-pagos-fraccionados"
-                  ],
-                  "period": {
-                    "code": "1T",
-                    "filing_year": 2025
-                  },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "15"
                   ],
-                  "source_modelo": "131"
+                  "source_modelo": "131",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-renta-2025-manual-parte1",
+                    "boe-modelo-100-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-86",
+                    "ley-35-2006:art-87",
+                    "ley-35-2006:art-88",
+                    "ley-35-2006:art-89",
+                    "orden-hap-2250-2015:art-1",
+                    "orden-hap-2250-2015:art-3"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-131-pagos-fraccionados"
-                  ],
-                  "period": {
-                    "code": "2T",
-                    "filing_year": 2025
-                  },
-                  "requires_member_fan_in": false,
-                  "source_casilla_ids": [
-                    "15"
-                  ],
-                  "source_modelo": "131"
-                },
-                {
-                  "filing_year": 2025,
-                  "origin": "registry_relation",
-                  "origin_ids": [
-                    "renta-2025-rel-131-pagos-fraccionados"
-                  ],
-                  "period": {
-                    "code": "3T",
-                    "filing_year": 2025
-                  },
-                  "requires_member_fan_in": false,
-                  "source_casilla_ids": [
-                    "15"
-                  ],
-                  "source_modelo": "131"
-                },
-                {
-                  "filing_year": 2025,
-                  "origin": "registry_relation",
-                  "origin_ids": [
-                    "renta-2025-rel-131-pagos-fraccionados"
-                  ],
-                  "period": {
-                    "code": "4T",
-                    "filing_year": 2025
-                  },
-                  "requires_member_fan_in": false,
-                  "source_casilla_ids": [
-                    "15"
-                  ],
-                  "source_modelo": "131"
-                },
-                {
-                  "filing_year": 2025,
-                  "origin": "registry_relation",
-                  "origin_ids": [
-                    "renta-2025-rel-184-atribucion-actividades-economicas"
+                    "renta-modelo-184-atribucion-actividades-economicas"
                   ],
                   "period": {
                     "code": "0A",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "tipo2.renta-atribuible-importe"
                   ],
-                  "source_modelo": "184"
+                  "source_modelo": "184",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-dr-184-2025",
+                    "aeat-renta-2025-manual-parte1"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-eha-3127-2009:art-1",
+                    "orden-hac-1431-2025:art-2",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-190-retenciones-anuales"
+                    "renta-modelo-190-retenciones-anuales"
                   ],
                   "period": {
                     "code": "0A",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "decl.retenciones-total"
                   ],
-                  "source_modelo": "190"
+                  "source_modelo": "190",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-modelo-190-instructions-2025",
+                    "boe-modelo-190-2025-form"
+                  ]
                 },
                 {
                   "filing_year": 2025,
+                  "legal_refs": [
+                    "ley-35-2006:art-99",
+                    "orden-eha-3377-2011:art-1",
+                    "rd-439-2007:art-108"
+                  ],
                   "origin": "registry_relation",
                   "origin_ids": [
-                    "renta-2025-rel-193-retenciones-anuales"
+                    "renta-modelo-193-retenciones-anuales"
                   ],
                   "period": {
                     "code": "0A",
                     "filing_year": 2025
                   },
+                  "required_source_casilla_ids": null,
                   "requires_member_fan_in": false,
                   "source_casilla_ids": [
                     "decl.retenciones-total"
                   ],
-                  "source_modelo": "193"
+                  "source_modelo": "193",
+                  "source_presence_groups": [],
+                  "source_refs": [
+                    "aeat-modelo-193-296-note-2025",
+                    "boe-modelo-193-2011-form"
+                  ]
                 }
               ],
               "dependency_count": 32,

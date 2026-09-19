@@ -27,10 +27,10 @@ from typing import Annotated, Final
 from pydantic import StringConstraints
 
 FIELD_KEY_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)*$"
-"""One or more lowercase dot-joined segments: a single word is a valid field key."""
+"""One or more lowercase dot-joined segments; a single word is a valid field key."""
 
 NAMESPACED_ID_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*)+$"
-"""Two or more lowercase dot-joined segments: a bare word is not a namespaced id."""
+"""Two or more lowercase dot-joined segments; a bare word is not a namespaced id."""
 
 NamespacedId = Annotated[
     str,

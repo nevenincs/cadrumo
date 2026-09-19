@@ -12,8 +12,8 @@ from typing import Any
 
 import pytest
 
-from ..providers import base as provider_base
-from ..providers.base import FinancialProvider, _resolved_absolute_source_path
+from .. import base as provider_base
+from ..base import FinancialProvider, _resolved_absolute_source_path
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
@@ -39,7 +39,7 @@ def resolutions(monkeypatch: pytest.MonkeyPatch) -> list[Path]:
 
 
 def _provider() -> FinancialProvider:
-    from ..providers.csv import CsvProvider
+    from ..csv import CsvProvider
 
     return CsvProvider()
 

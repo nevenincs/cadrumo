@@ -1383,6 +1383,36 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
+                  "value": "714"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "714",
+              "reason": "applicable_window_missing"
+            },
+            "message": "The filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "warning"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
                   "value": "720"
                 }
               ]
@@ -1647,6 +1677,10 @@
                 "reason": "applicability_undetermined"
               },
               {
+                "modelo": "714",
+                "reason": "applicable_window_missing"
+              },
+              {
                 "modelo": "720",
                 "reason": "applicability_undetermined"
               },
@@ -1660,11 +1694,13 @@
               }
             ],
             "confidently_excluded": [
+              "151",
               "184",
               "200",
               "202",
               "210",
-              "232"
+              "232",
+              "840"
             ],
             "out_of_scope": [
               "030",
@@ -1677,7 +1713,6 @@
               "145",
               "149",
               "150",
-              "151",
               "159",
               "170",
               "171",
@@ -1752,13 +1787,11 @@
               "593",
               "595",
               "596",
-              "714",
               "718",
               "795",
               "796",
               "797",
               "798",
-              "840",
               "848",
               "993"
             ],
@@ -3168,6 +3201,36 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
+                  "value": "714"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "714",
+              "reason": "applicable_window_missing"
+            },
+            "message": "The filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "warning"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
                   "value": "720"
                 }
               ]
@@ -3432,6 +3495,10 @@
                 "reason": "applicability_undetermined"
               },
               {
+                "modelo": "714",
+                "reason": "applicable_window_missing"
+              },
+              {
                 "modelo": "720",
                 "reason": "applicability_undetermined"
               },
@@ -3445,11 +3512,13 @@
               }
             ],
             "confidently_excluded": [
+              "151",
               "184",
               "200",
               "202",
               "210",
-              "232"
+              "232",
+              "840"
             ],
             "out_of_scope": [
               "030",
@@ -3462,7 +3531,6 @@
               "145",
               "149",
               "150",
-              "151",
               "159",
               "170",
               "171",
@@ -3537,13 +3605,11 @@
               "593",
               "595",
               "596",
-              "714",
               "718",
               "795",
               "796",
               "797",
               "798",
-              "840",
               "848",
               "993"
             ],
@@ -4955,6 +5021,36 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
+                  "value": "714"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "714",
+              "reason": "applicable_window_missing"
+            },
+            "message": "The filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "warning"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
                   "value": "720"
                 }
               ]
@@ -5219,6 +5315,10 @@
                 "reason": "applicability_undetermined"
               },
               {
+                "modelo": "714",
+                "reason": "applicable_window_missing"
+              },
+              {
                 "modelo": "720",
                 "reason": "applicability_undetermined"
               },
@@ -5232,11 +5332,13 @@
               }
             ],
             "confidently_excluded": [
+              "151",
               "184",
               "200",
               "202",
               "210",
-              "232"
+              "232",
+              "840"
             ],
             "out_of_scope": [
               "030",
@@ -5249,7 +5351,6 @@
               "145",
               "149",
               "150",
-              "151",
               "159",
               "170",
               "171",
@@ -5324,13 +5425,11 @@
               "593",
               "595",
               "596",
-              "714",
               "718",
               "795",
               "796",
               "797",
               "798",
-              "840",
               "848",
               "993"
             ],

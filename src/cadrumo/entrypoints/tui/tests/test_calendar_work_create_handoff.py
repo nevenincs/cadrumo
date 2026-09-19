@@ -23,7 +23,7 @@ from ....application.overview.next_actions import declare_next_action
 from ....application.user_profile.capsule_record import LoadedProfileRecord, ProfileRecordStore
 from ....core.bucket_pointer import resolve_active_bucket_id
 from ...adapter_composition import build_work_lifecycle_ports
-from ..declarations.tests.test_calendar import _projection
+from ..declarations.tests.calendar_fixtures import calendar_projection
 from ..launcher import _calendar_work_create_handoff
 
 __all__ = ["_isolated_cli_backend"]
@@ -69,7 +69,7 @@ def profile_decrypts(monkeypatch: pytest.MonkeyPatch) -> list[str]:
 def test_the_calendar_handoff_creates_the_declaration_decrypting_the_profile_once(
     bucket_id: str, profile_decrypts: list[str]
 ) -> None:
-    entry = next(row for row in _projection().entries if str(row.modelo) == "111")
+    entry = next(row for row in calendar_projection().entries if str(row.modelo) == "111")
     action = declare_next_action(
         "operator.modelo.work.create", modelo="111", year=entry.filing_year, period=str(entry.period)
     )

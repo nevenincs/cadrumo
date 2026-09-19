@@ -24,12 +24,12 @@ from typing import ClassVar, override
 import pytest
 
 from ....core.config import load_settings, override_settings
+from ....core.hardware import AcceleratorKind
 from ....core.model_catalogue import ModelRole
 from ....tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_json_response
 from ...local_reader import configured_role_model
 from ...provisioning import (
     AcceleratorDevice,
-    AcceleratorKind,
     AcceleratorReading,
     HardwareProfile,
     SystemMemoryReading,

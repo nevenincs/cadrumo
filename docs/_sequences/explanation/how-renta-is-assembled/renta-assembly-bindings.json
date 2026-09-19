@@ -22,10 +22,10 @@
         "command": "modelo.bindings.list",
         "notices": [],
         "result": {
-          "binding_count": 67,
+          "binding_count": 71,
           "bindings": [
             {
-              "binding_id": "renta-2025-modelo-100-estimacion-directa-es-normal",
+              "binding_id": "renta-modelo-100-estimacion-directa-es-normal",
               "borrador_capable": false,
               "encoded_options": [
                 {
@@ -57,7 +57,7 @@
               "typed_enum": "EstimacionDirectaModalidad"
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0186-deductible",
+              "binding_id": "renta-ledger-expense-0186-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -78,7 +78,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0192-deductible",
+              "binding_id": "renta-ledger-expense-0192-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -99,7 +99,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0199-deductible",
+              "binding_id": "renta-ledger-expense-0199-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -120,7 +120,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0203-deductible",
+              "binding_id": "renta-ledger-expense-0203-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -141,7 +141,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-tax-id",
+              "binding_id": "renta-profile-tax-id",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -164,7 +164,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-display-name",
+              "binding_id": "renta-profile-display-name",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -187,7 +187,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-tax-residence-ccaa",
+              "binding_id": "renta-profile-tax-residence-ccaa",
               "borrador_capable": true,
               "encoded_options": [],
               "filing_year": 2025,
@@ -210,7 +210,7 @@
               "typed_enum": "CCAA"
             },
             {
-              "binding_id": "renta-2025-profile-declaration-type",
+              "binding_id": "renta-profile-declaration-type",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -233,7 +233,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-taxpayer-sex",
+              "binding_id": "renta-profile-taxpayer-sex",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -256,7 +256,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-income-0171",
+              "binding_id": "renta-ledger-income-0171",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -277,7 +277,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-marital-status",
+              "binding_id": "renta-profile-marital-status",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -300,7 +300,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-taxpayer-birth-date",
+              "binding_id": "renta-profile-taxpayer-birth-date",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -323,7 +323,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-spouse-tax-id",
+              "binding_id": "renta-profile-spouse-tax-id",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -346,7 +346,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-spouse-display-name",
+              "binding_id": "renta-profile-spouse-display-name",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -369,7 +369,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-spouse-birth-date",
+              "binding_id": "renta-profile-spouse-birth-date",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -392,7 +392,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-spouse-sex",
+              "binding_id": "renta-profile-spouse-sex",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -415,7 +415,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-taxpayer-disability-grade",
+              "binding_id": "renta-profile-taxpayer-disability-grade",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -438,7 +438,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-taxpayer-death-date",
+              "binding_id": "renta-profile-taxpayer-death-date",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -461,7 +461,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-spouse-disability-grade",
+              "binding_id": "renta-profile-spouse-disability-grade",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -484,7 +484,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-spouse-non-resident-irpf",
+              "binding_id": "renta-profile-spouse-non-resident-irpf",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -507,7 +507,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-spouse-eu-eea-resident",
+              "binding_id": "renta-profile-spouse-eu-eea-resident",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -530,7 +530,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-spouse-eu-eea-country",
+              "binding_id": "renta-profile-spouse-eu-eea-country",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -553,7 +553,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-family-descendants-eu-eea-deduction",
+              "binding_id": "renta-profile-family-descendants-eu-eea-deduction",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -576,7 +576,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-family-minor-children-in-unit",
+              "binding_id": "renta-profile-family-minor-children-in-unit",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -599,7 +599,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-family-descendant-tax-id",
+              "binding_id": "renta-family-descendant-tax-id",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -622,7 +622,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-family-descendant-display-name",
+              "binding_id": "renta-family-descendant-display-name",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -645,7 +645,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-family-descendant-birth-date",
+              "binding_id": "renta-family-descendant-birth-date",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -668,7 +668,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-family-descendant-disability-grade",
+              "binding_id": "renta-family-descendant-disability-grade",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -691,7 +691,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-family-descendant-death-date",
+              "binding_id": "renta-family-descendant-death-date",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -714,7 +714,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-family-ascendant-tax-id",
+              "binding_id": "renta-family-ascendant-tax-id",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -737,7 +737,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-family-ascendant-display-name",
+              "binding_id": "renta-family-ascendant-display-name",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -760,7 +760,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-family-ascendant-birth-date",
+              "binding_id": "renta-family-ascendant-birth-date",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -783,7 +783,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-family-ascendant-disability-grade",
+              "binding_id": "renta-family-ascendant-disability-grade",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -806,7 +806,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-family-ascendant-cohabiting-descendant-count",
+              "binding_id": "renta-family-ascendant-cohabiting-descendant-count",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -829,7 +829,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-family-ascendant-death-date",
+              "binding_id": "renta-family-ascendant-death-date",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -852,7 +852,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-modelo-111-retenciones-periodicas",
+              "binding_id": "renta-modelo-111-retenciones-periodicas",
               "borrador_capable": true,
               "encoded_options": [],
               "filing_year": 2025,
@@ -866,8 +866,7 @@
               "period": "0A",
               "readiness": "relation input",
               "relation_inputs": [
-                "renta-2025-rel-111-retenciones-trimestrales",
-                "renta-2025-rel-111-retenciones-mensuales"
+                "renta-modelo-111-retenciones-periodicas"
               ],
               "revision": "2025",
               "source": "relation_prefill",
@@ -878,7 +877,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-modelo-123-retenciones-periodicas",
+              "binding_id": "renta-modelo-123-retenciones-periodicas",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -894,7 +893,7 @@
               "period": "0A",
               "readiness": "relation input",
               "relation_inputs": [
-                "renta-2025-rel-123-retenciones-trimestrales"
+                "renta-modelo-123-retenciones-periodicas"
               ],
               "revision": "2025",
               "source": "relation_prefill",
@@ -905,7 +904,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-modelo-130-pagos-fraccionados",
+              "binding_id": "renta-modelo-130-pagos-fraccionados",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -919,7 +918,7 @@
               "period": "0A",
               "readiness": "relation input",
               "relation_inputs": [
-                "renta-2025-rel-130-pagos-fraccionados"
+                "renta-modelo-130-pagos-fraccionados"
               ],
               "revision": "2025",
               "source": "relation_prefill",
@@ -930,7 +929,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-modelo-131-pagos-fraccionados",
+              "binding_id": "renta-modelo-131-pagos-fraccionados",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -944,7 +943,7 @@
               "period": "0A",
               "readiness": "relation input",
               "relation_inputs": [
-                "renta-2025-rel-131-pagos-fraccionados"
+                "renta-modelo-131-pagos-fraccionados"
               ],
               "revision": "2025",
               "source": "relation_prefill",
@@ -955,7 +954,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-modelo-184-atribucion-actividades-economicas",
+              "binding_id": "renta-modelo-184-atribucion-actividades-economicas",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -972,7 +971,7 @@
               "period": "0A",
               "readiness": "relation input",
               "relation_inputs": [
-                "renta-2025-rel-184-atribucion-actividades-economicas"
+                "renta-modelo-184-atribucion-actividades-economicas"
               ],
               "revision": "2025",
               "source": "relation_prefill",
@@ -983,7 +982,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-modelo-190-retenciones-anuales",
+              "binding_id": "renta-modelo-190-retenciones-anuales",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -998,7 +997,7 @@
               "period": "0A",
               "readiness": "relation input",
               "relation_inputs": [
-                "renta-2025-rel-190-retenciones-anuales"
+                "renta-modelo-190-retenciones-anuales"
               ],
               "revision": "2025",
               "source": "relation_prefill",
@@ -1009,7 +1008,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-modelo-193-retenciones-anuales",
+              "binding_id": "renta-modelo-193-retenciones-anuales",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1023,7 +1022,7 @@
               "period": "0A",
               "readiness": "relation input",
               "relation_inputs": [
-                "renta-2025-rel-193-retenciones-anuales"
+                "renta-modelo-193-retenciones-anuales"
               ],
               "revision": "2025",
               "source": "relation_prefill",
@@ -1034,7 +1033,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-marriage-full-year",
+              "binding_id": "renta-profile-marriage-full-year",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1057,7 +1056,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-marriage-month-start",
+              "binding_id": "renta-profile-marriage-month-start",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1080,7 +1079,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-marriage-month-end",
+              "binding_id": "renta-profile-marriage-month-end",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1103,7 +1102,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-base-liquidable-negativa-general-anterior",
+              "binding_id": "renta-base-liquidable-negativa-general-anterior",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1126,7 +1125,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-certificado-trabajo-retenciones",
+              "binding_id": "renta-certificado-trabajo-retenciones",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1152,7 +1151,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-madrid-nacimiento-adopcion-eligible-count",
+              "binding_id": "renta-profile-madrid-nacimiento-adopcion-eligible-count",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1174,7 +1173,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-unidad-familiar-otros-miembros-base",
+              "binding_id": "renta-profile-unidad-familiar-otros-miembros-base",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1196,7 +1195,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-anualidades-sin-minimo-descendientes",
+              "binding_id": "renta-profile-anualidades-sin-minimo-descendientes",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1217,7 +1216,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-minimo-descendientes-estatal",
+              "binding_id": "renta-profile-minimo-descendientes-estatal",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1239,7 +1238,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0183-deductible",
+              "binding_id": "renta-ledger-expense-0183-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1260,7 +1259,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0191-deductible",
+              "binding_id": "renta-ledger-expense-0191-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1281,7 +1280,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0193-deductible",
+              "binding_id": "renta-ledger-expense-0193-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1302,7 +1301,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0194-deductible",
+              "binding_id": "renta-ledger-expense-0194-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1323,7 +1322,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0195-deductible",
+              "binding_id": "renta-ledger-expense-0195-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1344,7 +1343,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0200-deductible",
+              "binding_id": "renta-ledger-expense-0200-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1365,7 +1364,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0202-deductible",
+              "binding_id": "renta-ledger-expense-0202-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1386,7 +1385,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0206-deductible",
+              "binding_id": "renta-ledger-expense-0206-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1407,7 +1406,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0208-deductible",
+              "binding_id": "renta-ledger-expense-0208-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1428,7 +1427,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0217-deductible",
+              "binding_id": "renta-ledger-expense-0217-deductible",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1449,7 +1448,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-minimo-descendientes-autonomico",
+              "binding_id": "renta-profile-minimo-descendientes-autonomico",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1472,7 +1471,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-profile-has-economic-activity",
+              "binding_id": "renta-profile-has-economic-activity",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1493,7 +1492,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-inventory-activity-closing-increase-0177",
+              "binding_id": "renta-inventory-activity-closing-increase-0177",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1513,7 +1512,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-inventory-activity-acquisition-cost-0181",
+              "binding_id": "renta-inventory-activity-acquisition-cost-0181",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1533,7 +1532,7 @@
               "typed_enum": null
             },
             {
-              "binding_id": "renta-2025-inventory-activity-closing-decrease-0182",
+              "binding_id": "renta-inventory-activity-closing-decrease-0182",
               "borrador_capable": false,
               "encoded_options": [],
               "filing_year": 2025,
@@ -1548,6 +1547,90 @@
               "revision": "2025",
               "source": "inventory",
               "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-maritime-path-rebeca",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-19-1994:art-75"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "boe-ley-19-1994-art-75-statutory-facts",
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-maritime-gross-navigation-income",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-19-1994:art-75"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "boe-ley-19-1994-art-75-statutory-facts",
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-maritime-annual-salary",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-7"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "boe-lirpf-statutory-facts",
+                "aeat-renta-2025-manual-parte1"
+              ],
+              "typed_enum": null
+            },
+            {
+              "binding_id": "renta-maritime-qualifying-days",
+              "borrador_capable": false,
+              "encoded_options": [],
+              "filing_year": 2025,
+              "input_channel": "decimal",
+              "legal_refs": [
+                "ley-35-2006:art-7"
+              ],
+              "modelo": "100",
+              "period": "0A",
+              "readiness": "profile fact",
+              "relation_inputs": [],
+              "revision": "2025",
+              "source": "profile",
+              "source_refs": [
+                "boe-lirpf-statutory-facts",
                 "aeat-renta-2025-manual-parte1"
               ],
               "typed_enum": null

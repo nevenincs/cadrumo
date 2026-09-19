@@ -165,6 +165,14 @@ def active_036_ownership_from_registry(
     generation and a caller holding a separately validated authority reach the
     same ownership derivation. :func:`censo_modelo_ownership` passes the
     bundled published operation.
+
+    Args:
+        authority: A :class:`PinnedAuthorityOperation` leased over a published
+            generation, or a :class:`ValidatedRegistryAuthority` compiled for
+            this derivation.
+
+    Returns:
+        The modelo 036 ownership the supplied authority declares.
     """
     if isinstance(authority, PinnedAuthorityOperation):
         try:

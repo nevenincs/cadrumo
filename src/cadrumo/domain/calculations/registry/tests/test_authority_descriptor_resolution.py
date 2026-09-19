@@ -29,10 +29,27 @@ def test_configured_root_selects_its_own_descriptor(tmp_path: Path) -> None:
         assert bundled_authority_descriptor_path().resolve() == descriptor.resolve()
 
 
-def test_unset_root_resolves_the_packaged_descriptor() -> None:
+def test_unset_root_addresses_the_packaged_location_and_nothing_else() -> None:
+    """An unset root resolves the distribution's location, present or not.
+
+    Asserted as the location rather than a successful read, because both
+    outcomes are correct and which one occurs depends on where the process is
+    running. An installed distribution carries the pair there and the call
+    returns it; a checkout after the authority moved out of the packaged tree
+    carries nothing there and the call refuses. What must hold in both is that
+    the packaged location is the ONLY place an unset root looks: the arm has no
+    search path and no second candidate.
+    """
+    packaged = bundled_path("registry", "authority", _DESCRIPTOR_NAME)
     with override_settings(cadrumo_authority_root=None):
-        resolved = bundled_authority_descriptor_path()
-    assert resolved == bundled_path("registry", "authority", _DESCRIPTOR_NAME)
+        try:
+            resolved = bundled_authority_descriptor_path()
+        except AuthorityDescriptorUnavailableError as refusal:
+            assert refusal.authority_root_configured is False
+            assert refusal.searched_path == packaged
+            assert not packaged.is_file()
+            return
+    assert resolved == packaged
     assert resolved.is_file()
 
 

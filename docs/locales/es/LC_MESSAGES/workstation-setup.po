@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-24 20:06+0200\n"
+"POT-Creation-Date: 2026-09-19 09:40+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.neve.md>\n"
 "Language: es\n"
@@ -154,22 +154,61 @@ msgstr ""
 
 #: ../../workstation-setup.md:70
 msgid ""
-"The `browser` extra provides the `playwright` command; install the "
-"browser it drives for live AEAT reads:"
+"The `browser` extra drives a Chromium build for live AEAT reads. Download"
+" the exact build the installed extra launches with:"
 msgstr ""
-"El extra `browser` proporciona el comando `playwright`; instala el "
-"navegador que controla para las lecturas en vivo de la AEAT:"
+"El extra `browser` utiliza una compilación de Chromium para lecturas en "
+"directo de la AEAT. Descarga la compilación exacta que lanza el extra "
+"instalado con:"
 
-#: ../../workstation-setup.md:77
+#: ../../workstation-setup.md:76
 msgid ""
-"On-host invoice reading uses a local vision model. Start the Ollama "
-"server and pull the model named in the `aeat config check` report:"
+"It does nothing when that build is already present. With the browser "
+"channel set to `chromium`, a browser read that finds the build missing "
+"refuses and names this command."
 msgstr ""
-"La lectura de facturas en el equipo usa un modelo de visión local. Inicia"
-" el servidor de Ollama y descarga el modelo indicado en el informe de "
-"`aeat config check`:"
+"No hace nada cuando esa compilación ya está presente. Con el canal de "
+"navegador fijado en `chromium`, una lectura de navegador que no encuentre"
+" la compilación se rechaza y nombra este comando."
+
+#: ../../workstation-setup.md:80
+msgid ""
+"On-host invoice reading uses a local model runtime (Ollama) with a text "
+"model for text-layer PDFs and a vision model for scans. Run `aeat config "
+"provision status` to see where you stand: whether the runtime is "
+"installed, whether it answers, and which reader models are present."
+msgstr ""
+"La lectura de facturas en el propio equipo utiliza un entorno de "
+"ejecución de modelos local (Ollama) con un modelo de texto para los PDF "
+"con capa de texto y un modelo de visión para los escaneos. Ejecuta `aeat "
+"config provision status` para ver tu situación: si el entorno de "
+"ejecución está instalado, si responde y qué modelos lectores están "
+"presentes."
 
 #: ../../workstation-setup.md:85
+msgid ""
+"Then close whatever that report shows as missing. `aeat config provision "
+"install` installs the runtime through `winget` on Windows or Homebrew on "
+"macOS, and only with `--confirm`; it does nothing when the runtime is "
+"already installed. On Linux, install Ollama with its upstream installer, "
+"which needs root. `aeat config provision start` starts an installed "
+"runtime that is not answering, and does nothing when it already answers. "
+"`aeat config provision pull` downloads every reader role's model, a few "
+"GB in total; narrow it with `--role` to fetch one role's model at a time."
+" `aeat config provision verify` confirms each model loads and answers."
+msgstr ""
+"Después cierra lo que ese informe muestre como ausente. `aeat config "
+"provision install` instala el entorno de ejecución mediante `winget` en "
+"Windows o Homebrew en macOS, y solo con `--confirm`; no hace nada cuando "
+"el entorno de ejecución ya está instalado. En Linux, instala Ollama con "
+"su instalador original, que necesita privilegios de root. `aeat config "
+"provision start` inicia un entorno de ejecución instalado que no "
+"responde, y no hace nada cuando ya responde. `aeat config provision pull`"
+" descarga el modelo de cada rol lector, unos pocos GB en total; acótalo "
+"con `--role` para descargar el modelo de un rol cada vez. `aeat config "
+"provision verify` confirma que cada modelo se carga y responde."
+
+#: ../../workstation-setup.md:96
 msgid ""
 "For cloud LLM classification, put the provider's own CLI on `PATH` and "
 "sign in with that provider's flow. See [Classify transactions with an LLM"
@@ -180,7 +219,7 @@ msgstr ""
 "Consulta [Clasificar transacciones con un LLM](how-to/classify-with-"
 "llm.md#set-up-a-provider)."
 
-#: ../../workstation-setup.md:89
+#: ../../workstation-setup.md:100
 msgid ""
 "Run `aeat config check` again after each change to confirm the gap is "
 "closed."
@@ -188,11 +227,11 @@ msgstr ""
 "Ejecuta `aeat config check` de nuevo tras cada cambio para confirmar que "
 "la carencia se ha resuelto."
 
-#: ../../workstation-setup.md:91
+#: ../../workstation-setup.md:102
 msgid "Run the Model Context Protocol (MCP) surface"
 msgstr "Ejecuta la superficie del Model Context Protocol (MCP)"
 
-#: ../../workstation-setup.md:93
+#: ../../workstation-setup.md:104
 msgid ""
 "Cadrumo's separate `cadrumo-harness` distribution provides the MCP "
 "server, `cadrumo-mcp`, so an AI assistant can operate the same local, "
@@ -207,7 +246,7 @@ msgstr ""
 "situación del contribuyente y las personas de agente acotadas que "
 "mantienen al asistente dentro del límite de seguridad."
 
-#: ../../workstation-setup.md:99
+#: ../../workstation-setup.md:110
 msgid ""
 "In the beta, synchronize that workspace member and run the server from "
 "the same repository checkout:"
@@ -215,7 +254,7 @@ msgstr ""
 "En la beta, sincroniza ese miembro del espacio de trabajo y ejecuta el "
 "servidor desde la misma copia del repositorio:"
 
-#: ../../workstation-setup.md:107
+#: ../../workstation-setup.md:118
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows the source-checkout "
 "registration and explains what the agent can and cannot do."
@@ -224,11 +263,11 @@ msgstr ""
 " un checkout del código fuente y explica qué puede hacer el agente y qué "
 "no puede hacer."
 
-#: ../../workstation-setup.md:110
+#: ../../workstation-setup.md:121
 msgid "Next steps"
 msgstr "Siguientes pasos"
 
-#: ../../workstation-setup.md:112
+#: ../../workstation-setup.md:123
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -236,7 +275,7 @@ msgstr ""
 "[Guía rápida](how-to/quickstart.md): de un perfil vacío a un fichero de "
 "modelo exportado."
 
-#: ../../workstation-setup.md:114
+#: ../../workstation-setup.md:125
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -245,11 +284,11 @@ msgstr ""
 "capacidades de servicio por perfil (exportación a Google, visión LLM, "
 "subida de evidencias a la nube)."
 
-#: ../../workstation-setup.md:116
+#: ../../workstation-setup.md:127
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Conecta un agente](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:117
+#: ../../workstation-setup.md:128
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolución de problemas](how-to/troubleshooting.md)"
 

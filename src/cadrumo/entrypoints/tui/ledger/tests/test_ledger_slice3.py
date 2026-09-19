@@ -33,7 +33,7 @@ from ..reconciliation import LedgerReconciliationScreen
 from ..routes import LedgerUnavailableScreen, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
 from .test_ledger_flows import _ClassificationDoor, _classify_action, _ImportDoor
-from .test_ledger_workspace import _projection, _review_action
+from .workspace_fixtures import ledger_evidence_action, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -42,10 +42,6 @@ _TX_B = "b" * 64
 _INVOICE = "c" * 64
 _INVOICE_D = "d" * 64
 _EVIDENCE = "e" * 64
-
-
-def _evidence_action() -> ActionReference:
-    return ActionReference(action_id=lookup_action("operator.ledger.evidence.review.list").action_id)
 
 
 def _link_action() -> ActionReference:
@@ -67,7 +63,7 @@ def _evidence_item() -> AttachmentReviewItem:
 
 
 def _reconciled_projection():
-    projection = _projection()
+    projection = ledger_projection()
     return projection.model_copy(
         update={
             "invoice_reconciliations": (
@@ -166,9 +162,11 @@ async def test_evidence_renders_only_safe_metadata_and_restores_semantic_focus()
     )
     controller = LedgerWorkspaceController(
         context,
-        _projection(),
+        ledger_projection(),
         LedgerWorkspaceInjection(
-            review_action=_review_action(), evidence_action=_evidence_action(), evidence_items=(_evidence_item(),)
+            review_action=ledger_review_action(),
+            evidence_action=ledger_evidence_action(),
+            evidence_items=(_evidence_item(),),
         ),
     )
     screen = LedgerEvidenceScreen(controller)
@@ -181,7 +179,7 @@ async def test_evidence_renders_only_safe_metadata_and_restores_semantic_focus()
         await pilot.press("enter")
         assert screen.requested_review is not None
         assert screen.requested_review.attachment_id == _EVIDENCE
-        assert screen.requested_review.action == _evidence_action()
+        assert screen.requested_review.action == ledger_evidence_action()
         rendered = "\n".join(str(widget.render()) for widget in screen.query(Static))
         assert "512" in rendered
         assert "protected-provider-locator" not in rendered
@@ -195,7 +193,7 @@ async def test_local_reconciliation_renders_distinct_source_and_submits_exact_vi
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
         _reconciled_projection(),
-        LedgerWorkspaceInjection(review_action=_review_action(), link_action=_link_action(), link_submitter=door),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=_link_action(), link_submitter=door),
     )
     screen = LedgerReconciliationScreen(controller)
     app = ScreenHostApp[None](screen)
@@ -222,7 +220,7 @@ async def test_reordered_table_selection_resolves_exact_semantic_pair_not_cursor
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
         _two_suggestion_projection(),
-        LedgerWorkspaceInjection(review_action=_review_action(), link_action=_link_action(), link_submitter=door),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=_link_action(), link_submitter=door),
     )
     screen = LedgerReconciliationScreen(controller)
     app = ScreenHostApp[None](screen)
@@ -253,7 +251,7 @@ async def test_reconciliation_restores_semantic_transaction_and_refuses_escape_i
     controller = LedgerWorkspaceController(
         context,
         _reconciled_projection(),
-        LedgerWorkspaceInjection(review_action=_review_action(), link_action=_link_action(), link_submitter=door),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=_link_action(), link_submitter=door),
     )
     screen = LedgerReconciliationScreen(controller)
     app = ScreenHostApp[None](screen)
@@ -280,7 +278,7 @@ async def test_reconciliation_failure_copy_is_generic_and_sensitive_exception_is
         TuiScreenContextV1(destination="workbench.ledger"),
         _reconciled_projection(),
         LedgerWorkspaceInjection(
-            review_action=_review_action(), link_action=_link_action(), link_submitter=_FailingLinkDoor()
+            review_action=ledger_review_action(), link_action=_link_action(), link_submitter=_FailingLinkDoor()
         ),
     )
     with override_settings(cadrumo_output_language="en"):
@@ -301,13 +299,15 @@ async def test_reconciliation_failure_copy_is_generic_and_sensitive_exception_is
 @pytest.mark.asyncio
 @pytest.mark.parametrize("screen_kind", ("evidence", "reconciliation"))
 async def test_slice3_compositor_has_one_scroll_owner_and_no_80_column_overflow(screen_kind: str) -> None:
-    projection = _projection() if screen_kind == "evidence" else _reconciled_projection()
+    projection = ledger_projection() if screen_kind == "evidence" else _reconciled_projection()
     if screen_kind == "evidence":
         controller = LedgerWorkspaceController(
             TuiScreenContextV1(destination="workbench.ledger"),
             projection,
             LedgerWorkspaceInjection(
-                review_action=_review_action(), evidence_action=_evidence_action(), evidence_items=(_evidence_item(),)
+                review_action=ledger_review_action(),
+                evidence_action=ledger_evidence_action(),
+                evidence_items=(_evidence_item(),),
             ),
         )
     else:
@@ -315,7 +315,7 @@ async def test_slice3_compositor_has_one_scroll_owner_and_no_80_column_overflow(
             TuiScreenContextV1(destination="workbench.ledger"),
             projection,
             LedgerWorkspaceInjection(
-                review_action=_review_action(), link_action=_link_action(), link_submitter=_LinkDoor()
+                review_action=ledger_review_action(), link_action=_link_action(), link_submitter=_LinkDoor()
             ),
         )
     screen = LedgerEvidenceScreen(controller) if screen_kind == "evidence" else LedgerReconciliationScreen(controller)
@@ -334,8 +334,8 @@ async def test_slice3_compositor_has_one_scroll_owner_and_no_80_column_overflow(
 def test_slice3_routes_and_actions_fail_closed_without_declared_dependencies() -> None:
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
-        _projection(),
-        LedgerWorkspaceInjection(review_action=_review_action()),
+        ledger_projection(),
+        LedgerWorkspaceInjection(review_action=ledger_review_action()),
     )
     assert isinstance(
         resolve_ledger_screen(controller, controller.route_target(LedgerWorkspaceArea.EVIDENCE)),
@@ -348,15 +348,17 @@ def test_slice3_routes_and_actions_fail_closed_without_declared_dependencies() -
     with pytest.raises(ValueError, match="canonical review query"):
         LedgerWorkspaceController(
             TuiScreenContextV1(destination="workbench.ledger"),
-            _projection(),
-            LedgerWorkspaceInjection(review_action=_review_action(), evidence_action=_link_action(), evidence_items=()),
+            ledger_projection(),
+            LedgerWorkspaceInjection(
+                review_action=ledger_review_action(), evidence_action=_link_action(), evidence_items=()
+            ),
         )
     with pytest.raises(ValueError, match="canonical command"):
         LedgerWorkspaceController(
             TuiScreenContextV1(destination="workbench.ledger"),
-            _projection(),
+            ledger_projection(),
             LedgerWorkspaceInjection(
-                review_action=_review_action(), link_action=_evidence_action(), link_submitter=_LinkDoor()
+                review_action=ledger_review_action(), link_action=ledger_evidence_action(), link_submitter=_LinkDoor()
             ),
         )
 
@@ -367,7 +369,7 @@ async def test_reconciliation_without_mutation_door_preserves_read_only_drift_an
         controller = LedgerWorkspaceController(
             TuiScreenContextV1(destination="workbench.ledger"),
             _reconciled_projection(),
-            LedgerWorkspaceInjection(review_action=_review_action()),
+            LedgerWorkspaceInjection(review_action=ledger_review_action()),
         )
         screen = LedgerReconciliationScreen(controller)
         app = ScreenHostApp[None](screen)
@@ -403,11 +405,11 @@ def _all_routes_controller() -> LedgerWorkspaceController:
         ),
         projection,
         LedgerWorkspaceInjection(
-            review_action=_review_action(),
+            review_action=ledger_review_action(),
             classify_action=_classify_action(),
             classification_submitter=_ClassificationDoor(),
             import_door=_ImportDoor(),
-            evidence_action=_evidence_action(),
+            evidence_action=ledger_evidence_action(),
             evidence_items=(_evidence_item(),),
             link_action=_link_action(),
             link_submitter=_LinkDoor(),
@@ -450,7 +452,7 @@ async def test_link_door_is_not_called_for_a_pair_absent_from_visible_projection
     controller = LedgerWorkspaceController(
         TuiScreenContextV1(destination="workbench.ledger"),
         _reconciled_projection(),
-        LedgerWorkspaceInjection(review_action=_review_action(), link_action=_link_action(), link_submitter=door),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), link_action=_link_action(), link_submitter=door),
     )
     with pytest.raises(ValueError, match="absent from the visible reconciliation projection"):
         await controller.submit_link(_TX, "f" * 64)
@@ -464,10 +466,10 @@ async def test_slice3_copy_is_real_across_locales_without_semantic_drift() -> No
         with override_settings(cadrumo_output_language=locale):
             controller = LedgerWorkspaceController(
                 TuiScreenContextV1(destination="workbench.ledger"),
-                _projection(),
+                ledger_projection(),
                 LedgerWorkspaceInjection(
-                    review_action=_review_action(),
-                    evidence_action=_evidence_action(),
+                    review_action=ledger_review_action(),
+                    evidence_action=ledger_evidence_action(),
                     evidence_items=(_evidence_item(),),
                 ),
             )
@@ -534,7 +536,7 @@ async def test_reconciliation_copy_pins_local_source_and_canonical_semantics(
             TuiScreenContextV1(destination="workbench.ledger"),
             _reconciled_projection(),
             LedgerWorkspaceInjection(
-                review_action=_review_action(), link_action=_link_action(), link_submitter=_LinkDoor()
+                review_action=ledger_review_action(), link_action=_link_action(), link_submitter=_LinkDoor()
             ),
         )
         screen = LedgerReconciliationScreen(controller)
@@ -582,7 +584,7 @@ async def test_a_suggested_link_shows_the_values_it_was_suggested_on() -> None:
         TuiScreenContextV1(destination="workbench.ledger"),
         _two_suggestion_projection(),
         LedgerWorkspaceInjection(
-            review_action=_review_action(), link_action=_link_action(), link_submitter=_LinkDoor()
+            review_action=ledger_review_action(), link_action=_link_action(), link_submitter=_LinkDoor()
         ),
     )
     screen = LedgerReconciliationScreen(controller)

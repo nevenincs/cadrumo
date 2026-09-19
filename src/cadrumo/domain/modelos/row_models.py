@@ -187,6 +187,7 @@ class Modelo184MemberRow(BaseModel):
     ``bindings/0001-bindings.toml`` atribucion_member source block.
 
     Parity assertions:
+
     * ``nif`` → ``member_tax_id`` (binding: modelo-184-member-row-nif)
     * ``nombre`` → ``member_legal_name`` (binding: modelo-184-member-row-name)
     * ``porcentaje`` → ``share_percentage`` (binding: modelo-184-member-row-share)
@@ -362,6 +363,7 @@ class Modelo232VinculadaRow(BaseModel):
     them.
 
     Parity assertions:
+
     * ``nif`` → ``counterparty_tax_id`` (binding: modelo-232-related-party-row-nif)
     * ``nombre`` → ``counterparty_legal_name`` (binding: modelo-232-related-party-row-name)
     * ``pais`` → ``country_code`` (binding: modelo-232-related-party-row-country)
@@ -732,6 +734,7 @@ class Modelo347ContraparteRow(BaseModel):
     must exceed €3,005.06 per RD 1065/2007 art. 33.1.
 
     Parity assertions:
+
     * ``nif`` → ``contraparte.nif`` (counterparty tax id)
     * ``nombre`` → ``contraparte.nombre`` (legal name)
     * ``importe_Q1/Q2/Q3/Q4`` → quarterly importe slots

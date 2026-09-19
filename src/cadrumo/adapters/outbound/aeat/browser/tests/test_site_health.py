@@ -39,6 +39,10 @@ _FIXTURES_ROOT = FIXTURES_DIR / "site_health"
 _PROBE_URL = f"{Settings.external_constants().aeat.domains.sede}/"
 _RATE_LIMIT_DEFAULT = 300
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
+# What central redaction leaves of a URL: the origin, with the path and the
+# query dropped. Asserting the origin under its own key (rather than as a bare
+# substring of the whole rendering) is what proves the path and query went.
+_REDACTED_URL_ORIGIN = "https://example.test"
 _OBSERVED_AT = datetime(2026, 5, 28, 14, 45, 0, tzinfo=UTC)
 
 
@@ -162,7 +166,7 @@ def test_waf_evidence_fragment_is_centrally_redacted() -> None:
     assert "sha256:" in fragment
     assert "private/path" not in fragment
     assert "token=secret" not in fragment
-    assert "https://example.test" in fragment
+    assert f"href='{_REDACTED_URL_ORIGIN}'" in fragment
     assert _JWT not in fragment
     assert "token:sha256:" in fragment
 

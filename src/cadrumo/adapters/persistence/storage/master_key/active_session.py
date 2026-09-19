@@ -143,7 +143,7 @@ def get_active_master_key() -> bytes:
     Used by every column-level encrypt and decrypt operation in
     ``_encrypted_columns.py``. The DEK (not the KEK) is the
     AES-256-GCM key for the row-ciphertext layer — the KEK only ever
-    unwraps the DEK during :meth:`BucketSession.open`.
+    unwraps the DEK while the session is being opened.
 
     Returns:
         The 32-byte DEK used for AES-256-GCM column-level encryption.

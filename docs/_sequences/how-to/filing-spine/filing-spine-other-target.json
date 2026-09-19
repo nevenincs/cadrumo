@@ -116,7 +116,7 @@
               "work_unit_id": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767",
               "work_unit_state": "borrador"
             },
-            "message": "Status calculate summary",
+            "message": "This active work unit can be calculated.",
             "severity": "info"
           }
         ],
@@ -200,7 +200,7 @@
               "work_unit_id": "fbec956defdca4f6ba7872bcc7024315cd049f522e140c50479ce01a09d64767",
               "work_unit_state": "borrador"
             },
-            "message": "Status calculate summary",
+            "message": "This active work unit can be calculated.",
             "severity": "info"
           }
         ],

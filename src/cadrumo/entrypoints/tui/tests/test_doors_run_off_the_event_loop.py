@@ -25,7 +25,7 @@ from ....application.search.workbench import WorkbenchSearchService
 from ...tui.components.host import ScreenHostApp
 from ..app import CadrumoTuiApp, RootBindingV1
 from ..declarations.calendar import DeclarationsCalendarScreen
-from ..declarations.tests.test_calendar import _controller, _projection
+from ..declarations.tests.calendar_fixtures import calendar_controller, calendar_projection
 from ..home import HomeScreen
 from ..ledger.controller import LedgerWorkspaceController
 from ..ledger.evidence import LedgerEvidenceScreen
@@ -39,9 +39,12 @@ from ..ledger.models import (
     LedgerImportSourceKind,
     LedgerReaderReadinessV1,
 )
-from ..ledger.tests.test_ledger_slice3 import _evidence_action
-from ..ledger.tests.test_ledger_workspace import _context, _review_action
-from ..ledger.tests.test_ledger_workspace import _projection as _ledger_projection
+from ..ledger.tests.workspace_fixtures import (
+    ledger_context,
+    ledger_evidence_action,
+    ledger_projection,
+    ledger_review_action,
+)
 from ..ledger.workspace_injection import LedgerWorkspaceInjection
 from ..ledger_doors import LedgerImportDoor
 from .home_fixtures import HomeFixtureScenario, build_home_projection_fixture
@@ -144,11 +147,11 @@ def _evidence_screen(boundary: TransportBoundary) -> LedgerEvidenceScreen:
     items: tuple[AttachmentReviewItem, ...] = ()
     return LedgerEvidenceScreen(
         LedgerWorkspaceController(
-            _context(),
-            _ledger_projection(),
+            ledger_context(),
+            ledger_projection(),
             LedgerWorkspaceInjection(
-                review_action=_review_action(),
-                evidence_action=_evidence_action(),
+                review_action=ledger_review_action(),
+                evidence_action=ledger_evidence_action(),
                 evidence_items=items,
                 evidence_door=_GuardedEvidenceDoor(boundary),
             ),
@@ -197,7 +200,7 @@ async def test_the_import_door_does_its_reading_and_writing_off_the_loop(tmp_pat
 @pytest.mark.asyncio
 async def test_the_calendar_creates_a_declaration_off_the_loop() -> None:
     boundary = TransportBoundary()
-    base = _projection()
+    base = calendar_projection()
     recovery_row = base.entries[0].model_copy(
         update={
             "recovery_action": declare_next_action("operator.modelo.work.create", modelo="130", year=2026, period="1T")
@@ -205,7 +208,7 @@ async def test_the_calendar_creates_a_declaration_off_the_loop() -> None:
     )
     projection = base.model_copy(update={"entries": (recovery_row, *base.entries[1:])})
     screen = DeclarationsCalendarScreen(
-        _controller(projection, recovery_handoff=lambda action, row: boundary.enter("create_declaration"))
+        calendar_controller(projection, recovery_handoff=lambda action, row: boundary.enter("create_declaration"))
     )
     async with ScreenHostApp[None](screen).run_test(size=(80, 24)) as pilot:
         await pilot.pause()

@@ -131,7 +131,7 @@
             },
             "code": "pays_capital_income_with_retencion",
             "context": {
-              "affected_modelos": "123,193"
+              "affected_modelos": "117,123,126,128,187,188,193,194"
             },
             "message": "Retencion capital unset",
             "severity": "warning"
@@ -1623,11 +1623,13 @@
             ],
             "confidently_excluded": [
               "131",
+              "151",
               "184",
               "200",
               "202",
               "210",
-              "232"
+              "232",
+              "840"
             ],
             "out_of_scope": [
               "030",
@@ -1640,7 +1642,6 @@
               "145",
               "149",
               "150",
-              "151",
               "159",
               "170",
               "171",
@@ -1720,7 +1721,6 @@
               "796",
               "797",
               "798",
-              "840",
               "848",
               "993"
             ],
@@ -1737,6 +1737,55 @@
           "generated_at": "2026-04-01T09:00:00Z",
           "incomplete_reason": null,
           "items": [
+            {
+              "adjusted_closes_on": "2026-01-20",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2026-01-20",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "136",
+                "period": "2025 4T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_refs": [],
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "136",
+              "opens_on": "2026-01-01",
+              "payment_cutoff_on": null,
+              "period": "2025 4T",
+              "recovery": {
+                "recargo_band": {
+                  "id": "completed_months_2",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 2,
+                  "min_completed_months": 2,
+                  "surcharge_pct": "3.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "calendar_unavailable",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
             {
               "adjusted_closes_on": "2026-01-30",
               "censo_enrolment_state": "not_checked",
@@ -1781,7 +1830,7 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "business_day",
+              "shift_reason": "calendar_unavailable",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
@@ -1830,7 +1879,7 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "business_day",
+              "shift_reason": "calendar_unavailable",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
@@ -1879,13 +1928,13 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "business_day",
+              "shift_reason": "calendar_unavailable",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
             }
           ],
-          "late_count": 3,
+          "late_count": 4,
           "range": {
             "from_date": "2025-04-01",
             "to_date": "2026-04-01"
@@ -1925,8 +1974,14 @@
             },
             {
               "affected_modelos": [
+                "117",
                 "123",
-                "193"
+                "126",
+                "128",
+                "187",
+                "188",
+                "193",
+                "194"
               ],
               "code": "pays_capital_income_with_retencion",
               "message": "cli.overview.warning.retencion_capital_unset"
@@ -2081,7 +2136,7 @@
             },
             "code": "pays_capital_income_with_retencion",
             "context": {
-              "affected_modelos": "123,193"
+              "affected_modelos": "117,123,126,128,187,188,193,194"
             },
             "message": "Retencion capital unset",
             "severity": "warning"
@@ -3575,11 +3630,13 @@
             ],
             "confidently_excluded": [
               "131",
+              "151",
               "184",
               "200",
               "202",
               "210",
-              "232"
+              "232",
+              "840"
             ],
             "out_of_scope": [
               "030",
@@ -3592,7 +3649,6 @@
               "145",
               "149",
               "150",
-              "151",
               "159",
               "170",
               "171",
@@ -3672,7 +3728,6 @@
               "796",
               "797",
               "798",
-              "840",
               "848",
               "993"
             ],
@@ -3689,6 +3744,55 @@
           "generated_at": "2026-04-01T09:00:00Z",
           "incomplete_reason": null,
           "items": [
+            {
+              "adjusted_closes_on": "2026-01-20",
+              "censo_enrolment_state": "not_checked",
+              "closes_on": "2026-01-20",
+              "filing_evidence": {
+                "aeat_evidence_conflict_reference_ids": [],
+                "aeat_evidence_kind": null,
+                "aeat_reference_id": null,
+                "aeat_snapshot_id": null,
+                "aeat_submission_state": "not_observed",
+                "aeat_submitted_at": null,
+                "evidence_source": null,
+                "filing_year": 2025,
+                "justificante_required": true,
+                "justificante_verified": false,
+                "local_calculation_revision_id": null,
+                "local_filed_at": null,
+                "local_filing_record_id": null,
+                "local_filing_state": "not_ready_to_file",
+                "modelo": "136",
+                "period": "2025 4T",
+                "verified_justificante_csv": null
+              },
+              "filing_year": 2025,
+              "holiday_refs": [],
+              "jurisdictions": [],
+              "local_work_unit_id": null,
+              "local_work_unit_name": null,
+              "local_work_unit_revision_id": null,
+              "modelo": "136",
+              "opens_on": "2026-01-01",
+              "payment_cutoff_on": null,
+              "period": "2025 4T",
+              "recovery": {
+                "recargo_band": {
+                  "id": "completed_months_2",
+                  "interest_applies": false,
+                  "legal_ref": "ley-58-2003:art-27.2",
+                  "max_completed_months": 2,
+                  "min_completed_months": 2,
+                  "surcharge_pct": "3.00"
+                },
+                "still_filable": true
+              },
+              "shift_reason": "calendar_unavailable",
+              "source": "registry_deadline",
+              "status": "OVERDUE",
+              "user_state": "late"
+            },
             {
               "adjusted_closes_on": "2026-01-30",
               "censo_enrolment_state": "not_checked",
@@ -3733,7 +3837,7 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "business_day",
+              "shift_reason": "calendar_unavailable",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
@@ -3782,7 +3886,7 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "business_day",
+              "shift_reason": "calendar_unavailable",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
@@ -3831,13 +3935,13 @@
                 },
                 "still_filable": true
               },
-              "shift_reason": "business_day",
+              "shift_reason": "calendar_unavailable",
               "source": "registry_deadline",
               "status": "OVERDUE",
               "user_state": "late"
             }
           ],
-          "late_count": 3,
+          "late_count": 4,
           "range": {
             "from_date": "2026-01-01",
             "to_date": "2026-06-30"
@@ -3877,8 +3981,14 @@
             },
             {
               "affected_modelos": [
+                "117",
                 "123",
-                "193"
+                "126",
+                "128",
+                "187",
+                "188",
+                "193",
+                "194"
               ],
               "code": "pays_capital_income_with_retencion",
               "message": "cli.overview.warning.retencion_capital_unset"

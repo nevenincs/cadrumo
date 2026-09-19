@@ -36,6 +36,40 @@ _DATE_DDMMYYYY_RE: Final = re.compile(r"^\s*(\d{2}[-/]\d{2}[-/]\d{4})\s*$")
 # Extended-form ISO 8601 (``YYYY-MM-DD``); the compact form is deliberately refused.
 _ISO_8601_EXTENDED_LENGTH: Final[int] = 10
 
+#: The separators a date format is defined by. Each is recognised by comparison
+#: and then re-emitted as its own literal below, so nothing from the input is
+#: carried into the mask -- see :func:`_date_shape`.
+_SHAPE_SEPARATORS: Final[tuple[str, ...]] = ("-", "/", ".", " ", ":", "T")
+
+
+def _character_shape(char: str) -> str:
+    """Return the class ``char`` belongs to, as a literal that never carries it.
+
+    Every branch yields a constant. The input reaches the conditions only, so
+    the mask this builds is a property of the value's shape and holds no part
+    of the value itself.
+    """
+    if char.isdigit():
+        return "9"
+    for separator in _SHAPE_SEPARATORS:
+        if char == separator:
+            return separator
+    return "A" if char.isalpha() else "?"
+
+
+def _date_shape(value: str) -> str:
+    """Return the character-class shape of ``value``, carrying none of it.
+
+    The values these parsers refuse are personal data -- a descendant's date of
+    birth, a censo registration date -- so a diagnostic must not echo them. What
+    makes a malformed date actionable is its SHAPE: ``9999-99-99`` against
+    ``99-99-9999`` says which format arrived, ``A`` says a letter reached a
+    numeric position, and the mask's own length is the value's length. Two
+    different dates of the same shape produce the same mask, and no mask
+    reconstructs the value it came from.
+    """
+    return "".join(_character_shape(char) for char in value)
+
 
 def parse_iso8601_date(raw: str | None) -> date | None:
     """Parse an ISO-8601 date string (``YYYY-MM-DD``) into a :class:`date`.
@@ -60,7 +94,10 @@ def parse_iso8601_date(raw: str | None) -> date | None:
     try:
         return date.fromisoformat(cleaned)
     except ValueError as exc:
-        _log.debug("parse_iso8601_date: %r is not a valid ISO-8601 date", cleaned)
+        _log.debug(
+            "parse_iso8601_date: refused a value of shape %s; expected 9999-99-99",
+            _date_shape(cleaned),
+        )
         # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY:
         # Called from @field_validator stacks; ValueError propagates into the
         # pydantic ValidationError chain.
@@ -153,7 +190,10 @@ def parse_ddmmyyyy_date(raw: str | None) -> date | None:
         return None
     match = _DATE_DDMMYYYY_RE.match(cleaned)
     if match is None:
-        _log.debug("parse_ddmmyyyy_date: %r does not match dd-mm-yyyy / dd/mm/yyyy", cleaned)
+        _log.debug(
+            "parse_ddmmyyyy_date: refused a value of shape %s; expected 99-99-9999 or 99/99/9999",
+            _date_shape(cleaned),
+        )
         # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY:
         # Called from @field_validator stacks; ValueError propagates into the
         # pydantic ValidationError chain.
@@ -166,11 +206,10 @@ def parse_ddmmyyyy_date(raw: str | None) -> date | None:
         return date(year, month, day)
     except ValueError as exc:
         _log.debug(
-            "parse_ddmmyyyy_date: %r parsed to (%d, %d, %d) which is not a valid calendar date",
-            cleaned,
-            day,
+            "parse_ddmmyyyy_date: a value of shape %s named month %d day %d, which is not a calendar date",
+            _date_shape(cleaned),
             month,
-            year,
+            day,
         )
         # BROAD-EXCEPT-RATIONALE-PYDANTIC-PARSE-PROXY:
         # Called from @field_validator stacks; ValueError propagates into the

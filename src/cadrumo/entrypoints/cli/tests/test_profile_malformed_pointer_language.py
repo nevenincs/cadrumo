@@ -17,7 +17,7 @@ from ....adapters.persistence.storage.tests.secure_sql import dev_test_database_
 from ....core.bucket_pointer import pointer_path
 from ....core.i18n.render import clear_output_language_cache, tr
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
-from .subprocess_cli import _as_text_completed_process
+from .subprocess_cli import as_text_completed_process
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -46,7 +46,7 @@ def _profile_storage_env(*, storage_root: Path, tmp_path: Path) -> dict[str, str
 
 def _run_cli(*args: str, storage_root: Path, tmp_path: Path) -> subprocess.CompletedProcess[str]:
     """Execute the production entry point in a fresh interpreter."""
-    return _as_text_completed_process(
+    return as_text_completed_process(
         run_audited_process(
             [
                 sys.executable,

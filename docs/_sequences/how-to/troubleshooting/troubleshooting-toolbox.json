@@ -13,7 +13,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "Workspace status\n\nYou are working in profile `docs-sequence-sandbox`.\nNo bank transactions have been imported yet.\nNo sales or purchase invoices are stored in the invoice register. This is a separate store from your bank ledger - it does not count classified ledger transactions. An empty invoice register is normal if you only use the bank ledger.\nNo saved declaration drafts were found.\nNo modelo work units have been started yet.\nLocal encrypted storage is readable with the current master key.\n\nWhat to type next\n  Import a bank statement to record your transactions.\n  Review imported rows.\n  Return to the command guide.\ncoverage_advised\t48\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 130 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 131 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 303 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t48\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.status.next_step\tImport a bank statement to record your transactions.\nnotice\toverview.status.next_step\tReview imported rows.\nnotice\toverview.status.next_step\tReturn to the command guide.\nnotice\toverview.coverage.incomplete\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 130 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 131 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 303 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.no_aeat_history\tThis profile holds no filing evidence AEAT confirmed.\nnext_action\taeat app ledger review\nnext_action\taeat app overview explain 038\nnext_action\taeat app overview explain 100\nnext_action\taeat app overview explain 111\nnext_action\taeat app overview explain 115\nnext_action\taeat app overview explain 117\nnext_action\taeat app overview explain 122\nnext_action\taeat app overview explain 123\nnext_action\taeat app overview explain 126\nnext_action\taeat app overview explain 128\nnext_action\taeat app overview explain 130\nnext_action\taeat app overview explain 131\nnext_action\taeat app overview explain 136\nnext_action\taeat app overview explain 156\nnext_action\taeat app overview explain 165\nnext_action\taeat app overview explain 180\nnext_action\taeat app overview explain 181\nnext_action\taeat app overview explain 182\nnext_action\taeat app overview explain 185\nnext_action\taeat app overview explain 187\nnext_action\taeat app overview explain 188\nnext_action\taeat app overview explain 189\nnext_action\taeat app overview explain 190\nnext_action\taeat app overview explain 193\nnext_action\taeat app overview explain 194\nnext_action\taeat app overview explain 216\nnext_action\taeat app overview explain 220\nnext_action\taeat app overview explain 222\nnext_action\taeat app overview explain 270\nnext_action\taeat app overview explain 280\nnext_action\taeat app overview explain 296\nnext_action\taeat app overview explain 303\nnext_action\taeat app overview explain 308\nnext_action\taeat app overview explain 309\nnext_action\taeat app overview explain 322\nnext_action\taeat app overview explain 341\nnext_action\taeat app overview explain 345\nnext_action\taeat app overview explain 347\nnext_action\taeat app overview explain 349\nnext_action\taeat app overview explain 353\nnext_action\taeat app overview explain 360\nnext_action\taeat app overview explain 369\nnext_action\taeat app overview explain 390\nnext_action\taeat app overview explain 490\nnext_action\taeat app overview explain 576\nnext_action\taeat app overview explain 604\nnext_action\taeat app overview explain 720\nnext_action\taeat app overview explain 721\nnext_action\taeat app overview explain 763\nnext_action\taeat app live filed pull-all\n"
+      "text": "Workspace status\n\nYou are working in profile `docs-sequence-sandbox`.\nNo bank transactions have been imported yet.\nNo sales or purchase invoices are stored in the invoice register. This is a separate store from your bank ledger - it does not count classified ledger transactions. An empty invoice register is normal if you only use the bank ledger.\nNo saved declaration drafts were found.\nNo modelo work units have been started yet.\nLocal encrypted storage is readable with the current master key.\n\nWhat to type next\n  Import a bank statement to record your transactions.\n  Review imported rows.\n  Return to the command guide.\ncoverage_advised\t49\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 130 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 131 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 303 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\ncoverage_advised\t49\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.status.next_step\tImport a bank statement to record your transactions.\nnotice\toverview.status.next_step\tReview imported rows.\nnotice\toverview.status.next_step\tReturn to the command guide.\nnotice\toverview.coverage.incomplete\tThe filing obligation 038 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 100 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 111 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 115 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 117 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 122 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 123 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 126 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 128 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 130 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 131 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 136 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 156 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 165 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 180 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 181 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 182 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 185 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 187 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 188 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 189 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 190 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 193 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 194 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 216 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 220 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 222 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 270 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 280 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 296 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 303 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 308 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 309 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 322 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 341 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 345 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 347 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 349 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 353 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 360 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 369 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 390 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 490 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 576 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 604 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 720 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 721 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.coverage.incomplete\tThe filing obligation 763 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.\nnotice\toverview.no_aeat_history\tThis profile holds no filing evidence AEAT confirmed.\nnext_action\taeat app ledger review\nnext_action\taeat app overview explain 038\nnext_action\taeat app overview explain 100\nnext_action\taeat app overview explain 111\nnext_action\taeat app overview explain 115\nnext_action\taeat app overview explain 117\nnext_action\taeat app overview explain 122\nnext_action\taeat app overview explain 123\nnext_action\taeat app overview explain 126\nnext_action\taeat app overview explain 128\nnext_action\taeat app overview explain 130\nnext_action\taeat app overview explain 131\nnext_action\taeat app overview explain 136\nnext_action\taeat app overview explain 156\nnext_action\taeat app overview explain 165\nnext_action\taeat app overview explain 180\nnext_action\taeat app overview explain 181\nnext_action\taeat app overview explain 182\nnext_action\taeat app overview explain 185\nnext_action\taeat app overview explain 187\nnext_action\taeat app overview explain 188\nnext_action\taeat app overview explain 189\nnext_action\taeat app overview explain 190\nnext_action\taeat app overview explain 193\nnext_action\taeat app overview explain 194\nnext_action\taeat app overview explain 216\nnext_action\taeat app overview explain 220\nnext_action\taeat app overview explain 222\nnext_action\taeat app overview explain 270\nnext_action\taeat app overview explain 280\nnext_action\taeat app overview explain 296\nnext_action\taeat app overview explain 303\nnext_action\taeat app overview explain 308\nnext_action\taeat app overview explain 309\nnext_action\taeat app overview explain 322\nnext_action\taeat app overview explain 341\nnext_action\taeat app overview explain 345\nnext_action\taeat app overview explain 347\nnext_action\taeat app overview explain 349\nnext_action\taeat app overview explain 353\nnext_action\taeat app overview explain 360\nnext_action\taeat app overview explain 369\nnext_action\taeat app overview explain 390\nnext_action\taeat app overview explain 490\nnext_action\taeat app overview explain 576\nnext_action\taeat app overview explain 604\nnext_action\taeat app overview explain 714\nnext_action\taeat app overview explain 720\nnext_action\taeat app overview explain 721\nnext_action\taeat app overview explain 763\nnext_action\taeat app live filed pull-all\n"
     },
     {
       "argv": [
@@ -114,347 +114,347 @@
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "preferences.output_language — Output language"
+                  "summary": "preferences.output_language — CLI output language for this profile"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.legal_entity_form — Legal entity form"
+                  "summary": "taxpayer_type.legal_entity_form — Legal form"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "identity.legal_name — Legal name"
+                  "summary": "identity.legal_name — Legal or company name for export headers"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.fiscal_residency — Fiscal residency"
+                  "summary": "taxpayer_type.fiscal_residency — Fiscal residency category"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.country_of_fiscal_residence — Country of fiscal residence"
+                  "summary": "taxpayer_type.country_of_fiscal_residence — Country of fiscal residence (ISO 3166-1 alpha-2 code, e.g. GB, DE, FR)"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.representante_fiscal_nif — Representante fiscal nif"
+                  "summary": "taxpayer_type.representante_fiscal_nif — NIF/NIE of fiscal representative in Spain (required outside EU/EEA)"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.representante_fiscal_nombre — Representante fiscal nombre"
+                  "summary": "taxpayer_type.representante_fiscal_nombre — Name of fiscal representative in Spain"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "tax_residence.ccaa — Ccaa"
+                  "summary": "tax_residence.ccaa — Tax-residence autonomous community"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "contact.postcode — Postcode"
+                  "summary": "contact.postcode — Tax address postcode"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.irpf_income_categories — Irpf income categories"
+                  "summary": "taxpayer_type.irpf_income_categories — IRPF income categories"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.declaration_roles — Declaration roles"
+                  "summary": "taxpayer_type.declaration_roles — Does the declaring entity hold any of these institutional roles for Modelo 347 (third-party operations) purposes?"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "censo.activity_start_date — Activity start date"
+                  "summary": "censo.activity_start_date — From what date do you have filing obligations / when did you register? (YYYY-MM-DD, optional)"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.incn_prior_12_months — Incn prior 12 months"
+                  "summary": "taxpayer_type.incn_prior_12_months — What was your net turnover over the past 12 months? (in euros, optional)"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.new_entity_first_two_profit_periods — New entity first two profit periods"
+                  "summary": "taxpayer_type.new_entity_first_two_profit_periods — Is this a newly-created legal entity in one of its first two profit-making tax periods?"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.ley_49_2002_special_regime_option_declared — Ley 49 2002 special regime option declared"
+                  "summary": "taxpayer_type.ley_49_2002_special_regime_option_declared — Has the entity filed the Modelo 036 option for the Title II Ley 49/2002 special fiscal regime?"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.ley_49_2002_special_regime_option_date — Ley 49 2002 special regime option date"
+                  "summary": "taxpayer_type.ley_49_2002_special_regime_option_date — Date declared for the Ley 49/2002 special-regime option"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.ley_49_2002_special_regime_renunciation_declared — Ley 49 2002 special regime renunciation declared"
+                  "summary": "taxpayer_type.ley_49_2002_special_regime_renunciation_declared — Has the entity filed a Modelo 036 renunciation of the Title II Ley 49/2002 special fiscal regime?"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "taxpayer_type.ley_49_2002_special_regime_renunciation_date — Ley 49 2002 special regime renunciation date"
+                  "summary": "taxpayer_type.ley_49_2002_special_regime_renunciation_date — Date declared for the Ley 49/2002 special-regime renunciation"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "iva.roi_enrolled — Roi enrolled"
+                  "summary": "iva.roi_enrolled — Enrolled in ROI"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "iva.oss_enrolled — Oss enrolled"
+                  "summary": "iva.oss_enrolled — Enrolled in OSS"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "iva.group_member_enrolled — Group member enrolled"
+                  "summary": "iva.group_member_enrolled — Enrolled as a member entity of an IVA group"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "iva.group_dominant_entity_enrolled — Group dominant entity enrolled"
+                  "summary": "iva.group_dominant_entity_enrolled — Enrolled as the dominant entity of an IVA group"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "iva.sii_enrolled — Sii enrolled"
+                  "summary": "iva.sii_enrolled — Enrolled in the SII (immediate information supply)"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "iva.intracommunity_operations_exceed_50000_eur — Intracommunity operations exceed 50000 eur"
+                  "summary": "iva.intracommunity_operations_exceed_50000_eur — Intra-community operations exceed 50,000 EUR"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "censo.large_company — Large company"
+                  "summary": "censo.large_company — Large-company condition"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "censo.public_administration_budget_gt_6000000 — Public administration budget gt 6000000"
+                  "summary": "censo.public_administration_budget_gt_6000000 — Public-administration budget over 6,000,000 EUR"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_filing.declaration_type — Declaration type"
+                  "summary": "renta_filing.declaration_type — Taxation type code"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_taxpayer.sex — Sex"
+                  "summary": "renta_taxpayer.sex — First taxpayer sex code"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_taxpayer.marital_status — Marital status"
+                  "summary": "renta_taxpayer.marital_status — First taxpayer marital status"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_family.situacion_familiar — Situacion familiar"
+                  "summary": "renta_family.situacion_familiar — Family situation (Art. 82 LIRPF)"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_taxpayer.marriage_date — Marriage date"
+                  "summary": "renta_taxpayer.marriage_date — Marriage start date (YYYY-MM-DD)"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_taxpayer.birth_date — Birth date"
+                  "summary": "renta_taxpayer.birth_date — First taxpayer birth date"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_taxpayer.disability_grade — Disability grade"
+                  "summary": "renta_taxpayer.disability_grade — First taxpayer disability code"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_taxpayer.death_date — Death date"
+                  "summary": "renta_taxpayer.death_date — First taxpayer death date"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_spouse.tax_id — Tax id"
+                  "summary": "renta_spouse.tax_id — Spouse NIF/NIE"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_spouse.name — Name"
+                  "summary": "renta_spouse.name — Spouse given name"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_spouse.surnames — Surnames"
+                  "summary": "renta_spouse.surnames — Spouse surnames"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_spouse.birth_date — Birth date"
+                  "summary": "renta_spouse.birth_date — Spouse birth date"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_spouse.sex — Sex"
+                  "summary": "renta_spouse.sex — Spouse sex code"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_spouse.disability_grade — Disability grade"
+                  "summary": "renta_spouse.disability_grade — Spouse disability grade (if applicable)"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_spouse.non_resident_irpf — Non resident irpf"
+                  "summary": "renta_spouse.non_resident_irpf — Spouse is non-resident (not an IRPF taxpayer)"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_spouse.eu_eea_resident — Eu eea resident"
+                  "summary": "renta_spouse.eu_eea_resident — Spouse is EU/EEA resident"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_spouse.eu_eea_country — Eu eea country"
+                  "summary": "renta_spouse.eu_eea_country — Spouse EU/EEA country"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_family.descendants_eu_eea_deduction — Descendants eu eea deduction"
+                  "summary": "renta_family.descendants_eu_eea_deduction — EU/EEA descendants in family-unit deduction"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "renta_family.minor_children_in_unit — Minor children in unit"
+                  "summary": "renta_family.minor_children_in_unit — Minor children in family unit"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "withholding.has_employees — Has employees"
+                  "summary": "withholding.has_employees — Has employees and pays salaries subject to withholding"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "withholding.pays_professionals_with_retencion — Pays professionals with retencion"
+                  "summary": "withholding.pays_professionals_with_retencion — Pays professionals with withholding"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.art109_activity_income_withholding_ge_70pct — Art109 activity income withholding ge 70pct"
+                  "summary": "irpf.art109_activity_income_withholding_ge_70pct — Art. 109 70% activity-income coverage exception applies"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "withholding.pays_rent_with_retencion — Pays rent with retencion"
+                  "summary": "withholding.pays_rent_with_retencion — Pays local rent with withholding"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "withholding.pays_capital_income_with_retencion — Pays capital income with retencion"
+                  "summary": "withholding.pays_capital_income_with_retencion — Pays capital income with withholding"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "withholding.modelo_111_no_retenciones_periods — Modelo 111 no retenciones periods"
+                  "summary": "withholding.modelo_111_no_retenciones_periods — Modelo 111 periods with no withholding"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.estimation_regime — Estimation regime"
+                  "summary": "irpf.estimation_regime — IRPF estimation regime"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.objective_estimation_modulos_iae_epigraph — Objective estimation modulos iae epigraph"
+                  "summary": "irpf.objective_estimation_modulos_iae_epigraph — IAE epigraph for objective-estimation modules"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.objective_estimation_modulos_module_1_units — Objective estimation modulos module 1 units"
+                  "summary": "irpf.objective_estimation_modulos_module_1_units — Annual module 1 units"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.objective_estimation_modulos_module_2_units — Objective estimation modulos module 2 units"
+                  "summary": "irpf.objective_estimation_modulos_module_2_units — Annual module 2 units"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.objective_estimation_modulos_module_3_units — Objective estimation modulos module 3 units"
+                  "summary": "irpf.objective_estimation_modulos_module_3_units — Annual module 3 units"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.objective_estimation_modulos_module_4_units — Objective estimation modulos module 4 units"
+                  "summary": "irpf.objective_estimation_modulos_module_4_units — Annual module 4 units"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.objective_estimation_modulos_module_5_units — Objective estimation modulos module 5 units"
+                  "summary": "irpf.objective_estimation_modulos_module_5_units — Annual module 5 units"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.objective_estimation_modulos_module_6_units — Objective estimation modulos module 6 units"
+                  "summary": "irpf.objective_estimation_modulos_module_6_units — Annual module 6 units"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.objective_estimation_modulos_module_7_units — Objective estimation modulos module 7 units"
+                  "summary": "irpf.objective_estimation_modulos_module_7_units — Annual module 7 units"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.special_regime — Special regime"
+                  "summary": "irpf.special_regime — IRPF special regime (Beckham Law / Art. 93 LIRPF)"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "irpf.special_regime_start_date — Special regime start date"
+                  "summary": "irpf.special_regime_start_date — Special regime election date (YYYY-MM-DD)"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "iva.does_intracomunitario — Does intracomunitario"
+                  "summary": "iva.does_intracomunitario — Conducts intra-community operations"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "obligations.third_party_transactions_above_347_threshold — Third party transactions above 347 threshold"
+                  "summary": "obligations.third_party_transactions_above_347_threshold — Third-party transactions exceed Modelo 347 threshold"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "obligations.bienes_extranjero_above_threshold — Bienes extranjero above threshold"
+                  "summary": "obligations.bienes_extranjero_above_threshold — Foreign-held assets exceed the Modelo 720 threshold"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "obligations.monedas_virtuales_extranjero_above_threshold — Monedas virtuales extranjero above threshold"
+                  "summary": "obligations.monedas_virtuales_extranjero_above_threshold — Virtual currencies held abroad above Modelo 721 threshold"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "capabilities.llm_vision — Llm vision"
+                  "summary": "capabilities.llm_vision — Enable on-host LLM vision for reading invoices?"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "capabilities.google_export — Google export"
+                  "summary": "capabilities.google_export — Enable Google Sheets export?"
                 },
                 {
                   "detail": null,
                   "requirement": "optional",
-                  "summary": "identity.notes — Notes"
+                  "summary": "identity.notes — Notes for your own records (optional)"
                 }
               ],
               "name": "profile.readiness",

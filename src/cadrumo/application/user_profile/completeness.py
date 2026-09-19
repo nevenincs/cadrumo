@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping
+from collections.abc import Iterable, Iterator, Mapping
+from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
+from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.governed_fact_scope import (
+    governed_facts_in_scope,
+    validating_governed_facts,
+)
 from ...domain.calculations.registry.irpf_income_categories import irpf_income_category_actividad_economica_token
 from ...domain.calculations.registry.renta_codes_catalogue import (
     fiscal_residency_requires_country,
@@ -46,6 +52,22 @@ SOCIO_COUNTRY_FIELD = "country_of_residence"
 PARTICIPE_CLAVE_BEARING_COUNTRY = "2"
 
 
+@contextmanager
+def _pinned_registry_scope() -> Iterator[None]:
+    """Pin the published generation these rules read their vocabularies from.
+
+    Entity type, legal form, IRPF income category and fiscal residency are
+    governed facts, and their resolvers refuse outside a generation-pinned
+    scope rather than reading a mutable default. A caller already holding one
+    keeps it, so a whole fact set is judged against a single generation.
+    """
+    if governed_facts_in_scope() is not None:
+        yield
+        return
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        yield
+
+
 def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:
     """Return profile paths conditionally required by declared taxpayer facts.
 
@@ -62,6 +84,12 @@ def conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[st
     no readiness surface asked for, so ``config profile status`` reported a
     profile ready and pointed the operator at a command that refused it.
     """
+    with _pinned_registry_scope():
+        return _conditional_profile_required_paths(values)
+
+
+def _conditional_profile_required_paths(values: Mapping[str, object]) -> tuple[str, ...]:
+    """Derive the conditional requirements inside a pinned registry scope."""
     required: list[str] = []
     if _token(values.get(AUTH_PROVIDER_PATH)).lower() == CLAVE_MOVIL_PROVIDER:
         required.append(CLAVE_MOVIL_ROUTE_PATH)
@@ -168,13 +196,14 @@ def iva_regime_required(values: Mapping[str, object]) -> bool:
     pure-landlord profile must not be forced into ``GENERAL`` just to pass
     profile persistence.
     """
-    entity_type = _token(values.get(ENTITY_TYPE_PATH))
-    if entity_type != entity_type_natural_person_token().value:
-        return True
-    categories = {
-        token.strip() for token in _token(values.get(IRPF_INCOME_CATEGORIES_PATH)).split(",") if token.strip()
-    }
-    return irpf_income_category_actividad_economica_token().value in categories
+    with _pinned_registry_scope():
+        entity_type = _token(values.get(ENTITY_TYPE_PATH))
+        if entity_type != entity_type_natural_person_token().value:
+            return True
+        categories = {
+            token.strip() for token in _token(values.get(IRPF_INCOME_CATEGORIES_PATH)).split(",") if token.strip()
+        }
+        return irpf_income_category_actividad_economica_token().value in categories
 
 
 def profile_value_is_present(value: object) -> bool:

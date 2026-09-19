@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import cast
 
 import pytest
 
-from ..logging import _prepare_log_directory, _scrub_value
+from ..logging import SecretScrubbingFilter, _prepare_log_directory, _scrub_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -95,3 +96,51 @@ def test_scrub_value_nested_mapping_scrubs_recursively() -> None:
     outer = cast(dict[str, object], outer_raw)
     assert outer["to" + "ken"] == "<redacted>"
     assert outer["count"] == 3
+
+
+def test_scrub_value_masks_the_home_directory_in_a_logged_path() -> None:
+    """A path argument keeps the file it names and loses whose machine it is on.
+
+    The diagnostic value of a path in a failed write, fsync, or lock is the
+    file it names; the leading segments are the operator's account name and
+    local layout. A `Path` argument is not a `str`, so this is the arm that has
+    to mask it -- a log line reaches the formatter as `%s` long after the
+    string scrubber has run.
+    """
+
+    target = Path.home() / ".cadrumo" / "secrets" / "index.json"
+
+    result = _scrub_value(target)
+
+    rendered = str(result)
+    assert str(Path.home()) not in rendered
+    assert rendered.startswith("~")
+    assert rendered.endswith("index.json")
+
+
+def test_scrub_value_leaves_a_path_outside_the_home_directory_intact() -> None:
+    """Masking is keyed to this machine's home, not to paths in general."""
+
+    assert _scrub_value(Path("/etc/shared/cadrumo/index.json")) == Path("/etc/shared/cadrumo/index.json")
+
+
+def test_secret_scrubbing_filter_masks_the_home_directory_in_a_record() -> None:
+    """The mask reaches the formatted record, not just the scrubbed argument."""
+
+    record = logging.LogRecord(
+        "cadrumo.test",
+        logging.ERROR,
+        "f",
+        1,
+        "atomic_write: standard-tier write failed target=%s error_type=%s",
+        (Path.home() / ".cadrumo" / "secrets" / "index.json", "OSError"),
+        None,
+    )
+
+    SecretScrubbingFilter().filter(record)
+
+    message = record.getMessage()
+    assert str(Path.home()) not in message
+    assert "~" in message
+    assert "index.json" in message
+    assert "error_type=OSError" in message

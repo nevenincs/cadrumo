@@ -205,7 +205,7 @@ class BucketSession:
     def absolute_deadline(self) -> datetime:
         """Return the immutable absolute session-lifetime cap.
 
-        Fixed at :meth:`open` as ``opened_at + absolute_minutes`` and never
+        Fixed when the session opens as ``opened_at + absolute_minutes`` and never
         refreshed; :meth:`touch` clamps the sliding idle deadline to it.
         """
         return self._absolute_deadline

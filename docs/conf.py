@@ -840,7 +840,70 @@ nitpick_ignore_regex = [
         r"^(utc_now|project_answers|write_manifest|sha256_file|save_envelope|"
         r"reset_workflow_state|output_language|extract_pages_text|"
         r"extract_pages_text_from_bytes|emit_collab_workspace_opened_event|"
-        r"LLMProvider|PersonaAction)$",
+        r"LLMProvider|PersonaAction|parse_declaracion|parse_declaracion_bytes|"
+        r"parse_justificante|parse_justificante_bytes|zeroise|"
+        r"NotificationsSnapshot)$",
+    ),
+    # Enum members are emitted as ``:ivar:`` entries by Napoleon
+    # (``napoleon_use_ivar``), never as ``py:attribute`` objects, so an
+    # ``:attr:`` reference to one has no target whether it is written bare
+    # (``VERIFIED``) or through its class (``IvaFlowDirection.SOPORTADO``,
+    # ``llm.LLMProvider.LOCAL``). Scoped to ``py:attr`` with an ALL-CAPS final
+    # segment, which no class or function name takes, so the suppression cannot
+    # mask a missing class. The underscored-constant pattern above covers the
+    # multi-word members; this covers the single-word ones.
+    (r"py:attr", r"^(?:[A-Za-z_][\w.]*\.)?[A-Z][A-Z0-9]*$"),
+    # Members reached through a class whose own definition lives in a private
+    # module: ``SecureObjectRepository`` is public, but ``apply_batch`` is
+    # defined on the write-operations base in
+    # ``sql/_secure_object_writes.py``, which is excluded from the documented
+    # surface, so the inherited member has no object to link to. The private
+    # dotted patterns above match a private segment in the reference path, and
+    # this reference names only public segments.
+    (
+        r"py:meth",
+        r"^(?:cadrumo\.)?adapters\.persistence\.storage\.sql\.secure_objects\."
+        r"SecureObjectRepository\.(apply_batch|save)$",
+    ),
+    # Support classes under a package's ``tests`` subpackage are excluded from
+    # the documented API surface (see the ApiStubManager exclusions), so a
+    # reference into one has no stub target. The ``test_*`` pattern above only
+    # catches test MODULES; these are helpers beside them.
+    (r"py:.*", r"^(?:cadrumo\.)?[\w.]*\.tests\.[\w.]+$"),
+    # Private-module references written WITHOUT a leading package segment
+    # (``_validate_constructs.validate_construct_closure``). The dotted private
+    # patterns above require a segment before the private one.
+    (r"py:.*", r"^_[a-z]\w*\.[A-Za-z_]\w*$"),
+    # Runtime type objects that autodoc renders into an annotation but that have
+    # no documentable definition anywhere: ``types.MappingProxyType``'s runtime
+    # ``mappingproxy`` spelling, and the ``GenericAlias`` that a subscripted
+    # alias reports as its own class under the module that declares it.
+    (r"py:class", r"^(mappingproxy|[\w.]*\.GenericAlias)$"),
+    # Stdlib and typing targets the vendored ``python.inv`` does not carry under
+    # the reftype the docstring uses: ``date.min`` is an attribute rather than
+    # ``py:data``, ``Path.with_name`` is absent from the inventory, and
+    # ``typing.PydanticArgs`` is a pydantic-injected name in the ``typing``
+    # namespace rather than a real typing object.
+    (
+        r"py:(data|meth|obj)",
+        r"^(datetime\.date\.min|pathlib\.Path\.with_name|typing\.PydanticArgs)$",
+    ),
+    # Textual and Rich classes autodoc renders by their BARE name, exactly as
+    # ``Widget`` above: the TUI screens subclass ``Screen`` and annotate Rich
+    # ``Style`` and Textual ``AutopilotCallbackType``. The vendored textual
+    # inventory carries the qualified targets, unreachable from the short form.
+    (r"py:class", r"^(Screen|Style|AutopilotCallbackType)$"),
+    # A ``TYPE_CHECKING``-only alias of a googleapiclient stub type; the Google
+    # API client ships no inventory, and the alias is not a project class.
+    (r"py:class", r"^SheetsValueRange$"),
+    # Project objects written by a path that omits the ``cadrumo.`` root and
+    # whose package is excluded from the documented surface (``entrypoints.cli``
+    # has no stubs) or whose bare name the resolver cannot reach
+    # (``application.workflow.persistence``, ``llm.invoice_extraction_prompt``).
+    (
+        r"py:.*",
+        r"^(entrypoints\.cli\.[\w.]+|application\.workflow\.persistence\.[\w.]+|"
+        r"llm\.invoice_extraction_prompt\.[\w.]+)$",
     ),
     (
         r"py:.*",

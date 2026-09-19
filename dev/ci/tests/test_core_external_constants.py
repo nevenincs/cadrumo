@@ -558,7 +558,7 @@ def test_runtime_tunables_are_settings_not_registry_constants() -> None:
 
     assert settings.cadrumo_live_iva_declaration_capture_timeout_ms < settings.cadrumo_live_iva_surface_timeout_ms
     assert settings.cadrumo_live_iva_cli_watchdog_timeout_ms < 300_000
-    assert settings.cadrumo_llm_openai_chat_completions_url.startswith("https://api.openai.com")
+    assert settings.cadrumo_llm_openai_chat_completions_url == "https://api.openai.com/v1/chat/completions"
     assert "{model}" in settings.cadrumo_llm_gemini_generate_content_template
     assert settings.cadrumo_llm_ollama_chat_url.startswith("http://")
 

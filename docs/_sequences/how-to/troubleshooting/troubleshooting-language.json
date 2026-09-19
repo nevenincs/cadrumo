@@ -19,7 +19,7 @@
         "notices": [],
         "result": {
           "binding_count": 35,
-          "bound_casilla_count": 33,
+          "bound_casilla_count": 35,
           "cadence": "quarterly",
           "casilla_count": 208,
           "code": "303",
@@ -33,7 +33,7 @@
             "orden-eha-3786-2008:art-1",
             "orden-eha-3786-2008:art-7"
           ],
-          "manual_casilla_count": 84,
+          "manual_casilla_count": 82,
           "official_name": "Modelo 303. Value Added Tax. Self-assessment.",
           "operation": "modelo.describe",
           "period": null,

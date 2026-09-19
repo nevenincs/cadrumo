@@ -70,6 +70,10 @@ _CAPTURED_AT = datetime(2026, 5, 27, 12, 0, tzinfo=UTC)
 _TARGET_1T = Period.from_year_and_code(2026, "1T")
 _TARGET_2T = Period.from_year_and_code(2026, "2T")
 _BUCKET_ID = "62626262-6262-4262-8262-626262626262"
+# What central redaction leaves of a URL: the origin, with the path and the
+# query dropped. Asserting the origin under its own key (rather than as a bare
+# substring of the whole rendering) is what proves the path and query went.
+_REDACTED_URL_ORIGIN = "https://example.test"
 
 
 def _remote_state_port(
@@ -711,7 +715,7 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path
     assert "phone_state" in rendered
     assert "app_did_not_prompt" in rendered
     assert "sha256:" in rendered
-    assert "https://example.test" in rendered
+    assert f'"{_REDACTED_URL_ORIGIN}"' in rendered
 
 
 def test_acquisition_payloads_require_explicit_auth_outcome() -> None:

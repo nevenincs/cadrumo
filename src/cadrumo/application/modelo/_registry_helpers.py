@@ -33,7 +33,6 @@ from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.period import Period
 from ...domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-    bundled_authority_descriptor_path,
     bundled_indexed_authority,
 )
 from ...domain.calculations.registry.casilla_membership import (
@@ -93,6 +92,33 @@ class _ResolvedRegistryCasillaInputs:
     unknown: tuple[CasillaId, ...]
     noncanonical: dict[CasillaId, tuple[CasillaId, ...]]
     unknown_only: tuple[CasillaId, ...]
+
+
+def absent_authority_file(exc: FileNotFoundError) -> str:
+    """Name the file whose absence refused an authority read.
+
+    The refusal this feeds means one thing only: a published authority
+    descriptor resolved, and the generation it names is not on disk. Nothing
+    resolving at all is a different state, reported by
+    :class:`~cadrumo.domain.calculations.registry.errors.AuthorityDescriptorUnavailableError`
+    at the resolution seam itself, which already names the searched location
+    and the command that publishes one.
+
+    The path is read from the raised error rather than by re-resolving the
+    descriptor. Re-resolving would name the descriptor, which in this state
+    exists -- so the operator would be sent to inspect the one file that is
+    not the problem -- and the resolution seam can itself refuse, which inside
+    an exception handler would replace the refusal being built with an
+    unrelated one.
+
+    Args:
+        exc: The refusal raised by the authority read.
+
+    Returns:
+        The absent file's path, or the error's own text when the platform
+        supplied no filename.
+    """
+    return exc.filename if isinstance(exc.filename, str) else str(exc)
 
 
 def _resolve_registry_snapshot(
@@ -399,7 +425,7 @@ def reject_unknown_override_casillas[CasillaKey](
     except FileNotFoundError as exc:
         raise AmendmentOverrideCasillaError(
             translated_message="application.modelo.errors.amendment_registry_root_missing",
-            context={"registry_root": bundled_authority_descriptor_path()},
+            context={"missing_path": absent_authority_file(exc)},
         ) from exc
     except RegistrySnapshotError as exc:
         raise AmendmentOverrideCasillaError(
@@ -478,7 +504,7 @@ def reject_unknown_import_casillas[CasillaKey](
     except FileNotFoundError as exc:
         raise ExternalModeloImportError(
             translated_message="application.modelo.errors.external_import_registry_root_missing",
-            context={"registry_root": bundled_authority_descriptor_path()},
+            context={"missing_path": absent_authority_file(exc)},
         ) from exc
     except RegistrySnapshotError as exc:
         raise ExternalModeloImportError(

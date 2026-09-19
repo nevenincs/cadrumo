@@ -135,7 +135,7 @@
             },
             "code": "pays_capital_income_with_retencion",
             "context": {
-              "affected_modelos": "123,193"
+              "affected_modelos": "117,123,126,128,187,188,193,194"
             },
             "message": "Retencion capital unset",
             "severity": "warning"
@@ -1648,11 +1648,13 @@
             ],
             "confidently_excluded": [
               "131",
+              "151",
               "184",
               "200",
               "202",
               "210",
-              "232"
+              "232",
+              "840"
             ],
             "out_of_scope": [
               "030",
@@ -1665,7 +1667,6 @@
               "145",
               "149",
               "150",
-              "151",
               "159",
               "170",
               "171",
@@ -1745,7 +1746,6 @@
               "796",
               "797",
               "798",
-              "840",
               "848",
               "993"
             ],
@@ -1760,6 +1760,45 @@
             ]
           },
           "entries": [
+            {
+              "adjusted_closes_on": "2026-01-20",
+              "aeat_submission_state": "not_observed",
+              "censo_enrolment_state": "unverified",
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "136"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "justificante_verified": false,
+              "local_filing_state": "not_ready_to_file",
+              "modelo": "136",
+              "period": "2025 4T",
+              "user_state": "late"
+            },
             {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
@@ -2452,8 +2491,14 @@
             },
             {
               "affected_modelos": [
+                "117",
                 "123",
-                "193"
+                "126",
+                "128",
+                "187",
+                "188",
+                "193",
+                "194"
               ],
               "code": "pays_capital_income_with_retencion",
               "fix_action": {
@@ -2701,7 +2746,7 @@
             },
             "code": "pays_capital_income_with_retencion",
             "context": {
-              "affected_modelos": "123,193",
+              "affected_modelos": "117,123,126,128,187,188,193,194",
               "profile": "docs-sequence-sandbox"
             },
             "message": "Retencion capital unset",
@@ -4073,11 +4118,11 @@
           "incomplete_reason": null,
           "profiles": [
             {
-              "entry_count": 15,
+              "entry_count": 16,
               "event_count": 0,
               "label": "docs-sequence-sandbox",
-              "next_due_closes_on": "2026-01-30",
-              "next_due_modelo": "130",
+              "next_due_closes_on": "2026-01-20",
+              "next_due_modelo": "136",
               "next_due_period": "2025 4T",
               "profile_id": "<profile-id>",
               "suppressed_entry_count": 0,
@@ -4214,7 +4259,7 @@
             },
             "code": "pays_capital_income_with_retencion",
             "context": {
-              "affected_modelos": "123,193"
+              "affected_modelos": "117,123,126,128,187,188,193,194"
             },
             "message": "Retencion capital unset",
             "severity": "warning"
@@ -5727,11 +5772,13 @@
             ],
             "confidently_excluded": [
               "131",
+              "151",
               "184",
               "200",
               "202",
               "210",
-              "232"
+              "232",
+              "840"
             ],
             "out_of_scope": [
               "030",
@@ -5744,7 +5791,6 @@
               "145",
               "149",
               "150",
-              "151",
               "159",
               "170",
               "171",
@@ -5824,7 +5870,6 @@
               "796",
               "797",
               "798",
-              "840",
               "848",
               "993"
             ],
@@ -5839,6 +5884,45 @@
             ]
           },
           "entries": [
+            {
+              "adjusted_closes_on": "2026-01-20",
+              "aeat_submission_state": "not_observed",
+              "censo_enrolment_state": "unverified",
+              "detail_action": {
+                "action": {
+                  "action_id": "operator.overview.explain",
+                  "cli_path": [
+                    "app",
+                    "overview",
+                    "explain"
+                  ],
+                  "target_command_key": "overview.explain"
+                },
+                "argument_bindings": [
+                  {
+                    "argument_name": "modelo",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "modelo",
+                    "status": "resolved",
+                    "value": "136"
+                  },
+                  {
+                    "argument_name": "year",
+                    "source": "operator_action.verdict_context",
+                    "source_evidence_id": null,
+                    "source_key": "year",
+                    "status": "resolved",
+                    "value": 2025
+                  }
+                ]
+              },
+              "justificante_verified": false,
+              "local_filing_state": "not_ready_to_file",
+              "modelo": "136",
+              "period": "2025 4T",
+              "user_state": "late"
+            },
             {
               "adjusted_closes_on": "2026-01-30",
               "aeat_submission_state": "not_observed",
@@ -6442,8 +6526,92 @@
               "verdict": "incomplete"
             },
             {
+              "modelo": "038",
+              "period": "2026 01",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "038",
+              "period": "2026 02",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "038",
+              "period": "2026 03",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "038",
+              "period": "2026 04",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "038",
+              "period": "2026 05",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "038",
+              "period": "2026 06",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "038",
+              "period": "2026 07",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "038",
+              "period": "2026 08",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "038",
+              "period": "2026 09",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "038",
+              "period": "2026 10",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "038",
+              "period": "2026 11",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
               "modelo": "117",
               "period": "2025 4T",
+              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "117",
+              "period": "2026 1T",
+              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "117",
+              "period": "2026 2T",
+              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "117",
+              "period": "2026 3T",
               "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
               "verdict": "incomplete"
             },
@@ -6460,8 +6628,44 @@
               "verdict": "incomplete"
             },
             {
+              "modelo": "126",
+              "period": "2026 1T",
+              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "126",
+              "period": "2026 2T",
+              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "126",
+              "period": "2026 3T",
+              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
+              "verdict": "incomplete"
+            },
+            {
               "modelo": "128",
               "period": "2025 4T",
+              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "128",
+              "period": "2026 1T",
+              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "128",
+              "period": "2026 2T",
+              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "128",
+              "period": "2026 3T",
               "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: paga rendimientos del capital mobiliario sujetos a retención.",
               "verdict": "incomplete"
             },
@@ -6662,6 +6866,12 @@
               "period": "2025 0A",
               "reason": "Modelo 232 no aplica: la obligacion informativa solo alcanza al contribuyente del Impuesto sobre Sociedades con operaciones vinculadas por encima de los umbrales del articulo 13.4 del RIS o con operaciones y situaciones relacionadas con paraisos fiscales.",
               "verdict": "not_applicable"
+            },
+            {
+              "modelo": "270",
+              "period": "2025 0A",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
             },
             {
               "modelo": "280",
@@ -6880,9 +7090,81 @@
               "verdict": "incomplete"
             },
             {
+              "modelo": "604",
+              "period": "2026 01",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "604",
+              "period": "2026 02",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "604",
+              "period": "2026 03",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "604",
+              "period": "2026 04",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "604",
+              "period": "2026 05",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "604",
+              "period": "2026 06",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "604",
+              "period": "2026 07",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "604",
+              "period": "2026 08",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "604",
+              "period": "2026 09",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "604",
+              "period": "2026 10",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "604",
+              "period": "2026 11",
+              "reason": "No se puede determinar la aplicabilidad de este modelo: todavía no se ha derivado una regla de aplicabilidad para él. La cobertura de reglas es deliberadamente reducida (el conjunto inicial de personas) y la expansión por entidad y régimen está pendiente. No es una afirmación sobre su perfil: su tipo de contribuyente puede estar correctamente declarado.",
+              "verdict": "incomplete"
+            },
+            {
               "modelo": "720",
               "period": "2025 0A",
               "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: posee bienes o derechos en el extranjero por encima del umbral.",
+              "verdict": "incomplete"
+            },
+            {
+              "modelo": "721",
+              "period": "2025 0A",
+              "reason": "No se puede determinar la aplicabilidad de este modelo desde el modelo de contribuyente declarado: depende de un hecho que el perfil no expresa con certeza. El modelo solo se afirma aplicable cuando ese hecho se declara positivamente; en otro caso no se conjetura una obligación. Hecho requerido para este modelo: posee monedas virtuales situadas en el extranjero por encima del umbral.",
               "verdict": "incomplete"
             },
             {
@@ -7006,8 +7288,14 @@
             },
             {
               "affected_modelos": [
+                "117",
                 "123",
-                "193"
+                "126",
+                "128",
+                "187",
+                "188",
+                "193",
+                "194"
               ],
               "code": "pays_capital_income_with_retencion",
               "fix_action": {

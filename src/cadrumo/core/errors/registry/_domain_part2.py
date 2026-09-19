@@ -78,6 +78,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.calculations.registry.errors.AuthorityDescriptorUnavailableError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_AUTHORITY_DESCRIPTOR_UNAVAILABLE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.calculations.registry.errors.RegistryLoadError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_LOAD",
@@ -141,6 +151,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         "cadrumo.domain.calculations.registry.errors.FilingYearOutsideSupportEnvelopeError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_FILING_YEAR_OUTSIDE_SUPPORT_ENVELOPE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry_snapshot",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.calculations.registry.errors.GovernedFactNotApplicableError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_GOVERNED_FACT_NOT_APPLICABLE",
             category=ErrorCategory.ERROR,
             message_key="errors.error.error_calculations_registry_snapshot",
             retryable=False,

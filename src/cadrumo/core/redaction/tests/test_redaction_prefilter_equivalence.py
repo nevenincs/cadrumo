@@ -8,10 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from ...tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
-from ..classification.policies import RedactionRule, SensitivityClass, default_policy_for
-from ..errors.hierarchy import RedactionError
-from ..redaction.rules import (
+from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
+from ... import tests as core_tests_package
+from ...classification.policies import RedactionRule, SensitivityClass, default_policy_for
+from ...errors.hierarchy import RedactionError
+from ..rules import (
     _CLI_STRING_CACHE_MAX_LENGTH,
     _REDACTION_KEY_SEPARATOR_RE,
     _apply_one,
@@ -46,12 +47,18 @@ _SHAPES = (
 )
 
 
+#: The redaction suites this corpus harvests live beside the rest of the
+#: ``core`` suites, so the directory is named through the owning test package
+#: rather than through this module's own location.
+_REDACTION_SUITE_ROOT = Path(core_tests_package.__path__[0])
+
+
 @cache
 def _corpus() -> tuple[str, ...]:
-    """String constants of this package's redaction suites, plus combined shapes."""
+    """String constants of the redaction suites, plus combined shapes."""
     strings: set[str] = set(_SHAPES)
     strings.update(f"{left} {right}" for left in _SHAPES for right in _SHAPES)
-    for path in Path(__file__).parent.glob("test_redaction*.py"):
+    for path in (*_REDACTION_SUITE_ROOT.glob("test_redaction*.py"), Path(__file__)):
         for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
             if isinstance(node, ast.Constant) and isinstance(node.value, str):
                 strings.add(node.value)

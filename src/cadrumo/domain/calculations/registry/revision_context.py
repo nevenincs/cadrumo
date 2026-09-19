@@ -58,12 +58,12 @@ ConstructMemberObject = (
     | ModeloScheduleDefinition
     | DependencyClassificationDefinition
 )
-"""Every schema class :func:`validate_construct_closure` may look up as a
-construct member. Every member of this union declares ``legal_refs`` and
-``source_refs`` -- the single source of truth for the type both
-:attr:`RevisionValidationContext.construct_member_objects` and
-:func:`~._validate_constructs.validate_construct_closure` declare, so the
-two stay in lock-step rather than one drifting to a bare ``object``.
+"""Every schema class the development compiler may look up as a construct
+member. Every member of this union declares ``legal_refs`` and ``source_refs``
+-- the single source of truth for the type that
+``dev.registry.compiler.validate_revision_closure`` builds its construct member
+objects from, so the two stay in lock-step rather than one drifting to a bare
+``object``.
 """
 
 

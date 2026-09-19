@@ -32,9 +32,12 @@ import hashlib
 import json
 import os
 import re
+import shutil
 import subprocess
 import sys
+from collections.abc import Sequence
 from pathlib import Path
+from tempfile import TemporaryDirectory
 from typing import Final
 
 _ROOT_FOR_DIRECT_INVOCATION = Path(__file__).resolve().parents[2]
@@ -193,6 +196,49 @@ def user_scope_source_pages(docs_root: Path) -> list[str]:
             continue
         pages.append(relative.as_posix())
     return sorted(pages)
+
+
+def validated_pages(docs_root: Path, pages: Sequence[str]) -> tuple[str, ...]:
+    """Return *pages* as authored docpaths, refusing anything outside the surface.
+
+    A page selection narrows which CATALOGUES a pass writes. It must never
+    narrow extraction: a page's message set is not a function of that page's
+    own prose. ``index.md`` is the proof -- its toctree renders the titles of
+    the documents it lists, so extracting it alone yields 33 messages where the
+    whole-surface build yields 74, and syncing catalogues from that partial
+    template silently deletes 41 translated entries per language.
+
+    A page filter that silently matched nothing would be worse than no filter:
+    the operator would read "catalogues updated" and believe a re-sync happened.
+    Every name is therefore checked against :func:`user_scope_source_pages`, the
+    one definition of the localized surface, and an unknown one is refused with
+    the nearest authored spellings so a typo or a missing suffix is obvious.
+
+    Args:
+        docs_root: The documentation source root.
+        pages: Docpaths relative to ``docs/``, for example
+            ``["how-to/quickstart.md"]``. Windows separators are accepted.
+
+    Returns:
+        The requested pages as sorted, de-duplicated POSIX docpaths.
+
+    Raises:
+        SystemExit: When *pages* is empty or names a page the localized surface
+            does not contain.
+    """
+    authored = set(user_scope_source_pages(docs_root))
+    requested = {Path(page).as_posix() for page in pages}
+    if not requested:
+        raise SystemExit("no pages selected; pass at least one authored page or omit the filter entirely.")
+    unknown = sorted(requested - authored)
+    if unknown:
+        detail = "\n".join(f"  {page}" for page in unknown)
+        raise SystemExit(
+            f"not authored, localized pages:\n{detail}\n"
+            f"The localized surface is the {len(authored)} authored page(s) under docs/; "
+            f"name one relative to docs/ with its suffix, for example how-to/quickstart.md.",
+        )
+    return tuple(sorted(requested))
 
 
 def pot_root(docs_root: Path) -> Path:
@@ -461,7 +507,11 @@ def extract_pot(repo_root: Path, out_dir: Path | None = None) -> Path:
     return out_dir
 
 
-def update_catalogues(repo_root: Path, languages: tuple[str, ...] = TARGET_LANGUAGES) -> None:
+def update_catalogues(
+    repo_root: Path,
+    languages: tuple[str, ...] = TARGET_LANGUAGES,
+    pages: Sequence[str] | None = None,
+) -> None:
     """Create or refresh the committed per-language ``.po`` catalogues.
 
     Runs ``sphinx-intl update`` from the extracted POT templates so every
@@ -474,14 +524,41 @@ def update_catalogues(repo_root: Path, languages: tuple[str, ...] = TARGET_LANGU
         repo_root: The repository root.
         languages: The BCP-47 target tags to update. Defaults to every
             documentation translation target.
+        pages: Authored pages whose catalogues this pass may touch, defaulting
+            to all of them. A narrowed set updates from a template tree holding
+            only those pages, so every other catalogue is left byte-for-byte
+            alone. That is what lets one writer re-sync the pages they authored
+            without also rewriting catalogue state for pages another
+            contributor is still editing.
 
     Raises:
-        SystemExit: If the catalogue update fails.
+        SystemExit: If the catalogue update fails, or a selected page has no
+            extracted template.
     """
     docs_root = repo_root / "docs"
     templates = pot_root(docs_root)
     if not templates.is_dir():
         raise SystemExit(f"POT templates not found at {templates}; run extraction first.")
+    if pages is None:
+        _run_catalogue_update(repo_root, docs_root, templates, languages)
+        prune_orphan_catalogues(repo_root, languages)
+        return
+    with TemporaryDirectory(prefix="cadrumo-docs-pot-") as scoped_text:
+        scoped = Path(scoped_text)
+        _stage_selected_templates(templates, validated_pages(docs_root, pages), scoped)
+        _run_catalogue_update(repo_root, docs_root, scoped, languages)
+    # Pruning is deliberately skipped here. It decides what to remove from the
+    # whole authored page set, and a pass that was asked to touch two pages has
+    # no standing to delete a catalogue on behalf of the other fifty-six.
+
+
+def _run_catalogue_update(
+    repo_root: Path,
+    docs_root: Path,
+    templates: Path,
+    languages: tuple[str, ...],
+) -> None:
+    """Run one ``sphinx-intl update`` for every language against *templates*."""
     command = [
         sys.executable,
         "-m",
@@ -497,7 +574,6 @@ def update_catalogues(repo_root: Path, languages: tuple[str, ...] = TARGET_LANGU
     result = _run_bounded(command, cwd=repo_root, env=None, what="sphinx-intl catalogue update")
     if result.returncode != 0:
         raise SystemExit(result.returncode)
-    prune_orphan_catalogues(repo_root, languages)
 
 
 def _run_set_batch(manifest: Path, *, dry_run: bool) -> int:
@@ -522,6 +598,59 @@ def _run_set_batch(manifest: Path, *, dry_run: bool) -> int:
     return 0
 
 
+def _run_scoped_pages(repo_root: Path, pages: Sequence[str], *, extract_only: bool) -> int:
+    """Re-sync only *pages*' catalogues, leaving every other catalogue alone.
+
+    The whole localized surface is extracted, because a page's message set
+    depends on the pages around it (see :func:`validated_pages`); only the
+    staged template subset narrows what is written. Extraction lands in a
+    temporary directory so a scoped run never republishes the committed
+    template tree under another writer's feet.
+    """
+    docs_root = repo_root / "docs"
+    selected = validated_pages(docs_root, pages)
+    with TemporaryDirectory(prefix="cadrumo-docs-scoped-pot-") as scoped_text:
+        templates = extract_pot(repo_root, out_dir=Path(scoped_text))
+        print(f"Extracted the whole surface; syncing {len(selected)} page(s) from {templates}", flush=True)
+        if extract_only:
+            return 0
+        _scoped_update_from(repo_root, docs_root, templates, selected)
+    print(
+        f"Updated {', '.join(TARGET_LANGUAGES)} catalogues for {', '.join(selected)} under {locale_root(docs_root)}",
+        flush=True,
+    )
+    return 0
+
+
+def _stage_selected_templates(templates: Path, pages: Sequence[str], destination: Path) -> None:
+    """Copy exactly *pages*' templates into *destination*.
+
+    ``sphinx-intl update`` syncs every template it is pointed at, so the
+    selection has to be expressed as the contents of the directory rather than
+    as an argument. Staging is what keeps the master document -- extracted
+    because Sphinx cannot build without it -- from reaching a catalogue the
+    caller never named.
+
+    Raises:
+        SystemExit: When a selected page has no extracted template.
+    """
+    for page in pages:
+        template = templates / Path(page).with_suffix(".pot")
+        if not template.is_file():
+            raise SystemExit(f"no extracted template for {page} at {template}; run extraction first.")
+        staged = destination / Path(page).with_suffix(".pot")
+        staged.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(template, staged)
+
+
+def _scoped_update_from(repo_root: Path, docs_root: Path, templates: Path, pages: Sequence[str]) -> None:
+    """Run the catalogue update from a tree narrowed to exactly *pages*."""
+    with TemporaryDirectory(prefix="cadrumo-docs-selected-pot-") as selected_text:
+        selected = Path(selected_text)
+        _stage_selected_templates(templates, pages, selected)
+        _run_catalogue_update(repo_root, docs_root, selected, TARGET_LANGUAGES)
+
+
 def main(argv: list[str] | None = None) -> int:
     """CLI entrypoint: extract POT templates and refresh the language catalogues.
 
@@ -537,6 +666,17 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Extract POT templates without refreshing the per-language catalogues.",
     )
+    parser.add_argument(
+        "--page",
+        action="append",
+        metavar="DOCPATH",
+        help=(
+            "Limit the pass to one authored page, relative to docs/ and with its suffix "
+            "(for example how-to/quickstart.md). Repeatable. Only the named pages' "
+            "catalogues are written; every other catalogue is left untouched and no "
+            "orphan cleanup runs. Omit to re-sync the whole localized surface."
+        ),
+    )
     commands = parser.add_subparsers(dest="command")
     set_batch = commands.add_parser("set-batch", help="Apply a validated documentation PO update manifest.")
     set_batch.add_argument("manifest", type=Path, help="JSON schema-v1 PO update manifest.")
@@ -547,6 +687,8 @@ def main(argv: list[str] | None = None) -> int:
         return _run_set_batch(args.manifest, dry_run=args.dry_run)
 
     repo_root = _repo_root()
+    if args.page:
+        return _run_scoped_pages(repo_root, args.page, extract_only=args.extract_only)
     templates = extract_pot(repo_root)
     print(f"Extracted POT templates: {templates}", flush=True)
     if args.extract_only:

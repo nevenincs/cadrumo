@@ -72,7 +72,7 @@
               "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
               "work_unit_state": "borrador"
             },
-            "message": "Status calculate summary",
+            "message": "This active work unit can be calculated.",
             "severity": "info"
           }
         ],

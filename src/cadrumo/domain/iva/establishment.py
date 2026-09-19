@@ -425,8 +425,8 @@ def territorial_scope_for_country(
     on shape would hand the same wrong establishment to each of them.
 
     **Why shape is not enough, in the direction that costs money.** Any
-    well-formed pair once resolved to
-        the registry-projected third-country token, so ``XX``, ``ZZ`` and ``QQ``
+    well-formed pair once resolved to the registry-projected third-country
+    token, so ``XX``, ``ZZ`` and ``QQ``
     settled a party outside the EU -- and on the issued side third country is
     export treatment, zero-rated. An issuer typo, a placeholder or a truncated
     field therefore exempted an operation silently, from evidence the ladder

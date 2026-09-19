@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-24 20:06+0200\n"
+"POT-Creation-Date: 2026-09-19 09:40+0200\n"
 "PO-Revision-Date: 2026-07-18 14:00+0200\n"
 "Last-Translator: Cadrumo docs team <docs@cadrumo.example>\n"
 "Language: ca\n"
@@ -152,22 +152,60 @@ msgstr ""
 
 #: ../../workstation-setup.md:70
 msgid ""
-"The `browser` extra provides the `playwright` command; install the "
-"browser it drives for live AEAT reads:"
+"The `browser` extra drives a Chromium build for live AEAT reads. Download"
+" the exact build the installed extra launches with:"
 msgstr ""
-"L'extra `browser` proporciona l'ordre `playwright`; instal·la el "
-"navegador que controla per a les lectures en directe de l'AEAT:"
+"L'extra `browser` fa servir una compilació de Chromium per a lectures en "
+"directe de l'AEAT. Descarregueu la compilació exacta que llança l'extra "
+"instal·lat amb:"
 
-#: ../../workstation-setup.md:77
+#: ../../workstation-setup.md:76
 msgid ""
-"On-host invoice reading uses a local vision model. Start the Ollama "
-"server and pull the model named in the `aeat config check` report:"
+"It does nothing when that build is already present. With the browser "
+"channel set to `chromium`, a browser read that finds the build missing "
+"refuses and names this command."
 msgstr ""
-"La lectura de factures al mateix equip utilitza un model de visió local. "
-"Inicia el servidor Ollama i descarrega el model indicat a l'informe "
-"d'`aeat config check`:"
+"No fa res quan aquesta compilació ja hi és. Amb el canal de navegador "
+"fixat a `chromium`, una lectura de navegador que no trobi la compilació "
+"es nega i anomena aquesta ordre."
+
+#: ../../workstation-setup.md:80
+msgid ""
+"On-host invoice reading uses a local model runtime (Ollama) with a text "
+"model for text-layer PDFs and a vision model for scans. Run `aeat config "
+"provision status` to see where you stand: whether the runtime is "
+"installed, whether it answers, and which reader models are present."
+msgstr ""
+"La lectura de factures a l'equip mateix fa servir un entorn d'execució de"
+" models local (Ollama) amb un model de text per als PDF amb capa de text "
+"i un model de visió per als escanejos. Executeu `aeat config provision "
+"status` per veure on us trobeu: si l'entorn d'execució està instal·lat, "
+"si respon i quins models lectors hi ha."
 
 #: ../../workstation-setup.md:85
+msgid ""
+"Then close whatever that report shows as missing. `aeat config provision "
+"install` installs the runtime through `winget` on Windows or Homebrew on "
+"macOS, and only with `--confirm`; it does nothing when the runtime is "
+"already installed. On Linux, install Ollama with its upstream installer, "
+"which needs root. `aeat config provision start` starts an installed "
+"runtime that is not answering, and does nothing when it already answers. "
+"`aeat config provision pull` downloads every reader role's model, a few "
+"GB in total; narrow it with `--role` to fetch one role's model at a time."
+" `aeat config provision verify` confirms each model loads and answers."
+msgstr ""
+"Després tanqueu tot allò que aquest informe mostri com a absent. `aeat "
+"config provision install` instal·la l'entorn d'execució mitjançant "
+"`winget` a Windows o Homebrew a macOS, i només amb `--confirm`; no fa res"
+" quan l'entorn d'execució ja està instal·lat. A Linux, instal·leu Ollama "
+"amb el seu instal·lador original, que necessita privilegis de root. `aeat"
+" config provision start` inicia un entorn d'execució instal·lat que no "
+"respon, i no fa res quan ja respon. `aeat config provision pull` "
+"descarrega el model de cada rol lector, uns pocs GB en total; limiteu-lo "
+"amb `--role` per descarregar el model d'un rol cada vegada. `aeat config "
+"provision verify` confirma que cada model es carrega i respon."
+
+#: ../../workstation-setup.md:96
 msgid ""
 "For cloud LLM classification, put the provider's own CLI on `PATH` and "
 "sign in with that provider's flow. See [Classify transactions with an LLM"
@@ -178,7 +216,7 @@ msgstr ""
 "Consulta [Classifica les transaccions amb un LLM](how-to/classify-with-"
 "llm.md#set-up-a-provider)."
 
-#: ../../workstation-setup.md:89
+#: ../../workstation-setup.md:100
 msgid ""
 "Run `aeat config check` again after each change to confirm the gap is "
 "closed."
@@ -186,11 +224,11 @@ msgstr ""
 "Torna a executar `aeat config check` després de cada canvi per confirmar "
 "que la mancança està resolta."
 
-#: ../../workstation-setup.md:91
+#: ../../workstation-setup.md:102
 msgid "Run the Model Context Protocol (MCP) surface"
 msgstr "Executa la superfície del Model Context Protocol (MCP)"
 
-#: ../../workstation-setup.md:93
+#: ../../workstation-setup.md:104
 msgid ""
 "Cadrumo's separate `cadrumo-harness` distribution provides the MCP "
 "server, `cadrumo-mcp`, so an AI assistant can operate the same local, "
@@ -205,7 +243,7 @@ msgstr ""
 " del contribuent i els perfils d'agent d'abast limitat que mantenen "
 "l'assistent dins del límit de seguretat."
 
-#: ../../workstation-setup.md:99
+#: ../../workstation-setup.md:110
 msgid ""
 "In the beta, synchronize that workspace member and run the server from "
 "the same repository checkout:"
@@ -213,7 +251,7 @@ msgstr ""
 "A la beta, sincronitza aquest membre de l'espai de treball i executa el "
 "servidor des de la mateixa còpia del repositori:"
 
-#: ../../workstation-setup.md:107
+#: ../../workstation-setup.md:118
 msgid ""
 "[Connect an agent](how-to/connect-an-agent.md) shows the source-checkout "
 "registration and explains what the agent can and cannot do."
@@ -222,11 +260,11 @@ msgstr ""
 "d'un checkout del codi font i explica què pot fer l'agent i què no pot "
 "fer."
 
-#: ../../workstation-setup.md:110
+#: ../../workstation-setup.md:121
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../workstation-setup.md:112
+#: ../../workstation-setup.md:123
 msgid ""
 "[Quickstart](how-to/quickstart.md) - from an empty profile to an exported"
 " modelo file."
@@ -234,7 +272,7 @@ msgstr ""
 "[Inici ràpid](how-to/quickstart.md) - d'un perfil buit a un fitxer de "
 "modelo exportat."
 
-#: ../../workstation-setup.md:114
+#: ../../workstation-setup.md:125
 msgid ""
 "[Set up a profile](how-to/profile-setup.md) - including the per-profile "
 "service capabilities (Google export, LLM vision, cloud evidence upload)."
@@ -243,11 +281,11 @@ msgstr ""
 "capacitats de servei per perfil (exportació a Google, visió LLM, pujada "
 "de proves al núvol)."
 
-#: ../../workstation-setup.md:116
+#: ../../workstation-setup.md:127
 msgid "[Connect an agent](how-to/connect-an-agent.md)"
 msgstr "[Connecta un agent](how-to/connect-an-agent.md)"
 
-#: ../../workstation-setup.md:117
+#: ../../workstation-setup.md:128
 msgid "[Troubleshooting](how-to/troubleshooting.md)"
 msgstr "[Resolució de problemes](how-to/troubleshooting.md)"
 

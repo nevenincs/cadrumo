@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import ast
 from pathlib import Path
-from typing import cast
 
 import pytest
 from textual.containers import VerticalScroll
@@ -12,135 +11,35 @@ from textual.widgets import DataTable, Static
 
 from .....application.ledger.workspace import (
     LedgerWorkspaceArea,
-    LedgerWorkspaceAreaStateV1,
-    LedgerWorkspaceAvailability,
-    LedgerWorkspaceEntryRefV1,
-    LedgerWorkspaceProjectionV1,
-    LedgerWorkspaceSource,
-    LedgerWorkspaceStatus,
 )
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.external_constants import OutputLanguage
-from .....core.identity.transaction_ids import TransactionId
 from .....tests.terminal_sizes import TERMINAL_WIDE
 from ....tui.components.host import ScreenHostApp
 from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
-from ..controller import LedgerWorkspaceController
 from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen
 from ..review import LedgerReviewScreen
 from ..routes import LEDGER_ROUTES, LedgerUnavailableScreen, ledger_screen_factory, resolve_ledger_screen
-from ..workspace_injection import LedgerWorkspaceInjection
+from .workspace_fixtures import (
+    LEDGER_TX_A,
+    LEDGER_TX_B,
+    ledger_context,
+    ledger_controller,
+    ledger_projection,
+    ledger_review_action,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
-_TX_A = cast("TransactionId", "a" * 64)
-_TX_B = cast("TransactionId", "b" * 64)
 _LOCALE_EXPECTED = {
     OutputLanguage.ES: ("Resumen del libro contable", "Filtro: todos los estados de revisión", "Revisado"),
     OutputLanguage.EN: ("Ledger overview", "Filter: all review statuses", "Reviewed"),
     OutputLanguage.CA: ("Resum del llibre comptable", "Filtre: tots els estats de revisió", "Revisat"),
     OutputLanguage.HU: ("Főkönyvi áttekintés", "Szűrő: minden felülvizsgálati állapot", "Felülvizsgálva"),
 }
-
-
-def _projection(*, unavailable: LedgerWorkspaceArea | None = None) -> LedgerWorkspaceProjectionV1:
-    states = []
-    counts = {
-        LedgerWorkspaceArea.OVERVIEW: 3,
-        LedgerWorkspaceArea.ENTRIES: 2,
-        LedgerWorkspaceArea.REVIEW: 2,
-        LedgerWorkspaceArea.IMPORT: 0,
-        LedgerWorkspaceArea.CLASSIFICATION: 2,
-        LedgerWorkspaceArea.EVIDENCE: 0,
-        LedgerWorkspaceArea.RECONCILIATION: 0,
-    }
-    for area in LedgerWorkspaceArea:
-        blocked = area is unavailable
-        states.append(
-            LedgerWorkspaceAreaStateV1(
-                area=area,
-                sources=(LedgerWorkspaceSource.LOCAL_LEDGER,),
-                availability=LedgerWorkspaceAvailability.LOCKED if blocked else LedgerWorkspaceAvailability.AVAILABLE,
-                reason_code="ledger.locked" if blocked else None,
-                status=(
-                    LedgerWorkspaceStatus.UNMEASURED
-                    if area in {LedgerWorkspaceArea.IMPORT, LedgerWorkspaceArea.EVIDENCE}
-                    else LedgerWorkspaceStatus.NEEDS_ATTENTION
-                ),
-                item_count=counts[area],
-            )
-        )
-    entries = (
-        LedgerWorkspaceEntryRefV1(
-            transaction_id=_TX_A,
-            review_status="pending",
-            date="2026-03-14",
-            amount="1250.00",
-            currency="EUR",
-            direction="outgoing",
-            counterparty="Suministros Delta SL",
-            description="Material de oficina",
-            business_classification="business",
-        ),
-        LedgerWorkspaceEntryRefV1(
-            transaction_id=_TX_B,
-            review_status="reviewed",
-            date="2026-03-02",
-            amount="480.50",
-            currency="EUR",
-            direction="incoming",
-            counterparty="Cliente Omega SA",
-            description="Servicios de consultoría",
-            business_classification="business",
-        ),
-    )
-    return LedgerWorkspaceProjectionV1(
-        bucket_id="synthetic-bucket",
-        areas=tuple(states),
-        entries=entries,
-        review_transaction_ids=(_TX_A, _TX_B),
-        invoice_reconciliations=(),
-        link_inconsistencies=(),
-        affected_declarations=(),
-    )
-
-
-def _context() -> TuiScreenContextV1:
-    return TuiScreenContextV1(destination="workbench.ledger")
-
-
-def _focused_context(transaction_id: TransactionId) -> TuiScreenContextV1:
-    """A workspace context already addressed at one entry.
-
-    Selection lives in ``context.focus``, so a test that needs the operator to
-    have chosen a row states it here rather than injecting a target. That is
-    the same channel the production selection handler writes.
-    """
-    return TuiScreenContextV1(
-        destination="workbench.ledger",
-        focus=TuiFocusIdentityV1(
-            destination="workbench.ledger",
-            semantic_key="ledger.transaction",
-            restore_token=transaction_id,
-        ),
-    )
-
-
-def _review_action() -> ActionReference:
-    declaration = lookup_action("operator.ledger.review")
-    return ActionReference(action_id=declaration.action_id)
-
-
-def _controller(
-    projection: LedgerWorkspaceProjectionV1,
-    context: TuiScreenContextV1 | None = None,
-) -> LedgerWorkspaceController:
-    return LedgerWorkspaceController(
-        context or _context(), projection, LedgerWorkspaceInjection(review_action=_review_action())
-    )
 
 
 def _all_copy(screen: LedgerOverviewScreen | LedgerEntriesScreen | LedgerReviewScreen) -> str:
@@ -155,7 +54,7 @@ def _all_copy(screen: LedgerOverviewScreen | LedgerEntriesScreen | LedgerReviewS
 
 
 def test_routes_cover_all_seven_areas_and_deferred_bodies_are_typed_placeholders() -> None:
-    controller = _controller(_projection())
+    controller = ledger_controller(ledger_projection())
     assert tuple(route.area for route in LEDGER_ROUTES) == tuple(LedgerWorkspaceArea)
     assert tuple(route.destination for route in LEDGER_ROUTES) == (
         "ledger.overview",
@@ -182,27 +81,27 @@ def test_routes_cover_all_seven_areas_and_deferred_bodies_are_typed_placeholders
 
 
 def test_factory_requires_real_outer_context_and_keeps_injected_projection() -> None:
-    projection = _projection()
-    screen = ledger_screen_factory(projection, review_action=_review_action())(_context())
+    projection = ledger_projection()
+    screen = ledger_screen_factory(projection, review_action=ledger_review_action())(ledger_context())
     assert isinstance(screen, LedgerOverviewScreen)
     assert screen.controller.projection is projection
     with pytest.raises(ValueError, match=r"workbench\.ledger"):
-        ledger_screen_factory(projection, review_action=_review_action())(
+        ledger_screen_factory(projection, review_action=ledger_review_action())(
             TuiScreenContextV1(destination="workbench.home")
         )
 
 
 def test_factory_refuses_undeclared_or_drifted_review_action_through_real_catalogue() -> None:
     with pytest.raises(KeyError, match="unknown operator action ID"):
-        ledger_screen_factory(_projection(), review_action=ActionReference(action_id="operator.ledger.absent"))
+        ledger_screen_factory(ledger_projection(), review_action=ActionReference(action_id="operator.ledger.absent"))
     classified = lookup_action("operator.ledger.classify")
     with pytest.raises(ValueError, match="canonical review query"):
         ledger_screen_factory(
-            _projection(),
+            ledger_projection(),
             review_action=ActionReference(action_id=classified.action_id),
         )
-    review_action = _review_action()
-    controller = _controller(_projection())
+    review_action = ledger_review_action()
+    controller = ledger_controller(ledger_projection())
     assert all(row.action == review_action for row in controller.review_rows())
     assert lookup_action(review_action.action_id).target_command_key == "ledger.review"
 
@@ -212,7 +111,7 @@ def test_factory_refuses_undeclared_or_drifted_review_action_through_real_catalo
 async def test_screens_show_seven_destinations_have_one_scroll_owner_and_no_horizontal_overflow(
     screen_type: type,
 ) -> None:
-    screen = screen_type(_controller(_projection()))
+    screen = screen_type(ledger_controller(ledger_projection()))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
@@ -227,8 +126,8 @@ async def test_screens_show_seven_destinations_have_one_scroll_owner_and_no_hori
 
 @pytest.mark.asyncio
 async def test_navigation_refusal_and_review_selection_preserve_semantic_identity() -> None:
-    projection = _projection(unavailable=LedgerWorkspaceArea.ENTRIES)
-    screen = LedgerReviewScreen(_controller(projection))
+    projection = ledger_projection(unavailable=LedgerWorkspaceArea.ENTRIES)
+    screen = LedgerReviewScreen(ledger_controller(projection))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
@@ -243,7 +142,7 @@ async def test_navigation_refusal_and_review_selection_preserve_semantic_identit
         review.focus()
         await pilot.press("down", "enter")
         await pilot.pause()
-        assert screen.requested_transaction_id == _TX_B
+        assert screen.requested_transaction_id == LEDGER_TX_B
         await pilot.press("escape")
         assert screen.back_requested
 
@@ -262,8 +161,8 @@ async def test_entry_rows_show_the_operator_their_own_facts_and_tables_are_each_
     identifier is machine addressing and has no business being painted, and the
     two tables remain one tab stop each.
     """
-    projection = _projection()
-    screen = LedgerEntriesScreen(_controller(projection))
+    projection = ledger_projection()
+    screen = LedgerEntriesScreen(ledger_controller(projection))
     app = ScreenHostApp[None](screen)
     # The widest supported terminal, because the column SET is responsive: a
     # narrow terminal drops the lowest-priority columns rather than overflowing
@@ -291,7 +190,7 @@ async def test_unmeasured_areas_never_render_a_numeric_zero_and_review_discloses
     from .....core.config import override_settings
 
     with override_settings(cadrumo_output_language="en"):
-        review_screen = LedgerReviewScreen(_controller(_projection()))
+        review_screen = LedgerReviewScreen(ledger_controller(ledger_projection()))
         app = ScreenHostApp[None](review_screen)
         async with app.run_test(size=(80, 24)) as pilot:
             await pilot.pause()
@@ -307,7 +206,7 @@ async def test_unmeasured_areas_never_render_a_numeric_zero_and_review_discloses
             assert "Reviewed" in rendered
             assert "all pending review rows" not in rendered
 
-        overview_screen = LedgerOverviewScreen(_controller(_projection()))
+        overview_screen = LedgerOverviewScreen(ledger_controller(ledger_projection()))
         overview_app = ScreenHostApp[None](overview_screen)
         async with overview_app.run_test(size=(80, 24)) as pilot:
             await pilot.pause()
@@ -319,26 +218,26 @@ async def test_unmeasured_areas_never_render_a_numeric_zero_and_review_discloses
 
 @pytest.mark.asyncio
 async def test_transaction_focus_restores_by_identity_after_row_reordering() -> None:
-    projection = _projection()
+    projection = ledger_projection()
     reordered = projection.model_copy(update={"entries": tuple(reversed(projection.entries))})
     context = TuiScreenContextV1(
         destination="workbench.ledger",
         focus=TuiFocusIdentityV1(
             destination="workbench.ledger",
             semantic_key="ledger.transaction",
-            restore_token=_TX_A,
+            restore_token=LEDGER_TX_A,
         ),
     )
-    screen = LedgerEntriesScreen(_controller(reordered, context))
+    screen = LedgerEntriesScreen(ledger_controller(reordered, context))
     app = ScreenHostApp[None](screen)
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
         table = screen.query_one("#ledger-entries", DataTable)
         assert app.focused is table
-        assert table.ordered_rows[table.cursor_row].key.value == _TX_A
+        assert table.ordered_rows[table.cursor_row].key.value == LEDGER_TX_A
         await pilot.press("enter")
         await pilot.pause()
-        assert screen.selected_transaction_id == _TX_A
+        assert screen.selected_transaction_id == LEDGER_TX_A
 
 
 @pytest.mark.asyncio
@@ -347,7 +246,7 @@ async def test_every_locale_uses_catalogue_calls_without_raw_internal_vocabulary
     from .....core.config import override_settings
 
     with override_settings(cadrumo_output_language=locale.value):
-        overview = LedgerOverviewScreen(_controller(_projection()))
+        overview = LedgerOverviewScreen(ledger_controller(ledger_projection()))
         overview_app = ScreenHostApp[None](overview)
         async with overview_app.run_test(size=(80, 24)) as pilot:
             await pilot.pause()
@@ -360,7 +259,7 @@ async def test_every_locale_uses_catalogue_calls_without_raw_internal_vocabulary
             assert tuple(
                 row.key.value for row in overview.query_one("#ledger-navigation", DataTable).ordered_rows
             ) == tuple(area.value for area in LedgerWorkspaceArea)
-        review = LedgerReviewScreen(_controller(_projection()))
+        review = LedgerReviewScreen(ledger_controller(ledger_projection()))
         review_app = ScreenHostApp[None](review)
         async with review_app.run_test(size=(80, 24)) as pilot:
             await pilot.pause()
@@ -368,8 +267,8 @@ async def test_every_locale_uses_catalogue_calls_without_raw_internal_vocabulary
             assert _LOCALE_EXPECTED[locale][1] in rendered
             assert _LOCALE_EXPECTED[locale][2] in rendered
             assert tuple(row.key.value for row in review.query_one("#ledger-review", DataTable).ordered_rows) == (
-                _TX_A,
-                _TX_B,
+                LEDGER_TX_A,
+                LEDGER_TX_B,
             )
 
 

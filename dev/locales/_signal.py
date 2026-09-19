@@ -74,7 +74,12 @@ _TRANSLATION_OPTION_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w])-[A-Za-z](?=\s|$|[,;:.)\]}])"
 )
 _TRANSLATION_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(
-    r"(?<![\w])(?:[A-Za-z_][A-Za-z0-9_]*(?:_[A-Za-z0-9_]+)+|"
+    # The snake_case arm says "an underscore with at least one character after
+    # it", not "one or more underscore-prefixed runs". Both accept exactly the
+    # same tokens, but the repeated form lets one token be split many ways, so a
+    # long `a_0_0_0...` that ends up not matching costs exponential backtracking
+    # to refuse.
+    r"(?<![\w])(?:[A-Za-z_][A-Za-z0-9_]*_[A-Za-z0-9_]+|"
     r"[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+|"
     r"[A-Za-z_]*\d[A-Za-z0-9_]*|"
     r"[A-Za-z][A-Za-z0-9]*(?:-[A-Za-z0-9]+){2,})(?![\w])"

@@ -37,7 +37,7 @@ from ..models import (
 )
 from ..routes import ledger_screen_factory, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
-from .test_ledger_workspace import _context, _focused_context, _projection, _review_action
+from .workspace_fixtures import ledger_context, ledger_focused_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -131,9 +131,9 @@ class _RefusingImportDoor(_ImportDoor):
 
 def _import_controller(door: _ImportDoor | None) -> LedgerWorkspaceController:
     return LedgerWorkspaceController(
-        _context(),
-        _projection(),
-        LedgerWorkspaceInjection(review_action=_review_action(), import_door=door),
+        ledger_context(),
+        ledger_projection(),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), import_door=door),
     )
 
 
@@ -151,13 +151,13 @@ def _classify_action() -> ActionReference:
 
 @pytest.mark.asyncio
 async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_authorized() -> None:
-    projection = _projection()
+    projection = ledger_projection()
     door = _ClassificationDoor()
     controller = LedgerWorkspaceController(
-        _focused_context(projection.entries[0].transaction_id),
+        ledger_focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
-            review_action=_review_action(),
+            review_action=ledger_review_action(),
             classify_action=_classify_action(),
             classification_submitter=door,
         ),
@@ -183,10 +183,10 @@ async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_a
 
     success_door = _ClassificationDoor()
     success_controller = LedgerWorkspaceController(
-        _focused_context(projection.entries[0].transaction_id),
+        ledger_focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
-            review_action=_review_action(),
+            review_action=ledger_review_action(),
             classify_action=_classify_action(),
             classification_submitter=success_door,
         ),
@@ -311,13 +311,13 @@ def test_an_unmeasured_invoice_preview_never_reads_as_zero() -> None:
 
 @pytest.mark.asyncio
 async def test_escape_is_refused_while_classification_submission_is_in_flight() -> None:
-    projection = _projection()
+    projection = ledger_projection()
     door = _SlowClassificationDoor()
     controller = LedgerWorkspaceController(
-        _focused_context(projection.entries[0].transaction_id),
+        ledger_focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
-            review_action=_review_action(),
+            review_action=ledger_review_action(),
             classify_action=_classify_action(),
             classification_submitter=door,
         ),
@@ -395,20 +395,20 @@ def test_import_area_is_refused_without_its_door() -> None:
 def test_factory_refuses_undeclared_or_drifted_classification_action() -> None:
     with pytest.raises(KeyError, match="unknown operator action ID"):
         ledger_screen_factory(
-            _projection(),
+            ledger_projection(),
             review_action=ActionReference(action_id="operator.ledger.review"),
             classify_action=ActionReference(action_id="operator.ledger.absent"),
         )
 
 
 def test_controller_refuses_off_projection_classification() -> None:
-    projection = _projection()
+    projection = ledger_projection()
     door = _ClassificationDoor()
     controller = LedgerWorkspaceController(
-        _context(),
+        ledger_context(),
         projection,
         LedgerWorkspaceInjection(
-            review_action=_review_action(),
+            review_action=ledger_review_action(),
             classify_action=_classify_action(),
             classification_submitter=door,
         ),
@@ -420,7 +420,7 @@ def test_controller_refuses_off_projection_classification() -> None:
     assert not door.calls
     with pytest.raises(ValueError, match="canonical command"):
         ledger_screen_factory(
-            _projection(),
+            ledger_projection(),
             review_action=ActionReference(action_id="operator.ledger.review"),
             classify_action=ActionReference(action_id="operator.ledger.review"),
         )
@@ -429,12 +429,12 @@ def test_controller_refuses_off_projection_classification() -> None:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("locale", tuple(OutputLanguage))
 async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(locale: OutputLanguage) -> None:
-    projection = _projection()
+    projection = ledger_projection()
     controller = LedgerWorkspaceController(
-        _focused_context(projection.entries[0].transaction_id),
+        ledger_focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
-            review_action=_review_action(),
+            review_action=ledger_review_action(),
             classify_action=_classify_action(),
             classification_submitter=_ClassificationDoor(),
             import_door=_ImportDoor(),
@@ -466,12 +466,12 @@ async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(local
 
 @pytest.mark.asyncio
 async def test_classification_flow_has_exact_focus_and_real_compositor_geometry() -> None:
-    projection = _projection()
+    projection = ledger_projection()
     controller = LedgerWorkspaceController(
-        _focused_context(projection.entries[0].transaction_id),
+        ledger_focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
-            review_action=_review_action(),
+            review_action=ledger_review_action(),
             classify_action=_classify_action(),
             classification_submitter=_ClassificationDoor(),
         ),
@@ -585,7 +585,7 @@ async def test_refresh_after_a_write_runs_off_the_loop_and_coalesces_repeated_ba
 
     from ..workspace_injection import LedgerWorkspaceRefreshV1
 
-    projection = _projection()
+    projection = ledger_projection()
     release = threading.Event()
     calls: list[int] = []
 
@@ -595,10 +595,10 @@ async def test_refresh_after_a_write_runs_off_the_loop_and_coalesces_repeated_ba
         return LedgerWorkspaceRefreshV1(projection=projection, evidence_items=None)
 
     controller = LedgerWorkspaceController(
-        _focused_context(projection.entries[0].transaction_id),
+        ledger_focused_context(projection.entries[0].transaction_id),
         projection,
         LedgerWorkspaceInjection(
-            review_action=_review_action(),
+            review_action=ledger_review_action(),
             classify_action=_classify_action(),
             classification_submitter=_ClassificationDoor(),
             refresh=slow_refresh,

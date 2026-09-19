@@ -15,7 +15,7 @@
       ],
       "captures": [],
       "envelope": {
-        "active_profile": null,
+        "active_profile": "docs-sequence-sandbox",
         "command": "config.profile.edit",
         "notices": [],
         "result": {

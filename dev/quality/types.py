@@ -207,15 +207,36 @@ def _norm(path: str) -> str:
     return forward
 
 
+#: Wall-clock ceiling for one checker run, in seconds. The nine runs together
+#: take about a minute on a developer machine, so a single run approaching ten
+#: is not slow -- it is stuck, and the ceiling exists to say so. Without one a
+#: stalled checker consumes the whole CI job budget and the job is cancelled
+#: with no step marked failed and nothing naming the checker, which is the
+#: shape this gate already refuses for an empty report.
+_CHECKER_TIMEOUT_SECONDS = 600
+
+
 def _run(cmd: list[str]) -> subprocess.CompletedProcess[str]:
-    """Run a checker, capturing stdout/stderr without raising."""
-    return subprocess.run(
-        ["uv", "run", "--no-sync", *cmd],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-        check=False,
-    )
+    """Run a checker, capturing stdout/stderr without raising.
+
+    A checker that stops making progress is reported as itself rather than
+    left to hang: the run is bounded, and a breach raises naming the command
+    and the ceiling it passed.
+    """
+    try:
+        return subprocess.run(
+            ["uv", "run", "--no-sync", *cmd],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            check=False,
+            timeout=_CHECKER_TIMEOUT_SECONDS,
+        )
+    except subprocess.TimeoutExpired as expired:
+        spelling = " ".join(cmd)
+        raise RuntimeError(
+            f"checker `{spelling}` produced no result within {_CHECKER_TIMEOUT_SECONDS}s and was terminated",
+        ) from expired
 
 
 def require_report(payload: str, result: subprocess.CompletedProcess[str], checker: str) -> None:

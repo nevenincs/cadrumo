@@ -83,12 +83,14 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     upsert_test_profile_facts,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.config import load_settings, override_settings
 from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
+from cadrumo.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError
@@ -782,6 +784,12 @@ def sequence_sandbox(
         ),
         isolated_profile_storage_root(tmp_path=sandbox_root),
         composed_profile_persistence_ports(),
+        # This engine invokes the Click command directly, so it is the host that
+        # must compose what the ``aeat`` console script composes. Conversions
+        # read the RECORDED ECB answers rather than the live provider the
+        # console script binds: a sandbox that reached the network would make
+        # every golden depend on the day's reference rates.
+        bind_exchange_rate_provider_factory(recorded_ecb_rate_provider),
         _isolated_diagnostic_log(),
         frozen_clock(SANDBOX_INSTANT),
         chdir(workdir),

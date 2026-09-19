@@ -134,7 +134,7 @@ def _assert_periods_lowercase(label: str, periods: tuple[str, ...]) -> None:
     MODIFICACION, BAJA). CENSO_MODELO_EVENT_KINDS canonicalises them lowercase.
     A registry author mirroring AEAT display text would silently re-introduce
     uppercase, which passes the _temporal.py case-insensitive mask but breaks
-    _active_036_ownership_from_registry whose equality guard is case-sensitive.
+    active_036_ownership_from_registry whose equality guard is case-sensitive.
     History: commit 33783e00c (drift introduced), 472de9c02 (reverted, 21 min later).
     """
     non_lowercase = [p for p in periods if p != p.lower()]
@@ -152,7 +152,7 @@ def test_m036_revision_periods_are_lowercase_canonical() -> None:
     AEAT publishes period values uppercase in Anexo 3 HTML tables, but the domain
     layer CENSO_MODELO_EVENT_KINDS canonicalises them lowercase. A registry author
     mirroring AEAT display text would re-introduce uppercase (history: commit
-    33783e00c, fixed 21 min later in 472de9c02). _active_036_ownership_from_registry
+    33783e00c, fixed 21 min later in 472de9c02). active_036_ownership_from_registry
     has a case-sensitive equality guard that the _temporal.py case-insensitive mask
     does not protect, so this lint must fire at snapshot build.
 

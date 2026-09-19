@@ -1187,7 +1187,8 @@ class SupportedFilingYearsCatalogue(TemporalSupportEnvelope):
     2024 but not 2023 is not a state the law produces; the enumerated form could
     express it only by accident, and nothing ever did.
 
-    :attr:`years` still enumerates the span, derived now rather than authored,
+    :attr:`TemporalSupportEnvelope.years` still enumerates the span, derived
+    now rather than authored,
     so a consumer asking which years are supported keeps asking the same way. It
     is a plain property rather than a computed field on purpose: the published
     artifact is re-validated against this model on every read, and a serialised

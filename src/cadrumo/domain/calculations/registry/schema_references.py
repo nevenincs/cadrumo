@@ -777,7 +777,7 @@ class SourceReference(RegistryModel):
     a 2021 pair split at period 07 (one design "hasta periodo 06", the
     successor "desde periodo 07"). Both members of each pair carry an
     identical nominal date window, so nothing before this field could tell
-    :func:`resolve_record_design_binary`'s caller which one to pick for a
+    a record-design resolver's caller which one to pick for a
     given filing period. Declare it only for a design whose own filename or
     published text states the period boundary; leave it undeclared rather
     than infer one.

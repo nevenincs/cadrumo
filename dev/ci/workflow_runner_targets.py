@@ -67,7 +67,17 @@ _RUNNER_LABEL_LITERAL: Final = re.compile(
 #: its members individually loses the grouping, and `self-hosted` alone is not a
 #: valid target. Only quoted tokens and commas, so a JSON object literal in the
 #: same script cannot match it.
-_RUNNER_LABEL_GROUP: Final = re.compile(r'\[(?P<body>(?:\s*["\'][A-Za-z0-9_.\-]+["\']\s*,?)+)\]')
+#:
+#: The members are spelled as "one, then any number of others" with the run of
+#: whitespace before a separator owned by exactly one repeat, rather than as a
+#: repeated member that may carry whitespace on both sides. Both accept the same
+#: bodies, but the second form lets one input be split many ways, so a bracket
+#: that never closes costs exponential backtracking to refuse rather than a
+#: linear scan.
+_QUOTED_LABEL: Final = r'["\'][A-Za-z0-9_.\-]+["\']'
+_RUNNER_LABEL_GROUP: Final = re.compile(
+    rf"\[(?P<body>\s*{_QUOTED_LABEL}(?:\s*(?:,\s*)?{_QUOTED_LABEL})*\s*,?\s*)\]",
+)
 
 #: One quoted token inside such a group.
 _GROUP_MEMBER: Final = re.compile(r'["\'](?P<label>[A-Za-z0-9_.\-]+)["\']')

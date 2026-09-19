@@ -9,7 +9,7 @@ richer surfaces of its sibling subpackages.
 - :class:`AuthProviderProbe` — narrow auth-provider surface for the preflight gate.
 - :class:`DeadlineWindowChecker` — narrow surface over
   :mod:`cadrumo.domain.deadlines` used by preflight.
-   - :class:`ModeloFindingLike` / :class:`ModeloDraftLike` — narrow filing draft surfaces;
+- :class:`ModeloFindingLike` / :class:`ModeloDraftLike` — narrow filing draft surfaces;
   :class:`domain.filing.schema.ModeloDraft` structurally conforms to
   :class:`ModeloDraftLike`.
 - :class:`SubmissionRepositoryProtocol` — the read-side persistence port.

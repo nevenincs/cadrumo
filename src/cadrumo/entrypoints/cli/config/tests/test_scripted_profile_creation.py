@@ -20,9 +20,9 @@ import pytest
 from .....adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from .....core.config import override_settings
 from .....core.i18n.render import I18N_STRICT_MISSING_KEYS, override_locales_root, tr
-from ...tests._machine_secret_channels_support import _register
 from ...tests.cli_performance import profile_cli_path
 from ...tests.cli_runner import invoke_cached_cli
+from ...tests.password_only_profile import register_password_only_profile
 from ...verb_input_schema import build_verb_input_schemas
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -487,7 +487,7 @@ def test_a_duplicate_label_is_refused_before_any_key_is_derived(tmp_path: Path) 
     compared case-insensitively, as the transaction compares it.
     """
     root = tmp_path / "store"
-    _register(root, label="Only One")
+    register_password_only_profile(root, label="Only One")
     payload = json.dumps({"passphrase": _CREDENTIAL_INPUT, "passphrase_confirmation": _CREDENTIAL_INPUT})
 
     profile = profile_cli_path(

@@ -1420,6 +1420,36 @@
                   "source_evidence_id": null,
                   "source_key": "modelo",
                   "status": "resolved",
+                  "value": "714"
+                }
+              ]
+            },
+            "code": "overview.coverage.incomplete",
+            "context": {
+              "modelo": "714",
+              "reason": "applicable_window_missing"
+            },
+            "message": "The filing obligation 714 could not be positively scoped for this profile and may be under-reported. Review its filing explanation.",
+            "severity": "warning"
+          },
+          {
+            "action": {
+              "action": {
+                "action_id": "operator.overview.explain",
+                "cli_path": [
+                  "app",
+                  "overview",
+                  "explain"
+                ],
+                "target_command_key": "overview.explain"
+              },
+              "argument_bindings": [
+                {
+                  "argument_name": "modelo",
+                  "source": "operator_action.verdict_context",
+                  "source_evidence_id": null,
+                  "source_key": "modelo",
+                  "status": "resolved",
                   "value": "720"
                 }
               ]
@@ -1559,7 +1589,7 @@
               "continuation_outcome": "operator_decision",
               "work_unit_count": "0"
             },
-            "message": "List no active work summary",
+            "message": "No active work unit is available to continue.",
             "severity": "info"
           }
         ],

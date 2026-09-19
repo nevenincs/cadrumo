@@ -32,7 +32,6 @@ from ...core.casilla_id import CasillaId
 from ...core.period import Period
 from ...domain.calculations.registry.authority import (
     PinnedAuthorityOperation,
-    bundled_authority_descriptor_path,
     bundled_indexed_authority,
 )
 from ...domain.calculations.registry.bindings import CasillaObservation
@@ -45,6 +44,7 @@ from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
+from ._registry_helpers import absent_authority_file
 from .action_errors import (
     CalculationRegistryUnavailableError,
     CasillaProvenanceMissingError,
@@ -160,7 +160,7 @@ def resolve_registry_snapshot_for_work_unit(
         except FileNotFoundError as exc:
             raise CalculationRegistryUnavailableError(
                 translated_message="application.modelo.errors.calculation_registry_root_missing",
-                context={"registry_root": bundled_authority_descriptor_path()},
+                context={"missing_path": absent_authority_file(exc)},
             ) from exc
     try:
         snapshot = operation.snapshot(

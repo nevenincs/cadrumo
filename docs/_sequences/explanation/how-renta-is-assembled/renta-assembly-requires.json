@@ -23,7 +23,7 @@
             "action": null,
             "code": "modelo.requires.missing_profile_coefficient",
             "context": {
-              "missing_bindings": "renta-2025-family-ascendant-birth-date, renta-2025-family-ascendant-cohabiting-descendant-count, renta-2025-family-ascendant-death-date, renta-2025-family-ascendant-disability-grade, renta-2025-family-ascendant-display-name, renta-2025-family-ascendant-tax-id, renta-2025-family-descendant-birth-date, renta-2025-family-descendant-death-date, renta-2025-family-descendant-disability-grade, renta-2025-family-descendant-display-name, renta-2025-family-descendant-tax-id, renta-2025-profile-declaration-type, renta-2025-profile-display-name, renta-2025-profile-family-descendants-eu-eea-deduction, renta-2025-profile-family-minor-children-in-unit, renta-2025-profile-marital-status, renta-2025-profile-spouse-birth-date, renta-2025-profile-spouse-disability-grade, renta-2025-profile-spouse-display-name, renta-2025-profile-spouse-eu-eea-country, renta-2025-profile-spouse-eu-eea-resident, renta-2025-profile-spouse-non-resident-irpf, renta-2025-profile-spouse-sex, renta-2025-profile-spouse-tax-id, renta-2025-profile-tax-id, renta-2025-profile-tax-residence-ccaa, renta-2025-profile-taxpayer-birth-date, renta-2025-profile-taxpayer-death-date, renta-2025-profile-taxpayer-disability-grade, renta-2025-profile-taxpayer-sex",
+              "missing_bindings": "renta-family-ascendant-birth-date, renta-family-ascendant-cohabiting-descendant-count, renta-family-ascendant-death-date, renta-family-ascendant-disability-grade, renta-family-ascendant-display-name, renta-family-ascendant-tax-id, renta-family-descendant-birth-date, renta-family-descendant-death-date, renta-family-descendant-disability-grade, renta-family-descendant-display-name, renta-family-descendant-tax-id, renta-profile-declaration-type, renta-profile-display-name, renta-profile-family-descendants-eu-eea-deduction, renta-profile-family-minor-children-in-unit, renta-profile-marital-status, renta-profile-spouse-birth-date, renta-profile-spouse-disability-grade, renta-profile-spouse-display-name, renta-profile-spouse-eu-eea-country, renta-profile-spouse-eu-eea-resident, renta-profile-spouse-non-resident-irpf, renta-profile-spouse-sex, renta-profile-spouse-tax-id, renta-profile-tax-id, renta-profile-tax-residence-ccaa, renta-profile-taxpayer-birth-date, renta-profile-taxpayer-death-date, renta-profile-taxpayer-disability-grade, renta-profile-taxpayer-sex",
               "modelo": "100"
             },
             "message": "The active profile has not set the following coefficient(s) needed for this modelo: Tax ID (NIF/NIE/CIF) (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Surnames (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Given name (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Declaration type (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Sex (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Marital status (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Birth date (ley-35-2006:art-57, orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse tax ID (NIF/NIE) (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse surnames (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse given name (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse birth date (ley-35-2006:art-57, orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse sex (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Disability grade (ley-35-2006:art-57, orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Death date (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse disability grade (ley-35-2006:art-57, orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse non-resident (not IRPF taxpayer) (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse EU/EEA resident (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Spouse EU/EEA country (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), EU/EEA descendant deduction (orden-hac-242-2025:art-3, orden-hac-277-2026:art-3), Minor children in the household (ley-35-2006:art-82, ley-35-2006:art-83, orden-hac-242-2025:art-3, orden-hac-277-2026:art-3).",
@@ -33,7 +33,7 @@
             "action": null,
             "code": "modelo.requires.unbucketed_binding_source",
             "context": {
-              "binding_ids": "renta-2025-certificado-trabajo-retenciones, renta-2025-inventory-activity-acquisition-cost-0181, renta-2025-inventory-activity-closing-decrease-0182, renta-2025-inventory-activity-closing-increase-0177",
+              "binding_ids": "renta-certificado-trabajo-retenciones, renta-inventory-activity-acquisition-cost-0181, renta-inventory-activity-closing-decrease-0182, renta-inventory-activity-closing-increase-0177",
               "casilla_ids": "0177, 0181, 0182, 0596",
               "modelo": "100",
               "source_kinds": "inventory, manual_input"
@@ -46,7 +46,7 @@
           "filing_year": 2025,
           "ledger_derivable": [
             {
-              "binding_id": "renta-2025-ledger-income-0171",
+              "binding_id": "renta-ledger-income-0171",
               "binding_source": "ledger_renta_income_aggregation",
               "casilla_id": "0171",
               "label": "Operating income",
@@ -64,7 +64,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0183-deductible",
+              "binding_id": "renta-ledger-expense-0183-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0183",
               "label": "Other operating consumables",
@@ -82,7 +82,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0186-deductible",
+              "binding_id": "renta-ledger-expense-0186-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0186",
               "label": "Social Security contributions of the activity holder",
@@ -100,7 +100,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0191-deductible",
+              "binding_id": "renta-ledger-expense-0191-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0191",
               "label": "Taxpayer's subsistence expenses",
@@ -118,7 +118,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0192-deductible",
+              "binding_id": "renta-ledger-expense-0192-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0192",
               "label": "Leases and royalties",
@@ -136,7 +136,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0193-deductible",
+              "binding_id": "renta-ledger-expense-0193-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0193",
               "label": "Repairs and maintenance",
@@ -154,7 +154,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0194-deductible",
+              "binding_id": "renta-ledger-expense-0194-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0194",
               "label": "Utility supplies",
@@ -172,10 +172,10 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0195-deductible",
+              "binding_id": "renta-ledger-expense-0195-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0195",
-              "label": "Contributions to alternative mutual-insurance schemes by the activity holder",
+              "label": "Contributions to alternative mutual societies of the activity holder",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -190,10 +190,10 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0199-deductible",
+              "binding_id": "renta-ledger-expense-0199-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0199",
-              "label": "Services of independent professionals",
+              "label": "Services from independent professionals",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -208,7 +208,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0200-deductible",
+              "binding_id": "renta-ledger-expense-0200-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0200",
               "label": "Insurance premiums",
@@ -226,7 +226,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0202-deductible",
+              "binding_id": "renta-ledger-expense-0202-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0202",
               "label": "Other external services",
@@ -244,7 +244,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0203-deductible",
+              "binding_id": "renta-ledger-expense-0203-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0203",
               "label": "Financial expenses",
@@ -262,7 +262,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0206-deductible",
+              "binding_id": "renta-ledger-expense-0206-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0206",
               "label": "Other tax-deductible levies",
@@ -280,7 +280,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0208-deductible",
+              "binding_id": "renta-ledger-expense-0208-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0208",
               "label": "Depreciation of tangible fixed assets",
@@ -298,7 +298,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-ledger-expense-0217-deductible",
+              "binding_id": "renta-ledger-expense-0217-deductible",
               "binding_source": "ledger_renta_gastos_estimacion_directa_aggregation",
               "casilla_id": "0217",
               "label": "Other tax-deductible items, excluding provisions",
@@ -345,7 +345,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0002",
-              "label": "For income arising from the assignment of the exploitation of copyright, if you choose to allocate the advance on account of it as the royalties accrue...",
+              "label": "In the case of income derived from the assignment of the exploitation of copyright, if you choose to allocate the advance payment on account of that income as the rights accrue, enter an 'X'",
               "legal_refs": [
                 "ley-35-2006:art-17",
                 "orden-hac-277-2026:art-3"
@@ -492,7 +492,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0014",
-              "label": "Union membership dues paid",
+              "label": "Trade union dues paid",
               "legal_refs": [
                 "ley-35-2006:art-19"
               ],
@@ -562,7 +562,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0023",
-              "label": "Amount applicable as a general rule",
+              "label": "Generally applicable amount",
               "legal_refs": [
                 "ley-35-2006:art-20"
               ],
@@ -891,7 +891,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0049",
-              "label": "For income arising from the assignment of the exploitation of copyright, if you choose to allocate the advance on account of it as the royalties accrue...",
+              "label": "In the case of income arising from the assignment of the exploitation of copyright, if you choose to allocate the advance payment on account of it as the rights accrue, enter an \"X\"",
               "legal_refs": [
                 "ley-35-2006:art-25",
                 "orden-hac-277-2026:art-3"
@@ -1471,7 +1471,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0084",
-              "label": "State whether the cadastral value has been reviewed, modified, or determined through a general collective valuation procedure that entered into force in this tax year or in the...",
+              "label": "State whether the cadastral value has been reviewed, modified or determined through a general collective valuation procedure that came into force in the tax year or in the last ten years (Yes/No)",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "orden-hac-277-2026:art-3"
@@ -1597,7 +1597,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0091",
-              "label": "Tenant 1's Tax ID (NIF) (*)",
+              "label": "Tenant 1 tax identification number (*)",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "orden-hac-277-2026:art-3"
@@ -1660,7 +1660,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0094",
-              "label": "Tenant 2's Tax ID (NIF) (*)",
+              "label": "Tenant 2 tax identification number (*)",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "orden-hac-277-2026:art-3"
@@ -1702,7 +1702,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0097",
-              "label": "Tenant 3's Tax ID (NIF) (*)",
+              "label": "Tenant 3 tax identification number (*)",
               "legal_refs": [
                 "ley-35-2006:art-22",
                 "orden-hac-277-2026:art-3"
@@ -1915,7 +1915,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0109",
-              "label": "Homeowners'-association expenses",
+              "label": "Community fees",
               "legal_refs": [
                 "rd-439-2007:art-13",
                 "ley-35-2006:art-23"
@@ -1990,7 +1990,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0114",
-              "label": "Insurance-contract premiums",
+              "label": "Insurance contract premiums",
               "legal_refs": [
                 "rd-439-2007:art-13",
                 "ley-35-2006:art-23"
@@ -2020,7 +2020,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0116",
-              "label": "Doubtful-debt provisions",
+              "label": "Doubtful collection balances",
               "legal_refs": [
                 "rd-439-2007:art-13",
                 "ley-35-2006:art-23"
@@ -2260,7 +2260,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0128",
-              "label": "Amount of improvements made in prior years",
+              "label": "Amount of improvements made in previous years",
               "legal_refs": [
                 "ley-35-2006:art-23",
                 "orden-hac-277-2026:art-3"
@@ -2437,7 +2437,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0137",
-              "label": "Number of days the ancillary property has been leased",
+              "label": "Number of days the accessory property was rented",
               "legal_refs": [
                 "ley-35-2006:art-23",
                 "orden-hac-277-2026:art-3"
@@ -2563,7 +2563,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0143",
-              "label": "Amount of improvements made in prior years to the ancillary property",
+              "label": "Amount of improvements made in previous years to the accessory property",
               "legal_refs": [
                 "ley-35-2006:art-23",
                 "orden-hac-277-2026:art-3"
@@ -2701,7 +2701,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0152",
-              "label": "Minimum computable income in the case of kinship",
+              "label": "Minimum countable income in the case of kinship",
               "legal_refs": [
                 "rd-439-2007:art-13",
                 "ley-35-2006:art-24"
@@ -2894,7 +2894,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0165",
-              "label": "Taxpayer carrying out the activity/activities",
+              "label": "Taxpayer carrying out the activity or activities",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -3015,7 +3015,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0170",
-              "label": "For income arising from the assignment of the exploitation of copyright, if you choose to allocate the advance on account of it as the royalties accrue...",
+              "label": "In the case of income arising from the assignment of the exploitation of copyright, if you choose to allocate the advance payment on account of it as the rights accrue, enter an \"X\"",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -3076,7 +3076,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0174",
-              "label": "Imputation of income from capital grants",
+              "label": "Recognition of income from capital grants",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -3202,7 +3202,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0187",
-              "label": "Severance and compensation payments",
+              "label": "Compensation payments",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -3256,7 +3256,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0190",
-              "label": "Other staff expenses",
+              "label": "Other personnel expenses",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -3304,7 +3304,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0198",
-              "label": "Other utility supplies",
+              "label": "Other utilities",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -3424,7 +3424,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0210",
-              "label": "Tax ID (NIF) of the guarderia o centro de educación infantil autorizado",
+              "label": "Tax ID (NIF) of the authorised nursery or early years education centre",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -3815,7 +3815,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0240",
-              "label": "Tax ID (NIF) of the spouse",
+              "label": "Spouse's tax identification number",
               "legal_refs": [
                 "ley-35-2006:art-81-bis",
                 "orden-hac-277-2026:art-3"
@@ -3836,7 +3836,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0241",
-              "label": "Name",
+              "label": "Given name",
               "legal_refs": [
                 "ley-35-2006:art-81-bis",
                 "orden-hac-277-2026:art-3"
@@ -4013,7 +4013,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0253",
-              "label": "For the donation of cultural assets by their authors or creators and their heirs",
+              "label": "For donation of cultural assets by their authors or creators and their heirs",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -4265,7 +4265,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0266",
-              "label": "Public aid to owners of assets forming part of the Spanish Historical Heritage for their conservation or restoration. Amount imputable to 2025 (complete Annex C.1) (*)",
+              "label": "Public aid to holders of assets forming part of Spanish Historical Heritage for their conservation or rehabilitation. Amount imputable to 2025 (complete Annex C.1) (*)",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -4520,7 +4520,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0279",
-              "label": "Public aid for the first establishment of young farmers under the National Rural Development Framework, for the acquisition of a stake in the capital of agr...",
+              "label": "Public aid for the first establishment of young farmers provided for in the National Rural Development Framework, intended for the acquisition of a shareholding in the capital of agricultural businesses. Amount attributable to 2025 (complete Annex C.1) (*)",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -4542,7 +4542,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0281",
-              "label": "Taxpayer who obtains the prizes",
+              "label": "Taxpayer receiving the prizes",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -4673,7 +4673,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0291",
-              "label": "Taxpayer who obtains the prizes",
+              "label": "Taxpayer receiving the prizes",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -4782,7 +4782,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0298",
-              "label": "Taxpayer who obtains other capital gains and losses not arising from the transfer of assets",
+              "label": "Taxpayer obtaining other capital gains and losses not derived from the transfer of assets",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -4803,7 +4803,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0299",
-              "label": "Grants for the acquisition of publicly subsidised or price-capped housing. Amount imputable to 2025 (complete Annex C.1) (*)",
+              "label": "Grants for the purchase of officially protected housing or price-capped housing. Amount attributable to 2025 (complete Annex C.1) (*)",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -4825,7 +4825,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0300",
-              "label": "Other grants or aid for the acquisition or renovation of the primary residence, or for repairing structural defects in it. Amount imputable to 2025 (complete An...",
+              "label": "Other subsidies or aid intended for acquiring or rehabilitating the habitual residence or repairing structural defects in it. Amount attributable to 2025 (complete Annex C.1) (*)",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -5022,7 +5022,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0311",
-              "label": "Tax ID (NIF) of the sociedad o fondo de inversión",
+              "label": "Tax identification number of the investment company or fund",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -6449,7 +6449,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0388",
-              "label": "Taxpayer who obtains these capital gains",
+              "label": "Taxpayer obtaining these capital gains",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -6492,7 +6492,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0391",
-              "label": "Taxpayer to whom the imputation corresponds",
+              "label": "Taxpayer to whom the allocation applies",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -6535,7 +6535,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0394",
-              "label": "Taxpayer to whom the imputation corresponds",
+              "label": "Taxpayer to whom the allocation applies",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -6578,7 +6578,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0397",
-              "label": "Tax ID (NIF) of the empleador",
+              "label": "Tax ID (NIF) of the employer",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -6600,7 +6600,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0398",
-              "label": "Taxpayer to whom the deferred imputation corresponds",
+              "label": "Taxpayer to whom the deferred allocation applies",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -6643,7 +6643,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0401",
-              "label": "If this is a taxpayer who has transferred the shares or units inter vivos, mark this box (only taxpayers who have changed their residence to another EU/EEA Member State...",
+              "label": "If this is a taxpayer who has transferred the shares or holdings inter vivos, tick this box (only taxpayers who have changed their residence to another Member State of the European Union)",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -6686,7 +6686,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0403",
-              "label": "Tax ID (NIF) of the sociedad emisora o fondo de inversión",
+              "label": "Tax ID (NIF) of the issuing company or investment fund",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -6898,7 +6898,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0416",
-              "label": "If taxpayers who are members of entities not resident in Spain were affected in 2024 by merger, spin-off, or share-exchange transactions governed by Chapter VII, Title VII...",
+              "label": "If taxpayers who are members of entities not resident in Spain were affected in 2024 by merger, spin-off, or share-exchange transactions governed by Chapter VII, Title VII of the Corporate Income Tax Act, tick this box with an \"X\"",
               "legal_refs": [
                 "ley-35-2006:art-37",
                 "orden-hac-277-2026:art-3"
@@ -6919,7 +6919,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0417",
-              "label": "If taxpayers who are members of entities not resident in Spain were affected in 2024 by merger, spin-off, or share-exchange transactions carried out by those entities, governed by...",
+              "label": "If taxpayers who are members of entities not resident in Spain were affected in 2024 by merger, spin-off, or share-exchange transactions carried out by those entities, governed by Chapter VII of Title VII of the Corporate Income Tax Act (articles 48 and 49 of its Regulations), and the non-resident entities have not applied a similar tax regime to this one, mark this box with an \"X\"",
               "legal_refs": [
                 "ley-35-2006:art-37",
                 "orden-hac-277-2026:art-3"
@@ -7047,7 +7047,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0431",
-              "label": "Negative net balances of capital gains and losses from 2021 to 2024 not arising from transfers, pending offset as of 1 January 2025, to be included in the general taxable base (...",
+              "label": "Negative net balances of capital gains and losses from 2021 to 2024 not arising from transfers, pending offset as of 1 January 2025, to be included in the general taxable base (Complete annex C.3)",
               "legal_refs": [
                 "ley-35-2006:art-48",
                 "orden-hac-277-2026:art-3"
@@ -7068,7 +7068,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0434",
-              "label": "Remaining negative net balances of capital gains and losses from 2021 to 2024 not arising from transfers, pending offset as of 1 January 2025, to be included in the...",
+              "label": "Remaining negative net balances of capital gains and losses from 2021 to 2024 not arising from transfers, pending offset as of 1 January 2025, to be included in the taxable base, limited to 25% of the amount in box [0432] (*) (complete Annex C.3) (balance pending, not offset, in box [0431])",
               "legal_refs": [
                 "ley-35-2006:art-48",
                 "orden-hac-277-2026:art-3"
@@ -7110,7 +7110,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0438",
-              "label": "Contributions made by the employer arising from the employee's decision",
+              "label": "Contributions made by the company deriving from a worker decision",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -7216,7 +7216,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0443",
-              "label": "Remaining negative net balances of movable-capital income from 2021, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of...",
+              "label": "Remaining negative net balances of movable-capital income from 2021, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of [0424] (*) (outstanding balance not offset in box [0449]) (Complete Annex C.3)",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "orden-hac-277-2026:art-3"
@@ -7237,7 +7237,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0444",
-              "label": "Remaining negative net balances of movable-capital income from 2022, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of...",
+              "label": "Remaining negative net balances of movable-capital income from 2022, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of [0424] (*) (outstanding balance not offset in box [0450]) (Complete Annex C.3)",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "orden-hac-277-2026:art-3"
@@ -7258,7 +7258,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0445",
-              "label": "Remaining negative net balances of movable-capital income from 2023, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of...",
+              "label": "Remaining negative net balances of movable-capital income from 2023, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of [0424] (*) (outstanding balance not offset in box [0451]) (Complete Annex C.3)",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "orden-hac-277-2026:art-3"
@@ -7279,7 +7279,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0447",
-              "label": "Remaining negative net balances of movable-capital income from 2024, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of...",
+              "label": "Remaining negative net balances of movable-capital income from 2024, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of [0424] (*) (outstanding balance not offset in box [0452]) (Complete Annex C.3)",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "orden-hac-277-2026:art-3"
@@ -7300,7 +7300,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0448",
-              "label": "Remaining negative net balances of capital gains and losses from 2024, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of...",
+              "label": "Remaining negative net balances of capital gains and losses from 2024, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of [0429] (*) (outstanding balance not offset in box [0442]) (Complete Annex C.3)",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "orden-hac-277-2026:art-3"
@@ -7405,7 +7405,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0453",
-              "label": "Remaining negative net balances of capital gains and losses from 2021, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of...",
+              "label": "Remaining negative net balances of capital gains and losses from 2021, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of [0429] (*) (outstanding balance not offset in box [0439]) (Complete Annex C.3)",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "orden-hac-277-2026:art-3"
@@ -7426,7 +7426,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0454",
-              "label": "Remaining negative net balances of capital gains and losses from 2022, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of...",
+              "label": "Remaining negative net balances of capital gains and losses from 2022, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of [0429] (*) (outstanding balance not offset in box [0440]) (Complete Annex C.3)",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "orden-hac-277-2026:art-3"
@@ -7447,7 +7447,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0455",
-              "label": "Remaining negative net balances of capital gains and losses from 2023, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of...",
+              "label": "Remaining negative net balances of capital gains and losses from 2023, pending offset as of 1 January 2025, to be included in the savings taxable base, limited to 25% of [0429] (*) (outstanding balance not offset in box [0441]) (Complete Annex C.3)",
               "legal_refs": [
                 "ley-35-2006:art-49",
                 "orden-hac-277-2026:art-3"
@@ -7558,7 +7558,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0462",
-              "label": "Taxpayer who makes, or to whom, the contributions are imputed",
+              "label": "Taxpayer who makes, or to whom are attributed, the payments and contributions",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -7601,7 +7601,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0464",
-              "label": "Excesses arising from employer contributions to group long-term-care insurance (complete Annex C.3)",
+              "label": "Excess amounts arising from employer contributions to collective long-term-care insurance (complete Annex C.3)",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -7623,7 +7623,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0465",
-              "label": "Employee contributions, other than those entered in [0438] and [0426]",
+              "label": "Employee contributions, except those entered in [0438] and [0426]",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -7645,7 +7645,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0466",
-              "label": "Contributions to group long-term-care insurance",
+              "label": "Contributions to collective long-term-care insurance",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -7946,7 +7946,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0482",
-              "label": "Taxpayer who pays the pensions or annuities",
+              "label": "Taxpayer paying the pensions or annuities",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -8135,7 +8135,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0491",
-              "label": "For joint filing. Amount from box [0461] applied",
+              "label": "For joint taxation. Amount from box [0461] applied",
               "legal_refs": [
                 "ley-35-2006:art-50",
                 "orden-hac-277-2026:art-3"
@@ -8282,7 +8282,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0499",
-              "label": "Contributions by self-employed workers, sole traders, or professionals",
+              "label": "Contributions by self-employed workers, individual entrepreneurs, or professionals",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -8354,7 +8354,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0504",
-              "label": "Increase in the net regional tax liability for loss of entitlement to the birth deduction (repayment of the advance payment) under article 6 ter of Legislative Decree 1/2014, of 6...",
+              "label": "Increase in the net regional tax liability for loss of entitlement to the birth deduction (repayment of the advance payment) under article 6 ter of Legislative Decree 1/2014, of 6 June, approving the consolidated text of the legal provisions of the Autonomous Community of the Balearic Islands on taxes ceded by the State: Regional portion",
               "legal_refs": [
                 "ley-35-2006:art-62",
                 "ley-35-2006:art-66",
@@ -8379,7 +8379,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0506",
-              "label": "Reduction for joint filing. Remainder of box [0461] applied",
+              "label": "Joint-taxation reduction. Remainder from box [0461] applied",
               "legal_refs": [
                 "ley-35-2006:art-50",
                 "orden-hac-277-2026:art-3"
@@ -8554,27 +8554,6 @@
             {
               "binding_id": null,
               "binding_source": null,
-              "casilla_id": "0525",
-              "label": "Corresponding to the general net taxable base",
-              "legal_refs": [
-                "ley-35-2006:art-7",
-                "orden-hac-277-2026:art-3"
-              ],
-              "number": "0525",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-dr-100-2025-input-dictionary",
-                "aeat-dr-100-2025-xsd",
-                "aeat-renta-2025-manual-parte1",
-                "aeat-renta-2025-manual-deducciones-autonomicas",
-                "boe-modelo-100-2025-form",
-                "aeat-modelo-100-procedure",
-                "aeat-renta-web-open"
-              ]
-            },
-            {
-              "binding_id": null,
-              "binding_source": null,
               "casilla_id": "0526",
               "label": "Corresponding to the savings net taxable base",
               "legal_refs": [
@@ -8685,7 +8664,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0556",
-              "label": "For allocations to the Reserve for Investments in the Canary Islands (Law 19/1994): State portion",
+              "label": "For allocations to the Reserve for Investments in the Canary Islands (Law 19/1994): State part",
               "legal_refs": [
                 "ley-35-2006:art-62",
                 "ley-35-2006:art-66",
@@ -8710,7 +8689,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0557",
-              "label": "For allocations to the Reserve for Investments in the Canary Islands (Law 19/1994): Regional portion",
+              "label": "For allocations to the Reserve for Investments in the Canary Islands (Law 19/1994): Autonomous-community part",
               "legal_refs": [
                 "ley-35-2006:art-62",
                 "ley-35-2006:art-66",
@@ -8806,7 +8785,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0565",
-              "label": "Deduction applicable to family units made up of tax residents of EU or EEA Member States (amounts from these boxes of Annex A.4): Pa...",
+              "label": "Deduction applicable to family units made up of tax residents of Member States of the European Union or the European Economic Area (amounts of these boxes of Annex A.4): State portion",
               "legal_refs": [
                 "ley-35-2006:art-81-bis",
                 "orden-hac-277-2026:art-3"
@@ -8827,7 +8806,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0566",
-              "label": "Deduction applicable to family units made up of tax residents of EU or EEA Member States (amounts from these boxes of Annex A.4): Pa...",
+              "label": "Deduction applicable to family units made up of tax residents of Member States of the European Union or the European Economic Area (amounts of these boxes of Annex A.4): Regional portion",
               "legal_refs": [
                 "ley-35-2006:art-81-bis",
                 "orden-hac-277-2026:art-3"
@@ -9166,7 +9145,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0583",
-              "label": "Late-payment interest corresponding to the prior regularisation: Regional portion",
+              "label": "Late-payment interest corresponding to the previous regularization: Autonomous-community part",
               "legal_refs": [
                 "ley-35-2006:art-62",
                 "ley-35-2006:art-66",
@@ -9484,7 +9463,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0611",
-              "label": "Maternity deduction. Amount of the deduction",
+              "label": "Maternity deduction. Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-81",
                 "orden-hac-277-2026:art-3"
@@ -9552,7 +9531,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0615",
-              "label": "Name",
+              "label": "Given name",
               "legal_refs": [
                 "ley-35-2006:art-81-bis",
                 "orden-hac-277-2026:art-3"
@@ -9771,7 +9750,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0626",
-              "label": "Name",
+              "label": "Given name",
               "legal_refs": [
                 "ley-35-2006:art-81-bis",
                 "orden-hac-277-2026:art-3"
@@ -10158,7 +10137,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0645",
-              "label": "Amounts paid eligible for the deduction",
+              "label": "Amounts paid qualifying for the deduction",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -10748,7 +10727,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0690",
-              "label": "If the dwelling was acquired after 31-12-2012 because it was under construction, state the acquisition date (date of the acquisition or new-build deed)",
+              "label": "If the dwelling was acquired after 31-12-2012 because it was under construction, enter the acquisition date (date of the acquisition deed or new-build deed)",
               "legal_refs": [
                 "ley-35-2006:dt-18",
                 "orden-hac-277-2026:art-3"
@@ -10853,7 +10832,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0698",
-              "label": "State portion: Amount of the deduction",
+              "label": "State part: deduction amount",
               "legal_refs": [
                 "ley-35-2006:dt-18",
                 "orden-hac-277-2026:art-3"
@@ -10874,7 +10853,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0699",
-              "label": "Regional portion: Amount of the deduction",
+              "label": "Autonomous-community part: deduction amount",
               "legal_refs": [
                 "ley-35-2006:dt-18",
                 "orden-hac-277-2026:art-3"
@@ -10937,7 +10916,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0702",
-              "label": "State portion: Amount of the deduction",
+              "label": "State part: deduction amount",
               "legal_refs": [
                 "ley-35-2006:dt-18",
                 "orden-hac-277-2026:art-3"
@@ -10958,7 +10937,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0703",
-              "label": "Regional portion: Amount of the deduction",
+              "label": "Autonomous-community part: deduction amount",
               "legal_refs": [
                 "ley-35-2006:dt-18",
                 "orden-hac-277-2026:art-3"
@@ -10979,7 +10958,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0704",
-              "label": "State portion: Amount of the deduction",
+              "label": "State part: deduction amount",
               "legal_refs": [
                 "ley-35-2006:dt-18",
                 "orden-hac-277-2026:art-3"
@@ -11000,7 +10979,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0705",
-              "label": "Regional portion: Amount of the deduction",
+              "label": "Autonomous-community part: deduction amount",
               "legal_refs": [
                 "ley-35-2006:dt-18",
                 "orden-hac-277-2026:art-3"
@@ -11050,6 +11029,8 @@
               "number": "0707",
               "source_refs": [
                 "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2024-dictionary",
+                "aeat-renta-2024-manual-parte1",
                 "aeat-dr-100-2025-input-dictionary",
                 "aeat-dr-100-2025-xsd",
                 "aeat-renta-2025-manual-parte1",
@@ -11063,7 +11044,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0708",
-              "label": "Acquisition date of the dwelling for which the deduction is claimed (unless box [0690] is completed)",
+              "label": "Acquisition date of the dwelling for which the deduction is applied (unless box [0690] is completed)",
               "legal_refs": [
                 "ley-35-2006:dt-18",
                 "orden-hac-277-2026:art-3"
@@ -11338,7 +11319,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0721",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-62",
                 "ley-35-2006:art-66",
@@ -11490,7 +11471,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0729",
-              "label": "Non-Resident Income Tax liabilities corresponding to income obtained in Spain in 2025 by the other members of the family unit resident in an EU/EEA Member St...",
+              "label": "Non-Resident Income Tax liabilities corresponding to income obtained in Spain in 2025 by the other members of the family unit resident in an EU/EEA Member State",
               "legal_refs": [
                 "ley-35-2006:da-48",
                 "orden-hac-277-2026:art-3"
@@ -11952,7 +11933,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0752",
-              "label": "For deductions under the general regime of the Corporate Income Tax Law: Applied in this return",
+              "label": "Deductions under the general regime of the Corporate Income Tax Law: applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -12078,7 +12059,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0758",
-              "label": "For investment of profits (art. 37 of the TRLIS, Transitional Provision 24 of the LIS) (only if a special investment plan approved by the Administration allows investment in this tax year): Applied in this...",
+              "label": "For investment of profits (art. 37 of the TRLIS, Transitional Provision 24 of the LIS) (only if a special investment plan approved by the Administration allows investment in this tax year): Applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -12183,7 +12164,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0763",
-              "label": "For donations of cultural assets and contributions towards the conservation, repair, and restoration of assets forming part of the cultural heritage of Castilla-La Mancha, and for cultural...",
+              "label": "For donations of cultural assets and contributions towards the conservation, repair and restoration of assets belonging to the cultural heritage of Castilla-La Mancha, and for cultural purposes, included in the Castilla-La Mancha cultural patronage plan",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -12897,7 +12878,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0799",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -13023,7 +13004,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0805",
-              "label": "For the increase in the cost of third-party financing for the primary-residence investment",
+              "label": "For the increase in external financing costs for the habitual residence investment",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -13149,7 +13130,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0811",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -13296,7 +13277,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0818",
-              "label": "For the lease of dwellings located in municipalities affected by risk of depopulation in Cantabria that constitute, or will constitute, the tenant's primary residence (deduction for the...",
+              "label": "For the lease of dwellings located in municipalities affected by risk of depopulation in Cantabria that constitute, or will constitute, the tenant's primary residence (deduction for the tenant) (amount from box [0646] of Annex B.12)",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -13464,7 +13445,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0826",
-              "label": "Registration number of certificate 1:",
+              "label": "Certificate 1 registration number:",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -13485,7 +13466,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0827",
-              "label": "Registration number of certificate 2:",
+              "label": "Certificate 2 registration number:",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -13674,7 +13655,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0836",
-              "label": "Deduction for investment in new tangible fixed assets or real-estate investments used for economic activities: Amount of the deduction (**)",
+              "label": "Deduction for investment in new items of tangible fixed assets or real estate investments assigned to economic activities: deduction amount (**)",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -13716,7 +13697,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0838",
-              "label": "Other methods: Applied in this return",
+              "label": "Other categories: applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -13884,7 +13865,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0847",
-              "label": "For the acquisition of a new primary residence, or the extension of the current one, by large families",
+              "label": "For the acquisition of a new habitual residence or extension of the current habitual residence by large families",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -13947,7 +13928,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0850",
-              "label": "For the birth or adoption of children, or foster care of minors",
+              "label": "For the birth or adoption of children or foster care of minors",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -14031,7 +14012,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0854",
-              "label": "For investment in the acquisition of shares and company units arising from company-formation or capital-increase agreements in commercial companies (amount from the...",
+              "label": "For investment in the acquisition of shares and company units arising from company-formation or capital-increase agreements in commercial companies (amount from box [1136] of Annex B.11)",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -14157,7 +14138,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0860",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -14199,7 +14180,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0862",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -14220,7 +14201,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0863",
-              "label": "For legal-defence expenses relating to the employment relationship",
+              "label": "For legal defence expenses related to the employment relationship",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -14640,7 +14621,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0886",
-              "label": "For the investment in a primary residence classed as protected housing",
+              "label": "For investment in a protected habitual residence",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -16236,7 +16217,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0965",
-              "label": "For expenses in the purchase of textbooks, language teaching, and other education-related expenses",
+              "label": "For expenses for acquiring textbooks, language teaching and other education-related expenses",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -16467,7 +16448,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0976",
-              "label": "For subsidised renovation works under State or regional housing plans aimed at improving energy efficiency, sustainability, and adaptation to the...",
+              "label": "For subsidised renovation works under State or regional housing plans aimed at improving energy efficiency, sustainability and accessibility for disability in the habitual residence (amount from box [2001] of Annex B.12)",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -16509,7 +16490,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0978",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -16635,7 +16616,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "0984",
-              "label": "Amount applied in the year",
+              "label": "Amount applied in the tax year",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -17244,7 +17225,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1016",
-              "label": "For investment in the acquisition of shares or company units arising from company-formation or capital-increase agreements in commercial companies (amount from box [1136]...",
+              "label": "For investment in the acquisition of shares or company units arising from company-formation or capital-increase agreements in commercial companies (amount from box [1136] of annex B.11)",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -17895,7 +17876,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1050",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -17937,7 +17918,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1053",
-              "label": "For donations for the protection of the cultural heritage of the Region of Murcia, or the promotion of cultural, artistic, social, scientific-technological, and environmental activities",
+              "label": "For donations for the protection of the cultural heritage of the Region of Murcia or promotion of cultural, artistic, social, scientific-technological and environmental activities",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -18189,7 +18170,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1065",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -18252,7 +18233,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1068",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -18273,7 +18254,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1069",
-              "label": "For expenses in nursery schools or early-education centres, or staff hired for the care of children aged 0 to 3, for taxpayers resident in small municipalities",
+              "label": "For expenses in nursery schools or early-childhood education centres, or personnel hired to care for children aged 0 to 3, by taxpayers resident in small municipalities",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -18399,7 +18380,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1076",
-              "label": "Tax ID (NIF) of the Escuela, Centro  o Guardería Infantil",
+              "label": "Tax ID (NIF) of the school, centre or nursery",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -18420,7 +18401,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1077",
-              "label": "For investment in the acquisition of shares or company units in entities carrying out projects declared to be of special public, social, or economic interest (amount from the...",
+              "label": "For investment in the acquisition of shares or company units in entities carrying out projects declared to be of special public, social, or economic interest (amount from box [2083] of Annex B.13)",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -18609,7 +18590,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1087",
-              "label": "For amounts allocated to regular childcare at nurseries and first-cycle early-education centres for children, adopted or fostered children, or those under delegated guardianship for...",
+              "label": "For amounts allocated to regular childcare at nurseries and first-cycle early-education centres for children, adopted or fostered children, or those under delegated guardianship for adoption purposes, under three years of age",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -18693,7 +18674,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1091",
-              "label": "For the acquisition or renovation of a primary residence in rural areas",
+              "label": "For acquisition or rehabilitation of the habitual residence in rural areas",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -18819,7 +18800,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1097",
-              "label": "For the lease of a dwelling due to activities in a different municipality",
+              "label": "For renting a dwelling for activities in a different municipality",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -18987,7 +18968,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1105",
-              "label": "For habitually residing in municipalities and minor local entities in Extremadura with a population under 3,000",
+              "label": "For habitual residence in municipalities and smaller local entities of Extremadura with fewer than 3,000 inhabitants",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -19050,7 +19031,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1108",
-              "label": "For conservation or improvement works on the primary residence (carried out from 1 January 2014 to 31 December 2015)",
+              "label": "For conservation or improvement works on the habitual residence (carried out from 1 January 2014 to 31 December 2015)",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -19092,7 +19073,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1110",
-              "label": "For conservation or improvement works on the primary residence carried out during the period",
+              "label": "For conservation or improvement works on the habitual residence carried out during the period",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -19197,7 +19178,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1115",
-              "label": "For the care of ascendants",
+              "label": "For care of ascendants",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -19218,7 +19199,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1116",
-              "label": "For expenses arising from the lease of a dwelling",
+              "label": "For expenses arising from housing rental",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -19281,7 +19262,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1119",
-              "label": "For the acquisition of a primary residence due to the birth or adoption of children",
+              "label": "For acquisition of the habitual residence due to the birth or adoption of children",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -19302,7 +19283,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1120",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -19470,7 +19451,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1129",
-              "label": "Amounts paid eligible for the deduction",
+              "label": "Amounts paid qualifying for the deduction",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -19617,7 +19598,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1136",
-              "label": "Total amount of the deduction for investments in newly or recently created businesses (amount generated)",
+              "label": "Total amount of the deduction for investments in new or recently created companies (amount generated)",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -20121,7 +20102,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1160",
-              "label": "Social Security contribution account code",
+              "label": "Contribution account code",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -20184,7 +20165,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1163",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -20205,7 +20186,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1164",
-              "label": "Small-municipality code:",
+              "label": "Small municipality code:",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -20268,7 +20249,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1167",
-              "label": "To offset the rise in interest on mortgage loans for the acquisition of a primary residence",
+              "label": "To mitigate the rise in interest on mortgage loans used to acquire the habitual residence",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -20310,7 +20291,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1169",
-              "label": "For amounts arising from public aid granted by the Generalitat under Decree-Law 3/2020, of 10 April, to workers affected by a furlough scheme (ERTE) and who have...",
+              "label": "For amounts arising from public aid granted by the Generalitat under Decreto Ley 3/2020, de 10 de abril, to workers affected by an ERTE and to those who have reduced their working hours for family reconciliation reasons due to the declaration of the state of alarm caused by the COVID-19 health crisis",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -20373,7 +20354,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1172",
-              "label": "For monetary donations aimed at financing research, innovation, and scientific or technological development programmes in the treatment and prevention of infections caused by...",
+              "label": "For monetary donations aimed at financing research, innovation and scientific or technological development programmes in the field of treatment and prevention of infections caused by COVID-19",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -21024,7 +21005,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1203",
-              "label": "Amount of the regional deduction for expenses on credit-insurance premiums covering unpaid residential rent (landlord's deduction)",
+              "label": "Amount of the autonomous-community deduction for credit-insurance premium expenses to cover unpaid housing-rental income (landlord deduction)",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -21045,7 +21026,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1204",
-              "label": "Small-municipality code:",
+              "label": "Small municipality code:",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -21066,7 +21047,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1205",
-              "label": "Small-municipality code:",
+              "label": "Small municipality code:",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -21087,7 +21068,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1206",
-              "label": "Tax ID (NIF) of the otro progenitor 1",
+              "label": "Tax ID (NIF) of the other parent 1",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -21554,7 +21535,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1229",
-              "label": "Amount the taxpayer undertakes to reinvest, within the two years following the transfer, in the acquisition of a new primary residence",
+              "label": "Amount that the taxpayer undertakes to reinvest, in the two years following the transfer, in acquiring a new habitual residence",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -21619,7 +21600,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1232",
-              "label": "Total amount obtained from the transfer of shares or units eligible for reinvestment for the reinvestment exemption in a newly or recently created bus...",
+              "label": "Total amount obtained as a result of the transfer of shares or holdings that is eligible for reinvestment for the purposes of the exemption for reinvestment in a new company or one recently formed",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -21893,7 +21874,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1244",
-              "label": "Tax ID (NIF) of the otro progenitor 2",
+              "label": "Tax ID (NIF) of the other parent 2",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -22670,7 +22651,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1284",
-              "label": "Taxpayer entitled to the reduction",
+              "label": "Taxpayer entitled to reduction",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -23002,7 +22983,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1299",
-              "label": "Unapplied 2025 contributions (except employer contributions to group long-term-care insurance) whose amount is requested to be deductible over the following 5 years:...",
+              "label": "Unapplied 2025 contributions (except employer contributions to group long-term-care insurance) whose amount is requested to be deductible over the following 5 years: Pending application in future tax years",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -23024,7 +23005,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1300",
-              "label": "Taxpayer entitled to the reduction",
+              "label": "Taxpayer entitled to reduction",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -23378,7 +23359,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1316",
-              "label": "Taxpayer entitled to the reduction",
+              "label": "Taxpayer entitled to reduction",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -23732,7 +23713,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1332",
-              "label": "Taxpayer entitled to the reduction",
+              "label": "Taxpayer entitled to reduction",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -24110,7 +24091,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1349",
-              "label": "Taxpayer entitled to the reduction",
+              "label": "Taxpayer entitled to reduction",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -24410,7 +24391,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1363",
-              "label": "Taxpayer entitled to the reduction",
+              "label": "Taxpayer entitled to reduction",
               "legal_refs": [
                 "ley-35-2006:art-51",
                 "ley-35-2006:art-52",
@@ -26681,7 +26662,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1468",
-              "label": "Reduced net income",
+              "label": "Net income after allowances",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -27198,7 +27179,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1494",
-              "label": "Beef cattle, meat sheep, meat goats, poultry, and rabbit farming: Gross income",
+              "label": "Beef cattle, meat sheep, meat goats, poultry and rabbit farming: gross income",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -27248,7 +27229,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1497",
-              "label": "Forestry activities with an average felling cycle of over 30 years: Gross income",
+              "label": "Forestry activities with an average cutting cycle of more than 30 years: gross income",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -27348,7 +27329,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1503",
-              "label": "Cereals, citrus fruit, nuts, horticulture, potatoes, legumes, table-wine grapes without designation of origin, tobacco, olive products, and edible mushrooms: Gross income",
+              "label": "Cereals, citrus fruit, nuts, horticulture, potatoes, legumes, table wine grapes without designation of origin, tobacco, olive products and mushrooms for human consumption: gross income",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -27398,7 +27379,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1506",
-              "label": "Breeding pigs, breeding cattle, dairy sheep, dairy goats, and beekeeping: Gross income",
+              "label": "Breeding pigs, breeding cattle, dairy sheep, dairy goats and beekeeping: gross income",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -27448,7 +27429,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1509",
-              "label": "Forestry activities with an average felling cycle of 30 years or less: Gross income",
+              "label": "Forestry activities with an average cutting cycle of 30 years or less: gross income",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -27498,7 +27479,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1512",
-              "label": "Rice, table-wine grapes with designation of origin, oilseeds, flowers, ornamental plants, and table grapes: Gross income",
+              "label": "Rice, table wine grapes with designation of origin, oilseeds, flowers, ornamental plants and table grapes: gross income",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -27648,7 +27629,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1521",
-              "label": "Roots (except sugar beet), tubers, forage, cotton, non-citrus fruit, and other agricultural products not expressly covered under other items: Gross income",
+              "label": "Roots (except sugar beet), tubers, fodder crops, cotton, non-citrus fruits and other agricultural products not expressly included in other numbers: gross income",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -27798,7 +27779,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1530",
-              "label": "Other ancillary work and services carried out by farmers, livestock breeders, or forestry-activity holders, except breeding, custody, and fattening services for livestock (including poultry): Gross...",
+              "label": "Gross income from other ancillary work and services and raft-grown mussel production",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -27823,7 +27804,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1531",
-              "label": "Index",
+              "label": "Product 15 index: ancillary services and raft-grown mussels",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
@@ -28194,7 +28175,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1557",
-              "label": "For training expenses incurred by taxpayers performing specially qualified work directly and principally related to research and develop...",
+              "label": "For training expenses incurred by taxpayers carrying out specially qualified work, directly and mainly related to research and development, scientific or technical activities",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -28240,7 +28221,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1561",
-              "label": "Taxpayer who is a partner, co-owner, or participant in the entity",
+              "label": "Taxpayer who is a partner, co-owner or participant in the entity",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -28555,7 +28536,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1579",
-              "label": "Deductible provisions and hard-to-justify expenses (simplified direct estimation only) (note the limit set in article 30.2 of the Tax Regulation)",
+              "label": "Deductible provisions and hard-to-justify expenses (simplified direct assessment only) (take into account the limit established in Article 30.2 of the Tax Regulation)",
               "legal_refs": [
                 "ley-35-2006:art-86",
                 "orden-hac-277-2026:art-3"
@@ -28744,7 +28725,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1589",
-              "label": "50% exempt gains (certain urban properties only)",
+              "label": "50% Exempt gains (certain urban properties only)",
               "legal_refs": [
                 "ley-35-2006:art-86",
                 "orden-hac-277-2026:art-3"
@@ -28765,7 +28746,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1590",
-              "label": "Gains exempt through reinvestment of life annuities",
+              "label": "Gains exempt due to reinvestment in life annuities",
               "legal_refs": [
                 "ley-35-2006:art-86",
                 "orden-hac-277-2026:art-3"
@@ -29061,7 +29042,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1614",
-              "label": "Taxpayer who is a partner, co-owner, or participant in the entity",
+              "label": "Taxpayer who is a partner, co-owner or participant in the entity",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -29508,7 +29489,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1635",
-              "label": "Amount paid in 2021 and/or 2022 applied in this year",
+              "label": "Amount paid in 2021 and/or 2022 applied in the tax year",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -29595,7 +29576,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1641",
-              "label": "50% exempt gain (certain urban properties only)",
+              "label": "50 Percent exempt gain (only certain urban properties)",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -29920,7 +29901,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1659",
-              "label": "Date of the prior energy-performance certificate",
+              "label": "Date of the previous energy efficiency certificate",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -30025,7 +30006,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1664",
-              "label": "Cadastral reference (property 1)",
+              "label": "Cadastral reference (dwelling 1)",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -30088,7 +30069,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1667",
-              "label": "Date of the prior energy-performance certificate",
+              "label": "Date of the previous energy efficiency certificate",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -30277,7 +30258,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1676",
-              "label": "Date of the prior energy-performance certificate",
+              "label": "Date of the previous energy efficiency certificate",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -30489,7 +30470,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1686",
-              "label": "For technological-innovation activities (art. 35.2 LIS): Applied in this return",
+              "label": "For technological innovation activities (Article 35.2 LIS): applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -30510,7 +30491,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1687",
-              "label": "For investments in foreign film productions in Spain (art. 36.2 of the LIS) (**): Applied in this return",
+              "label": "For investments in foreign film productions in Spain (Article 36.2 LIS) (**): applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -30531,7 +30512,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1688",
-              "label": "For investments in live performing-arts and music productions (art. 36.3 LIS). Deduction for the producer: Applied in this return",
+              "label": "For investments in live performing arts and musical productions (Article 36.3 LIS). Producer deduction: applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -31224,7 +31205,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1722",
-              "label": "For investments in Spanish film productions and audiovisual series (art. 36.1 of the LIS). Deduction for the financier (*): Applied in this return",
+              "label": "For investments in Spanish film productions and audiovisual series (Article 36.1 of the LIS). Financier deduction (*): applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -31245,7 +31226,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1723",
-              "label": "For investments in live performing-arts and music productions (art. 36.3 LIS). Deduction for the financier (*): Applied in this return",
+              "label": "For investments in live performing arts and musical productions (Article 36.3 LIS). Financier deduction (*): applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -31329,7 +31310,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1727",
-              "label": "For technological-innovation activities (art. 35.2 LIS): Applied in this return",
+              "label": "For technological innovation activities (Article 35.2 LIS): applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -31350,7 +31331,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1728",
-              "label": "For investments in foreign film productions in Spain (art. 36.2 of the LIS) (*): Applied in this return",
+              "label": "For investments in foreign film productions in Spain (Article 36.2 of the LIS) (*): applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -31371,7 +31352,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1729",
-              "label": "For investments in live performing-arts and music productions (art. 36.3 LIS). Deduction for the producer: Applied in this return",
+              "label": "For investments in live performing arts and musical productions (Article 36.3 LIS). Producer deduction: applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -31392,7 +31373,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1730",
-              "label": "For investments in Spanish film productions and audiovisual series (art. 36.1 of the LIS). Deduction for the financier (**): Applied in this return",
+              "label": "For investments in Spanish film productions and audiovisual series (Article 36.1 of the LIS). Financier deduction(**): applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -31413,7 +31394,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1731",
-              "label": "For investments in live performing-arts and music productions (art. 36.3 LIS). Deduction for the producer: Applied in this return",
+              "label": "For investments in live performing arts and musical productions (Article 36.3 LIS). Producer deduction: applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -32141,7 +32122,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1764",
-              "label": "Date of the subsequent energy-performance certificate",
+              "label": "Date of the later energy efficiency certificate",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -32204,7 +32185,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1767",
-              "label": "Date of the subsequent energy-performance certificate",
+              "label": "Date of the later energy efficiency certificate",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -32225,7 +32206,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1768",
-              "label": "Prior non-renewable primary-energy consumption",
+              "label": "Previous non-renewable primary energy consumption",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -32246,7 +32227,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1769",
-              "label": "Subsequent non-renewable primary-energy consumption",
+              "label": "Later non-renewable primary energy consumption",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -32267,7 +32248,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1770",
-              "label": "Prior energy-rating letter (energy consumption)",
+              "label": "Previous energy rating letter (energy consumption)",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -32288,7 +32269,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1771",
-              "label": "Subsequent energy-rating letter (energy consumption)",
+              "label": "Later energy rating letter (energy consumption)",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -32309,7 +32290,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1772",
-              "label": "Date of the subsequent energy-performance certificate",
+              "label": "Date of the later energy efficiency certificate",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -32330,7 +32311,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1773",
-              "label": "Prior non-renewable primary-energy consumption",
+              "label": "Previous non-renewable primary energy consumption",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -32351,7 +32332,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1774",
-              "label": "Subsequent non-renewable primary-energy consumption",
+              "label": "Later non-renewable primary energy consumption",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -32372,7 +32353,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1775",
-              "label": "Prior energy-rating letter (energy consumption)",
+              "label": "Previous energy rating letter (energy consumption)",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -32393,7 +32374,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1776",
-              "label": "Subsequent energy-rating letter (energy consumption)",
+              "label": "Later energy rating letter (energy consumption)",
               "legal_refs": [
                 "ley-35-2006:da-50",
                 "orden-hac-277-2026:art-3"
@@ -32882,7 +32863,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1800",
-              "label": "Taxpayer holder of the virtual currencies transferred:",
+              "label": "Taxpayer holder of the transferred virtual currencies:",
               "legal_refs": [
                 "ley-35-2006:art-11",
                 "orden-hac-277-2026:art-3"
@@ -34849,7 +34830,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1908",
-              "label": "For investment in the acquisition of shares and company units arising from company-formation or capital-increase agreements in commercial companies (amount from the...",
+              "label": "For investment in the acquisition of shares and equity interests as a result of agreements to incorporate companies or increase capital in commercial companies (the amount of the...",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -34934,7 +34915,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1912",
-              "label": "Expenses and taxes inherent to the transfer, paid by the transferor",
+              "label": "Expenses and taxes inherent to the transfer paid by the transferor",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -34978,7 +34959,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1914",
-              "label": "Expenses and taxes inherent to the acquisition, paid by the acquirer",
+              "label": "Expenses and taxes inherent to the acquisition paid by the acquirer",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -35634,7 +35615,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1947",
-              "label": "\"60 aniversario del Festival Porta Ferrada\": Applied in this return",
+              "label": "\"60th anniversary of the Festival Porta Ferrada\": Applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -35655,7 +35636,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1948",
-              "label": "\"Programa EN PLAN BIEN\": Applied in this return",
+              "label": "\"EN PLAN BIEN Programme\": applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -35697,7 +35678,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1951",
-              "label": "\"Open Barcelona-Trofeo Conde de Godó\": Applied in this return",
+              "label": "\"Open Barcelona-Conde de Godó Trophy\": Applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -35802,7 +35783,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1956",
-              "label": "\"XXXVII Copa América Barcelona\": Applied in this return",
+              "label": "\"XXXVII America's Cup Barcelona\": Applied in this return",
               "legal_refs": [
                 "ley-35-2006:art-68.2",
                 "orden-hac-277-2026:art-3"
@@ -36054,7 +36035,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1968",
-              "label": "Benefit in kind (not exempt for exceeding the amount set in article 42.3.f), pending imputation under article 14.2.m) of the Tax Law): Val...",
+              "label": "Benefit in kind (not exempt for exceeding the amount set in article 42.3.f), pending imputation under article 14.2.m) of the Tax Law): Valuation",
               "legal_refs": [
                 "ley-35-2006:art-17",
                 "orden-hac-277-2026:art-3"
@@ -36075,7 +36056,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1969",
-              "label": "Benefit in kind (not exempt for exceeding the amount set in article 42.3.f), pending imputation under article 14.2.m) of the Tax Law): Ingr...",
+              "label": "Benefit in kind (not exempt for exceeding the amount set in article 42.3.f), pending imputation under article 14.2.m) of the Tax Law): Payments on account",
               "legal_refs": [
                 "ley-35-2006:art-17",
                 "orden-hac-277-2026:art-3"
@@ -36096,7 +36077,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1970",
-              "label": "Benefit in kind (not exempt for exceeding the amount set in article 42.3.f), pending imputation under article 14.2.m) of the Tax Law): Ingr...",
+              "label": "Benefit in kind (not exempt for exceeding the amount set in article 42.3.f), pending imputation under article 14.2.m) of the Tax Law): Payments on account passed on",
               "legal_refs": [
                 "ley-35-2006:art-17",
                 "orden-hac-277-2026:art-3"
@@ -36117,7 +36098,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1971",
-              "label": "Benefit in kind (not exempt for exceeding the amount set in article 42.3.f), pending imputation under article 14.2.m) of the Tax Law): Impo...",
+              "label": "Benefit in kind (not exempt for exceeding the amount set in article 42.3.f), pending imputation under article 14.2.m) of the Tax Law): Gross amount ([1968] + [1969] - [1970])",
               "legal_refs": [
                 "ley-35-2006:art-17",
                 "ley-35-2006:art-42.3.f",
@@ -36183,7 +36164,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1974",
-              "label": "Tax ID (NIF)",
+              "label": "NIF",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -36271,7 +36252,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "1978",
-              "label": "Tax ID (NIF)",
+              "label": "NIF",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -37585,7 +37566,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "2040",
-              "label": "Tax ID (NIF) of the guardería autorizada 1",
+              "label": "Tax ID (NIF) of authorised nursery 1",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -37627,7 +37608,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "2042",
-              "label": "Tax ID (NIF) of the guardería autorizada 1",
+              "label": "Tax ID (NIF) of authorised nursery 1",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -40000,7 +39981,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "2155",
-              "label": "Amount of the deduction",
+              "label": "Deduction amount",
               "legal_refs": [
                 "ley-35-2006:art-77",
                 "orden-hac-277-2026:art-3"
@@ -41407,7 +41388,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "2225",
-              "label": "Tax ID (NIF) of the sociedad o fondo de inversión",
+              "label": "Tax ID (NIF) of the company or investment fund",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -41605,7 +41586,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "2235",
-              "label": "Sum of capital gains arising from transfers or redemptions of shares or units issued by collective-investment institutions, as referred to in article 75.3.j) of the...",
+              "label": "Sum of capital gains arising from transfers or redemptions of shares or units issued by collective-investment institutions, as referred to in article 75.3.j) of the Tax Regulations (sum of boxes [2232])",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -41627,7 +41608,7 @@
               "binding_id": null,
               "binding_source": null,
               "casilla_id": "2236",
-              "label": "Sum of capital losses arising from transfers or redemptions of shares or units issued by collective-investment institutions, as referred to in article 75.3.j) of the...",
+              "label": "Sum of capital losses arising from transfers or redemptions of shares or units issued by collective-investment institutions, as referred to in article 75.3.j) of the Tax Regulations (sum of boxes [2234])",
               "legal_refs": [
                 "ley-35-2006:art-33",
                 "ley-35-2006:art-34",
@@ -41989,19 +41970,6 @@
             {
               "binding_id": null,
               "binding_source": null,
-              "casilla_id": "eo-agraria-reduccion-irregularidad-base",
-              "label": "Net income from agricultural, livestock, or forestry activity with a generation period exceeding two years, or classed by regulation as obtained in a markedly irregular manner over time, imputed to this single tax period (the base to which the 30% reduction of article 32.1 of the Tax Law applies; amount declared by the filer - see box [1554])",
-              "legal_refs": [
-                "ley-35-2006:art-32"
-              ],
-              "number": "eo-agraria-reduccion-irregularidad-base",
-              "source_refs": [
-                "aeat-renta-2025-manual-parte1"
-              ]
-            },
-            {
-              "binding_id": null,
-              "binding_source": null,
               "casilla_id": "F",
               "label": "Amounts paid qualifying for the deduction",
               "legal_refs": [
@@ -42110,6 +42078,19 @@
             {
               "binding_id": null,
               "binding_source": null,
+              "casilla_id": "eo-agraria-reduccion-irregularidad-base",
+              "label": "Net income from agricultural, livestock, or forestry activity with a generation period exceeding two years, or classed by regulation as obtained in a markedly irregular manner over time, imputed to this single tax period (the base to which the 30% reduction of article 32.1 of the Tax Law applies; amount declared by the filer - see box [1554])",
+              "legal_refs": [
+                "ley-35-2006:art-32"
+              ],
+              "number": "eo-agraria-reduccion-irregularidad-base",
+              "source_refs": [
+                "aeat-renta-2025-manual-parte1"
+              ]
+            },
+            {
+              "binding_id": null,
+              "binding_source": null,
               "casilla_id": "prestacion-inss-maternidad-paternidad-exenta",
               "label": "Tax-exempt INSS public maternity and paternity benefits",
               "legal_refs": [
@@ -42124,7 +42105,7 @@
           "period": "0A",
           "previous_filing": [
             {
-              "binding_id": "renta-2025-base-liquidable-negativa-general-anterior",
+              "binding_id": "renta-base-liquidable-negativa-general-anterior",
               "binding_source": "previous_filing",
               "casilla_id": "1388",
               "label": "FY 2024: Pending application at the start of the period",
@@ -42148,7 +42129,7 @@
           "profile_checked": true,
           "profile_derivable": [
             {
-              "binding_id": "renta-2025-family-ascendant-birth-date",
+              "binding_id": "renta-family-ascendant-birth-date",
               "binding_source": "profile",
               "casilla_id": "ANOASDLG",
               "label": "Ascendant's date of birth",
@@ -42163,7 +42144,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-family-descendant-display-name",
+              "binding_id": "renta-family-descendant-display-name",
               "binding_source": "profile",
               "casilla_id": "APENOMDLG",
               "label": "Child or descendant's surname and first name",
@@ -42178,7 +42159,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-family-ascendant-display-name",
+              "binding_id": "renta-family-ascendant-display-name",
               "binding_source": "profile",
               "casilla_id": "APENOMDLG_ASC",
               "label": "Ascendant's surname and first name",
@@ -42193,7 +42174,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-family-ascendant-cohabiting-descendant-count",
+              "binding_id": "renta-family-ascendant-cohabiting-descendant-count",
               "binding_source": "profile",
               "casilla_id": "CONVASDLG",
               "label": "Ascendant's cohabiting descendants",
@@ -42208,7 +42189,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-taxpayer-death-date",
+              "binding_id": "renta-profile-taxpayer-death-date",
               "binding_source": "profile",
               "casilla_id": "DECFAL",
               "label": "First filer's date of death",
@@ -42223,7 +42204,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-family-ascendant-tax-id",
+              "binding_id": "renta-family-ascendant-tax-id",
               "binding_source": "profile",
               "casilla_id": "DNIASDLG",
               "label": "Ascendant's Tax ID (NIF)",
@@ -42239,37 +42220,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-spouse-display-name",
-              "binding_source": "profile",
-              "casilla_id": "DP_APENOM_C",
-              "label": "Spouse's surname and first name",
-              "legal_refs": [
-                "orden-hac-277-2026:art-3"
-              ],
-              "number": "*14",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-dr-100-2025-xsd",
-                "boe-modelo-100-2025-form"
-              ]
-            },
-            {
-              "binding_id": "renta-2025-profile-display-name",
-              "binding_source": "profile",
-              "casilla_id": "DP_APENOM_D",
-              "label": "First filer's surname and first name",
-              "legal_refs": [
-                "orden-hac-277-2026:art-3"
-              ],
-              "number": "*02",
-              "source_refs": [
-                "aeat-dr-100-2025-dictionary",
-                "aeat-dr-100-2025-xsd",
-                "boe-modelo-100-2025-form"
-              ]
-            },
-            {
-              "binding_id": "renta-2025-profile-spouse-birth-date",
+              "binding_id": "renta-profile-spouse-birth-date",
               "binding_source": "profile",
               "casilla_id": "DPFNAC_C",
               "label": "Spouse's date of birth",
@@ -42284,7 +42235,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-taxpayer-birth-date",
+              "binding_id": "renta-profile-taxpayer-birth-date",
               "binding_source": "profile",
               "casilla_id": "DPFNAC_D",
               "label": "First filer's date of birth",
@@ -42300,7 +42251,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-spouse-disability-grade",
+              "binding_id": "renta-profile-spouse-disability-grade",
               "binding_source": "profile",
               "casilla_id": "DPGMIN_C",
               "label": "Spouse's degree of disability",
@@ -42315,7 +42266,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-taxpayer-disability-grade",
+              "binding_id": "renta-profile-taxpayer-disability-grade",
               "binding_source": "profile",
               "casilla_id": "DPGMIN_D",
               "label": "First filer's degree of disability",
@@ -42330,7 +42281,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-spouse-tax-id",
+              "binding_id": "renta-profile-spouse-tax-id",
               "binding_source": "profile",
               "casilla_id": "DPNIF_C",
               "label": "Spouse's Tax ID (NIF)",
@@ -42346,7 +42297,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-tax-id",
+              "binding_id": "renta-profile-tax-id",
               "binding_source": "profile",
               "casilla_id": "DPNIF_D",
               "label": "First filer's Tax ID (NIF)",
@@ -42361,7 +42312,37 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-marital-status",
+              "binding_id": "renta-profile-spouse-display-name",
+              "binding_source": "profile",
+              "casilla_id": "DP_APENOM_C",
+              "label": "Spouse's surname and first name",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "*14",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ]
+            },
+            {
+              "binding_id": "renta-profile-display-name",
+              "binding_source": "profile",
+              "casilla_id": "DP_APENOM_D",
+              "label": "First filer's surname and first name",
+              "legal_refs": [
+                "orden-hac-277-2026:art-3"
+              ],
+              "number": "*02",
+              "source_refs": [
+                "aeat-dr-100-2025-dictionary",
+                "aeat-dr-100-2025-xsd",
+                "boe-modelo-100-2025-form"
+              ]
+            },
+            {
+              "binding_id": "renta-profile-marital-status",
               "binding_source": "profile",
               "casilla_id": "ECIVIL",
               "label": "First filer's marital status on 31/12/2025",
@@ -42376,7 +42357,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-family-ascendant-death-date",
+              "binding_id": "renta-family-ascendant-death-date",
               "binding_source": "profile",
               "casilla_id": "FALLASDLG",
               "label": "Ascendant's date of death",
@@ -42391,7 +42372,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-family-descendant-death-date",
+              "binding_id": "renta-family-descendant-death-date",
               "binding_source": "profile",
               "casilla_id": "FALLDLG",
               "label": "Child or descendant's date of death",
@@ -42406,7 +42387,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-family-descendant-birth-date",
+              "binding_id": "renta-family-descendant-birth-date",
               "binding_source": "profile",
               "casilla_id": "FNACDLG",
               "label": "Child or descendant's date of birth",
@@ -42421,7 +42402,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-family-descendants-eu-eea-deduction",
+              "binding_id": "renta-profile-family-descendants-eu-eea-deduction",
               "binding_source": "profile",
               "casilla_id": "HIJOSUE",
               "label": "Children or descendants, EU or EEA",
@@ -42436,7 +42417,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-family-descendant-disability-grade",
+              "binding_id": "renta-family-descendant-disability-grade",
               "binding_source": "profile",
               "casilla_id": "MINUSDLG",
               "label": "Child or descendant's disability code",
@@ -42451,7 +42432,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-family-descendant-tax-id",
+              "binding_id": "renta-family-descendant-tax-id",
               "binding_source": "profile",
               "casilla_id": "NIFDLG",
               "label": "Child or descendant's Tax ID (NIF)",
@@ -42469,7 +42450,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-spouse-non-resident-irpf",
+              "binding_id": "renta-profile-spouse-non-resident-irpf",
               "binding_source": "profile",
               "casilla_id": "NORESIDENTE",
               "label": "Non-resident spouse who is not an IRPF taxpayer",
@@ -42484,7 +42465,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-family-ascendant-disability-grade",
+              "binding_id": "renta-family-ascendant-disability-grade",
               "binding_source": "profile",
               "casilla_id": "PCTMINASDLG",
               "label": "Ascendant's disability code",
@@ -42499,7 +42480,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-family-minor-children-in-unit",
+              "binding_id": "renta-profile-family-minor-children-in-unit",
               "binding_source": "profile",
               "casilla_id": "PH18",
               "label": "Minor children in the family unit",
@@ -42514,7 +42495,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-spouse-eu-eea-resident",
+              "binding_id": "renta-profile-spouse-eu-eea-resident",
               "binding_source": "profile",
               "casilla_id": "RESIDENTEUE",
               "label": "Spouse resident in the EU or EEA",
@@ -42529,7 +42510,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-spouse-sex",
+              "binding_id": "renta-profile-spouse-sex",
               "binding_source": "profile",
               "casilla_id": "SEXO_C",
               "label": "Spouse's sex",
@@ -42544,7 +42525,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-taxpayer-sex",
+              "binding_id": "renta-profile-taxpayer-sex",
               "binding_source": "profile",
               "casilla_id": "SEXO_D",
               "label": "First filer's sex",
@@ -42559,7 +42540,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-declaration-type",
+              "binding_id": "renta-profile-declaration-type",
               "binding_source": "profile",
               "casilla_id": "TIPOTRIBUTACION",
               "label": "Chosen taxation option",
@@ -42574,7 +42555,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-tax-residence-ccaa",
+              "binding_id": "renta-profile-tax-residence-ccaa",
               "binding_source": "profile",
               "casilla_id": "ZCCAD",
               "label": "Autonomous Community of the return",
@@ -42589,7 +42570,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-profile-spouse-eu-eea-country",
+              "binding_id": "renta-profile-spouse-eu-eea-country",
               "binding_source": "profile",
               "casilla_id": "ZRUE2",
               "label": "Spouse's country of residence, EU or EEA",
@@ -42606,7 +42587,7 @@
           ],
           "relation_prefill": [
             {
-              "binding_id": "renta-2025-modelo-111-retenciones-periodicas",
+              "binding_id": "renta-modelo-111-retenciones-periodicas",
               "binding_source": "relation_prefill",
               "casilla_id": "0596",
               "label": "For employment income",
@@ -42634,7 +42615,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-modelo-190-retenciones-anuales",
+              "binding_id": "renta-modelo-190-retenciones-anuales",
               "binding_source": "relation_prefill",
               "casilla_id": "0596",
               "label": "For employment income",
@@ -42662,7 +42643,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-modelo-123-retenciones-periodicas",
+              "binding_id": "renta-modelo-123-retenciones-periodicas",
               "binding_source": "relation_prefill",
               "casilla_id": "0597",
               "label": "For movable-capital income",
@@ -42684,7 +42665,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-modelo-193-retenciones-anuales",
+              "binding_id": "renta-modelo-193-retenciones-anuales",
               "binding_source": "relation_prefill",
               "casilla_id": "0597",
               "label": "For movable-capital income",
@@ -42706,16 +42687,18 @@
               ]
             },
             {
-              "binding_id": "renta-2025-modelo-184-atribucion-actividades-economicas",
+              "binding_id": "renta-modelo-184-atribucion-actividades-economicas",
               "binding_source": "relation_prefill",
               "casilla_id": "1577",
-              "label": "Net income from an economic activity attributed by income-attribution entities",
+              "label": "Net return from economic activity attributed by entities under the income attribution regime",
               "legal_refs": [
                 "ley-35-2006:art-27",
                 "ley-35-2006:art-28",
                 "ley-35-2006:art-30",
                 "ley-35-2006:art-31",
                 "ley-35-2006:art-32",
+                "ley-35-2006:art-86",
+                "ley-35-2006:art-89",
                 "orden-hap-2250-2015:art-3"
               ],
               "number": "1577",
@@ -42730,7 +42713,7 @@
           "revision": "2025",
           "unbucketed_sources": [
             {
-              "binding_id": "renta-2025-inventory-activity-closing-increase-0177",
+              "binding_id": "renta-inventory-activity-closing-increase-0177",
               "binding_source": "inventory",
               "casilla_id": "0177",
               "label": "Change in inventory due to an increase in closing stock",
@@ -42748,7 +42731,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-inventory-activity-acquisition-cost-0181",
+              "binding_id": "renta-inventory-activity-acquisition-cost-0181",
               "binding_source": "inventory",
               "casilla_id": "0181",
               "label": "Purchase of inventory",
@@ -42766,7 +42749,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-inventory-activity-closing-decrease-0182",
+              "binding_id": "renta-inventory-activity-closing-decrease-0182",
               "binding_source": "inventory",
               "casilla_id": "0182",
               "label": "Change in inventory due to a decrease in closing stock",
@@ -42784,7 +42767,7 @@
               ]
             },
             {
-              "binding_id": "renta-2025-certificado-trabajo-retenciones",
+              "binding_id": "renta-certificado-trabajo-retenciones",
               "binding_source": "manual_input",
               "casilla_id": "0596",
               "label": "For employment income",
@@ -42813,36 +42796,36 @@
             }
           ],
           "unresolved_profile_bindings": [
-            "renta-2025-family-ascendant-birth-date",
-            "renta-2025-family-descendant-display-name",
-            "renta-2025-family-ascendant-display-name",
-            "renta-2025-family-ascendant-cohabiting-descendant-count",
-            "renta-2025-profile-taxpayer-death-date",
-            "renta-2025-family-ascendant-tax-id",
-            "renta-2025-profile-spouse-display-name",
-            "renta-2025-profile-display-name",
-            "renta-2025-profile-spouse-birth-date",
-            "renta-2025-profile-taxpayer-birth-date",
-            "renta-2025-profile-spouse-disability-grade",
-            "renta-2025-profile-taxpayer-disability-grade",
-            "renta-2025-profile-spouse-tax-id",
-            "renta-2025-profile-tax-id",
-            "renta-2025-profile-marital-status",
-            "renta-2025-family-ascendant-death-date",
-            "renta-2025-family-descendant-death-date",
-            "renta-2025-family-descendant-birth-date",
-            "renta-2025-profile-family-descendants-eu-eea-deduction",
-            "renta-2025-family-descendant-disability-grade",
-            "renta-2025-family-descendant-tax-id",
-            "renta-2025-profile-spouse-non-resident-irpf",
-            "renta-2025-family-ascendant-disability-grade",
-            "renta-2025-profile-family-minor-children-in-unit",
-            "renta-2025-profile-spouse-eu-eea-resident",
-            "renta-2025-profile-spouse-sex",
-            "renta-2025-profile-taxpayer-sex",
-            "renta-2025-profile-declaration-type",
-            "renta-2025-profile-tax-residence-ccaa",
-            "renta-2025-profile-spouse-eu-eea-country"
+            "renta-family-ascendant-birth-date",
+            "renta-family-descendant-display-name",
+            "renta-family-ascendant-display-name",
+            "renta-family-ascendant-cohabiting-descendant-count",
+            "renta-profile-taxpayer-death-date",
+            "renta-family-ascendant-tax-id",
+            "renta-profile-spouse-birth-date",
+            "renta-profile-taxpayer-birth-date",
+            "renta-profile-spouse-disability-grade",
+            "renta-profile-taxpayer-disability-grade",
+            "renta-profile-spouse-tax-id",
+            "renta-profile-tax-id",
+            "renta-profile-spouse-display-name",
+            "renta-profile-display-name",
+            "renta-profile-marital-status",
+            "renta-family-ascendant-death-date",
+            "renta-family-descendant-death-date",
+            "renta-family-descendant-birth-date",
+            "renta-profile-family-descendants-eu-eea-deduction",
+            "renta-family-descendant-disability-grade",
+            "renta-family-descendant-tax-id",
+            "renta-profile-spouse-non-resident-irpf",
+            "renta-family-ascendant-disability-grade",
+            "renta-profile-family-minor-children-in-unit",
+            "renta-profile-spouse-eu-eea-resident",
+            "renta-profile-spouse-sex",
+            "renta-profile-taxpayer-sex",
+            "renta-profile-declaration-type",
+            "renta-profile-tax-residence-ccaa",
+            "renta-profile-spouse-eu-eea-country"
           ],
           "unresolved_profile_keys": [
             "identity.tax_id",

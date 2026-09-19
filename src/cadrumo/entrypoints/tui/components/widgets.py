@@ -355,7 +355,7 @@ class SourceActionCard(Vertical):
         height: auto;
     }
     """
-    """`Vertical`'s own default is `height: 1fr` (an expanding container),
+    """`Vertical`'s own default height expands to fill a container's share,
     which is fine standing alone but stretches a card to fill whatever
     space several 1fr siblings divide -- overriding to `auto` sizes the
     card to its own three children instead."""

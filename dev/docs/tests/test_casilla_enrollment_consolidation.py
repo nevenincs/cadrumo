@@ -32,9 +32,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_core, pytest.mark.docs]
 
 _REPO_ROOT = REPO_ROOT
 _M130_CASILLA_15_SOURCE = (
-    "src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/"
-    "casillas/c01__csaldo-negativo-fin-periodo.toml"
+    "src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/casillas/0001-declarations.toml"
 )
+#: Inclusive source lines of the casilla-15 declaration inside the consolidated
+#: declarations file. The resolver reads the file itself to decide which
+#: declaration a hit overlaps, so the span only has to fall inside that one.
+_M130_CASILLA_15_LINES = (150, 157)
 
 
 from .registry_authority_fixture import authority
@@ -124,8 +127,8 @@ def test_m130_casilla_15_rag_section_resolves_to_one_canonical_target(
     result = resolver.resolve(
         ChunkHit(
             path=_M130_CASILLA_15_SOURCE,
-            line_start=207,
-            line_end=219,
+            line_start=_M130_CASILLA_15_LINES[0],
+            line_end=_M130_CASILLA_15_LINES[1],
             score=0.97,
         )
     )
@@ -140,26 +143,35 @@ def test_m130_casilla_15_rag_section_resolves_to_one_canonical_target(
 
 def test_m130_casilla_15_definition_and_target_match_reference(
     m130_casilla_15: CasillaSearchRecord,
+    projected: tuple[tuple[CasillaSearchRecord, ...], CasillaProjectionStats],
     reference: CasillaReferenceResult,
 ) -> None:
-    """The generated entry contains the registry definition and shared anchor."""
+    """The generated entry carries the registry definition and shared anchor.
+
+    A page renders ONE language -- the build language -- and never substitutes
+    another, so each language's label and help are asserted against a render in
+    that language rather than expected to coexist on one page.
+    """
     page = next(page for page in reference.pages if page.modelo == "130")
     anchor = casilla_page_anchor("130", "15")
     unified = to_search_record(m130_casilla_15)
+    records, _stats = projected
 
     assert anchor in page.anchors
     assert page.output_relpath.replace(".rst", ".html") + f"#{anchor}" == unified.target
-    assert m130_casilla_15.descriptions[OutputLanguage.ES] in page.rst
-    assert f":Data type: ``{m130_casilla_15.data_type}``" in page.rst
-    assert f":Input kind: ``{m130_casilla_15.input_kind.value}``" in page.rst
-    assert f":Required: {'yes' if m130_casilla_15.required else 'no'}" in page.rst
+    assert f'<article class="casilla-card" id="{anchor}">' in page.rst
+    assert f'<span class="casilla-card__number">{m130_casilla_15.number}</span>' in page.rst
+    assert f"casilla-fill--{m130_casilla_15.input_kind.value}" in page.rst
     if m130_casilla_15.formula_id is not None:
-        assert f":Formula id: ``{m130_casilla_15.formula_id}``" in page.rst
+        assert f"<code>{m130_casilla_15.formula_id}</code>" in page.rst
 
-    for language in (OutputLanguage.EN, OutputLanguage.CA, OutputLanguage.HU):
+    for language in OutputLanguage:
         label = m130_casilla_15.descriptions.get(language)
         help_text = m130_casilla_15.localized_help.get(language.value)
         assert label and label.strip(), f"M130/casilla 15 has no {language.value} label"
         assert help_text and help_text.strip(), f"M130/casilla 15 has no {language.value} help"
-        assert label in page.rst
-        assert help_text in page.rst
+        localized = render_casilla_reference(_REPO_ROOT, records=records, language=language)
+        localized_page = next(entry for entry in localized.pages if entry.modelo == "130")
+        assert anchor in localized_page.anchors
+        assert f'<h3 class="casilla-card__title">{label}</h3>' in localized_page.rst
+        assert help_text in localized_page.rst

@@ -40,7 +40,7 @@ from typing import Any, Literal, Self, cast
 from cadrumo.tests.audited_process import run_audited_process
 
 from ....tests.inventory import SRC_CADRUMO
-from .subprocess_cli import _as_text_completed_process, subprocess_cli_env
+from .subprocess_cli import as_text_completed_process, subprocess_cli_env
 
 __all__ = [
     "CliPerformanceCalibration",
@@ -576,7 +576,7 @@ def _run_child(
         }
         started = time.perf_counter()
         try:
-            completed = _as_text_completed_process(
+            completed = as_text_completed_process(
                 run_audited_process(
                     [
                         sys.executable,

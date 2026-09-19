@@ -3,8 +3,8 @@
 :func:`lookup_rate` resolves :class:`EUMemberState` and :class:`IvaRateKind`
 queries into :class:`IvaRateRecord` records projected from governed-fact
 authority results; :func:`rate_table_covers`
-answers whether the table reaches a date at all; :func:`cite` renders
-:class:`IvaCategory` catalogue citations from an :class:`IvaCatalogue`.
+answers whether the table reaches a date at all; :func:`coexisting_tier_rates`
+and :func:`rate_kinds_for_declared_rate` report the tiers a date carries.
 """
 
 from __future__ import annotations

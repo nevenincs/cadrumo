@@ -58,10 +58,10 @@
           "display_name": "docs-sequence-sandbox",
           "earliest_safe_erase_date": null,
           "fingerprint": {
-            "digest": "ce39ea7df57c7e273f843e0037c793a2265a976099471cd8d5f8ca04c0fe6747",
-            "file_count": 5,
+            "digest": "1359d32c9f7dac6f0fd75a0f8e461b04a0198964f3bee176d9b30b4a5b2d0017",
+            "file_count": 4,
             "schema_version": 1,
-            "total_bytes": 2534
+            "total_bytes": 1850
           },
           "profile_id": "<profile-id>",
           "retained_record_count": 0
