@@ -78,6 +78,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.calculations.registry.errors.AuthorityDescriptorUnavailableError",
+        ErrorCode(
+            code="ERROR_CALCULATIONS_REGISTRY_AUTHORITY_DESCRIPTOR_UNAVAILABLE",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_calculations_registry",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.calculations.registry.errors.RegistryLoadError",
         ErrorCode(
             code="ERROR_CALCULATIONS_REGISTRY_LOAD",

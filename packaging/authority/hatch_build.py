@@ -53,6 +53,7 @@ from typing import Any, TypeGuard, override
 
 from hatchling.builders.config import BuilderConfig
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
+from hatchling.plugin.manager import PluginManager
 
 #: Overrides where a source-tree build reads the published authority from.
 #: Unset, the pair is read from ``.authority/`` at the build root.
@@ -137,7 +138,7 @@ def _selected_pair(root: Path) -> tuple[Path, Path]:
     return descriptor, database
 
 
-class CustomBuildHook(BuildHookInterface[BuilderConfig]):
+class CustomBuildHook(BuildHookInterface[BuilderConfig[PluginManager], PluginManager]):
     """Force-include the descriptor-selected authority pair at the published path."""
 
     PLUGIN_NAME = "cadrumo-authority"

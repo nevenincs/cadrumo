@@ -49,6 +49,7 @@ from typing import Any, TypeGuard, override
 
 from hatchling.builders.config import BuilderConfig
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
+from hatchling.plugin.manager import PluginManager
 
 _CORPUS_BINARY_SUFFIXES = frozenset({".docx", ".pdf", ".xls", ".xlsm", ".xlsx", ".zip"})
 _TARGET_PREFIX = "cadrumo_data/_data/corpus"
@@ -83,7 +84,7 @@ def _corpus_root(hook_root: Path) -> Path | None:
     return None
 
 
-class CustomBuildHook(BuildHookInterface[BuilderConfig]):
+class CustomBuildHook(BuildHookInterface[BuilderConfig[PluginManager], PluginManager]):
     """Force-include this companion's corpus source binaries under the mirrored tree."""
 
     PLUGIN_NAME = "cadrumo-data-official-corpus"
