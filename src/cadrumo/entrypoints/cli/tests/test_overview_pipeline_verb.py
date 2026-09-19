@@ -232,7 +232,8 @@ def test_pipeline_calculated_but_unverified_unit_is_not_ready() -> None:
     ]
     assert readiness_notices
     assert all(
-        notice["action"] == {
+        notice["action"]
+        == {
             "action": {
                 "action_id": "operator.modelo.work.verify",
                 "target_command_key": "modelo.work.verify",

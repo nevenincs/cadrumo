@@ -264,9 +264,7 @@ def test_cli_command_submits_supervised_export_and_resolves_public_result(tmp_pa
                 entered_or_failed.set()
 
         worker_context = copy_context()
-        command = Thread(
-            target=lambda: worker_context.run(run_command)
-        )
+        command = Thread(target=lambda: worker_context.run(run_command))
         command.start()
         assert entered_or_failed.wait(timeout=80), worker_errors
         if worker_errors:

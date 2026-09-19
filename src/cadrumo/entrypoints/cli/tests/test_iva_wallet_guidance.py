@@ -129,7 +129,7 @@ def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
 
     assert result.exit_code != 0, "Expected non-zero exit when in-scope prior IVA authority is missing"
     assert 'action.failed_condition_id: "modelo.work.calculate.iva_wallet.ready"' in result.output, result.output
-    assert 'action.action: null' in result.output, result.output
+    assert "action.action: null" in result.output, result.output
     assert 'action.no_recovery_outcome: "operator_decision"' in result.output, result.output
     assert "iva-wallet override" not in result.output, (
         f"A recovery command needs taxpayer-supplied evidence and cannot be inferred:\n{result.output}"

@@ -197,9 +197,7 @@ def test_boundary_still_reports_genuine_bug_as_unexpected(
         wrapped()
 
     crashes = [record for record in caplog.records if "unexpected exception" in record.message]
-    assert crashes, [
-        record.message for record in caplog.records
-    ]
+    assert crashes, [record.message for record in caplog.records]
     assert crashes[0].levelno == logging.DEBUG
     assert crashes[0].exc_info is not None
     assert crashes[0].exc_info[0] is RuntimeError

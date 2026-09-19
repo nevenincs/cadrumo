@@ -115,17 +115,13 @@ def test_apply_routes_through_the_single_cotejo_apply_authority() -> None:
     apply_calls = [
         node
         for node in ast.walk(tree)
-        if isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "apply_cotejo"
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "apply_cotejo"
     ]
     assert len(apply_calls) == 1, "the import door must have exactly one cotejo apply call"
     apply_call = apply_calls[0]
     assert apply_call.args and isinstance(apply_call.args[0], ast.Name)
     assert apply_call.args[0].id == "state"
     assert not any(
-        isinstance(node, ast.Call)
-        and isinstance(node.func, ast.Name)
-        and node.func.id == "apply_fact_changes"
+        isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "apply_fact_changes"
         for node in ast.walk(tree)
     )

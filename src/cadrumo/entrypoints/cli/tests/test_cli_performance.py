@@ -38,10 +38,7 @@ def test_profiler_reports_real_import_model_and_filesystem_observations(tmp_path
     # resolution still has to load a CLI implementation module during the
     # phase; assert that real boundary instead of expecting the already-loaded
     # package marker in the delta.
-    assert any(
-        module.startswith("cadrumo.entrypoints.cli.")
-        for module in profile.resolution.imported_modules
-    )
+    assert any(module.startswith("cadrumo.entrypoints.cli.") for module in profile.resolution.imported_modules)
     assert set(profile.resolution.import_families) == {"registry", "crypto", "custody", "keyring", "storage"}
     assert all(not Path(path).is_absolute() for path in profile.invocation.filesystem_created)
     assert profile.invocation.filesystem_operations

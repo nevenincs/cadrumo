@@ -69,9 +69,9 @@ from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_requires_bank_account
-from ...domain.calculations.registry.export import fixed_width_record_casilla_ids
 from ...domain.calculations.registry.binding_aggregation import BindingAggregationOp, binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
+from ...domain.calculations.registry.export import fixed_width_record_casilla_ids
 from ...domain.calculations.registry.export_parse import xml_dictionary_entries
 from ...domain.calculations.registry.rate_box_partition import (
     RateBoxPartition,
@@ -272,9 +272,7 @@ def _rendered_row_binding_casilla_ids(
     """Return row-field casillas whose active binding value reaches a rendered record."""
     bindings = {str(binding.id): binding for binding in schema_provider.get_snapshot(draft.modelo).revision.bindings}
     active_binding_ids = {
-        str(value.binding_id)
-        for value in draft.binding_values
-        if value.value is not None and value.value != ""
+        str(value.binding_id) for value in draft.binding_values if value.value is not None and value.value != ""
     }
     rendered: set[CasillaId] = set()
     for record in layout.records:
@@ -298,7 +296,10 @@ def _rendered_row_binding_casilla_ids(
             if binding_aggregation_op(binding) is not BindingAggregationOp.ROWS:
                 continue
             selector = binding_row_set_selector(binding)
-            if selector is not None and (casilla_id := record.row_field_casilla_ids.get(selector.row_field)) is not None:
+            if (
+                selector is not None
+                and (casilla_id := record.row_field_casilla_ids.get(selector.row_field)) is not None
+            ):
                 rendered.add(casilla_id)
     return rendered
 

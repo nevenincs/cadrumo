@@ -31,7 +31,6 @@ from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuth
 from cadrumo.domain.calculations.registry.export_parse import xml_dictionary_entries
 from cadrumo.domain.calculations.registry.modelo_obligation_scope import NON_REGISTRY_MODELOS
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
-from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 
 from ...compiler.authority import compiled_bundled_authority
 from ...compiler.authority_state import source_root_for
