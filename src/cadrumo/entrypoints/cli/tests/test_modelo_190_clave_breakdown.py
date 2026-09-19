@@ -66,6 +66,17 @@ def _withholding(
             "percibido_especie": percibido_especie,
             "retencion_practicada": retencion_practicada,
             "ingreso_a_cuenta": ingreso_a_cuenta,
+            "base_retenciones": "0.00",
+            "incapacity_cash_perception": "0.00",
+            "incapacity_cash_withholding": "0.00",
+            "incapacity_kind_value": "0.00",
+            "incapacity_kind_ingreso_a_cuenta": "0.00",
+            "incapacity_kind_repercutido": "0.00",
+            "foral_retention_estatal": "0.00",
+            "foral_retention_navarra": "0.00",
+            "foral_retention_araba": "0.00",
+            "foral_retention_gipuzkoa": "0.00",
+            "foral_retention_bizkaia": "0.00",
         },
     )
 

@@ -34,6 +34,7 @@ from ...application.invoices.catalogue_lifecycle import resolve_catalogue_invoic
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.modelo import Modelo
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.withholding_bindings import (
     WithholdingClaveBreakdown,
     WithholdingObservation,
@@ -195,25 +196,27 @@ def aggregate_modelo(
     received_invoice_retencion: list[str] | None = None,
 ) -> None:
     """Delegate per-modelo aggregation execution to the backend service."""
-    command = PerModeloAggregationCommand(
-        modelo=modelo,
-        period=resolve_year_period(year, period, modelo=modelo),
-        retencion_observations=_parse_typed_cli_observations(
-            retencion_observation, model=RetencionObservation, flag="--retencion-observation"
-        ),
-        counterpart_observations=_parse_typed_cli_observations(
-            counterpart_observation, model=CounterpartObservation, flag="--counterpart-observation"
-        ),
-        foreign_asset_observations=_parse_typed_cli_observations(
-            foreign_asset_observation, model=ForeignAssetIngestObservation, flag="--foreign-asset-observation"
-        ),
-        withholding_observations=_parse_typed_cli_observations(
-            withholding_observation, model=WithholdingObservation, flag="--withholding-observation"
-        ),
-    )
-    invoice_retencion_requests = _parse_typed_cli_observations(
-        received_invoice_retencion, model=InvoiceRetencionRouteRequest, flag="--received-invoice-retencion"
-    )
+    operation = authority_operation(ctx)
+    with validating_governed_facts(operation):
+        command = PerModeloAggregationCommand(
+            modelo=modelo,
+            period=resolve_year_period(year, period, modelo=modelo),
+            retencion_observations=_parse_typed_cli_observations(
+                retencion_observation, model=RetencionObservation, flag="--retencion-observation"
+            ),
+            counterpart_observations=_parse_typed_cli_observations(
+                counterpart_observation, model=CounterpartObservation, flag="--counterpart-observation"
+            ),
+            foreign_asset_observations=_parse_typed_cli_observations(
+                foreign_asset_observation, model=ForeignAssetIngestObservation, flag="--foreign-asset-observation"
+            ),
+            withholding_observations=_parse_typed_cli_observations(
+                withholding_observation, model=WithholdingObservation, flag="--withholding-observation"
+            ),
+        )
+        invoice_retencion_requests = _parse_typed_cli_observations(
+            received_invoice_retencion, model=InvoiceRetencionRouteRequest, flag="--received-invoice-retencion"
+        )
     command, excluded_invoice_retencions = _route_invoice_retenciones_into_command(command, invoice_retencion_requests)
     if command.modelo == Modelo("190").value:
         bucket_id = active_bucket_id_or_refuse()
@@ -227,7 +230,7 @@ def aggregate_modelo(
             command,
             ports=retencion_observation_ports_factory(ctx)(bucket_id=bucket_id),
         )
-    result = aggregate_per_modelo(command, operation=authority_operation(ctx))
+    result = aggregate_per_modelo(command, operation=operation)
     clave_breakdown = _clave_breakdown(command)
     aggregate_result = ModeloAggregateResult.from_aggregation_result(result, clave_breakdown=clave_breakdown)
     notices = [_invoice_retencion_excluded_notice(projection) for projection in excluded_invoice_retencions]
