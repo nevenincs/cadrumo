@@ -1,0 +1,2745 @@
+---
+tags:
+  - '#exec'
+  - '#semantic-consolidation'
+date: '2026-08-28'
+modified: '2026-09-17'
+body_schema: 'body-v2'
+body_hash: 'sha256:5955f0568873cc14a0adfad65472745f6ee48fcef79d97fe61047a781f90fb8f'
+related:
+  - "[[2026-08-28-semantic-consolidation-plan]]"
+---
+
+# `semantic-consolidation` ledger
+
+## Changes
+
+- `S01` `A` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
+- `S01` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py` -> `pass`
+- `S02` `A` `src/cadrumo/domain/modelos/filing_text.py`
+- `S02` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S02` `M` `src/cadrumo/domain/modelos/_work_unit.py`
+- `S02` `M` `src/cadrumo/domain/modelos/_verification_report.py`
+- `S02` `M` `src/cadrumo/domain/modelos/_filing_record.py`
+- `S02` `verify:` `uv run --no-sync pytest src/cadrumo/domain/modelos/tests` -> `pass`
+- `S03` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S03` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_filing_record.py`
+- `S03` `verify:` `aeat_csv_register` -> `CSV-1`
+- `S03` `verify:` `pytest test_modelo_filing_record.py -n 0 -m ""`
+- `S03` `verify:` `pytest payload gate -n 0 -m ""`
+- `S04` `M` `src/cadrumo/domain/invoices/validators.py`
+- `S04` `M` `src/cadrumo/domain/invoices/models.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/_ledger_catalogue_invoice_payloads.py`
+- `S04` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
+- `S04` `verify:`
+- `S04` `verify:` `pytest domain/invoices + payload gate -n 0 -m ""`
+- `S04` `verify:`
+- `S06` `T`
+- `S06` `verify:` `src/cadrumo/domain/modelos/__init__.py` -> `__all__: tuple[str, ...] = ()` -> `__getattr__`
+- `S07` `M` `src/cadrumo/adapters/persistence/storage/__init__.py`
+- `S07` `M`
+- `S07` `M` `src/cadrumo/adapters/persistence/storage/tests/test_smoke.py`
+- `S07` `M`
+- `S07` `verify:` `pytest adapters/persistence/storage -n 0 -m ""`
+- `S07` `verify:` `--collect-only`
+- `S09` `T`
+- `S09` `verify:` `__init__.py` -> `__getattr__`
+- `S09` `verify:`
+- `S10` `A` `src/cadrumo/core/filing_year.py`
+- `S10` `M` `src/cadrumo/core/_period.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/schema_scalars.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/query_reports.py`
+- `S10` `M` `src/cadrumo/application/modelo/_export.py`
+- `S10` `M` `src/cadrumo/application/modelo/_review_package.py`
+- `S10` `M` `src/cadrumo/application/modelo/_edit_models.py`
+- `S10` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S10` `M` `src/cadrumo/application/modelo/workspace_models.py`
+- `S10` `M` `src/cadrumo/application/export/google_operation.py`
+- `S10` `M` `src/cadrumo/application/registry/source_connectivity.py`
+- `S10` `M` `src/cadrumo/application/overview/_explain.py`
+- `S10` `M` `src/cadrumo/application/state_projection.py`
+- `S10` `M` `src/cadrumo/application/user_profile/commands.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/_modelo_review_package_payloads.py`
+- `S16` `T`
+- `S16` `verify:` `operator_surface`
+- `S17` `T`
+- `S17` `verify:` `__init__.py`
+- `S17` `verify:` `P07.S164`
+- `S19` `M` `src/cadrumo/application/ledger/models.py`
+- `S19` `M` `src/cadrumo/application/ledger/ratios.py`
+- `S19` `M` `src/cadrumo/core/unit_proportion.py`
+- `S19` `M` `src/cadrumo/domain/renta/_ledger_expenses.py`
+- `S19` `M` `src/cadrumo/domain/transactions/_llm.py`
+- `S19` `M` `src/cadrumo/domain/transactions/_model_validation.py`
+- `S19` `M` `src/cadrumo/domain/usage_ratios/_model.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/_diagnostics_payloads.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`
+- `S19` `M` `src/cadrumo/entrypoints/cli/_ledger_support.py`
+- `S19` `verify:` `uv run --no-sync pytest src/cadrumo/domain/transactions src/cadrumo/domain/usage_ratios src/cadrumo/application/ledger/tests` -> `pass`
+- `S20` `M` `src/cadrumo/application/aggregation/_irnr_income_ledger.py`
+- `S20` `M` `src/cadrumo/application/aggregation/_iva_ledger.py`
+- `S20` `M` `src/cadrumo/application/aggregation/_modelo_bindings.py`
+- `S20` `M` `src/cadrumo/application/aggregation/tests/test_service.py`
+- `S20` `M` `src/cadrumo/application/calculations/tests/_cross_period_clean_state_support.py`
+- `S20` `M` `src/cadrumo/application/filing/tests/test_export_post_write_verification.py`
+- `S20` `M` `src/cadrumo/application/filing/tests/test_modelo_303_exonerado_390_refusal.py`
+- `S20` `M` `src/cadrumo/application/filing/tests/test_unbuilt_layout_export_refusal.py`
+- `S20` `M` `src/cadrumo/application/ledger/ratios.py`
+- `S20` `M` `src/cadrumo/application/ledger/tests/test_public_definition_identity.py`
+- `S20` `M` `src/cadrumo/application/modelo/_preconditions.py`
+- `S20` `M` `src/cadrumo/application/modelo/tests/test_calculation_route.py`
+- `S20` `M` `src/cadrumo/application/operator_actions/_catalogue.py`
+- `S20` `M` `src/cadrumo/application/operator_surface/_models.py`
+- `S20` `M` `src/cadrumo/application/registry/__init__.py`
+- `S20` `M` `src/cadrumo/application/registry/source_connectivity_authority.py`
+- `S20` `M` `src/cadrumo/application/registry/tests/test_source_connectivity_authority.py`
+- `S20` `M` `src/cadrumo/application/registry/tests/test_source_connectivity_authority_contract.py`
+- `S20` `M` `src/cadrumo/application/registry/tests/test_temporal_coverage.py`
+- `S20` `M` `src/cadrumo/application/registry/tests/test_terminal_preconditions.py`
+- `S20` `M` `src/cadrumo/application/registry/tests/test_tree_reports.py`
+- `S20` `M` `src/cadrumo/application/tests/test_diagnostics.py`
+- `S20` `M` `src/cadrumo/application/user_profile/tests/test_preflight_modelo_scoped_requirement.py`
+- `S20` `M` `src/cadrumo/core/tests/test_operations.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/inventory_bindings.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/ledger_bindings.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/record_design.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/record_design_schema.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/schema_verification.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/tests/test_every_bundled_design_is_read_or_reported.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/tests/test_export_split_part_rendering.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_349_registry.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/tests/test_narrow_mechanism_admissions.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/tests/test_public_api_boundaries.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/tests/test_registry_reviewability.py`
+- `S20` `M` `src/cadrumo/domain/calculations/registry/tests/test_temporal.py`
+- `S20` `M` `src/cadrumo/domain/categories/_proportionality.py`
+- `S20` `M` `src/cadrumo/domain/categories/tests/test_home_office_grouping_is_centralised.py`
+- `S20` `M` `src/cadrumo/domain/contribuyente/assets/__init__.py`
+- `S20` `M` `src/cadrumo/domain/contribuyente/inventory/__init__.py`
+- `S20` `M` `src/cadrumo/domain/fincas/_tier_resolver.py`
+- `S20` `M` `src/cadrumo/domain/iva/_recargo_equivalencia.py`
+- `S20` `M` `src/cadrumo/domain/modelos/_calculation_revision_m303_evidence.py`
+- `S20` `M` `src/cadrumo/domain/modelos/_ledger_filing_snapshot.py`
+- `S20` `M` `src/cadrumo/domain/modelos/_row_models.py`
+- `S20` `M` `src/cadrumo/domain/renta/_ledger_expenses.py`
+- `S20` `M` `src/cadrumo/domain/transactions/_m210_income_classification.py`
+- `S20` `verify:` `uv run --no-sync pytest src/cadrumo/domain/categories src/cadrumo/domain/fincas src/cadrumo/application/ledger/tests src/cadrumo/application/operator_surface` -> `pass`
+- `S21` `M` `src/cadrumo/application/modelo/_work_lifecycle.py`
+- `S21` `M` `src/cadrumo/application/workflow/run_models.py`
+- `S21` `M` `src/cadrumo/core/_action_argument_resolution.py`
+- `S21` `M` `src/cadrumo/core/_precondition_action_invariants.py`
+- `S21` `M` `src/cadrumo/core/identifier_grammar.py`
+- `S21` `M` `src/cadrumo/core/json_contract.py`
+- `S21` `M` `src/cadrumo/domain/modelos/_verification_report.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
+- `S21` `verify:` `uv run --no-sync pytest src/cadrumo/core/tests/test_json_contract_envelope.py src/cadrumo/domain/modelos/tests` -> `pass`
+- `S22` `M` `src/cadrumo/core/percentage.py`
+- `S22` `M` `src/cadrumo/domain/bienes_inversion/__init__.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/_m303_orden_raw_models.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/withholding296_bindings.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S22` `M` `src/cadrumo/domain/contribuyente/assets/__init__.py`
+- `S22` `M` `src/cadrumo/domain/contribuyente/inventory/__init__.py`
+- `S22` `M` `src/cadrumo/domain/iva/_prorrata.py`
+- `S22` `verify:` `uv run --no-sync pytest src/cadrumo/domain/iva/tests/test_prorrata.py src/cadrumo/domain/bienes_inversion` -> `pass`
+- `S23` `M` `src/cadrumo/application/aggregation/_counterpart.py`
+- `S23` `M` `src/cadrumo/application/aggregation/_foreign_assets.py`
+- `S23` `M` `src/cadrumo/application/aggregation/_impatriado_income_ledger.py`
+- `S23` `M` `src/cadrumo/application/aggregation/_irnr_income_ledger.py`
+- `S23` `M` `src/cadrumo/application/invoices/_bulk_import.py`
+- `S23` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S23` `M` `src/cadrumo/core/_period.py`
+- `S23` `M` `src/cadrumo/core/country_code.py`
+- `S23` `M` `src/cadrumo/core/tests/test_filing_year_single_declaration.py`
+- `S23` `M` `src/cadrumo/domain/calculations/registry/counterpart_bindings.py`
+- `S23` `M` `src/cadrumo/domain/calculations/registry/detail_record_bindings.py`
+- `S23` `M` `src/cadrumo/domain/calculations/registry/invoice_bindings.py`
+- `S23` `M` `src/cadrumo/domain/calculations/registry/withholding296_bindings.py`
+- `S23` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S23` `M` `src/cadrumo/domain/invoices/_models.py`
+- `S23` `M` `src/cadrumo/domain/modelos/_ledger_filing_snapshot.py`
+- `S23` `verify:` `uv run --no-sync pytest src/cadrumo/application/aggregation/tests/test_iva_ledger.py src/cadrumo/core/tests/test_period.py -n 0` -> `pass`
+- `S24` `T`
+- `S24` `verify:` `TaxIdIdentityToken`
+- `S24` `verify:` `str | None = Field(min_length=9, max_length=9)`
+- `S25` `M` `src/cadrumo/adapters/inbound/pdf/_shared.py`
+- `S25` `M` `src/cadrumo/adapters/outbound/aeat/sede/schema.py`
+- `S25` `M` `src/cadrumo/application/evidence/_service.py`
+- `S25` `M` `src/cadrumo/core/config_runtime_fields.py`
+- `S25` `verify:` `UnitFraction`
+- `S25` `verify:` `[Ge(0.0), Le(1.0)]`
+- `S25` `blocked:`
+- `S26` `M` `src/cadrumo/adapters/outbound/aeat/sede/notifications.py`
+- `S26` `M` `src/cadrumo/application/live/notification_documents.py`
+- `S26` `M` `src/cadrumo/application/user_profile/custody_transactions.py`
+- `S26` `M` `src/cadrumo/domain/notifications/__init__.py`
+- `S26` `verify:`
+- `S26` `verify:`
+- `S26` `verify:` `pytest domain/notifications + sede -k notification -n 0 -m ""`
+- `S30` `M` `src/cadrumo/domain/calculations/registry/gasto193_bindings.py`
+- `S30` `M` `src/cadrumo/domain/calculations/registry/withholding296_bindings.py`
+- `S30` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S30` `verify:`
+- `S30` `verify:` `pytest registry -k "withholding or gasto193 or 296" -n 0 -m ""`
+- `S30` `verify:` `validate_registry()`
+- `S34` `A` `src/cadrumo/core/source_locator.py`
+- `S34` `M` `src/cadrumo/application/live/deudas.py`
+- `S34` `M` `src/cadrumo/application/overview/calendar_models.py`
+- `S34` `verify:`
+- `S34` `verify:` `pytest overview + live -k "calendar or deudas" -n 0 -m ""`
+- `S40` `A` `src/cadrumo/adapters/persistence/storage/sql/tests/test_revision_id_join_is_unambiguous.py`
+- `S40` `verify:` `pytest -n 0 -m ""`
+- `S40` `verify:` `[a-z0-9._-]+`
+- `S40` `verify:` `namespace=` -> `src/cadrumo`
+- `S46` `T`
+- `S46` `verify:` `IsoCurrencyCode`
+- `S46` `verify:` `core/tests/test_currency_fields_use_one_annotation.py`
+- `S48` `M` `src/cadrumo/application/ledger/models.py`
+- `S48` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S48` `verify:`
+- `S48` `verify:` `pytest application/ledger/tests -k "export or model" -n 0 -m ""`
+- `S48` `verify:` `pytest cli test_ledger_interface_contract_payloads.py -n 0 -m ""`
+- `S51` `M` `NonNegativeInt`
+- `S51` `M` `pyproject.toml` -> `S105`
+- `S51` `M` `src/cadrumo/adapters/outbound/storage/tests/test_foundation.py`
+- `S51` `verify:`
+- `S51` `verify:` `--collect-only`
+- `S51` `verify:` `pytest adapters/outbound/storage/tests -n 0 -m ""`
+- `S59` `T`
+- `S59` `verify:` `application/auth/apoderado_text.py` -> `application/modelo/review_package_text.py`
+- `S60` `M` `src/cadrumo/domain/modelos/filing_text.py`
+- `S60` `M` `src/cadrumo/application/modelo/review_package.py`
+- `S60` `verify:`
+- `S60` `verify:` `pytest domain/modelos + application/modelo -k "filing_text or actor or review_package or reconciliation" -n 0 -m ""`
+- `S61` `T`
+- `S61` `verify:` `IssueDetail` -> `core/prose_elision.py`
+- `S66` `T`
+- `S66` `verify:`
+- `S67` `T`
+- `S67` `verify:` `application/overview` -> `domain/contribuyente` -> `core/errors` -> `__all__: tuple[str, ...] = ()`
+- `S67` `verify:` `P07.S167`
+- `S78` `M` `src/cadrumo/llm/providers/__init__.py`
+- `S78` `M` `src/cadrumo/llm/providers/base.py`
+- `S78` `M` `src/cadrumo/llm/providers/anthropic.py`
+- `S78` `M` `src/cadrumo/llm/providers/gemini.py`
+- `S78` `M` `src/cadrumo/llm/providers/local.py`
+- `S78` `M` `src/cadrumo/llm/providers/openai.py`
+- `S78` `M` `src/cadrumo/llm/client.py`
+- `S78` `M` `src/cadrumo/llm/tests/test_client.py`
+- `S78` `M` `src/cadrumo/llm/tests/test_parameter_capability_boundary.py`
+- `S78` `M` `src/cadrumo/llm/tests/test_vision_capability_boundary.py`
+- `S78` `M` `src/cadrumo/application/ledger/evidence_draft.py`
+- `S78` `M` `src/cadrumo/application/ledger/llm_classification.py`
+- `S78` `M` `src/cadrumo/application/ledger/tests/test_evidence_corpus_parsing.py`
+- `S78` `M` `src/cadrumo/adapters/outbound/llm/tests/test_evidence_consent_ledger.py`
+- `S78` `verify:` `pytest src/cadrumo/llm src/cadrumo/adapters/outbound/llm -n 0 -m ""` -> `pass`
+- `S79` `M` `src/cadrumo/tests/test_docstring_core_struct_links.py`
+- `S79` `verify:` `pytest src/cadrumo/tests/test_docstring_core_struct_links.py::test_core_struct_anchors_are_unambiguous` -> `pass`
+- `S84` `M` `src/cadrumo/application/registry/__init__.py`
+- `S84` `M` `src/cadrumo/application/calculations/__init__.py`
+- `S84` `verify:`
+- `S86` `R` `src/cadrumo/core/observability/_capture.py -> capture.py`
+- `S86` `R` `src/cadrumo/core/observability/_context.py -> context.py`
+- `S86` `R` `src/cadrumo/core/observability/_fingerprint.py -> fingerprint.py`
+- `S86` `R` `src/cadrumo/core/observability/_golden.py -> golden.py`
+- `S86` `R` `src/cadrumo/core/observability/_models.py -> models.py`
+- `S86` `R` `src/cadrumo/core/observability/_recorder.py -> recorder.py`
+- `S86` `R` `src/cadrumo/core/observability/_redaction_rules.py -> redaction_rules.py`
+- `S86` `R` `src/cadrumo/core/observability/_replay.py -> replay.py`
+- `S86` `R` `src/cadrumo/core/observability/_sink.py -> sink.py`
+- `S86` `R` `src/cadrumo/core/observability/_store.py -> store.py`
+- `S86` `M` `src/cadrumo/core/observability/__init__.py`
+- `S86` `M` `dev/registry/analysis/load_census_classification.py`
+- `S86` `verify:` `pytest src/cadrumo/core/observability -n 0 -m ""` -> `pass`
+- `S87` `M` `src/cadrumo/domain/currency/__init__.py`
+- `S87` `R` `src/cadrumo/domain/currency/_models.py -> models.py`
+- `S87` `R` `src/cadrumo/domain/currency/_service.py -> service.py`
+- `S87` `M` `src/cadrumo/domain/manuals/__init__.py`
+- `S87` `M` `src/cadrumo/domain/fincas/__init__.py`
+- `S87` `verify:` `pytest src/cadrumo/domain/{currency,manuals,fincas} -n 0 -m ""` -> `pass`
+- `S88` `M` `src/cadrumo/core/tests/test_external_constants.py`
+- `S88` `M` `src/cadrumo/core/tests/test_external_constants_centralisation_part2.py`
+- `S88` `M` `src/cadrumo/core/tests/test_persisted_version_single_declaration.py`
+- `S88` `M` `src/cadrumo/tests/test_parsing_enrollment_inventory.py`
+- `S88` `M` `src/cadrumo/adapters/persistence/profile/tests/test_every_composing_write_is_declared.py`
+- `S88` `M` `src/cadrumo/adapters/persistence/storage/tests/test_active_bucket_consumer_coverage.py`
+- `S88` `M` `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`
+- `S88` `M` `src/cadrumo/domain/deadlines/tests/test_iva_profile_cutover_static.py`
+- `S88` `M` `dev/audit/tests/test_dead_code.py`
+- `S88` `M` `dev/audit/tests/test_dev_rename_audit_tools.py`
+- `S88` `M` `dev/docs/terminology/tests/test_resolution.py`
+- `S88` `M` `dev/identity/tests/test_identifier_namespace_enrollment_gate.py`
+- `S88` `M` `dev/quality/tests/test_rule_citation_resolves.py`
+- `S88` `M` `dev/tests/test_cli_action_census.py`
+- `S88` `M` `dev/tests/test_cli_action_census_dispositions.py`
+- `S88` `M` `dev/tests/test_registry_facade_family_census.py`
+- `S88` `M` `dev/tests/test_regulatory_drift_census.py`
+- `S89` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S89` `M` `src/cadrumo/tests/test_parsing_enrollment_inventory.py`
+- `S89` `M` `src/cadrumo/core/tests/test_persisted_version_single_declaration.py`
+- `S89` `verify:` `pytest src/cadrumo/tests/test_parsing_enrollment_inventory.py src/cadrumo/core/parsing -n 0 -m ""` -> `pass`
+- `S90` `A` `src/cadrumo/tests/test_relative_imports_resolve.py`
+- `S90` `verify:` `pytest src/cadrumo/tests/test_relative_imports_resolve.py -n 0` -> `pass`
+- `S91` `M` `src/cadrumo/domain/censo/__init__.py`
+- `S91` `M` `src/cadrumo/domain/attachments/__init__.py`
+- `S91` `M` `src/cadrumo/domain/categories/__init__.py`
+- `S91` `M` `src/cadrumo/domain/invoices/__init__.py`
+- `S91` `M` `src/cadrumo/domain/buckets/__init__.py`
+- `S91` `M` `src/cadrumo/domain/iva/tests/test_invoice_classification.py`
+- `S91` `M` `src/cadrumo/application/aggregation/_modelo_bindings.py`
+- `S91` `verify:` `pytest src/cadrumo/domain/{censo,attachments,categories,invoices,buckets} src/cadrumo/application/invoices src/cadrumo/domain/iva/tests -n 0 -m ""` -> `pass`
+- `S92` `M` `src/cadrumo/application/modelo/tests/test_workspace_manifest.py`
+- `S92` `M` `src/cadrumo/application/user_profile/tests/test_hold_decision_has_one_door.py`
+- `S92` `M` `src/cadrumo/entrypoints/tests/test_operation_composition.py`
+- `S92` `M` `src/cadrumo/entrypoints/tests/test_google_operation.py`
+- `S92` `M` `src/cadrumo/tests/test_enum_constant_extraction_inventory.py`
+- `S92` `M` `src/cadrumo/core/tests/test_external_constants_centralisation_part2.py`
+- `S92` `M` `dev/tests/test_public_authority_cutover.py`
+- `S92` `verify:` `pytest <the seven gates> -n 0 -m ""` -> `pass`
+- `S93` `M` `src/cadrumo/adapters/persistence/profile/tests/test_co_commit_carries_its_revision.py`
+- `S93` `M` `src/cadrumo/adapters/persistence/profile/tests/test_every_composing_write_is_declared.py`
+- `S93` `M` `src/cadrumo/domain/buckets/tests/test_no_bare_event_append_save.py`
+- `S93` `M` `dev/identity/tests/test_identifier_namespace_enrollment_gate.py`
+- `S93` `M` `dev/tests/test_invoice_iva_validation_owner_census.py`
+- `S93` `verify:` `pytest <the five gates> -n 0 -m ""` -> `pass`
+- `S94` `M` `src/cadrumo/adapters/persistence/profile/tests/test_every_composing_write_is_declared.py`
+- `S94` `verify:` `pytest test_every_composing_write_is_declared.py -n 0 -m ""`
+- `S95` `M` `src/cadrumo/domain/deadlines/__init__.py`
+- `S95` `M` `src/cadrumo/adapters/outbound/google/__init__.py`
+- `S95` `M` `src/cadrumo/adapters/outbound/aeat/sede/__init__.py`
+- `S95` `verify:` `pytest src/cadrumo/domain/deadlines src/cadrumo/adapters/outbound/google src/cadrumo/adapters/outbound/aeat/sede -n 0 -m ""` -> `fail`
+- `S96` `M` `pyproject.toml`
+- `S96` `verify:` `ruff check src/cadrumo/domain/deadlines src/cadrumo/application/wizard src/cadrumo/domain/auth/apoderamientos` -> `pass`
+- `S97` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_censal_no_write_surface.py`
+- `S97` `verify:` `pytest src/cadrumo/adapters/outbound/aeat/sede/tests/test_censal_no_write_surface.py -n 0 -m ""` -> `pass`
+- `S98` `M` `src/cadrumo/core/setup_answers.py`
+- `S98` `verify:` `pytest src/cadrumo/core/tests/test_setup_answers.py -n 0 -m ""` -> `pass`
+- `S99` `M` `src/cadrumo/domain/filing/__init__.py`
+- `S99` `M` `src/cadrumo/domain/iva/__init__.py`
+- `S99` `M` `src/cadrumo/domain/iva_compensation/__init__.py`
+- `S99` `M` `src/cadrumo/domain/iva_compensation/reconciliation.py`
+- `S99` `M` `src/cadrumo/domain/iva/schema.py`
+- `S99` `verify:` `pytest src/cadrumo/domain/{filing,iva,iva_compensation} -n 0 -m ""` -> `pass`
+- `S99` `verify:` `pytest src/cadrumo/application/{aggregation,invoices} src/cadrumo/domain/invoices -n 0 -m ""` -> `fail`
+- `S100` `A` `dev/quality/namespace_retirement_sweep.py`
+- `S100` `verify:` `python dev/quality/namespace_retirement_sweep.py` -> `pass`
+- `S101` `M` `src/cadrumo/application/modelo/_export.py`
+- `S101` `M` `src/cadrumo/application/modelo/_revision_replay_inputs.py`
+- `S101` `verify:` `pytest src/cadrumo/tests/test_namespace_attribute_reachability.py -n 0 -m ""` -> `pass`
+- `S102` `A` `src/cadrumo/application/evidence/bundle_text.py`
+- `S102` `M` `src/cadrumo/application/evidence/_models.py`
+- `S102` `M` `src/cadrumo/entrypoints/cli/_modelo_aux_payloads.py`
+- `S102` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
+- `S102` `verify:` `pytest src/cadrumo/application/evidence -n 0 -m ""` -> `pass`
+- `S103` `M` `src/cadrumo/domain/iva_compensation/balance.py`
+- `S103` `M` `src/cadrumo/entrypoints/cli/_modelo_iva_wallet_payloads.py`
+- `S103` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads_m036.py`
+- `S103` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
+- `S103` `verify:` `pytest src/cadrumo/domain/iva_compensation -n 0 -m ""` -> `pass`
+- `S104` `T`
+- `S105` `M` `src/cadrumo/application/modelo/review_package.py`
+- `S105` `M` `src/cadrumo/entrypoints/cli/_modelo_review_package_payloads.py`
+- `S105` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
+- `S105` `verify:` `pytest src/cadrumo/application/modelo/tests/test_modelo_work_review.py src/cadrumo/entrypoints/cli/tests/test_modelo_work_review_envelope.py -n 0 -m ""` -> `pass`
+- `S105` `M` `src/cadrumo/application/filing/tests/test_m303_export_applicability_internal.py`
+- `S105` `verify:` `pytest src/cadrumo/application/filing/tests/test_m303_export_applicability_internal.py -n 0 -m ""` -> `pass`
+- `S106` `M` `src/cadrumo/core/errors/__init__.py`
+- `S106` `M` `src/cadrumo/application/evidence/_models.py`
+- `S106` `M` `src/cadrumo/core/tests/test_setup_answers.py`
+- `S106` `M` `src/cadrumo/domain/calculations/registry/errors.py`
+- `S106` `M` `src/cadrumo/domain/fincas/errors.py`
+- `S106` `M` `dev/tests/test_authored_error_message_join.py`
+- `S106` `verify:` `pytest src/cadrumo/core/errors -n 0 -m ""` -> `pass`
+- `S107` `R` `src/cadrumo/adapters/inbound/censo/_parser.py -> parser.py`
+- `S107` `M`
+- `S107` `M` `src/cadrumo/application/portals/tests/test_service.py`
+- `S107` `M` `src/cadrumo/application/portals/tests/test_portal_refusal_message_key_only.py`
+- `S107` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S107` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_filed_history_operation_view.py`
+- `S107` `verify:` `pytest src/cadrumo/application/portals src/cadrumo/adapters/inbound/censo -n 0 -m ""` -> `pass`
+- `S108` `T`
+- `S108` `verify:` `src/cadrumo/tests/test_inert_namespace_imports_resolve.py`
+- `S109` `M` `src/cadrumo/domain/transactions/model_validation.py`
+- `S109` `M` `src/cadrumo/entrypoints/cli/_review.py`
+- `S109` `verify:` `pytest src/cadrumo/domain/transactions -n 0 -m unit` -> `pass`
+- `S110` `T`
+- `S110` `verify:` `_validate_cif` -> `_documents.py`
+- `S110` `verify:` `.vault/audit/2026-08-30-semantic-consolidation-cif-leader-policy-audit.md`
+- `S111` `A` `src/cadrumo/core/spanish_postcode.py`
+- `S111` `M` `src/cadrumo/core/setup_answers.py`
+- `S111` `M` `src/cadrumo/application/wizard/widgets.py`
+- `S111` `M` `src/cadrumo/application/wizard/tests/test_setup_answer_field_parity.py`
+- `S111` `verify:` `pytest src/cadrumo/application/wizard/tests/test_setup_answer_field_parity.py -n 0 -m ""` -> `pass`
+- `S112` `T`
+- `S112` `verify:` `aggregate_ledger_import_results` -> `application/ledger/actions_import.py:615`
+- `S112` `verify:` `remote_mirror_object_label` -> `adapters/outbound/storage/_mirror_manifest.py:415`
+- `S113` `M` `src/cadrumo/application/ledger/actions_import.py`
+- `S113` `M` `src/cadrumo/entrypoints/cli/_ledger_import_cli.py`
+- `S113` `verify:` `pytest src/cadrumo/application/ledger/tests -k import -n 0 -m ""` -> `pass`
+- `S113` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_import_directory_ordering.py -n 0 -m ""` -> `pass`
+- `S114` `R` `src/cadrumo/adapters/persistence/storage/secret_store/_secret_store.py -> store.py`
+- `S114` `M`
+- `S114` `verify:` `pytest src/cadrumo/adapters/persistence/storage/secret_store -n 0 -m ""` -> `pass`
+- `S115` `M` `src/cadrumo/application/ledger/models.py`
+- `S115` `M` `src/cadrumo/application/ledger/actions_import.py`
+- `S115` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S115` `M` `src/cadrumo/entrypoints/cli/_ledger_import_cli.py`
+- `S115` `M` `src/cadrumo/application/ledger/tests/test_actions_import_export.py`
+- `S115` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_import_ux.py`
+- `S115` `M` `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`
+- `S115` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_status_import_payload_contract.py`
+- `S115` `verify:`
+- `S115` `verify:` `pytest application/ledger + the two CLI import suites -k import -n 0 -m ""`
+- `S116` `A` `src/cadrumo/tests/test_inert_namespace_imports_resolve.py`
+- `S116` `verify:` `pytest src/cadrumo/tests/test_inert_namespace_imports_resolve.py -n 0 -m ""` -> `pass`
+- `S117` `M` `src/cadrumo/adapters/outbound/storage/_mirror_manifest.py`
+- `S117` `M` `src/cadrumo/adapters/outbound/storage/__init__.py`
+- `S117` `M` `src/cadrumo/entrypoints/cli/_config/_google.py`
+- `S117` `M` `src/cadrumo/entrypoints/cli/_config/tests/test_google_sync_push.py`
+- `S117` `verify:` `pytest src/cadrumo/adapters/outbound/storage -n 0 -m ""` -> `pass`
+- `S117` `verify:` `pytest src/cadrumo/entrypoints/cli/_config/tests/test_google_sync_push.py -n 0 -m ""` -> `pass`
+- `S118` `R` `adapters/outbound/storage/_mirror_manifest.py` -> `mirror_manifest.py`
+- `S118` `verify:` `_mirror_manifest` -> `src/` -> `dev/`
+- `S118` `verify:`
+- `S119` `M` `src/cadrumo/application/aggregation/_service.py`
+- `S119` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S119` `verify:` `pytest src/cadrumo/application/aggregation -n 0 -m unit` -> `pass`
+- `S119` `verify:` `pytest src/cadrumo/application/aggregation/tests/test_per_modelo_service.py -n 0 -m ""` -> `pass`
+- `S120` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
+- `S120` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py -n 0 -m ""` -> `pass`
+- `S121` `M` `src/cadrumo/` -> `dev/`
+- `S121` `M` `dev/quality/namespace_retirement_sweep.py`
+- `S121` `verify:` `pytest src/cadrumo/adapters/persistence/storage/custody -n 0` -> `pass`
+- `S122` `A` `src/cadrumo/adapters/persistence/storage/custody/digest_model.py`
+- `S122` `M` `src/cadrumo/adapters/persistence/storage/custody/label_head_models.py`
+- `S122` `verify:` `pytest src/cadrumo/adapters/persistence/storage/custody -n 0` -> `pass`
+- `S123` `M` `src/cadrumo/adapters/persistence/storage/custody/digest_model.py`
+- `S123` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule_records.py`
+- `S123` `M` `src/cadrumo/adapters/persistence/storage/custody/recovery_artifact.py`
+- `S123` `verify:` `identical`
+- `S123` `verify:` `pytest src/cadrumo/adapters/persistence/storage/custody -n 0` -> `pass`
+- `S124` `M` `src/cadrumo/adapters/persistence/storage/custody/records.py`
+- `S124` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule_records.py`
+- `S124` `verify:`
+- `S124` `verify:` `pytest storage/tests -k "custody or capsule or digest or envelope" -n 0 -m ""`
+- `S125` `M` `src/cadrumo/application/auth/apoderado_service.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/custody/records.py`
+- `S125` `M` `src/cadrumo/entrypoints/cli/_config_payloads.py`
+- `S125` `verify:` `pytest src/cadrumo/adapters/persistence/storage/custody -n 0` -> `pass`
+- `S125` `verify:` `pytest src/cadrumo/application/auth -n 0 -m ""` -> `pass`
+- `S126` `M` `src/cadrumo/core/parsing/_codes.py`
+- `S126` `M` `src/cadrumo/core/parsing/__init__.py`
+- `S126` `M` `src/cadrumo/domain/currency/models.py`
+- `S126` `M` `src/cadrumo/entrypoints/cli/_ledger_catalogue_invoice_payloads.py`
+- `S126` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S126` `verify:` `pytest src/cadrumo/domain/currency src/cadrumo/core/parsing -n 0 -m ""` -> `pass`
+- `S126` `verify:` `pytest src/cadrumo/adapters/inbound/financial -n 0 -m ""` -> `pass`
+- `S127` `M` `src/cadrumo/core/text_bounds.py`
+- `S127` `M` `src/cadrumo/entrypoints/cli/_ledger_catalogue_invoice_payloads.py`
+- `S127` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py src/cadrumo/domain/invoices -n 0 -m ""` -> `pass`
+- `S128` `M` `src/cadrumo/domain/calculations/registry/invoice_bindings.py`
+- `S128` `verify:` `base_total += 100` -> `country_code = 5`
+- `S128` `verify:` `pytest test_invoice_bindings + test_counterpart_bindings + test_contraparte_clave_row_grouping -n 0 -m ""`
+- `S129` `M` `src/cadrumo/application/ledger/preflight.py`
+- `S129` `M` `src/cadrumo/application/aggregation/_impatriado_income_ledger.py`
+- `S129` `M` `src/cadrumo/application/aggregation/_irnr_income_ledger.py`
+- `S129` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S129` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S129` `verify:` `pytest src/cadrumo/application/ledger/tests -k preflight -n 0 -m ""` -> `pass`
+- `S129` `verify:` `pytest src/cadrumo/application/aggregation/tests -k "impatriado or irnr" -n 0 -m ""` -> `pass`
+- `S130` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S130` `verify:` `0` -> `12.34` -> `-1` -> `NaN` -> `abc` -> `1e3`
+- `S131` `M` `src/cadrumo/core/identity/_documents.py`
+- `S131` `M` `src/cadrumo/core/identity/_tax_id.py`
+- `S131` `M` `src/cadrumo/core/identity/tests/test_documents.py`
+- `S131` `M` `src/cadrumo/core/identity/tests/test_tax_id.py`
+- `S131` `M` `src/cadrumo/domain/invoices/tests/test_validators.py`
+- `S131` `verify:` `pytest src/cadrumo/core/identity/tests src/cadrumo/domain/invoices/tests/test_validators.py -n 0 -m ""` -> `pass`
+- `S131` `verify:` `pytest src/cadrumo/domain/{invoices,iva,censo} -n 0 -m ""` -> `pass`
+- `S131` `verify:` `pytest src/cadrumo/application/auth src/cadrumo/application/ledger/tests/test_{counterparty_tax_id_agreement,identity_roles}.py -n 0 -m ""` -> `402 pass, 1 unrelated fail`
+- `S131` `verify:` `pytest src/cadrumo/core/tests -k "redaction or identity" -n 0 -m ""` -> `pass`
+- `S132` `A` `src/cadrumo/core/identity/tests/test_single_identity_algorithm.py`
+- `S132` `verify:` `pytest ... test_single_identity_algorithm.py -n 0 -m ""` -> `pass`
+- `S132` `verify:`
+- `S133` `A` `src/cadrumo/application/auth/apoderado_text.py`
+- `S133` `A` `src/cadrumo/application/modelo/review_package_text.py`
+- `S133` `M` `src/cadrumo/application/auth/apoderado_service.py`
+- `S133` `M` `src/cadrumo/application/modelo/review_package.py`
+- `S133` `M` `src/cadrumo/application/modelo/_review_package_counter_sign.py`
+- `S133` `M` `src/cadrumo/application/modelo/_review_package_feedback.py`
+- `S133` `M` `src/cadrumo/entrypoints/cli/_config_payloads.py`
+- `S133` `M` `src/cadrumo/entrypoints/cli/_modelo_review_package_payloads.py`
+- `S133` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
+- `S133` `verify:`
+- `S133` `verify:` `pytest src/cadrumo/application/modelo/tests -k review_package -n 0 -m ""` -> `pass`
+- `S133` `verify:` `pytest ... test_cli_payload_constraint_authority.py -n 0 -m ""` -> `pass`
+- `S133` `verify:` `pytest src/cadrumo/application/auth/tests + 2 config CLI modules -n 0 -m ""` -> `374 pass, 1 unrelated fail`
+- `S134` `M` `src/cadrumo/core/spanish_postcode.py`
+- `S134` `M` `src/cadrumo/domain/calculations/registry/schema_scalars.py`
+- `S134` `M` `src/cadrumo/domain/calculations/registry/tests/test_long_tail_data_types.py`
+- `S134` `verify:` `PostalCode` -> `28001` -> `01001` -> `99999` -> `60000` -> `00001` -> `53000`
+- `S134` `verify:` `MunicipalityCode` -> `28079` -> `99999` -> `00001`
+- `S134` `verify:` `ProvinceCode` -> `52` -> `99`
+- `S134` `verify:` `ValidatedRegistryAuthority.load(...).validate_registry()`
+- `S134` `verify:` `pytest .../tests -k "long_tail or validate_scalar or data_type" -n 0 -m ""` -> `pass`
+- `S135` `M` `src/cadrumo/core/country_code.py`
+- `S135` `M` `src/cadrumo/domain/invoices/validators.py`
+- `S135` `M` `src/cadrumo/domain/calculations/registry/schema_scalars.py`
+- `S135` `verify:` `ES` -> `es` -> `" ES "` -> `E1`
+- `S136` `M` `src/cadrumo/core/text_bounds.py`
+- `S136` `M` `src/cadrumo/domain/contribuyente/descendant_record.py`
+- `S136` `M` `src/cadrumo/domain/contribuyente/descendant_facts.py`
+- `S136` `M` `src/cadrumo/domain/contribuyente/family_types.py`
+- `S136` `M` `src/cadrumo/application/wizard/descendant_group.py`
+- `S136` `M` `src/cadrumo/entrypoints/cli/_config_descendiente_payloads.py`
+- `S136` `verify:`
+- `S136` `verify:` `pytest src/cadrumo/domain/contribuyente src/cadrumo/application/wizard -n 0 -m ""`
+- `S137` `M` `src/cadrumo/adapters/outbound/aeat/auth/clave_movil_support.py`
+- `S137` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_movil.py`
+- `S137` `verify:`
+- `S137` `verify:`
+- `S137` `verify:` `pytest .../auth/tests/test_clave_movil.py -n 0 -m ""`
+- `S137` `verify:` `pytest .../aeat/auth -n 0 -m ""`
+- `S138` `M` `src/cadrumo/domain/retention/_floor.py`
+- `S138` `M` `src/cadrumo/domain/retention/__init__.py`
+- `S138` `M` `src/cadrumo/application/config_reset.py`
+- `S138` `M` `src/cadrumo/entrypoints/cli/_config/_profile_delete.py`
+- `S138` `verify:`
+- `S138` `verify:` `pytest src/cadrumo/domain/retention + 5 reset suites -n 0 -m ""`
+- `S139` `M` `src/cadrumo/application/tests/test_config_reset_recovery.py`
+- `S139` `M` `dev/quality/namespace_retirement_sweep.py`
+- `S139` `verify:` `pytest .../test_config_reset_recovery.py -n 0 -m ""`
+- `S139` `verify:`
+- `S140` `M` `src/cadrumo/domain/contribuyente/descendant_maternity.py`
+- `S140` `M` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S140` `M` `src/cadrumo/entrypoints/cli/_config/_descendiente.py`
+- `S140` `verify:`
+- `S140` `verify:` `pytest src/cadrumo/domain/contribuyente -n 0 -m ""`
+- `S141` `M` `src/cadrumo/application/calculations/_maritime_exemption_service.py`
+- `S141` `M` `src/cadrumo/application/modelo/_maritime_preview.py`
+- `S141` `M` `src/cadrumo/entrypoints/cli/_modelo_maritime_cli.py`
+- `S141` `A` `src/cadrumo/application/modelo/tests/test_maritime_preview_retmar_mandatory_filing.py`
+- `S141` `verify:` `pytest .../test_maritime_preview_retmar_mandatory_filing.py -n 0 -m ""`
+- `S141` `verify:` `pytest .../test_maritime_exemption_service.py -n 0 -m ""`
+- `S142` `M` `src/cadrumo/domain/deadlines/festivos.py`
+- `S142` `verify:` `load_holiday_calendar`
+- `S142` `verify:` `pytest src/cadrumo/domain/deadlines/tests -k "festivo or shift or holiday" -n 0 -m ""`
+- `S142` `verify:`
+- `S143` `A` `src/cadrumo/core/resources/_repos/tests/test_every_shipped_resource_loads.py`
+- `S143` `verify:` `pytest .../test_every_shipped_resource_loads.py -n 0 -m ""`
+- `S143` `verify:`
+- `S144` `M` `src/cadrumo/application/ledger/models.py`
+- `S144` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S144` `verify:`
+- `S144` `verify:`
+- `S145` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S145` `M` `src/cadrumo/application/ledger/models.py`
+- `S145` `M` `src/cadrumo/entrypoints/cli/tests/test_ledger_interface_contract_payloads.py`
+- `S145` `verify:`
+- `S145` `verify:`
+- `S145` `verify:` `pytest test_ledger_interface_contract_payloads.py + payload gate -n 0 -m ""`
+- `S146` `M` `src/cadrumo/core/decimal/_grammar.py`
+- `S146` `M` `src/cadrumo/core/decimal/__init__.py`
+- `S146` `M` `src/cadrumo/entrypoints/cli/_modelo_iva_wallet_payloads.py`
+- `S146` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S146` `M` `src/cadrumo/entrypoints/cli/_app_live_iva_wallet_payloads.py`
+- `S146` `M` `src/cadrumo/entrypoints/cli/_ledger_business_payloads.py`
+- `S146` `verify:`
+- `S146` `verify:`
+- `S146` `verify:`
+- `S146` `verify:` `pytest core/decimal + payload gate + ledger contract -n 0 -m ""`
+- `S147` `A` `src/cadrumo/core/tests/test_currency_fields_use_one_annotation.py`
+- `S147` `M` `src/cadrumo/domain/invoices/models.py`
+- `S147` `M` `src/cadrumo/domain/modelos/ledger_filing_snapshot.py`
+- `S147` `M` `src/cadrumo/application/invoices/_bulk_import.py`
+- `S147` `M` `src/cadrumo/application/invoices/_queries.py`
+- `S147` `M` `src/cadrumo/application/storage/calc_sheets/_records.py`
+- `S147` `M` `src/cadrumo/application/operations/financial_operand.py`
+- `S147` `M` `src/cadrumo/entrypoints/cli/_ledger_business_payloads.py`
+- `S147` `verify:`
+- `S147` `verify:` `pytest domain/invoices + domain/modelos/tests -n 0 -m ""`
+- `S147` `verify:` `pytest the gate + detail-record observations -n 0 -m ""`
+- `S147` `verify:`
+- `S148` `M` `src/cadrumo/entrypoints/cli/_config_bucket_history_payloads.py`
+- `S148` `M` `src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py`
+- `S148` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S148` `verify:`
+- `S148` `verify:` `pytest cli/tests -k "bucket_history or ledger_rule or rule_payload" -n 0 -m ""`
+- `S149` `M` `src/cadrumo/entrypoints/cli/_ledger_business_payloads.py`
+- `S149` `verify:` `resolve_iva_rate_slot`
+- `S149` `verify:` `pytest cli/tests -k ledger_business -n 0 -m ""`
+- `S150` `A` `src/cadrumo/core/tests/test_country_code_fields_use_one_annotation.py`
+- `S150` `M` `src/cadrumo/core/tests/test_currency_fields_use_one_annotation.py`
+- `S150` `M` `src/cadrumo/domain/calculations/registry/donativo_bindings.py`
+- `S150` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S150` `verify:` `pytest both class gates -n 0 -m ""`
+- `S150` `verify:` `pytest registry -k donativo` -> `application/modelo -k operation`
+- `S150` `verify:`
+- `S151` `M` `src/cadrumo/application/ledger/models.py`
+- `S151` `M` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S151` `M` `src/cadrumo/core/tests/test_currency_fields_use_one_annotation.py`
+- `S151` `verify:` `pytest application/ledger/tests -k "patch or manual" -n 0 -m ""`
+- `S151` `verify:` `pytest both class gates -n 0 -m ""`
+- `S152` `M` `src/cadrumo/application/ledger/models.py`
+- `S152` `verify:`
+- `S152` `verify:`
+- `S152` `verify:` `pytest application/ledger/tests -k "patch or manual or group or update" -n 0 -m ""`
+- `S153` `M` `src/cadrumo/application/ledger/evidence.py`
+- `S153` `verify:`
+- `S153` `verify:`
+- `S153` `verify:` `pytest application/ledger/tests -k evidence -n 0 -m ""`
+- `S154` `A` `.vault/audit/2026-08-31-semantic-consolidation-invisible-bounds-audit.md`
+- `S154` `verify:` `pad_fixed_width_text`
+- `S154` `verify:`
+- `S154` `verify:` `resolve_iva_rate_slot`
+- `S155` `M` `src/cadrumo/application/overview/tests/test_applicability.py`
+- `S155` `M` `src/cadrumo/application/overview/tests/test_obligation_coverage.py`
+- `S155` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_cuota_integra_lanes.py`
+- `S155` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_840_applicability.py`
+- `S155` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_applicability.py`
+- `S155` `verify:` `_cif_check_value("4567890")` -> `A`
+- `S155` `verify:` `validate_spanish_tax_id("A45678901")`
+- `S155` `verify:`
+- `S155` `verify:` `pytest the five files -n 0 -m ""`
+- `S156` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S156` `M` `src/cadrumo/entrypoints/cli/_config_payloads.py`
+- `S156` `M` `src/cadrumo/application/workflow/events.py`
+- `S156` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_payload_constraint_authority.py`
+- `S156` `verify:` ` [...]`
+- `S156` `verify:` `reason_class`
+- `S156` `verify:` `pytest payload gate -n 0 -m ""`
+- `S157` `M` `src/cadrumo/domain/iva/regimen_simplificado_rows.py`
+- `S157` `verify:`
+- `S157` `verify:`
+- `S157` `verify:` `pytest domain/iva -k "orden or simplificado or regimen" -n 0 -m ""`
+- `S157` `verify:` `pytest registry -k "m303_orden or orden_projection or simplificado" -n 0 -m ""`
+- `S157` `verify:` `validate_registry()`
+- `S158` `M` `dev/quality/namespace_retirement_sweep.py`
+- `S158` `M` `dev/tests/test_projection_ref_compiler_callers.py`
+- `S158` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry_taxonomy_consumer.py`
+- `S158` `verify:`
+- `S158` `verify:` `pytest both repointed gates -n 0 -m ""`
+- `S159` `M` `src/cadrumo/domain/calculations/registry/_m303_orden_raw_models.py`
+- `S159` `verify:`
+- `S159` `verify:` `pytest registry -k "m303_orden or orden_raw or orden_projection" -n 0 -m ""`
+- `S160` `M` `src/cadrumo/domain/renta/_ledger_expenses.py`
+- `S160` `verify:` `pytest domain/renta -k "ledger_expense or expense" -n 0 -m ""`
+- `S161` `M` `src/cadrumo/core/tabular.py`
+- `S161` `M` `src/cadrumo/domain/calculations/registry/m303_orden_projection_models.py`
+- `S161` `M` `src/cadrumo/domain/calculations/registry/query_reports.py`
+- `S161` `M` `src/cadrumo/domain/fincas/models.py`
+- `S161` `M` `src/cadrumo/application/workflow/run_models.py`
+- `S161` `verify:` `error_count`
+- `S161` `verify:`
+- `S162` `M` `src/cadrumo/core/text_bounds.py`
+- `S162` `M` `src/cadrumo/domain/contribuyente/descendant_record.py`
+- `S162` `M` `src/cadrumo/entrypoints/cli/_config_descendiente_payloads.py`
+- `S162` `verify:`
+- `S162` `verify:` `pytest domain/contribuyente -k "descendant or meses" -n 0 -m ""`
+- `S162` `verify:` `pytest descendiente payload parity + payload gate -n 0 -m ""`
+- `S163` `M` `__init__.py`
+- `S163` `verify:`
+- `S163` `verify:` `pytest --collect-only -q`
+- `S163` `verify:` `pytest core + renta + submission + usage_ratios + evidence + export + transactions -n 0`
+- `S163` `verify:`
+- `S164` `A` `src/cadrumo/core/money/rounding.py`
+- `S164` `A` `src/cadrumo/domain/notifications/sancion.py`
+- `S164` `A` `src/cadrumo/application/bienes_inversion/_service.py`
+- `S164` `A` `src/cadrumo/application/prorrata_register/_service.py`
+- `S164` `M`
+- `S164` `verify:` `pytest prorrata_register + bienes_inversion + notifications + money + domain siblings -n 0`
+- `S164` `verify:` `pytest`
+- `S164` `verify:` `--collect-only`
+- `S165` `A` `src/cadrumo/core/topics/catalogue.py`
+- `S165` `A` `src/cadrumo/core/access_gate/gate.py`
+- `S165` `M` `src/cadrumo/core/errors/registry/_application_part1.py`
+- `S165` `M` `src/cadrumo/core/topics/tests/test_catalogue.py`
+- `S165` `M`
+- `S165` `verify:` `pytest core/topics -n 0 -m ""`
+- `S165` `verify:` `--collect-only`
+- `S166` `A` `src/cadrumo/core/classification/policies.py`
+- `S166` `A` `src/cadrumo/tests/fixtures/external_layout_candidates/models.py`
+- `S166` `A` `src/cadrumo/adapters/inbound/borrador/_extractors/selection.py`
+- `S166` `M` `src/cadrumo/adapters/persistence/storage/__init__.py`
+- `S166` `A` `src/cadrumo/adapters/inbound/justificante/_parsers/text_extraction.py`
+- `S166` `M`
+- `S166` `verify:` `pytest core/classification + core/redaction -n 0 -m ""`
+- `S166` `verify:` `--collect-only`
+- `S167` `A` `src/cadrumo/domain/contribuyente/inventory/records.py`
+- `S167` `A` `src/cadrumo/core/redaction/rules.py`
+- `S167` `A` `src/cadrumo/domain/bienes_inversion/register.py`
+- `S167` `A` `src/cadrumo/domain/prorrata_register/register.py`
+- `S167` `A` `src/cadrumo/domain/contribuyente/assets/records.py`
+- `S167` `A` `src/cadrumo/core/corpus_manifest/manifest.py`
+- `S167` `M` `src/cadrumo/core/errors/registry/_domain_part3.py`
+- `S167` `M`
+- `S167` `verify:` `pytest contribuyente + redaction + bienes_inversion + prorrata_register + corpus_manifest + errors -n 0`
+- `S167` `verify:` `--collect-only`
+- `S168` `A` `src/cadrumo/adapters/outbound/aeat/verify/contract.py`
+- `S168` `A` `src/cadrumo/application/filing/validation.py`
+- `S168` `A` `src/cadrumo/tests/fixtures/provenance.py`
+- `S168` `M` `src/cadrumo/adapters/outbound/aeat/verify/tests/test_verify.py`
+- `S168` `M`
+- `S168` `verify:` `pytest aeat/verify -n 0 -m "not live"` -> `CADRUMO_LIVE_TESTS_ENABLED`
+- `S168` `verify:` `--collect-only`
+- `S169` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S169` `verify:` `entry_points.txt` -> `aeat = cadrumo.entrypoints._cli_main:main`
+- `S170` `M` `blob_store` -> `envelope` -> `bucket` -> `master_key`
+- `S170` `M` `core.resources` -> `aeat.browser` -> `application.invoices`
+- `S170` `verify:`
+- `S170` `verify:`
+- `S171` `M`
+- `S171` `M` `src/` -> `dev/`
+- `S171` `verify:`
+- `S172` `M`
+- `S172` `M`
+- `S172` `verify:` `storage.sql` -> `core.identity`
+- `S172` `verify:`
+- `S173` `A` `src/cadrumo/tests/test_production_scan_surface_has_no_orphans.py`
+- `S173` `verify:` `pytest -n 0 -m ""`
+- `S173` `verify:`
+- `S174` `A` `src/cadrumo/core/errors/registry/declared_codes.py`
+- `S174` `M` `src/cadrumo/core/errors/error_codes.py` -> `src/cadrumo/core/errors/tests/test_registry_enforcement.py`
+- `S174` `M` `src/cadrumo/core/errors/registry/__init__.py`
+- `S174` `verify:` `pytest core/errors -n 0 -m ""` -> `application.modelo`
+- `S174` `verify:`
+
+## Notes
+
+- `S03` The alias half of this step landed earlier; this is the invariant half, and the
+- `S03` step's phrasing turned out to point one step short of the answer.
+- `S03` It asks to MOVE the imported-evidence match invariant to the filing-record
+- `S03` model. It cannot move: the invariant compares `evidence_kind` and
+- `S03` `evidence_reference_id` against `external_evidence`, and those two flat fields
+- `S03` exist only on the payload. `ModeloRecord` has no such fields -- it has the
+- `S03` evidence row that already carries both, and it already enforces the presence
+- `S03` invariants (accepted implies evidence, evidence implies accepted).
+- `S03` So the invariant was guarding a duplication rather than a rule. The two flat
+- `S03` fields restated what `external_evidence` carries and were accepted as separate
+- `S03` INPUT, which is what made disagreement possible in the first place.
+- `S03` They are derived now. `computed_field` keeps them on the wire -- verified against
+- `S03` the serialization schema and a real dump, because the validation schema does not
+- `S03` show computed fields and checking only that would have made the "wire unchanged"
+- `S03` claim wrong. What is gone is the ability to supply them.
+- `S03` That is a stronger guarantee than relocating the check would have been, and the
+- `S03` test says so: a check that two inputs agree only fires when someone runs it,
+- `S03` while a value with ONE source has nothing to disagree with. The divergence test
+- `S03` now asserts the payload is refused for supplying them at all, and separately
+- `S03` that the derived values are right.
+- `S03` What remains of the validator is the one thing still worth asserting: an
+- `S03` imported filing record carries evidence, because an import without evidence is
+- `S03` not an import.
+- `S03` The remaining failure in that module is a peer's: `WorkAmendResult` gained a
+- `S03` required `m303_rectificativa_motive` that the test does not supply. Zero
+- `S03` occurrences in this session's diff.
+- `S04` The last ledger payload module was held open by one `model_validator`, and the
+- `S04` gate was right to hold it. The validator does delegate its checks to the
+- `S04` canonical identity validators -- but it decided WHICH regime applies with its own
+- `S04` `if country == "ES"`, and the invoice normaliser decided the same thing with a
+- `S04` mapping and a default. Same rule, two spellings, in a domain model and a wire
+- `S04` projection.
+- `S04` Probed before extracting, and the two populations differ in a way worth keeping:
+- `S04` the domain maps an ABSENT country to a pass-through, so a garbage identifier is
+- `S04` accepted when no country is declared. That is deliberate -- a factura
+- `S04` simplificada may carry no counterparty country, and with no country there is no
+- `S04` regime to check against. The CLI payload's country is required, so it never
+- `S04` reaches that branch. Not a divergence on shared input, but the same rule written
+- `S04` twice all the same.
+- `S04` `validate_counterparty_tax_id` now carries it, beside the two validators it
+- `S04` dispatches to, with the absent-country pass-through documented as the deliberate
+- `S04` half rather than an oversight.
+- `S04` This completes the ledger family the step names. `_ledger_payloads.py` and
+- `S04` `_ledger_business_payloads.py` were reconciled earlier in the campaign; this was
+- `S04` the third.
+- `S06` No change needed. The step was already satisfied and had never been marked,
+- `S06` which is worth recording rather than quietly ticking: a plan that under-reports
+- `S06` its own completion distorts the only signal for whether the campaign is
+- `S06` finished. This was found by reading the plan's OPEN steps instead of adding more
+- `S06` to it -- `next_open_step` had been `P01.S06` for the whole campaign while
+- `S06` discovery-driven steps piled up behind it.
+- `S06` Its sibling P01.S80 stays open by design: it records that the retirement is held
+- `S06` uncommitted while a peer lands an overlapping application/modelo relocation,
+- `S06` because sixty files carry both diffs. That is a git-sequencing hold owned by the
+- `S06` session that manages commits, not work remaining here.
+- `S06` The other two namespace retirements are genuinely open and were not taken.
+- `S06` `adapters/persistence/storage/__init__.py` still carries its lazy map at 912
+- `S06` lines, and a peer is visibly editing it -- two probes this session hit that map
+- `S06` mid-write, once with the module absent and once with a duplicate namespace key.
+- `S06` `core/__init__.py` is 1236 lines with two `__getattr__` definitions and is the
+- `S06` largest slice.
+- `S07` The largest facade in the tree, and the one every other storage retirement was
+- `S07` waiting on: `blob_store`, `envelope`, `bucket`, `master_key` and `sql` could not
+- `S07` go inert while their parent read its own exports through them.
+- `S07` Resolution was done ONCE, to an absolute module per name, and each consumer then
+- `S07` got a relative import whose depth was computed from its own position. That is
+- `S07` the opposite of what the earlier repointings did -- they adjusted the existing
+- `S07` path, which is how a `..` became a `...` and how a consumer's own module segment
+- `S07` ended up concatenated onto a forwarded path. Deriving beats adjusting.
+- `S07` ### Three consumer shapes an AST import scan cannot see
+- `S07` Each surfaced only under a real test run, after `--collect-only` was clean.
+- `S07` String module paths.** The map itself is `name -> "..module"`. Retiring
+- `S07` `core.classification` earlier had already broken this file through five string
+- `S07` entries the rewrite left behind, because they are data rather than imports.
+- `S07` A different distribution.** `dev/` and `src/cadrumo-harness/` are separate
+- `S07` package roots. Their module names do not begin with `cadrumo`, so a relative
+- `S07` import computed against them escapes their own root. They take the absolute
+- `S07` form; the tool now decides on the root, not on the path.
+- `S07` Source inside a string literal.** A subprocess test embeds a Python program
+- `S07` as a string and runs it in a child. Its imports are invisible to every static
+- `S07` tool and it fails only when the child runs.
+- `S07` ### A gate whose premise the ruling reverses
+- `S07` `test_runtime_master_key_and_namespace_boundaries_are_public` asserted, in its
+- `S07` own docstring, that "critical storage boundaries must be imported from the
+- `S07` package root" -- precisely what this step retires. That is a contradiction
+- `S07` between a gate and a ruling, not a bug to patch quietly.
+- `S07` What the gate PROTECTS survives the ruling: those boundaries must stay public,
+- `S07` named and reachable. So it now resolves each of the eleven against the module
+- `S07` that defines it and additionally asserts the root exports nothing. It is a
+- `S07` stronger check than before -- it pins each boundary to ONE canonical module
+- `S07` rather than to a re-export that could have come from anywhere.
+- `S07` ### What was deliberately left broken
+- `S07` Four consumers name symbols that no longer exist anywhere in the tree
+- `S07` (`get_master_key_provider`, `StoragePathKind`, and two dunder reads). Those are
+- `S07` half-landed peer relocations and were already failing. Their imports were left
+- `S07` pointing where they pointed, so they are exactly as broken as they were found
+- `S07` rather than blocking this retirement on someone else's incomplete work.
+- `S09` Censused by SHAPE rather than by identifier, which is the point of the step: a
+- `S09` search for the mechanism NAME cannot find a facade that spells it differently.
+- `S09` The scan looks for a module-level `__getattr__`, or a module-level dict whose
+- `S09` values are all relative submodule strings, in every package namespace.
+- `S09` Four namespaces qualify:
+- `S09` | namespace | dict | size |
+- `S09` | --- | --- | --- |
+- `S09` | `adapters/persistence/storage` | `_LAZY_EXPORTS` | 257 |
+- `S09` | `core` | `_LAZY_EXPORTS` | 357 |
+- `S09` | `entrypoints/cli` | none -- an if-chain | -- |
+- `S09` | `tests` | `_LAZY_EXPORTS` | 2 |
+- `S09` So the feared second population is ONE real member. The two heavy maps use the
+- `S09` same identifier the mechanism-name search already found, and are P01.S07 and
+- `S09` P01.S08. The `tests` facade uses it too and carries two entries.
+- `S09` ### The ruling
+- `S09` The one member the identifier search would have missed is
+- `S09` `entrypoints/cli/__init__.py`, whose lazy resolution is an if-chain over name
+- `S09` sets rather than a dict lookup. It is NOT retired on the same grounds as the
+- `S09` other two, and the difference is the reason rather than the mechanism.
+- `S09` The heavy maps exist for namespace convenience -- a caller reaching a contract
+- `S09` through a package instead of its defining module -- which the campaign ruled
+- `S09` against. The CLI one exists to keep `_command_schema`, `_config._google` and
+- `S09` `_modelo_rendering` off the EAGER import path, so constructing the app object
+- `S09` never pulls the registry-dependent command tree; its docstring names the guard
+- `S09` that would be defeated. That is a startup-cost argument about an entrypoint, not
+- `S09` a namespace-shortcut argument, and retiring it would reintroduce the cost.
+- `S09` The `tests` facade is likewise defended in its own docstring, and bounded: "Two
+- `S09` entries are not a migration in progress: a new shared helper belongs in a
+- `S09` submodule, imported by its path, not promoted to a third row here."
+- `S09` Both stay. Recorded so a later sweep reading only the mechanism does not retire
+- `S09` them for consistency with a ruling that was never about them.
+- `S16` Verified rather than assumed: each namespace was checked for relative imports,
+- `S16` class or function definitions, and a non-empty ``__all__``. All five report zero
+- `S16` imports, zero definitions and ``__all__: tuple[str, ...] = ()``.
+- `S16` `domain/portals`
+- `S16` `domain/transactions`
+- `S16` `llm`
+- `S16` `llm/providers`
+- `S16` `entrypoints`
+- `S16` `operator_surface` has no package namespace at all -- it is a module,
+- `S16` `_operator_surface_reconciliation.py`, so there was never a map to retire.
+- `S16` One near-miss worth recording. A `grep -c "__getattr__"` on
+- `S16` `llm/providers/__init__.py` returned 1 and read like a surviving lazy arm. The
+- `S16` match is inside the DOCSTRING, which documents the retirement: the package once
+- `S16` "deferred ``AnthropicAdapter`` behind a ``__getattr__`` arm" and the guard
+- `S16` "protected nothing" because its only caller already imported the adapter from its
+- `S16` own module. Counting a mechanism by grepping its name finds the prose about it
+- `S16` too -- the same failure this campaign's shape-based census in P01.S09 was built
+- `S16` to avoid.
+- `S17` Closed by the relocations recorded under `P07.S164`: `core/money` to
+- `S17` `rounding.py`, `domain/notifications` to `sancion.py`,
+- `S17` `application/bienes_inversion` and `application/prorrata_register` to
+- `S17` `_service.py`. Each was a package containing nothing but an `__init__.py` that
+- `S17` held a real class -- the namespace doing the work a named module should.
+- `S17` Verified by re-deriving the population rather than by counting off the four:
+- `S17` every namespace that still defines production code directly has sibling modules,
+- `S17` so none is a module in disguise. The step's population is empty, not merely
+- `S17` reduced by four.
+- `S17` Two of the four landed on `_service.py`, which their consumers reach from other
+- `S17` packages. That is a cross-package private import, and it is carried as its own
+- `S17` finding in
+- `S17` `2026-08-31-semantic-consolidation-private-module-cross-package-debt-audit`
+- `S17` rather than left implicit here: the relocation this step asked for is done, and
+- `S17` the naming of two of its results is part of a wider open question.
+- `S20` The commit was staged with directory-level pathspecs and captured 32 files
+- `S20` belonging to a concurrent session in this shared worktree, including a
+- `S20` substantial change to the registry source-connectivity authority and several
+- `S20` registry test modules. Nothing was lost and the working tree was unchanged, but
+- `S20` the peer's work is attributed to this Step's commit. Correcting it requires a
+- `S20` soft reset, which is owner-gated; the capture is recorded here rather than
+- `S20` silently carried. Subsequent commits in this campaign stage file-by-file.
+- `S24` Settled by S30, whose adjudication is exactly what this step asks for and was
+- `S24` recorded there.
+- `S24` The step's own framing is the answer: the identity token normalises without
+- `S24` enforcing a length, so promoting a nine-character field to it ALONE would have
+- `S24` dropped the width. The six fields therefore carry both -- the token for the
+- `S24` normalisation, the existing `min_length=9, max_length=9` for the width -- rather
+- `S24` than one replacing the other.
+- `S24` The probe that decided it: against the bare bound, the token folds `12345678z`
+- `S24` to uppercase where the bare bound stored it unfolded, and accepts a padded
+- `S24` ` 12345678Z ` the bare bound refused because nothing stripped before the length
+- `S24` was measured. Strictly better on every column, and no new refusal, which is what
+- `S24` made it safe without a tax review.
+- `S24` The CHECKSUM question that would have gone further is deliberately still open and
+- `S24` recorded in S30: one of the six says in its own docstring that a previous payer
+- `S24` may be foreign without a Spanish NIF, which no Spanish control character can
+- `S24` validate.
+- `S25` The census ruled itself. Fifteen float fields carry a zero-to-one-shaped bound
+- `S25` and they are three different things:
+- `S25` Three are genuine zero-to-one SCORES -- an extraction confidence, a sede
+- `S25` confidence, an evidence completeness ratio -- and they take `UnitFraction`.
+- `S25` `completeness_ratio` already used it at three other sites, so this one was the
+- `S25` straggler rather than a new adoption.
+- `S25` Seven are DURATIONS in seconds with `gt=0`: lock timeouts, retry backoffs, a
+- `S25` polling interval, an HTTP timeout. Same operator on the bound, unrelated
+- `S25` concept, and they stay open-coded. An alias here would say "positive number"
+- `S25` and teach a reader nothing.
+- `S25` A search relevance `score` is `ge=0.0` with no upper bound at all, so it is
+- `S25` not a fraction.
+- `S25` ### The divergence the census exposed
+- `S25` Two temperature fields said zero-to-one and the settings default said zero-to-TWO,
+- `S25` for the same value. `client.py:487` feeds
+- `S25` `settings.cadrumo_llm_default_temperature` straight into an `LlmRequest` whose
+- `S25` own `temperature` is bounded at one -- so `CADRUMO_LLM_DEFAULT_TEMPERATURE=1.5`
+- `S25` validated as configuration and then failed at request construction. A
+- `S25` configuration the application called valid and could never use.
+- `S25` Capped at one, where the request caps it. The two remain open-coded rather than
+- `S25` aliased: an LLM sampling temperature is not a share of one and giving it
+- `S25` `UnitFraction` would be the scale confusion this campaign keeps finding, not a
+- `S25` cure for it.
+- `S25` ### Verification blocked, again and stated
+- `S25` A peer's `core/` split has left `cadrumo.core.storage_taxonomy_locations` with a
+- `S25` circular import that fails on its own, and `cadrumo.core.hardware` missing --
+- `S25` sixteen `llm` test modules will not collect. Checked that neither is reachable
+- `S25` from this change: `core/unit_proportion.py` has zero storage references, and two
+- `S25` of the three changed modules import cleanly in isolation.
+- `S25` So this rests on direct annotation probes rather than a green suite. Weaker
+- `S25` evidence, recorded as such.
+- `S26` `Hex64Str`'s own docstring states the rule this step settles: every hex-64
+- `S26` concept "USES this primitive... It is never re-declared by writing the
+- `S26` ``StringConstraints(...)`` call or the pattern out again."
+- `S26` Six fields re-declared it, and NONE of the six carried the pattern. They spelled
+- `S26` `Field(min_length=64, max_length=64)`, which is a length and nothing else, so all
+- `S26` six accepted sixty-four arbitrary characters where the canonical requires
+- `S26` sixty-four lowercase hex digits. The divergence the step reports is therefore not
+- `S26` a stylistic one between a literal and a constant: the re-declarations were
+- `S26` strictly weaker.
+- `S26` Checked each producer before tightening, because uppercase hex is now refused and
+- `S26` a producer emitting it would break:
+- `S26` both challenge fields come from `secrets.token_hex(32)`, which is lowercase
+- `S26` the digests come from `sha256_hex(...)` and `hashlib`, also lowercase
+- `S26` `pdf_sha256` looked like the risk, since a value from the AEAT sede would be
+- `S26` outside our control. It is not: the field is filled by `sha256_hex(body)` over
+- `S26` bytes we already hold. A sibling model in the same package already types the
+- `S26` same field as the canonical, which is what made this one the outlier rather
+- `S26` than the convention.
+- `S26` Four custody tests fail in this area and none of them touch a hex annotation:
+- `S26` two on an OS keyring the machine cannot write to, one on lock ordering, one on a
+- `S26` peer's retryable-code registry.
+- `S30` Six fields pinned exactly `min_length=9, max_length=9` -- the Spanish identifier
+- `S30` width -- with neither canonical, and in three cases the canonical sits one line
+- `S30` above in the SAME class. `withholding296_bindings.py` declares
+- `S30` `perceptor_tax_id: TaxIdIdentityToken` and then `representative_tax_id: str |
+- `S30` None = Field(min_length=9, max_length=9)` directly beneath it.
+- `S30` The ruling is the NORMALISING canonical plus the existing width, not the
+- `S30` checksum-validating one, and the probe is why. Against the bare bound:
+- `S30` | input | bare 9-width | token + 9-width |
+- `S30` | --- | --- | --- |
+- `S30` | `12345678z` | stored lowercase | folded to `12345678Z` |
+- `S30` | `" 12345678Z "` | REFUSED (padding makes it 11) | normalised, accepted |
+- `S30` | `1234567Z` | refused | refused |
+- `S30` | `AB123456C` | accepted | accepted |
+- `S30` Strictly better on every column and no new refusal. The lowercase row is the one
+- `S30` that mattered: an unfolded token is what `tax_id_identity_token`'s own docstring
+- `S30` warns about, where two canonically-equal identifiers become two rollups but one
+- `S30` stored row.
+- `S30` The CHECKSUM question is deliberately left open rather than settled here. Moving
+- `S30` these to `SubjectTaxId` would add a refusal to registry-declared AEAT data on my
+- `S30` reading that a legal representative or prior payer is always Spanish-resident,
+- `S30` and one of the six contradicts that in its own docstring -- `nif_pagador_anterior`
+- `S30` says it is obligatory "except where the previous payer is foreign without a
+- `S30` Spanish NIF". That is a tax review, and this campaign has already been bitten
+- `S30` once by arithmetic done in my head rather than grounded.
+- `S30` `nif_pais_residencia` on Modelo 296 is the opposite case and had NEITHER
+- `S30` canonical. It is literally the perceptor's identifier in their own country, on an
+- `S30` IRNR withholding modelo, so it must never take the checksum alias -- no Spanish
+- `S30` control character can validate it. It now takes the normalising token, with the
+- `S30` reason recorded at the field so nobody later "completes" the consolidation by
+- `S30` giving it the checksum.
+- `S34` The step names three strengths for one concept and the census found the name
+- `S34` carrying THIRTEEN distinct annotations. Most are different concepts wearing a
+- `S34` similar name -- a registry citation, a parsed AnyHttpUrl, a filesystem path --
+- `S34` and the census's job was separating those from the one real disagreement.
+- `S34` It is the capture and its projection. `application/live/deudas.py` persists a
+- `S34` snapshot whose `source_url` sets a minimum and NO maximum; the overview calendar
+- `S34` entry copies that value straight across at `calendar.py:396` into a field capped
+- `S34` at 512. A persisted URL longer than the cap does not truncate, it refuses -- and
+- `S34` it refuses the whole calendar entry, so one long sede link would take out the
+- `S34` overview for that taxpayer rather than that one field.
+- `S34` The bound is the generous one deliberately. A sede URL carries session and
+- `S34` procedure parameters and is long by nature, so tightening the persisted side to
+- `S34` 512 would refuse links the portal really issues; 1024 is what this codebase
+- `S34` already gives a stored URL on its ORM column. The corpus fetch record and that
+- `S34` column already agree on 1024 and were left alone -- they are a different concept
+- `S34` and they already agree with each other.
+- `S34` `OptionalSourceUrl` is separate rather than `SourceUrl | None` because the
+- `S34` projection spells an absent value as the empty string on the wire, and a minimum
+- `S34` of one would refuse it.
+- `S40` The step asks to move `derive_revision_id` from its ` `-joined hash onto
+- `S40` `content_hash_hex`. The migration was NOT performed, and the reason is a
+- `S40` measurement rather than a reluctance.
+- `S40` ### The stated remedy is a persisted-format decision
+- `S40` `revision_id` is a stored `VARCHAR_64` column, and
+- `S40` `verify_revision_self_consistency` recomputes it from the lineage columns at
+- `S40` read time as a tamper gate. Changing the derivation restamps every stored row
+- `S40` and fails that gate on every row not yet migrated. The module's own docstring
+- `S40` already adjudicated this: bringing anything new under the digest "would restamp
+- `S40` every stored `revision_id`, which is a persisted-format decision rather than a
+- `S40` local fix."
+- `S40` A mechanism exists -- `migrate_many_atomically` decrypts, chain-upgrades and
+- `S40` replaces atomically -- so the migration is buildable. It would rewrite every
+- `S40` encrypted row in every namespace, on a surface governed by
+- `S40` `sensitive-financial-data-secure-storage-only`, and it needs a transition rule
+- `S40` for rows read before they are restamped. That is the operator's call.
+- `S40` ### The risk the step implies does not exist
+- `S40` A delimiter join is unsafe when a field can contain the delimiter. Seven of the
+- `S40` eight inputs cannot by construction: a hex object key, a decimal schema version,
+- `S40` an ISO-8601 instant, and four hex digests or empty strings. Only `namespace` is
+- `S40` typed loosely, as `str = Field(min_length=1)`.
+- `S40` The first reading was that this leaves a forgery open, and a probe was written
+- `S40` to prove it. The probe FAILED, and working out why is the finding: injecting the
+- `S40` delimiter into `namespace` shifts content into `object_key.hex()`, whose
+- `S40` alphabet is hex digits. There is no valid second tuple that re-parses the same
+- `S40` joined string, because the field that would have to absorb the overflow cannot
+- `S40` legally hold it. Every valid tuple carries exactly seven delimiters; an injected
+- `S40` one carries more, and hashes differently.
+- `S40` So the existing derivation is injective, and the migration would buy the same
+- `S40` property at the cost of restamping every stored row.
+- `S40` ### What was done instead
+- `S40` The safety rested on every declared namespace happening to be a plain
+- `S40` identifier -- true of all 77, but a convention rather than an invariant. It is
+- `S40` now a gate, with the injectivity argument asserted alongside it rather than left
+- `S40` in a comment, so a future namespace that breaks the property fails a test rather
+- `S40` than silently weakening a tamper check.
+- `S40` The step stays open: this closes the risk, not the step. Whether to adopt the
+- `S40` canonical primitive anyway, for one-mechanism reasons rather than safety ones,
+- `S40` is the persisted-format decision above.
+- `S46` Closed by work recorded under S129, S144, S145 and S147. The step asked for ONE
+- `S46` ruling covering both payload families; what it got is a ruling plus a gate,
+- `S46` because the manual search kept succeeding -- four consecutive rounds each found a
+- `S46` currency declaration the previous round had missed, and four policies were live
+- `S46` at once disagreeing on `"eur"`, `" EUR "` and `"12A"`.
+- `S46` The ruling is `IsoCurrencyCode`: trim, uppercase, three letters. Three sites
+- `S46` carry a declared exception with its reason -- a registry-authored declaration
+- `S46` that should fail its author rather than be repaired, a boundary that already
+- `S46` applies the canonical policy through a `mode="before"` validator, and a
+- `S46` `Literal['EUR']` that is stricter rather than looser.
+- `S46` Marked complete on verification rather than on memory: the step was open while
+- `S46` the work was done, which is the state this campaign has now found several times.
+- `S48` The canonical export row declared no validators at all while the CLI projection
+- `S48` of it carried three: two date checks and the non-negative amount rule. The rules
+- `S48` now live on the row.
+- `S48` That siting is the whole point rather than a tidiness preference. `LedgerExportRow`
+- `S48` is what the export writes, and a rule enforced only on the way out through JSON
+- `S48` left the CSV and the persisted snapshot ungoverned -- the JSON envelope is one
+- `S48` of several things built from this row, not the gate in front of them.
+- `S48` The projection KEEPS its copy, and that is a decision worth stating because it
+- `S48` looks like the duplication this campaign removes. It is not: an output payload
+- `S48` that promises less than the record it mirrors is the divergence this same module
+- `S48` has been corrected for twice already, once on four string bounds and once on a
+- `S48` currency. What matters is that both sides now ask the SAME two predicates,
+- `S48` `parse_iso8601_date` and `is_non_negative_canonical_decimal`, so the rule is
+- `S48` stated once and checked twice rather than written twice.
+- `S48` Probed rather than assumed on the one case that could have broken real data: the
+- `S48` serializer spells an absent optional column as `""`, and both the empty
+- `S48` `value_date` and an empty `taxable_base` are still accepted.
+- `S51` Only two forms were rewritten, both proven identical to the canonical before
+- `S51` anything was touched:
+- `S51` n: int = Field(ge=0)
+- `S51` n: Annotated[int, Field(ge=0)]
+- `S51` A field carrying any FURTHER constraint was left alone. 317 sites matched the
+- `S51` shape; 241 were rewritten. The 76 left are not the same bound, and collapsing
+- `S51` them would have silently widened or narrowed a contract -- the exact defect this
+- `S51` campaign removes, committed in its name.
+- `S51` The equivalence check nearly produced a false negative. Comparing whole model
+- `S51` schemas reported them as differing, because the models used for the comparison
+- `S51` have different names and the title carries into the schema. Comparing the FIELD
+- `S51` schema shows byte-identical output in both validation and serialization mode.
+- `S51` A check that compares more than the thing under test answers a different
+- `S51` question and reports it in the same words.
+- `S51` ### A ruff ignore pinned to a filename
+- `S51` `pyproject.toml` carried
+- `S51` `"src/cadrumo/core/classification/__init__.py" = ["S105"]`, suppressing a false
+- `S51` positive on a `SECRET = "secret"` sensitivity-class member. Relocating that enum
+- `S51` to `policies.py` left the ignore pointing at a file that no longer holds it, and
+- `S51` the false positive resurfaced.
+- `S51` Repointed rather than answered with an inline `noqa`. The project already uses
+- `S51` `noqa: S105` with a reason for genuine one-off false positives, but a path-scoped
+- `S51` ignore that already exists should follow its subject rather than be replaced by
+- `S51` a second mechanism.
+- `S51` Worth noting as a relocation consequence in its own right: a config entry keyed
+- `S51` by filename is a consumer of that filename, and no import scan sees it.
+- `S51` ### A facade-surface gate repaired
+- `S51` `test_storage_package_public_surface_keeps_factory_and_manifest_helpers_private_backends_hidden`
+- `S51` asserted nine symbols on the storage package root's `__all__`, which the earlier
+- `S51` retirement emptied.
+- `S51` Its two halves survive the retirement differently. The contracts-are-public half
+- `S51` now resolves each symbol at its defining module. The backends-are-private half
+- `S51` was strengthened rather than kept: against an inert namespace `not hasattr(root,
+- `S51` backend)` is vacuously true, so the test now also asserts the backends are
+- `S51` absent from each contract module.
+- `S51` All nine contracts live in underscore-private modules, so the rewritten test
+- `S51` pins WHERE they live without blessing that shape -- it is the subject of the
+- `S51` open mirror-manifest publicising step, and the test now gives that move
+- `S51` something to move against.
+- `S59` Closed by S133. The step asks for a ruling on four note bounds "with no canonical
+- `S59` among them", and the ruling turned out to be that there was nothing to adjudicate.
+- `S59` Read together, the four pair up: each CLI payload restates the application-layer
+- `S59` bound it projects, and each pair AGREES. Four bounds each written twice, not four
+- `S59` competing answers. Two aliases now cover three concepts -- the author's notes and
+- `S59` the counter-signer's note share one because they are the same writing at the same
+- `S59` point in the exchange, and the feedback note keeps its own because it is the leg
+- `S59` where the writer reviews someone else's return.
+- `S59` I had deferred this through several rounds as needing an operator ruling. That
+- `S59` was wrong, and the reason is worth keeping: I had read the four NUMBERS without
+- `S59` reading the four pairings.
+- `S60` The two actor bounds were 64 on the filing label and 128 on the review package,
+- `S60` fed by one operator resolver. The review package's own docstring had already
+- `S60` recorded the difference as "unexplained rather than principled" and declined to
+- `S60` narrow it, on the grounds that tightening a persisted bound is a decision about
+- `S60` stored data rather than a de-duplication. That reasoning was right and this
+- `S60` reconciles the other way instead.
+- `S60` Widening refuses nothing that was accepted before, so the only question was
+- `S60` whether the 64 was load-bearing. It was not: no fixed-width export slot binds an
+- `S60` actor, checked across the registry export records, so nothing downstream relied
+- `S60` on it. Both aliases now read one `ACTOR_LABEL_MAX_LENGTH`.
+- `S60` Both names stay. A review-package actor and a filing actor are different roles
+- `S60` that happen to share a shape, and collapsing the names would lose that; what had
+- `S60` to stop differing is the number.
+- `S60` The one failing test in the area asserts a `MISSING_REQUIRED_CASILLA` finding on
+- `S60` an M190 verification, with `verified_by='test-operator'` at thirteen characters
+- `S60` unrelated to any bound this step touched.
+- `S61` Closed by S129. The step describes the defect exactly: the canonical elides at
+- `S61` 512 where the payload rejected, so the two disagreed about an over-long detail.
+- `S61` The canonical's own comment says why eliding is right -- refusing "would drop the
+- `S61` explanation for the exclusion AND fail the aggregation that produced it, a silent
+- `S61` under-declaration dressed as a validation error" -- and the payload reintroduced
+- `S61` that failure one layer out. A 600-character detail is now accepted and elided
+- `S61` where it was refused.
+- `S66` Verified rather than assumed: each namespace was checked for relative imports,
+- `S66` class or function definitions, and a non-empty ``__all__``. All five report zero
+- `S66` imports, zero definitions and ``__all__: tuple[str, ...] = ()``.
+- `S66` `domain/portals`
+- `S66` `domain/transactions`
+- `S66` `llm`
+- `S66` `llm/providers`
+- `S66` `entrypoints`
+- `S66` `operator_surface` has no package namespace at all -- it is a module,
+- `S66` `_operator_surface_reconciliation.py`, so there was never a map to retire.
+- `S66` One near-miss worth recording. A `grep -c "__getattr__"` on
+- `S66` `llm/providers/__init__.py` returned 1 and read like a surviving lazy arm. The
+- `S66` match is inside the DOCSTRING, which documents the retirement: the package once
+- `S66` "deferred ``AnthropicAdapter`` behind a ``__getattr__`` arm" and the guard
+- `S66` "protected nothing" because its only caller already imported the adapter from its
+- `S66` own module. Counting a mechanism by grepping its name finds the prose about it
+- `S66` too -- the same failure this campaign's shape-based census in P01.S09 was built
+- `S66` to avoid.
+- `S67` All three namespaces named by the step now define no production code and are
+- `S67` inert.
+- `S67` `domain/contribuyente` was closed here by relocating its two defining
+- `S67` subpackages -- `inventory` to `records.py` (58 symbols) and `assets` to
+- `S67` `records.py` (11 symbols) -- under `P07.S167`. `application/overview` and
+- `S67` `core/errors` were emptied by other lanes; the committed history carries
+- `S67` `relocation:core.errors split the errors namespace into its canonical defining
+- `S67` modules` from another session.
+- `S67` Confirmed against the live tree rather than against that history, because a
+- `S67` namespace can be emptied and refilled: each of the three was read for its
+- `S67` current definition count and its `__all__`, and all three are inert now.
+- `S78` Four of the 568 tests in the verification run reported failures that are not
+- `S78` this Step's. Two (`test_provenance_stamp_singularity`,
+- `S78` `test_evidence_marker_declared_at_every_builder`) walk the source tree and hit
+- `S78` a file a peer session deleted mid-run; both pass on re-run. One requires
+- `S78` `CADRUMO_LIVE_TESTS_ENABLED` and refuses by design. One raises
+- `S78` `NoRevisionForPeriodError` against registry TOMLs a peer is authoring.
+- `S84` Censused rather than taken from the step's count. Seven module-scope calls sit in
+- `S84` package namespaces; two are `_s09_optional_*` test fixtures. The five real ones
+- `S84` are three different things, and the ruling differs for each.
+- `S84` Sound and forced.** `application/calculations` calls `model_rebuild()` to
+- `S84` resolve a forward reference that is `TYPE_CHECKING`-only inside
+- `S84` `_iva_wallet_reconciliation` because of a circular import. It cannot move to a
+- `S84` defining module: it needs BOTH modules already loaded, and the package namespace
+- `S84` is the only place that observes that condition. It registers nothing and reaches
+- `S84` nothing.
+- `S84` Process configuration, not registration.** `entrypoints/cli` configures stdio
+- `S84` for UTF-8, disables rich rendering, and decorates the Typer app. These are an
+- `S84` entrypoint's own setup on the way to becoming a program, not a package exporting
+- `S84` behaviour, and the step's "dependency inversion" framing does not describe them.
+- `S84` Superseded.** `application/registry` imports `cadrumo.domain.renta` purely to
+- `S84` trigger its cross-domain check registration. That is the finding.
+- `S84` `_snapshot_internals._install_cross_domain_snapshot_checks` now does the same
+- `S84` import, idempotently and flag-guarded, at the start of every snapshot build --
+- `S84` and its docstring names THIS site as the problem it was built to solve:
+- `S84` "registration no longer relies on a composition root happening to import renta
+- `S84` before the first M100 snapshot."
+- `S84` So the old mechanism survives beside its own replacement, in a namespace whose
+- `S84` `__all__` is empty. That pairing is the worst available: nothing to import the
+- `S84` package FOR, yet importing it pulls a domain. It is the 613-module cost the step
+- `S84` names.
+- `S84` Ruled superseded and recorded at the site rather than deleted. Removing a
+- `S84` registration side effect is a behaviour change on an import-order-sensitive path
+- `S84` and wants a green tree to land against; the tree is currently mid-relocation by a
+- `S84` peer and will not import.
+- `S86` Two of the 130 tests fail on a peer's CLI verb rename (`workflow view` ->
+- `S86` `workflow show`) that this observability test's expectation has not caught up
+- `S86` with. The diff to `replay.py` is imports only, so the argv logic is untouched.
+- `S88` Pins naming files under `domain/modelos/` are deliberately excluded: that
+- `S88` retirement is complete in the working tree but uncommitted, entangled with a
+- `S88` peer's overlapping relocation, so its pins ride with its own commit.
+- `S89` One exposed violation is deferred: the bare `date.fromisoformat` in
+- `S89` `application/modelo/_edit_services.py` is fixed in the working tree but that
+- `S89` file already imports from modelos modules the commit does not carry, so it
+- `S89` rides with the modelos commit.
+- `S91` The invoices namespace re-exported three names belonging to domain/iva while
+- `S91` iva imported back into invoices for IvaRate. The cycle is dissolved, not moved:
+- `S91` iva reaches invoices.enums directly and its own tests stop importing its own
+- `S91` functions back through the invoices facade.
+- `S92` Four of the thirteen candidates were reverted rather than repointed: they assert
+- `S92` that the RETIRED private module is absent, so repointing them inverted the test
+- `S92` into asserting the live module does not exist. One failed and said so, which is
+- `S92` how the class was found. A `_x.py` literal means one of two opposite things.
+- `S93` `test_every_composing_write_carries_a_revision_or_is_declared` remains red on two
+- `S93` `application/modelo/_edit_execution.py` functions that compose a secure-object
+- `S93` write without asserting a revision. That predates this campaign and needs an
+- `S93` architectural ruling rather than a mechanical sweep; tracked as its own Step.
+- `S93` The identifier-enrolment gate keeps one stale adjudication naming
+- `S93` `domain/modelos/_ledger_filing_snapshot.py`, which rides with the held modelos
+- `S93` commit.
+- `S94` Ruled CLOSED rather than merely inventoried, which the gate's own docstring is
+- `S94` careful to distinguish: "It is an inventory, not a clearance. Being listed
+- `S94` records that a site writes a document without asserting a revision; it does not
+- `S94` certify the site is safe."
+- `S94` Both sites qualify under the first of the three situations that gate names --
+- `S94` the document was never read, so there is no revision to assert.
+- `S94` `_co_commit_receipt` CONSTRUCTS a `ModeloEditMutationResultReceiptV1` from the
+- `S94` request and writes it; nothing loads it first. `apply_modelo_edit` is its
+- `S94` enclosing function and that receipt is its only composing write, everything else
+- `S94` being delegated to the calculation boundary and the single-writer primitive.
+- `S94` The receipt is additionally per-record rather than a singleton catalogue: its id
+- `S94` is a content hash over the operation, baseline, calculation revision and bucket
+- `S94` event, so two writers can only collide by writing the identical receipt. That is
+- `S94` the narrowing the gate's third situation describes, and here it compounds with
+- `S94` the first rather than substituting for it.
+- `S94` Both entries say "closed, not merely unclassified", because this inventory
+- `S94` deliberately admits which of its rows have been judged and which have only been
+- `S94` recorded -- borrowing a neighbour's reason is the failure it warns about.
+- `S95` 1363 pass, 33 fail. Sixteen are live tests refusing without
+- `S95` CADRUMO_LIVE_TESTS_ENABLED / _GOOGLE, which is their design. The remainder --
+- `S95` six SedeParseError, one RegistryValidationError on a modelo-130 sign marker,
+- `S95` one KeyError on a modelo-111 export record, and four M210 deadline windows
+- `S95` resolving to None -- are all downstream of a peer's in-flight registry
+- `S95` refactor: 26 registry modules and 20 registry TOMLs are modified in the
+- `S95` working tree, and registry validation is all-or-nothing. This Step's diff to
+- `S95` `domain/deadlines` is imports and docstrings only.
+- `S96` The wizard entry is deleted rather than repointed: an inline `noqa` carrying a
+- `S96` stated reason already covered that one line, so the broader per-file ignore was
+- `S96` redundant and the narrower suppression is the correct one to keep.
+- `S98` FiscalResidency was never a deadlines symbol: the namespace re-exported it from
+- `S98` `contribuyente.renta_codes`, and the accessor for that module was already
+- `S98` defined beside the one being repointed.
+- `S99` The single consumer failure is the peer registry refactor already identified:
+- `S99` 26 registry modules and 20 registry TOMLs are modified in the working tree and
+- `S99` registry validation is all-or-nothing.
+- `S99` Thirteen Protocol property stubs and one validator gained docstrings rather than
+- `S99` a suppression -- publicising a module exposes it to the docstring rules, and a
+- `S99` protocol's members are its contract.
+- `S102` The notes bound was written out identically at both sites. The completeness
+- `S102` ratio ran the other way: the CLI already used the canonical `UnitFraction`
+- `S102` while the manifest model restated `ge=0.0, le=1.0` by hand, so the projection
+- `S102` was more canonical than its own source.
+- `S103` The expiry-year bound is deliberately wider than a filing year, because the
+- `S103` value is derived as `source_filing_year + 4`; that reasoning is now recorded on
+- `S103` the alias rather than implied by a bare literal. Probed rather than restated:
+- `S103` 2200 accepts, 2201 and 1999 refuse, None accepts.
+- `S103` The M036 event id ran the other way again -- the payload declared a looser
+- `S103` `1..128` string where the model it projects declares `BucketEventId`, a 64-char
+- `S103` hex. Tightening it aligns the projection with the only values its source
+- `S103` produces.
+- `S104` The hierarchy split was applied and then reverted by the concurrent git session,
+- `S104` which restored tracked files underneath it. Between those two points a commit
+- `S104` landed on the half-applied state, leaving a HEAD that imported
+- `S104` `core.errors.hierarchy` without tracking the module -- a clean checkout could
+- `S104` not import `domain/fincas/errors.py`. The git owner reverted it and HEAD is
+- `S104` consistent again.
+- `S104` Four untracked modules from the attempt remain on disk and are unreferenced by
+- `S104` HEAD, but the tree-walking gates import every module under `src/`, so
+- `S104` `hierarchy.py`'s registered exception subclasses fail to bind and four tests in
+- `S104` `test_exception_base_hygiene` and `test_registry_enforcement` fail. They need
+- `S104` removing; that was left to the operator.
+- `S105` `WorkUnit.modelo` is already `ModeloCode`, and the manifest was calling
+- `S105` `str(work_unit.modelo)` to downgrade it before restating a looser bound. The
+- `S105` JSON schema is unchanged -- still `{"type": "string"}` -- so the wire contract
+- `S105` holds while the validation behind it becomes the canonical three-digit check.
+- `S105` Two more fields ran the other way: the CLI already used `NonEmptyStr` where the
+- `S105` manifest restated `min_length=1`.
+- `S105` The pin survived a rename sweep unchanged in meaning but wrong in fact: it named
+- `S105` `calculation_revision`, which had stopped defining these classes and only went
+- `S105` on re-exporting them. Repointing the sweep preserved the wrong module, and only
+- `S105` removing the re-export made the gate say so.
+- `S106` The split had been reverted, then re-landed by the concurrent session, which
+- `S106` deleted the three private modules and kept 365 repointed consumers but left the
+- `S106` namespace still exporting. Restoring that namespace from HEAD was the wrong
+- `S106` read of the state and broke the tree; the working tree wanted the inert form and
+- `S106` five stragglers repointed.
+- `S106` `test_exception_base_hygiene` still reports four production exception classes
+- `S106` rooting at bare builtins without a declared rationale. Those classes arrive from
+- `S106` peer commits and this Step's diff to their files is empty.
+- `S107` The censo rename regex was written unscoped and rewrote `_parser` in the
+- `S107` declaracion, borrador and justificante packages too, where that module is still
+- `S107` private. Thirteen files were reverted by resolving each relative import against
+- `S107` the filesystem and restoring the private name only where the private module
+- `S107` actually exists.
+- `S108` The gate refuses a name imported from a namespace that exports nothing, which is
+- `S108` the distinction the step asks for: a genuinely inert namespace against one still
+- `S108` served by a live lazy export map.
+- `S108` Worth recording how it was narrowed. The first version read `core`'s lazy map as
+- `S108` empty and produced 6,803 false positives -- it could not tell "exports nothing"
+- `S108` from "exports lazily", which is precisely the distinction it exists to draw. It
+- `S108` was narrowed to namespaces that are genuinely inert.
+- `S109` A triage sweep reported the CLI restating the transaction model's zero-to-one
+- `S109` bound. Confirming it found a third site: the model's own validator declared
+- `S109` `_CONFIDENCE_MIN` / `_CONFIDENCE_MAX` rather than reading the canonical
+- `S109` unit-proportion constants, so the same bound stood in three places, two of them
+- `S109` inside the supposedly-canonical side.
+- `S109` The CLI keeps its localised refusal and loses only the bound, which is the
+- `S109` shape `_decimal_parsing` already documents as correct: the grammar lives in
+- `S109` core, the instructive refusal is what the CLI legitimately owns.
+- `S110` Closed by S131. The operator ruled that two validators answering one question
+- `S110` differently is the defect rather than the question, and the direction was not a
+- `S110` free choice: AEAT partitions the CIF kind letters three ways, `_documents`
+- `S110` already implemented that partition, and `_tax_id`'s own module docstring stated
+- `S110` it correctly while the code beneath it accepted the letter form for `ABEH`.
+- `S110` The four restated validators in `_tax_id` are gone, 140 lines, and the surviving
+- `S110` one kept the richer refusal payload rather than the poorer. A structural gate now
+- `S110` holds each policy table and the checksum arithmetic to one declaration.
+- `S111` The rule lived at one entrance only: the wizard checked it, and the profile
+- `S111` field it writes into carried no constraint, so any other route persisted a
+- `S111` malformed value silently. Probed at the model rather than restated: undeclared
+- `S111` and 28001 accept, 99999 and 1001 refuse.
+- `S111` The field-parity test filled every free-text answer with the token `sample`,
+- `S111` which a postcode question no longer accepts. Its helper now reads the postcode
+- `S111` question ids from the widget module rather than restating them, so a second
+- `S111` postcode question cannot pass the test while the profile refuses it.
+- `S112` Both rehomings landed earlier in the campaign: the folder-import aggregation now
+- `S112` has an application counterpart and the Drive remote-object label derivation an
+- `S112` adapter one, so neither is computed in the CLI without a home.
+- `S112` Its sibling S115 stays open and is a different thing -- widening that fold so a
+- `S112` directory import reports every file's report rather than only the first.
+- `S113` The CLI copy took seven fields from the first result without checking the rest
+- `S113` agreed, so a fold of results from different invocations would have reported the
+- `S113` first file's period, bucket and batch id for all of them. The rehomed version
+- `S113` refuses that instead; proved by folding two results differing only in
+- `S113` `bucket_id` and observing the refusal.
+- `S113` One narrowing is carried forward rather than fixed here: `validation` and
+- `S113` `source` are per-file reports and the result model holds one of each, so a
+- `S113` directory import still reports only the first file's. Widening those to tuples
+- `S113` is a model shape change, tracked separately.
+- `S114` The namespace had been made inert while four sites still reached through it,
+- `S114` including production `blob_store/_materialisation.py` and the storage lazy map.
+- `S114` Collection failed for 1544 tests until the defining module was public.
+- `S115` The fold carried its own narrowing note: "validation and source are per-FILE
+- `S115` reports and only the first survives... widening those fields to tuples is a
+- `S115` shape change this fold cannot make on its own." So a directory import reported
+- `S115` ONE file's validation as though it spoke for the import, and the other files'
+- `S115` findings were unreachable.
+- `S115` Widened end to end: the record holds tuples, both producers wrap their single
+- `S115` report in a one-tuple, the fold concatenates them with the reference tuples it
+- `S115` already concatenated, and the renderer prints each file's block instead of one.
+- `S115` A single-file import carries a one-tuple rather than keeping a scalar beside the
+- `S115` tuple. That matters more than it reads: the single and the many are now the same
+- `S115` type, so no caller has to tell them apart, and the fold has nothing to special-
+- `S115` case. It is also why four test files changed -- the wire key went from
+- `S115` `validation` to `validations`, and this project carries no released data, so the
+- `S115` rename is the whole migration.
+- `S115` Probed the actual defect rather than only the tests: three results folded keep
+- `S115` three validations and three sources, in file order.
+- `S115` ### One failure in this area is NOT this
+- `S115` `test_one_poisoned_file_does_not_discard_the_rest_of_the_folder` fails, and it
+- `S115` is worth naming because it sits in the same feature and sounds like this step.
+- `S115` It is not. The folder LOOP re-raises on the first `TransactionValidationError`
+- `S115` and aborts the run, which is the behaviour that test was written to forbid --
+- `S115` its own comment says "under the old comprehension it aborted the run before
+- `S115` either good file was reached". The loop is untouched by this change; the diff
+- `S115` here is the renderer and the shapes. A partial-success folder import is a
+- `S115` different fix from a fold that keeps every report.
+- `S116` Judges only namespaces that serve NO names -- empty `__all__`, no `__getattr__`,
+- `S116` no re-exports. A first attempt read a live lazy export map as empty and reported
+- `S116` six thousand eight hundred false positives; narrowing to genuinely inert
+- `S116` namespaces leaves fifteen, of which ten were dunders and five were real.
+- `S116` Proved by planting an inert package and a consumer importing a name from it,
+- `S116` observing the refusal, then removing both. The probe files sat under `src/`,
+- `S116` which is the weaker form of the proof: the guidance prefers a probe outside the
+- `S116` repository so a peer's sweep cannot commit the mutation.
+- `S117` A mirrored row is named `<object-key-hmac>--<label>.bin`. The hmac half already
+- `S117` lived in the outbound adapter and the CLI delegated to it; the label half was
+- `S117` computed in the CLI. Both are facts about the wire, not about whichever surface
+- `S117` pushes.
+- `S117` Deliberately NOT merged with the adapter's `_manifest_label`, which names the
+- `S117` manifest file rather than a row: that one keeps the whole namespace, admits no
+- `S117` dots or underscores, and allows sixty-four characters. Neither policy is a
+- `S117` superset of the other.
+- `S118` The step asked for the mirror-manifest module to be publicised so its
+- `S118` remote-naming contracts are reachable without the storage namespace. It was
+- `S118` blocked for most of this campaign, and not by difficulty: the storage namespace
+- `S118` had already been retired under `P01.S07`, which left two consumers in
+- `S118` `entrypoints/cli/_config` importing from a private module in another package --
+- `S118` trading the facade violation for the boundary violation.
+- `S118` The operator ruled that private defining modules may hard-move to public names,
+- `S118` deleting the private path in the same change. That is what
+- `S118` `aeat-architecture-boundaries` prescribes and it is what closed this step.
+- `S118` This was one of 152 promotions made under that ruling. The measured effect
+- `S118` across the campaign: cross-package private imports fell from 208 modules over
+- `S118` 646 consumer files to 49 over 65.
+- `S118` ### Four consumer shapes, three of which no import scan sees
+- `S118` The promotion tool learned each of these the hard way, and each is recorded
+- `S118` because the next relocation will meet them again:
+- `S118` `from pkg import _mod` binds the MODULE by name, so the resolved import target
+- `S118` is the PACKAGE. Matching only the module misses it; matching the bare module
+- `S118` name over-applies to identically named modules elsewhere -- both mistakes were
+- `S118` made, in that order.
+- `S118` The error-code registry keys `CadrumoError` subclasses by fully-qualified
+- `S118` module path and refuses an unregistered subclass at import time. Every
+- `S118` promotion of a module holding one is also a registry edit.
+- `S118` A plain string replacement of the dotted path also rewrites LONGER module
+- `S118` names sharing the prefix. Promoting `_m303_regimen_simplificado` silently
+- `S118` repointed `_m303_regimen_simplificado_annual_summary`, which still had its
+- `S118` underscore. The replacement is now anchored on a non-identifier boundary.
+- `S118` The repo-root `conftest.py` imports from `cadrumo.tests`, and a `src/`-and-
+- `S118` `dev/`-only sweep leaves it on the pre-promotion name, breaking collection
+- `S118` tree-wide from outside both scanned roots.
+- `S119` Three sites declared the same modelo bound, two of them on the canonical side.
+- `S119` Adopting the validated type on all three broke a test asserting that a
+- `S119` whitespace-padded code is refused at DISPATCH with a message naming the
+- `S119` supported modelos.
+- `S119` That test pins a deliberate design rather than an oversight: which modelos the
+- `S119` service supports is registry-driven, and the CLI contract allows a late refusal
+- `S119` for exactly that reason provided it lists the accepted set. Typing the command
+- `S119` field refused earlier with a generic shape error and lost the listing, so the
+- `S119` command field keeps its own shape and now says why. The contract and result
+- `S119` models, which carry no operator input, took the canonical type.
+- `S120` The gate excluded `None` and booleans from its threshold test on the grounds
+- `S120` that comparing against either asks whether a field is present. It did not
+- `S120` exclude the empty string, but an optional text field arrives over the wire as
+- `S120` `""` rather than `None`, so `value is None or value == ""` is one presence check
+- `S120` in the two spellings the wire uses. The gate read the second half as a rule and
+- `S120` flagged a validator whose whole body delegates to the canonical usage-ratio
+- `S120` authority.
+- `S120` Loosening a detector risks blinding it, so the change was probed against eight
+- `S120` expressions: `> Decimal("1")`, `< 0`, `== "ES"` and `len(value) > 9` still flag;
+- `S120` `is None`, `== ""`, `is True` and a comparison between two projected fields do
+- `S120` not.
+- `S121` Four custody lock tests were failing with "holder subprocess exited with code 1
+- `S121` before signalling ready" and "supervised child produced no readiness line".
+- `S121` Read as flakiness on this worktree's backing share, including by this campaign.
+- `S121` They were not flaky: the subprocess source is built as a STRING, and it named
+- `S121` `custody._filesystem`, a module an earlier retirement had made public. The child
+- `S121` died on ImportError and the parent could only report that it never spoke.
+- `S121` A dotted module path in a string is not an import node, so every AST sweep here
+- `S121` was blind to it. Twenty-six such paths were stale, in logger names, caplog
+- `S121` targets and spawned-subprocess sources.
+- `S121` The sweep arm added for this repeated the absence-assertion trap in its dotted
+- `S121` spelling: it rewrote `import_module("...._closure")` inside a
+- `S121` `pytest.raises(ModuleNotFoundError)`, inverting the test into asserting the live
+- `S121` module is absent. The arm now skips a path whose surrounding lines expect an
+- `S121` import to fail.
+- `S122` A triage sweep reported five custody records hand-rolling a self-digest shape a
+- `S122` base class already generalises, and said the dependency direction allowed the
+- `S122` two capsule records to subclass it. Checked: the direction is the reverse.
+- `S122` `label_head_models` imports `ProfileCustodyCapsuleLabel` FROM `capsule_records`,
+- `S122` so those two subclassing it where it lived would have closed an import cycle.
+- `S122` The base is therefore extracted to a leaf module that imports nothing from its
+- `S122` siblings. This Step is the relocation only -- behaviour-neutral, and the two
+- `S122` existing subclasses still resolve. Extending it with the field validator, the
+- `S122` mismatch check and the canonical payload, then moving the five records onto it,
+- `S122` is tracked separately: these records verify encrypted profile-password custody,
+- `S122` so each move needs its digest proved unchanged rather than assumed.
+- `S123` The base now owns the mismatch refusal as well as the computation, keyed by a
+- `S123` message ClassVar. Each record keeps its OWN digest-shape field validator,
+- `S123` because those genuinely differ: one accepts a bare sha256, two accept the
+- `S123` `sha256:`-prefixed form, and a third spells the length-and-prefix check inline.
+- `S123` A triage sweep had described all five as identical "modulo the max-bytes
+- `S123` constant and error-message string", which is true of the computation and not of
+- `S123` the validation.
+- `S123` The digest is order-independent -- `bounded_canonical_json_bytes` sorts keys --
+- `S123` so adding a second base could not shift it through field reordering. That was
+- `S123` checked before the rebase rather than assumed, because multiple inheritance
+- `S123` would otherwise have been the obvious way to change a stored digest silently.
+- `S123` Proof is empirical, not argued: a fixed synthetic instance of each of the five
+- `S123` records was digested before the change and after, and the five hashes are
+- `S123` identical character for character. The inherited refusal was then
+- `S123` mutation-proved on a real record -- a valid marker accepts, the same marker with
+- `S123` a zeroed digest refuses with the inherited message.
+- `S123` Two records only are moved. The envelope, the recovery envelope and the capsule
+- `S123` commit still hand-roll the computation and are tracked separately: these verify
+- `S123` encrypted profile-password custody, and one proof per record is the price of
+- `S123` touching them.
+- `S123` Two subprocess reset tests fail when the whole custody suite runs and pass 3/3
+- `S123` in isolation -- an ordering or shared-state interaction, unrelated to a change
+- `S123` proved digest-neutral.
+- `S124` The move the step names is already done: the envelope, the recovery envelope and
+- `S124` the capsule commit all extend `CustodyDigestModel`, as does the recovery
+- `S124` artifact. The digests are proved unchanged by the roundtrip suite rather than by
+- `S124` a fresh proof, since the move landed earlier in the campaign.
+- `S124` `ProfileCustodyCapsuleLabel` stays off the base, correctly -- it chains two
+- `S124` digests, computing one over a payload that already contains another, which the
+- `S124` base's single-digest shape cannot express.
+- `S124` What remained was a different duplication in the same files: the digest-STRING
+- `S124` format check, written three ways. `recovery.py` and `recovery_artifact.py` call
+- `S124` the canonical `validate_prefixed_digest`; `records.py` had a rival regex
+- `S124` implementation; `capsule_records.py` inlined the length, prefix and alphabet
+- `S124` checks by hand -- while ALREADY IMPORTING the canonical at the top of the file.
+- `S124` That last one is the sharpest version of this campaign's shape: the canonical was
+- `S124` in scope and the check was written out anyway.
+- `S124` Probed all three against the canonical before collapsing them, on six inputs
+- `S124` including uppercase hex and a wrong length. Identical on every one, so the
+- `S124` collapse changes nothing but the number of places the rule lives.
+- `S124` ### A regression this found, and did not re-baseline
+- `S124` `test_inner_envelope_vacuity_invariants` fails at `assert 15 >= 16`: one read
+- `S124` path has stopped calling `inner_envelope_version_is_current`. It is NOT this
+- `S124` change -- neither file mentions that predicate and the diff contains zero
+- `S124` references -- and the gate's own docstring is explicit about what to do:
+- `S124` "Lowering this floor is only ever legitimate alongside evidence that the missing
+- `S124` calls moved into a shared reader. A drop with no such consolidation is the
+- `S124` regression this gate exists to catch: verify before re-baselining, never the
+- `S124` reverse."
+- `S124` So it is left red. Fifteen call sites across thirteen files, listed by a scan
+- `S124` run for this purpose; the shared kernel in `profile/_secure_enveloped_document.py`
+- `S124` is still among them, so the loss is one of the individual readers rather than the
+- `S124` inherited check.
+- `S124` Worth recording how nearly I mis-reported it: the first scan output was piped
+- `S124` through `tail` and the kernel fell off the visible list, which read exactly like
+- `S124` the kernel having lost its call. A truncated list of members is not a
+- `S124` measurement of the population.
+- `S125` The obvious consolidation for `represented_nif` was to adopt the canonical
+- `S125` `SubjectTaxId` alias. Checking first showed why that would have been wrong: the
+- `S125` apoderamiento flow validates that field through `validate_identity`, the
+- `S125` ``_documents`` implementation, while `SubjectTaxId` runs `validate_spanish_tax_id`,
+- `S125` the ``_tax_id`` one. Those two disagree about the ABEH CIF leader class, so the
+- `S125` adoption would have moved a live field from one policy to the opposite without
+- `S125` anyone deciding to. Only the uncontested LENGTH bound was consolidated, and the
+- `S125` CIF audit now records that the divergence sits on a live path rather than merely
+- `S125` inside one package.
+- `S125` `password_generation` was not simply restated. The result payload declared
+- `S125` ``ge=2`` and NO ceiling, while the custody envelope declares ``ge=1`` and a
+- `S125` maximum -- so neither bound was a superset, and the payload could report a
+- `S125` generation the envelope would refuse to store. Both are now declared beside the
+- `S125` envelope: the general counter, and the narrower post-change form whose lower
+- `S125` bound is genuinely two because a profile starts at one. Probed rather than
+- `S125` restated: two accepts, one refuses as pre-change, and a value above the custody
+- `S125` ceiling refuses.
+- `S126` Three sites, three different strengths for one concept. The domain model bounded
+- `S126` the length only, so it accepted `eur` and `$$$`; two CLI payloads carried
+- `S126` hand-rolled `^[A-Z]{3}$` patterns, stricter than the model they project.
+- `S126` The canonical normaliser already existed and its docstring already warned why a
+- `S126` field constraint is the wrong shape: a `min_length` / `max_length` bound fires on
+- `S126` padding first and never reaches the normaliser, so `" usd "` is refused for its
+- `S126` spaces rather than accepted as `USD`. The domain model had fallen into exactly
+- `S126` that trap. The alias is a `BeforeValidator` for that reason.
+- `S126` Probed at the domain model: `" usd "` now yields `USD`, and a two-letter code
+- `S126` refuses.
+- `S127` `PositiveDecimal` is declared separately from `NonNegativeDecimal` rather than
+- `S127` folded into it, because the difference is the whole point at these sites: an
+- `S127` exchange rate of zero is not a rate, while a total of zero is a legitimate
+- `S127` total. Probed both ways round.
+- `S128` The step describes it exactly: three private classes whose docstrings say
+- `S128` "Mutable accumulator" while their config froze them, so
+- `S128` `bucket.base_total += observation.base_amount` raised `frozen_instance` and
+- `S128` every aggregation over a non-empty observation set failed. These are the three
+- `S128` failures that have been red in every registry run this campaign made.
+- `S128` Ruled in favour of the docstrings. The frozen discipline protects a persisted or
+- `S128` returned record; these are local buckets inside one function, never persisted and
+- `S128` never returned -- the rows are built as plain mappings afterwards -- so there is
+- `S128` nothing here for it to protect.
+- `S128` ### The fix weakened something and a probe caught it
+- `S128` Dropping `frozen` alone made every assignment bypass validation: the class went
+- `S128` from refusing a Decimal sum to accepting `country_code = 5`. That is a worse
+- `S128` defect than the one being fixed, because it is silent. `validate_assignment` is
+- `S128` therefore part of the config rather than an afterthought, and the reason is
+- `S128` recorded beside it.
+- `S128` Worth keeping as a general point: removing a constraint to permit a legitimate
+- `S128` operation can remove a second constraint that was riding on it. The probe that
+- `S128` found this was three lines and ran before the tests did.
+- `S129` This is a defect, not tidiness. The canonical annotation ELIDES an over-length
+- `S129` detail at 512 rather than refusing it, and the comment above it says why:
+- `S129` refusing "would drop the explanation for the exclusion AND fail the aggregation
+- `S129` that produced it -- a silent under-declaration dressed as a validation error."
+- `S129` Two CLI payloads restated the bound as `Field(min_length=1, max_length=512)`,
+- `S129` which REFUSES. They reintroduced the exact failure the annotation exists to
+- `S129` prevent, one layer further out: a 513-character detail failed the emit and took
+- `S129` the explanation with it.
+- `S129` The annotation itself was also written out three times, once in preflight and
+- `S129` once in each of two aggregation ledgers.
+- `S129` Probed at the CLI payload: a 600-character detail is now accepted and stored at
+- `S129` 512, where before it was refused.
+- `S130` The validator parsed the amount and then compared the result against zero. The
+- `S130` sign rule is the canonical parser's own `signed` axis, so it now asks
+- `S130` `try_parse_canonical_decimal(value, signed=False)` -- the shape the IVA wallet
+- `S130` payload already used for the same field family. A ledger amount is a magnitude
+- `S130` and direction lives on its own enum, so non-negativity is a property of the
+- `S130` grammar rather than a threshold a payload picks.
+- `S131` Two validators, one question, different answers: `validate_identity("A1234567D")`
+- `S131` refused where `validate_spanish_tax_id("A1234567D")` accepted. Both computed the
+- `S131` same CIF check value; they disagreed only on whether an `ABEH` kind letter may
+- `S131` carry a letter control. Each carried a comment calling the divergence
+- `S131` deliberate, and one contradicted its own module docstring, which stated the AEAT
+- `S131` rule correctly.
+- `S131` The merge direction was determined, not chosen. AEAT partitions the kind letters
+- `S131` three ways and `ABEH` is the digit-only class, so the accepting side admitted an
+- `S131` identifier the sede refuses -- with the declaration already built around it.
+- `S131` `_tax_id`'s four restated validators are deleted (140 lines) and
+- `S131` `validate_spanish_tax_id` delegates; the return shape is now the only difference
+- `S131` between the surfaces.
+- `S131` The refusal payloads also diverged, and that was resolved the other way: the
+- `S131` surviving validator raised with the translation key alone, so `str(exc)` was
+- `S131` `errors.identity.nif_check_letter_mismatch` rather than a sentence. The deleted
+- `S131` surface's plain-English messages were moved onto all twelve raises before it
+- `S131` went, so the merge kept the richer half of each half.
+- `S131` `test_validate_spanish_tax_id_accepts_abeh_letter_form` asserted the defect as
+- `S131` the contract, name and docstring included. Corrected rather than deleted, and it
+- `S131` now pins the refusal. `B1234567D` was the only such literal in the tree.
+- `S131` `_compute_cif_check` was orphaned by the merge and is deleted.
+- `S132` Structural rather than a behavioural sample, because a sample cannot see a
+- `S132` validator that no test calls yet. Each policy table -- the two checksum tables,
+- `S132` the kind catalogue, and the digit-only and letter-only partitions -- must be
+- `S132` declared once, and the `% 23` and Luhn expressions must be computed only in the
+- `S132` pinned authority. Naming a table inside a docstring is allowed and distinguished
+- `S132` from re-declaring it as a value: prose documents the rule, a value implements it
+- `S132` a second time, and only the second drifts.
+- `S132` The third assertion is the anti-vacuity one. Without it, moving the tables out of
+- `S132` the authority makes the first two trivially true -- no module would restate a
+- `S132` table the gate can no longer find anywhere.
+- `S132` Proved by mutating the package from a script outside the repository so nothing
+- `S132` under `src` changed: a probe module restating `"ABEH"` reds the first arm, one
+- `S132` recomputing `% 23` reds the second, and rewriting the authority's own table as an
+- `S132` equivalent expression reds the third.
+- `S133` These four bounds -- 500, 2000, 2000, 4000 -- had been held back through several
+- `S133` rounds as needing an operator ruling, on the reading that four different numbers
+- `S133` for operator commentary was a divergence someone had to adjudicate. Reading them
+- `S133` together showed that was wrong. They pair up: each CLI payload restates the
+- `S133` application-layer bound it projects, and each pair AGREES. There was no
+- `S133` disagreement to rule on, only four bounds each written twice.
+- `S133` Identical is the dangerous case rather than the safe one. Nothing fails while
+- `S133` the two copies agree, so the day one side is adjusted the other keeps its own
+- `S133` answer and the operator is refused, or not, depending on which surface they
+- `S133` reach first.
+- `S133` Two aliases cover three concepts. The package author's notes and the
+- `S133` counter-signer's note share `ReviewPackageNote` because they are the same kind
+- `S133` of writing at the same point in the exchange; giving them separate names would
+- `S133` put 2000 in two places again under a disguise. `ReviewFeedbackNote` stays its own
+- `S133` alias at 4000 -- that is the one leg where the writer reviews someone else's
+- `S133` return, so the note carries reasoning rather than a label.
+- `S133` `_modelo_review_package_payloads.py` declared nothing further afterwards and the
+- `S133` gate's staleness arm said so on its own, which is the arm working as intended:
+- `S133` outstanding is now 5 modules.
+- `S133` The import insertion landed inside a parenthesised multi-line import on the
+- `S133` first pass, because the anchor matched on line prefix. Re-placed using each
+- `S133` module's last complete top-level import via its AST end line.
+- `S134` Two sentinels independently reported that the registry's `PostalCode` took any
+- `S134` five digits while `core/spanish_postcode.py` required a real province prefix, so
+- `S134` `99999` passed at one boundary and failed at the other. Both were right, and both
+- `S134` stopped one definition short of the actual finding.
+- `S134` `_PROVINCE_CODE_RE`, twenty lines above `_POSTAL_CODE_RE` in the SAME file, is
+- `S134` byte-identical to the alternation the core postcode pattern leads with. The file
+- `S134` already knew the province rule and its own postcode validator did not use it.
+- `S134` That is the third copy, and it is the one that makes the divergence look
+- `S134` accidental rather than considered.
+- `S134` So the merge is not "registry adopts the core postcode". The province alternation
+- `S134` is now its own named fragment in core, and three shapes read it: a province code
+- `S134` standing alone, a postcode, and an INE municipality code. The municipality code
+- `S134` is deliberately NOT collapsed into the postcode -- `28079` is Madrid the
+- `S134` municipality, not a postal district -- but it carries the same province prefix
+- `S134` and now says so by construction.
+- `S134` Checked before tightening, and neither sentinel did: whether any casilla
+- `S134` declaring `data_type = "postal_code"` is a FOREIGN address, which would make the
+- `S134` Spanish province rule wrong rather than stricter. All fourteen are Spanish -- M036
+- `S134` censo domicilios and locales, M180 rental property, M714 patrimonio. Modelo 210
+- `S134` does carry `irnr.contribuyente.foreign_address.postal_code`, but as an export
+- `S134` producer key, not under this data type.
+- `S134` Each validator keeps its own refusal and error type, as
+- `S134` `core/unit_proportion.py` already documents for its own family: only the SHAPE is
+- `S134` shared, because a caller loading a registry fragment must be told which fragment
+- `S134` is malformed.
+- `S134` `TestPostalCode::test_accepted` asserted `99999` and `00001` as valid postcodes,
+- `S134` and `TestMunicipalityCode::test_accepted` asserted `00001`. Corrected, and the
+- `S134` values moved to the refusal lists with the reason.
+- `S135` Reported as a two-way divergence: the invoice validator normalises then matches,
+- `S135` the registry one matches the raw value, so `"es"` splits them. There is a THIRD,
+- `S135` and it changes the verdict. `normalise_iso_3166_alpha2_jurisdiction` in
+- `S135` `core/parsing/_codes.py` also refuses a lowercase token, and refuses it ON
+- `S135` PURPOSE -- its docstring says the jurisdiction axis selects a row's
+- `S135` regulatory-source treatment, so a caller supplying `"es"` is told to declare the
+- `S135` canonical code rather than having one guessed.
+- `S135` That makes the recommended fix -- add `.strip().upper()` to the registry copy --
+- `S135` the wrong move. It would have propagated the folding policy into the boundary
+- `S135` whose sibling in core deliberately refuses it, under cover of a de-duplication.
+- `S135` What is genuinely duplicated is the two-character shape, written out as
+- `S135` `^[A-Z]{2}$` at both sites. That is now one named fragment in
+- `S135` `core/country_code.py`, and each caller keeps its own fold-or-refuse answer with
+- `S135` the reason recorded at the site: an invoice counterparty's country is a label, so
+- `S135` folding costs nothing; a casilla's country selects a treatment, so it refuses.
+- `S135` The fold-versus-refuse question across the two surfaces is left OPEN and is
+- `S135` flagged for the operator. Settling it needs evidence about what AEAT accepts on
+- `S135` each surface, which a consolidation pass does not have and must not manufacture.
+- `S135` `core/country_code.py` already declined once to add a charset check on exactly
+- `S135` this reasoning; the same reasoning applies to the case policy.
+- `S136` Reported as four sites. There are eight, and the two the report missed are the
+- `S136` ones worth having: alta_posterior_nacimiento_mes has its month rule stated TWICE
+- `S136` inside descendant_facts.py -- once reading the profile answer store, once parsing
+- `S136` a flag string -- plus a third time as a Field bound on the record. The CLI
+- `S136` payload module the report called an adopter of the alias hand-rolls the loop as
+- `S136` well, so it does both.
+- `S136` Two aliases would not have been enough, because five of the eight cannot use an
+- `S136` annotation at all: each raises its OWN refusal, and they differ on purpose --
+- `S136` ProfileAnswerTypeError naming the answer key, ProfileValidationError, a failed
+- `S136` wizard verdict carrying a locale key, a plain ValueError pydantic wraps. What is
+- `S136` shared is the question, so is_calendar_month sits beside CalendarMonth the way
+- `S136` is_unit_proportion sits beside UnitProportion.
+- `S136` _filing_projection_ref.py declares a slot with the same 1-12 bound and is
+- `S136` deliberately left alone: a slot is a numbered group-company row on the M200 INCN
+- `S136` sheet, which happens to top out at twelve. Same numbers, different fact.
+- `S137` The adapter carried its own DNI and NIE regexes to pick the kind, then called the
+- `S137` canonical checksum. Half-merged, and the half it kept was incomplete: no branch
+- `S137` for a K/L/M NIF, the number a natural person holds when they have no DNI or NIE
+- `S137` a minor, or a foreign national whose number is not yet assigned.
+- `S137` Probed rather than reasoned: validate_identity on K1234567L returns NIF, and
+- `S137` classify_identity on the same value raised, telling the holder their identifier
+- `S137` was not a valid DNI or NIE. A checksum-valid Spanish identifier refused with a
+- `S137` false claim about it.
+- `S137` The exclusion was NOT policy. The function docstring states the CIF exclusion and
+- `S137` its reason -- Cl@ve Movil authenticates a natural person -- and says nothing
+- `S137` about a prefixed NIF, which is what distinguishes a stale copy from a decision.
+- `S137` Classification now comes from validate_identity and the local regexes are gone.
+- `S137` The accepted set is a mapping keyed by IdentityDocument, so the exclusion is
+- `S137` stated rather than emergent: if AEAT is found to bar a prefixed NIF from this
+- `S137` flow specifically, that is one entry with the evidence beside it, not a regex to
+- `S137` re-derive. The CIF refusal improved for free -- it now names what the operator
+- `S137` supplied instead of reporting only that the value was not a DNI or NIE, which was
+- `S137` equally true of a typo and of an empty string.
+- `S138` A confessed duplication. The CLI verb docstring said the DECISION was written
+- `S138` twice -- the all-profile reset testing the blocking flag together with a recorded
+- `S138` override, this verb testing the flag alone -- that a third condition added to the
+- `S138` retention contract would reach one site and not the other, and that fixing it
+- `S138` meant promoting the decision to a shared application function. This does that.
+- `S138` The shared function takes the two FACTS rather than an assessment, because the
+- `S138` callers hold different types: the reset works from a resolved
+- `S138` ConfigResetRetentionDecision, the delete from a RetentionFloorAssessment off the
+- `S138` maintenance authority. Taking facts serves both without forcing either into the
+- `S138` other model. override_approved defaults to false so a surface offering no
+- `S138` override does not have to say so -- the delete verb passes nothing, which is the
+- `S138` accurate statement rather than a value withheld.
+- `S138` This is a destructive path, so the equivalence was checked by enumeration rather
+- `S138` than by De Morgan on paper: all four input pairs, before and after, identical.
+- `S139` Two failures in the crash-recovery suite, and they were not caused by the
+- `S139` retention change -- that was truth-tabled identical first. The gate traces for a
+- `S139` delete in a file ending _lifecycle.py and injects a crash there. A peer renamed
+- `S139` the module holding ProfileCapsuleLifecycle.delete from _lifecycle.py to
+- `S139` lifecycle.py, so the pin then matched only invoices/_lifecycle.py -- a module
+- `S139` with no delete in it at all. The boundary was never injected.
+- `S139` Worth being precise about what failed. The gate DID notice: its own RuntimeError
+- `S139` says the effect moved or was renamed and the boundary was silently never
+- `S139` injected, which is the anti-vacuity guard working. Without it the suite would
+- `S139` have gone green over a destructive path it had stopped exercising.
+- `S139` The retirement sweep should have caught the stale pin and reported clean. The
+- `S139` reason is worth keeping: the whole crash-injection program is passed to a child
+- `S139` interpreter as ONE STRING, so every pin in it is a constant of the child, and
+- `S139` ast.parse of the parent sees a single opaque blob. The parent walk found zero
+- `S139` .py constants in a file that is almost nothing but pins.
+- `S139` The sweep now re-walks any string constant that itself parses as Python. Most
+- `S139` strings are not Python and raise, which is the filter -- confirmed by probe: a
+- `S139` sentence merely MENTIONING a module name is not re-walked, so it yields no false
+- `S139` positive.
+- `S140` The declaration surface and the calculate path both asked whether a descendant
+- `S140` relación is ambiguous for Art. 58.1 versus Art. 81.1, and both restated the AEAT
+- `S140` manual reasoning beside their own copy of
+- `S140` `relacion is DescendantRelacion.DESCENDIENTE`. Only the relación half was
+- `S140` extracted. The months gate stays at each site because it genuinely differs --
+- `S140` declared months at declaration time, contributing months at calculate time.
+- `S140` Consolidating surfaced something the two copies were hiding. Both asserted the
+- `S140` axis has "no member for either population today", naming two: a grandchild or
+- `S140` other descendant by consanguinidad, and a minor under judicial guarda y custodia.
+- `S140` The second half is stale. DescendantRelacion.GUARDA_Y_CUSTODIA_JUDICIAL exists,
+- `S140` its own docstring says Art. 81.1 excludes it BY NAME, and it is correctly absent
+- `S140` from ART_81_1_MATERNIDAD_RELACIONES -- so that carer can state their relationship
+- `S140` truthfully and the deducción already does not reach them.
+- `S140` Behaviour was right; the reasoning beside it was written twice and neither copy
+- `S140` followed the axis when it gained the member. The centralised version now names
+- `S140` the one population that remains without a truthful value.
+- `S141` The renderer computed `result.retmar_mandatory_filing or facts.retmar_registered`.
+- `S141` That `or` was not defensive padding: on the incomplete-profile path the preview
+- `S141` reruns the resolution against facts with the RETMAR flag deliberately CLEARED --
+- `S141` the only way to get observations from incomplete data -- so the rerun result
+- `S141` carries false on exactly the branch where the real answer may be true. The CLI
+- `S141` was reaching past the muddled result to the untouched fact and repairing it.
+- `S141` Right answer, wrong place, and untested as such: the end-to-end test asserts the
+- `S141` flag is true for a registered taxpayer, which the `or` also satisfies, so the two
+- `S141` sources were never distinguished. A second condition joining the service
+- `S141` determination would have left the renderer returning the old answer, and a
+- `S141` registered taxpayer would have been told their filing is optional.
+- `S141` The determination is now its own function, the preview answers from the ORIGINAL
+- `S141` facts through it, and the renderer reads. The new regression asserts the two
+- `S141` DISAGREE on the warning path -- result false, preview true -- which is only
+- `S141` meaningful once the preview stops reading the rerun, and a third case pins that
+- `S141` the preview agrees with the service over every input rather than restating it.
+- `S141` Two failures in the CLI test module are a peer's tuple-versus-list tightening on
+- `S141` observation legal_refs and source_refs, untouched by this change.
+- `S142` Found while verifying a reported duplication, and larger than the duplication.
+- `S142` `shift_deadline` implements the Ley 39/2015 art. 30.5 business-day rule and has
+- `S142` exactly one production caller, the overview calendar. It could not run. Every
+- `S142` bundled festivos calendar raised on load, because the boundary model whose own
+- `S142` docstring says its job is "coercing the native TOML scalars into the date and
+- `S142` CalendarCCAA field types" carried STRICT_FROZEN_CONFIG -- and strict mode refuses
+- `S142` to turn the authored string "ES-MD" into a CalendarCCAA. The model that exists to
+- `S142` coerce was refusing to.
+- `S142` It failed closed, and then degraded in a way that was recorded but not
+- `S142` alarming. The one caller catches DeadlineValidationError, falls back to the
+- `S142` unshifted date with reason "calendar_unavailable", and logs the exception at
+- `S142` DEBUG.
+- `S142` Corrected after first writing this record: "nothing said so" was too strong.
+- `S142` That reason is carried on every calendar entry and the CLI renders it, so an
+- `S142` operator reading the calendar saw `shift=Calendar unavailable` on every row --
+- `S142` a real signal, with a locale key, that had been there all along. What it was
+- `S142` not is an alert. An identical label on every entry reads as a column heading
+- `S142` rather than a fault, and the dates beside it had silently reverted to the
+- `S142` unshifted legal-text values. The rule was inert for every shipped year, and the
+- `S142` one thing that said so said it uniformly enough to disappear.
+- `S142` Worth separating the two failure shapes, because the fix differs. A swallow that
+- `S142` substitutes a value and surfaces NOTHING is a defect in the handler. This one
+- `S142` surfaced a structural signal that no surface treated as a problem -- closer to
+- `S142` `state_projection.py`'s registry-snapshot handler, which returns a refusal the
+- `S142` caller renders as `registry_ready: false`, except that this one's signal had no
+- `S142` consumer that could act on it.
+- `S142` The three TOML ROW models now carry a frozen, closed, non-strict config -- the
+- `S142` hydration boundary the project rule prescribes, registry TOML free-form and the
+- `S142` loader lifting the typed enum. Holiday and HolidayCalendar, the records these
+- `S142` rows project onto, stay strict.
+- `S142` ### Carried forward for an operator ruling
+- `S142` With the calendar loading, a second and separate question becomes answerable, and
+- `S142` it is NOT fixed here because it moves money.
+- `S142` `classify_obligation_status` and the recargo path consume the RAW registry
+- `S142` `closes_on` and never shift it. 116 of 843 registry close dates land on a
+- `S142` weekend, so those dates are raw legal-text dates rather than pre-shifted ones.
+- `S142` Probed: a Modelo 303 window closing Saturday 2026-01-31 shifts to Monday
+- `S142` 2026-02-02, and a taxpayer filing on that Monday is classified OVERDUE by the
+- `S142` engine; 2026-01-01 (Año Nuevo) shifts to 2026-01-02 with the same result. The
+- `S142` overview calendar carries the correct `adjusted_closes_on` beside a `status` and
+- `S142` a `recovery` computed from the unadjusted date.
+- `S142` No docstring, comment or ADR states that `closes_on` is deliberately raw and that
+- `S142` consumers must shift it themselves. The direction of the error is
+- `S142` over-declaration -- a false OVERDUE and an overstated recargo -- which is the
+- `S142` direction this codebase's own rules warn is unwatched. Whether AEAT computes the
+- `S142` recargo from the published date or the shifted one is a legal question needing
+- `S142` grounding, so it is recorded rather than decided.
+- `S143` The festivos calendars shipped unloadable. The sibling tests in this package DO
+- `S143` load calendars and were red, so the failure was not invisible -- but they name
+- `S143` their years as literals, `get(2024)` and `get(2025)`. A data family grows by
+- `S143` having a file added to it, and a test that names the years it knows about cannot
+- `S143` notice the one that arrives next: `festivos-2026.toml` shipped covered by
+- `S143` nothing.
+- `S143` So this gate DISCOVERS the years from disk. It is over the property "every file
+- `S143` we ship can be read by the loader that owns it", not over a count or a list, and
+- `S143` it gets stronger on its own each time a file is added. It catches a bare
+- `S143` `Exception` deliberately: narrowing to the errors one expects would reintroduce
+- `S143` the blind spot, since the original failure was a pydantic ValidationError nobody
+- `S143` predicts a TOML loader will raise.
+- `S143` Three assertions, and the first two matter together: an anti-vacuity check that
+- `S143` the discovery found any files at all, the load check, and a content check that a
+- `S143` loaded calendar declares holidays -- because a calendar that parses to nothing
+- `S143` shifts nothing, which is indistinguishable from the failure that prompted this.
+- `S143` ### Proving it took three corrections, each of which looked like proof
+- `S143` The mutation probe restores the exact shipped defect from outside the repository.
+- `S143` Getting there was instructive and the reasons are recorded in the probe:
+- `S143` Reassigning `model_config` on a built model is inert -- pydantic compiles the
+- `S143` core schema at class creation -- so the rows have to be subclassed.
+- `S143` Subclassing the rows is not enough either: the outer document model's field
+- `S143` annotations still name the ORIGINAL row classes, so its rows keep validating
+- `S143` leniently. The outer model has to be rebuilt against the strict rows.
+- `S143` And `load_holiday_calendar` carries an `lru_cache` on top of the repository's
+- `S143` own identity map, so clearing one cache and not the other serves the mutation a
+- `S143` result parsed before it.
+- `S143` The last one is the one worth carrying forward. The probe ran pytest in-process
+- `S143` and pytest defaults to xdist here, so the gate executed in FRESH WORKER PROCESSES
+- `S143` that never saw the in-memory mutation. Three runs came back green and read
+- `S143` exactly like a blind gate. An in-process mutation probe MUST pass `-n 0`, or it
+- `S143` measures nothing and says so in the same words a passing gate uses.
+- `S144` Sentinel yield on "find duplicated X" had gone to zero across two rounds, so the
+- `S144` method changed rather than the wording. The campaign names MODEL REDEFINITION as
+- `S144` a headline target, and semantic search is the wrong instrument for it: two models
+- `S144` that redefine each other share FIELD NAMES, not prose, and RAG ranks meaning in
+- `S144` text. So it was measured -- every pydantic model under entrypoints/cli compared
+- `S144` field-set against every model in application/ and domain/, ranked by containment
+- `S144` of the CLI model in the inner one, envelope fields excluded.
+- `S144` 297 pairs at 75% or better. The top is 100% containment over 31 fields with
+- `S144` nothing CLI-only: LedgerExportRowPayload against LedgerExportRow.
+- `S144` Reading that pair turned up a THIRD currency declaration, which an earlier round
+- `S144` of this same campaign had missed while consolidating currency at three sites:
+- `S144` `CurrencyCode` in application/ledger/models.py, length-only, three characters.
+- `S144` Probed against the canonical `IsoCurrencyCode`:
+- `S144` `"eur"` -> the ledger alias keeps `"eur"` unnormalised; canonical gives `"EUR"`
+- `S144` `" EUR "` -> the ledger alias REFUSES (padding breaks the length bound);
+- `S144` canonical normalises to `"EUR"`
+- `S144` `"12A"` -> the ledger alias ACCEPTS a value that is not a currency
+- `S144` The padding case is the one the canonical normaliser's own docstring warns
+- `S144` about, and the local alias had walked straight into it. Retired; four fields
+- `S144` repointed, including one CLI payload that was importing the loose alias while
+- `S144` its sibling in the same module already used the canonical one.
+- `S144` Checked before tightening: the only non-alpha currency literal anywhere in the
+- `S144` tree is a refusal-test value both types reject.
+- `S145` The payload docstring says it "mirrors" LedgerExportRow. For four columns it did
+- `S145` not: the canonical row requires content in lifecycle_state, direction,
+- `S145` description and business_classification, and the payload accepted an empty
+- `S145` string in each. A payload LOOSER than the record it projects lets a consumer
+- `S145` validate a row the producer could never emit, so the published schema promised
+- `S145` less than the data actually carries. Both sides now read `NonEmptyStr` -- which
+- `S145` is the alias's own stated purpose, "so a payload cannot quietly disagree with the
+- `S145` model it projects about whether empty is allowed".
+- `S145` ### A regression of my own, from an earlier round
+- `S145` One test failure here was mine and older than this step.
+- `S145` `test_export_and_preflight_payloads_use_typed_nested_rows` asserted that a
+- `S145` currency of `"eur"` is REFUSED by the export payload. That was true while the
+- `S145` payload carried a hand-rolled `^[A-Z]{3}$`. An earlier round of this campaign
+- `S145` replaced that with the canonical `IsoCurrencyCode`, which NORMALISES `"eur"` to
+- `S145` `"EUR"` instead of refusing it -- and the narrower test selection run at the time
+- `S145` did not include this module, so it went red and stayed red.
+- `S145` The test's intent survives and is correct: the payload must cross the same wall
+- `S145` as the canonical model. What no longer holds is its example, because after this
+- `S145` step both sides normalise `"eur"` identically. Asserting a refusal there would
+- `S145` now pin the payload as STRICTER than the record it mirrors, which is the exact
+- `S145` divergence the test exists to forbid. The case is repointed at `"EURO"` --
+- `S145` currency-as-a-word, a real operator mistake the LLM extraction fixtures carry --
+- `S145` which both sides refuse.
+- `S145` The remaining failure in that module, an `operator_action` field
+- `S145` `LedgerIssuePayload` never declared, is peer-owned: the model carries three
+- `S145` fields and the file is not in this session's diff.
+- `S146` Second pass over the measured queue, and the measurement had to be corrected
+- `S146` first. Comparing constraint METADATA between a CLI payload and the record it
+- `S146` projects reported 400 disagreements, and the money ones were all false: every
+- `S146` flagged field is a `str` on the wire, so a `Ge(ge=Decimal(0))` bound cannot
+- `S146` apply to it. A stringified decimal cannot carry a Decimal constraint, and a scan
+- `S146` that reads metadata alone will say so 400 times.
+- `S146` Narrowing each CLI model to its single best inner match removed a second noise
+- `S146` class -- unrelated records pairing on a shared `snapshot_id` and `source_url`.
+- `S146` The real question turned out to be different and better: when a payload
+- `S146` stringifies a bounded amount, does it RE-ASSERT the bound in string form? Some
+- `S146` did and some did not, which is the same concept answered two ways.
+- `S146` Two answers, and two implementations of the answer. `_modelo_iva_wallet_payloads`
+- `S146` and `_ledger_payloads` each carried a non-negative-canonical-decimal validator,
+- `S146` and the second docstring already said it was the "same shape" as the first. Now
+- `S146` one predicate in `core.decimal`, with each caller keeping its own refusal --
+- `S146` the difference between them is real and worth preserving: an export column spells
+- `S146` an absent optional as "" and must accept it, a balance is always present and an
+- `S146` empty one is malformed.
+- `S146` Three payloads asserted nothing at all, so a negative balance, a negative cost
+- `S146` of goods sold or a negative gross income could reach the wire from a record whose
+- `S146` Decimal field forbids it. `_app_live_iva_wallet_payloads` and
+- `S146` `_ledger_business_payloads` had no validators in the module whatsoever.
+- `S146` `applicable_rate` needed the other bound, not this one. The M210 record bounds it
+- `S146` `ge=0, le=1` -- a share of one -- so asserting only non-negativity would have let
+- `S146` a rate of `5` onto the wire. Five hundred per cent reads as a plausible
+- `S146` percentage typed into a share field, so the upper bound is the half that catches
+- `S146` the real mistake. It routes through `is_unit_proportion`, the existing authority.
+- `S146` Two peer relocations interrupted verification mid-probe, both in the storage
+- `S146` namespace registry: first a module absent while its lazy map still named it, then
+- `S146` a duplicate namespace key. Both cleared on retry, so neither was stranded state
+- `S146` and neither was acted on.
+- `S147` The instrument came first. Comparing constraint metadata between a payload and
+- `S147` the record it projects reported 400 disagreements and the money ones were all
+- `S147` false, because a stringified decimal cannot carry a Decimal bound. Constraints
+- `S147` are now compared only where BOTH sides carry the same underlying type, which
+- `S147` removes that class by construction rather than by filtering.
+- `S147` What the corrected scan surfaced was a fourth currency policy. That is the
+- `S147` number that mattered: I had found and fixed one currency site per round for
+- `S147` four rounds, which meant I was fixing sites and not the class. So the class was
+- `S147` censused -- 48 currency-named fields, 7 canonical -- and probed:
+- `S147` | site | EUR | eur | " EUR " | E | 12A |
+- `S147` | --- | --- | --- | --- | --- | --- |
+- `S147` | invoices.Invoice | EUR | eur | refused | refused | 12A |
+- `S147` | operations.FinancialOperand | EUR | refused | refused | refused | refused |
+- `S147` | modelos.LedgerFilingSnapshot | EUR | eur | " EUR " | E | 12A |
+- `S147` | core.IsoCurrencyCode | EUR | EUR | EUR | refused | refused |
+- `S147` A FILING SNAPSHOT accepted the single character `E`.
+- `S147` Five sites adopted the canonical. Three did not, and the distinction is the
+- `S147` point: `financial_operand` is a registry-AUTHORED declaration where a sloppy code
+- `S147` should fail the author rather than be repaired behind them; `raw_transaction`
+- `S147` already applies the canonical policy through a `mode="before"` validator with its
+- `S147` own error type, and its docstring explains the ordering that makes the padded
+- `S147` ` usd ` case work; `_ledger_expenses` is `Literal['EUR']`, which is STRICTER than
+- `S147` the canonical, not looser.
+- `S147` ### One adoption was wrong and the tests said so
+- `S147` `detail_record_bindings.Modelo720RowObservation.currency_code` took the canonical
+- `S147` and a test went red: the model already applies a shared `uppercase_alpha_code`
+- `S147` validator to `country_code` and `currency_code` together, which REFUSES a
+- `S147` lowercase code rather than folding it. Adopting a normalising annotation layered
+- `S147` a second policy over the one its sibling field follows. Reverted and declared.
+- `S147` That is the lesson given to the sentinels turned back on my own work: before
+- `S147` adopting a canonical, check what POLICY rides along with it.
+- `S147` ### The gate
+- `S147` Structural rather than a list: any field whose name says it carries a currency
+- `S147` code must use the canonical annotation or be declared with a reason. It found
+- `S147` eleven sites the manual census had not ruled on, which is the gate earning its
+- `S147` place on the first run.
+- `S147` Four arms, proved by mutation from outside the repository: a hand-annotated
+- `S147` field, an exception whose reason is a placeholder, the field vocabulary narrowed
+- `S147` to nothing, and an exception naming a field that no longer exists. All four red,
+- `S147` tree restored.
+- `S147` The probe had to run each mutation in a SUBPROCESS. Two arms mutate the gate file
+- `S147` itself, and pytest keeps the already-imported module in `sys.modules`, so an
+- `S147` in-process second run re-uses the cached module and never reads the edit -- it
+- `S147` reported two arms blind that were not. Same failure shape as the xdist one from
+- `S147` the previous round: the mutation never reached, and a probe that changes nothing
+- `S147` reports it in the same words a passing gate uses.
+- `S148` Census of the timestamp class: 340 datetime-typed timestamp fields, 72 using
+- `S148` `UtcInstant`. The census alone does not say which of the remaining 265 are wrong,
+- `S148` and that is the interesting part -- the existing gate
+- `S148` `test_utc_instant_sources_are_aware.py` documents a field that legitimately
+- `S148` carries a NAIVE value, because AEAT prints a Europe/Madrid wall-clock time on the
+- `S148` justificante with no offset. Typing that one as an instant refused every real
+- `S148` receipt and broke a hundred and thirty-two tests. So "bare datetime" is not a
+- `S148` defect by itself.
+- `S148` The provable subset is narrower and comes from the typed divergence scan: a
+- `S148` payload whose record carries `validate_utc_aware` and which drops it in
+- `S148` projection. Three of those, each populated by copying the already-aware value
+- `S148` straight off the record (`event.occurred_at`, `inspection.created_at`,
+- `S148` `record.filed_at`), so adopting the annotation asserts what the value already
+- `S148` satisfies rather than tightening anything.
+- `S148` Checked before changing: `since` and `until` on the same bucket-history model
+- `S148` stay bare `datetime`, because they are operator-supplied filter bounds rather
+- `S148` than recorded instants and a naive `--since 2026-01-01` is a reasonable thing to
+- `S148` type.
+- `S149` The rate-scale census found `iva_rate` carrying four encodings under one name:
+- `S149` a fraction [0,1] on `Transaction`, a percentage 0-100 on the asset and inventory
+- `S149` ledgers, a percentage on the CLI wire mirror of those, and a whole-number
+- `S149` percentage on the evidence draft with no bound declared at all. The codebase had
+- `S149` already written the hazard down -- `_iva_rate_is_a_fraction_not_a_percentage`
+- `S149` says an operator moving between those surfaces "has two conventions under one
+- `S149` option name and no signal telling them which applies".
+- `S149` The unbounded evidence-draft field was reported as unclear and is NOT a defect.
+- `S149` Its values pass through `resolve_iva_rate_slot`, which maps against a closed slot
+- `S149` taxonomy rather than a range, so a mis-read `210` is refused with the accepted
+- `S149` set named -- and so is `0.21`, which is the fraction-scale value arriving on a
+- `S149` percentage-scale path. Probed rather than taken from the docstring. A bound
+- `S149` expressed as a closed SET is still a bound, and a scan looking for numeric
+- `S149` constraints will not see it.
+- `S149` What was worth fixing is smaller. The wire mirror spelled its two scale bounds as
+- `S149` local `_HUNDRED` and `_ONE` constants, re-deriving them outside the commit that
+- `S149` centralised the percentage scale. They now read `PERCENTAGE_MIN`/`PERCENTAGE_MAX`
+- `S149` and `UNIT_PROPORTION_MIN`/`UNIT_PROPORTION_MAX`. The saving is not the two lines:
+- `S149` this one module carries a percentage-scale rate and a share-scale ratio side by
+- `S149` side, and a local `_HUNDRED` beside a local `_ONE` is precisely the pairing that
+- `S149` lets one field quietly take the other convention. The named constants say which
+- `S149` scale is meant.
+- `S150` Two sites the census called plainly adoptable were byte-identical to the
+- `S150` canonical and just not importing it. Verifying before acting caught something the
+- `S150` census had missed on one of them: `donativo_bindings` also applies the shared
+- `S150` `uppercase_alpha_code` validator, so its annotation carries the LENGTH and the
+- `S150` validator carries the CASE policy. Adopting the length-only canonical preserves
+- `S150` behaviour exactly, which it would not have if the case rule had lived in the
+- `S150` annotation.
+- `S150` The country gate deliberately checks the SHAPE only. Unlike currency, this class
+- `S150` has a live policy split that is defended on both sides --
+- `S150` `normalise_iso_3166_alpha2_jurisdiction` refuses a lowercase token because the
+- `S150` jurisdiction axis selects regulatory treatment, `validate_country_code` folds it
+- `S150` because a counterparty's country is a label. Sharing the shape stops a third
+- `S150` length bound appearing; keeping the policies separate stops a de-duplication
+- `S150` silently moving one site onto the other's regime.
+- `S150` ### The gates were blind and the probe found it
+- `S150` The first probe run reported the hand-spelled-bound arm GREEN. The cause was in
+- `S150` my own gate: `found[f"{path}::{field}"] = annotation` keyed a dict by field name,
+- `S150` so a module declaring the same name twice kept only one entry.
+- `S150` `operation_definitions.py` declares `pais` at two lines and `codigo_pais` at two
+- `S150` more, so the mutation landed on a declaration the gate then overwrote.
+- `S150` The currency gate shipped with the identical flaw. Five modules declare a
+- `S150` currency field name more than once and `application/ledger/models.py` does it
+- `S150` FOUR times, so that gate could see one of four and said nothing about the rest.
+- `S150` Both now map a site to the SET of annotations declared under it, and a site
+- `S150` offends when any member is non-canonical. The key stays `path::field` rather than
+- `S150` gaining a line number, because an exception keyed by line goes stale on the next
+- `S150` edit above it.
+- `S150` This is the count-without-members failure in a new costume: a lookup keyed by
+- `S150` something non-unique reports a real number about the wrong population.
+- `S151` With the key collision fixed, the currency gate immediately reported three sites
+- `S151` it had been hiding. One is a defect worth naming.
+- `S151` `ManualLedgerTransactionCommand.currency` is the canonical annotation.
+- `S151` `ManualLedgerTransactionPatch.currency` -- the same operator, the same field, on
+- `S151` the update path rather than the create path -- was `str | None`. So an operator
+- `S151` could not CREATE a ledger row with a malformed currency but could EDIT one into
+- `S151` having it. The create/patch pair is exactly where this hides, because the two
+- `S151` models sit a hundred lines apart in one file and the patch legitimately differs
+- `S151` by making every field optional; the annotation change rides along unnoticed
+- `S151` inside that legitimate difference.
+- `S151` `LedgerListRowPayload.currency` was a bare string on the row that renders stored
+- `S151` transactions, adopted.
+- `S151` The third is declared rather than adopted: `EvidenceExtractResult.currency` sits
+- `S151` beside `taxable_base` and `iva_rate`, also strings, for the reason that payload
+- `S151` exists -- it shows the operator what the extractor READ from a document,
+- `S151` including when what it read is wrong. Refusing it at the model boundary would
+- `S151` discard the evidence the operator is being asked to review.
+- `S152` The currency create/patch defect suggested a whole class, so it was hunted rather
+- `S152` than waited for: every full model paired with its partial variant, optionality
+- `S152` stripped from both sides, annotations compared on what remains. A patch model
+- `S152` legitimately differs from its create counterpart by making every field optional,
+- `S152` so a diff between them is EXPECTED to be full of `| None` noise and a real change
+- `S152` underneath rides along unremarked.
+- `S152` The first run found zero pairs and reported a clean tree. That was wrong and the
+- `S152` reason is worth keeping: the filter accepted only classes deriving from
+- `S152` `BaseModel` or `OutputSchema` DIRECTLY, and the pair that motivated the scan --
+- `S152` `ManualLedgerTransactionCommand` and `...Patch` -- both derive from a private
+- `S152` shared input base. A scan that cannot see the case that inspired it will report
+- `S152` a clean tree with total confidence.
+- `S152` One real divergence survived: `group_label` was bounded at 64 on the create
+- `S152` command and unbounded on the patch, so a label too long to CREATE could be
+- `S152` applied by EDITING. Both now read one `_GROUP_LABEL_MAX_LENGTH`.
+- `S152` `description` looked like a second finding and is not. The patch accepts `""`
+- `S152` because `_normalise_optional_ledger_text` collapses a blank to `None`, which on a
+- `S152` patch means "not changing this field" rather than "set it to empty".
+- `S152` The bound sits on the `str` arm rather than on the union. A length constraint
+- `S152` applied to `str | None` is asked to measure `None` and raises -- it surfaced as a
+- `S152` TypeError in eleven unrelated tests rather than as a message about this field.
+- `S153` Reported as a display-only exposure: a persisted evidence record whose
+- `S153` `iva_rate` took any Decimal at all, with no calculation consumer found. Verifying
+- `S153` it made the finding bigger in two directions.
+- `S153` First, it is not one field. `taxable_base` and `iva_amount` on the same record
+- `S153` were equally unbounded, and those two are NOT display-only: the reconciliation
+- `S153` projection at `application/aggregation/_renta_ledger.py:722` copies them into a
+- `S153` renta deductible-expense observation. A negative taxable base persisted on
+- `S153` evidence reaches a deduction. The report had itself noted the projection carries
+- `S153` those two fields; what it did not do was connect that to the unbounded source.
+- `S153` Second, it is not one model. The same three fields are declared identically on
+- `S153` `PurchaseInvoiceEvidencePatch`, so both the record and its update path took any
+- `S153` Decimal. This is the create/patch pairing again, but not a DIVERGENCE -- both
+- `S153` sides were equally unguarded, which is why the sibling scan in S152 would never
+- `S153` have found it: that scan looks for the two sides disagreeing.
+- `S153` The first edit attempt asserted the field block appeared once and refused when it
+- `S153` found two. That refusal was the useful part -- it stopped a replace that would
+- `S153` have silently patched whichever copy came first and left the other, which is
+- `S153` precisely how the divergences this campaign keeps finding get created.
+- `S153` `iva_rate` takes the percentage scale per its own docstring, so it reads
+- `S153` `Percentage`; the two amounts read `NonNegativeDecimal`, the ledger's standing
+- `S153` rule that an amount is a magnitude.
+- `S154` No production change. The highest-consequence open item in the campaign resolves
+- `S154` to NOT A DEFECT, and establishing that was the work.
+- `S154` `_producer_snapshot.py`'s fixed-width export rows declare every field as
+- `S154` `str | None` -- `codigo_pais`, `ciudad`, `entero`, `decimal`, identically
+- `S154` unconstrained -- and they feed FILED BYTES. A sentinel flagged it as the one site
+- `S154` it most wanted traced, correctly: if the producer skipped validation a malformed
+- `S154` country code would reach an official document with no gate at all.
+- `S154` The gate is the codec. `pad_fixed_width_text` refuses a value longer than the
+- `S154` field's registry-declared length, and `_render_record_bytes` independently
+- `S154` refuses when the encoded byte count does not equal the declared count. Probed
+- `S154` rather than read: `"ESPANA"` in a two-character field is refused with
+- `S154` `fixed-width value exceeds length 2`. It does not TRUNCATE, which is the failure
+- `S154` that would have mattered -- a silently shortened code on a filed record.
+- `S154` The bound could not sit on the row model even in principle. The width comes from
+- `S154` the registry record design, per modelo and per revision; the row model is one
+- `S154` generated shape serving all of them.
+- `S154` That is the third time this session a field looked unbounded to an
+- `S154` annotation-reading scan and was not. The audit records all three -- a closed SET
+- `S154` resolved against, a CODEC refusing on its own contract, a shared VALIDATOR
+- `S154` carrying the policy -- because the mistake has a direction: adding a bound to a
+- `S154` field that already has an invisible one is not harmless tidying. It contradicted
+- `S154` the real policy once already, on the Modelo 720 currency code, and reddened a
+- `S154` test.
+- `S155` A correction to S131, and to what was reported at the time.
+- `S155` The CIF leader merge made `ABEH` digit-control-only, which was the point. Its
+- `S155` blast radius was reported as one literal, `B1234567D`, on the strength of a
+- `S155` census that DID surface a second -- `A4567890A` -- and dismissed it with
+- `S155` arithmetic done in my head: I derived the check value as 0, letter `J`, and
+- `S155` concluded `A` was invalid under both the old and new readings.
+- `S155` The real value is 1, letter `A`. So `A4567890A` was a VALID CIF under the old
+- `S155` mixed reading and is invalid under the correct one, at fifteen fixture sites
+- `S155` across five files, which have been failing since that merge landed.
+- `S155` The census was right and the dismissal was wrong, which is the part worth
+- `S155` keeping. A grep that surfaces a candidate and a hand-derivation that clears it
+- `S155` are not equal evidence, and the checksum function was available to call the whole
+- `S155` time. Every one of the fifteen now carries `A45678901` -- the same entity, the
+- `S155` digit form its leader class requires -- and the function was asked rather than
+- `S155` re-derived.
+- `S156` `FindingPayload.message` capped at 500 and REFUSED above it. That message is not
+- `S156` authored: it is `tr(finding.message_locale_key, **finding.message_facts)`, a
+- `S156` locale template with taxpayer data substituted, so its length is set by the
+- `S156` household rather than by a writer.
+- `S156` `core/prose_elision.py` exists for exactly this and names it in the first
+- `S156` sentence of its own docstring -- "a diagnostic, finding, or issue whose message
+- `S156` is assembled from taxpayer data has a length nobody authored... when such a
+- `S156` message crosses its field's cap the model raises, and a NON-BLOCKING advisory
+- `S156` becomes a blocking failure." The finding payload had not adopted it. The
+- `S156` consequence is worse than a truncated string: a refused payload drops the
+- `S156` finding, so the verification results with MOST to say are the ones the operator
+- `S156` would not have seen.
+- `S156` Probed: 600 and 5000 characters now store 500 with the visible ` [...]` marker.
+- `S156` The domain finding carries no `message` field at all, only the locale key and
+- `S156` its facts, so this cap is not a restatement of anything -- it is the only
+- `S156` declaration of how long a rendered finding may be, and it was the wrong KIND of
+- `S156` declaration rather than a duplicate one. Worth separating: not every gate finding
+- `S156` is a duplication, and this one would have been missed by looking for a canonical
+- `S156` counterpart.
+- `S156` `reason_class` was the plain case: the same `min_length=1, max_length=64` on the
+- `S156` workflow event and again on the CLI payload that projects it. Declared once, on
+- `S156` the event.
+- `S156` Both modules then declared nothing further and the gate said so on its own.
+- `S156` Outstanding is 2, from 11 when this phase started.
+- `S156` Neither P02.S03 nor P02.S05 is complete and neither is marked. S03 still asks for
+- `S156` the imported-evidence match invariant to move to the filing-record model; S05
+- `S156` still has `_overview_payloads.py`, whose four remaining declarations are
+- `S156` coherence validators rather than bounds.
+- `S157` A new shape, and the inverse of the one recorded in the invisible-bounds audit.
+- `S157` There the annotation UNDERSTATED, and a field that looked unbounded was governed
+- `S157` by a closed set, a codec or a shared validator. Here the annotation OVERSTATED:
+- `S157` both Orden coefficients declared `ge=0`, permitting a zero that neither field can
+- `S157` actually receive.
+- `S157` The evidence differs per field and both were checked rather than generalised
+- `S157` from one:
+- `S157` A module coefficient is refused by `validate_orden_module_identities`, and the
+- `S157` only construction site builds each `ModuloOrdenAnual` straight into the
+- `S157` `ActividadOrdenAnual` that runs it, so a zero was never constructible.
+- `S157` A seasonal index coefficient is compiled from
+- `S157` `M303AnnualOrdenRawSeasonalIndex`, whose own field is already `gt=0`, so a zero
+- `S157` could never arrive from the only source there is.
+- `S157` The downstream module check stays rather than being replaced. It takes a
+- `S157` Protocol, so it governs any future implementer and not only this class -- the
+- `S157` annotation now agrees with it instead of contradicting it.
+- `S157` Deliberately NOT done the other way. The tempting move was to leave the
+- `S157` annotation and treat the downstream validator as the whole rule, which is what
+- `S157` the Modelo 720 correction earlier in this campaign taught: do not preempt a
+- `S157` shared validator with an annotation. That reasoning does not apply here, because
+- `S157` the annotation and the validator disagree rather than overlap, and it was the
+- `S157` annotation making the unstated claim.
+- `S157` ### Verification was blocked, then completed
+- `S157` At the time this landed the tests could not run. A peer was relocating inside
+- `S157` `core/`: `authority_grade` did not resolve, which broke collection for
+- `S157` twenty-nine registry test modules and eight IVA ones, and `storage_taxonomy`
+- `S157` appeared BETWEEN two runs minutes apart. The step was recorded as resting on
+- `S157` direct construction probes rather than a green suite, which is weaker evidence.
+- `S157` The relocation has since settled and the suites were re-run: 79 registry tests,
+- `S157` 5 IVA tests, and `validate_registry()` over the whole tree, all green. The
+- `S157` verify lines above are that run, not the probes.
+- `S158` The sweep crashed partway through. It globs the tree and then reads what it
+- `S158` found, and on a shared worktree those are two different moments: a peer deleted
+- `S158` `core/_type_adapters.py` between them.
+- `S158` That failure mode is worse than it looks, which is why the fix is a tolerant
+- `S158` reader rather than a narrower glob. A sweep that dies at file four hundred has
+- `S158` silently not checked files four hundred to nine hundred, and reports nothing
+- `S158` about them -- the same shape as every vacuous gate this campaign has found, in
+- `S158` the tool built to find them.
+- `S158` With it running, it found two gates pinning a module the same peer had made
+- `S158` public.
+- `S158` The storage-taxonomy one was RED, not silent, because it carries its own
+- `S158` `assert declaration.is_file()`. That is the anti-vacuity guard working, and worth
+- `S158` noting as the counter-example: a pin with a presence assertion beside it fails
+- `S158` loudly instead of scanning nothing.
+- `S158` The projection-ref one had no such guard and was scanning with a
+- `S158` `_COMPILER_HOME` that no longer existed. Repointing it made it run for the first
+- `S158` time since that rename, and it immediately reported real drift: the registry
+- `S158` loader's projection-ref compilation had moved into `_loader_internals.py` when
+- `S158` the loader was split, and the expectation still named `loader.py`.
+- `S158` The contract did not change -- that module is still the registry loader, only a
+- `S158` different file of it -- so the expectation was updated rather than the code. What
+- `S158` is worth keeping is that this is the SECOND time this one expectation has gone
+- `S158` stale by a move; its own docstring records the first, about its other path. Both
+- `S158` times the gate went quiet rather than red.
+- `S159` Completes the coefficient family. Four fields carried the same concept across
+- `S159` two layers and only one of the four said what was true:
+- `S159` | | raw extraction | runtime |
+- `S159` | --- | --- | --- |
+- `S159` | module coefficient | was `ge=0`, now `gt=0` | was `ge=0`, now `gt=0` |
+- `S159` | seasonal coefficient | `gt=0` already | was `ge=0`, now `gt=0` |
+- `S159` The seasonal raw field was right all along, which is what made the module field's
+- `S159` `ge=0` visible as an inconsistency rather than a convention -- two fields named
+- `S159` `coefficient` in one file with opposite zero-inclusion.
+- `S159` The siting is the point. This is the EXTRACTION boundary, whose whole job is
+- `S159` refusing a bad read of the BOE. A zero module coefficient used to pass here and
+- `S159` fail later at compile, which is past the point where the error can still name the
+- `S159` source line it came from -- the boundary that could have said "this row of the
+- `S159` Orden read wrong" instead handed a clean object to a stage that could only say
+- `S159` "a module coefficient is not positive".
+- `S160` Reported as an unexplained disagreement: three income-side `gross_amount` fields
+- `S160` allow zero, the expense-side one forbids it, with no stated reason either way.
+- `S160` Four surfaces, and the trace found three answers:
+- `S160` | surface | a zero amount |
+- `S160` | --- | --- |
+- `S160` | import parse boundary | REFUSED -- "a zero-amount row carries no flow" |
+- `S160` | `RawTransaction.amount` | accepted; only a negative is refused |
+- `S160` | income observation `gross_amount` | accepted |
+- `S160` | expense fact `gross_amount` | REFUSED |
+- `S160` That looked like the campaign's usual shape, and it is not. The income side has a
+- `S160` test that deliberately constructs a zero-value observation and asserts it still
+- `S160` surfaces when unrouted -- an unrouted zero has to reach the operator precisely
+- `S160` because nothing routed it. So `ge=0` there is a modelled case, not an oversight,
+- `S160` and a zero-amount deductible expense is still not an expense.
+- `S160` Adjudicated as DELIBERATE, and the reason written at the field. It had been
+- `S160` carried only by a test, which is the fourth place this campaign has found a
+- `S160` bound's justification living somewhere an annotation cannot show it -- after a
+- `S160` closed set, a codec's declared width, and a shared validator. A reader comparing
+- `S160` the two annotations had no way to reach it.
+- `S160` `RawTransaction` accepting a zero that its own import boundary refuses is left
+- `S160` alone and NOT folded into this: whether a manually entered zero-amount
+- `S160` transaction is legitimate is a separate question from which of two observations
+- `S160` may carry one, and it reaches persisted data.
+- `S160` P08.S29 stays open. Its coefficient third landed in S157 and S159, this is its
+- `S160` gross-amount third, and its taxable-base third is a tax review -- two sites forbid
+- `S160` a zero base and four allow it, proven live in one file, and whether a zero base
+- `S160` imponible is legitimate is the operator's call under the sibling step S39.
+- `S161` The count census found 442 integer count fields: 189 bare `int`, 130 spelling
+- `S161` `Field(ge=0)`, 28 defaulted to zero with no bound at all. That whole population
+- `S161` is P08.S51's, and that step gates itself on "once the shared tree is quieter" --
+- `S161` which it is not: a peer is relocating `core/` module by module and four different
+- `S161` modules have gone missing mid-run today. Attempting 189 edits across domain,
+- `S161` application and adapters against that would collide badly, so the wide sweep is
+- `S161` left where its own precondition puts it.
+- `S161` The slice taken instead is the one the local alias exists for. `PositiveCount`
+- `S161` was minted because pydantic's `PositiveInt` is NOT a drop-in at these sites: it
+- `S161` is `Gt(0)` where these are `Ge(1)`, which admits the same integers but
+- `S161` serialises to `exclusiveMinimum: 0` rather than `minimum: 1` on a published
+- `S161` envelope. Six CLI payloads had adopted it; twelve domain and application fields
+- `S161` still spelled `Field(ge=1)` by hand.
+- `S161` Checked rather than assumed on the one that looked wrong: `error_count` at
+- `S161` `ge=1` reads like a defect, since a count of errors should surely allow zero. It
+- `S161` is on `WorkflowValidationFailedDetails` -- a record that exists only when
+- `S161` validation FAILED, so zero errors would be incoherent. Correct as it stands, and
+- `S161` `PositiveCount` says so more clearly than the raw bound did.
+- `S162` The wire validator's docstring says it "mirrors the canonical month-set rules",
+- `S162` and a mirror should ASK the rule rather than re-derive it. Only the first of the
+- `S162` three delegated -- `is_calendar_month`, adopted in an earlier step -- while
+- `S162` uniqueness and ascending order were written out on both sides.
+- `S162` `is_canonical_month_set` now states all three once. A predicate rather than a
+- `S162` shared validator because the two callers raise different errors deliberately:
+- `S162` the record a `ProfileValidationError` naming the repeated months for an operator
+- `S162` who typed them, the payload a plain `ValueError` saying only that the set is
+- `S162` malformed. The record therefore asks the predicate first and builds its detailed
+- `S162` refusal only on failure -- the rule is one question, and what follows it is
+- `S162` message-building.
+- `S162` The empty tuple is canonical, which the probe confirms rather than assumes: a
+- `S162` descendant with no qualifying months is a normal record, not a malformed one.
+- `S162` P02.S05 is marked with this, and its remaining surface is named honestly rather
+- `S162` than swept in: `_overview_payloads.py` still carries four coherence validators --
+- `S162` a justificante-CSV requirement, an inclusive date order, a single-profile
+- `S162` coverage rule. Those are cross-field rules about one payload's internal
+- `S162` consistency, not restatements of a canonical bound, so they are not this step's
+- `S162` kind of finding and were not forced into it.
+- `S163` The step exists because the FIRST census was wrong, and the second was wrong in
+- `S163` a different way. Both reported confidently.
+- `S163` The regex census matched the bare-package form (`from .. import X`) and the
+- `S163` immediate-sibling form (`from ..retention import X`) but not the dotted-path
+- `S163` form (`from ....domain.retention import X`), which is how most consumers
+- `S163` actually import. It reported twelve namespaces as having ZERO readers. They were
+- `S163` retired on that reading and collection went to 386 errors: 185 tests read
+- `S163` `domain.retention` alone. The twelve were restored from committed content,
+- `S163` byte-clean, and collection returned to its 6 pre-existing errors.
+- `S163` The replacement resolved `level` and `module` the way Python does -- and still
+- `S163` reported the same twelve unread. It carried an off-by-one: level 1 means the
+- `S163` containing package, which for an `__init__.py` is the module itself but for a
+- `S163` plain module is itself-minus-its-own-name. Applying the package form to both
+- `S163` mis-resolved nearly every consumer.
+- `S163` So the third version carries a ground-truth arm. Five namespaces were PROVEN to
+- `S163` have readers by the 386 collection errors; the scan refuses to report at all
+- `S163` unless it can see all five. That arm is the only reason the third version can be
+- `S163` trusted, and it is the step that both earlier versions skipped.
+- `S163` ### What the corrected instrument found
+- `S163` Zero namespaces are unread. All 83 have consumers, so there was never a tranche
+- `S163` of free retirements -- that tranche was an artifact of the defect, twice.
+- `S163` ### Three more defects, each found by reading rather than reasoning
+- `S163` The repointing tool was wrong three times, and in each case I predicted a cause
+- `S163` and the prediction was wrong. Reading the emitted line against the committed one
+- `S163` settled all three in a single pass:
+- `S163` a function-local import was rewritten at column zero, so eleven files stopped
+- `S163` parsing
+- `S163` `from .. import X` already ends in its dots, and joining another one landed a
+- `S163` level too high -- `from ...sub` instead of `from ..sub`
+- `S163` a facade re-exporting `_x as x` leaves no `x` in the defining module, so the
+- `S163` repointed import has to carry the private name and re-alias it
+- `S163` The tool refuses rather than guessing when a consumer imports a name the eager
+- `S163` block does not carry. That refusal is load-bearing: it stopped the sweep on
+- `S163` `application.registry`, where a gate test imports `__all__` from the namespace
+- `S163` itself and retirement changes what that test MEANS.
+- `S163` ### A structural constraint the sweep discovered
+- `S163` `storage.blob_store` and `storage.envelope` retired cleanly and broke 639
+- `S163` collections. Their PARENT namespace's lazy map reads its own exports through
+- `S163` them, so a child cannot go inert before its parent. Both were restored; the
+- `S163` consumers repointed at defining modules stayed correct and were kept.
+- `S163` That is the dependency ordering behind the two largest open steps -- storage at
+- `S163` 257 lazy exports and core at 357 -- and it means those two are not merely bigger
+- `S163` instances of this work but its precondition.
+- `S163` ### Five namespaces refused retirement on their own merits
+- `S163` Retired and then reverted, each for a reason worth keeping rather than
+- `S163` retrying:
+- `S163` `application.invoices` -- a gate test asserts the production resolver IS
+- `S163` publicly exported. Retirement does not fail that test, it contradicts it, so
+- `S163` the question is which rule governs and that is not a mechanical call.
+- `S163` `core.resources` -- consumers reach it as `resources.bundled_path(...)`,
+- `S163` attribute access on the module object. No import scan can see that, which
+- `S163` makes it the one shape this whole instrument is blind to by construction.
+- `S163` `aeat.browser`, `storage.blob_store`, `storage.envelope` -- the parent's lazy
+- `S163` map reads its own exports through the child.
+- `S163` The parent-first constraint is now a guard in the tool rather than a lesson, so
+- `S163` the sweep refuses those instead of discovering them at collection time.
+- `S163` ### What the residual refusals are
+- `S163` Forty-two namespaces still carry an eager block. They divide into namespaces
+- `S163` whose parent must go first, namespaces that also carry a `__getattr__` lazy map
+- `S163` (the eager block is only half the facade), and namespaces that DEFINE production
+- `S163` code directly rather than re-export it -- the last being the population of
+- `S163` `P07.S17`, `P07.S67` and `P07.S83`, which is relocation work and not this.
+- `S163` ### A peer's staged commit was broken, and the sweep spread it
+- `S163` `application.calculations` (156 exports, 153 consumers) was `MM` -- staged AND
+- `S163` further modified. It was retired anyway, because the status check and the sweep
+- `S163` ran in one command and there was nothing to gate on between them.
+- `S163` Their staged change regrouped two names into different import blocks, and BOTH
+- `S163` new homes are wrong: `relation_prefill_period_zero_default_binding_ids` is
+- `S163` defined in `_relation_prefill_m202`, not `_relation_prefill`, and
+- `S163` `filing_external_evidence_blockers` in `_cross_period_external_evidence`, not
+- `S163` `cross_period_clean_state`. The retirement read that staged map as authority and
+- `S163` propagated it, and 240 collections failed.
+- `S163` Restoring their staged version did NOT fix it -- it reinstated their defect,
+- `S163` which is how the defect was found at all. The `MM` was almost certainly them
+- `S163` midway through fixing it, and that unstaged fix is what the sweep overwrote.
+- `S163` Both symbols are now re-homed on the modules that define them, their staged
+- `S163` regrouping intent preserved, and the namespace left eager: retiring it belongs
+- `S163` to whoever holds that commit.
+- `S163` The rule this yields is narrower than "skip dirty files". A facade's import
+- `S163` block is a MAP, and a sweep that repoints consumers through it inherits
+- `S163` everything the map gets wrong -- so a facade being actively edited is not merely
+- `S163` a merge hazard, it is an unreliable source. Read the map against the defining
+- `S163` modules before trusting it, which the tool now cannot do for a name it cannot
+- `S163` find and refuses on instead.
+- `S164` Four packages whose `__init__.py` held a real class: the namespace was doing the
+- `S164` work a named module should. The class moves to a named module in the same
+- `S164` package and the namespace goes inert.
+- `S164` Two of the four are not pure disguised modules. `bienes_inversion` and
+- `S164` `prorrata_register` BOTH define a service and forward an adapter repository, so
+- `S164` a consumer reaching `BienesInversionIvaRegisterRepository` through the namespace
+- `S164` is reaching past it into `adapters.persistence.profile`. A defined name and a
+- `S164` forwarded name look identical at the import site and must go to different
+- `S164` places, which is why the first attempt refused rather than guessing.
+- `S164` ### The relocation was wrong three times, each time about depth
+- `S164` The body was written one level deeper on the assumption that a module inside
+- `S164` the package resolves relative imports differently from its `__init__`. It does
+- `S164` not: level 1 means the containing package from both. Every relative import
+- `S164` gained a dot it should not have.
+- `S164` The forwarded-name repointing concatenated the consumer's own module segment
+- `S164` onto the forwarded path, producing
+- `S164` `....bienes_inversion.adapters.persistence.profile.bienes_inversion`.
+- `S164` `__all__` was stripped by line prefix, and it is routinely a multi-line list,
+- `S164` so the opening line went and the closing bracket stayed. Two files stopped
+- `S164` parsing.
+- `S164` The nine broken imports were finally repaired by looking up where each symbol is
+- `S164` actually DEFINED and computing the depth from that, rather than by adjusting the
+- `S164` old path -- the difference between deriving the answer and patching the symptom.
+- `S164` ### The check that was supposed to catch this could not
+- `S164` An over-deep relative import escapes the package root. The damage scan computed
+- `S164` an empty anchor for that case and skipped it, so `....core.identity` in a
+- `S164` four-part module read as clean. Every one of the nine was invisible to the
+- `S164` instrument watching for exactly this.
+- `S164` That is the third time this campaign that a checking instrument was blind to the
+- `S164` specific defect it existed to find. The pattern is consistent: the blind spot
+- `S164` sits in the branch that handles the DEGENERATE case, and the degenerate case is
+- `S164` what a wrong answer produces.
+- `S165` Both namespaces named their new home PUBLICLY -- `catalogue.py`, `gate.py` --
+- `S165` because every consumer sits outside the package. A relocation onto an
+- `S165` underscore-private module would have converted a namespace import into a
+- `S165` cross-package private import, trading one rule violation for another.
+- `S165` That is a correction to the two relocations recorded under S164, which landed on
+- `S165` `_service.py` and whose consumers are in other packages. Renaming those requires
+- `S165` removing a file, which the operator's standing prohibition on destructive
+- `S165` commands forbids, so it is flagged rather than done.
+- `S165` ### Two couplings the relocation had to carry with it
+- `S165` Neither is visible from the moved code.
+- `S165` The error-code registry keys exceptions by fully-qualified module path, so
+- `S165` `cadrumo.core.topics.TopicNotFoundError` became
+- `S165` `cadrumo.core.topics.catalogue.TopicNotFoundError` and its registry entry had to
+- `S165` move in the same change. The registry refuses at import time on an unregistered
+- `S165` subclass, so this surfaced immediately rather than silently -- the gate did its
+- `S165` job.
+- `S165` And a surface gate pinned `topics.__all__` against an expected set, asserting
+- `S165` that CLI and rendering symbols never leak into the topics package. Emptying the
+- `S165` namespace made that assertion vacuously comparable to an empty set and it failed
+- `S165` loudly, which is the correct behaviour for a gate whose subject moved. The
+- `S165` `__all__` moved onto `catalogue.py` and the gate now reads it there, so the
+- `S165` intent -- topics are backend catalogue records -- is preserved rather than
+- `S165` weakened to fit the new shape.
+- `S165` The general lesson is that a namespace's public surface can be load-bearing for
+- `S165` something other than imports. Retiring it is not always a no-op even when every
+- `S165` consumer is repointed correctly.
+- `S166` `core.classification` is the largest relocation so far: ten symbols, 77
+- `S166` consumers, and the whole sensitivity and redaction policy vocabulary.
+- `S166` ### A lazy map in an unrelated package, keyed by STRING
+- `S166` Moving `SensitivityClass` broke 622 collections through
+- `S166` `adapters.persistence.storage`, which re-exports it. Its lazy map stores module
+- `S166` paths as string literals -- `"....core.classification"` -- so the rewrite
+- `S166` updated the one real `import` statement in that file and left five string
+- `S166` entries pointing at a module that no longer holds the symbol.
+- `S166` No AST import scan can see those, by construction: they are data, not imports.
+- `S166` The parent-first guard did not fire either, because storage is not an ancestor
+- `S166` of `core.classification` -- it is a peer package reaching across the tree.
+- `S166` So the guard learned the wrong shape from the earlier case. The real rule is not
+- `S166` "a parent may read through a child" but "ANY package may re-export from ANY
+- `S166` other, by import or by string, and both are consumers". The string form is the
+- `S166` dangerous half because it is invisible to the tooling and fails only at
+- `S166` attribute-access time.
+- `S166` ### The half-retirement window
+- `S166` `justificante._parsers` refused mid-run on a test importing a private
+- `S166` `_TEXT_CACHE`, and the refusal came AFTER the namespace had already been made
+- `S166` inert -- the tool writes the namespace before it walks consumers, so a late
+- `S166` refusal leaves the package exporting nothing with its consumers still pointing
+- `S166` at it. Restored from committed content.
+- `S166` The ordering is wrong and worth fixing before the next batch: consumers should
+- `S166` be validated in full, then written, and the namespace emptied last. A tool that
+- `S166` can refuse must refuse before it mutates anything.
+- `S166` ### The ordering was fixed, and it changed the answer
+- `S166` The tool now collects and validates every consumer edit before writing anything;
+- `S166` the new module and the emptied namespace are written last. Re-running
+- `S166` `justificante._parsers` against the fixed ordering left the namespace completely
+- `S166` untouched on refusal, which is the behaviour the earlier run should have had.
+- `S166` Then the refusal itself turned out to be the tool's, not the code's. It mapped
+- `S166` only PUBLIC names, so a test importing `_TEXT_CACHE` looked like a name that had
+- `S166` not moved -- when in fact every top-level definition moves together and a
+- `S166` private one moves just as surely. Mapping private names too completed the
+- `S166` relocation: seven symbols, and `pytest justificante` green at 167.
+- `S166` Worth noting because the refusal was persuasive. It named a real symbol and a
+- `S166` real file, and the honest-looking reading was "a consumer depends on a private
+- `S166` that should not leave the namespace". The actual fact was that the tool could
+- `S166` not see half of what it was moving.
+- `S167` These six had been skipped in an earlier pass as peer-modified. Re-checking
+- `S167` rather than repeating that claim showed the peers had since settled and all six
+- `S167` were clean. The stale reading, not the tree, was the blocker.
+- `S167` Every new module is named publicly, so a consumer in another package reaches a
+- `S167` public module rather than converting a namespace import into a cross-package
+- `S167` private one.
+- `S167` ### The error registry moved with the classes, again
+- `S167` Four exception classes broke 606 collections the moment their namespaces went
+- `S167` inert, because the error-code registry keys `CadrumoError` subclasses by
+- `S167` fully-qualified module path and refuses an unregistered subclass at import time.
+- `S167` This is the second time in this campaign, after `core.topics`. It is worth
+- `S167` stating as a standing consequence rather than a surprise: relocating any
+- `S167` exception class is also a registry edit, and the registry is not discoverable
+- `S167` from the moved code -- nothing in `bienes_inversion` mentions it.
+- `S167` The refusal message is well built. It names the class, says what to do, and
+- `S167` explicitly raises the possibility that a concurrent process added the class
+- `S167` mid-flight, which in a shared tree is the difference between a real defect and
+- `S167` someone else's in-progress work.
+- `S167` ### Scope check
+- `S167` Namespaces defining production code directly: 28 at the start of this campaign
+- `S167` segment, 11 now. What remains is `core` and `entrypoints/cli` -- both governed
+- `S167` by the open ruling in
+- `S167` `2026-08-31-semantic-consolidation-core-facade-ruling-conflict-audit` -- plus
+- `S167` `tests` fixtures packages and two packages whose consumers import submodules
+- `S167` rather than symbols.
+- `S168` The tree now collects with ZERO errors, for the first time in this campaign
+- `S168` segment. The six that had stood all session were two peer-owned half-landed
+- `S168` relocations, and a peer resolved both while this batch was running. They were
+- `S168` correctly never chased.
+- `S168` ### Module-object access, the fourth invisible consumer shape
+- `S168` Thirty-nine tests failed on `module 'cadrumo.adapters.outbound.aeat.verify' has
+- `S168` no attribute ...`. One test file binds the package as a module object --
+- `S168` `from ... import verify as verify_module` -- and then reaches through it for
+- `S168` private helpers.
+- `S168` That is an import an AST scan DOES see, but the coupling it creates is not in
+- `S168` the import: it is in every later `verify_module.X` attribute access. Repointing
+- `S168` the binding to the defining module fixed all thirty-nine at once.
+- `S168` Added to the list this campaign has accumulated of consumer shapes a static
+- `S168` import scan cannot fully resolve: string module paths in a lazy map, a separate
+- `S168` distribution's package root, source embedded in a string literal, and now a
+- `S168` module bound as an object. Each was found only by running tests after
+- `S168` `--collect-only` was already clean, which is the argument against treating
+- `S168` collection as sufficient proof for a relocation.
+- `S168` ### A staged peer collision, handled differently this time
+- `S168` `application.filing` was `MM` -- staged plus modified -- and was relocated
+- `S168` before that was visible, exactly as `application.calculations` had been.
+- `S168` It was NOT reverted this time, and the difference is worth stating. The
+- `S168` calculations revert was necessary because that peer's staged map was WRONG: it
+- `S168` named modules that did not define the symbols, and restoring it reintroduced a
+- `S168` real defect affecting 240 collections. Here the staged change is a valid import
+- `S168` regrouping of a facade being retired, the tree collects clean with the
+- `S168` relocation in place, and every repointed consumer reads a defining module that
+- `S168` works whether or not the facade returns.
+- `S168` So the peer's commit can land without breaking anything; it will simply
+- `S168` reintroduce a namespace nothing routes through any more.
+- `S169` The oracle asserted the console script is `cadrumo.entrypoints.cli:main`.
+- `S169` `pyproject.toml` declares `cadrumo.entrypoints._cli_main:main`, and the built
+- `S169` wheel agrees with `pyproject.toml`.
+- `S169` `_cli_main.main` defers logging configuration and then calls `cli.main`, so both
+- `S169` names exist and both are callable. That is why the drift was invisible: reading
+- `S169` either file alone shows a working entry point, and only the packaging metadata
+- `S169` distinguishes which one ships.
+- `S169` The two sides were dated to settle the direction rather than guess it. The
+- `S169` `pyproject.toml` change landed at 15:20; the assertion arrived at 19:04 the same
+- `S169` day in a commit named `restore: recover harness deployment verification`. So the
+- `S169` assertion is older content reinstated over a newer surface -- the documented
+- `S169` pattern of the restored harness lagging what it couples to, not a deliberate
+- `S169` pin.
+- `S169` ### It was recorded as unverifiable, and that was wrong
+- `S169` This was first written up as needing a built wheel that was not available, and
+- `S169` tracked for someone else. That was an assumption, not a finding: `uv build
+- `S169` wheel` succeeds here in under a minute, and reading `entry_points.txt` out of
+- `S169` the resulting archive settles the question directly.
+- `S169` The reasoning had been sound enough to act on -- pyproject is the source of
+- `S169` truth, and the commit ordering confirmed the direction -- but it stayed
+- `S169` inference until the artefact was read. The correction is cheap and worth
+- `S169` stating: before declaring something unverifiable, try the verification.
+- `S170` The four storage children were refused earlier by the parent-first guard. They
+- `S170` retire cleanly now that `P01.S07` removed the parent's lazy map, which is the
+- `S170` constraint behaving exactly as recorded rather than a new discovery.
+- `S170` ### Three that fail on their own merits, re-confirmed
+- `S170` A sweep across every remaining clean namespace re-retired three that had been
+- `S170` reverted earlier in the campaign, because the sweep's refusal criteria cannot
+- `S170` see why they were reverted. They broke the same way a second time and were
+- `S170` reverted again:
+- `S170` `core.resources` -- consumers reach it as `resources.bundled_path(...)`,
+- `S170` attribute access on the module object
+- `S170` `aeat.browser` -- a consumer imports `Profile`, which the eager block does not
+- `S170` carry
+- `S170` `application.invoices` -- a gate asserts the production resolver IS publicly
+- `S170` exported, which retirement contradicts rather than breaks
+- `S170` Worth recording as a property of the tooling: a batch sweep re-proposes anything
+- `S170` whose exclusion lives in a human judgement rather than in a guard. The
+- `S170` parent-first case became a guard and never came back; these three have no
+- `S170` guard, so they will be re-proposed by every future sweep until one exists or
+- `S170` they are settled.
+- `S170` ### Tree state at close
+- `S170` The tree-wide collection is red, at 708 errors, all from a peer's in-flight
+- `S170` refactor of `domain/calculations/registry/record_design*` -- one file that
+- `S170` failed to parse mid-write and a private helper being moved between modules.
+- `S170` None of it is this campaign's, and a clean tree-wide verification run was not
+- `S170` available at close.
+- `S170` What could be verified was: the damage scan reads zero unparseable files and
+- `S170` zero unresolvable relative imports, and no collection error names a namespace
+- `S170` retired here. That is weaker evidence than a green collection and is recorded
+- `S170` as such rather than as a pass.
+- `S171` Raised by another session, with measurements this campaign did not have: at peak
+- `S171` `ruff check src/cadrumo` reported 3192 syntax errors from the automated import
+- `S171` rewrite, and named six files, of which `dev/locales/_fstring_registry.py` and
+- `S171` `src/cadrumo/tests/__init__.py` were plainly in this campaign's blast radius --
+- `S171` the first imports from `application.storage_management` and the second consumes
+- `S171` `tests.fixtures`, both retired here.
+- `S171` The splice bug itself was known and half-fixed: rewritten imports were written
+- `S171` over the original line range without preserving the original node's
+- `S171` indentation, which put a function-local import at column zero. That half was
+- `S171` found earlier, by pytest collection.
+- `S171` ### The reporting gap was worse than the bug
+- `S171` The post-write damage scan walked `src/` only. The rewriter's roots are `src/`
+- `S171` AND `dev/`, so every file written under `dev/` went unverified, and this
+- `S171` campaign kept reporting "0 files fail to parse" while another lane watched the
+- `S171` error count climb into the thousands. The number was true about the subset it
+- `S171` measured and was reported as though it covered everything written.
+- `S171` That is the same failure this campaign has now recorded three times in other
+- `S171` forms -- a count reported about the wrong population -- and it is the reason the
+- `S171` peer saw it first.
+- `S171` ### Both fixes
+- `S171` `ast.parse` on the rendered text before every write, raising instead of
+- `S171` writing. It costs microseconds against a rewrite already being performed, and
+- `S171` every one of the six reported breakages would have been refused at the source.
+- `S171` The damage scan now parses both roots. Module-existence checking stays scoped to
+- `S171` `src/`, because `dev/` is its own package root: resolving its relative imports
+- `S171` against `src/` produced 410 false positives the moment the scan was widened
+- `S171` naively, which would have traded a silent gap for a noisy one.
+- `S171` ### A second-order effect worth recording
+- `S171` The peer reported that `lint-imports` currently evaluates ZERO contracts,
+- `S171` because it aborts on the first syntax error it meets and prints a single narrow
+- `S171` complaint rather than a tally. A layering gate in that state is
+- `S171` indistinguishable from a passing one. That is the same shape as the earlier
+- `S171` finding in this campaign that one stale ignore silently aborted the whole
+- `S171` contract set -- a gate that fails open on malformed input reports nothing and
+- `S171` reads as clean.
+- `S172` "Stop retiring facades until the rename is ruled on" was too broad a reading of
+- `S172` this campaign's own finding. A facade whose definitions are already PUBLIC can
+- `S172` be retired with no new violation; only the private-definition case trades one
+- `S172` rule for another. The constraint belongs in the tool, not in the campaign's
+- `S172` pace.
+- `S172` The guard refuses when the defining module is private AND the consumer is
+- `S172` outside the owning package, naming the module to publicise first. On the first
+- `S172` sweep it caught `storage.sql` (`SecureObjectRow` in `._orm`) and `core.identity`
+- `S172` (`ContentDigest` in `._digest`) -- two retirements that would each have added
+- `S172` tens of consumers to the debt this campaign just measured.
+- `S172` ### The exclusions are now guards, not memory
+- `S172` `core.resources`, `application.invoices` and `aeat.browser` were retired,
+- `S172` verified broken, and reverted for the THIRD time in this campaign. Each has a
+- `S172` real reason -- module-object attribute access, a gate asserting the opposite,
+- `S172` and an import the eager block does not carry -- and none of those reasons is
+- `S172` derivable by the sweep.
+- `S172` That is the property recorded under `P01.S170` and left unaddressed: a batch
+- `S172` sweep re-proposes anything whose exclusion lives in a human judgement rather
+- `S172` than in code. The parent-first case became a guard after ONE occurrence and
+- `S172` never returned; these three had no guard and cost three round trips each.
+- `S172` They now sit in an exclusion table carrying their reasons, so the sweep refuses
+- `S172` them with the reason rather than retiring them and waiting to be caught by a
+- `S172` test run.
+- `S172` ### Tree state
+- `S172` Three collection errors, all in
+- `S172` `domain/calculations/registry/tests/test_modelo_100_registry_roles_*`. That
+- `S172` subtree carries 375 modified files and another session reports three of its
+- `S172` agents blocked there; none of the errors names anything retired here, and the
+- `S172` local damage scan is clean on both roots.
+- `S173` The step asked for one shared definition of the production scan surface, after
+- `S173` 55 functions were found walking it with their own filters. The definition is the
+- `S173` deliverable here; adopting it at the whole-surface walkers is separate work and
+- `S173` is deliberately not bundled with it.
+- `S173` ### Two candidate rules were tested and rejected on evidence
+- `S173` A NAME CONVENTION guesses what a scratch file will be called. The guess is wrong
+- `S173` the first time someone picks a different prefix, and it cannot be verified.
+- `S173` A GIT-TRACKED filter was the intuitive answer and is the worse of the two. The
+- `S173` tree currently holds 56 untracked `.py` files under `src/cadrumo`, and most are
+- `S173` this campaign's own relocations -- legitimate production modules that simply are
+- `S173` not committed yet. That filter would have hidden the campaign's entire output
+- `S173` from every ratchet using it, silently, for as long as the work sat uncommitted:
+- `S173` false-clean, invisible, on precisely the surface under change.
+- `S173` ### What survives is reachability, widened past imports
+- `S173` A production module earns its place by being statically imported, OR by being
+- `S173` named somewhere -- a command-spec enrolment, an error-code registry entry, a
+- `S173` string module path.
+- `S173` Measured before being written: of 107 unimported production modules, **107 are
+- `S173` referenced by name and 0 are referenced nowhere**. The rule costs no allowlist
+- `S173` and no maintenance, which is what makes it survivable; an allowlist of 107
+- `S173` entries would go stale faster than it was read.
+- `S173` The check REFUSES rather than filters. An orphan is either a scratch file or a
+- `S173` module whose enrolment is missing, and both are worth a failure naming the file.
+- `S173` A filter would have made the same distinction silently and dropped the module
+- `S173` from the ratchet's surface, which is the failure mode this whole step exists to
+- `S173` close.
+- `S173` ### The zero is proved rather than asserted
+- `S173` A gate reporting zero offenders is indistinguishable from a gate that cannot
+- `S173` find anything. The detector was run against three synthetic scratch names,
+- `S173` including the exact filename from the crash another session reported
+- `S173` (`_untracked_tui_boundary_probe_30004`), and all three are caught. Three real
+- `S173` modules that nothing imports -- `_kdf_worker`, `source_readiness`,
+- `S173` `_app_quickfile` -- are correctly admitted, on 5, 2 and 3 name references
+- `S173` respectively.
+- `S173` That probe runs in-process against synthetic names rather than by writing a file
+- `S173` into the package root, because writing a scratch file into the package root is
+- `S173` the hazard under test.
+- `S174` The registry namespace held one thing: `_ALL_DECLARED_ERROR_CODES`, assembled
+- `S174` from its own submodules. Both consumers -- `error_codes.py` and
+- `S174` `tests/test_registry_enforcement.py` -- sit inside `core.errors`, so repointing
+- `S174` them creates no cross-package private import and needs no ruling. That is why
+- `S174` this one could proceed while the heavier facades cannot.
+- `S174` The relocated name stays private (`_ALL_DECLARED_ERROR_CODES`) inside a public
+- `S174` module. That is deliberate: the tuple is package-internal assembly, its only
+- `S174` external-looking consumer is a test in the same package, and promoting the name
+- `S174` would widen a contract this step has no mandate to widen. `error_codes.py`
+- `S174` keeps its `# pyright: ignore[reportPrivateUsage]` for the same reason.
+- `S174` ### The one failure is not this change
+- `S174` `test_exception_base_hygiene` fails on
+- `S174` `ModeloEditSessionClosedError(RuntimeError)` and
+- `S174` `ModeloWorkspaceMaterializationProvenanceMissingError(ValueError)` in
+- `S174` `application.modelo` -- two classes rooting at bare builtins without binding to
+- `S174` the error registry or declaring a rationale. It was failing before this
+- `S174` relocation and is another lane's.
+- `S174` Worth naming because the relocation touched the error registry and the failure
+- `S174` is about error classes: adjacent subject, unrelated cause. Reading the assertion
+- `S174` rather than the file it lives in is what separated them.

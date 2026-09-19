@@ -1,0 +1,490 @@
+---
+tags:
+  - '#exec'
+  - '#semantic-dedup-epic'
+date: '2026-06-13'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:c925815195469809234ac6ab1b137b7ba717732c50dd841912cfddfdb4da18c6'
+related:
+  - "[[2026-06-13-semantic-dedup-epic-plan]]"
+---
+
+# `semantic-dedup-epic` ledger
+
+## Changes
+
+- `S01` `T` `src/aeat/core/identity/_documents.py`
+- `S02` `T` `src/aeat/core/identity/_tax_id.py`
+- `S03` `T` `src/aeat/domain/calculations/registry/_schema_scalars.py`
+- `S04` `T` `src/aeat/adapters/outbound/aeat/export/_formats/_serialise.py`
+- `S05` `T` `src/aeat/adapters/outbound/aeat/export/_formats/_record_spec.py`
+- `S06` `T` `src/aeat/core/identity/_bucket.py`
+- `S07` `T` `src/aeat/domain/filing/_runtime_repository.py`
+- `S15` `T` `src/aeat/adapters/persistence/storage/errors.py`
+- `S16` `T` `src/aeat/entrypoints/cli/_app_live_auth_preflight.py`
+- `S17` `T` `src/aeat/entrypoints/cli/_app_live_verify_cli.py`
+- `S18` `T` `src/aeat/core/decimal/_coerce.py`
+- `S19` `T` `src/aeat/application/ledger/_review_projection.py`
+- `S20` `T` `src/aeat/application/ledger/_review_projection.py`
+- `S21` `T` `src/aeat/domain/calculations/registry/_binding_selector_utils.py`
+- `S22` `T` `src/aeat/application/filing/_export.py`
+- `S23` `T` `src/aeat/domain/iva/_invoice_classification.py`
+- `S24` `T` `src/aeat/entrypoints/cli/_common.py`
+- `S25` `T` `src/aeat/core/hashing.py`
+- `S26` `T` `src/aeat/adapters/persistence/storage/sql/_secure_object_crypto.py`
+- `S27` `T` `src/aeat/core/hashing.py`
+- `S28` `T` `src/aeat/domain/calculations/registry/_binding_selector_utils.py`
+- `S29` `T` `src/aeat/adapters/outbound/storage/_local.py`
+- `S30` `T` `src/aeat/application/ledger/_models.py`
+- `S31` `T` `src/aeat/application/modelo/_calculation_actions.py`
+- `S32` `T` `src/aeat/application/ledger/_actions_common.py`
+- `S33` `T` `src/aeat/entrypoints/cli/_modelo_cli_support.py`
+- `S34` `T` `src/aeat/entrypoints/cli/_ledger_rules_cli.py`
+- `S35` `T` `src/aeat/core/_models.py`
+- `S36` `T` `src/aeat/core/_models.py`
+- `S37` `T` `src/aeat/core/hashing.py`
+- `S38` `T` `src/aeat/core/time.py`
+- `S39` `T` `src/aeat/adapters/persistence/storage/errors.py`
+- `S40` `T` `src/aeat/application/live/_snapshot_base.py`
+- `S41` `T` `src/aeat/adapters/persistence/storage/envelope/_secure_repository.py`
+- `S42` `T` `src/aeat/application/ledger/_evidence.py`
+- `S43` `T` `src/cadrumo/core/corpus_manifest/_bundle_signing.py`
+- `S44` `T` `src/cadrumo/core/observability/_store.py`
+- `S45` `T` `src/cadrumo/domain/justificante/_schema.py`
+- `S46` `T` `src/cadrumo/application/ledger/_actions_export.py`
+- `S46` `T` `src/cadrumo/application/filing/_export.py`
+- `S47` `T` `src/cadrumo/domain/modelos/_filing_record.py`
+- `S47` `T` `src/cadrumo/application/calculations/_cross_period_clean_state.py`
+- `S47` `T` `src/cadrumo/application/overview/_calendar_evidence.py`
+- `S47` `T` `src/cadrumo/application/live/_filed_observation_persistence.py`
+- `S48` `T` `src/cadrumo/application/calculations/_observations_repository.py`
+- `S48` `T` `src/cadrumo/application/live/_filed_observation_persistence.py`
+- `S48` `T` `src/cadrumo/application/calculations/_cross_period_clean_state.py`
+- `S48` `T` `src/cadrumo/application/overview/_calendar_evidence.py`
+- `S49` `T` `src/cadrumo/domain/manuals/_fetch.py`
+- `S49` `T` `src/cadrumo/domain/manuals/tests/test_fetch.py`
+- `S50` `T` `src/cadrumo/application/filing`
+- `S50` `T` `src/cadrumo/domain/calculations/registry`
+- `S50` `T` `src/cadrumo/application/filing/tests`
+- `S51` `T` `src/cadrumo/entrypoints/mcp`
+- `S51` `T` `src/cadrumo/core`
+- `S51` `T` `src/cadrumo/entrypoints/mcp/tests`
+- `S52` `T` `src/cadrumo/application/filing`
+- `S52` `T` `src/cadrumo/domain/calculations/registry`
+- `S52` `T` `src/cadrumo/application/filing/tests`
+- `S53` `T` `src/cadrumo/entrypoints/mcp`
+- `S53` `T` `src/cadrumo/core`
+- `S53` `T` `src/cadrumo/entrypoints/mcp/tests`
+- `S54` `T` `src/cadrumo/application/modelo`
+- `S54` `T` `src/cadrumo/application/modelo/tests`
+- `S55` `T` `src/cadrumo/adapters/outbound/google`
+- `S55` `T` `src/cadrumo/adapters/outbound/google/tests`
+- `S56` `T` `src/cadrumo/application/review`
+- `S56` `T` `src/cadrumo/application/review/tests`
+- `S57` `T` `src/cadrumo/adapters/outbound/aeat/sede`
+- `S57` `T` `src/cadrumo/adapters/outbound/aeat/sede/tests`
+- `S58` `T` `src/cadrumo/application/live`
+- `S58` `T` `src/cadrumo/application/live/tests`
+- `S59` `T` `src/cadrumo/application/modelo`
+- `S59` `T` `src/cadrumo/application/modelo/tests`
+- `S60` `T` `src/cadrumo/application/modelo`
+- `S60` `T` `src/cadrumo/application/modelo/tests`
+- `S61` `T` `src/cadrumo/adapters/outbound/aeat/sede`
+- `S61` `T` `src/cadrumo/adapters/outbound/aeat/sede/tests`
+- `S62` `T` `src/cadrumo/adapters/outbound/aeat/sede`
+- `S62` `T` `src/cadrumo/adapters/outbound/aeat/sede/tests`
+- `S63` `T` `src/cadrumo/adapters/outbound/aeat/sede`
+- `S63` `T` `src/cadrumo/adapters/outbound/aeat/sede/tests`
+- `S64` `T` `src/cadrumo/core`
+- `S64` `T` `src/cadrumo/application/flows`
+- `S64` `T` `src/cadrumo/application/wizard`
+- `S65` `T` `src/cadrumo/adapters/outbound/aeat/auth`
+- `S65` `T` `src/cadrumo/adapters/outbound/aeat/auth/tests`
+- `S66` `T` `src/cadrumo/adapters/outbound/aeat/export/_formats`
+- `S66` `T` `src/cadrumo/adapters/outbound/aeat/export/_formats/tests`
+- `S67` `T` `src/cadrumo/entrypoints/cli`
+- `S67` `T` `src/cadrumo/entrypoints/cli/tests`
+- `S68` `T` `src/cadrumo/application/modelo`
+- `S68` `T` `src/cadrumo/adapters/outbound/aeat/export`
+- `S68` `T` `src/cadrumo/application/modelo/tests`
+- `S69` `T` `src/cadrumo/entrypoints/cli`
+- `S69` `T` `src/cadrumo/entrypoints/cli/tests`
+- `S70` `T` `src/cadrumo/entrypoints/cli`
+- `S70` `T` `src/cadrumo/entrypoints/cli/tests`
+- `S71` `T` `src/cadrumo/domain/iva`
+- `S71` `T` `src/cadrumo/domain/calculations/registry`
+- `S71` `T` `src/cadrumo/domain/iva/tests`
+- `S72` `T` `src/cadrumo/core`
+- `S72` `T` `src/cadrumo/application/aggregation`
+- `S72` `T` `src/cadrumo/domain/calculations/registry`
+- `S72` `T` `src/cadrumo/**/tests`
+- `S73` `T` `src/cadrumo/domain/iva`
+- `S73` `T` `src/cadrumo/domain/calculations/registry`
+- `S73` `T` `src/cadrumo/domain/iva/tests`
+- `S74` `T` `src/cadrumo/application/live`
+- `S74` `T` `src/cadrumo/adapters/outbound/aeat/sede`
+- `S74` `T` `src/cadrumo/domain/iva_compensation`
+- `S74` `T` `src/cadrumo/**/tests`
+- `S75` `T` `src/cadrumo/application/user_profile`
+- `S75` `T` `focused real-behavior tests`
+- `S76` `T` `src/cadrumo/application/registry`
+- `S76` `T` `focused real-registry tests`
+- `S77` `T` `src/cadrumo/application/modelo`
+- `S77` `T` `real wallet boundary tests`
+- `S78` `T` `src/cadrumo/core`
+- `S78` `T` `src/cadrumo/locales`
+- `S78` `T` `focused identity and locale tests`
+- `S79` `T` `src/cadrumo/core`
+- `S79` `T` `registry and export schema tests`
+- `S80` `T` `src/cadrumo/domain/calculations/registry`
+- `S80` `T` `Renta WEB replay tests`
+- `S81` `T` `src/cadrumo/adapters/inbound/declaracion/tests`
+- `S81` `T` `domain period contract tests`
+- `S82` `T` `src/cadrumo/core/json_contract.py`
+- `S82` `T` `core JSON contract tests`
+- `S83` `T` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S83` `T` `CLI payload tests`
+- `S84` `T` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S84` `T` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S84` `T` `CLI payload tests`
+- `S85` `T` `src/cadrumo/entrypoints/cli/_config_payloads.py`
+- `S85` `T` `profile inspection commands`
+- `S85` `T` `CLI payload tests`
+- `S86` `T` `src/cadrumo/domain/user_profile/_registry_contract.py`
+- `S86` `T` `affected registry contract tests`
+- `S87` `T` `src/cadrumo/domain/deadlines`
+- `S87` `T` `src/cadrumo/application/overview/_explain.py`
+- `S87` `T` `overview tests`
+- `S88` `T` `src/cadrumo/domain/retention`
+- `S88` `T` `src/cadrumo/application/overview/_explain.py`
+- `S88` `T` `retention and overview tests`
+- `S89` `T` `src/cadrumo/entrypoints/cli/_registry_corpus_payloads.py`
+- `S89` `T` `registry corpus payload tests`
+- `S90` `T` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S90` `T` `_modelo_rendering.py`
+- `S90` `T` `CLI payload tests`
+- `S91` `T` `src/cadrumo/entrypoints/cli/_registry_diff_payloads.py`
+- `S91` `T` `diff payload tests`
+- `S92` `T` `src/cadrumo/adapters/outbound/llm/_providers/base.py`
+- `S92` `T` `provider tests`
+- `S93` `T` `src/cadrumo/adapters/outbound/llm/_providers/base.py`
+- `S93` `T` `provider tests`
+- `S94` `T` `src/cadrumo/adapters/outbound/llm/_providers`
+- `S94` `T` `provider response tests`
+- `S95` `T` `src/cadrumo/entrypoints/cli/_config_payloads.py`
+- `S95` `T` `config repair payload tests`
+- `S96` `T` `src/cadrumo/adapters/outbound/storage`
+- `S96` `T` `storage provider regression tests`
+- `S97` `T` `src/cadrumo/domain/attachments`
+- `S97` `T` `src/cadrumo/application/ledger`
+- `S97` `T` `evidence input tests`
+- `S98` `T` `src/cadrumo/domain/deadlines`
+- `S98` `T` `recargo regression tests`
+- `S99` `T` `src/cadrumo/adapters/outbound/google/_records.py`
+- `S99` `T` `OAuth record and flow tests`
+- `S100` `T` `src/cadrumo/adapters/outbound/storage`
+- `S100` `T` `src/cadrumo/adapters/outbound/google`
+- `S100` `T` `Drive listing tests`
+- `S101` `T` `src/cadrumo/core/_bucket_pointer.py`
+- `S101` `T` `core pointer tests`
+- `S102` `T` `src/cadrumo/application/live/_borrador_100.py`
+- `S102` `T` `Borrador snapshot tests`
+- `S103` `T` `src/cadrumo/entrypoints/cli/_review_payloads.py`
+- `S103` `T` `review payload tests`
+- `S104` `T` `src/cadrumo/entrypoints/cli/_config_payloads.py`
+- `S104` `T` `archive CLI tests`
+- `S105` `T` `src/cadrumo/application/modelo/_work_plazo.py`
+- `S105` `T` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S105` `T` `focused deadline tests`
+- `S106` `T` `src/cadrumo/adapters/outbound/google/_document_link_resolver.py`
+- `S106` `T` `real generated-client folder-list tests`
+- `S107` `T` `src/cadrumo/adapters/outbound/storage/_integrity.py`
+- `S107` `T` `src/cadrumo/adapters/outbound/storage/_google_drive.py`
+- `S107` `T` `focused integrity tests`
+- `S108` `T` `src/cadrumo/adapters/outbound/google/_records.py`
+- `S108` `T` `src/cadrumo/adapters/outbound/storage/_google_drive.py`
+- `S108` `T` `focused record tests`
+- `S109` `T` `src/cadrumo/adapters/outbound/google/_api.py`
+- `S109` `T` `real HttpRequest response tests`
+- `S110` `T` `src/cadrumo/domain/modelos/_ledger_filing_snapshot.py`
+- `S110` `T` `snapshot and evidence persistence tests`
+- `S111` `T` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S111` `T` `export payload round-trip/refusal tests`
+- `S112` `T` `src/cadrumo/entrypoints/cli/_overview_payloads.py`
+- `S112` `T` `focused overview payload tests`
+- `S113` `T` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S113` `T` `filing-record payload tests`
+- `S114` `T` `src/cadrumo/entrypoints/cli/_config/_google_payloads.py`
+- `S114` `T` `Google sync probe payload tests`
+- `S115` `T` `src/cadrumo/entrypoints/cli/_diagnostics_payloads.py`
+- `S115` `T` `diagnostics telemetry payload tests`
+- `S116` `T` `src/cadrumo/entrypoints/cli/_config/_capabilities_payloads.py`
+- `S116` `T` `capability payload tests`
+- `S117` `T` `src/cadrumo/entrypoints/cli/_config/_censo_payloads.py`
+- `S117` `T` `Censo payload tests`
+- `S118` `T` `src/cadrumo/entrypoints/cli/_config/_collab_payloads.py`
+- `S118` `T` `collaboration payload tests`
+- `S119` `T` `src/cadrumo/entrypoints/cli notification payloads and notification tests`
+- `S120` `T` `src/cadrumo/entrypoints/cli/tests/test_live_notifications_verbs.py`
+- `S120` `T` `notification lint verification`
+- `S121` `T` `src/cadrumo/entrypoints/cli/_app_live_payloads.py`
+- `S121` `T` `live IVA history projection tests`
+- `S122` `T` `src/cadrumo/entrypoints/cli/_app_live_payloads.py`
+- `S122` `T` `src/cadrumo/entrypoints/cli/_app_live.py`
+- `S122` `T` `live IVA auth tests`
+- `S123` `T` `src/cadrumo/entrypoints/cli/_app_live_payloads.py`
+- `S123` `T` `src/cadrumo/entrypoints/cli/_app_live.py`
+- `S123` `T` `live IVA payload tests`
+- `S124` `T` `src/cadrumo/entrypoints/cli/_config/_check_payloads.py`
+- `S124` `T` `config-check tests`
+- `S125` `T` `src/cadrumo/entrypoints/cli/_config/_google_credential_source_payloads.py`
+- `S125` `T` `credential source tests`
+- `S126` `T` `src/cadrumo/entrypoints/cli/_app_contract_payloads.py`
+- `S126` `T` `contract manifest tests`
+- `S127` `T` `src/cadrumo/adapters/outbound/storage/_factory.py`
+- `S127` `T` `storage factory tests`
+- `S128` `T` `src/cadrumo/entrypoints/cli/_root_payloads.py`
+- `S128` `T` `root callback tests`
+- `S129` `T` `src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py`
+- `S129` `T` `ledger provider payload tests`
+- `S130` `T` `src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py`
+- `S130` `T` `src/cadrumo/entrypoints/cli/_ledger_rules_cli.py`
+- `S130` `T` `ledger rule tests`
+- `S131` `T` `src/cadrumo/entrypoints/cli/_ledger_rule_payloads.py`
+- `S131` `T` `ledger rule payload tests`
+- `S132` `T` `src/cadrumo/adapters/inbound/declaracion/_parser.py`
+- `S132` `T` `declaration parser tests`
+- `S133` `T` `src/cadrumo/application/live/_borrador_100.py`
+- `S133` `T` `Modelo 100 snapshot tests`
+- `S134` `T` `src/cadrumo/entrypoints/cli/_review.py`
+- `S134` `T` `review payload tests`
+- `S135` `T` `src/cadrumo/entrypoints/cli/_app_agent_workspace_payloads.py`
+- `S135` `T` `agent workspace tests`
+- `S136` `T` `src/cadrumo/entrypoints/cli/_app_maintenance_payloads.py`
+- `S136` `T` `reconciliation CLI tests`
+- `S137` `T` `src/cadrumo/entrypoints/cli/_ledger_catalogue_invoice_payloads.py`
+- `S137` `T` `catalogue invoice tests`
+- `S138` `T` `src/cadrumo/domain/calculations/registry period-token models and tests`
+- `S139` `T` `src/cadrumo/domain/calculations/registry/_schema_references.py`
+- `S139` `T` `src/cadrumo/application/registry/_corpus.py`
+- `S139` `T` `registry and corpus citation tests`
+- `S140` `T` `src/cadrumo/entrypoints/mcp/_tools.py`
+- `S140` `T` `MCP schema and transport tests`
+- `S141` `T` `src/cadrumo/domain/calculations/registry/_legal.py`
+- `S141` `T` `src/cadrumo/application/corpus_search/_citation_lookup.py`
+- `S141` `T` `legal grounding and citation lookup tests`
+- `S142` `T` `src/cadrumo/entrypoints/mcp/_result_thinning.py`
+- `S142` `T` `MCP thinning schema and integration tests`
+- `S143` `T` `src/cadrumo/application/filing/_import.py`
+- `S143` `T` `src/cadrumo/application/filing/tests/test_import.py`
+- `S144` `T` `src/cadrumo/application/auth/_operator_probes.py`
+- `S144` `T` `src/cadrumo/application/_state_projection_auth.py`
+- `S144` `T` `auth projection tests`
+- `S145` `T` `src/cadrumo/application/evidence/_service.py`
+- `S145` `T` `src/cadrumo/application/evidence/tests`
+- `S146` `T` `src/cadrumo/domain/calculations/registry/_corpus_catalogue.py`
+- `S146` `T` `registry corpus verifier tests`
+- `S147` `T` `src/cadrumo/agent/eval/_models.py`
+- `S147` `T` `src/cadrumo/agent/eval/_runner.py`
+- `S147` `T` `src/cadrumo/agent/eval/_live_scoring.py`
+- `S147` `T` `agent eval tests`
+- `S148` `T` `src/cadrumo/agent/eval/_models.py`
+- `S148` `T` `src/cadrumo/agent/eval/_runner.py`
+- `S148` `T` `agent evaluation tests`
+- `S149` `T` `dev/packaging/evidence.py`
+- `S149` `T` `dev/packaging/tests/test_evidence.py`
+- `S150` `T` `dev/packaging/desktop_capture.py`
+- `S150` `T` `dev/packaging/tests/test_desktop_capture.py`
+- `S151` `T` `dev/packaging/distribution_evidence_emit.py`
+- `S151` `T` `dev/packaging/tests/test_distribution_evidence_emit.py`
+- `S152` `T` `dev/docs/preprocess/_schema.py`
+- `S152` `T` `dev/docs/preprocess/tests/test_sidecar_contract.py`
+- `S153` `T` `dev/deploy/frontend_static_site.py`
+- `S153` `T` `dev/deploy/tests/test_frontend_static_site.py`
+- `S154` `T` `dev/_build_evidence_corpus.py`
+- `S154` `T` `dev/tests/test_build_evidence_corpus.py`
+- `S155` `T` `dev/docs/download_matrix.py`
+- `S155` `T` `dev/docs/tests/test_download_matrix.py`
+- `S156` `T` `dev/docs/preprocess/_html.py`
+- `S156` `T` `cited normative corpus sidecars`
+- `S156` `T` `legal-reference migration tests`
+- `S157` `T` `legal catalogue corpus references`
+- `S157` `T` `dev/docs/preprocess`
+- `S157` `T` `registry legal verification`
+- `S157` `T` `citation lookup tests`
+- `S158` `T` `Madrid legal catalogue and Renta 2025 extracted corpus sidecars`
+- `S159` `T` `IVA rate catalogue`
+- `S159` `T` `foreign VAT legal catalogue`
+- `S159` `T` `authoritative corpus sidecars`
+- `S159` `T` `IVA rate verification tests`
+- `S160` `T` `src/cadrumo/entrypoints/mcp/_result_thinning.py`
+- `S160` `T` `src/cadrumo/entrypoints/mcp/_tools.py`
+- `S160` `T` `src/cadrumo/entrypoints/mcp/tests`
+- `S161` `T` `src/cadrumo/application/auth/_operator_results.py`
+- `S161` `T` `src/cadrumo/application/auth/_certificate_sources_operator.py`
+- `S161` `T` `src/cadrumo/application/auth/tests`
+- `S162` `T` `dev/packaging/desktop_capture.py`
+- `S162` `T` `dev/packaging/tests`
+- `S163` `T` `dev/packaging/_hashing.py`
+- `S163` `T` `dev/packaging`
+- `S163` `T` `dev/corpus/sync_aeat_record_design_corpus.py`
+- `S163` `T` `packaging-homebrew.yml`
+- `S163` `T` `tests`
+- `S164` `T` `dev/packaging`
+- `S164` `T` `dev/packaging/tests`
+- `S165` `T` `src/cadrumo/application/modelo`
+- `S165` `T` `src/cadrumo/application/modelo/tests`
+- `S166` `T` `src/cadrumo/tests/fixtures`
+- `S166` `T` `src/cadrumo/domain/calculations/registry/tests`
+- `S167` `T` `src/cadrumo/domain/submission`
+- `S167` `T` `src/cadrumo/domain/submission/tests`
+- `S168` `T` `src/cadrumo/core/observability`
+- `S168` `T` `src/cadrumo/core/observability/tests`
+- `S169` `T` `src/cadrumo/entrypoints/mcp`
+- `S169` `T` `MCP memory-session tests`
+- `S170` `T` `recipient replay persistence and focused concurrent-consumption tests`
+- `S171` `T` `src/cadrumo/domain/modelos`
+- `S171` `T` `persistence profile adapters`
+- `S171` `T` `filing calculation`
+- `S171` `T` `focused UTC regressions`
+- `S172` `T` `src/cadrumo/agent/eval/_report.py`
+- `S172` `T` `agent evaluation report tests`
+- `S173` `T` `src/cadrumo/agent/eval/_live_scoring.py`
+- `S173` `T` `agent evaluation scoring tests`
+- `S174` `T` `src/cadrumo/domain/calculations/registry`
+- `S174` `T` `registry completeness tests`
+- `S175` `T` `src/cadrumo/application/auth`
+- `S175` `T` `focused auth import regressions`
+- `S176` `T` `src/cadrumo/application/calculations/_iva_wallet_reconciliation.py`
+- `S176` `T` `IVA wallet reconciliation tests`
+- `S177` `T` `src/cadrumo/adapters/persistence/storage/master_key/_bucket_session.py`
+- `S177` `T` `bucket-session tests`
+- `S178` `T` `src/cadrumo/application/modelo/_review_package_recipient_encryption.py`
+- `S178` `T` `recipient encryption tests`
+- `S179` `T` `src/cadrumo/application/flows/_review.py`
+- `S179` `T` `review flow tests`
+- `S180` `T` `src/cadrumo/agent/eval/_live_scoring.py`
+- `S180` `T` `live harness and lifecycle tests`
+- `S181` `T` `src/cadrumo/application/modelo/_review_package_signing.py`
+- `S181` `T` `signing tests`
+- `S182` `T` `src/cadrumo/entrypoints/cli/_modelo_review_package_payloads.py`
+- `S182` `T` `review-package CLI tests`
+- `S183` `T` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S183` `T` `ledger status payload tests`
+- `S184` `T` `src/cadrumo/agent/eval/_flywheel.py`
+- `S184` `T` `report and flywheel tests`
+- `S185` `T` `src/cadrumo/adapters/persistence/profile/transactions.py`
+- `S185` `T` `transaction repository round-trip tests`
+- `S186` `T` `src/cadrumo/agent/eval/_runner.py`
+- `S186` `T` `golden lifecycle tests`
+- `S187` `T` `src/cadrumo/entrypoints/cli/_overview_payloads.py`
+- `S187` `T` `overview rendering and calendar tests`
+- `S188` `T` `src/cadrumo/application/modelo/_review_package_recipient_registry.py`
+- `S188` `T` `recipient registry tests`
+- `S189` `T` `src/cadrumo/application/calculations/_iva_compensation_history.py`
+- `S189` `T` `compensation history tests`
+- `S190` `T` `src/cadrumo/adapters/persistence/profile/assets.py`
+- `S190` `T` `asset ledger tests`
+- `S191` `T` `src/cadrumo/application/live/_iva_remote_state.py`
+- `S191` `T` `IVA remote-acquisition tests`
+- `S192` `T` `src/cadrumo/adapters/persistence/profile/prorrata_register.py`
+- `S192` `T` `prorrata register tests`
+- `S193` `T` `src/cadrumo/entrypoints/cli/_ledger_payloads.py`
+- `S193` `T` `ledger import tests`
+- `S194` `T` `src/cadrumo/entrypoints/cli/_app_live_payloads.py`
+- `S194` `T` `Borrador CLI tests`
+- `S195` `T` `src/cadrumo/application/modelo/_review_package_signing.py`
+- `S195` `T` `_review_package_counter_sign.py`
+- `S195` `T` `review-package tests`
+- `S196` `T` `src/cadrumo/application/transactions/_import.py`
+- `S196` `T` `src/cadrumo/application/ledger/_actions_import.py`
+- `S196` `T` `focused import tests`
+- `S197` `T` `src/cadrumo/entrypoints/cli/_config_payloads.py`
+- `S197` `T` `src/cadrumo/entrypoints/cli/_config/_auth.py`
+- `S197` `T` `auth CLI payload tests`
+- `S198` `T` `src/cadrumo/entrypoints/cli/_diagnostics_payloads.py`
+- `S198` `T` `src/cadrumo/entrypoints/cli/_app_diagnostics_telemetry.py`
+- `S198` `T` `telemetry payload tests`
+- `S199` `T` `src/cadrumo/entrypoints/cli/_registry_payloads.py`
+- `S199` `T` `src/cadrumo/entrypoints/cli/registry.py`
+- `S199` `T` `registry payload typing tests`
+- `S200` `T` `src/cadrumo/application/modelo/_calculation_actions.py`
+- `S200` `T` `focused calculation action tests`
+- `S201` `T` `src/cadrumo/domain/calculations/registry/_schema_references.py`
+- `S201` `T` `_loader.py`
+- `S201` `T` `loader directory tests`
+- `S202` `T` `src/cadrumo/domain/calculations/registry/_legal.py`
+- `S202` `T` `catalogue verification tests`
+- `S203` `T` `src/cadrumo/domain/filing/_amendment.py`
+- `S203` `T` `amendment roundtrip and filing repository tests`
+- `S204` `T` `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_page_flow.py`
+- `S204` `T` `auth diagnostic persistence tests`
+- `S205` `T` `src/cadrumo/adapters/outbound/llm/_cache.py`
+- `S205` `T` `focused LLM cache tests`
+- `S206` `T` `src/cadrumo/adapters/outbound/google/_records.py`
+- `S206` `T` `focused Google OAuth record tests`
+- `S207` `T` `src/cadrumo/core/observability/_store.py`
+- `S207` `T` `_sink.py if required`
+- `S207` `T` `observability writer tests`
+- `S208` `T` `src/cadrumo/adapters/outbound/google/_records.py`
+- `S208` `T` `OAuth record/flow/session tests`
+- `S209` `T` `src/cadrumo/adapters/outbound/llm/_run_telemetry.py`
+- `S209` `T` `telemetry roundtrip/retention tests`
+- `S210` `T` `src/cadrumo/adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py`
+- `S210` `T` `parser source identity tests`
+- `S211` `T` `src/cadrumo/domain/calculations/registry/_validate_revision_rules.py`
+- `S211` `T` `temporal registry tests`
+- `S212` `T` `registry schedule schema and validation`
+- `S212` `T` `filing schedule tests`
+- `S213` `T` `src/cadrumo/core/observability/_store.py`
+- `S213` `T` `observability trace tests`
+- `S214` `T` `src/cadrumo/entrypoints/mcp/_telemetry.py`
+- `S214` `T` `MCP telemetry retention and serving-gate tests`
+- `S215` `T` `registry snapshot schema and construct tests`
+- `S216` `T` `financial XLSX inbound parser and real workbook import tests`
+- `S217` `T` `registry legal-reference schema`
+- `S217` `T` `applicability validation`
+- `S217` `T` `snapshot assembly`
+- `S217` `T` `and legal-reference tests`
+- `S218` `T` `application export tabular verifier and focused export/ledger tests`
+- `S220` `T` `local storage object resolution and collision regression tests`
+- `S222` `T` `outbound ECB FX provider and focused provider tests`
+- `S223` `T` `Google Drive storage resolver and multi-page lookup tests`
+- `S224` `T` `Google Drive storage iterator and malformed-marker regression tests`
+- `S225` `T` `application provisioning probe and focused provisioning tests`
+- `S226` `T` `registry formula schema`
+- `S226` `T` `canonical runtime operator metadata`
+- `S226` `T` `and formula validation tests`
+- `S227` `T` `release readiness generated-surface parser and direct tests`
+- `S228` `T` `remote mirror manifest comparison and direct storage tests`
+- `S229` `T` `remote mirror manifest records`
+- `S229` `T` `loader`
+- `S229` `T` `and direct storage tests`
+- `S230` `T` `registry parameter schema`
+- `S230` `T` `runtime parity`
+- `S230` `T` `and direct validation tests`
+- `S231` `T` `config-reset journal models`
+- `S231` `T` `resume orchestration`
+- `S231` `T` `and recovery tests`
+- `S232` `T` `access-gate authorization manifest loader and direct manifest tests`
+- `S233` `T` `registry scenario report schema and direct scenario tests`
+- `S234` `T` `registry extraction anchor schema and direct schema tests`
+- `S235` `T` `workflow state models and declaration persistence tests`
+- `S236` `T` `registry parameter-only loader and direct directory-mode tests`
+- `S237` `T` `profile bundle export operation`
+- `S237` `T` `recovery cleanup`
+- `S237` `T` `and direct recovery tests`
+- `S238` `T` `registry extraction profile schema and direct extraction tests`
+- `S239` `T` `registry snapshot validation`
+- `S239` `T` `affected M100 legal-reference data`
+- `S239` `T` `and direct legal-window tests`
+- `S240` `T` `bucket maintenance import transaction boundary and direct encrypted archive tests`
+- `S241` `T` `bucket maintenance forced-import rollback boundary and direct encrypted archive tests`
+- `S242` `T` `registry formula parameter schema and direct bracket-window tests`
+- `S243` `T` `OFX provider validation and direct real-fixture tests`
+- `S244` `T` `local observation spreadsheet parser and direct CSV/XLSX duplicate-row tests`
+- `S245` `T` `registry verification expectation schema and direct tolerance tests`
+- `S246` `T` `bucket sandbox merge transaction boundary and direct encrypted-storage tests`
+- `S247` `T` `local observation XLSX parser and direct stale-formula-cache tests`
+- `S248` `T` `registry parity scenario schema and direct workbook-parity tests`

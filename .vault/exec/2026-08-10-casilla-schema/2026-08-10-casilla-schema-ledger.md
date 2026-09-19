@@ -1,0 +1,129 @@
+---
+tags:
+  - '#exec'
+  - '#casilla-schema'
+date: '2026-08-10'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:c0c1cc2eb7cc16f1585e27d9eb963451011279104559d9e40e367f344fb80a65'
+related:
+  - "[[2026-08-10-casilla-schema-plan]]"
+---
+
+# `casilla-schema` ledger
+
+## Changes
+
+- `S01` `T` `src/cadrumo/application/modelo/_preconditions.py`
+- `S02` `T` `src/cadrumo/_data/registry/aeat/`
+- `S03` `T` `src/cadrumo/domain/calculations/registry/_export_parse.py`
+- `S04` `T` `src/cadrumo/domain/calculations/registry/_export.py`
+- `S04` `T` `src/cadrumo/domain/calculations/registry/tests/test_casilla_field_kind_enrollment.py`
+- `S05` `T` `src/cadrumo/_data/registry/aeat/modelos/`
+- `S05` `T` `src/cadrumo/domain/calculations/registry/tests/test_completeness_manifest_authoring_shape.py`
+- `S06` `T` `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`
+- `S06` `T` `src/cadrumo/application/state_projection.py`
+- `S06` `T` `src/cadrumo/application/modelo/_required_binding_gate.py`
+- `S07` `T` `src/cadrumo/domain/calculations/registry/_record_design_coverage.py`
+- `S07` `T` `src/cadrumo/domain/calculations/registry/_validate_completeness.py`
+- `S08` `T` `completeness_manifest`
+- `S09` `T` `src/cadrumo/domain/calculations/registry/_bindings.py`
+- `S09` `T` `src/cadrumo/domain/calculations/registry/_rate_box_partition.py`
+- `S10` `T` `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`
+- `S10` `T` `src/cadrumo/application/modelo/tests/test_calculation_modelo_adjustments.py`
+- `S11` `T` `src/cadrumo/domain/calculations/registry/_queries.py`
+- `S11` `T` `src/cadrumo/domain/calculations/registry/__init__.py`
+- `S11` `T` `src/cadrumo/domain/calculations/registry/tests/test_queries.py`
+- `S11` `T` `src/cadrumo/application/calculations/_relation_prefill.py`
+- `S12` `T` `src/cadrumo/domain/calculations/registry/_handoffs.py`
+- `S12` `T` `src/cadrumo/domain/calculations/registry/__init__.py`
+- `S12` `T` `src/cadrumo/domain/calculations/registry/tests/test_cross_period_relation_consumption.py`
+- `S12` `T` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_contract.py`
+- `S13` `T` `src/cadrumo/domain/calculations/registry/_handoffs.py`
+- `S13` `T` `src/cadrumo/domain/calculations/registry/__init__.py`
+- `S13` `T` `src/cadrumo/domain/calculations/registry/tests/test_relation_handoff_inventory.py`
+- `S13` `T` `src/cadrumo/application/calculations/_relation_prefill.py`
+- `S13` `T` `src/cadrumo/application/calculations/tests/test_relation_prefill_source_mesh.py`
+- `S14` `T` `src/cadrumo/core/_official_box_status.py`
+- `S14` `T` `src/cadrumo/core/__init__.py`
+- `S14` `T` `src/cadrumo/core/tests/test_official_box_status.py`
+- `S15` `T` `src/cadrumo/domain/calculations/registry/_export.py`
+- `S15` `T` `src/cadrumo/domain/calculations/registry/__init__.py`
+- `S15` `T` `src/cadrumo/domain/calculations/registry/tests/test_official_box_classification.py`
+- `S16` `T` `src/cadrumo/core/_operator_action_enums.py`
+- `S16` `T` `src/cadrumo/core/__init__.py`
+- `S16` `T` `src/cadrumo/core/tests/test_operator_action_axis.py`
+- `S17` `T` `src/cadrumo/application/calculations/_cross_period_models.py`
+- `S17` `T` `src/cadrumo/application/calculations/__init__.py`
+- `S17` `T` `src/cadrumo/application/calculations/tests/test_cross_period_blocker_action_projection.py`
+- `S18` `T` `src/cadrumo/domain/modelos/_verification_report.py`
+- `S18` `T` `src/cadrumo/domain/modelos/__init__.py`
+- `S18` `T` `src/cadrumo/application/state_projection.py`
+- `S18` `T` `src/cadrumo/application/_state_projection_readiness.py`
+- `S18` `T` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S18` `T` `src/cadrumo/entrypoints/cli/_modelo_readiness_cli.py`
+- `S19` `T` `src/cadrumo/application/ledger/_preflight.py`
+- `S19` `T` `src/cadrumo/application/ledger/__init__.py`
+- `S19` `T` `src/cadrumo/core/_confirmation_gate.py`
+- `S19` `T` `src/cadrumo/core/__init__.py`
+- `S20` `T`
+- `S21` `T` `message_facts`
+- `S22` `T`
+- `S23` `T` `ModeloWorkReview`
+- `S23` `T` `build_modelo_work_review`
+- `S24` `T` `ModeloVerificationFinding`
+- `S24` `T` `src/cadrumo/application/modelo/`
+- `S24` `T` `casilla_id`
+- `S24` `T` `None`
+- `S24` `T` `application/modelo`
+- `S25` `T` `src/cadrumo/application/modelo/`
+- `S26` `T` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S26` `T` `src/cadrumo/entrypoints/cli/_modelo_work_review_cli.py`
+- `S26` `T` `src/cadrumo/entrypoints/cli/_modelo.py`
+- `S26` `T` `src/cadrumo/entrypoints/cli/_modelo_rendering.py`
+- `S26` `T` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_review_envelope.py`
+- `S26` `T` `src/cadrumo/locales/{en,es,ca,hu}.yml`
+- `S27` `T` `src/cadrumo/application/modelo/_data_inventory.py`
+- `S27` `T` `src/cadrumo/application/modelo/tests/test_data_inventory_profile_keys.py`
+- `S27` `T` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S27` `T` `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`
+- `S27` `T` `src/cadrumo/entrypoints/cli/tests/test_modelo_requires_data_inventory.py`
+- `S27` `T` `src/cadrumo/locales/en.yml`
+- `S27` `T` `src/cadrumo/locales/es.yml`
+- `S27` `T` `src/cadrumo/locales/ca.yml`
+- `S27` `T` `src/cadrumo/locales/hu.yml`
+- `S28` `T` `src/cadrumo/application/overview/_pipeline_health.py`
+- `S28` `T` `src/cadrumo/entrypoints/cli/tests/test_overview_pipeline_verb.py`
+- `S28` `T` `cli.overview.pipeline`
+- `S29` `T` `src/cadrumo/application/verification/`
+- `S30` `T` `src/cadrumo/application/verification/`
+- `S31` `T` `src/cadrumo/domain/calculations/registry/`
+- `S32` `T` `src/cadrumo/application/filing/_export.py`
+- `S33` `T` `src/cadrumo/application/state_projection.py`
+- `S33` `T` `src/cadrumo/entrypoints/cli/_modelo_discovery_cli.py`
+- `S34` `T` `src/cadrumo/adapters/inbound/tui/`
+- `S35` `T` `src/cadrumo/adapters/inbound/tui/`
+- `S35` `T` `src/cadrumo/locales/`
+- `S35` `T` `dev/locales/_fstring_registry.py`
+- `S36` `T` `.vault/audit/`
+- `S37` `T` `src/cadrumo/domain/calculations/registry/_validate_export_exemption.py`
+- `S38` `T` `src/cadrumo/core/`
+- `S39` `T` `.vaultspec/rules/casilla-schema-buildout.md`
+- `S40` `T` `.vault/plan/2026-08-10-casilla-schema-plan.md`
+- `S41` `T` `.vault/plan/2026-08-10-casilla-schema-plan.md`
+- `S80` `T` `.vault/plan/2026-08-10-casilla-schema-plan.md and .vault/exec/2026-08-10-casilla-schema/2026-08-10-casilla-schema-W01-P02-S08.md and .vault/research/2026-08-10-casilla-schema-research.md and src/cadrumo/domain/calculations/registry/tests/test_record_design_completeness.py`
+- `S82` `T` `src/cadrumo/core/ and src/cadrumo/domain/calculations/registry/_export.py and src/cadrumo/application/modelo/ and src/cadrumo/adapters/inbound/tui/`
+- `S83` `T` `src/cadrumo/application/modelo/tests/test_e2e_ledger_m303_quarters_to_m390_annual.py`
+- `S84` `T` `src/cadrumo/locales/`
+- `S85` `T` `src/cadrumo/domain/calculations/registry/tests/test_relation_handoff_inventory.py`
+- `S86` `T` `.vault/audit/2026-08-12-casilla-schema-s33-readiness-mapping-audit.md`
+- `S86` `T` `.vault/exec/2026-08-10-casilla-schema/2026-08-10-casilla-schema-W01-P01-S02.md`
+- `S87` `T` `.vault/index/casilla-schema.index.md`
+- `S88` `T` `src/cadrumo/application/registry/tests/test_diff.py`
+- `S88` `T` `src/cadrumo/entrypoints/cli/tests/test_modelo_reconcile_verb.py`
+- `S88` `T` `src/cadrumo/domain/calculations/registry/tests/test_m303_retired_revision_cutover.py`
+- `S90` `T` `src/cadrumo/locales/`
+- `S91` `T` `src/cadrumo/application/modelo/tests/test_modelo_303_deductible_evidence_gate.py`
+- `S91` `T` `src/cadrumo/application/modelo/tests/test_modelo_303_official_box_under_declaration.py`
+- `S91` `T` `src/cadrumo/application/aggregation/`
+- `S92` `T` `src/cadrumo/domain/calculations/registry/tests/test_casilla_label_spanish_source_coverage.py`

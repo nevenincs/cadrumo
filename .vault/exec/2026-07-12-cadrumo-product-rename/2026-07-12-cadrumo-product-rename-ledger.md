@@ -1,0 +1,188 @@
+---
+tags:
+  - '#exec'
+  - '#cadrumo-product-rename'
+date: '2026-07-12'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:9d79c3adfde5250dab2f3dbddba2992051401e5869a6ef433460c46223341bfd'
+related:
+  - "[[2026-07-12-cadrumo-product-rename-plan]]"
+---
+
+# `cadrumo-product-rename` ledger
+
+## Changes
+
+- `S01` `T` `shared worktree ownership ledger`
+- `S02` `T` `product and authority environment-variable matrix`
+- `S03` `T` `persistence identity matrix`
+- `S04` `T` `issue #476 external reservation register`
+- `S05` `T` `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md`
+- `S05` `T` `src/cadrumo/core/product_identity.py`
+- `S05` `T` `src/cadrumo/core/tests/test_product_identity.py`
+- `S06` `T` `src/cadrumo/core/__init__.py`
+- `S07` `T` `src/cadrumo/core/tests/test_product_identity.py`
+- `S08` `T` `.vaultspec/rules/cadrumo-product-authority-names.md`
+- `S09` `T` `src/aeat to src/cadrumo package tree`
+- `S10` `T` `src/aeat tests to src/cadrumo tests`
+- `S11` `T` `src/cadrumo/core/resources`
+- `S12` `T` `src/cadrumo/_data/registry TOML callable targets`
+- `S13` `T` `src/cadrumo dynamic import sites`
+- `S14` `T` `src/cadrumo/core/errors registries`
+- `S15` `T` `src/cadrumo/adapters/outbound/aeat`
+- `S16` `T` `src/cadrumo/_data/registry/aeat`
+- `S17` `T` `src/cadrumo configuration consumers/tests`
+- `S17` `T` `dev configuration consumers`
+- `S17` `T` `env/.env.example`
+- `S17` `T` `packaging/mcpb/manifest.json`
+- `S17` `T` `.github/workflows`
+- `S17` `T` `justfile`
+- `S17` `T` `conftest.py`
+- `S18` `T` `src/cadrumo/core/_config_state_root.py`
+- `S18` `T` `src/cadrumo/core/tests/test_config_state_root.py`
+- `S19` `T` `src/cadrumo core configuration/state routing`
+- `S19` `T` `persistence SQL and master-key consumers`
+- `S19` `T` `cohesive database tests/examples`
+- `S20` `T` `src/cadrumo/core/auth_session_keys.py`
+- `S20` `T` `src/cadrumo/adapters/outbound/aeat/auth/_session_store.py`
+- `S20` `T` `src/cadrumo/application/auth/tests/test_sessions_storage_state_paths.py`
+- `S20` `T` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_session_store_roundtrip.py`
+- `S21` `T` `src/cadrumo persistence namespace registry/repository and cohesive consumers/tests/examples`
+- `S22` `T` `src/cadrumo sealed bucket archive writer/reader/header/service and focused storage/application/CLI tests`
+- `S23` `T` `src/cadrumo/adapters/persistence/storage/tests/test_cadrumo_state_identity_acceptance.py`
+- `S24` `T` `pyproject.toml`
+- `S25` `T` `src/cadrumo/entrypoints/cli and direct CLI structural tests`
+- `S26` `T` `src/cadrumo/entrypoints/mcp executable/refusal modules and focused real tests`
+- `S27` `T` `src/cadrumo/core/_optional_extras.py`
+- `S27` `T` `optional-extra consumers`
+- `S27` `T` `error registries`
+- `S27` `T` `agent/MCP/search/corpus degradation surfaces and direct tests`
+- `S28` `T` `packaging/aeat_data_manuals to packaging/cadrumo_data_manuals`
+- `S29` `T` `packaging/cadrumo_data_manuals/pyproject.toml`
+- `S30` `T` `packaging/cadrumo_data_manuals/hatch_build.py`
+- `S31` `T` `packaging/aeat_data_official to packaging/cadrumo_data_official`
+- `S32` `T` `packaging/cadrumo_data_official/pyproject.toml`
+- `S32` `T` `packaging/cadrumo_data_official/README.md`
+- `S33` `T` `packaging/cadrumo_data_official/hatch_build.py`
+- `S34` `T` `src/cadrumo/core/resources/_boundary.py`
+- `S34` `T` `src/cadrumo/core/resources/tests/test_corpus_companion_seam.py`
+- `S35` `T` `dev/packaging/tests/test_cadrumo_data_distribution.py`
+- `S36` `T` `uv.lock`
+- `S37` `T` `dev/packaging/smoke_core.py`
+- `S38` `T` `dev/packaging/smoke_extras.py`
+- `S39` `T` `dev/packaging/smoke_docker.py`
+- `S40` `T` `dev/packaging/smoke_split_install.py`
+- `S41` `T` `local root wheel artifact`
+- `S41` `T` `pyproject.toml`
+- `S41` `T` `packaging/cadrumo_data_official/hatch_build.py`
+- `S41` `T` `dev/packaging/smoke_split_install.py`
+- `S41` `T` `dev/packaging/tests/test_cadrumo_data_distribution.py`
+- `S42` `T` `local companion wheel artifacts`
+- `S43` `T` `src/cadrumo/entrypoints/mcp/_server.py`
+- `S43` `T` `src/cadrumo/entrypoints/mcp/tests/test_meta_tools.py`
+- `S44` `T` `src/cadrumo/entrypoints/mcp/_resources.py`
+- `S45` `T` `src/cadrumo/entrypoints/mcp/_prompts.py`
+- `S46` `T` `src/cadrumo/entrypoints/mcp tests`
+- `S47` `T` `src/cadrumo/entrypoints/mcp/tests/test_client_handshake.py`
+- `S48` `T` `src/cadrumo/agent/_workspace.py`
+- `S49` `T` `src/cadrumo/agent/tests`
+- `S50` `T` `packaging/marketplace generated output`
+- `S51` `T` `packaging/marketplace validation evidence`
+- `S52` `T` `packaging/mcpb/manifest.json`
+- `S53` `T` `packaging/mcpb/build.py`
+- `S54` `T` `packaging/mcpb/tests/test_build.py`
+- `S55` `T` `.vault/exec/2026-07-12-cadrumo-product-rename/2026-07-12-cadrumo-product-rename-W05-P11-S55.md`
+- `S55` `T` `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md`
+- `S55` `T` `dev/release/readiness.py`
+- `S55` `T` `dev/release/tests/test_justfile_release_guidance.py`
+- `S55` `T` `dev/release/tests/test_readiness.py`
+- `S55` `T` `justfile`
+- `S56` `T` `.github/workflows/publish.yml`
+- `S57` `T` `.github/workflows/packaging-smoke.yml`
+- `S57` `T` `dev/packaging/tests/test_packaging_smoke_workflow.py`
+- `S58` `T` `dev/packaging/tests/test_ci_workflow.py`
+- `S58` `T` `.github/workflows/ci.yml`
+- `S59` `T` `.github/workflows/agent-harness-eval.yml`
+- `S60` `T` `dev/release`
+- `S61` `T` `issue #476 release gate evidence`
+- `S62` `T` `src/cadrumo entrypoint help authorities`
+- `S63` `T` `English locale catalogue`
+- `S64` `T` `Spanish locale catalogue`
+- `S65` `T` `Catalan locale catalogue`
+- `S66` `T` `Hungarian locale catalogue`
+- `S67` `T` `generated locale scaffold`
+- `S68` `T` `README.md`
+- `S68` `T` `src/cadrumo/tests/test_readme_cli_demo.py`
+- `S69` `T` `RELEASING.md`
+- `S70` `T` `docs/how-to`
+- `S71` `T` `docs/explanation and docs/reference`
+- `S72` `T` `docs/conf.py`
+- `S72` `T` `docs/index.md`
+- `S72` `T` `docs/_static/cadrumo-favicon.svg`
+- `S72` `T` `docs/_static/cadrumo-mark-dark.svg`
+- `S72` `T` `docs/_static/cadrumo-mark-light.svg`
+- `S72` `T` `dev/docs/tests/test_docs_build.py`
+- `S73` `T` `docs release and verification surfaces`
+- `S74` `T` `generated documentation surfaces`
+- `S75` `T` `built documentation site`
+- `S76` `T` `repository rename residue report`
+- `S77` `T` `compatibility absence gate`
+- `S78` `T` `Cadrumo feature test surface`
+- `S79` `T` `CADRUMO artifact acceptance surface`
+- `S80` `T` `feature-surface gate evidence`
+- `S81` `T` `CADRUMO rename change set`
+- `S82` `T` `formal review remediation set`
+- `S83` `T` `post-review verification evidence`
+- `S84` `T` `shared-worktree delivery audit`
+- `S85` `T` `Epic project-management association`
+- `S86` `T` `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md`
+- `S86` `T` `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md`
+- `S86` `T` `.vaultspec/rules/cadrumo-product-authority-names.md`
+- `S86` `T` `generated provider naming rules`
+- `S86` `T` `src/cadrumo/core/product_identity.py`
+- `S86` `T` `src/cadrumo/core/tests/test_product_identity.py`
+- `S87` `T` `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md`
+- `S87` `T` `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md`
+- `S87` `T` `.vault/audit/2026-07-13-cadrumo-product-rename-authority-lock-audit.md`
+- `S87` `T` `.vault/exec/2026-07-12-cadrumo-product-rename/2026-07-12-cadrumo-product-rename-W01-P02-S87.md`
+- `S88` `T` `src/cadrumo locale manager`
+- `S88` `T` `CLI`
+- `S88` `T` `and cohesive tests`
+- `S89` `T` `English`
+- `S89` `T` `Spanish`
+- `S89` `T` `Catalan`
+- `S89` `T` `and Hungarian locale catalogues`
+- `S90` `T` `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md`
+- `S90` `T` `src/cadrumo/core/product_identity.py`
+- `S90` `T` `src/cadrumo/core/tests/test_product_identity.py`
+- `S90` `T` `src/cadrumo/tests/test_parity.py`
+- `S90` `T` `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md`
+- `S90` `T` `S90 execution record`
+- `S91` `T` `locale manager`
+- `S91` `T` `shared interpolation grammar`
+- `S91` `T` `and cohesive audit tests`
+- `S92` `T` `shared i18n grammar`
+- `S92` `T` `locale audit`
+- `S92` `T` `cohesive renderer and audit tests`
+- `S93` `T` `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md`
+- `S93` `T` `src/cadrumo/core/product_identity.py`
+- `S93` `T` `src/cadrumo/core/tests/test_product_identity.py`
+- `S93` `T` `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md`
+- `S93` `T` `S89 and S90 execution records`
+- `S93` `T` `S93 execution record`
+- `S94` `T` `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md`
+- `S94` `T` `S94 execution record`
+- `S95` `T` `.vault/adr/2026-07-12-cadrumo-product-rename-adr.md`
+- `S95` `T` `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md`
+- `S95` `T` `src/cadrumo/core/product_identity.py`
+- `S95` `T` `src/cadrumo/core/tests/test_product_identity.py`
+- `S95` `T` `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md`
+- `S95` `T` `S95 execution record`
+- `S96` `T` `.vault/adr/2026-07-13-product-rename-adr.md`
+- `S96` `T` `.vault/adr/2026-07-12-cadrumo-cli-executable-adr.md`
+- `S96` `T` `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md`
+- `S96` `T` `S96 execution record`
+- `S97` `T` `.vault/adr/2026-07-13-product-rename-adr.md`
+- `S97` `T` `.vault/plan/2026-07-12-cadrumo-product-rename-plan.md`
+- `S97` `T` `S97 execution record`

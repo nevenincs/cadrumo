@@ -1,0 +1,177 @@
+---
+tags:
+  - '#exec'
+  - '#python-runtime-compatibility'
+date: '2026-09-02'
+modified: '2026-09-17'
+body_schema: 'body-v2'
+body_hash: 'sha256:dd54c832628954bf29ee297923be2cf310792bfbc99977f1bcb15fc22a5b03e3'
+related:
+  - "[[2026-09-02-python-runtime-compatibility-plan]]"
+---
+
+# `python-runtime-compatibility` ledger
+
+## Changes
+
+- `S01` `M` `pyproject.toml`
+- `S01` `verify:` `uv run --no-sync python -c "import tomllib; p=tomllib.load(open('pyproject.toml','rb')); assert p['project']['requires-python'] == '>=3.13'; assert p['tool']['ruff']['target-version'] == 'py313'"` -> `pass`
+- `S02` `M` `uv.lock`
+- `S02` `verify:` `uv lock --check` -> `pass`
+- `S03` `A` `dev/ci/python-runtime-matrix.json`
+- `S03` `verify:` `uv run --no-sync python -c "import json; from pathlib import Path; p=json.loads(Path('dev/ci/python-runtime-matrix.json').read_text(encoding='utf-8')); assert p['current_stable_minor']=='3.14'; assert [r['minor'] for r in p['stable']]==['3.13','3.14']; assert p['next']['minor']=='3.15'; assert p['next']['phase']=='prerelease'; assert p['next']['classifier_eligible'] is False"` -> `pass`
+- `S04` `A` `dev/ci/python_runtime_matrix.py`
+- `S04` `verify:` `uv run --no-sync ruff check dev/ci/python_runtime_matrix.py; uv run --no-sync python -m dev.ci.python_runtime_matrix` -> `pass`
+- `S05` `M` `dev/ci/python_runtime_matrix.py`
+- `S05` `A` `dev/ci/tests/test_python_runtime_matrix.py`
+- `S05` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_matrix.py; uv run --no-sync ruff check dev/ci/python_runtime_matrix.py dev/ci/tests/test_python_runtime_matrix.py` -> `pass`
+- `S06` `M` `dev/audit/security.py`
+- `S06` `verify:` `uv run --no-sync ruff check dev/audit/security.py; uv run --no-sync python -c "from pathlib import Path; text=Path('dev/audit/security.py').read_text(encoding='utf-8'); assert 'requires Python' in text and 'no upper bound' in text; assert '>=3.13,<3.14' not in text; assert '>=3.13,<3.15' not in text"` -> `pass`
+- `S07` `M` `dev/audit/tests/test_security.py`
+- `S07` `verify:` `uv run --no-sync pytest -q dev/audit/tests/test_security.py; uv run --no-sync ruff check dev/audit/tests/test_security.py dev/audit/security.py` -> `pass`
+- `S08` `M` `dev/packaging/tests/test_release_cohort.py`
+- `S08` `verify:` `uv run --no-sync pytest -q dev/packaging/tests/test_release_cohort.py; uv run --no-sync ruff check dev/packaging/tests/test_release_cohort.py` -> `pass`
+- `S09` `M` `dev/quality/python_compatibility_scan.py`
+- `S09` `verify:` `uv run --no-sync ruff check dev/quality/python_compatibility_scan.py; .venv\Scripts\python.exe -m py_compile dev/quality/python_compatibility_scan.py; .venv\Scripts\python.exe -m dev.quality.python_compatibility_scan` -> `pass`
+- `S10` `A` `dev/quality/tests/test_python_compatibility_scan.py`
+- `S10` `verify:` `uv run --no-sync pytest -q dev/quality/tests/test_python_compatibility_scan.py -o addopts='' -m 'unit and not external_tool and not os_keychain'; uv run --no-sync ruff check dev/quality/tests/test_python_compatibility_scan.py` -> `pass`
+- `S11` `M` `src/cadrumo/application/modelo/workspace_manifest.py`
+- `S11` `verify:` `uv run --no-sync python -m py_compile src/cadrumo/application/modelo/workspace_manifest.py` -> `pass`
+- `S12` `M` `src/cadrumo/application/modelo/tests/test_workspace_manifest.py`
+- `S12` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_workspace_manifest.py -o addopts='' -m 'integration and hex_application' -k 'future_forward or local_models or unresolved_forward' -n 0; uv run --no-sync ruff check src/cadrumo/application/modelo/tests/test_workspace_manifest.py` -> `pass`
+- `S13` `M` `src/cadrumo/application/wizard/commands.py`
+- `S13` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/wizard/commands.py; uv run --no-sync ruff check --ignore S101 src/cadrumo/application/wizard/commands.py; uv run --no-sync python -m py_compile src/cadrumo/application/wizard/commands.py; uv run --no-sync pytest -q src/cadrumo/application/wizard/tests/test_commands_helpers.py -o addopts='' -m 'unit and hex_application' -n 0` -> `pass`
+- `S14` `M` `src/cadrumo/application/wizard/tests/test_commands_helpers.py`
+- `S14` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/wizard/tests/test_commands_helpers.py; uv run --no-sync ruff check src/cadrumo/application/wizard/tests/test_commands_helpers.py; uv run --no-sync pytest -q src/cadrumo/application/wizard/tests/test_commands_helpers.py -o addopts='' -m 'unit and hex_application' -n 0` -> `pass`
+- `S15` `M` `dev/tests/test_every_source_file_parses.py`
+- `S15` `verify:` `uv run --no-sync ruff format --check dev/tests/test_every_source_file_parses.py; uv run --no-sync ruff check dev/tests/test_every_source_file_parses.py; uv run --no-sync python -m py_compile dev/tests/test_every_source_file_parses.py; uv run --no-sync pytest -q dev/tests/test_every_source_file_parses.py -o addopts='' -m 'unit and hex_core' -n 0` -> `pass`
+- `S16` `M` `dev/tests/test_import_hygiene_scan.py`
+- `S16` `verify:` `uv run --no-sync ruff format --check dev/tests/test_import_hygiene_scan.py; uv run --no-sync ruff check dev/tests/test_import_hygiene_scan.py; uv run --no-sync python -m py_compile dev/tests/test_import_hygiene_scan.py; uv run --no-sync pytest -q dev/tests/test_import_hygiene_scan.py -o addopts='' -m 'unit and hex_core' -k 'future_directive' -n 0` -> `pass`
+- `S17` `A` `dev/ci/python_runtime_compatibility.py`
+- `S17` `verify:` `uv run --no-sync ruff check dev/ci/python_runtime_compatibility.py; uv run --no-sync python -m py_compile dev/ci/python_runtime_compatibility.py` -> `pass`
+- `S18` `A` `dev/ci/tests/test_python_runtime_compatibility.py`
+- `S18` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_compatibility.py -o addopts=''` -> `uv run --no-sync ruff check dev/ci/python_runtime_compatibility.py dev/ci/tests/test_python_runtime_compatibility.py` -> `pass`
+- `S19` `M` `dev/packaging/evidence.py`
+- `S19` `verify:` `uv run --no-sync ruff check dev/packaging/evidence.py; uv run --no-sync python -m py_compile dev/packaging/evidence.py; uv run --no-sync pytest -q dev/packaging/tests/test_evidence.py -k 'command_transcript or checkpoint' -o addopts=''` -> `pass`
+- `S20` `M` `dev/packaging/tests/test_evidence.py`
+- `S20` `verify:` `uv run --no-sync ruff check dev/packaging/tests/test_evidence.py; uv run --no-sync python -m py_compile dev/packaging/tests/test_evidence.py; uv run --no-sync pytest -q dev/packaging/tests/test_evidence.py -k 'source_and_binary or missing_wheel or foreign_cohort' -o addopts=''` -> `pass`
+- `S21` `M` `dev/packaging/_smoke_common.py`
+- `S21` `verify:` `uv run --no-sync ruff check dev/packaging/_smoke_common.py; uv run --no-sync python -m py_compile dev/packaging/_smoke_common.py` -> `pass`
+- `S22` `M` `dev/packaging/tests/test_smoke_core_env.py`
+- `S22` `verify:` `uv run --no-sync ruff check dev/packaging/tests/test_smoke_core_env.py; uv run --no-sync python -m py_compile dev/packaging/tests/test_smoke_core_env.py; uv run --no-sync pytest -q dev/packaging/tests/test_smoke_core_env.py -o addopts=''` -> `pass`
+- `S23` `A` `.github/workflows/python-runtime-compatibility.yml`
+- `S23` `verify:` `uv run --no-sync pytest -q -o addopts='' dev/ci/tests/test_python_runtime_compatibility_workflow.py; uv run --no-sync ruff check dev/ci/tests/test_python_runtime_compatibility_workflow.py` -> `pass`
+- `S24` `A` `dev/ci/tests/test_python_runtime_compatibility_workflow.py`
+- `S24` `verify:` `uv run --no-sync pytest -q -o addopts='' dev/ci/tests/test_python_runtime_compatibility_workflow.py; uv run --no-sync ruff check dev/ci/tests/test_python_runtime_compatibility_workflow.py` -> `pass`
+- `S25` `M` `dev/ci/tests/test_python_version_pin.py`
+- `S25` `verify:` `uv run --no-sync pytest -q -o addopts='' dev/ci/tests/test_python_version_pin.py; uv run --no-sync ruff check dev/ci/tests/test_python_version_pin.py` -> `pass`
+- `S26` `M` `dev/ci/tests/test_change_class_tiers.py`
+- `S26` `verify:` `uv run --no-sync pytest -q -o addopts='' dev/ci/tests/test_change_class_tiers.py; uv run --no-sync ruff check dev/ci/tests/test_change_class_tiers.py` -> `pass`
+- `S27` `M` `dev/ci/tests/test_workflow_tool_invocation.py`
+- `S27` `verify:` `uv run --no-sync pytest -q -o addopts='' dev/ci/tests/test_workflow_tool_invocation.py; uv run --no-sync ruff check dev/ci/tests/test_workflow_tool_invocation.py` -> `pass`
+- `S28` `M` `dev/packaging/tests/test_packaging_smoke_workflow.py`
+- `S28` `verify:` `uv run --no-sync pytest -q -o addopts='' dev/packaging/tests/test_packaging_smoke_workflow.py; uv run --no-sync ruff check dev/packaging/tests/test_packaging_smoke_workflow.py` -> `pass`
+- `S29` `M` `dev/packaging/tests/test_packaging_quick_workflow.py`
+- `S29` `verify:` `uv run --no-sync pytest -q -o addopts='' dev/packaging/tests/test_packaging_quick_workflow.py; uv run --no-sync ruff check dev/packaging/tests/test_packaging_quick_workflow.py` -> `pass`
+- `S30` `M` `pyproject.toml`
+- `S30` `M` `uv.lock`
+- `S30` `verify:` `uv run --no-sync pytest -q dev/packaging/tests/test_classifier_parity.py -o addopts='' -n 0; uv run --no-sync python -c "import json,tomllib; from pathlib import Path; inv=json.loads(Path('dev/ci/python-runtime-matrix.json').read_text(encoding='utf-8')); data=tomllib.load(open('pyproject.toml','rb')); claimed={c.rsplit(' :: ',1)[-1] for c in data['project']['classifiers'] if c.startswith('Programming Language :: Python :: ')}; eligible={r['minor'] for r in inv['stable'] if r['classifier_eligible']}; assert claimed == eligible == {'3.13'}; assert inv['next']['minor'] not in claimed"` -> `pass`
+- `S30` `verify:` `uv lock --check; uv run --no-sync python -c "import tomllib; from pathlib import Path; data=tomllib.load(Path('pyproject.toml').open('rb')); runtime=data['project']['dependencies']; dev=[item for item in data['dependency-groups']['dev'] if isinstance(item,str)]; assert not any(item.startswith('rtoml') for item in runtime); assert any(item.startswith('rtoml') for item in dev)"` -> `pass`
+- `S31` `T`
+- `S31` `verify:` `uv run --no-sync python -c "import json,tomllib; from pathlib import Path; inv=json.loads(Path('dev/ci/python-runtime-matrix.json').read_text(encoding='utf-8')); eligible={r['minor'] for r in inv['stable'] if r['classifier_eligible']}; data=tomllib.load(open('packaging/cadrumo_data_manuals/pyproject.toml','rb')); claimed={c.rsplit(' :: ',1)[-1] for c in data['project']['classifiers'] if c.startswith('Programming Language :: Python :: ')}; assert data['project']['requires-python'] == '>=3.13'; assert claimed == eligible == {'3.13'}; assert inv['next']['minor'] not in claimed"` -> `pass`
+- `S32` `T`
+- `S32` `verify:` `uv run --no-sync python -c "import json,tomllib; from pathlib import Path; inv=json.loads(Path('dev/ci/python-runtime-matrix.json').read_text(encoding='utf-8')); data=tomllib.loads(Path('packaging/cadrumo_data_official/pyproject.toml').read_text(encoding='utf-8')); claimed={c.rsplit(' :: ',1)[-1] for c in data['project']['classifiers'] if c.startswith('Programming Language :: Python :: ')}; eligible={r['minor'] for r in inv['stable'] if r['classifier_eligible']}; assert claimed == eligible == {'3.13'}; assert inv['next']['minor'] not in claimed"` -> `pass`
+- `S34` `T`
+- `S34` `verify:` `uv run --no-sync pytest -q dev/packaging/tests/test_classifier_parity.py -o addopts='' -n 0; uv run --no-sync ruff check dev/packaging/tests/test_classifier_parity.py` -> `pass`
+- `S36` `M` `.github/workflows/publish.yml`
+- `S36` `verify:` `actionlint .github/workflows/publish.yml; uv run --no-sync pytest -q dev/ci/tests/test_workflow_tool_invocation.py -o addopts='' -n 0` -> `pass`
+- `S36` `verify:` `uv run --no-sync python -c "from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); assert [row.minor for row in inventory.stable] == ['3.13', '3.14']; assert inventory.next.phase.value == 'prerelease'; assert not inventory.next.classifier_eligible"` -> `pass`
+- `S38` `M` `CONTRIBUTING.md`
+- `S38` `verify:` `uv run --no-sync python -c 'from pathlib import Path; links=("docs/workstation-setup.md","dev/ci/python-runtime-matrix.json","RELEASING.md","REGISTRY-CONFORMANCE.md",".python-version"); assert all(Path(link).is_file() for link in links); print("root-doc local links: pass")'` -> `pass`
+- `S40` `M` `RELEASING.md`
+- `S40` `verify:` `uv run --no-sync python -c 'from pathlib import Path; text=Path("RELEASING.md").read_text(encoding="utf-8"); required=("dev/ci/python-runtime-matrix.json",".python-version","source-vs-binary","sealed-artifact","classifier_eligible: false","just python-compatibility","per-runtime rebuild"); missing=[item for item in required if item not in text]; assert not missing, missing; print("release-runtime-promotion docs: pass")'` -> `pass`
+- `S42` `M` `justfile`
+- `S42` `verify:` `just --dry-run python-compatibility; just --dump | Select-String -Pattern 'python-compatibility:|dev.packaging.release_cohort build|dev.ci.python_runtime_compatibility|for mode in source binary|runtime inventory produced no rows'` -> `pass`
+- `S42` `verify:` `uv run --no-sync python -c 'import json; from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); rows=inventory.rows; assert [row.identifier for row in rows] == ["cp313","cp314","cp315-next"]; assert [row.phase.value for row in rows] == ["stable","stable","prerelease"]; assert rows[-1].blocking is False; print("inventory-driven rows: pass")'` -> `pass`
+- `S58` `M` `dev/packaging/release_cohort.py`
+- `S58` `verify:` `uv run --no-sync pytest -q -o addopts='' dev/packaging/tests/test_release_cohort.py; uv run --no-sync ruff check dev/packaging/release_cohort.py dev/packaging/tests/test_release_cohort.py; uv run --no-sync python -m dev.packaging.release_cohort --help` -> `pass`
+- `S59` `M` `dev/packaging/tests/test_release_cohort.py`
+- `S59` `verify:` `uv run --no-sync pytest -q -o addopts='' dev/packaging/tests/test_release_cohort.py; uv run --no-sync ruff check dev/packaging/tests/test_release_cohort.py` -> `pass`
+- `S60` `M` `src/cadrumo/core/toml.py`
+- `S60` `verify:` `uv run --no-sync ruff format --check src/cadrumo/core/toml.py; uv run --no-sync ruff check src/cadrumo/core/toml.py; uv run --no-sync python -m py_compile src/cadrumo/core/toml.py; uv run --no-sync pytest -q src/cadrumo/core/tests/test_toml.py src/cadrumo/core/tests/test_toml_registry_parity.py -o addopts='' -m 'unit and hex_core' -n 0` -> `pass`
+- `S60` `verify:` `uv run --no-sync python -` -> `pass`
+- `S61` `M` `src/cadrumo/core/tests/test_toml.py`
+- `S61` `verify:` `uv run --no-sync ruff format --check src/cadrumo/core/tests/test_toml.py; uv run --no-sync ruff check src/cadrumo/core/tests/test_toml.py; uv run --no-sync python -m py_compile src/cadrumo/core/tests/test_toml.py; uv run --no-sync pytest -q src/cadrumo/core/tests/test_toml.py src/cadrumo/core/tests/test_toml_registry_parity.py -o addopts='' -m 'unit and hex_core' -n 0` -> `pass`
+- `S62` `M` `dev/packaging/python_cohort.py`
+- `S62` `verify:` `uv run --no-sync pytest -q -p no:randomly dev/packaging/tests/test_python_cohort_digest_assertions.py dev/packaging/tests/test_release_cohort.py` -> `pass`
+- `S62` `verify:` `uv run --no-sync ruff check dev/packaging/python_cohort.py` -> `pass`
+- `S63` `M` `dev/packaging/tests/test_release_cohort.py`
+- `S63` `verify:` `uv run --no-sync pytest -q -p no:randomly dev/packaging/tests/test_release_cohort.py dev/packaging/tests/test_python_cohort_digest_assertions.py` -> `pass`
+- `S63` `verify:` `uv run --no-sync ruff check dev/packaging/python_cohort.py dev/packaging/tests/test_release_cohort.py` -> `pass`
+- `S63` `verify:` `uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/release-cohort-pycompat-final` -> `pass`
+- `S63` `verify:` `uv run --no-sync python -c \"import json; from pathlib import Path; p=Path('var/python-runtime-compatibility'); files=[p/'final-cp313'/'binary'/'evidence.json',p/'final-cp314'/'binary'/'evidence.json',p/'final-cp315-next'/'binary'/'evidence.json']; e=[json.loads(f.read_text()) for f in files]; assert [(x['runtime']['python'],x['status'],x['dependency']['status']) for x in e]==[('3.13.14','passed','resolved'),('3.14.6','passed','resolved'),('3.15.0b4','failed','missing-wheel')]; print('binary runtime evidence: pass')\"` -> `pass`
+- `S64` `M` `dev/ci/python-runtime-matrix.json`
+- `S64` `M` `dev/ci/tests/test_python_runtime_matrix.py`
+- `S64` `M` `dev/packaging/tests/test_classifier_parity.py`
+- `S64` `M` `pyproject.toml`
+- `S64` `M` `packaging/cadrumo_data_manuals/pyproject.toml`
+- `S64` `M` `packaging/cadrumo_data_official/pyproject.toml`
+- `S64` `verify:` `uv run --no-sync pytest -q dev/packaging/tests/test_classifier_parity.py dev/ci/tests/test_python_runtime_matrix.py -o addopts='' -n 0` -> `pass`
+- `S64` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_compatibility_workflow.py -o addopts='' -n 0` -> `pass`
+- `S64` `verify:` `uv run --no-sync ruff check dev/packaging/tests/test_classifier_parity.py dev/ci/tests/test_python_runtime_matrix.py` -> `pass`
+- `S64` `verify:` `uv lock --check` -> `pass`
+- `S64` `verify:` `uv run --no-sync python -c "import json,tomllib; from pathlib import Path; inv=json.loads(Path('dev/ci/python-runtime-matrix.json').read_text(encoding='utf-8')); assert [r['minor'] for r in inv['stable'] if r['classifier_eligible']]==['3.13','3.14']; assert inv['next']['minor']=='3.15' and inv['next']['phase']=='prerelease' and inv['next']['blocking'] is False and inv['next']['classifier_eligible'] is False; paths=['pyproject.toml','packaging/cadrumo_data_manuals/pyproject.toml','packaging/cadrumo_data_official/pyproject.toml']; expected={'3.13','3.14'}; assert all({c.rsplit(' :: ',1)[-1] for c in tomllib.load(open(path,'rb'))['project']['classifiers'] if c.startswith('Programming Language :: Python :: ')}==expected for path in paths)"` -> `pass`
+- `S65` `M` `dev/ci/python_runtime_compatibility.py`
+- `S65` `M` `dev/ci/tests/test_python_runtime_compatibility.py`
+- `S65` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_compatibility.py` -> `pass`
+- `S66` `M` `dev/ci/python_runtime_compatibility.py`
+- `S66` `M` `dev/ci/tests/test_python_runtime_compatibility.py`
+- `S66` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_compatibility.py` -> `pass`
+- `S67` `M` `.github/workflows/python-runtime-compatibility.yml`
+- `S67` `M` `dev/ci/tests/test_python_runtime_compatibility_workflow.py`
+- `S67` `verify:` `uv run --no-sync pytest -q -m integration dev/ci/tests/test_python_runtime_compatibility_workflow.py` -> `pass`
+- `S68` `M` `dev/ci/python_runtime_compatibility.py`
+- `S68` `M` `dev/ci/tests/test_python_runtime_compatibility.py`
+- `S68` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_compatibility.py` -> `pass`
+- `S69` `M` `dev/ci/python-runtime-matrix.json`
+- `S69` `M` `dev/ci/python_runtime_matrix.py`
+- `S69` `M` `dev/ci/tests/test_python_runtime_matrix.py`
+- `S69` `M` `CONTRIBUTING.md`
+- `S69` `M` `RELEASING.md`
+- `S69` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_matrix.py -o addopts='' -n 0` -> `pass`
+- `S69` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_compatibility_workflow.py -o addopts='' -n 0` -> `pass`
+- `S69` `verify:` `uv run --no-sync ruff check dev/ci/python_runtime_matrix.py dev/ci/tests/test_python_runtime_matrix.py` -> `pass`
+- `S69` `verify:` `uv lock --check` -> `pass`
+- `S69` `verify:` `uv python find --offline 3.15` -> `pass`
+- `S69` `verify:` `uv run --no-sync python -c "from pathlib import Path; from dev.ci.python_runtime_matrix import load_runtime_inventory; inventory=load_runtime_inventory(); assert inventory.next.selector=='3.15'; assert inventory.next.phase.value=='prerelease'; assert inventory.next.blocking is False; assert inventory.next.classifier_eligible is False; contributing=Path('CONTRIBUTING.md').read_text(encoding='utf-8'); assert 'provisionable rolling minor selector' in contributing and '3.15.0b4' in contributing; releasing=Path('RELEASING.md').read_text(encoding='utf-8'); assert 'selector provisionable' in releasing and '3.15.0b4' in releasing; print('selector/docs: pass')"` -> `pass`
+- `S70` `M` `dev/ci/python_runtime_compatibility.py`
+- `S70` `M` `dev/ci/tests/test_python_runtime_compatibility.py`
+- `S70` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_compatibility.py -o addopts='' && uv run --no-sync ruff check dev/ci/python_runtime_compatibility.py dev/ci/tests/test_python_runtime_compatibility.py` -> `pass`
+- `S70` `verify:` `same-commit matrix at ea2f347ba22a5d566f18f8c97a995c22348eb3d9 with cohort d57b1de3c709...: source CPython 3.13.14, 3.14.6, 3.15.0b4; sealed offline binary CPython 3.13.14 and 3.14.6` -> `pass`
+- `S71` `M` `dev/ci/python_runtime_compatibility.py`
+- `S71` `M` `dev/ci/tests/test_python_runtime_compatibility.py`
+- `S71` `M` `dev/packaging/python_cohort.py`
+- `S71` `M` `dev/packaging/runtime_wheelhouse.py`
+- `S71` `M` `dev/packaging/tests/_cohort_attestation.py`
+- `S71` `M` `dev/packaging/tests/test_acquire_tooling.py`
+- `S71` `A` `dev/packaging/tests/test_runtime_wheelhouse.py`
+- `S71` `M` `dev/packaging/tests/test_python_cohort_digest_assertions.py`
+- `S71` `M` `src/cadrumo_harness/_workspace.py`
+- `S71` `M` `src/cadrumo_harness/tests/_plugin_cohort.py`
+- `S71` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_compatibility.py dev/packaging/tests/test_runtime_wheelhouse.py -o addopts=''` -> `pass`
+- `S71` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_compatibility.py -k advisory_missing_wheels -o addopts=''` -> `pass`
+- `S71` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_python_runtime_compatibility.py dev/packaging/tests/test_python_cohort.py src/cadrumo_harness/tests/test_plugin_workspace.py -o addopts=''` -> `pass`
+- `S71` `verify:` `uv run --no-sync ruff check dev/ci/python_runtime_compatibility.py dev/packaging/runtime_wheelhouse.py dev/packaging/python_cohort.py dev/packaging/tests/test_runtime_wheelhouse.py` -> `pass`
+- `S71` `verify:` `uv run --no-sync python -m dev.packaging.release_cohort verify --cohort-dir var/python-runtime-wheelhouse-snapshot-0c9e915444e8/var/release-cohort-python-313-314-sealed` -> `pass`
+- `S71` `verify:` `binary probes CPython 3.13.14 and 3.14.6, offline/no-index/find-links/require-hashes` -> `pass`
+- `S71` `verify:` `same-commit matrix at ea2f347ba22a5d566f18f8c97a995c22348eb3d9 with cohort d57b1de3c709...: source CPython 3.13.14, 3.14.6, 3.15.0b4; sealed offline binary CPython 3.13.14 and 3.14.6; advisory 3.15 missing-wheel pydantic-core/PyYAML` -> `pass`
+
+## Notes
+
+- `S59` `uv run --no-sync python -m dev.packaging.release_cohort build --output var/release-cohort-package-module-proof-20260902` -> `fail` after the clean child imported and executed `dev.packaging.release_cohort`; the existing `uv --require-hashes` local-wheel install refused `cadrumo-0.2.2-py3-none-any.whl` because it had no hash, and staging was removed.
+- `S62` The plan scope names `release_cohort.py` because it owns the `UV_REQUIRE_HASHES=1` policy; the local-wheel digest binding is implemented at the called `python_cohort.py` attestation seam and is recorded above as the actual modified path.
+- `S63` Real clean cohort build completed at source commit `10154f14aefd237ea7163940fb6bcfc1e96b95f3` with the exact CPython `3.13.11` builder and cohort verification passed.
+- `S63` Binary evidence passed with resolved dependencies on CPython `3.13.14` and `3.14.6`; advisory CPython `3.15.0b4` recorded the expected attributable `missing-wheel` failure for PyYAML rather than a skip.
+- `S64` Sealed cohort construction and artifact verification passed at source commit `10154f14aefd237ea7163940fb6bcfc1e96b95f3`; source and binary probes passed on CPython `3.14.6`.
+- `S64` CPython `3.15.0b4` remains prerelease and advisory: source compatibility passed, while binary evidence reports the attributable upstream PyYAML `missing-wheel` result. It remains unclassified.
+- `S69` Offline provisioning resolves the rolling selector `3.15` to CPython `3.15.0b4`; the former fixed selector `3.15.0-rc.2` has no provisionable interpreter in this environment. The canary remains prerelease, advisory, and unclassified.

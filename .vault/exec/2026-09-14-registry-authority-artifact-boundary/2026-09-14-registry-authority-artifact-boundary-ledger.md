@@ -1,0 +1,176 @@
+---
+tags:
+  - '#exec'
+  - '#registry-authority-artifact-boundary'
+date: '2026-09-14'
+modified: '2026-09-17'
+body_schema: 'body-v2'
+body_hash: 'sha256:67c33b3564e3cd2be816bbcc0aadc6c502a06431a70266638bde5ba40fab0b3c'
+related:
+  - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
+---
+
+# `registry-authority-artifact-boundary` ledger
+
+## Changes
+
+- `S01` `M` `dev/registry/compiler/authority.py`
+- `S01` `M` `dev/registry/pipeline/cli.py`
+- `S01` `M` `dev/registry/pipeline/authority_publication.py`
+- `S01` `M` `dev/registry/tests/test_authority_enrollment.py`
+- `S01` `verify:` `checkpoint A focused source/enrollment and component selection` -> `pass`
+- `S02` `A` `dev/registry/compiler/profile_schema.py`
+- `S02` `A` `dev/registry/tests/test_profile_schema_enrollment.py`
+- `S02` `verify:` `checkpoint A focused source/enrollment and component selection` -> `pass`
+- `S07` `M` `dev/registry/compiler/fact_providers.py`
+- `S07` `M` `dev/registry/tests/test_fact_providers.py`
+- `S07` `verify:` `checkpoint A focused source/enrollment and component selection` -> `pass`
+- `S13` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S13` `A` `src/cadrumo/domain/calculations/registry/tests/authority_fakes.py`
+- `S13` `A` `src/cadrumo/domain/calculations/registry/tests/test_authority_component_contract.py`
+- `S13` `verify:` `uv run --no-sync pytest -n 0 -m unit src/cadrumo/domain/calculations/registry/tests/test_authority_component_contract.py -q` -> `pass`
+- `S13` `verify:` `uv run --no-sync ruff check ...` -> `pass`
+- `S13` `verify:` `uv run --no-sync ty check ...` -> `pass`
+- `S14` `A` `src/cadrumo/domain/calculations/registry/authority_store.py`
+- `S14` `A` `dev/registry/tests/test_authority_database.py`
+- `S14` `verify:` `checkpoint A focused source/enrollment and component selection` -> `pass`
+- `S15` `A` `dev/registry/compiler/authority_database.py`
+- `S15` `A` `dev/registry/tests/test_authority_database.py`
+- `S15` `verify:` `checkpoint A focused source/enrollment and component selection` -> `pass`
+- `S16` `A` `dev/registry/benchmark_authority.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/tests/test_authority_component_contract.py`
+- `S16` `verify:` `checkpoint A: pytest focused selection` -> `pass`
+- `S16` `verify:` `checkpoint A: ruff check focused selection` -> `pass`
+- `S16` `verify:` `checkpoint A: ty check focused selection` -> `pass`
+- `S17` `M` `dev/registry/pipeline/authority_publication.py`
+- `S17` `A` `dev/registry/tests/test_authority_generation_publication.py`
+- `S17` `verify:` `checkpoint A focused source/enrollment and component selection` -> `pass`
+- `S19` `A` `src/cadrumo/domain/calculations/registry/authority_store.py`
+- `S19` `A` `dev/registry/tests/test_authority_database.py`
+- `S19` `verify:` `checkpoint A focused source/enrollment and component selection` -> `pass`
+- `S20` `A` `src/cadrumo/domain/calculations/registry/authority_cache.py`
+- `S20` `A` `src/cadrumo/domain/calculations/registry/tests/test_authority_cache.py`
+- `S20` `verify:` `uv run --no-sync pytest -n 0 src/cadrumo/domain/calculations/registry/tests/test_authority_cache.py -q` -> `pass`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S21` `A` `src/cadrumo/domain/calculations/registry/tests/test_authority_database.py`
+- `S21` `verify:` `checkpoint A focused source/enrollment and component selection` -> `pass`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/temporal.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S22` `M` `dev/registry/compiler/authority_database.py`
+- `S22` `verify:` `checkpoint A focused source/enrollment and component selection` -> `pass`
+- `S23` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S23` `M` `src/cadrumo/domain/iva/lookup.py`
+- `S23` `M` `src/cadrumo/domain/iva/rates.py`
+- `S23` `verify:` `uv run --no-sync pytest src/cadrumo/domain/iva/tests/test_rates_temporal.py -q` -> `pass`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/authority_artifact.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/governed_fact_scope.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S24` `M` `src/cadrumo/domain/calculations/registry/temporal.py`
+- `S24` `M` `dev/registry/compiler/authority_database.py`
+- `S24` `M` `dev/registry/tests/test_authority_database.py`
+- `S24` `verify:` `uv run --no-sync pytest -n 0 dev/registry/tests/test_authority_database.py::test_revision_context_selects_directory_before_one_complete_revision -q` -> `pass`
+- `S24` `verify:` `uv run --no-sync ruff check ... && uv run --no-sync ty check ...` -> `pass`
+- `S27` `M` `src/cadrumo/domain/user_profile/values.py`
+- `S27` `M` `src/cadrumo/domain/user_profile/tests/test_contextful_values.py`
+- `S27` `verify:` `checkpoint B profile context selection` -> `pass`
+- `S28` `A` `src/cadrumo/application/user_profile/authority_context.py`
+- `S28` `M` `src/cadrumo/application/user_profile/projections.py`
+- `S28` `M` `src/cadrumo/application/user_profile/overview.py`
+- `S28` `M` `src/cadrumo/application/user_profile/validation.py`
+- `S28` `verify:` `checkpoint B profile and capsule selection` -> `pass`
+- `S34` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule_records.py`
+- `S34` `M` `src/cadrumo/adapters/persistence/storage/tests/profile_capsule_runtime.py`
+- `S34` `verify:` `checkpoint B capsule lineage selection` -> `pass`
+- `S42` `M` `src/cadrumo/application/modelo/_required_binding_gate.py`
+- `S42` `M` `src/cadrumo/application/modelo/profile_binding.py`
+- `S42` `M` `src/cadrumo/application/modelo/profile_readiness_gate.py`
+- `S42` `verify:` `checkpoint B integrated profile selection` -> `pass`
+- `S47` `M` `src/cadrumo/application/auth/sessions.py`
+- `S47` `M` `src/cadrumo/application/wizard/status.py`
+- `S47` `M` `src/cadrumo/application/diagnostics.py`
+- `S47` `M` `src/cadrumo/domain/renta/maritime_exemption.py`
+- `S47` `M` `dev/locales/_registry_scanner.py`
+- `S47` `verify:` `checkpoint B integrated profile selection` -> `pass`
+- `S50` `M` `src/cadrumo/entrypoints/cli/common.py`
+- `S50` `M` `src/cadrumo/entrypoints/cli/config/_complete_setup_cli.py`
+- `S50` `M` `src/cadrumo/entrypoints/cli/config/_profile_inspect.py`
+- `S50` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S50` `verify:` `checkpoint B focused import census` -> `pass`
+- `S56` `M` `src/cadrumo/domain/calculations/registry/queries.py`
+- `S56` `M` `src/cadrumo/domain/calculations/registry/applicability.py`
+- `S56` `M` `src/cadrumo/domain/calculations/registry/support_matrix.py`
+- `S56` `M` `src/cadrumo/domain/calculations/registry/formula_runtime_ops.py`
+- `S56` `verify:` `checkpoint B component contract selection` -> `pass`
+- `S65` `M` `src/cadrumo/application/aggregation/service.py`
+- `S65` `verify:` `checkpoint B integrated model selection` -> `pass`
+- `S66` `M` `src/cadrumo/application/calculations/revision_carry_gate.py`
+- `S66` `M` `src/cadrumo/application/calculations/relation_prefill_m202.py`
+- `S66` `M` `src/cadrumo/application/calculations/m303_regimen_simplificado.py`
+- `S66` `verify:` `checkpoint B integrated model selection` -> `pass`
+- `S74` `M` `src/cadrumo/application/modelo/_registry_resources.py`
+- `S74` `M` `src/cadrumo/application/modelo/projection.py`
+- `S74` `M` `src/cadrumo/application/modelo/registry_discovery.py`
+- `S74` `M` `src/cadrumo/application/modelo/verification_cross_period.py`
+- `S74` `verify:` `checkpoint B integrated model selection` -> `pass`
+- `S84` `M` `src/cadrumo/application/overview/calendar_warnings.py`
+- `S84` `M` `src/cadrumo/application/foreign_asset_thresholds.py`
+- `S84` `M` `src/cadrumo/entrypoints/cli/modelo_spreadsheet_cli.py`
+- `S84` `M` `src/cadrumo/domain/portals/registry.py`
+- `S84` `M` `src/cadrumo/domain/transactions/m210_income_classification.py`
+- `S84` `verify:` `checkpoint B focused import census` -> `pass`
+- `S92` `M` `src/cadrumo/domain/iva/classification.py`
+- `S92` `M` `src/cadrumo/domain/iva/components.py`
+- `S92` `M` `src/cadrumo/domain/iva/lookup.py`
+- `S92` `M` `src/cadrumo/domain/iva/rates.py`
+- `S92` `verify:` `checkpoint B focused import and contract checks` -> `pass`
+- `S93` `M` `src/cadrumo/domain/categories/spending_category_catalogue.py`
+- `S93` `M` `src/cadrumo/domain/categories/proportionality_catalogue.py`
+- `S93` `M` `src/cadrumo/domain/transactions/retencion_facts.py`
+- `S93` `M` `src/cadrumo/domain/transactions/tipo_actividad_partitions.py`
+- `S93` `verify:` `checkpoint B focused import census` -> `pass`
+- `S106` `M` `src/cadrumo/application/corpus_search/citation_lookup.py`
+- `S106` `M` `src/cadrumo/application/corpus_search/tests/test_citation_lookup.py`
+- `S106` `verify:` `checkpoint B focused import census` -> `pass`
+- `S108` `M` `src/cadrumo/application/modelo/_work_review_assembly.py`
+- `S108` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py`
+- `S108` `verify:` `checkpoint B focused import census` -> `pass`
+- `S110` `M` `src/cadrumo/application/filing/runtime.py`
+- `S110` `M` `src/cadrumo/application/filing/export.py`
+- `S110` `M` `src/cadrumo/application/filing/export_verification.py`
+- `S110` `M` `src/cadrumo/application/filing/tests/test_filing.py`
+- `S110` `M` `src/cadrumo/application/filing/tests/test_runtime_profile_export_bindings.py`
+- `S110` `verify:` `uv run --no-sync pytest src/cadrumo/application/filing/tests/test_filing.py src/cadrumo/application/filing/tests/test_runtime_profile_export_bindings.py -q` -> `pass`
+- `S114` `D` `src/cadrumo/domain/user_profile/loader.py`
+- `S114` `A` `dev/registry/tests/profile_schema_support.py`
+- `S114` `M` `dev/registry/compiler/validator.py`
+- `S114` `verify:` `rg -n "domain\.user_profile\.loader|load_profile_schema\(" src/cadrumo dev` -> `pass`
+- `S117` `M` `src/cadrumo/domain/calculations/registry/conftest.py`
+- `S117` `M` `src/cadrumo/domain/calculations/registry/tests/test_authority_artifact.py`
+- `S117` `M` `src/cadrumo/domain/iva/classification.py`
+- `S117` `M` `dev/registry/tests/test_authority_artifact_round_trip.py`
+- `S117` `M` `dev/registry/tests/test_authority_publication.py`
+- `S117` `verify:` `checkpoint B focused authority/profile/filing selection (69 passed)` -> `pass`
+- `S117` `verify:` `compileall plus focused Ruff and ty checks` -> `pass`
+- `S124` `A` `src/cadrumo/domain/calculations/registry/tests/test_authority_cache.py`
+- `S124` `A` `dev/registry/tests/test_authority_database.py`
+- `S124` `verify:` `checkpoint A focused source/enrollment and component selection` -> `pass`
+- `S126` `A` `dev/registry/tests/test_authority_generation_publication.py`
+- `S126` `M` `dev/registry/pipeline/authority_publication.py`
+- `S126` `verify:` `checkpoint A focused source/enrollment and component selection` -> `pass`
+- `S127` `M` `pyproject.toml`
+- `S127` `verify:` `uv run --no-sync python -c "import tomllib; tomllib.load(open('pyproject.toml','rb'))"` -> `pass`
+- `S129` `M` `dev/packaging/tests/test_installed_oracles.py`
+- `S129` `verify:` `uv run --no-sync ruff check dev/packaging/tests/test_installed_oracles.py` -> `pass`
+- `S129` `verify:` `uv run --no-sync ty check dev/packaging/tests/test_installed_oracles.py` -> `pass`
+- `S131` `M` `dev/registry/benchmark_authority.py`
+- `S131` `verify:` `uv run --no-sync ruff check dev/registry/benchmark_authority.py` -> `pass`
+- `S131` `verify:` `uv run --no-sync ty check dev/registry/benchmark_authority.py` -> `pass`
+- `S131` `verify:` `uv run --no-sync python -m dev.registry.benchmark_authority --help` -> `pass`
+- `S135` `M` `docs/how-to/publish-runtime-authority.md`
+- `S135` `M` `docs/reference/registry-legal-api.md`
+- `S135` `verify:` `documentation updated from implemented descriptor and component contracts` -> `pass`
+
+## Notes
+
+- `S117` Checkpoint B was reopened on 2026-09-14 after the later integrated consumer cohort produced 32 passes and six stale usage-ratio fixture failures. The repaired fixture and source-window regressions await one affected-cohort run after receipt-covered compiler inputs are handed off.

@@ -1,0 +1,448 @@
+---
+tags:
+  - '#exec'
+  - '#aeat-export-fragment-generator-authority'
+date: '2026-08-10'
+modified: '2026-09-15'
+body_schema: 'body-v2'
+body_hash: 'sha256:194579fc604f24f0d7d3acb039d1eb2b3766be08890f644932c439cf84970ff9'
+related:
+  - "[[2026-08-10-aeat-export-fragment-generator-authority-plan]]"
+---
+
+# `aeat-export-fragment-generator-authority` ledger
+
+## Changes
+
+- `S01` `T` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S02` `T` `dev/registry/`
+- `S03` `T` `src/cadrumo/domain/calculations/registry/tests/`
+- `S04` `T` `dev/registry/`
+- `S05` `T` `dev/registry/`
+- `S06` `T` `dev/registry/`
+- `S07` `T` `dev/registry/`
+- `S08` `T` `dev/registry/_export_tree.py`
+- `S08` `T` `dev/registry/tests/test_export_tree.py`
+- `S08` `T` `dev/registry/tests/test_generated_tree_check.py`
+- `S08` `T` `src/cadrumo/domain/calculations/registry/__init__.py`
+- `S09` `T` `dev/registry/`
+- `S10` `T` `dev/registry/`
+- `S11` `T` `dev/registry/`
+- `S12` `T` `dev/registry/`
+- `S13` `T` `dev/registry/tests/`
+- `S14` `T` `dev/registry/tests/`
+- `S15` `T` `dev/registry/tests/`
+- `S16` `T` `dev/registry/tests/`
+- `S16` `T` `dev/registry/tests/`
+- `S16` `T` `src/cadrumo/application/filing/tests/`
+- `S20` `T` `dev/registry/pipeline/_tree_validation.py`
+- `S20` `T` `dev/registry/tests/test_generated_export_trees.py`
+- `S20` `T` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`
+- `S30` `T` `src/cadrumo/domain/calculations/registry/`
+- `S30` `T` `dev/registry/`
+- `S31` `T` `dev/registry/`
+- `S32` `T` `dev/registry/`
+- `S33` `T` `dev/registry/tests/`
+- `S35` `T` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S35` `T` `src/cadrumo/domain/calculations/registry/tests/test_record_design_source_selection.py`
+- `S36` `T` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`
+- `S36` `T` `src/cadrumo/domain/calculations/registry/tests/`
+- `S37` `T` `src/cadrumo/domain/calculations/registry/`
+- `S37` `T` `src/cadrumo/application/filing/`
+- `S37` `T` `src/cadrumo/adapters/outbound/aeat/export/`
+- `S38` `T` `src/cadrumo/core/decimal/`
+- `S38` `T` `src/cadrumo/domain/calculations/registry/`
+- `S38` `T` `src/cadrumo/application/filing/`
+- `S38` `T` `src/cadrumo/adapters/outbound/aeat/export/`
+- `S39` `T` `src/cadrumo/`
+- `S40` `T` `src/cadrumo/domain/calculations/registry/`
+- `S40` `T` `dev/registry/`
+- `S41` `T` `src/cadrumo/domain/calculations/registry/`
+- `S41` `T` `dev/registry/`
+- `S42` `T` `dev/registry/`
+- `S42` `T` `dev/registry/tests/`
+- `S43` `T` `src/cadrumo/domain/calculations/registry/`
+- `S43` `T` `dev/registry/`
+- `S44` `T` `.vault/adr/2026-06-13-m303-form-vs-semantic-casilla-dual-keying-adr.md`
+- `S44` `T` `.vault/adr/2026-07-01-modelo-303-regimen-simplificado-adr.md`
+- `S44` `T` `.vault/research/2026-06-04-m303-form-vs-semantic-casilla-dual-keying-research.md`
+- `S44` `T` `.vault/audit/2026-08-10-aeat-export-fragment-generator-authority-s44-m303-semantic-home-architecture-audit.md`
+- `S45` `T` `src/cadrumo/domain/calculations/registry/`
+- `S45` `T` `src/cadrumo/application/filing/`
+- `S45` `T` `src/cadrumo/application/modelo/`
+- `S45` `T` `src/cadrumo/application/user_profile/`
+- `S45` `T` `src/cadrumo/domain/user_profile/`
+- `S45` `T` `src/cadrumo/core/`
+- `S45` `T` `dev/registry/`
+- `S45` `T` `src/cadrumo/_data/registry/aeat/modelos/`
+- `S46` `T` `src/cadrumo/domain/deadlines/`
+- `S46` `T` `src/cadrumo/application/user_profile/`
+- `S46` `T` `src/cadrumo/application/modelo/`
+- `S46` `T` `src/cadrumo/application/filing/`
+- `S47` `T` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`
+- `S48` `T` `src/cadrumo/domain/calculations/registry/`
+- `S48` `T` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`
+- `S48` `T` `src/cadrumo/application/filing/`
+- `S49` `T` `src/cadrumo/domain/calculations/registry/`
+- `S49` `T` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`
+- `S49` `T` `src/cadrumo/application/filing/`
+- `S50` `T` `src/cadrumo/domain/calculations/registry/`
+- `S50` `T` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`
+- `S50` `T` `src/cadrumo/application/filing/`
+- `S51` `T` `src/cadrumo/application/modelo/`
+- `S51` `T` `src/cadrumo/application/filing/`
+- `S51` `T` `src/cadrumo/domain/calculations/registry/tests/`
+- `S52` `T` `dev/registry/tests/test_m303_canonical_home_census.py`
+- `S53` `T` `src/cadrumo/domain/calculations/registry/`
+- `S53` `T` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S53` `T` `dev/registry/`
+- `S54` `T` `src/cadrumo/domain/iva/`
+- `S54` `T` `src/cadrumo/application/aggregation/`
+- `S54` `T` `src/cadrumo/domain/calculations/registry/`
+- `S54` `T` `src/cadrumo/domain/bienes_inversion/`
+- `S54` `T` `.vault/research/`
+- `S54` `T` `.vault/adr/`
+- `S55` `T` `src/cadrumo/core/`
+- `S55` `T` `src/cadrumo/domain/deadlines/`
+- `S55` `T` `src/cadrumo/domain/prorrata_register/`
+- `S55` `T` `src/cadrumo/application/filing/`
+- `S55` `T` `src/cadrumo/application/modelo/`
+- `S55` `T` `src/cadrumo/application/aggregation/`
+- `S55` `T` `src/cadrumo/application/calculations/`
+- `S56` `T` `src/cadrumo/application/filing/`
+- `S56` `T` `src/cadrumo/domain/calculations/registry/`
+- `S57` `T` `src/cadrumo/core/`
+- `S57` `T` `src/cadrumo/domain/calculations/registry/`
+- `S57` `T` `src/cadrumo/application/filing/`
+- `S57` `T` `dev/registry/`
+- `S58` `T`
+- `S59` `T` `src/cadrumo/domain/calculations/registry/`
+- `S59` `T` `src/cadrumo/domain/iva/`
+- `S59` `T` `src/cadrumo/application/filing/`
+- `S59` `T` `src/cadrumo/_data/registry/`
+- `S60` `T` `src/cadrumo/core/`
+- `S60` `T` `src/cadrumo/application/filing/`
+- `S60` `T` `src/cadrumo/domain/calculations/registry/`
+- `S61` `T` `src/cadrumo/core/`
+- `S61` `T` `src/cadrumo/domain/calculations/registry/`
+- `S61` `T` `dev/registry/`
+- `S61` `T` `dev/registry/tests/`
+- `S62` `T` `src/cadrumo/domain/calculations/registry/`
+- `S62` `T` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`
+- `S62` `T` `dev/registry/`
+- `S63` `T` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`
+- `S63` `T` `src/cadrumo/domain/calculations/registry/`
+- `S63` `T` `src/cadrumo/application/filing/`
+- `S64` `T` `dev/registry/_semantic_map.py`
+- `S64` `T` `dev/registry/_semantic_map_loader.py`
+- `S64` `T` `dev/registry/_semantic_map_validation.py`
+- `S64` `T` `dev/registry/_semantic_map_join.py`
+- `S64` `T` `dev/registry/_provenance_manifest.py`
+- `S64` `T` `dev/registry/tests/`
+- `S66` `T` `src/cadrumo/_data/corpus/`
+- `S66` `T` `src/cadrumo/_data/registry/aeat/legal/`
+- `S66` `T` `src/cadrumo/_data/registry/aeat/sources/`
+- `S66` `T` `dev/registry/tests/`
+- `S67` `T` `dev/registry/mappings/modelo_303/2023/`
+- `S67` `T` `dev/registry/render_profiles/modelo_303/2023/`
+- `S68` `T` `dev/registry/mappings/modelo_303/2024-early/`
+- `S68` `T` `dev/registry/render_profiles/modelo_303/2024-early/`
+- `S69` `T` `dev/registry/mappings/modelo_303/2024-late/`
+- `S69` `T` `dev/registry/render_profiles/modelo_303/2024-late/`
+- `S70` `T` `dev/registry/mappings/modelo_303/2025/`
+- `S70` `T` `dev/registry/render_profiles/modelo_303/2025/`
+- `S71` `T` `dev/registry/mappings/modelo_303/2026/`
+- `S71` `T` `dev/registry/render_profiles/modelo_303/2026/`
+- `S72` `T` `dev/registry/`
+- `S72` `T` `dev/registry/tests/`
+- `S73` `T` `src/cadrumo/domain/calculations/registry/`
+- `S73` `T` `src/cadrumo/core/`
+- `S73` `T` `src/cadrumo/_data/registry/aeat/m303_orden_anual/`
+- `S73` `T` `src/cadrumo/_data/corpus/`
+- `S74` `T` `.vault/adr/`
+- `S74` `T` `src/cadrumo/domain/calculations/registry/`
+- `S74` `T` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`
+- `S75` `T` `src/cadrumo/core/`
+- `S75` `T` `src/cadrumo/domain/calculations/registry/`
+- `S75` `T` `src/cadrumo/application/filing/`
+- `S76` `T` `src/cadrumo/domain/calculations/registry/`
+- `S76` `T` `src/cadrumo/application/calculations/`
+- `S76` `T` `src/cadrumo/application/filing/`
+- `S76` `T` `src/cadrumo/domain/modelos/`
+- `S77` `T` `src/cadrumo/core/`
+- `S77` `T` `src/cadrumo/domain/iva/`
+- `S77` `T` `src/cadrumo/domain/calculations/registry/`
+- `S77` `T` `src/cadrumo/application/filing/`
+- `S77` `T` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/`
+- `S78` `T` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S78` `T` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/`
+- `S78` `T` `dev/registry/`
+- `S78` `T` `dev/registry/tests/`
+- `S83` `T` `src/cadrumo/_data/corpus/`
+- `S83` `T` `src/cadrumo/_data/registry/aeat/m303_orden_anual/`
+- `S83` `T` `src/cadrumo/domain/calculations/registry/`
+- `S83` `T` `src/cadrumo/domain/iva/`
+- `S85` `T` `dev/registry/analysis/m390_2022_anchor_census.py`
+- `S85` `T` `src/cadrumo/core/_filing_projection_ref.py`
+- `S86` `T` `src/cadrumo/domain/calculations/registry/`
+- `S86` `T` `dev/registry/`
+- `S86` `T` `dev/registry/tests/`
+- `S87` `T` `src/cadrumo/_data/registry/aeat/modelos/390/`
+- `S87` `T` `src/cadrumo/domain/calculations/registry/`
+- `S87` `T` `src/cadrumo/domain/calculations/registry/tests/`
+- `S92` `T` `src/cadrumo/domain/modelos/`
+- `S92` `T` `src/cadrumo/application/modelo/`
+- `S92` `T` `src/cadrumo/application/filing/`
+- `S92` `T` `src/cadrumo/core/`
+- `S92` `T` `src/cadrumo/adapters/persistence/profile/`
+- `S92` `T` `src/cadrumo/**/tests/`
+- `S94` `T` `src/cadrumo/core/_filing_projection_ref.py`
+- `S94` `T` `src/cadrumo/core/tests/test_filing_projection_ref.py`
+- `S94` `T` `src/cadrumo/domain/calculations/registry/tests/test_modelo_200_registry.py`
+- `S95` `T` `src/cadrumo/_data/registry/aeat/modelos/200/revisions/2024-y-siguientes/casillas/`
+- `S101` `T` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_185/`
+- `S101` `T` `src/cadrumo/_data/registry/aeat/legal/modelo-185.toml`
+- `S101` `T` `src/cadrumo/_data/registry/aeat/modelos/185/revisions/2003-2025/`
+- `S101` `T` `dev/registry/mappings/modelo_185/`
+- `S101` `T` `dev/registry/render_profiles/modelo_185/`
+- `S101` `T` `src/cadrumo/application/filing/tests/`
+- `S109` `T` `src/cadrumo/_data/corpus/aeat_official/disenos_registro/`
+- `S109` `T` `src/cadrumo/_data/registry/aeat/legal/`
+- `S109` `T` `src/cadrumo/domain/calculations/registry/tests/`
+- `S110` `T` `src/cadrumo/domain/calculations/registry/_record_design.py`
+- `S110` `T` `src/cadrumo/domain/calculations/registry/tests/test_diagram_design_band_recovery_baseline.py`
+- `S21` `T`
+- `S21` `verify:` `pytest -q dev/registry/tests/test_generated_export_trees.py -k m390` -> `9 passed`
+- `S21` `verify:` `check` -> `result=matched`
+- `S21` `verify:` `0 errors, 0 warnings, 0 notes`
+- `S21` `verify:` `pass`
+- `S21` `verify:` `pass`
+- `S80` `A` `dev/registry/mappings/modelo_390/2023/0001-records.toml`
+- `S80` `A` `dev/registry/mappings/modelo_390/2023/0002-entries.toml`
+- `S80` `A` `dev/registry/render_profiles/modelo_390/2023/0001-numeric-representation.toml`
+- `S80` `M` `dev/registry/pipeline/source_defects.py`
+- `S80` `M` `dev/registry/tests/test_source_defect_declarations.py`
+- `S80` `A` `dev/registry/tests/test_m390_2023_semantic_map.py`
+- `S80` `M` `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`
+- `S80` `A` `.vault/audit/2026-09-07-aeat-export-fragment-generator-authority-s80-semantic-map-review-audit.md`
+- `S80` `M` `.vault/index/aeat-export-fragment-generator-authority.index.md`
+- `S80` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_m390_2023_semantic_map.py dev/registry/tests/test_source_defect_declarations.py` -> `pass (18 passed)`
+- `S80` `verify:` `uv run --no-sync basedpyright dev/registry/tests/test_m390_2023_semantic_map.py dev/registry/pipeline/source_defects.py dev/registry/tests/test_source_defect_declarations.py` -> `pass (0 errors, 0 warnings, 0 notes)`
+- `S80` `verify:` `uv run --no-sync ruff check dev/registry/tests/test_m390_2023_semantic_map.py dev/registry/pipeline/source_defects.py dev/registry/tests/test_source_defect_declarations.py` -> `pass`
+- `S80` `verify:` `uv run --no-sync ruff format --check dev/registry/tests/test_m390_2023_semantic_map.py dev/registry/pipeline/source_defects.py dev/registry/tests/test_source_defect_declarations.py` -> `pass`
+- `S80` `verify:` `uv run --no-sync vaultspec-core vault check annotations --feature aeat-export-fragment-generator-authority --json` -> `pass`
+- `S81` `A` `dev/registry/mappings/modelo_390/2024/0001-records.toml`
+- `S81` `A` `dev/registry/mappings/modelo_390/2024/0002-entries.toml`
+- `S81` `A` `dev/registry/render_profiles/modelo_390/2024/0001-numeric-representation.toml`
+- `S81` `A` `dev/registry/tests/test_m390_2024_semantic_map.py`
+- `S81` `M` `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`
+- `S81` `A` `.vault/audit/2026-09-07-aeat-export-fragment-generator-authority-s81-semantic-map-review-audit.md`
+- `S81` `M` `.vault/index/aeat-export-fragment-generator-authority.index.md`
+- `S81` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_m390_2024_semantic_map.py` -> `pass (2 passed)`
+- `S81` `verify:` `uv run --no-sync basedpyright dev/registry/tests/test_m390_2024_semantic_map.py` -> `pass (0 errors, 0 warnings, 0 notes)`
+- `S81` `verify:` `uv run --no-sync ruff check dev/registry/tests/test_m390_2024_semantic_map.py` -> `pass`
+- `S81` `verify:` `uv run --no-sync ruff format --check dev/registry/tests/test_m390_2024_semantic_map.py` -> `pass`
+- `S82` `A` `dev/registry/mappings/modelo_390/2025/0001-records.toml`
+- `S82` `A` `dev/registry/mappings/modelo_390/2025/0002-entries.toml`
+- `S82` `A` `dev/registry/render_profiles/modelo_390/2025/0001-numeric-representation.toml`
+- `S82` `A` `dev/registry/tests/test_m390_2025_semantic_map.py`
+- `S82` `M` `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`
+- `S82` `A` `.vault/audit/2026-09-07-aeat-export-fragment-generator-authority-s82-semantic-map-review-audit.md`
+- `S82` `M` `.vault/index/aeat-export-fragment-generator-authority.index.md`
+- `S82` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_m390_2025_semantic_map.py` -> `pass (2 passed)`
+- `S82` `verify:` `uv run --no-sync basedpyright dev/registry/tests/test_m390_2025_semantic_map.py` -> `pass (0 errors, 0 warnings, 0 notes)`
+- `S82` `verify:` `uv run --no-sync ruff check dev/registry/tests/test_m390_2025_semantic_map.py` -> `pass`
+- `S82` `verify:` `uv run --no-sync ruff format --check dev/registry/tests/test_m390_2025_semantic_map.py` -> `pass`
+- `S84` `M` `src/cadrumo/core/aggregation.py`
+- `S84` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S84` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S84` `M` `src/cadrumo/domain/modelos/calculation_revision_identity.py`
+- `S84` `A` `src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py`
+- `S84` `M` `src/cadrumo/domain/calculations/registry/bindings.py`
+- `S84` `A` `src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_annual_summary_bindings.py`
+- `S84` `A` `src/cadrumo/domain/calculations/registry/tests/test_m390_m303_regimen_simplificado_annual_summary_bindings.py`
+- `S84` `A` `src/cadrumo/application/calculations/m303_regimen_simplificado_annual_summary.py`
+- `S84` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S84` `M` `src/cadrumo/application/modelo/export.py`
+- `S84` `M` `src/cadrumo/application/modelo/filing_actions.py`
+- `S84` `M` `src/cadrumo/application/modelo/revision_persistence.py`
+- `S84` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S84` `M` `src/cadrumo/application/modelo/tests/test_modelo_390_303_simplificado_fold_in_live.py`
+- `S84` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/bindings/0009-m303-regimen-simplificado-annual-summary.toml`
+- `S84` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2023/bindings/0009-m303-regimen-simplificado-annual-summary.toml`
+- `S84` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2024/bindings/0009-m303-regimen-simplificado-annual-summary.toml`
+- `S84` `A` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2025/bindings/0009-m303-regimen-simplificado-annual-summary.toml`
+- `S84` `verify:` `uv run python -u -m pytest -q src/cadrumo/application/modelo/tests/test_modelo_390_303_simplificado_fold_in_live.py src/cadrumo/domain/calculations/registry/tests/test_m390_m303_regimen_simplificado_annual_summary_bindings.py src/cadrumo/domain/calculations/registry/tests/test_relation_handoff_paths.py::test_bundled_handoff_paths_have_one_owner_and_preserve_provenance src/cadrumo/domain/calculations/registry/tests/test_relation_handoff_inventory.py::test_relation_handoff_inventory_enumerates_every_validated_relation` -> `pass`
+- `S84` `verify:` `uv run basedpyright src/cadrumo/application/calculations/m303_regimen_simplificado_annual_summary.py src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_annual_summary_bindings.py src/cadrumo/domain/modelos/calculation_revision.py src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py src/cadrumo/core/filing_projection_ref.py` -> `pass`
+- `S128` `R` `dev/registry/pipeline/_source_defects.py` -> `dev/registry/pipeline/source_defects.py`
+- `S128` `M` `dev/registry/pipeline/_export_tree.py`
+- `S128` `M` `dev/registry/pipeline/_tree_check.py`
+- `S128` `M` `dev/registry/pipeline/cli.py`
+- `S128` `M` `dev/registry/pipeline/render_check.py`
+- `S128` `M` `dev/registry/tests/test_generated_export_trees.py`
+- `S128` `M` `dev/registry/tests/test_generated_tree_cli.py`
+- `S128` `M` `dev/registry/tests/test_render_check.py`
+- `S128` `M` `dev/registry/tests/test_source_defect_declarations.py`
+- `S128` `M` `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`
+- `S128` `M` `.vault/plan/2026-08-14-registry-temporal-coverage-plan.md`
+- `S128` `A` `.vault/audit/2026-09-07-aeat-export-fragment-generator-authority-s128-source-defect-wiring-audit.md`
+- `S128` `M` `.vault/index/aeat-export-fragment-generator-authority.index.md`
+- `S128` `verify:` `uv run pytest -q dev/registry/tests/test_source_defect_declarations.py dev/registry/tests/test_generated_tree_cli.py` -> `pass`
+- `S128` `verify:` `uv run pytest -q dev/registry/tests/test_render_check.py` -> `pass`
+- `S128` `verify:` `uv run pytest -q --collect-only dev/registry/tests/test_generated_export_trees.py` -> `pass`
+- `S128` `verify:` `uv run pytest -q dev/registry/tests/test_generated_export_trees.py::test_every_pending_check_mode_entry_names_an_enrolled_tree` -> `pass`
+- `S128` `verify:` `uv run ruff check <owned-python-files>` -> `pass`
+- `S128` `verify:` `uv run ruff format --check <owned-python-files>` -> `pass`
+- `S129` `A` `dev/registry/pipeline/candidate_staging.py`
+- `S129` `M` `dev/registry/pipeline/_export_tree.py`
+- `S129` `M` `dev/registry/pipeline/cli.py`
+- `S129` `M` `dev/registry/pipeline/generated_export_bootstrap_targets.toml`
+- `S129` `M` `dev/registry/pipeline/render_check.py`
+- `S129` `M` `dev/registry/tests/test_generated_export_trees.py`
+- `S129` `M` `dev/registry/tests/test_generated_tree_cli.py`
+- `S129` `M` `src/cadrumo/_data/registry/aeat/modelos/390/revisions/2022/constructs/0001-constructs.toml`
+- `S129` `M` `.vault/plan/2026-08-10-aeat-export-fragment-generator-authority-plan.md`
+- `S129` `A` `.vault/audit/2026-09-07-aeat-export-fragment-generator-authority-s129-candidate-staging-audit.md`
+- `S129` `M` `.vault/index/aeat-export-fragment-generator-authority.index.md`
+- `S129` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_generated_tree_cli.py` -> `pass`
+- `S129` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_generated_export_trees.py::test_m390_bootstrap_isolation_excludes_both_export_authorities_and_keeps_required_support` -> `pass`
+- `S129` `verify:` `uv run --no-sync python -u -c "from dev.registry.pipeline.cli import app; app()" check 390 2022 aeat-dr-390-2022 2022 0A` -> `pass`
+- `S129` `verify:` `uv run --no-sync basedpyright dev/registry/pipeline/candidate_staging.py dev/registry/pipeline/cli.py dev/registry/pipeline/render_check.py dev/registry/tests/test_generated_tree_cli.py dev/registry/tests/test_generated_export_trees.py` -> `pass (0 errors, 0 warnings, 0 notes)`
+- `S129` `verify:` `uv run --no-sync ruff check <owned-python-files>` -> `pass`
+- `S129` `verify:` `uv run --no-sync ruff format --check <owned-python-files>` -> `pass`
+- `S130` `T`
+- `S130` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_generated_tree_cli.py` -> `19 passed`
+- `S130` `verify:` `uv run --no-sync basedpyright dev/registry/tests/test_generated_tree_cli.py dev/registry/pipeline/candidate_staging.py` -> `0 errors, 0 warnings, 0 notes`
+- `S130` `verify:` `uv run --no-sync ruff check dev/registry/tests/test_generated_tree_cli.py` -> `pass`
+- `S130` `verify:` `uv run --no-sync ruff format --check dev/registry/tests/test_generated_tree_cli.py` -> `pass`
+- `S131` `T`
+- `S131` `verify:` `2 passed`
+- `S131` `verify:` `result=publishable_absence`
+- `S131` `verify:` `basedpyright` -> `0 errors, 0 warnings, 0 notes`
+- `S131` `verify:` `pass`
+- `S131` `verify:` `pass`
+- `S132` `M` `dev/registry/tests/test_generated_export_trees.py`
+- `S132` `M` `dev/registry/tests/test_declaration_invariant_gates.py`
+- `S132` `M` `dev/registry/tests/test_m303_generated_envelope_proof.py`
+- `S132` `verify:` `uv run basedpyright dev/registry/tests/test_generated_export_trees.py dev/registry/tests/test_declaration_invariant_gates.py dev/registry/tests/test_m303_generated_envelope_proof.py` -> `pass`
+- `S132` `verify:` `uv run ruff check dev/registry/tests/test_generated_export_trees.py dev/registry/tests/test_declaration_invariant_gates.py dev/registry/tests/test_m303_generated_envelope_proof.py` -> `pass`
+- `S132` `verify:` `2 passed`
+- `S132` `verify:` `69 filing revisions accounted for with non-empty owner, reconsideration condition, and detail`
+- `S133` `M` `dev/registry/pipeline/cli.py`
+- `S133` `M` `dev/registry/pipeline/generated_tree_dispositions.toml`
+- `S133` `M` `dev/registry/pipeline/render_check.py`
+- `S133` `M` `dev/registry/tests/test_generated_export_trees.py`
+- `S133` `M` `dev/registry/tests/test_generated_tree_cli.py`
+- `S133` `M` `dev/registry/tests/test_render_check.py`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0001-record-m151-page-01.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0002-record-m151-page-02.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0003-record-m151-page-02.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0004-record-m151-page-03.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0005-record-m151-page-03.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0006-record-m151-page-04.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0007-record-m151-page-04.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0008-record-m151-page-05.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0009-record-m151-page-06.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0010-record-m151-page-06.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0011-record-m151-page-07.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0012-record-m151-page-08.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/0013-record-m151-did.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2015-2022/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0001-record-m151-page-01.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0002-record-m151-page-01.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0003-record-m151-page-02.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0004-record-m151-page-02.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0005-record-m151-page-03.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0006-record-m151-page-03.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0007-record-m151-page-04.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0008-record-m151-page-04.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0009-record-m151-page-05.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0010-record-m151-page-06.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0011-record-m151-page-07.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0012-record-m151-page-08.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0013-record-m151-page-08.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0014-record-m151-page-09.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0015-record-m151-page-10.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/0016-record-m151-did.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/151/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/export/0001-record-m184-declarante.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/export/0002-record-m184-entidad.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/export/0003-record-m184-entidad.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/export/0004-record-m184-socio.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/export/0001-record-m184-declarante.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/export/0002-record-m184-entidad.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/export/0003-record-m184-entidad.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/export/0004-record-m184-socio.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/export/0001-record-m210-autoliquidacion.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/export/0002-record-m210-autoliquidacion.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/export/0003-record-m210-ingreso-devolucion.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2025/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/export/0001-record-m210-autoliquidacion.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/export/0002-record-m210-autoliquidacion.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/export/0003-record-m210-ingreso-devolucion.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/210/revisions/2026-y-siguientes/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0001-record-m232-operaciones-vinculadas.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0002-record-m232-paraisos-fiscales.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/0003-record-m232-paraisos-fiscales.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2016-2017/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/0001-record-m232-operaciones-vinculadas.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/0002-record-m232-paraisos-fiscales.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/0003-record-m232-paraisos-fiscales.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/232/revisions/2018-y-siguientes/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0001-record-m296-declarante.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0002-record-m296-perceptor.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0003-record-m296-perceptor-intereses.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0004-record-m296-anexo-a-pagos.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/0005-record-m296-anexo-b-certificados.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/296/revisions/2024-y-siguientes/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/export/0001-record-m322-page-01.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/export/0002-record-m322-page-02.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/export/0003-record-m322-page-03.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/export/0004-record-m322-page-04.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2008-2022/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/export/0001-record-m322-page-01.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/export/0002-record-m322-page-01.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/export/0003-record-m322-page-02.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/export/0004-record-m322-page-03.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/export/0005-record-m322-page-04.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2023/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/export/0001-record-m322-page-01.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/export/0002-record-m322-page-01.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/export/0003-record-m322-page-02.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/export/0004-record-m322-page-03.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/export/0005-record-m322-page-04.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/322/revisions/2024-2025/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/export/0001-record-m353-declaracion.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/export/0002-record-m353-declaracion.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2021-2025/export/_generation.provenance.json`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/export/0001-record-m353-declaracion.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/export/0002-record-m353-declaracion.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/export/0003-record-m353-domiciliacion-devolucion.toml`
+- `S133` `M` `src/cadrumo/_data/registry/aeat/modelos/353/revisions/2026-desde-02/export/_generation.provenance.json`
+- `S133` `verify:` `uv run ruff check dev/registry/pipeline/cli.py dev/registry/pipeline/render_check.py dev/registry/tests/test_generated_tree_cli.py dev/registry/tests/test_render_check.py dev/registry/tests/test_generated_export_trees.py` -> `pass`
+- `S133` `verify:` `uv run basedpyright dev/registry/pipeline/cli.py dev/registry/pipeline/render_check.py dev/registry/tests/test_generated_tree_cli.py dev/registry/tests/test_render_check.py dev/registry/tests/test_generated_export_trees.py` -> `pass`
+- `S133` `verify:` `6 passed`
+- `S133` `verify:` `uv run python -u -m dev.registry.analysis.generated_tree_state` -> `19 reproduced, 11 provenance-only, 2 record-drift, 1 never-committed`
+- `S133` `verify:` `3b5cae286c21834388e95d09f19824ce11f707c7` -> `104 passed`
+
+## Notes
+
+- `S21` The final registry-load bracket drifted from `d035e7ab956335a7a9ea3c520a33bdcd668c2c57` to `d427ab6c981be9a0b825e4a4d01e3b81a90434df` only across unrelated object-name-declustering Vault documents. No measured registry or Modelo 390 path changed.
+- `S80` The broader `test_m390_auxiliary_envelope.py` module cannot currently collect
+- `S80` because unrelated concurrent application changes introduce a
+- `S80` `CalculationSourceContext` circular import. Its isolated rerun failed at the
+- `S80` same import boundary with a stable HEAD; S80's own detector reads the real
+- `S80` parser intermediate directly and proves the separately governed auxiliary
+- `S80` header still contains 13 anchors.
+- `S82` The feature-wide Vaultspec check is externally red because the concurrently
+- `S82` edited `.vault/adr/2026-08-11-tui-interface-adr.md` is not valid UTF-8 at byte
+- `S82` 12671 and is therefore excluded from global metadata scans. S82 does not touch
+- `S82` that file. Its feature annotations and all other reported feature checks are
+- `S82` clean; the four pre-existing body-section warnings and intentional `PLAN022`
+- `S82` ordering warning remain unchanged.
+- `S128` The exact Modelo 390 CLI check now renders past the adjudicated page-7 literal and reaches the later S21-owned refusal: the generated candidate conflicts with the superseded `export_layouts` tree.
+- `S130` The verification HEAD bracket drifted from `edfe80c7539431910c2a71b0cc8bc11a0e3852dc` to `697344b883edfcb47252fb2baa680a0df8934034` only across unrelated object-name-declustering Vault and quality-test paths. No measured registry path changed. Read-only CLI replays now pass bootstrap selection and expose separate S21 prerequisites: generated-layout legal-reference closure for 2023 and transitive continuity-metadata staging for 2024-2025.
+- `S131` Vaultspec RAG failed at the service boundary for both code and Vault queries. Discovery therefore used the exact S21, continuity, construct, and candidate-staging identifiers only. All verification HEAD brackets were stable at `0038adeb5bf421f0d6eebdb2a4e29d532179f9e1`.
+- `S132` The complete generated-tree module reached all dynamically projected rows but inherited 27 current reproduction failures: all 27 differ in generated provenance and both Modelo 347 revisions additionally carry the already-ledgered record drift. This is a live input-versus-published-artifact condition, not a filtered enrollment or type-check failure. The separate canonical two-channel integration test is currently blocked by unrelated concurrent `snapshot_ref` contract work and fails while constructing its pre-existing Modelo 200 vector before exercising this Step.

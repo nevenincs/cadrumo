@@ -1,0 +1,501 @@
+---
+tags:
+  - '#exec'
+  - '#duplication-burndown'
+date: '2026-09-03'
+modified: '2026-09-17'
+body_schema: 'body-v2'
+body_hash: 'sha256:fd3940ffe2c156e0dc04941df059df9ae1f7e5503b40ac03eec4be5c143d08cf'
+related:
+  - "[[2026-09-03-duplication-burndown-plan]]"
+---
+
+# `duplication-burndown` ledger
+
+## Changes
+
+- `S01` `M` `dev/audit/duplication_dispositions.toml`
+- `S01` `verify:` `uv run --no-sync python -m dev.audit.duplication` -> `pass`
+- `S02` `A` `dev/audit/tests/_duplication_support.py`
+- `S02` `A` `dev/audit/tests/test_duplication.py`
+- `S02` `A` `dev/audit/tests/test_duplication_scan.py`
+- `S02` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_duplication.py dev/audit/tests/test_duplication_scan.py` -> `pass`
+- `S02` `verify:` `uv run --no-sync ruff check dev/audit/tests` -> `pass`
+- `S04` `M` `dev/audit/duplication_dispositions.toml`
+- `S04` `verify:` `uv run --no-sync python -m dev.audit.duplication` -> `pass`
+- `S04` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_duplication.py dev/audit/tests/test_duplication_scan.py` -> `pass`
+- `S05` `M` `dev/audit/tests/_duplication_support.py`
+- `S05` `M` `dev/audit/tests/test_duplication.py`
+- `S05` `M` `dev/audit/tests/test_duplication_scan.py`
+- `S05` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_duplication.py dev/audit/tests/test_duplication_scan.py` -> `pass`
+- `S05` `verify:` `uv run --no-sync ruff check dev/audit/tests` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/cli/_app_ledger_command_spec_support.py`
+- `S08` `A` `src/cadrumo/entrypoints/cli/tests/test_app_ledger_parameter_declaration_primitives.py`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/entrypoints/cli/tests/test_app_ledger_parameter_declaration_primitives.py` -> `pass`
+- `S08` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/cli/_app_ledger_command_spec_support.py` -> `pass`
+- `S09` `M` `src/cadrumo/entrypoints/cli/_app_ledger_lifecycle_command_specs.py`
+- `S09` `M` `src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py`
+- `S09` `M` `dev/audit/duplication_dispositions.toml`
+- `S09` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_duplication.py dev/audit/tests/test_duplication_scan.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/cli/_app_ledger_lifecycle_command_specs.py src/cadrumo/entrypoints/cli/_app_ledger_operations_command_specs.py` -> `pass`
+- `S10` `M` `src/cadrumo/entrypoints/cli/_app_ledger_evidence_command_specs.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/_app_ledger_classification_command_specs.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/_app_ledger_counterparty_command_specs.py`
+- `S10` `M` `dev/audit/duplication_dispositions.toml`
+- `S10` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_duplication.py dev/audit/tests/test_duplication_scan.py` -> `pass`
+- `S10` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/cli/_app_ledger_evidence_command_specs.py src/cadrumo/entrypoints/cli/_app_ledger_foundation_command_specs.py src/cadrumo/entrypoints/cli/_app_ledger_classification_command_specs.py src/cadrumo/entrypoints/cli/_app_ledger_counterparty_command_specs.py` -> `pass`
+- `S11` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_common_command_parameters.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_filing_record_command_specs.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py`
+- `S11` `M` `dev/audit/duplication_dispositions.toml`
+- `S11` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_duplication.py dev/audit/tests/test_duplication_scan.py` -> `pass`
+- `S11` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/cli/_modelo_nonwork_calculations_command_specs.py src/cadrumo/entrypoints/cli/_modelo_nonwork_filing_record_command_specs.py src/cadrumo/entrypoints/cli/_modelo_nonwork_reconcile_command_specs.py` -> `pass`
+- `S12` `M` `dev/audit/duplication_dispositions.toml`
+- `S12` `M` `dev/audit/tests/test_duplication.py`
+- `S12` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_duplication.py dev/audit/tests/test_duplication_scan.py` -> `pass`
+- `S13` `M` `src/cadrumo/application/export/google_operation.py`
+- `S13` `M` `dev/audit/duplication_dispositions.toml`
+- `S13` `verify:` `uv run --no-sync pytest -q src/cadrumo/entrypoints/tests/test_google_operation.py src/cadrumo/application/export` -> `pass`
+- `S13` `verify:` `uv run --no-sync ty check src/cadrumo/application/export/google_operation.py` -> `pass`
+- `S13` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_duplication.py dev/audit/tests/test_duplication_scan.py` -> `pass`
+- `S14` `T`
+- `S14` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/outbound/aeat/sede -k "groi or nif_iva or adapter_utils"` -> `pass`
+- `S15` `A` `src/cadrumo/entrypoints/tui/ledger/workspace_injection.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S15` `M` `src/cadrumo/entrypoints/tui/ledger/routes.py`
+- `S15` `M`
+- `S15` `M` `dev/audit/duplication_dispositions.toml`
+- `S15` `verify:` `uv run --no-sync pytest -q -m "unit or integration" src/cadrumo/entrypoints/tui/ledger src/cadrumo/entrypoints/tui/devtools` -> `pass`
+- `S15` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/tui/ledger/` -> `pass`
+- `S16` `T`
+- `S16` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/calculations/registry -k "ledger_renta or gastos or binding"` -> `pass`
+- `S17` `M` `dev/audit/duplication_dispositions.toml`
+- `S17` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_duplication.py dev/audit/tests/test_duplication_scan.py` -> `pass`
+- `S18` `M` `dev/quality/suite.py`
+- `S18` `M` `dev/quality/tests/test_suite_gate_table.py`
+- `S18` `verify:` `uv run --no-sync python -m dev.audit.duplication` -> `pass`
+- `S18` `verify:` `uv run --no-sync python -m dev.audit.dead_code` -> `pass`
+- `S18` `verify:` `uv run --no-sync just check-semantic` -> `pass`
+- `S18` `verify:` `uv run --no-sync ruff check .` -> `pass`
+- `S18` `verify:` `uv run --no-sync ruff format --check .` -> `pass`
+- `S18` `verify:` `uv run --no-sync python -m dev.quality.types` -> `pass`
+- `S18` `verify:` `uv run --no-sync lint-imports` -> `pass`
+- `S18` `verify:` `uv run --no-sync python -m dev.quality.relative_imports` -> `pass`
+- `S18` `verify:` `uv run --no-sync python -m dev.quality.suite` -> `fail, 2 of 12 gates, both peer-owned`
+- `S18` `verify:` `uv run --no-sync python -m dev.quality.unreachable_module_ratchet` -> `fail, peer-owned`
+- `S18` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_ratchet` -> `fail, peer-owned`
+- `S19` `A` `src/cadrumo/entrypoints/tui/ledger/action_guards.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S19` `M` `src/cadrumo/entrypoints/tui/ledger/routes.py`
+- `S19` `verify:` `uv run --no-sync pytest -q -m "unit or integration" src/cadrumo/entrypoints/tui/ledger` -> `pass`
+- `S19` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/tui/ledger/` -> `pass`
+- `S20` `M` `dev/quality/constant_value_agreement.py`
+- `S20` `M` `src/cadrumo/core/hashing.py`
+- `S20` `M` `src/cadrumo/application/ledger/id_resolution.py`
+- `S20` `M` `src/cadrumo/application/user_profile/bundle_export_operation.py`
+- `S20` `M` `src/cadrumo/adapters/outbound/storage/_integrity.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/attachment.py`
+- `S20` `M` `src/cadrumo/domain/attachments/models.py`
+- `S20` `verify:` `uv run --no-sync python -m dev.quality.constant_value_agreement` -> `pass`
+- `S20` `verify:` `uv run --no-sync ruff check src/cadrumo` -> `pass`
+- `S20` `verify:` `uv run --no-sync ty check src/cadrumo` -> `fail, peer-owned`
+- `S21` `A` `dev/quality/docstring_reference_targets.py`
+- `S21` `A` `dev/quality/tests/test_docstring_reference_targets.py`
+- `S21` `M` `src/cadrumo/core/config.py`
+- `S21` `M` `src/cadrumo/core/ledger_sort.py`
+- `S21` `M` `src/cadrumo/entrypoints/cli/_common.py`
+- `S21` `M` `src/cadrumo/application/aggregation/_renta_income_ledger.py`
+- `S21` `M` `src/cadrumo/application/modelo/calculate_input.py`
+- `S21` `M` `src/cadrumo/application/modelo/iva_wallet_seed.py`
+- `S21` `M` `src/cadrumo/application/modelo/maritime_preview.py`
+- `S21` `M` `src/cadrumo/application/modelo/work_addressing.py`
+- `S21` `M` `src/cadrumo/application/transactions/diagnostics.py`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/_validate_constructs.py`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/counterpart_bindings.py`
+- `S21` `M` `src/cadrumo/domain/contribuyente/keys.py`
+- `S21` `M` `src/cadrumo/application/aggregation/_business_proportion.py`
+- `S21` `M` `src/cadrumo/application/aggregation/_currency_predicates.py`
+- `S21` `M` `src/cadrumo/application/aggregation/_iva_transaction.py`
+- `S21` `M` `src/cadrumo/application/aggregation/_modelo_bindings.py`
+- `S21` `M` `src/cadrumo/application/aggregation/_renta_ledger.py`
+- `S21` `M` `src/cadrumo/application/aggregation/errors.py`
+- `S21` `verify:` `uv run --no-sync pytest dev/quality/tests/test_docstring_reference_targets.py` -> `pass`
+- `S21` `verify:` `uv run --no-sync ruff check src/cadrumo` -> `pass`
+- `S22` `M` `src/cadrumo/application/live/notification_documents.py`
+- `S22` `M` `src/cadrumo/adapters/inbound/notificacion/_sancion.py`
+- `S22` `M` `src/cadrumo/domain/iva/sepa_marca.py`
+- `S22` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`
+- `S22` `verify:` `uv run --no-sync ruff check src/cadrumo` -> `pass`
+- `S22` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/outbound/google -n 0` -> `fail`
+- `S23` `R` `src/cadrumo/adapters/outbound/google/_drive_entries.py -> src/cadrumo/adapters/outbound/google/drive_entries.py`
+- `S23` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`
+- `S23` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`
+- `S23` `M` `src/cadrumo/adapters/outbound/google/tests/test_drive_entries.py`
+- `S23` `M` `src/cadrumo/adapters/outbound/storage/_google_drive.py`
+- `S23` `R` `docs/api/cadrumo.adapters.outbound.google._drive_entries.rst -> docs/api/cadrumo.adapters.outbound.google.drive_entries.rst`
+- `S23` `verify:` `uv run --no-sync ruff check src/cadrumo` -> `pass`
+- `S23` `verify:` `uv run --no-sync python -m dev.docs.apidocs scaffold --check` -> `pass`
+
+## Notes
+
+- `S02` Three gates from the deleted originals were not restored as written. Two asserted the
+- `S02` production tree carries zero clones; that was true when they were authored and is false
+- `S02` today (52 groups), so restoring them would gate the dashboard on a frozen corpus count,
+- `S02` which `aeat-quality-gates` bans. The health-report gate was rewritten to assert the
+- `S02` mapping instead: GREEN reachable only via `observed_zero`, clones AMBER carrying the
+- `S02` measured count, neither verdict honest without proof of inspection.
+- `S02` The third (`test_dispositions_arithmetic_reconciles`) and the live coverage gate
+- `S02` (`test_every_observed_clone_group_has_a_recorded_disposition`) take the disposition
+- `S02` RECORD as their subject, which `W01.P01.S04` fills and `W01.P01.S05` proves. They are
+- `S02` deferred to S05 rather than restored here, where they would red the tree on debt this
+- `S02` Step does not own.
+- `S02` `dev/audit/tests` carries 17 pre-existing failures unrelated to this Step:
+- `S02` `test_vacuity_screen` (16) runs `git ls-files` inside a non-repository `tmp_path` and
+- `S02` gets exit 128, and one timing-sensitive semgrep timeout case in `test_security_scan`.
+- `S02` Neither module imports the restored files.
+- `S04` Every one of the 52 observed groups is classified `cluster-owned`; none is `intentional`.
+- `S04` The governing decision requires a literal observed-zero close and states that a
+- `S04` disposition never excuses a positive detector result, so an `intentional` entry could not
+- `S04` close a group here -- it would leave the detector positive. The classification stays
+- `S04` defined in the header for the post-campaign rolling ratchet.
+- `S04` `reconciled_groups` now equals `observed_groups` (52). That is a statement about coverage
+- `S04` of this ledger, not about the tree: the tree still carries all 52 clones and the runner
+- `S04` still reports them. Verified non-suppressive -- the scan reports 52 clones and 0.21%
+- `S04` before and after this change.
+- `S04` The seven clusters were derived from the live file-sets, not assumed: 43
+- `S04` ledger-command-declarations, 3 application-local-authorities, 2
+- `S04` modelo-nonwork-command-declarations, and one each of ledger-renta-gastos-bindings,
+- `S04` modelo-export-review-package, sede-check-mechanics, tui-ledger-controller-routes.
+- `S04` Coverage proven by the restored multiset read: 27 distinct file-sets, 52 recorded, 0
+- `S04` uncovered. Teeth proven both ways against the live set -- injecting a surplus clone into
+- `S04` an already-recorded file-set is detected, and so is a brand-new file-set.
+- `S04` The previous revision of this file cited a plan Step identifier in its header. That
+- `S04` citation was removed rather than carried forward: the Code Stands Alone mandate forbids
+- `S04` configuration from referencing vault documents or Step ids, so clusters are named
+- `S04` descriptively instead.
+- `S05` Six gates added, closing the two deferred in `S02` plus the four this Step names.
+- `S05` Disposition parsing: the summary/group arithmetic identity; a classification vocabulary
+- `S05` membership check so an invented or missing classification cannot read as a decision the
+- `S05` arithmetic still counts; and an owner check, because `cluster-owned` with no `owner`
+- `S05` names no owner and is indistinguishable from an unreviewed group labelled to look
+- `S05` complete.
+- `S05` Live reconciliation: the multiset coverage read over the real scan, now with an explicit
+- `S05` non-empty guard on the parsed record so coverage cannot pass vacuously.
+- `S05` Unavailable evidence stays non-green: an unavailable scan carries an empty `groups`
+- `S05` tuple, so feeding it to the coverage read returns the same "nothing uncovered" a
+- `S05` genuinely covered tree gives. That false green is pinned as its own unit gate, which is
+- `S05` what keeps the live gate's outcome precondition from being deleted as redundant by
+- `S05` someone reading only the coverage arithmetic.
+- `S05` Changed-scan evidence stays non-green: the record may not declare FEWER groups than the
+- `S05` live scan observes. The direction is deliberate and matches the coverage read's existing
+- `S05` asymmetry -- under-declaring hides debt and fails; declaring more is a landed
+- `S05` consolidation the record has not yet dropped, which is progress and passes.
+- `S05` Teeth proven for all four record gates against isolated in-memory inputs, never by
+- `S05` mutating the committed record: dropping one from the summary, under-declaring
+- `S05` `meta.observed_groups`, an invented classification, a missing classification, a blank
+- `S05` owner, and a missing owner each fail; live 60 against a declared 52 fails; live 40
+- `S05` against a declared 52 passes.
+- `S08` Six primitives were justified by an AST census of the live tree rather than by
+- `S08` resemblance: six keyword shapes account for 200 of the 264 literal parameter
+- `S08` declarations across the ledger command-spec fragments, each recurring in up to 14 files.
+- `S08` Only `name`, `declarations` and `help_key` vary between uses; every remaining field is
+- `S08` fixed by the contract, which is why the primitives supply them.
+- `S08` The shapes are kept separate rather than folded behind default arguments because their
+- `S08` differences are contracts, not detail: an absent default is not an empty-string default,
+- `S08` optional is not required, and a flag is not free text. A gate asserts no two primitives
+- `S08` can collapse onto the same declaration.
+- `S08` Equality is proven against literals constructed independently in the test module, never
+- `S08` against the primitives' own output, and is asserted twice over -- structural equality on
+- `S08` the frozen dataclass, plus a per-field sweep that pins the field set so a field added to
+- `S08` `OptionSpec` later cannot be silently defaulted into every shared parameter. Teeth
+- `S08` confirmed for `show_default`, `hidden`, `multiple`, `is_flag`, `metavar` drift and for a
+- `S08` required-versus-optional swap.
+- `S08` This Step defines the primitives; migrating consumers is the following Steps' scope, so
+- `S08` nothing consumes them yet. That is measurable and is recorded rather than absorbed: the
+- `S08` unreachable-code audit's unused-symbol count moved from 1414 to 1420, exactly these six
+- `S08` functions. The clone count is unchanged at 52 for the same reason -- no literal has been
+- `S08` displaced yet. Both close as the migration Steps land.
+- `S08` `test_root_command_specs.py::test_root_specs_own_the_executable_namespace_and_parameter_contracts`
+- `S08` fails in this worktree on a root parameter tuple (`self_test` versus `quiet`, plus an
+- `S08` extra `debug`). It is unrelated to this Step: nothing in the tree consumes the new
+- `S08` primitives, so this change has no blast radius on the root specs. The failure belongs to
+- `S08` the in-flight CLI root verb work.
+- `S09` 49 literal parameter declarations were replaced (37 lifecycle, 12 operations) by an AST
+- `S09` rewrite that matches a call only when its keyword shape equals a primitive's exactly and
+- `S09` carries the identity fields across verbatim. A declaration differing by even one field is
+- `S09` left alone, so a divergent parameter cannot be absorbed into a shared contract.
+- `S09` Contract equivalence is proven by comparing the exported `LEDGER_LIFECYCLE_COMMAND_SPECS`
+- `S09` and `LEDGER_OPERATIONS_COMMAND_SPECS` before and after: 11 and 8 specs,
+- `S09` `sha256:d7c2e86c3577ce3cde1646e6123fd7724cfd0bc2d3a3cce481fa2fc1b283d65b` on both sides,
+- `S09` still identical after formatting. Every command token, help key, policy, handler,
+- `S09` parameter default and result schema is therefore unchanged.
+- `S09` The first comparison attempt reported a spurious divergence. `repr` on a dataclass holding
+- `S09` a frozenset is not stable across processes -- set iteration order follows the hash seed --
+- `S09` so the capability sets rendered in different orders. The comparison was redone through a
+- `S09` canonical serializer that sorts every set before rendering.
+- `S09` Clone count fell from 52 to 37; duplicated lines from 0.21% to 0.15%. Unused symbols fell
+- `S09` from 1420 to 1415: five of the six primitives are now consumed, and `_required_text_option`
+- `S09` remains unconsumed until the next migration Step.
+- `S09` The coverage gate went red immediately after the consolidation, correctly. Removing
+- `S09` lifecycle's literals left `evidence` and `inventory_analysis` -- which had each cloned
+- `S09` lifecycle -- now cloning each other, a file-set pairing the record did not carry. The
+- `S09` ledger was reconciled against the live scan through its owning generator, which is what
+- `S09` that record's contract requires; it is not a mute, and the detector's own count is
+- `S09` unchanged by it.
+- `S09` Two failures in the CLI test tree are pre-existing and were proven so by A/B against
+- `S09` copies of the unmodified modules: `test_root_command_specs` (root parameter tuple) and
+- `S09` `test_ledger_interface_contract_payloads` (a pydantic `extra_forbidden` payload) fail
+- `S09` identically with and without this change.
+- `S10` 88 literal parameter declarations were replaced (29 evidence, 29 foundation, 22
+- `S10` classification, 8 counterparty) by the same exact-shape AST rewrite used for the previous
+- `S10` component: a call is rewritten only when its keyword shape equals a primitive's exactly.
+- `S10` Contract equivalence proven by canonical comparison of the four exported spec tuples
+- `S10` before and after: 12 evidence, 8 foundation, 1 classification, 3 counterparty,
+- `S10` `sha256:408fe8dff0d130a122112fc6b6ad630624bb8277b200d6d3698223cc8cd618a4` on both sides.
+- `S10` The comparison sorts every set before rendering, because `repr` on a dataclass holding a
+- `S10` frozenset varies with the process hash seed.
+- `S10` Clone count fell from 37 to 14; duplicated lines from 0.15% to 0.06%. The
+- `S10` ledger-command-declarations cluster fell from 28 groups to 5.
+- `S10` The transient debt this campaign's earlier Step introduced is now fully repaid. All six
+- `S10` parameter primitives have production consumers, the support module reports no unused
+- `S10` symbols, and the tree-wide unused-symbol count returned to 1414 -- its value before the
+- `S10` primitives were defined.
+- `S10` The disposition ledger was reconciled against the live scan through its owning generator,
+- `S10` as the previous consolidation also required. 14 groups now carry a disposition.
+- `S10` The two CLI failures remain the pre-existing ones established by A/B in the previous
+- `S10` Step: `test_root_command_specs` and `test_ledger_interface_contract_payloads`. The passing
+- `S10` count in that selection is unchanged at 321.
+- `S11` Resolved through the non-work Modelo surface's own declaration authority, not the
+- `S11` ledger's. The two families' parameter shapes genuinely differ: the ledger spells
+- `S11` `metavar`, `count`, `eager`, `show_default` and `hidden` at every call while this family
+- `S11` relies on the dataclass defaults, and this family declares `is_flag=False` for its boolean
+- `S11` options where the ledger uses a bare presence switch. The ledger rewrite left these
+- `S11` untouched for exactly that reason, which is the shape guard working rather than an
+- `S11` oversight.
+- `S11` Eight factories were added to the existing shared parameter module, justified by a census
+- `S11` of the three clone-bearing modules: seven shapes account for 35 of their 44 literal
+- `S11` declarations. The remaining nine stay literal because they are distinct contracts --
+- `S11` transport loci, constrained paths, and domain enum values -- and folding them in would
+- `S11` have merged authorities that only look alike.
+- `S11` 37 literals were replaced (16 calculations, 13 filing record, 8 reconcile). Contract
+- `S11` equivalence proven by canonical comparison of the three exported spec tuples: 4, 4 and 3
+- `S11` specs, `sha256:37cf4820c235480760e69d7b9d53a24783bbf8c7203fa58a293e2f2feccaa68c` on both
+- `S11` sides.
+- `S11` Clone count fell from 14 to 12; duplicated lines from 0.06% to 0.05%. The
+- `S11` modelo-nonwork-command-declarations cluster is fully resolved and no longer appears in the
+- `S11` ledger. All eight new factories have production consumers and the tree-wide unused-symbol
+- `S11` count is unchanged at 1414.
+- `S11` `test_modelo_describe_payload_parity::test_boundary_filing_years_remain_valid` fails in
+- `S11` this worktree; it was proven pre-existing by A/B against copies of the unmodified modules,
+- `S11` failing identically with and without this change. `test_root_command_specs` remains the
+- `S11` other known pre-existing failure.
+- `S12` Adjudicated `intentional`, which the amended governing decision now permits: closure rests
+- `S12` on adjudicated residue rather than a literal zero.
+- `S12` The matched span is the handler SIGNATURE, not shared behaviour. The command runtime
+- `S12` dispatches through `invoke(**arguments)` built from the declared CommandSpec parameters, so
+- `S12` each handler must spell every declared parameter itself. Neither side can accept a bundle
+- `S12` the way the TUI controller could in the sibling Step, because there the controller was a
+- `S12` plain class whose caller I could change; here BOTH sides are dispatcher-facing. Removing
+- `S12` this clone would require changing the dispatch contract, and reordering the parameters to
+- `S12` defeat token matching is the detector-oriented shortcut the decision rejects. The two
+- `S12` workflows stay distinct authorities, which this Step required.
+- `S12` The clone therefore remains visible and counted. Nothing about the detector changed.
+- `S13` The three application-local pairs were adjudicated independently and reached three
+- `S13` different verdicts. Only one was a shared authority.
+- `S13` Resolved: `export/google_operation.py`. `GoogleSheetsExportRemoteResult` and
+- `S13` `GoogleSheetsExportOperationResult` both declared the same fourteen workbook-write facts.
+- `S13` That is one concept with two carriers -- the port returns the facts, the operation retains
+- `S13` them with provenance -- so the facts now live in a `GoogleSheetsWorkbookWriteFacts` base
+- `S13` both inherit. Equivalence proven by comparing pydantic field definitions before and after:
+- `S13` all 14 and 20 fields identical in annotation, requiredness, default and metadata, and both
+- `S13` models still frozen. The only schema movement is the ORDER of one `required` array; its
+- `S13` member set and every property definition are unchanged, and that array is a set of names
+- `S13` whose order carries no validation meaning.
+- `S13` Not consolidatable: `auth/operation_definitions.py` with `user_profile/operations.py`. The
+- `S13` matched span is the import preamble -- two modules that register operations importing the
+- `S13` same operations vocabulary. An import statement cannot be shared, and this is precisely
+- `S13` the phenomenon the disposition record's own banner documents: the detector flags shared
+- `S13` preambles while missing real semantic duplication.
+- `S13` Not consolidatable without merging distinct authorities:
+- `S13` `aggregation/_atribucion_member.py`. The self-clone spans `_observation_from_socio` and
+- `S13` `_detail_row_from_socio`, which build different target types and deliberately differ in
+- `S13` four fields: the observation renders text per the diseño (`_optional_str`, `_x_flag`)
+- `S13` while the row carries typed domain values (`_optional_naturaleza_inmueble`,
+- `S13` `_optional_situacion_inmueble`, `_optional_clave_declarado`). Merging them would couple the
+- `S13` source-observation contract to the domain row contract, which the governing decision
+- `S13` forbids.
+- `S13` Clone count fell from 12 to 11. Two of this Step's three groups remain in the record as
+- `S13` `cluster-owned` because the campaign's closure bar is a literal observed zero and neither
+- `S13` can honestly be classified `intentional` under that bar; see the blocked structural
+- `S13` residue also found in the Modelo export pair.
+- `S13` 37 failures across the wider application selection are pre-existing. Proven by A/B on
+- `S13` `test_export_output_paths.py` against a copy of the unmodified module: 10 failed, 2 passed
+- `S13` identically with and without this change.
+- `S14` No code change. The adjudication is that this pair's shared check mechanics were already
+- `S14` centralised before this campaign, and the residual clone is not duplication.
+- `S14` `_adapter_utils.py` already owns every shared mechanic: landing assertions, marker verdict
+- `S14` extraction, the locate helper, playwright page handling, the NIF check operation tail, and
+- `S14` registry failure messages. `groi_check` imports nine of its symbols and `nif_iva_check`
+- `S14` ten. The distinct AEAT protocol authority of each check stays in its own module, which is
+- `S14` what this Step required be preserved.
+- `S14` The clone the detector reports is the ten-line import preamble naming those shared
+- `S14` symbols, and nothing else. It is an artifact of correct centralisation rather than a
+- `S14` defect: the more mechanics move to the shared module, the longer the identical import list
+- `S14` grows and the more the token matcher has to match on. Removing it would require either
+- `S14` un-centralising the mechanics or introducing a facade re-export layer, and a re-export
+- `S14` layer is forbidden outright by the architecture boundaries this project holds.
+- `S14` The group therefore stays recorded as `cluster-owned` and visible in the count. It is the
+- `S14` fourth structurally irreducible clone found in this campaign, after the Modelo export
+- `S14` handler signature, the auth/user-profile import preamble, and the deliberately diverging
+- `S14` atribucion member builders.
+- `S15` Clone count fell from 11 to 10. The eleven injected dependencies are now one frozen
+- `S15` `LedgerWorkspaceInjection`, so the parameter list is declared once rather than in both the
+- `S15` route factory and the controller constructor.
+- `S15` Dependency injection and refresh ownership are preserved, which this Step required. The
+- `S15` factory keeps its public signature, so `launcher.py` and every external caller are
+- `S15` unchanged; it builds the injection once and hands it to the controller. The controller
+- `S15` still exposes each dependency as the attribute its screens read, assigned from the
+- `S15` injection, so no downstream reader changed.
+- `S15` The guard consolidated in the preceding Step moved into the injection's `__post_init__`,
+- `S15` which is where it belongs: there is now one construction path, so a check cannot apply on
+- `S15` one and not the other. The duplicated prepared-import uniqueness check moved with it.
+- `S15` 28 construction sites were converted across three test modules and the devtools workbench
+- `S15` fixture. 232 tests pass.
+- `S16` No code change. Consolidating only the shared concept is what this Step permitted, and the
+- `S16` shared concept is already consolidated.
+- `S16` Both families already resolve through `_ledger_binding_resolution`, referencing
+- `S16` `resolve_ledger_family_binding_values` and `unsupported_ledger_family_observations` six
+- `S16` times each, and both already reach the shared `binding_aggregation`,
+- `S16` `binding_selector_utils` and `ledger_binding_selector_support` modules. There is no
+- `S16` remaining shared mechanic to centralise.
+- `S16` What must NOT be merged is the declarations themselves. The two carry different governing
+- `S16` authority: the estimacion directa family binds `Modelo.M100` and the pago-fraccionado
+- `S16` family binds `Modelo.M130`, over different casilla sets. Each relationship family is
+- `S16` required to keep its own typed declaration and resolver at its owning module, so merging
+- `S16` them would break the binding contract rather than remove duplication. A shared preamble is
+- `S16` not evidence of shared identity.
+- `S16` The detector's matched span is the import preamble, lines 7 to 30 in both files, naming
+- `S16` the shared registry vocabulary. It is the same artifact of correct centralisation already
+- `S16` adjudicated for the sede checker pair: the more mechanics move to shared modules, the
+- `S16` longer the identical import list grows.
+- `S16` 664 registry tests pass. The group stays recorded and visible in the count.
+- `S17` Reconciled: the live scan reports 10 clone groups, the record carries 10 dispositions across
+- `S17` 9 distinct file-sets, and the multiset coverage read reports 0 uncovered. Entries for the 42
+- `S17` groups resolved during the campaign were removed as their clones disappeared, which is what
+- `S17` this record's contract requires -- a disposition describes a group observed NOW, so a
+- `S17` resolved entry loses no reasoning.
+- `S17` Nine groups are `cluster-owned` and one is `intentional`: the Modelo export and
+- `S17` review-package handler signatures, which the dispatch contract forces to be spelled twice.
+- `S18` Re-measured against the current tree; the earlier record for this Step was
+- `S18` taken at a revision whose results have since inverted in both directions, so it
+- `S18` is replaced rather than appended to.
+- `S18` Green: the duplication runner at 10 clones and 0.05 percent with every group
+- `S18` carrying exactly one disposition and zero uncovered, which is the closure the
+- `S18` amended governing decision defines; the dead-code audit; the semantic leak
+- `S18` screen; whole-tree lint and format; types; both import gates; and the docstring,
+- `S18` unconsumed-export and write-path ratchets. The aggregate suite reports 10 of 12.
+- `S18` Red, both peer-owned and both already classified: the module ratchet on three
+- `S18` modules that fit no available disposition, and the symbol ratchet on two
+- `S18` symbols. The owner decisions those need are tracked in the reachability plan and
+- `S18` are not resolvable from here.
+- `S18` Two gates were found running different arguments in the aggregate suite than in
+- `S18` their own justfile recipe, which is how a gate defined twice fails: the recipe
+- `S18` and the table disagree in silence. The dependency gate scanned the harness
+- `S18` package in the recipe but not in the table, so the table reported two
+- `S18` dependencies as declared-but-unused when both are imported there; widening the
+- `S18` table's scan to match removed both findings and surfaced no new ones. The
+- `S18` architecture gate ran four test files in the recipe and two in the table, so two
+- `S18` architecture gates never ran in the aggregate at all. Both were aligned to their
+- `S18` recipe, and a gate now compares each table entry's arguments against its recipe.
+- `S18` One transient was observed and is not a finding: the suite recorded a syntax
+- `S18` error in a locale test that a peer was rewriting during the run. The file parses
+- `S18` and the gate exits 0 on re-measurement.
+- `S18` No threshold, exclusion, baseline, skip or allowlist was changed. The dependency
+- `S18` scan was widened, which makes the gate see more rather than tolerate more.
+- `S19` The duplication hid a missing guard, which is the finding.
+- `S19` The route factory and the workspace controller each validated the injected Ledger actions
+- `S19` against the same canonical command keys. The factory checked four -- review, classify,
+- `S19` evidence, link. The controller checked three: it never verified that `review_action`
+- `S19` resolves to `ledger.review`, and its only reference to that key is a routing-table entry.
+- `S19` So every caller constructing the controller directly, which is the devtools workbench
+- `S19` fixture and ten flow tests, skipped that refusal entirely while the factory path enforced
+- `S19` it.
+- `S19` That is what writing a guard twice produces: not two copies of one rule, but two rules that
+- `S19` drifted. The check now lives in one module both paths call, so a future check cannot land
+- `S19` on a single path. The controller gained the review-action refusal it was missing, and 75
+- `S19` TUI ledger tests pass with it.
+- `S19` Teeth proven directly against the guard: a review action that resolves to classify, a
+- `S19` classify action that resolves to review, and a link action that resolves to review are each
+- `S19` refused with their own message.
+- `S20` The screen reported 35 collisions. Adding one discriminator reduced the real
+- `S20` backlog to 3, and the distinction is the finding: 32 of the 35 build their value
+- `S20` from an imported authority rather than from literals. `SEDE_BASE =
+- `S20` EXTERNAL.aeat.domains.www6` in four sede modules and `BUCKETS_DIRNAME =
+- `S20` storage_location(StorageCategory.BUCKETS).subpath` in two are local bindings of
+- `S20` one canonical value - every copy resolves to whatever the authority says, so
+- `S20` they cannot drift. Only a value retyped from literals is a second source of
+- `S20` truth. Those are now reported as `derived_name_collision` and kept out of the
+- `S20` actionable count.
+- `S20` Of the 3 that remained, 2 were the same value under two names: the lowercase hex
+- `S20` alphabet, declared in five modules as `_HEX_ALPHABET` or `_HEX_DIGITS`, every one
+- `S20` of them used for the same membership test. Merging them onto a published
+- `S20` `core.hashing.HEX_ALPHABET` exposed a sixth declaration under a third name,
+- `S20` `_ASCII_HEX_LOWER`, which no collision kind could ever have caught because only
+- `S20` one module spelled it that way. The tree now carries one declaration and six
+- `S20` importers.
+- `S20` `CSV_EXTENSIONS` is the one collision left and is not merged here: the two sites
+- `S20` are an inbound financial provider and a modelo observation spreadsheet reader,
+- `S20` whose accepted extensions agree today by coincidence rather than by a shared
+- `S20` rule, so consolidating them would invent a coupling the code does not claim.
+- `S21` Thirty-one further shipped modules were repointed in one sweep and are not
+- `S21` listed individually; the sweep changed docstring text only, verified by a diff
+- `S21` carrying no non-`:mod:` additions.
+- `S21` The count went 87 to 35. Roughly a third of that was the screen learning to
+- `S21` read what it was looking at rather than the tree changing: subscripted generics
+- `S21` (`Envelope[BlobManifest]` is two claims, not one unresolvable string), instance
+- `S21` attributes assigned as `self.x`, and `:mod:` roles written relatively. Each of
+- `S21` those was a false positive the screen had manufactured.
+- `S21` The rule that made the module sweep safe is the phrase "lived in". An earlier
+- `S21` attempt at the same sweep was reverted because it rewrote a sentence about
+- `S21` where code USED to live, turning a true statement about history into a false
+- `S21` one about the present. Skipping any line carrying that phrase separated 36
+- `S21` present-tense references, safely repointed, from 3 historical ones left exactly
+- `S21` as written. `_iter_validated_envelopes` was left for the same reason: its
+- `S21` sentence is past tense and correct.
+- `S21` Nothing here was guessed. Each repointing names a symbol confirmed to exist:
+- `S21` the builder was found through the test the docstring itself names, the
+- `S21` counterpart supplier through the source_kind filter its sentence describes, and
+- `S21` `ExternalConstants` because the docstring contradicted its own signature. Where
+- `S21` no replacement existed the citation was removed rather than invented -- twice,
+- `S21` for `is_sandbox_label` and a See Also entry pointing at a function that never
+- `S21` appears in the tree.
+- `S21` Two findings were not documentation defects at all. A rule slug in production
+- `S21` prose led to the vault-citation ratchet, and a second slug wearing a `:func:`
+- `S21` role showed that ratchet's own pattern was blind to role form.
+- `S22` Two duplicates were deliberately left. `domain/iva/invoice_classification`
+- `S22` already imports `domain.invoices`, so importing `SPAIN_COUNTRY_CODE` the other
+- `S22` way would close a package-level cycle. And the Google `OWNERSHIP_KEY` /
+- `S22` `OWNERSHIP_VALUE` copy in `adapters/outbound/storage/_google_drive.py` cannot
+- `S22` import its canonical home, because that home is the private module
+- `S22` `adapters/outbound/google/_drive_entries.py` and a cross-package import from a
+- `S22` private underscore module is forbidden outright. The copy exists BECAUSE the
+- `S22` canonical home is private; resolving it means giving those constants a public
+- `S22` home, which is a placement decision rather than a cleanup.
+- `S22` Six pre-existing failures were confirmed by copy-aside A/B, identical with and
+- `S22` without these edits: four in `adapters/outbound/google`
+- `S22` (`test_auth_preconditions`, three in `test_calc_sheets_typed_outcomes`) and two
+- `S22` in `application/live` (`test_censal_acquisition`, `test_iva_wallet_capture_backend`).
+- `S23` The api stub tree was regenerated through its owning generator rather than
+- `S23` hand-edited. That run changed 70 stubs: 51 modules had no stub at all and 19
+- `S23` were stale, from modules landing without regeneration, so the drift gate was
+- `S23` standing red before this Step and is now conformant. Only two of the 70 belong
+- `S23` to this rename.
+- `S23` `test_storage_validation_carrier_totality_and_canonical_construction` fails
+- `S23` both with and without this change, on
+- `S23` `storage.factory:build_google_credentials has no stable validation identity`.
+- `S23` Establishing that took three attempts: the test timed out past 500s twice under
+- `S23` machine contention, and a run that completed in 8.6s against the baseline
+- `S23` looked like evidence the change had introduced a hang. Timing the import both
+- `S23` ways (2.66s with the change, 3.55s without) showed it had not.

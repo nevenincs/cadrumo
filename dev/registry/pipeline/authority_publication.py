@@ -602,7 +602,8 @@ def _cleanup_retired_authority_databases(destination: Path, *, current_database:
         names = ", ".join(sorted(path.name for path in leased))
         print(
             f"authority retirement deferred for {len(leased)} superseded generation(s), still open by a reader: "
-            f"{names}. They remain in {destination} and in the built wheel until a later publication retires them.",
+            f"{names}. They remain in {destination} until a later publication retires them. They are not "
+            f"published: packaging selects the descriptor and the one database it names, never the directory.",
             file=sys.stderr,
         )
     return tuple(leased)

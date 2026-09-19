@@ -1,0 +1,392 @@
+---
+tags:
+  - '#exec'
+  - '#registry-dated-validity'
+date: '2026-08-27'
+modified: '2026-09-17'
+body_schema: 'body-v2'
+body_hash: 'sha256:f1c01ece20da473b0295b6a8b0dfa0b0d1632364c6fb6a57129f6bc2faf4313d'
+related:
+  - "[[2026-08-27-registry-dated-validity-plan]]"
+---
+
+# `registry-dated-validity` ledger
+
+## Changes
+
+- `S02` `A` `src/cadrumo/core/validity_window.py`
+- `S02` `A` `src/cadrumo/core/tests/test_validity_window.py`
+- `S02` `verify:` `pytest src/cadrumo/core/tests/test_validity_window.py` -> `pass`
+- `S03` `A` `src/cadrumo/_data/registry/aeat/categories/profiles.toml`
+- `S03` `D` `src/cadrumo/_data/registry/aeat/categories/profiles/2024.toml`
+- `S03` `D` `src/cadrumo/_data/registry/aeat/categories/profiles/2025.toml`
+- `S03` `M` `src/cadrumo/domain/categories/_proportionality.py`
+- `S03` `M` `src/cadrumo/domain/categories/_registry.py`
+- `S03` `M` `src/cadrumo/domain/categories/__init__.py`
+- `S03` `M` `src/cadrumo/domain/categories/tests/test_registry.py`
+- `S03` `M` `src/cadrumo/domain/categories/tests/test_profile.py`
+- `S03` `M` `src/cadrumo/domain/categories/tests/test_proportionality.py`
+- `S03` `M` `src/cadrumo/domain/categories/tests/test_citation_authority.py`
+- `S03` `M` `src/cadrumo/domain/usage_ratios/_model.py`
+- `S03` `M` `src/cadrumo/domain/renta/tests/test_ledger_expenses.py`
+- `S03` `M` `src/cadrumo/domain/renta/tests/test_region_deductibility_selection.py`
+- `S03` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`
+- `S03` `M` `dev/locales/_registry_scanner.py`
+- `S03` `M` `dev/ci/tests/test_ledger_scale_benchmark.py`
+- `S03` `verify:` `pytest src/cadrumo/domain/categories src/cadrumo/domain/renta/tests` -> `pass`
+- `S04` `M` `src/cadrumo/application/registry/tests/test_exact_key_corpus_year_coverage.py`
+- `S04` `M` `src/cadrumo/domain/iva/tests/test_year_coverage_matches_supported_filing_years.py`
+- `S04` `verify:` `pytest src/cadrumo/application/registry/tests/test_exact_key_corpus_year_coverage.py` -> `fail`
+- `S05` `M` `src/cadrumo/domain/categories/_proportionality.py`
+- `S05` `A` `src/cadrumo/domain/categories/tests/test_citation_edition_window.py`
+- `S05` `verify:` `pytest src/cadrumo/domain/categories/tests/test_citation_edition_window.py` -> `pass`
+- `S06` `A` `src/cadrumo/domain/iva/tests/test_provision_window_bounds_grounding.py`
+- `S06` `verify:` `pytest src/cadrumo/domain/iva/tests/test_provision_window_bounds_grounding.py` -> `pass`
+- `S07` `A` `src/cadrumo/_data/registry/aeat/iva/catalogues.toml`
+- `S07` `D` `src/cadrumo/_data/registry/aeat/iva/catalogues/2025.toml`
+- `S07` `M` `src/cadrumo/domain/iva/_schema.py`
+- `S07` `M` `src/cadrumo/domain/iva/_catalogue.py`
+- `S07` `M` `src/cadrumo/domain/iva/__init__.py`
+- `S07` `M` `src/cadrumo/core/config.py`
+- `S07` `M` `src/cadrumo/core/_storage_taxonomy.py`
+- `S07` `M` `src/cadrumo/core/resources/_registry.py`
+- `S07` `M` `src/cadrumo/core/resources/_repos/iva_catalogues.py`
+- `S07` `M` `src/cadrumo/domain/iva/tests/test_catalogue_period_keyed.py`
+- `S07` `M` `src/cadrumo/domain/iva/tests/test_rules.py`
+- `S07` `M` `src/cadrumo/domain/iva/tests/test_verify.py`
+- `S07` `M` `src/cadrumo/domain/iva/tests/test_lookup_refusals_carry_no_authored_prose.py`
+- `S07` `M` `env/.env.example`
+- `S07` `M` `docs/reference/environment-overrides.md`
+- `S07` `verify:` `pytest src/cadrumo/domain/iva` -> `pass`
+- `S08` `A` `src/cadrumo/_data/registry/aeat/iva/place_of_supply.toml`
+- `S08` `D` `src/cadrumo/_data/registry/aeat/iva/place_of_supply/2025.toml`
+- `S08` `M` `src/cadrumo/domain/iva/_place_of_supply.py`
+- `S08` `M` `src/cadrumo/domain/iva/tests/test_place_of_supply_grounding.py`
+- `S08` `M` `src/cadrumo/domain/iva/tests/test_iva_registry_grounding.py`
+- `S08` `verify:` `pytest src/cadrumo/domain/iva` -> `pass`
+- `S09` `T`
+- `S09` `verify:` `out-of-tree mutation of all three shipped corpora` -> `pass`
+- `S10` `T`
+- `S11` `A` `.vault/audit/2026-08-27-registry-dated-validity-audit.md`
+- `S12` `T`
+- `S12` `verify:` `AEAT Manual practico Renta 2022-2025 and BOE Ordenes PJC/178/2025, PJC/297/2026` -> `pass`
+- `S13` `M` `src/cadrumo/domain/categories/_proportionality.py`
+- `S13` `M` `src/cadrumo/domain/categories/_registry.py`
+- `S13` `M` `src/cadrumo/_data/registry/aeat/categories/profiles.toml`
+- `S13` `A` `src/cadrumo/domain/categories/tests/test_statutory_cap_schedule.py`
+- `S13` `verify:` `pytest src/cadrumo/domain/categories` -> `pass`
+- `S14` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
+- `S14` `verify:` `load_registry_tree over the bundled registry` -> `pass`
+- `S15` `M` `src/cadrumo/domain/categories/_proportionality.py`
+- `S15` `M` `src/cadrumo/domain/categories/_registry.py`
+- `S15` `M` `src/cadrumo/_data/registry/aeat/categories/profiles.toml`
+- `S15` `A` `src/cadrumo/domain/categories/tests/test_provision_window_bounds_citations.py`
+- `S15` `M` `src/cadrumo/domain/categories/tests/test_citation_edition_window.py`
+- `S15` `M` `src/cadrumo/domain/categories/tests/test_proportionality.py`
+- `S15` `M` `src/cadrumo/domain/categories/tests/test_citation_authority.py`
+- `S15` `verify:` `pytest src/cadrumo/domain/categories src/cadrumo/domain/iva src/cadrumo/domain/renta/tests` -> `pass`
+- `S16` `T`
+- `S16` `verify:` `out-of-tree mutation of the shipped categories corpus, 5 proofs` -> `pass`
+- `S16` `verify:` `pytest test_exact_key_corpus_year_coverage.py test_year_coverage_matches_supported_filing_years.py` -> `pass`
+- `S17` `M` `src/cadrumo/core/_concepto_ingreso.py`
+- `S17` `M` `src/cadrumo/core/__init__.py`
+- `S17` `M` `src/cadrumo/domain/transactions/_volumen_ingresos.py`
+- `S17` `M` `src/cadrumo/domain/transactions/__init__.py`
+- `S17` `M` `src/cadrumo/application/modelo/_art109_activity_income.py`
+- `S17` `M` `src/cadrumo/_data/registry/aeat/legal/irpf-retencion-actividades.toml`
+- `S17` `A` `src/cadrumo/application/modelo/tests/test_art109_base_excludes_subvenciones.py`
+- `S17` `verify:` `pytest test_art109_base_excludes_subvenciones.py` -> `pass`
+- `S17` `verify:` `out-of-tree mutation of the shipped registry, 3 proofs plus control` -> `pass`
+- `S18` `M` `src/cadrumo/domain/categories/_proportionality.py`
+- `S18` `M` `src/cadrumo/domain/categories/_registry.py`
+- `S18` `M` `src/cadrumo/_data/registry/aeat/categories/profiles.toml`
+- `S18` `M` `src/cadrumo/domain/renta/_ledger_expenses.py`
+- `S18` `M` `src/cadrumo/domain/categories/tests/test_registry.py`
+- `S18` `M` `src/cadrumo/domain/renta/tests/test_ledger_expenses.py`
+- `S18` `A` `src/cadrumo/domain/categories/tests/test_seguro_enfermedad_discapacidad_limb.py`
+- `S18` `A` `src/cadrumo/domain/renta/tests/test_seguro_cap_sums_both_limbs.py`
+- `S18` `verify:` `pytest src/cadrumo/domain/categories src/cadrumo/domain/renta src/cadrumo/domain/tests` -> `pass`
+- `S18` `verify:` `out-of-tree mutation of the shipped corpus, 3 proofs plus control` -> `pass`
+- `S19` `A` `src/cadrumo/core/calendar_shift.py`
+- `S19` `M` `src/cadrumo/domain/retention/_floor.py`
+- `S19` `M` `src/cadrumo/domain/retention/__init__.py`
+- `S19` `M` `src/cadrumo/domain/retention/tests/test_floor.py`
+- `S19` `M` `src/cadrumo/application/overview/_explain.py`
+- `S19` `M` `src/cadrumo/application/overview/tests/test_explain.py`
+- `S19` `M` `src/cadrumo/domain/fincas/_tier_resolver.py`
+- `S19` `M` `src/cadrumo/domain/fincas/tests/test_tier_resolver.py`
+- `S19` `M` `src/cadrumo/domain/fincas/tests/test_threshold_registry_grounded.py`
+- `S19` `A` `src/cadrumo/domain/fincas/tests/test_rehab_lookback_is_calendar_relative.py`
+- `S19` `R` `renta-<year>-rental-rehab-lookback-days.toml -> renta-<year>-rental-rehab-lookback-years.toml`
+- `S19` `verify:` `pytest src/cadrumo/domain/fincas src/cadrumo/domain/retention` -> `pass`
+- `S19` `verify:` `out-of-tree mutation, 2 proofs plus 2 controls` -> `pass`
+- `S20` `A` `src/cadrumo/domain/contribuyente/_seguro_enfermedad_insured.py`
+- `S20` `M` `src/cadrumo/domain/contribuyente/__init__.py`
+- `S20` `M` `src/cadrumo/application/modelo/profile_binding.py`
+- `S20` `A` `src/cadrumo/domain/contribuyente/tests/test_seguro_enfermedad_insured.py`
+- `S20` `verify:` `pytest src/cadrumo/domain/contribuyente + profile-binding real path` -> `pass`
+- `S21` `R` `src/cadrumo/domain/contribuyente/_seguro_enfermedad_insured.py` -> `src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`
+- `S21` `M` `src/cadrumo/domain/contribuyente/seguro_enfermedad_insured.py`
+- `S21` `M` `src/cadrumo/domain/contribuyente/__init__.py`
+- `S21` `M` `src/cadrumo/domain/contribuyente/tests/test_seguro_enfermedad_insured.py`
+- `S21` `M` `src/cadrumo/application/user_profile/projections.py`
+- `S21` `M` `src/cadrumo/application/modelo/profile_binding.py`
+- `S21` `M` `src/cadrumo/application/modelo/_autonomic_deduccion_advisory.py`
+- `S21` `M` `src/cadrumo/application/modelo/_required_binding_gate.py`
+- `S21` `M` `src/cadrumo/application/modelo/_profile_export_binding.py`
+- `S21` `M` `src/cadrumo/application/modelo/tests/test_autonomic_deduccion_advisory.py`
+- `S21` `M` `src/cadrumo/application/modelo/tests/test_modelo_100_2024_profile_coverage.py`
+- `S21` `M` `src/cadrumo/application/modelo/tests/test_profile_binding_real_path.py`
+- `S21` `M` `src/cadrumo/application/aggregation/_renta_ledger.py`
+- `S21` `A` `src/cadrumo/application/aggregation/tests/test_seguro_enfermedad_cap_reaches_production.py`
+- `S21` `verify:` `pytest src/cadrumo/application/aggregation/tests/test_seguro_enfermedad_cap_reaches_production.py` -> `pass`
+- `S21` `verify:` `pytest test_profile_binding_real_path test_autonomic_deduccion_advisory test_modelo_100_2024_profile_coverage test_profile_binding test_seguro_enfermedad_insured test_seguro_cap_sums_both_limbs` -> `pass`
+- `S22` `A` `src/cadrumo/core/citation_grounding.py`
+- `S22` `D` `src/cadrumo/domain/iva/_schema.py`
+- `S22` `M` `src/cadrumo/domain/iva/_schema.py`
+- `S22` `M` `src/cadrumo/domain/iva/__init__.py`
+- `S22` `M` `src/cadrumo/domain/iva/_catalogue.py`
+- `S22` `M` `src/cadrumo/domain/iva/verify.py`
+- `S22` `M` `src/cadrumo/domain/iva/tests/test_rules.py`
+- `S22` `M` `src/cadrumo/domain/categories/_proportionality.py`
+- `S22` `M` `src/cadrumo/domain/categories/_registry.py`
+- `S22` `M` `src/cadrumo/_data/registry/aeat/categories/profiles.toml`
+- `S22` `A` `src/cadrumo/domain/categories/tests/test_citation_quote_grounding.py`
+- `S22` `M` `src/cadrumo/domain/categories/tests/test_profile.py`
+- `S22` `M` `src/cadrumo/locales/en/*` -> `es/*` -> `ca/*` -> `hu/*`
+- `S22` `M` `dev/locales/tests/test_registry_locale_key_parity.py`
+- `S22` `verify:` `pytest domain/categories domain/iva domain/usage_ratios dev/locales` -> `1556 passed, 4 failed (peer CLI locale keys)`
+- `S22` `verify:` `bite proofs over the shipped TOML, four probes` -> `pass`
+- `S23` `M` `src/cadrumo/_data/registry/aeat/categories/profiles.toml`
+- `S23` `A` `src/cadrumo/domain/renta/tests/test_usage_ratio_requires_operator_input.py`
+- `S23` `M` `src/cadrumo/domain/usage_ratios/tests/test_model.py`
+- `S23` `verify:` `pytest domain/renta domain/usage_ratios domain/categories` -> `231 passed`
+- `S23` `verify:` `pytest application/ledger/tests/test_preflight_home_office.py` -> `pass`
+- `S23` `verify:` `bite proof reinstating default_ratio on one category` -> `both halves red, restore verified`
+- `S24` `A` `src/cadrumo/application/user_profile/usage_ratio_resolution.py`
+- `S24` `M` `src/cadrumo/application/user_profile/censo_sync.py`
+- `S24` `A` `src/cadrumo/application/user_profile/tests/test_usage_ratio_resolution.py`
+- `S24` `M` `src/cadrumo/domain/categories/_spending_category.py`
+- `S24` `M` `src/cadrumo/domain/categories/__init__.py`
+- `S24` `A` `src/cadrumo/domain/categories/tests/test_home_office_grouping_is_centralised.py`
+- `S24` `M` `src/cadrumo/domain/usage_ratios/_service.py`
+- `S24` `M` `src/cadrumo/adapters/persistence/profile/usage_ratios.py`
+- `S24` `M` `src/cadrumo/application/ledger/preflight.py`
+- `S24` `M` `src/cadrumo/application/ledger/ratios.py`
+- `S24` `M` `src/cadrumo/application/state_projection.py`
+- `S24` `M` `src/cadrumo/application/aggregation/_modelo_bindings.py`
+- `S24` `verify:` `pytest domain/categories domain/usage_ratios domain/renta application/aggregation + preflight + resolver` -> `1301 passed, 5 failed (peer)`
+- `S24` `verify:` `bite proof: un-wire the derivation` -> `red, restore verified`
+- `S24` `verify:` `bite proof: reinstate a local family grouping` -> `red on the gate's own assertion, restore verified`
+
+## Notes
+
+- `S09` The first run of the bite proofs reported four passes for the wrong reason: the
+- `S09` harness never created its temp subdirectories, so every corpus refused with
+- `S09` `FileNotFoundError` and the harness counted the refusal as a gate biting. The
+- `S09` harness now treats an OS error as a broken proof rather than a red gate. A second
+- `S09` defect surfaced after that fix: the provision-window mutation widened only the
+- `S09` first citation, whose article has been in force since 1993, so nothing violated
+- `S09` and the proof passed while proving nothing. Both were corrected before the
+- `S09` recorded pass.
+- `S12` No file changed: this row obtained evidence. The five figures and their
+- `S12` provenance are recorded in the feature audit. Two independent official sources
+- `S12` agree on 2025 (the Manual's printed figure and the orden's base and tipo), and
+- `S12` AEAT's own printed method reproduces all four published years to the cent, which
+- `S12` is what licenses deriving 2026 from the orden alone. A first web search returned
+- `S12` two different 2025 base figures from secondary summaries; both were discarded in
+- `S12` favour of the primary orden text.
+- `S14` No corpus fetch was needed after all: RD 439/2007 is already bundled
+- `S14` consolidated, and the grounding rule prefers pointing corpus_ref at the bundled
+- `S14` file over hand-authoring a duplicate excerpt. Both entries are agent_reviewed
+- `S14` with an operator-re-stamp note, matching the sibling LIRPF entries.
+- `S15` Which article establishes each of the three previously uncited profiles is an
+- `S15` agent tax review against the bundled consolidated LIRPF, recorded as such beside
+- `S15` each citation in the TOML. It is the part of this change that most needs operator
+- `S15` re-stamping, and the audit says so.
+- `S16` Two of the five proofs were wrong on their first run and were corrected before
+- `S16` the recorded pass. One narrowed a cap row into an INVERTED span, so it reddened
+- `S16` the span validator and proved nothing about coverage. The other inverted its own
+- `S16` success condition and reported a correctly-dropped year as a failure; the
+- `S16` implementation was right and the proof was not. Both are recorded because a
+- `S16` bite proof that passes for the wrong reason is the failure this discipline exists
+- `S16` to catch.
+- `S17` Reused rather than reinvented. `ConceptoIngreso` and `TipoActividad` already existed
+- `S17` and art. 110.1.c) already paired them; this adds art. 109's own sibling set, predicate
+- `S17` and selectors beside them. The two provisions deliberately do NOT share a set: art. 110
+- `S17` keeps subvenciones corrientes in the base and art. 109.3/109.4 take them out, so one
+- `S17` shared set would get exactly one provision wrong. A test pins the divergence to exactly
+- `S17` SUBVENCION_CORRIENTE so a later merge of the two reds.
+- `S17` The activity selectors are declared under art. 109 rather than borrowing the art. 95
+- `S17` retencion partitions they currently coincide with, following the reasoning the art. 110
+- `S17` selector already records: those partition retention RATES, and this exemption's scope
+- `S17` must not move if a rate partition is re-cut.
+- `S17` The A04-with-A05 profesional grouping follows the art. 95 partition this registry
+- `S17` already grounds. It is an agent tax review and the parameter says so in reviewed_by;
+- `S17` the operator should re-stamp it.
+- `S17` Seventeen tests fail in the affected run. All seventeen are in repo-wide core gates
+- `S17` (source-connectivity, storage-liveness, period-string, clock-seam, modelo-string,
+- `S17` persisted-version, external-constants) and every failing module was already failing in
+- `S17` the pre-change sweep recorded earlier in this campaign. None is in the art. 109,
+- `S17` transactions, concepto or volumen surface this step touched.
+- `S18` The variant concept was WIDENED, not duplicated. A variant already meant a cap
+- `S18` selected by a legally relevant condition; only its unit was daily, because dietas was
+- `S18` the first user. RIRPF art. 9 states daily amounts and LIRPF art. 30.2.5.a states annual
+- `S18` per-person ones, so the variant now carries exactly one of the two units and a rule's
+- `S18` variants must agree on which. The dietas shape is unchanged and a test pins that.
+- `S18` An annual variant set applies EVERY variant at once to its own share of the insured
+- `S18` persons, unlike a daily set where one condition selects one amount. That is what the
+- `S18` article means by 500 per person or 1.500 for each with discapacidad in the same return.
+- `S18` THE HALF THIS DOES NOT DELIVER, stated plainly. Production never populates the person
+- `S18` counts: the only construction site of RentaDeductibilityContext, in
+- `S18` application/aggregation/_renta_ledger.py, sets profile_year, usage_ratios,
+- `S18` residence_ccaa and iva_deduction_ratio and leaves statutory_cap_person_count at its
+- `S18` default of 1. So the shipped behaviour today is a flat 500 for the contribuyente, and
+- `S18` it remains so after this step. What changed is that the lawful answer is now
+- `S18` expressible and computed correctly when the counts are supplied; wiring the family
+- `S18` profile through to that context is separate work and is recorded as such in the
+- `S18` feature audit rather than counted as done here.
+- `S18` Three existing tests asserted the retired flat shape and were updated to the two-limb
+- `S18` contract rather than deleted: the registry semantics test, the ledger cap test, and
+- `S18` the regulatory-cap-binds gate, which reds if a cap stops binding. That gate is why the
+- `S18` uncounted fallback exists at all -- returning None there would have made the seguro cap
+- `S18` bind nothing.
+- `S19` RELOCATION. add_prescription_years was calendar-year arithmetic with a leap clamp
+- `S19` living in domain/retention under a prescription-specific name, reachable only through
+- `S19` that package's facade. A second domain needing the same arithmetic is the point at
+- `S19` which a canonical home has to be nominated, so it moved to
+- `S19` core.calendar_shift.shift_by_calendar_years with every consumer updated in the same
+- `S19` change and the old name deleted rather than aliased. Five files, including the gate
+- `S19` that pins the name to prove the arithmetic is delegated rather than re-inlined.
+- `S19` A TEST ENCODED THE DEFECT AS THE CONTRACT. test_rehab_finished_731_days_before_falls
+- `S19` _through asserted TIER_50 for a rehabilitation finished 2023-06-01 against a contract
+- `S19` celebrated 2025-06-01 -- exactly two calendar years, and 731 days because 2024 is a leap
+- `S19` year. The suite was defending the day count against the article. It was corrected to
+- `S19` assert TIER_60_REHAB and renamed, with a sibling case pinning that the window is still
+- `S19` bounded one day earlier.
+- `S19` THE PARAMETER DECISION, carried through. The days declaration was retired in all six
+- `S19` revisions that carried it and re-declared in years, so no parameter describes a unit
+- `S19` the code no longer reads. A shipped gate reds if any revision re-declares it in days.
+- `S19` HARNESS ERRORS, recorded. Two of the four bite proofs were written with inverted
+- `S19` assertions -- one treated a correctly-denying retired rule as a failure, the other
+- `S19` treated a correctly-widened leap boundary as a narrowing. Both were corrected before
+- `S19` the recorded pass. This is the third tick in this campaign where a proof lied in my
+- `S19` favour, which is the argument for reading every proof's failure text rather than its
+- `S19` verdict.
+- `S19` A registry-validation red seen mid-tick (rd-1065-2007:art-33/34 corpus anchors) was a
+- `S19` peer's uncommitted edit that they reverted themselves; no peer work was lost and the
+- `S19` final run is clean without it.
+- `S20` NOT YET REACHABLE IN PRODUCTION, and recorded as unwired rather than done. The
+- `S20` counts are derived and correct, but the last hop into
+- `S20` application/aggregation/_renta_ledger.py is blocked by a CIRCULAR IMPORT:
+- `S20` application/modelo/profile_binding.py already imports from ..aggregation at line 79,
+- `S20` so the aggregation cannot import back to reach the family-profile assembler. A
+- `S20` function-local import would hide the cycle rather than remove it, which the runtime
+- `S20` import-graph audit axis names explicitly, so it was not used. The wiring edit was
+- `S20` written, found to cycle, and reverted; the tree carries no partial version of it.
+- `S20` Closing it needs _renta_family_profile_from_facts relocated out of application/modelo
+- `S20` into a layer both subpackages can depend on. That function's own docstring records it
+- `S20` as a deliberate single reconstruction carrying the union of two earlier ones, so the
+- `S20` relocation is delicate and deserves its own step rather than being folded in here.
+- `S20` THREE PLACES THE NEIGHBOURING PROVISION WOULD HAVE OVER-GRANTED, all avoided by
+- `S20` reading art. 30.2.5.a rather than reusing art. 58.1. Its household limb is
+- `S20` cohabitation OR assimilated economic dependency, where this article says only "que
+- `S20` convivan con el". Its age limb is under 25 OR any discapacidad, where this article
+- `S20` says only hijos menores de veinticinco anos -- so an over-25 child with discapacidad
+- `S20` is in the minimo population and outside this one. And the conyuge limb reads the
+- `S20` MARRIED status token, not the wider partnered set, because the article says "su
+- `S20` conyuge" and a pareja de hecho is not one.
+- `S20` An undeclared discapacidad grado takes the ORDINARY limb rather than dropping the
+- `S20` person. Membership is settled by then; only the limb is unknown, and the article
+- `S20` grants the ordinary limit absent the condition the higher one requires. Dropping them
+- `S20` would cost the filer 500 euros for a person the article covers.
+- `S21` Two relocations were required to reach production and are recorded here because
+- `S21` each deleted a name rather than aliasing it. `count_seguro_enfermedad_insured`
+- `S21` moved off the `RentaFamilyProfile` assembler onto a plain descendant sequence and
+- `S21` gained `seguro_enfermedad_insured_counts_from_facts`, so the whole count sits
+- `S21` below both application packages; the first attempt routed through
+- `S21` `application/modelo` and hit the existing modelo-imports-aggregation cycle.
+- `S21` `profile_fact_index` and its type guard moved from
+- `S21` `application/modelo/profile_binding.py` to `application/user_profile/projections.py`
+- `S21` for the same reason, with all seven consumers updated in the same change.
+- `S21` Nineteen tests are red in the affected suites and NONE are caused by this Step.
+- `S21` Attribution: `application/wizard` no longer registers the profile keys on import,
+- `S21` which reds the registration-order, fact-write-door and cleared-path gates, and
+- `S21` traces to the peer relocation commit `f3d439a8bf`; the M100 2025 relief bindings
+- `S21` added by `6c0b795c8d` and `e13a909b5a` red the source-mesh binding-set
+- `S21` assertions; and the modelo 200 `calculation` authority grade reds three borrador
+- `S21` and lifecycle tests from `1d1b203114`. All sit in paths this Step did not touch
+- `S21` and are left for their owners.
+- `S22` The mis-citation this pass surfaced is the substantive finding. `seguros_salud_autonomo`
+- `S22` cited LIRPF "art. 30.2.5.c regla 1.a"; letter c of that rule is gastos de manutencion
+- `S22` and regla 1.a is aportaciones a mutualidades. Seguro de enfermedad is letter a. The
+- `S22` locale key is why nobody saw it: a citation rendering as the literal word "Quote"
+- `S22` cannot be read against the article it names. Locator corrected and pinned by a
+- `S22` regression.
+- `S22` Two defects of my own from earlier in this campaign were found and fixed here. The
+- `S22` mutualidad rule's `notes` sat after its cap-schedule array-of-tables, so TOML bound it
+- `S22` to the final schedule row and the rule carried none; the scanner stringified the
+- `S22` absence into the literal locale key "None", unauthorable in any catalogue. And the two
+- `S22` statutory-cap variant labels added with the seguro fix were never authored in the four
+- `S22` catalogues. Both are now closed, with the "None" shape gated.
+- `S22` Scope note against the standing goal: the 41 annual-edition citations are recorded
+- `S22` `source_not_bundled` rather than grounded. That is the honest state, not a narrowing --
+- `S22` the AEAT Manual practico editions and portal help pages they name are not among the
+- `S22` bundled consolidated BOE texts, so no verbatim excerpt can be transcribed from anything
+- `S22` this repository holds. What the standing goal still asks for and this excludes is
+- `S22` first-party evidence text for those 41; obtaining it needs the Manual editions bundled,
+- `S22` which is an operator decision about corpus scope, not authoring work.
+- `S22` The pinned key count in the locale parity gate was replaced rather than raised. A tally
+- `S22` reds on every new spending category, trains the reader to bump the number, and says
+- `S22` nothing about which key appeared.
+- `S23` Five categories carried `default_ratio = "0.30"` beside their real
+- `S23` `statutory_multiplier = "0.30"`. The evaluator reads `default_ratio` in the same slot
+- `S23` as a STORED ratio and stored ratios are already effective, because the censo derivation
+- `S23` multiplies the raw area proportion by the statutory factor before saving. So the
+- `S23` default asserted an EFFECTIVE thirty per cent, which LIRPF art. 30.2.5.b reaches only
+- `S23` at a raw afectacion of 1.00 -- the entire dwelling as office. A taxpayer who had
+- `S23` declared nothing deducted the maximum the article can ever allow.
+- `S23` The `statutory_multiplier` is deliberately kept: the 30 per cent IS statutory and the
+- `S23` censo derivation applies it. Only the fabricated second factor is gone, and a separate
+- `S23` assertion holds the multiplier in place so the correction cannot swing the other way.
+- `S23` The corrected documentation test in `domain/usage_ratios/tests/test_model.py` had
+- `S23` encoded the defect as the contract -- it called `default_ratio` "the statutory default"
+- `S23` and pinned a fallback pattern the article does not support.
+- `S23` 32 tests are red in `application/ledger` and `adapters/persistence/profile` and NONE
+- `S23` are caused by this Step: they are `ConfirmationBlockedError` from the ledger
+- `S23` confirmation gate and stale composing-write declarations naming
+- `S23` `application/ledger/actions_common.py` and `application/workflow/_persistence.py`,
+- `S23` which trace to the peer commits `0e5e7ff94c` and `38a95dabdf`. No red involves category
+- `S23` profiles, usage ratios or deductibility.
+- `S24` The censo 036 declaration reached the deduction only as a VALIDATOR before this Step.
+- `S24` `CensoSyncService.bound_raw_afectacion_ratio` computed office_m2/total_m2 and
+- `S24` `derive_home_office_ratios_from_censo` applied the art. 30.2.5.b thirty per cent, but
+- `S24` no production caller joined them: the operator had to retype the ratio through
+- `S24` `ledger ratios set`, and a filer who declared their m2 and never did deducted nothing
+- `S24` on utilities, silently, with no preflight reason for it. The calculate path now resolves
+- `S24` ratios through `resolve_effective_usage_ratios`, and a new
+- `S24` `MISSING_HOME_OFFICE_AFECTACION` preflight reason reports the case where neither a
+- `S24` stored ratio nor censo m2 exist.
+- `S24` Deriving is not new policy: the censo guard already refuses any stored home-office
+- `S24` ratio that is not exactly the derived one and blocks calculation on mismatch, so the
+- `S24` stored value carried no information the censo did not already have.
+- `S24` Centralisation, which is the larger half of this Step. `_HOME_OFFICE_FAMILIES` was
+- `S24` declared FOUR times -- `domain/usage_ratios/_service.py`,
+- `S24` `adapters/persistence/profile/usage_ratios.py`, `application/ledger/ratios.py`,
+- `S24` `application/ledger/preflight.py` -- two as tuples and two as frozensets, and two of
+- `S24` those modules also each carried their own `_home_office_categories()`. A fifth copy was
+- `S24` added and removed within this Step. All are deleted; `HOME_OFFICE_FAMILIES` and
+- `S24` `home_office_categories()` now live once in `domain/categories/_spending_category.py`
+- `S24` beside the membership table they derive from, with every consumer importing them. No
+- `S24` shim, no re-export, no alias. The identical `CensoSyncService(bucket_id=X)
+- `S24` .bound_raw_afectacion_ratio(profile_id=X)` call, restated at two production sites, is
+- `S24` now `bound_raw_afectacion_ratio_for_bucket`; the CLI listing is deliberately NOT folded
+- `S24` in, because it resolves a profile_id that can differ from the bucket.
+- `S24` A gate holds the centralisation: a module that references both family members in code
+- `S24` reds. It reads the AST rather than the raw text, because several modules legitimately
+- `S24` explain the difference between the two families in prose -- the first version of the
+- `S24` gate flagged two such docstrings, which is how that distinction was found.
+- `S24` Five aggregation tests are red and none are caused by this Step: an m210 `pais`
+- `S24` row-model validator raising on None, an IVA source-mesh authority test, an atribucion
+- `S24` required-set test and a cross-modelo invoice period test. The same five were red before
+- `S24` this Step's first edit, and all sit in peer paths.

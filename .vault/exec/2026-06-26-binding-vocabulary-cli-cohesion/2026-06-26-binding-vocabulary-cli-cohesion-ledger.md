@@ -1,0 +1,202 @@
+---
+tags:
+  - '#exec'
+  - '#binding-vocabulary-cli-cohesion'
+date: '2026-06-26'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:86fd32d217d16c2eb993556337bbca6e055fa8cc7713431301fbfcea85e8c8b5'
+related:
+  - "[[2026-06-26-binding-vocabulary-cli-cohesion-plan]]"
+---
+
+# `binding-vocabulary-cli-cohesion` ledger
+
+## Changes
+
+- `S01` `T` `regen docs-scaffold + locale + API-stub + docstring-core-struct deltas in the same commit`
+- `S01` `T` `collect-only clean before commit`
+- `S01` `T` `apply-cached own-only`
+- `S01` `T` `abort-on-WIP`
+- `S01` `T` `src/aeat/entrypoints/cli/_modelo_payloads.py`
+- `S01` `T` `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`
+- `S01` `T` `src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py`
+- `S02` `T` `regen docs-scaffold + locale + API-stub + docstring-core-struct in the same commit`
+- `S02` `T` `collect-only clean before commit`
+- `S02` `T` `apply-cached own-only`
+- `S02` `T` `abort-on-WIP`
+- `S02` `T` `src/aeat/domain/calculations/registry/_queries.py`
+- `S02` `T` `src/aeat/domain/calculations/registry/__init__.py`
+- `S02` `T` `src/aeat/domain/calculations/registry/_schema.py`
+- `S03` `T` `rename _BindingRow to _EntradasBindingRow only if a residual stem collision is found in calc_sheets/_layout.py`
+- `S03` `T` `src/aeat/entrypoints/cli/_modelo_payloads.py`
+- `S03` `T` `src/aeat/application/storage/calc_sheets/_layout.py`
+- `S04` `T` `assert pure-rename with no semantic / type-value change across the BindingRow renames`
+- `S04` `T` `src/aeat/domain/calculations/registry/tests`
+- `S04` `T` `src/aeat/entrypoints/cli/tests/test_modelo_registry_surface.py`
+- `S05` `T` `update materialize_m232_related_party_rows and the single direct-submodule test import`
+- `S05` `T` `run dev.docs.apidocs scaffold to regen the API-stub (remove the orphan`
+- `S05` `T` `add the new stub) plus locale + docstring-core-struct in the same commit`
+- `S05` `T` `collect-only clean before commit`
+- `S05` `T` `apply-cached own-only`
+- `S05` `T` `abort-on-WIP`
+- `S05` `T` `src/aeat/domain/calculations/registry/_m232_row_bindings.py`
+- `S05` `T` `src/aeat/tests/test_storage_decimal_redaction_error_typing.py`
+- `S06` `T` `sweep verify_source_file / verify_source_catalogue at _validate.py`
+- `S06` `T` `the registry package __init__ re-export and __all__`
+- `S06` `T` `and the three test consumers`
+- `S06` `T` `run dev.docs.apidocs scaffold to regen the API-stub plus locale + docstring-core-struct in the same commit`
+- `S06` `T` `collect-only clean before commit`
+- `S06` `T` `apply-cached own-only`
+- `S06` `T` `abort-on-WIP`
+- `S06` `T` `src/aeat/domain/calculations/registry/_sources.py`
+- `S06` `T` `src/aeat/domain/calculations/registry/_validate.py`
+- `S06` `T` `src/aeat/domain/calculations/registry/__init__.py`
+- `S07` `T` `assert the relocations changed only module paths and import sites`
+- `S07` `T` `no behaviour`
+- `S07` `T` `src/aeat/domain/calculations/registry/tests/test_catalogue_verification.py`
+- `S07` `T` `src/aeat/domain/calculations/registry/tests`
+- `S07` `T` `docs/api`
+- `S08` `T` `regen docs-scaffold + locale + API-stub + docstring-core-struct in the same commit`
+- `S08` `T` `collect-only clean before commit`
+- `S08` `T` `apply-cached own-only`
+- `S08` `T` `abort-on-WIP`
+- `S08` `T` `src/aeat/application/modelo/_reconcile.py`
+- `S08` `T` `src/aeat/application/modelo/__init__.py`
+- `S08` `T` `src/aeat/entrypoints/cli/_modelo_reconcile_cli.py`
+- `S08` `T` `src/aeat/application/live/_justificante.py`
+- `S09` `T` `regen docs-scaffold + locale + API-stub + docstring-core-struct in the same commit`
+- `S09` `T` `collect-only clean before commit`
+- `S09` `T` `apply-cached own-only`
+- `S09` `T` `abort-on-WIP`
+- `S09` `T` `src/aeat/application/ledger/_business_operation_invoice.py`
+- `S09` `T` `src/aeat/application/ledger/__init__.py`
+- `S09` `T` `src/aeat/entrypoints/cli/_ledger_business_invoice_cli.py`
+- `S09` `T` `src/aeat/application/invoices/_source_resolver.py`
+- `S10` `T` `do NOT touch the legitimate M303 compensacion carve-out binding usages in the same module`
+- `S10` `T` `regen docs-scaffold + API-stub + docstring-core-struct in the same commit`
+- `S10` `T` `collect-only clean before commit`
+- `S10` `T` `apply-cached own-only`
+- `S10` `T` `abort-on-WIP`
+- `S10` `T` `src/aeat/domain/iva_compensation/_reconciliation.py`
+- `S10` `T` `docs/conf.py`
+- `S11` `T` `confirm none of the three axes were folded into BindingSourceKind`
+- `S11` `T` `src/aeat/application/modelo/tests`
+- `S11` `T` `src/aeat/application/ledger/tests`
+- `S11` `T` `src/aeat/domain/iva_compensation`
+- `S12` `T` `do NOT rename ModeloSourceResolver / CalculationSourceResolution / merge_source_resolutions (settled by phase-2.2)`
+- `S12` `T` `regen docs-scaffold + locale + API-stub + docstring-core-struct in the same commit`
+- `S12` `T` `collect-only clean before commit`
+- `S12` `T` `apply-cached own-only`
+- `S12` `T` `abort-on-WIP`
+- `S12` `T` `src/aeat/application/aggregation/_service.py`
+- `S12` `T` `src/aeat/application/aggregation/_source_mesh.py`
+- `S13` `T` `regen docs-scaffold + API-stub + docstring-core-struct in the same commit`
+- `S13` `T` `collect-only clean before commit`
+- `S13` `T` `apply-cached own-only`
+- `S13` `T` `abort-on-WIP`
+- `S13` `T` `src/aeat/application/filing/runtime.py`
+- `S14` `T` `src/aeat/application/aggregation/tests`
+- `S14` `T` `src/aeat/application/filing/tests`
+- `S15` `T` `collect-only clean before each commit`
+- `S15` `T` `apply-cached own-only`
+- `S15` `T` `abort-on-WIP`
+- `S15` `T` `src/aeat/domain/calculations/registry/_ledger_bindings.py`
+- `S15` `T` `src/aeat/application/aggregation/_retenciones.py`
+- `S15` `T` `src/aeat/application/aggregation/_counterpart.py`
+- `S15` `T` `src/aeat/domain/calculations/registry/_counterpart_bindings.py`
+- `S15` `T` `src/aeat/application/aggregation/_foreign_assets.py`
+- `S15` `T` `src/aeat/domain/calculations/registry/_detail_record_bindings.py`
+- `S15` `T` `src/aeat/domain/calculations/registry/_withholding_bindings.py`
+- `S15` `T` `src/aeat/domain/calculations/registry/_invoice_bindings.py`
+- `S16` `T` `collect-only clean before each commit`
+- `S16` `T` `apply-cached own-only`
+- `S16` `T` `abort-on-WIP`
+- `S16` `T` `src/aeat/adapters/outbound/aeat/sede/_schema.py`
+- `S16` `T` `src/aeat/adapters/outbound/aeat/sede/_nif_iva_check.py`
+- `S16` `T` `src/aeat/adapters/inbound/declaracion/_schema.py`
+- `S16` `T` `src/aeat/adapters/inbound/borrador/_schema.py`
+- `S17` `T` `OracleModeloObservation stays as the oracle-marked calc-tier anchor)`
+- `S17` `T` `one atomic relocation commit per renamed carrier tagged relocation:<symbol>`
+- `S17` `T` `each regenerating docs-scaffold + API-stub + docstring-core-struct in the same commit`
+- `S17` `T` `collect-only clean before each commit`
+- `S17` `T` `apply-cached own-only`
+- `S17` `T` `abort-on-WIP`
+- `S17` `T` `src/aeat/domain/calculations/registry/_renta_web_open_oracle.py`
+- `S17` `T` `src/aeat/domain/calculations/registry/_groi_oracle.py`
+- `S17` `T` `src/aeat/domain/calculations/registry/_aeat_nif_iva_oracle.py`
+- `S18` `T` `src/aeat/application/aggregation/tests`
+- `S18` `T` `src/aeat/domain/calculations/registry/tests`
+- `S19` `T` `add a clarifying module-docstring line on each where the distinction is not already explicit`
+- `S19` `T` `one atomic commit`
+- `S19` `T` `collect-only clean before commit`
+- `S19` `T` `apply-cached own-only`
+- `S19` `T` `abort-on-WIP`
+- `S19` `T` `src/aeat/application/calculations/_relation_prefill.py`
+- `S19` `T` `src/aeat/application/calculations/_binding_prefill.py`
+- `S19` `T` `src/aeat/domain/calculations/registry/_schema.py`
+- `S20` `T` `src/aeat/application/calculations/tests`
+- `S21` `T` `author the rename through the locale CLI (python -m aeat.locales modelo / set for cli.app.modelo.bindings.preview_help and list_help) and sweep the runtime write-policy allowlist`
+- `S21` `T` `the error-registry default_suggestion fields`
+- `S21` `T` `the cross-period next_action builders`
+- `S21` `T` `the curated operator help`
+- `S21` `T` `and the envelope command= identifiers`
+- `S21` `T` `regen docs-scaffold + locale scaffold in the same commit`
+- `S21` `T` `collect-only clean and test_documented_command_conformance + test_json_schema_conformance green before commit`
+- `S21` `T` `apply-cached own-only`
+- `S21` `T` `abort-on-WIP`
+- `S21` `T` `src/aeat/entrypoints/cli/_modelo_discovery_cli.py`
+- `S21` `T` `src/aeat/application/storage_write_policy.py`
+- `S21` `T` `src/aeat/core/errors/_registry.py`
+- `S21` `T` `src/aeat/application/operator_surface/_help.py`
+- `S22` `T` `author through the locale CLI (cli.config.google.sync.calc.pull*) and sweep the runtime write-policy allowlist`
+- `S22` `T` `error-registry default_suggestion`
+- `S22` `T` `cross-period next_action builders`
+- `S22` `T` `curated operator help`
+- `S22` `T` `and envelope command= identifiers`
+- `S22` `T` `regen docs-scaffold + locale scaffold in the same commit`
+- `S22` `T` `collect-only clean and the two conformance gates green before commit`
+- `S22` `T` `apply-cached own-only`
+- `S22` `T` `abort-on-WIP`
+- `S22` `T` `src/aeat/entrypoints/cli/_config/_google_sync_calc.py`
+- `S22` `T` `src/aeat/application/storage_write_policy.py`
+- `S22` `T` `src/aeat/core/errors/_registry.py`
+- `S22` `T` `src/aeat/application/operator_surface/_help.py`
+- `S23` `T` `author through the locale CLI (cli.app.modelo.work.calculate_help) and sweep the runtime write-policy allowlist`
+- `S23` `T` `error-registry default_suggestion`
+- `S23` `T` `cross-period next_action builders`
+- `S23` `T` `curated operator help`
+- `S23` `T` `and envelope command= identifiers`
+- `S23` `T` `regen docs-scaffold + locale scaffold in the same commit`
+- `S23` `T` `collect-only clean and the two conformance gates green before commit`
+- `S23` `T` `apply-cached own-only`
+- `S23` `T` `abort-on-WIP`
+- `S23` `T` `src/aeat/entrypoints/cli/_modelo_work_calculate_cli.py`
+- `S23` `T` `src/aeat/application/storage_write_policy.py`
+- `S23` `T` `src/aeat/core/errors/_registry.py`
+- `S23` `T` `src/aeat/application/operator_surface/_help.py`
+- `S24` `T` `src/aeat/entrypoints/cli/tests/test_documented_command_conformance.py`
+- `S24` `T` `src/aeat/entrypoints/cli/tests/test_json_schema_conformance.py`
+- `S24` `T` `src/aeat/locales`
+- `S25` `T` `lands only if the rename pass is light or as a separate phase): replace the free-form DataBindingDefinition.selector BindingSelectorMap Mapping with a discriminated union keyed by BindingSourceKind so the per-family selector models in _bindings.py BECOME the schema rather than a validate-time overlay`
+- `S25` `T` `updating the _schema.py field and alias`
+- `S25` `T` `the _schema_scalars.py alias`
+- `S25` `T` `and the _validate_binding_selector_shapes snapshot gate`
+- `S25` `T` `atomic commit with docs-scaffold + API-stub + docstring-core-struct regen`
+- `S25` `T` `collect-only clean before commit`
+- `S25` `T` `apply-cached own-only`
+- `S25` `T` `abort-on-WIP. NOTE: H3 source_revision_selector on the relation surface is NOT the binding selector and is out of scope`
+- `S25` `T` `src/aeat/domain/calculations/registry/_schema.py`
+- `S25` `T` `src/aeat/domain/calculations/registry/_schema_scalars.py`
+- `S25` `T` `src/aeat/domain/calculations/registry/_bindings.py`
+- `S26` `T` `gated by test_schema_hygiene.py`
+- `S26` `T` `atomic commit with docs-scaffold + API-stub + docstring-core-struct regen`
+- `S26` `T` `collect-only clean before commit`
+- `S26` `T` `apply-cached own-only`
+- `S26` `T` `abort-on-WIP`
+- `S26` `T` `src/aeat/domain/calculations/registry/_schema.py`
+- `S26` `T` `src/aeat/domain/calculations/registry/_queries.py`
+- `S27` `T` `if F8 is deferred to a separate phase`
+- `S27` `T` `leave this Wave open and record the carve in the close note`
+- `S27` `T` `src/aeat/domain/calculations/registry/tests/test_schema_hygiene.py`
+- `S27` `T` `src/aeat/domain/calculations/registry/tests`

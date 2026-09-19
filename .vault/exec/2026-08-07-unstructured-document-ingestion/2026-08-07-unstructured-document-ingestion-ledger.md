@@ -1,0 +1,362 @@
+---
+tags:
+  - '#exec'
+  - '#unstructured-document-ingestion'
+date: '2026-08-07'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:6455f94eeb96b53f1e80a991bc8151d9b7e6461c86b8b186427a11748be41000'
+related:
+  - "[[2026-08-07-unstructured-document-ingestion-plan]]"
+---
+
+# `unstructured-document-ingestion` ledger
+
+## Changes
+
+- `S01` `T` `src/cadrumo/core`
+- `S02` `T` `src/cadrumo/core`
+- `S03` `T` `src/cadrumo/application/ledger/__init__.py`
+- `S04` `T` `src/cadrumo/application/ledger`
+- `S05` `T` `src/cadrumo/application/ledger`
+- `S06` `T` `src/cadrumo/application/ledger/_evidence_draft.py`
+- `S07` `T` `src/cadrumo/application/ledger/_evidence_draft.py`
+- `S08` `T` `src/cadrumo/application/ledger/tests`
+- `S09` `T` `src/cadrumo/application/ledger`
+- `S10` `T` `src/cadrumo/entrypoints/cli`
+- `S11` `T` `src/cadrumo/application/ledger`
+- `S12` `T`
+- `S13` `T`
+- `S14` `T`
+- `S15` `T` `src/cadrumo/llm/_client.py`
+- `S16` `T` `src/cadrumo/llm/_providers/anthropic.py`
+- `S17` `T` `src/cadrumo/llm`
+- `S18` `T` `src/cadrumo/application/ledger`
+- `S19` `T` `src/cadrumo/application/ledger`
+- `S20` `T` `src/cadrumo/application/ledger`
+- `S21` `T` `src/cadrumo/entrypoints/cli`
+- `S22` `T` `src/cadrumo/application/ledger/_evidence_draft.py`
+- `S23` `T` `src/cadrumo/application/ledger`
+- `S24` `T` `src/cadrumo/application/ledger`
+- `S24` `T` `src/cadrumo/entrypoints/cli`
+- `S25` `T` `src/cadrumo/adapters/inbound/financial`
+- `S26` `T` `src/cadrumo/llm`
+- `S27` `T` `src/cadrumo/adapters/inbound/financial`
+- `S28` `T` `src/cadrumo/entrypoints/cli`
+- `S29` `T` `src/cadrumo/adapters/inbound/financial`
+- `S30` `T` `src/cadrumo/application/ledger`
+- `S31` `T` `src/cadrumo/application/ledger/tests`
+- `S32` `T` `src/cadrumo/llm/tests`
+- `S33` `T` `src/cadrumo`
+- `S34` `T` `dev`
+- `S38` `T` `dev`
+- `S40` `T`
+- `S41` `T`
+- `S42` `T`
+- `S43` `T`
+- `S44` `T`
+- `S45` `T` `src/cadrumo/application/provisioning.py`
+- `S46` `T` `src/cadrumo/llm/_client.py`
+- `S47` `T` `aeat config check`
+- `S47` `T` `src/cadrumo/entrypoints/cli/_config`
+- `S48` `T` `src/cadrumo/core`
+- `S49` `T` `src/cadrumo/application/provisioning.py`
+- `S50` `T` `src/cadrumo/core/_config_runtime_fields.py`
+- `S51` `T` `aeat config provision`
+- `S52` `T` `src/cadrumo/llm/_client.py`
+- `S53` `T` `src/cadrumo/llm`
+- `S54` `T` `src/cadrumo/llm/__init__.py`
+- `S55` `T` `pyproject.toml`
+- `S56` `T` `dev/packaging`
+- `S57` `T` `src/cadrumo/adapters/inbound/financial`
+- `S58` `T` `src/cadrumo/llm/_client.py`
+- `S59` `T` `src/cadrumo/application/provisioning.py`
+- `S60` `T` `src/cadrumo/entrypoints/cli`
+- `S61` `T` `src/cadrumo/application/ledger`
+- `S62` `T` `src/cadrumo/application/ledger`
+- `S63` `T` `src/cadrumo/application/ledger`
+- `S64` `T` `src/cadrumo/entrypoints/cli`
+- `S65` `T` `src/cadrumo/application/ledger`
+- `S66` `T` `src/cadrumo/entrypoints/cli`
+- `S67` `T` `src/cadrumo/application/ledger`
+- `S68` `T` `src/cadrumo/application/ledger`
+- `S69` `T` `src/cadrumo/application/ledger`
+- `S70` `T` `src/cadrumo/application/ledger/tests`
+- `S71` `T` `src/cadrumo/llm/_client.py`
+- `S72` `T` `src/cadrumo/application/user_profile`
+- `S72` `T` `src/cadrumo/entrypoints/cli`
+- `S73` `T` `src/cadrumo/entrypoints/cli`
+- `S74` `T` `src/cadrumo/application/provisioning.py`
+- `S75` `T` `dev/packaging`
+- `S76` `T` `src/cadrumo/entrypoints/cli`
+- `S77` `T` `src/cadrumo/llm`
+- `S78` `T` `src/cadrumo/application/ledger`
+- `S79` `T` `src/cadrumo/llm/_client.py`
+- `S80` `T`
+- `S81` `T` `dev`
+- `S82` `T` `dev`
+- `S83` `T` `src/cadrumo/llm`
+- `S84` `T` `src/cadrumo/application/ledger/tests`
+- `S85` `T` `src/cadrumo/entrypoints/cli`
+- `S86` `T` `src/cadrumo/llm`
+- `S86` `T` `src/cadrumo/application/ledger`
+- `S87` `T` `src/cadrumo/llm`
+- `S88` `T` `src/cadrumo/application/ledger`
+- `S89` `T` `src/cadrumo/application/ledger`
+- `S90` `T` `src/cadrumo`
+- `S91` `T`
+- `S92` `T` `src/cadrumo/entrypoints/cli/tests`
+- `S93` `T` `src/cadrumo/llm/tests`
+- `S93` `T` `src/cadrumo/application/ledger/tests`
+- `S93` `T` `src/cadrumo/tests`
+- `S94` `T` `src/cadrumo/application/ledger`
+- `S95` `T` `src/cadrumo/application/ledger`
+- `S96` `T` `src/cadrumo/application/ledger/tests`
+- `S97` `T` `src/cadrumo/llm`
+- `S97` `T` `src/cadrumo/application/ledger`
+- `S98` `T`
+- `S99` `T`
+- `S100` `T` `src/cadrumo/llm`
+- `S100` `T` `src/cadrumo/application/ledger`
+- `S101` `T`
+- `S102` `T`
+- `S103` `T` `src/cadrumo/domain/calculations/registry/tests`
+- `S104` `T` `src/cadrumo/application/ledger`
+- `S105` `T` `src/cadrumo/application/ledger`
+- `S106` `T` `src/cadrumo/application/ledger/tests`
+- `S107` `T`
+- `S108` `T`
+- `S109` `T` `src/cadrumo/domain/transactions`
+- `S109` `T` `src/cadrumo/tests`
+- `S110` `T`
+- `S111` `T`
+- `S112` `T` `src/cadrumo/application/ledger`
+- `S113` `T` `src/cadrumo/llm`
+- `S113` `T` `src/cadrumo/application/ledger`
+- `S114` `T` `src/cadrumo/application/ledger`
+- `S114` `T` `src/cadrumo/tests`
+- `S115` `T` `src/cadrumo/application/ledger`
+- `S116` `T` `src/cadrumo/application/ledger`
+- `S117` `T` `src/cadrumo/application/ledger`
+- `S118` `T` `src/cadrumo/application/ledger`
+- `S119` `T`
+- `S120` `T` `src/cadrumo/domain/iva`
+- `S120` `T` `src/cadrumo/application/ledger`
+- `S121` `T` `src/cadrumo/application/ledger`
+- `S122` `T` `src/cadrumo/_data/registry`
+- `S122` `T` `src/cadrumo/domain/iva`
+- `S123` `T` `src/cadrumo/_data/corpus`
+- `S124` `T` `src/cadrumo/application/ledger`
+- `S124` `T` `src/cadrumo/entrypoints/cli`
+- `S124` `T` `src/cadrumo/locales`
+- `S126` `T` `src/cadrumo/entrypoints/cli`
+- `S127` `T` `src/cadrumo/_data/registry`
+- `S127` `T` `src/cadrumo/domain/iva`
+- `S128` `T` `src/cadrumo/domain/iva`
+- `S129` `T` `src/cadrumo/entrypoints/cli`
+- `S130` `T` `src/cadrumo/adapters/inbound/einvoice`
+- `S130` `T` `src/cadrumo/application/ledger`
+- `S131` `T` `src/cadrumo/domain/iva`
+- `S132` `T` `src/cadrumo/application/ledger`
+- `S133` `T` `src/cadrumo/application/ledger`
+- `S135` `T` `src/cadrumo/application/ledger`
+- `S136` `T` `src/cadrumo/application/ledger`
+- `S137` `T` `src/cadrumo/_data/registry`
+- `S137` `T` `src/cadrumo/domain/iva`
+- `S138` `T` `src/cadrumo/application/ledger`
+- `S139` `T` `src/cadrumo/application/ledger`
+- `S140` `T` `src/cadrumo/application/ledger`
+- `S141` `T` `src/cadrumo/application/ledger`
+- `S142` `T` `src/cadrumo/llm`
+- `S143` `T` `src/cadrumo/application/ledger`
+- `S144` `T` `src/cadrumo/llm`
+- `S145` `T` `src/cadrumo/entrypoints/cli`
+- `S147` `T` `src/cadrumo/application/ledger`
+- `S148` `T` `src/cadrumo/_data/registry`
+- `S149` `T` `src/cadrumo/application/ledger`
+- `S151` `T` `src/cadrumo/application/ledger`
+- `S152` `T` `src/cadrumo/application/ledger`
+- `S153` `T`
+- `S154` `T` `src/cadrumo/llm`
+- `S154` `T` `src/cadrumo/application/ledger`
+- `S154` `T` `src/cadrumo/entrypoints/cli`
+- `S155` `T`
+- `S156` `T`
+- `S157` `T` `src/cadrumo/application/ledger`
+- `S158` `T` `src/cadrumo/domain/iva`
+- `S159` `T` `src/cadrumo/llm`
+- `S160` `T` `src/cadrumo/application/ledger`
+- `S162` `T` `src/cadrumo/_data, src/cadrumo/adapters/inbound/einvoice`
+- `S163` `T` `src/cadrumo/tests`
+- `S163` `T` `src/cadrumo/application/user_profile`
+- `S164` `T` `src/cadrumo/llm`
+- `S164` `T` `src/cadrumo/application/ledger`
+- `S165` `T`
+- `S166` `T` `src/cadrumo/application/ledger`
+- `S166` `T` `src/cadrumo/entrypoints/cli`
+- `S167` `T` `src/cadrumo/_data/registry`
+- `S168` `T` `src/cadrumo/application/ledger`
+- `S169` `T` `src/cadrumo/application/ledger`
+- `S169` `T` `src/cadrumo/llm`
+- `S169` `T` `src/cadrumo/entrypoints/cli`
+- `S170` `T` `src/cadrumo/_data/registry`
+- `S171` `T` `src/cadrumo/domain/iva`
+- `S171` `T` `src/cadrumo/application/ledger`
+- `S172` `T` `src/cadrumo/domain/iva`
+- `S173` `T` `src/cadrumo/domain/iva`
+- `S174` `T` `src/cadrumo`
+- `S175` `T` `src/cadrumo/domain/iva`
+- `S176` `T` `src/cadrumo/application/ledger`
+- `S177` `T` `src/cadrumo/application/ledger`
+- `S178` `T` `src/cadrumo/application/ledger`
+- `S179` `T` `src/cadrumo/application/ledger`
+- `S180` `T` `src/cadrumo/adapters/inbound/einvoice`
+- `S181` `T` `src/cadrumo/application/ledger`
+- `S182` `T` `src/cadrumo/domain/iva`
+- `S182` `T` `src/cadrumo/application/ledger`
+- `S183` `T` `src/cadrumo/application/ledger`
+- `S184` `T` `src/cadrumo/domain/iva`
+- `S184` `T` `src/cadrumo/application/ledger`
+- `S185` `T` `src/cadrumo/domain/iva`
+- `S185` `T` `src/cadrumo/application/ledger`
+- `S187` `T` `src/cadrumo/domain/iva`
+- `S188` `T` `src/cadrumo/application/ledger`
+- `S189` `T`
+- `S190` `T`
+- `S191` `T`
+- `S192` `T`
+- `S194` `T` `src/cadrumo/application/ledger`
+- `S195` `T` `src/cadrumo/application/ledger`
+- `S196` `T` `src/cadrumo/_data/registry`
+- `S197` `T` `src/cadrumo/_data/registry`
+- `S197` `T` `src/cadrumo/domain/iva`
+- `S198` `T` `src/cadrumo/application/ledger, dev`
+- `S199` `T` `src/cadrumo/entrypoints/cli`
+- `S199` `T` `src/cadrumo/application/ledger`
+- `S200` `T`
+- `S201` `T` `src/cadrumo/application/ledger/_preflight.py`
+- `S202` `T`
+- `S203` `T` `src/cadrumo/_data`
+- `S203` `T` `src/cadrumo/domain/iva`
+- `S204` `T` `src/cadrumo`
+- `S205` `T` `src/cadrumo`
+- `S206` `T`
+- `S207` `T` `src/cadrumo/application/ledger`
+- `S208` `T` `src/cadrumo/entrypoints/cli`
+- `S208` `T` `src/cadrumo/application/ledger`
+- `S209` `T` `src/cadrumo`
+- `S210` `T`
+- `S211` `T` `src/cadrumo`
+- `S212` `T` `src/cadrumo/entrypoints/cli`
+- `S215` `T` `src/cadrumo/application/ledger`
+- `S216` `T` `src/cadrumo/application/ledger`
+- `S217` `T` `dev/docs/preprocess`
+- `S218` `T` `src/cadrumo/application/ledger`
+- `S219` `T` `src/cadrumo/application/ledger`
+- `S219` `T` `src/cadrumo/entrypoints/cli`
+- `S220` `T` `src/cadrumo/domain/iva`
+- `S221` `T` `src/cadrumo/domain/iva`
+- `S222` `T` `docs`
+- `S223` `T` `src/cadrumo`
+- `S225` `T` `src/cadrumo`
+- `S226` `T` `src/cadrumo/core`
+- `S227` `T` `src/cadrumo/domain/iva`
+- `S229` `T` `src/cadrumo/application/ledger`
+- `S230` `T` `src/cadrumo/application/ledger`
+- `S231` `T` `src/cadrumo/entrypoints/cli`
+- `S232` `T` `dev`
+- `S233` `T` `src/cadrumo/entrypoints/cli`
+- `S234` `T` `src/cadrumo/application/ledger`
+- `S235` `T` `src/cadrumo/_data/registry`
+- `S236` `T` `src/cadrumo/application/ledger`
+- `S237` `T` `.vault`
+- `S238` `T` `src/cadrumo/application/ledger`
+- `S239` `T` `src/cadrumo/entrypoints/cli`
+- `S240` `T` `src/cadrumo/application/ledger`
+- `S241` `T` `src/cadrumo/application/ledger`
+- `S242` `T`
+- `S243` `T` `src/cadrumo/locales`
+- `S244` `T`
+- `S245` `T` `src/cadrumo`
+- `S247` `T` `src/cadrumo/application/aggregation`
+- `S248` `T` `src/cadrumo`
+- `S249` `T` `src/cadrumo`
+- `S250` `T` `src/cadrumo/core`
+- `S251` `T` `src/cadrumo/entrypoints/cli`
+- `S252` `T` `src/cadrumo`
+- `S253` `T` `src/cadrumo`
+- `S254` `T` `src/cadrumo/entrypoints/cli`
+- `S256` `T` `src/cadrumo/domain/invoices`
+- `S257` `T` `src/cadrumo/core`
+- `S258` `T` `src/cadrumo/domain/invoices`
+- `S259` `T` `src/cadrumo/locales`
+- `S260` `T` `src/cadrumo/adapters/inbound/einvoice`
+- `S261` `T` `src/cadrumo/application/modelo`
+- `S262` `T` `src/cadrumo/adapters/inbound/einvoice`
+- `S264` `T` `src/cadrumo/domain/calculations/registry/_detail_record_bindings.py`
+- `S265` `T` `dev/locales`
+- `S267` `T` `src/cadrumo/core/redaction/__init__.py`
+- `S268` `T` `src/cadrumo/entrypoints/cli/_ledger_evidence`
+- `S268` `T` `src/cadrumo/application/ledger/_confirmation_gate.py`
+- `S269` `T` `src/cadrumo/core/redaction/__init__.py`
+- `S270` `T` `src/cadrumo/core/redaction/__init__.py`
+- `S271` `T` `src/cadrumo/core/redaction/__init__.py`
+- `S272` `T` `src/cadrumo/adapters/inbound/invoices/_bulk_import.py`
+- `S273` `T` `src/cadrumo/entrypoints/cli`
+- `S274` `T` `dev/ingest_harness`
+- `S275` `T` `src/cadrumo/application/ledger/_llm_classification.py`
+- `S276` `T` `src/cadrumo/entrypoints/cli`
+- `S276` `T` `src/cadrumo/application/ledger`
+- `S277` `T`
+- `S278` `T` `src/cadrumo/core/redaction/__init__.py`
+- `S279` `T` `src/cadrumo/core/tests`
+- `S280` `T` `dev`
+- `S281` `T` `dev/ingest_harness`
+- `S283` `T` `dev/release`
+- `S284` `T`
+- `S285` `T` `dev/locales`
+- `S286` `T` `src/cadrumo/llm/_pricing.py`
+- `S287` `T` `src/cadrumo/llm/_evidence_draft_text.py`
+- `S288` `T` `src/cadrumo/llm/_evidence_draft_text.py`
+- `S289` `T` `.vault/adr/2026-08-07-release-asset-transport-public-repo-artifact-return-adr.md`
+- `S290` `T` `dev/ingest_harness/_field_mapping.py`
+- `S291` `T` `src/cadrumo/application/ledger`
+- `S292` `T` `src/cadrumo/application/ledger/_llm_classification.py`
+- `S293` `T` `src/cadrumo/locales`
+- `S294` `T` `.github/workflows/publish-release.yml`
+- `S296` `T` `dev/ingest_harness/_runner.py`
+- `S297` `T` `src/cadrumo/application/ledger`
+- `S298` `T` `src/cadrumo/application/aggregation`
+- `S300` `T` `src/cadrumo/application/modelo`
+- `S301` `T` `src/cadrumo/application/calculations`
+- `S302` `T` `src/cadrumo/tests/loopback_llm.py`
+- `S305` `T` `src/cadrumo/application`
+- `S306` `T` `src/cadrumo/application/calculations/tests`
+- `S308` `T` `dev/corpus`
+- `S309` `T` `src/cadrumo/application/ledger`
+- `S310` `T` `src/cadrumo/entrypoints/cli`
+- `S311` `T` `src/cadrumo/entrypoints/cli/tests`
+- `S312` `T` `src/cadrumo/core/redaction`
+- `S313` `T` `src/cadrumo/adapters/outbound/llm`
+- `S314` `T` `src/cadrumo/llm`
+- `S315` `T` `dev/docs`
+- `S316` `T` `src/cadrumo/llm`
+- `S317` `T` `src/cadrumo/tests`
+- `S318` `T` `src/cadrumo/application/wizard`
+- `S319` `T` `dev/ci`
+- `S320` `T` `src/cadrumo/entrypoints/cli`
+- `S321` `T` `src/cadrumo/application/ledger/tests`
+- `S322` `T` `src/cadrumo/core`
+- `S322` `T` `src/cadrumo/application/ledger`
+- `S323` `T` `src/cadrumo/application/aggregation`
+- `S323` `T` `src/cadrumo/application/modelo`
+- `S324` `T` `src/cadrumo/domain/iva`
+- `S325` `T` `.vault/adr`
+- `S326` `T` `src/cadrumo/application/calculations`
+- `S327` `T` `src/cadrumo/entrypoints/cli`
+- `S328` `T` `src/cadrumo/application/ledger`
+- `S329` `T` `src/cadrumo/application/ledger`
+- `S330` `T` `src/cadrumo/entrypoints/cli`
+- `S331` `T` `src/cadrumo/application/ledger`
+- `S332` `T` `src/cadrumo/domain/iva`
+- `S333` `T`

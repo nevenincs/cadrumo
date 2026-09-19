@@ -1,0 +1,145 @@
+---
+tags:
+  - '#exec'
+  - '#registry-revision-stamp-coverage'
+date: '2026-09-07'
+modified: '2026-09-17'
+body_schema: 'body-v2'
+body_hash: 'sha256:dbcc72f766223486c1e57ce698ea3f0207430c4341dfbfcabde0e1d339216a93'
+related:
+  - "[[2026-09-07-registry-revision-stamp-coverage-plan]]"
+---
+
+# `registry-revision-stamp-coverage` ledger
+
+## Changes
+
+- `S01` `M` `src/cadrumo/application/calculations/revision_carry_gate.py`
+- `S01` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/calculations/tests/test_carry_gate_parity.py` -> `pass`
+- `S02` `M` `src/cadrumo/application/calculations/binding_prefill.py`
+- `S02` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/calculations/tests/test_carry_gate_parity.py` -> `pass`
+- `S03` `M` `src/cadrumo/application/calculations/relation_prefill.py`
+- `S03` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/calculations/tests/test_carry_gate_parity.py` -> `pass`
+- `S04` `M` `src/cadrumo/application/calculations/cross_period_clean_state.py`
+- `S04` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/calculations/tests/test_carry_gate_parity.py` -> `pass`
+- `S05` `M` `src/cadrumo/application/calculations/prorrata_regularizacion.py`
+- `S05` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/calculations/tests/test_carry_gate_parity.py` -> `pass`
+- `S06` `M` `src/cadrumo/application/calculations/iva_compensation_annual_partition.py`
+- `S06` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/calculations/tests/test_carry_gate_parity.py` -> `pass`
+- `S07` `M` `src/cadrumo/application/calculations/bienes_inversion_regularizacion.py`
+- `S07` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/calculations/tests/test_carry_gate_parity.py` -> `pass`
+- `S08` `M` `src/cadrumo/application/prorrata_register/seed.py`
+- `S08` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/prorrata_register/tests/test_seed.py` -> `pass`
+- `S09` `M` `src/cadrumo/application/modelo/iva_wallet_gate.py`
+- `S09` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/calculations/tests/test_carry_gate_parity.py` -> `pass`
+- `S10` `M` `src/cadrumo/application/calculations/tests/test_carry_gate_parity.py`
+- `S10` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/calculations/tests/test_carry_gate_parity.py` -> `pass`
+- `S11` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S12` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S13` `M` `src/cadrumo/application/modelo/revision_persistence.py`
+- `S13` `M` `src/cadrumo/application/modelo/external_import_actions.py`
+- `S14` `M` `src/cadrumo/adapters/persistence/profile/tests/test_calculation_repository_roundtrip.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/_modelo_payloads.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/_modelo_revision_payload_parts.py`
+- `S16` `M` `src/cadrumo/application/modelo/calculation.py`
+- `S17` `M` `src/cadrumo/domain/modelos/tests/test_calculation_revision_evidence.py`
+- `S17` `M` `src/cadrumo/domain/modelos/tests/test_calculation_revision_observations.py`
+- `S17` `M` `src/cadrumo/domain/modelos/tests/test_calculation_revision_replay.py`
+- `S17` `M` `src/cadrumo/adapters/persistence/profile/tests/test_calculation_repository_roundtrip.py`
+- `S18` `M` `src/cadrumo/domain/modelos/verification_report.py`
+- `S18` `M` `src/cadrumo/adapters/persistence/profile/modelos_verification_reports.py`
+- `S19` `A` `src/cadrumo/application/calculations/verification_report_gate.py`
+- `S19` `M` `src/cadrumo/application/modelo/verification_actions.py`
+- `S19` `M` `src/cadrumo/adapters/persistence/profile/modelos_verification_reports.py`
+- `S20` `M` `src/cadrumo/application/modelo/reconciliation_records.py`
+- `S20` `M` `src/cadrumo/application/modelo/reconciliation.py`
+- `S21` `M` `src/cadrumo/adapters/persistence/profile/tests/test_modelo_reconciliation_repository.py`
+- `S21` `M` `src/cadrumo/domain/modelos/tests/test_verification_report_roundtrip.py`
+- `S22` `M` `src/cadrumo/application/modelo/review_package.py`
+- `S23` `M` `src/cadrumo/application/modelo/review_package.py`
+- `S23` `M` `src/cadrumo/application/modelo/tests/test_review_package_signing.py`
+- `S23` `M` `src/cadrumo/application/modelo/tests/test_review_package_counter_sign.py`
+- `S23` `M` `src/cadrumo/application/modelo/tests/test_review_package_feedback.py`
+- `S24` `M` `src/cadrumo/application/filing/export_proof.py`
+- `S25` `M` `src/cadrumo/adapters/persistence/profile/tests/test_filing_export_replay_custody.py`
+- `S26` `M` `src/cadrumo/application/live/borrador_100.py`
+- `S27` `M` `src/cadrumo/application/live/tests/test_borrador_100.py`
+- `S27` `M` `src/cadrumo/application/live/tests/test_borrador_100_roundtrip.py`
+- `S28` `M` `src/cadrumo/domain/iva_compensation/carry_forward.py`
+- `S29` `M` `src/cadrumo/application/calculations/iva_compensation_history.py`
+- `S29` `M` `src/cadrumo/application/calculations/iva_compensation_annual_partition.py`
+- `S30` `M` `src/cadrumo/domain/iva_compensation/reconciliation.py`
+- `S31` `M` `src/cadrumo/application/calculations/iva_wallet_reconciliation.py`
+- `S31` `M` `src/cadrumo/application/calculations/observations_repository.py`
+- `S32` `M` `src/cadrumo/domain/prorrata_register/register.py`
+- `S33` `M` `src/cadrumo/application/prorrata_register/seed.py`
+- `S33` `M` `src/cadrumo/application/prorrata_register/sector_lifecycle.py`
+- `S33` `M` `src/cadrumo/application/modelo/revision_persistence.py`
+- `S33` `M` `src/cadrumo/entrypoints/cli/_prorrata_register_cli.py`
+- `S34` `M` `src/cadrumo/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py`
+- `S35` `M` `src/cadrumo/application/calculations/tests/test_prorrata_regularizacion.py`
+- `S35` `M` `src/cadrumo/application/prorrata_register/tests/test_seed.py`
+- `S35` `M` `src/cadrumo/application/prorrata_register/tests/test_service.py`
+- `S36` `T`
+- `S36` `verify:` `uv run pytest -q -n 0 dev/quality/tests/test_registry_revision_stamp_coverage.py` -> `pass`
+- `S37` `M` `src/cadrumo/application/calculations/observations_repository.py`
+- `S38` `M` `src/cadrumo/application/modelo/m145_communication_records.py`
+- `S39` `M` `src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py`
+- `S39` `M` `src/cadrumo/application/calculations/m303_regimen_simplificado_annual_summary.py`
+- `S40` `M` `src/cadrumo/application/modelo/calculation.py`
+- `S40` `M` `src/cadrumo/application/modelo/tests/test_m349_calculation_display_export.py`
+- `S41` `M` `src/cadrumo/application/calculations/revision_carry_gate.py`
+- `S41` `M` `src/cadrumo/application/calculations/observations_repository.py`
+- `S41` `M` `src/cadrumo/adapters/outbound/aeat/sede/schema.py`
+- `S41` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_capture.py`
+- `S42` `M` `src/cadrumo/adapters/persistence/profile/tests/test_calculation_repository_roundtrip.py`
+- `S42` `M` `src/cadrumo/adapters/persistence/profile/tests/test_filing_export_replay_custody.py`
+- `S42` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_observation_store_roundtrip.py`
+- `S42` `M` `src/cadrumo/application/calculations/tests/test_revision_stamp_roundtrip.py`
+- `S43` `A` `dev/quality/tests/test_registry_revision_stamp_coverage.py`
+- `S43` `verify:` `uv run pytest -q -n0 dev/quality/tests/test_registry_revision_stamp_coverage.py` -> `pass`
+- `S44` `T`
+- `S44` `verify:` `uv run pytest -q -n0 dev/quality/tests/test_registry_revision_stamp_coverage.py` -> `pass`
+- `S44` `verify:` `uv run pytest -q -n0 <calculation, Borrador, filing, export, review, reconciliation, advisory, and declarations divergence suites>` -> `pass`
+- `S44` `verify:` `uv run pytest -q -n0 <nine secure-persistence and carrier round-trip suites>` -> `pass`
+- `S44` `verify:` `uv run pytest -q -n0 <M303 canonical ingress, wallet, observation, operator, and prorrata suites>` -> `pass`
+- `S45` `T`
+- `S45` `verify:` `uv run pytest --co -q -m integration src/cadrumo/entrypoints/cli/tests/test_prorrata_register_seed_cli.py src/cadrumo/entrypoints/cli/tests/test_modelo_local_observation_cli.py src/cadrumo/entrypoints/cli/tests/test_overview_calendar_local_evidence.py src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py` -> `pass`
+- `S45` `verify:` `uv run pytest -q -n 0 -m integration src/cadrumo/entrypoints/cli/tests/test_prorrata_register_seed_cli.py src/cadrumo/entrypoints/cli/tests/test_modelo_local_observation_cli.py src/cadrumo/entrypoints/cli/tests/test_overview_calendar_local_evidence.py src/cadrumo/entrypoints/cli/tests/test_modelo_source_mesh_calculate.py` -> `pass`
+- `S46` `T`
+- `S46` `verify:` `uv run basedpyright` -> `pass`
+- `S46` `verify:` `uv run ruff check <campaign paths>` -> `pass`
+- `S46` `verify:` `uv run ruff format --check <campaign paths>` -> `pass`
+- `S47` `M` `.vault/reference/2026-09-07-registry-revision-stamp-coverage-reference.md`
+- `S47` `A` `.vault/adr/2026-09-07-registry-revision-stamp-coverage-adr.md`
+- `S47` `A` `.vault/audit/2026-09-07-registry-revision-stamp-coverage-implementation-review-audit.md`
+- `S47` `verify:` `rg <canonical-only and deleted compatibility assertions> .vault/reference .vault/adr src/cadrumo` -> `pass`
+- `S48` `M` `src/cadrumo/adapters/outbound/aeat/sede/schema.py`
+- `S48` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_capture.py`
+- `S48` `M` `src/cadrumo/application/live/filed_observation_persistence.py`
+- `S48` `M` `src/cadrumo/application/registry/filed_state.py`
+- `S48` `M` `src/cadrumo/entrypoints/cli/_overview_evidence.py`
+
+## Notes
+
+- `S44` The secure-persistence selection passed 108 tests before three stale fixture
+- `S44` expectations failed; after canonical migration, those three selectors passed.
+- `S44` The M303 selection passed 34 tests before one registry-directory fingerprint
+- `S44` race caused a failure; the exact stale-stamp case passed on an isolated retry.
+- `S44` No campaign behavior failure remained.
+- `S44` After formal review remediation, the M145/amendment selection passed 99 tests,
+- `S44` the review/repository selection passed 44 tests, the cross-period selection
+- `S44` passed 31 tests, and the final canonical carry-fixture selection passed 9 tests.
+- `S45` Repository-wide integration collection reached 5,624 selected tests before 16
+- `S45` unrelated collection errors from deleted `entrypoints/tui/devtools` modules in
+- `S45` the shared worktree. The campaign's applicable 70-test integration selection
+- `S45` collected explicitly and passed in full.
+- `S46` `just check-architecture` passed 31 of 32 checks. Its only failure is the
+- `S46` unrelated shared-worktree deletion of `entrypoints/tui/devtools` modules while
+- `S46` 28 TUI tests still import them; no campaign-owned import edge was reported.
+- `S46` The final full `basedpyright` run reported zero diagnostics; campaign-scoped
+- `S46` Ruff lint and format checks passed after review remediation.
+- `S47` The feature-scoped Vault checks were clean before an unrelated shared-worktree
+- `S47` audit acquired a non-UTF-8 byte. The final check reports only that external
+- `S47` `quality-gate-zero-closure-s112-detector-gate-review` encoding error; this
+- `S47` feature remains at 48/48 and its documents have no reported finding.

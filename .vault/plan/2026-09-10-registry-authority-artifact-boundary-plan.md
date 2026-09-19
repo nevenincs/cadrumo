@@ -1,0 +1,145 @@
+---
+tags:
+  - '#plan'
+  - '#registry-authority-artifact-boundary'
+date: '2026-09-10'
+tier: L3
+related:
+  - '[[2026-09-10-registry-authority-artifact-boundary-adr]]'
+  - '[[2026-09-10-registry-authority-artifact-boundary-research]]'
+  - '[[2026-09-14-registry-authority-artifact-boundary-post-delta-architecture-review-reference]]'
+modified: '2026-09-14'
+body_schema: body-v2
+body_hash: 'sha256:0ee1bea5551ee33a240bad2ff810ab9c899e1cbb174790d9b16be9cb24ba1b78'
+---
+
+# `registry-authority-artifact-boundary` plan
+
+Publish a validated immutable authority artifact, consume it exclusively at runtime, and prove the packaged boundary through real workflows.
+
+## Description
+
+The accepted immutable-runtime-publication decision governs all Waves. Wave W01 defines publication, Wave W02 changes the runtime authority path, and Wave W03 removes package coupling and verifies the release boundary. The plan uses only publication and installed-workflow behavior as proof; it does not encode implementation shape as an oracle.
+
+## Steps
+
+## Wave `W01` - Publishable authority format
+
+Establish the complete artifact format and the development publisher that produces it before runtime switches to that contract.
+
+### Phase `W01.P01` - Artifact contract
+
+Define the versioned, digest-verified immutable authority representation and its failure semantics.
+
+- [x] `W01.P01.S01` - Implement the artifact reader and writer contract; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.
+
+### Phase `W01.P02` - Development publication
+
+Make development validation publish an artifact atomically without using runtime fallback semantics.
+
+- [x] `W01.P02.S02` - Publish validated registry candidates as authority artifacts; `dev/registry/pipeline/`.
+
+## Wave `W02` - Artifact-only runtime
+
+Switch bundled runtime authority to artifact consumption and remove its raw authoring loader path.
+
+### Phase `W02.P03` - Runtime authority
+
+Construct bundled authority from the published artifact and fail before work when the artifact is invalid.
+
+- [x] `W02.P03.S03` - Replace bundled source compilation with artifact loading; `src/cadrumo/domain/calculations/registry/authority.py`.
+- [x] `W02.P03.S04` - Remove runtime compiler cache and raw loader exposure; `src/cadrumo/domain/calculations/registry/loader.py`.
+
+## Wave `W03` - Package boundary and proof
+
+Exclude authoring inputs from the shipped package and prove the release boundary with installed behavioral workflows.
+
+### Phase `W03.P04` - Packaging and development relocation
+
+Place compiler and conformance code in development dependencies and package only runtime assets.
+
+- [x] `W03.P04.S05` - Restrict distribution contents to runtime authority assets; `pyproject.toml`.
+- [x] `W03.P04.S06` - Relocate registry authoring tests and compiler-only modules; `src/cadrumo/domain/calculations/registry/`.
+- [x] `W03.P04.S09` - Embed signed runtime evidence projections in authority artifacts; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.
+- [x] `W03.P04.S10` - Project runtime provenance and inspection data into signed authority artifacts; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.
+
+### Phase `W03.P05` - Behavioral release gates
+
+Exercise publication refusal, artifact-only installed use, corruption refusal, and post-publication source isolation.
+
+- [x] `W03.P05.S07` - Prove artifact publication and installed runtime behavior; `dev/registry/tests/test_authority_publication.py, dev/packaging/tests/test_installed_oracles.py`.
+- [x] `W03.P05.S08` - Document the artifact publication and recovery workflow; `docs/`.
+
+## Wave `W04` - Canonical compiled runtime
+
+Complete the authority boundary by removing bootstrap and parallel regulated-data lanes, publishing compact v4 typed projections, and proving one installed runtime authority.
+
+### Phase `W04.P06` - Compact artifact and bootstrap-safe identifiers
+
+Publish v4 without authoring-source bootstrap, preserve the canonical typed graph, and remove schema-approved wire defaults without adding runtime delta interpretation.
+
+- [x] `W04.P06.S11` - Implement syntax-only Modelo and TaxDomain value types and migrate enum-dependent callers; `src/cadrumo/core/modelo.py, src/cadrumo/core/tax_domain.py, src/cadrumo/entrypoints/, src/cadrumo/application/, src/cadrumo/domain/`.
+- [x] `W04.P06.S12` - Implement the compact atomic v4 authority wire contract with exact typed reconstruction and no runtime delta interpreter; `src/cadrumo/domain/calculations/registry/authority_artifact.py`.
+
+### Phase `W04.P07` - Typed runtime catalogue unification
+
+Compile every regulated AEAT runtime table into typed authority catalogues and route consumers, supported-year admission, and cache coordinates through one authority provider.
+
+- [x] `W04.P07.S13` - Compile parallel IVA, territory, recargo and authorization inputs into canonical typed registry catalogues; `src/cadrumo/domain/calculations/registry/schema.py, dev/registry/compiler/, src/cadrumo/_data/registry/aeat/`.
+- [x] `W04.P07.S14` - Route regulated runtime consumers through published typed authority providers and remove default raw authoring loaders; `src/cadrumo/domain/iva/, src/cadrumo/domain/deadlines/, src/cadrumo/domain/auth/apoderamientos/, src/cadrumo/domain/resources/`.
+- [x] `W04.P07.S15` - Centralize supported filing-year admission and runtime cache identity on ValidatedRegistryAuthority; `src/cadrumo/domain/calculations/registry/authority.py, src/cadrumo/application/filing/`.
+
+### Phase `W04.P08` - Installed boundary proof
+
+Regenerate the tracked v4 authority and prove compact semantic round-trip, raw-source isolation, fail-closed loading, centralized temporal limits, and installed artifact-only workflows.
+
+- [x] `W04.P08.S16` - Regenerate and measure the tracked v4 artifact, proving semantic equality and the compactness budget; `src/cadrumo/_data/registry/authority/authority.json, dev/registry/pipeline/`.
+- [x] `W04.P08.S17` - Prove installed artifact-only execution, corruption refusal, zero raw AEAT readers, typed operative-value consumption and centralized temporal admission; `tests/integration/, dev/packaging/tests/, src/cadrumo/tests/`.
+- [x] `W04.P08.S18` - Document publication, recovery, schema migration and runtime ownership, then complete final architecture review; `docs/, .vault/audit/`.
+
+## Wave `W05` - Authority backend remediation
+
+Restore trustworthy publication and reliable runtime reads, optimize the existing format, prove reproducible dependency tracking, and consider a storage pivot only if measured workload budgets still fail.
+
+### Phase `W05.P09` - Trustworthy publication
+
+Require full validation, coherent identities, complete evidence closure, and atomic replacement from one captured candidate.
+
+- [x] `W05.P09.S19` - Require full registry and evidence validation of the captured candidate before atomic publication; `dev/registry/compiler/authority.py, dev/registry/pipeline/authority_publication.py`.
+- [x] `W05.P09.S20` - Separate source-manifest, compiler-schema build, component-dependency, and payload identities and enforce full canonical publication; `dev/registry/pipeline/authority_publication.py, src/cadrumo/domain/calculations/registry/authority_artifact.py`.
+- [x] `W05.P09.S21` - Reject incomplete, duplicate, mismatched, or unknown-reference artifact evidence before replacement and runtime admission; `src/cadrumo/domain/calculations/registry/authority_artifact.py, dev/registry/tests/`.
+
+### Phase `W05.P10` - Reliable immutable runtime
+
+Freeze the reachable authority graph and make installed Modelo queries independent of authoring context and generic deep copying.
+
+- [x] `W05.P10.S22` - Make the authority holder, temporal mappings, snapshots, and every reachable semantic value deeply immutable; `src/cadrumo/domain/calculations/registry/authority.py, src/cadrumo/domain/calculations/registry/binding_temporal.py, src/cadrumo/domain/calculations/registry/schema.py`.
+- [x] `W05.P10.S23` - Prove installed Modelo 303 query, copy, empty-ledger calculation, and published 2026 export-field codec paths without authoring context or weakened membership validation; `src/cadrumo/domain/calculations/registry/authority.py, src/cadrumo/domain/iva/flow.py, dev/packaging/tests/test_installed_oracles.py`.
+
+### Phase `W05.P11` - Current-format query performance
+
+Share immutable typed definitions, precompute invariant indexes, bound caches, and measure representative workloads before changing storage.
+
+- [x] `W05.P11.S24` - Share deeply immutable typed definitions, index evidence, and bound generation, context-projection, and snapshot caches without requiring eager revision or layout precomputation; `src/cadrumo/domain/calculations/registry/authority.py, src/cadrumo/domain/calculations/registry/schema.py`.
+- [x] `W05.P11.S25` - Measure fresh-process post-import load, peak memory, first snapshots, warm queries, and full enumeration; record results without asserting unapproved product budgets; `dev/registry/benchmark_authority.py`.
+
+### Phase `W05.P12` - Reproducible selective builds
+
+Bind compiler semantics and exact transitive inputs to publication, then prove selective output equivalent to a clean full build before enabling it.
+
+- [x] `W05.P12.S26` - Capture compiler-schema identity and exact uncached or staged transitive input manifests for publication; `dev/registry/pipeline/authority_publication.py, dev/registry/compiler/source_evidence_fingerprint.py`.
+- [x] `W05.P12.S27` - Prove concurrent-input refusal while retaining full-only canonical publication; defer selective component output and equivalence claims until exact dependency closure is implemented; `dev/registry/tests/, dev/registry/pipeline/`.
+
+### Phase `W05.P13` - Measured storage decision
+
+Evaluate a different physical backend only if the optimized current format misses agreed product budgets, preserving one logical authority generation.
+
+- [x] `W05.P13.S28` - Retain the optimized current format and defer indexed storage until concrete product startup or memory SLOs require a separate architecture decision; `.vault/adr/`.
+
+## Parallelization
+
+Waves are ordered: the publisher contract precedes the artifact-only runtime, which precedes package exclusion and installed proof. Within W03, packaging relocation and behavioral-gate preparation may proceed independently once W02 is complete.
+
+## Verification
+
+Publication of a deliberately defective candidate is refused without changing the published artifact. A built and isolated package, with authoring TOML and record-design corpus absent, completes an actual CLI workflow. A missing or corrupted artifact fails before output and never recompiles sources. Changing development sources after publication leaves installed behavior unchanged until valid republishing. Each completed step receives review, and the final review has no unresolved high or critical finding.

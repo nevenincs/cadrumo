@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
 from collections.abc import Mapping
 from pathlib import Path
 
@@ -891,3 +892,24 @@ def test_spellcheck_fails_closed_when_pinned_dictionaries_are_absent(tmp_path) -
     assert spelling == {}
     assert inventory["spelling_tool_failures"] == 1
     assert findings[0]["kind"] == "spelling_tool_unavailable"
+
+
+def test_identifier_signal_pattern_terminates_on_adversarial_underscore_runs() -> None:
+    """The snake_case arm must not backtrack exponentially on a near-miss run.
+
+    ``_filtered_translation_text`` runs the identifier pattern over arbitrary
+    translator-supplied prose, and Spanish, Catalan and Galician prose is full
+    of non-ASCII letters. Such a letter is a word character the ASCII-only
+    identifier body cannot consume, so a long underscore-separated run ending
+    in one forces the pattern to prove no split matches. With an ambiguous
+    "body or separator" spelling that proof doubles in cost per segment: the
+    input below takes minutes, against microseconds once the split is unique.
+    """
+    adversarial = "A_" + "0_" * 30 + "é"
+
+    started = time.perf_counter()
+    filtered, _ = _filtered_translation_text(adversarial)
+    elapsed = time.perf_counter() - started
+
+    assert elapsed < 2.0
+    assert "é" in filtered

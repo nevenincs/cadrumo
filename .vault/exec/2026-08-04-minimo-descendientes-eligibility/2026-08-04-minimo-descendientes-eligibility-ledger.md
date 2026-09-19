@@ -1,0 +1,122 @@
+---
+tags:
+  - '#exec'
+  - '#minimo-descendientes-eligibility'
+date: '2026-08-04'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:2287ec613ccfa10090e467f3c1c5c57a74f118c835b676e888445242eb6e9e28'
+related:
+  - "[[2026-08-04-minimo-descendientes-eligibility-plan]]"
+---
+
+# `minimo-descendientes-eligibility` ledger
+
+## Changes
+
+- `S01` `T` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/*/parameters/`
+- `S01` `T` `src/cadrumo/_data/registry/aeat/legal/`
+- `S02` `T` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/*/parameters/`
+- `S02` `T` `src/cadrumo/_data/registry/aeat/legal/`
+- `S03` `T` `src/cadrumo/domain/calculations/registry/tests/`
+- `S04` `T` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S04` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S05` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S05` `T` `src/cadrumo/application/modelo/_profile_binding.py`
+- `S05` `T` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_drift_detection.py`
+- `S06` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S07` `T` `src/cadrumo/application/modelo/_profile_binding.py`
+- `S07` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S08` `T` `src/cadrumo/entrypoints/cli/_config/_descendiente.py`
+- `S08` `T` `src/cadrumo/application/wizard/`
+- `S08` `T` `src/cadrumo/locales/`
+- `S09` `T` `src/cadrumo/_data/corpus/manual_oracles/`
+- `S09` `T` `src/cadrumo/application/modelo/tests/`
+- `S10` `T` `src/cadrumo/application/modelo/tests/`
+- `S11` `T` `src/cadrumo/domain/contribuyente/tests/test_custodia_compartida.py`
+- `S11` `T` `src/cadrumo/domain/contribuyente/tests/test_descendant_info.py`
+- `S12` `T` `src/cadrumo/application/modelo/_minimo_descendientes_advisory.py`
+- `S12` `T` `src/cadrumo/application/modelo/tests/`
+- `S13` `T` `src/cadrumo/core/_descendant_relacion.py`
+- `S14` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S15` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S16` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S17` `T` `src/cadrumo/application/modelo/_profile_binding.py`
+- `S18` `T` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S18` `T` `src/cadrumo/application/modelo/_profile_binding.py`
+- `S19` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S19` `T` `src/cadrumo/domain/contribuyente/tests/test_incremento_guarderia_0613.py`
+- `S19` `T` `src/cadrumo/core/external_constants.py`
+- `S19` `T` `src/cadrumo/core/tests/test_external_constants_centralisation_part2.py`
+- `S19` `T` `src/cadrumo/locales/`
+- `S20` `T` `src/cadrumo/entrypoints/cli/_config/_descendiente.py`
+- `S21` `T` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S21` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S22` `T` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S22` `T` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S22` `T` `src/cadrumo/entrypoints/cli/_config/_descendiente.py`
+- `S23` `T` `src/cadrumo/core/external_constants.py`
+- `S23` `T` `src/cadrumo/domain/contribuyente/_deduccion_maternidad.py`
+- `S24` `T` `src/cadrumo/application/modelo/_profile_binding.py`
+- `S24` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S25` `T` `src/cadrumo/_data/corpus/normatives/html/ley-35-2006-art-81.html`
+- `S26` `T` `src/cadrumo/domain/contribuyente/_deduccion_maternidad.py`
+- `S26` `T` `src/cadrumo/application/modelo/_profile_binding.py`
+- `S27` `T` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/*/parameters/`
+- `S27` `T` `src/cadrumo/_data/registry/aeat/legal/`
+- `S28` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S28` `T` `src/cadrumo/domain/contribuyente/tests/test_deduccion_maternidad_0611.py`
+- `S29` `T` `src/cadrumo/core/_descendant_relacion.py`
+- `S29` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S30` `T` `src/cadrumo/locales/`
+- `S30` `T` `src/cadrumo/entrypoints/cli/_config/_descendiente.py`
+- `S30` `T` `src/cadrumo/application/wizard/`
+- `S31` `T` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S31` `T` `src/cadrumo/locales/`
+- `S32` `T` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S33` `T` `src/cadrumo/locales/`
+- `S33` `T` `src/cadrumo/entrypoints/cli/_config/_descendiente.py`
+- `S34` `T` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S34` `T` `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py`
+- `S34` `T` `src/cadrumo/locales/`
+- `S35` `T` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/`
+- `S36` `T` `src/cadrumo/application/modelo/tests/test_minimo_descendientes_prorrata_inferred_advisory.py`
+- `S37` `T`
+- `S38` `T` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S38` `T` `src/cadrumo/entrypoints/cli/_config/_descendiente.py`
+- `S38` `T` `src/cadrumo/locales/`
+- `S39` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S39` `T` `src/cadrumo/domain/contribuyente/_descendant_facts.py`
+- `S39` `T` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S39` `T` `src/cadrumo/entrypoints/cli/_config/_descendiente.py`
+- `S40` `T` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/formulas/`
+- `S40` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S40` `T` `src/cadrumo/application/modelo/_profile_binding.py`
+- `S40` `T` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S41` `T` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S42` `T` `src/cadrumo/application/wizard/_descendant_group.py`
+- `S42` `T` `src/cadrumo/application/wizard/_persistence.py`
+- `S42` `T` `src/cadrumo/application/wizard/tests/test_descendant_group.py`
+- `S42` `T` `src/cadrumo/application/wizard/tests/test_descendant_persistence.py`
+- `S42` `T` `src/cadrumo/locales/`
+- `S42` `T` `2026-08-04-minimo-descendientes-eligibility-P04-S39`
+- `S43` `T` `.vault/exec/2026-08-04-minimo-descendientes-eligibility/`
+- `S43` `T` `.vault/plan/2026-08-04-minimo-descendientes-eligibility-plan.md`
+- `S44` `T` `src/cadrumo/domain/contribuyente/family.py`
+- `S44` `T` `src/cadrumo/domain/contribuyente/_descendant_facts.py`
+- `S44` `T` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S44` `T` `src/cadrumo/entrypoints/cli/_config/_descendiente.py`
+- `S44` `T` `src/cadrumo/application/wizard/`
+- `S45` `T`
+- `S46` `T` `src/cadrumo/application/modelo/_minimo_descendientes_advisory.py`
+- `S47` `T`
+- `S48` `T` `src/cadrumo/entrypoints/cli/`
+- `S48` `T` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S49` `T`
+- `S50` `T` `src/cadrumo/application/modelo/_calculate_input.py`
+- `S50` `T` `src/cadrumo/application/modelo/_profile_binding.py`
+- `S50` `T` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2024/`
+- `S50` `T` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S50` `T` `src/cadrumo/application/modelo/tests/`
+- `S50` `T` `src/cadrumo/domain/calculations/registry/tests/`
+- `S50` `T` `src/cadrumo/entrypoints/cli/tests/`

@@ -1,0 +1,490 @@
+---
+tags:
+  - '#exec'
+  - '#import-centralization'
+date: '2026-07-01'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:51e5a6244c346233155b6b6f4dfb97dc9c541dfa9d22bfc3333b77c04bf1abcf'
+related:
+  - "[[2026-07-01-import-centralization-plan]]"
+---
+
+# `import-centralization` ledger
+
+## Changes
+
+- `S01` `T` `src/aeat/domain/modelos/__init__.py`
+- `S02` `T` `src/aeat/adapters/outbound/google/__init__.py`
+- `S03` `T` `src/aeat/core/__init__.py`
+- `S04` `T` `src/aeat/application/live/__init__.py`
+- `S05` `T` `src/aeat/domain/iva_compensation/__init__.py`
+- `S06` `T` `src/aeat/domain/iva_compensation/__init__.py`
+- `S07` `T` `src/aeat/adapters/inbound/pdf/__init__.py`
+- `S08` `T` `src/aeat/domain/user_profile/__init__.py`
+- `S09` `T` `src/aeat/adapters/outbound/aeat/sede/__init__.py`
+- `S10` `T` `src/aeat/domain/contribuyente/__init__.py`
+- `S11` `T` `src/aeat/domain/contribuyente/__init__.py`
+- `S12` `T` `src/aeat/application/calculations/__init__.py`
+- `S13` `T` `src/aeat/application/calculations/__init__.py`
+- `S14` `T` `src/aeat/application/calculations/__init__.py`
+- `S15` `T` `W01`
+- `S15` `T` `registry`
+- `S15` `T` `P12`
+- `S15` `T` `P13`
+- `S15` `T` `P35`
+- `S15` `T` `src/aeat/domain/calculations/registry/__init__.py`
+- `S15` `T` `_loader.py`
+- `S15` `T` `src/aeat/adapters/persistence/storage/master_key/__init__.py`
+- `S15` `T` `_active_session.py`
+- `S15` `T` `src/aeat/adapters/persistence/storage/crypto/__init__.py`
+- `S15` `T` `src/aeat/application/wizard/__init__.py`
+- `S15` `T` `src/aeat/application/user_profile/__init__.py`
+- `S15` `T` `_orchestration.py`
+- `S15` `T` `_validation.py`
+- `S15` `T` `_custody_carry.py`
+- `S15` `T` `_repository.py`
+- `S15` `T` `src/aeat/core/parsing`
+- `S15` `T` `src/aeat/application/aggregation/__init__.py`
+- `S15` `T` `src/aeat/adapters/persistence/storage/envelope/__init__.py`
+- `S15` `T` `_envelope.py`
+- `S15` `T` `src/aeat/adapters/persistence/storage/sql/__init__.py`
+- `S15` `T` `src/aeat/domain/invoices/__init__.py`
+- `S15` `T` `_models.py`
+- `S15` `T` `src/aeat/adapters/outbound/storage/__init__.py`
+- `S15` `T` `_factory.py`
+- `S15` `T` `src/aeat/application/storage/calc_sheets/__init__.py`
+- `S15` `T` `src/aeat/domain/__init__.py`
+- `S15` `T` `src/aeat/domain/attachments/__init__.py`
+- `S15` `T` `src/aeat/adapters/outbound/aeat/auth/__init__.py`
+- `S15` `T` `src/aeat/domain/buckets/__init__.py`
+- `S15` `T` `src/aeat/domain/renta/__init__.py`
+- `S15` `T` `src/aeat/application/workflow/__init__.py`
+- `S15` `T` `src/aeat/application/ledger/__init__.py`
+- `S15` `T` `src/aeat/application/modelo/__init__.py`
+- `S15` `T` `_m036_lifecycle.py`
+- `S15` `T` `src/aeat/core/i18n/__init__.py`
+- `S15` `T` `src/aeat/domain/portals/__init__.py`
+- `S15` `T` `src/aeat/entrypoints/cli/__init__.py`
+- `S15` `T` `_app_contract.py`
+- `S15` `T` `src/aeat/entrypoints/cli/`
+- `S15` `T` `src/aeat/application/`
+- `S15` `T` `src/aeat/adapters/persistence/storage/`
+- `S15` `T` `src/aeat/agent/`
+- `S16` `T` `src/aeat/domain/calculations/registry/__init__.py`
+- `S17` `T` `src/aeat/domain/calculations/registry/__init__.py`
+- `S18` `T` `src/aeat/domain/calculations/registry/__init__.py`
+- `S19` `T` `src/aeat/adapters/persistence/storage/master_key/__init__.py`
+- `S20` `T` `src/aeat/adapters/persistence/storage/master_key/__init__.py`
+- `S21` `T` `src/aeat/adapters/persistence/storage/crypto/__init__.py`
+- `S22` `T` `src/aeat/application/wizard/__init__.py`
+- `S23` `T` `src/aeat/application/user_profile/__init__.py`
+- `S24` `T` `src/aeat/application/user_profile/__init__.py`
+- `S25` `T` `src/aeat/application/user_profile/__init__.py`
+- `S26` `T` `src/aeat/core/parsing/__init__.py`
+- `S27` `T` `src/aeat/core/parsing/__init__.py`
+- `S28` `T` `src/aeat/core/parsing/__init__.py`
+- `S29` `T` `src/aeat/application/aggregation/__init__.py`
+- `S30` `T` `src/aeat/adapters/persistence/storage/envelope/__init__.py`
+- `S31` `T` `src/aeat/adapters/persistence/storage/envelope/__init__.py`
+- `S32` `T` `src/aeat/adapters/persistence/storage/sql/__init__.py`
+- `S33` `T` `src/aeat/domain/invoices/__init__.py`
+- `S34` `T` `src/aeat/adapters/outbound/storage/__init__.py`
+- `S35` `T` `src/aeat/adapters/outbound/storage/__init__.py`
+- `S36` `T` `src/aeat/application/storage/calc_sheets/__init__.py`
+- `S37` `T` `src/aeat/domain/__init__.py`
+- `S38` `T` `src/aeat/domain/attachments/__init__.py`
+- `S39` `T` `src/aeat/adapters/outbound/aeat/auth/__init__.py`
+- `S40` `T` `src/aeat/domain/buckets/__init__.py`
+- `S41` `T` `src/aeat/domain/renta/__init__.py`
+- `S42` `T` `src/aeat/application/workflow/__init__.py`
+- `S43` `T` `src/aeat/domain/calculations/__init__.py`
+- `S44` `T` `src/aeat/application/ledger/__init__.py`
+- `S45` `T` `src/aeat/application/modelo/__init__.py`
+- `S46` `T` `src/aeat/core/i18n/__init__.py`
+- `S47` `T` `src/aeat/domain/portals/__init__.py`
+- `S48` `T` `src/aeat/entrypoints/cli/__init__.py`
+- `S49` `T` `src/aeat/application/modelo/__init__.py`
+- `S50` `T` `src/aeat/application/modelo/_action_errors.py`
+- `S51` `T` `src/aeat/application/modelo/_amendment_actions.py`
+- `S52` `T` `src/aeat/application/modelo/_art109_activity_income.py`
+- `S53` `T` `src/aeat/application/modelo/_art20_advisory.py`
+- `S54` `T` `src/aeat/application/modelo/_binding_resolution.py`
+- `S55` `T` `src/aeat/application/modelo/_borrador_binding.py`
+- `S56` `T` `src/aeat/application/modelo/_calculate_input.py`
+- `S57` `T` `src/aeat/application/modelo/_calculation_actions.py`
+- `S58` `T` `src/aeat/application/modelo/_calculation_aggregation_context.py`
+- `S59` `T` `src/aeat/application/modelo/_calculation_helpers.py`
+- `S60` `T` `src/aeat/application/modelo/_calculation_preparation.py`
+- `S61` `T` `src/aeat/application/modelo/_calculation_resolution.py`
+- `S62` `T` `src/aeat/application/modelo/_calculation_source_policy.py`
+- `S63` `T` `src/aeat/application/modelo/_dt12_advisory.py`
+- `S64` `T` `src/aeat/application/modelo/_export.py`
+- `S65` `T` `src/aeat/application/modelo/_external_import_actions.py`
+- `S66` `T` `src/aeat/application/modelo/_filed_revision_observation.py`
+- `S67` `T` `src/aeat/application/modelo/_filing_actions.py`
+- `S68` `T` `src/aeat/application/modelo/_history.py`
+- `S69` `T` `src/aeat/application/modelo/_iva_wallet_gate.py`
+- `S70` `T` `src/aeat/application/modelo/_iva_wallet_seed.py`
+- `S71` `T` `src/aeat/application/modelo/_ledger_evidence_gate.py`
+- `S72` `T` `src/aeat/application/modelo/_m210_rate.py`
+- `S73` `T` `src/aeat/application/modelo/_maritime_preview.py`
+- `S74` `T` `src/aeat/application/modelo/_objective_estimation_advisory.py`
+- `S75` `T` `src/aeat/application/modelo/_participation_index_rebuild.py`
+- `S76` `T` `src/aeat/application/modelo/_profile_binding.py`
+- `S77` `T` `src/aeat/application/modelo/_profile_readiness_gate.py`
+- `S78` `T` `src/aeat/application/modelo/_projection.py`
+- `S79` `T` `src/aeat/application/modelo/_reconcile.py`
+- `S80` `T` `src/aeat/application/modelo/_registry_discovery.py`
+- `S81` `T` `src/aeat/application/modelo/_registry_helpers.py`
+- `S82` `T` `src/aeat/application/modelo/_registry_resources.py`
+- `S83` `T` `src/aeat/application/modelo/_required_binding_gate.py`
+- `S84` `T` `src/aeat/application/modelo/_result_disposition_resolution.py`
+- `S85` `T` `src/aeat/application/modelo/_result_summary.py`
+- `S86` `T` `src/aeat/application/modelo/_revision_persistence.py`
+- `S87` `T` `src/aeat/application/modelo/_revision_replay_inputs.py`
+- `S88` `T` `src/aeat/application/modelo/_selectors.py`
+- `S89` `T` `src/aeat/application/modelo/_semantic_role_resolution.py`
+- `S90` `T` `src/aeat/application/modelo/_taxation_comparison.py`
+- `S91` `T` `src/aeat/application/modelo/_verification_actions.py`
+- `S92` `T` `src/aeat/application/modelo/_verification_cross_period.py`
+- `S93` `T` `src/aeat/application/modelo/_work_addressing.py`
+- `S94` `T` `src/aeat/application/modelo/_work_lifecycle.py`
+- `S95` `T` `src/aeat/application/modelo/_work_plazo.py`
+- `S96` `T` `src/aeat/application/modelo/_workflow_gate.py`
+- `S97` `T` `src/aeat/adapters/persistence/profile/fincas.py`
+- `S98` `T` `src/aeat/adapters/persistence/storage/__init__.py`
+- `S99` `T` `src/aeat/adapters/persistence/storage/_rotation.py`
+- `S100` `T` `src/aeat/adapters/persistence/storage/attachment.py`
+- `S101` `T` `src/aeat/adapters/persistence/storage/blob_store/_blob_store.py`
+- `S102` `T` `src/aeat/adapters/persistence/storage/blob_store/_materialisation.py`
+- `S103` `T` `src/aeat/adapters/persistence/storage/bucket/_export_header.py`
+- `S104` `T` `src/aeat/adapters/persistence/storage/bucket/_manifest.py`
+- `S105` `T` `src/aeat/adapters/persistence/storage/crypto/_encrypted_columns.py`
+- `S106` `T` `src/aeat/adapters/persistence/storage/envelope/_envelope.py`
+- `S107` `T` `src/aeat/adapters/persistence/storage/envelope/_repository_test_suite.py`
+- `S108` `T` `src/aeat/adapters/persistence/storage/master_key/_master_key.py`
+- `S109` `T` `src/aeat/adapters/persistence/storage/master_key/_master_key_bucket_dek.py`
+- `S110` `T` `src/aeat/adapters/persistence/storage/master_key/_master_key_derivation.py`
+- `S111` `T` `src/aeat/adapters/persistence/storage/master_key/_master_key_ephemeral.py`
+- `S112` `T` `src/aeat/adapters/persistence/storage/master_key/_recovery.py`
+- `S113` `T` `src/aeat/adapters/persistence/storage/master_key/_recovery_facade.py`
+- `S114` `T` `src/aeat/adapters/persistence/storage/master_key/_recovery_record.py`
+- `S115` `T` `src/aeat/adapters/persistence/storage/runtime.py`
+- `S116` `T` `src/aeat/adapters/persistence/storage/secret_store/_secret_store.py`
+- `S117` `T` `src/aeat/adapters/persistence/storage/sql/_orm.py`
+- `S118` `T` `src/aeat/adapters/persistence/storage/sql/_secure_object_integrity.py`
+- `S119` `T` `src/aeat/adapters/persistence/storage/sql/secure_objects.py`
+- `S120` `T` `src/aeat/entrypoints/cli/__init__.py`
+- `S121` `T` `src/aeat/entrypoints/cli/_app_live_portals_cli.py`
+- `S122` `T` `src/aeat/entrypoints/cli/_app_live_verify_cli.py`
+- `S123` `T` `src/aeat/entrypoints/cli/_common.py`
+- `S124` `T` `src/aeat/entrypoints/cli/_config/_capabilities_cli.py`
+- `S125` `T` `src/aeat/entrypoints/cli/_config/_google.py`
+- `S126` `T` `src/aeat/entrypoints/cli/_config/_google_folder.py`
+- `S127` `T` `src/aeat/entrypoints/cli/_config/_google_sync_calc.py`
+- `S128` `T` `src/aeat/entrypoints/cli/_config/_profile_bundle.py`
+- `S129` `T` `src/aeat/entrypoints/cli/_ledger.py`
+- `S130` `T` `src/aeat/entrypoints/cli/_ledger_lifecycle_cli.py`
+- `S131` `T` `src/aeat/entrypoints/cli/_ledger_llm_cli.py`
+- `S132` `T` `src/aeat/entrypoints/cli/_ledger_read_cli.py`
+- `S133` `T` `src/aeat/entrypoints/cli/_ledger_support.py`
+- `S134` `T` `src/aeat/entrypoints/cli/_modelo_iva_wallet_cli.py`
+- `S135` `T` `src/aeat/entrypoints/cli/_modelo_maritime_cli.py`
+- `S136` `T` `src/aeat/entrypoints/cli/_modelo_payloads.py`
+- `S137` `T` `src/aeat/entrypoints/cli/_modelo_records_cli.py`
+- `S138` `T` `src/aeat/entrypoints/cli/_modelo_work_revision_payloads.py`
+- `S139` `T` `src/aeat/entrypoints/cli/_modelo_work_verification_cli.py`
+- `S140` `T` `src/aeat/entrypoints/cli/_overview.py`
+- `S141` `T` `src/aeat/entrypoints/cli/_overview_rendering.py`
+- `S142` `T` `src/aeat/adapters/outbound/aeat/auth/_authenticator_types.py`
+- `S143` `T` `src/aeat/adapters/outbound/aeat/auth/_clave_movil.py`
+- `S144` `T` `src/aeat/adapters/outbound/aeat/auth/certificate.py`
+- `S145` `T` `src/aeat/adapters/outbound/aeat/browser/_site_health_parsers.py`
+- `S146` `T` `src/aeat/adapters/outbound/aeat/sede/_auth_state.py`
+- `S147` `T` `src/aeat/adapters/outbound/aeat/sede/_censo_live.py`
+- `S148` `T` `src/aeat/adapters/outbound/aeat/sede/_declarations.py`
+- `S149` `T` `src/aeat/adapters/outbound/aeat/sede/_declarations_observations.py`
+- `S150` `T` `src/aeat/adapters/outbound/aeat/sede/_iva_compensation_wallet.py`
+- `S151` `T` `src/aeat/adapters/outbound/aeat/sede/_notifications.py`
+- `S152` `T` `src/aeat/adapters/outbound/aeat/sede/_walker.py`
+- `S153` `T` `src/aeat/adapters/outbound/aeat/verify/__init__.py`
+- `S154` `T` `src/aeat/adapters/outbound/google/_api.py`
+- `S155` `T` `src/aeat/adapters/outbound/google/_calc_sheets_apply.py`
+- `S156` `T` `src/aeat/adapters/outbound/google/_calc_sheets_pull.py`
+- `S157` `T` `src/aeat/adapters/outbound/google/_document_link_resolver.py`
+- `S158` `T` `src/aeat/adapters/outbound/storage/_factory.py`
+- `S159` `T` `src/aeat/application/ledger/_actions_classification.py`
+- `S160` `T` `src/aeat/application/ledger/_actions_common.py`
+- `S161` `T` `src/aeat/application/ledger/_actions_export.py`
+- `S162` `T` `src/aeat/application/ledger/_actions_import.py`
+- `S163` `T` `src/aeat/application/ledger/_actions_lifecycle.py`
+- `S164` `T` `src/aeat/application/ledger/_actions_manual.py`
+- `S165` `T` `src/aeat/application/ledger/_actions_split_merge.py`
+- `S166` `T` `src/aeat/application/ledger/_business_operation_invoice.py`
+- `S167` `T` `src/aeat/application/ledger/_evidence.py`
+- `S168` `T` `src/aeat/application/ledger/_evidence_textlayer.py`
+- `S169` `T` `src/aeat/application/ledger/_llm_classification.py`
+- `S170` `T` `src/aeat/application/ledger/_models.py`
+- `S171` `T` `src/aeat/application/ledger/_participation_read.py`
+- `S172` `T` `src/aeat/application/ledger/_review_projection.py`
+- `S173` `T` `src/aeat/application/ledger/_rule_repository.py`
+- `S174` `T` `src/aeat/application/user_profile/_aggregate.py`
+- `S175` `T` `src/aeat/application/user_profile/_bundle.py`
+- `S176` `T` `src/aeat/application/user_profile/_capabilities.py`
+- `S177` `T` `src/aeat/application/user_profile/_censo_sync.py`
+- `S178` `T` `src/aeat/application/user_profile/_custody_carry.py`
+- `S179` `T` `src/aeat/application/user_profile/_keys_validation.py`
+- `S180` `T` `src/aeat/application/user_profile/_language_resolver.py`
+- `S181` `T` `src/aeat/application/user_profile/_lifecycle.py`
+- `S182` `T` `src/aeat/application/user_profile/_orchestration.py`
+- `S183` `T` `src/aeat/application/user_profile/_profile_repository.py`
+- `S184` `T` `src/aeat/application/user_profile/_projections.py`
+- `S185` `T` `src/aeat/application/user_profile/_repository.py`
+- `S186` `T` `src/aeat/application/user_profile/_testing.py`
+- `S187` `T` `src/aeat/application/user_profile/_validation.py`
+- `S188` `T` `src/aeat/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py`
+- `S189` `T` `src/aeat/adapters/inbound/borrador/_parsers/_pdfplumber_backend.py`
+- `S190` `T` `src/aeat/adapters/inbound/borrador/_schema.py`
+- `S191` `T` `src/aeat/adapters/inbound/declaracion/_parser.py`
+- `S192` `T` `src/aeat/adapters/inbound/declaracion/_parsers/_pdfplumber_backend.py`
+- `S193` `T` `src/aeat/adapters/inbound/declaracion/_schema.py`
+- `S194` `T` `src/aeat/adapters/inbound/financial/__init__.py`
+- `S195` `T` `src/aeat/adapters/inbound/justificante/_extract.py`
+- `S196` `T` `src/aeat/adapters/inbound/justificante/_parser.py`
+- `S197` `T` `src/aeat/adapters/inbound/justificante/_parsers/__init__.py`
+- `S198` `T` `src/aeat/adapters/inbound/justificante/_parsers/_pdfplumber_backend.py`
+- `S199` `T` `src/aeat/application/calculations/_binding_prefill.py`
+- `S200` `T` `src/aeat/application/calculations/_iva_compensation_annual_partition.py`
+- `S201` `T` `src/aeat/application/calculations/_iva_compensation_history.py`
+- `S202` `T` `src/aeat/application/calculations/_iva_wallet_balance.py`
+- `S203` `T` `src/aeat/application/calculations/_iva_wallet_reconciliation.py`
+- `S204` `T` `src/aeat/application/calculations/_m111_no_retenciones.py`
+- `S205` `T` `src/aeat/application/calculations/_maritime_exemption_service.py`
+- `S206` `T` `src/aeat/application/calculations/_multi_year.py`
+- `S207` `T` `src/aeat/application/calculations/_observations_repository.py`
+- `S208` `T` `src/aeat/application/calculations/_relation_prefill.py`
+- `S209` `T` `src/aeat/application/calculations/_row_set_assembly.py`
+- `S210` `T` `src/aeat/domain/calculations/_export_field_kind.py`
+- `S211` `T` `src/aeat/domain/calculations/registry/_export_parse.py`
+- `S212` `T` `src/aeat/domain/calculations/registry/_invoice_bindings.py`
+- `S213` `T` `src/aeat/domain/calculations/registry/_ledger_bindings.py`
+- `S214` `T` `src/aeat/domain/calculations/registry/_queries.py`
+- `S215` `T` `src/aeat/domain/calculations/registry/_schema.py`
+- `S216` `T` `src/aeat/domain/calculations/registry/_validate.py`
+- `S217` `T` `src/aeat/application/auth/_acquisition_lock.py`
+- `S218` `T` `src/aeat/application/auth/_actions.py`
+- `S219` `T` `src/aeat/application/auth/_operator.py`
+- `S220` `T` `src/aeat/application/auth/_operator_probes.py`
+- `S221` `T` `src/aeat/application/auth/_operator_scope.py`
+- `S222` `T` `src/aeat/application/auth/_sessions.py`
+- `S223` `T` `src/aeat/application/filing/_calculate.py`
+- `S224` `T` `src/aeat/application/filing/_export.py`
+- `S225` `T` `src/aeat/application/filing/_history_models.py`
+- `S226` `T` `src/aeat/application/filing/_review.py`
+- `S227` `T` `src/aeat/application/filing/_testing_registry.py`
+- `S228` `T` `src/aeat/application/filing/runtime.py`
+- `S229` `T` `src/aeat/application/overview/_agenda.py`
+- `S230` `T` `src/aeat/application/overview/_backlog.py`
+- `S231` `T` `src/aeat/application/overview/_calendar.py`
+- `S232` `T` `src/aeat/application/overview/_calendar_models.py`
+- `S233` `T` `src/aeat/application/overview/_coverage.py`
+- `S234` `T` `src/aeat/application/overview/_explain.py`
+- `S235` `T` `src/aeat/application/wizard/_catalogue.py`
+- `S236` `T` `src/aeat/application/wizard/_commands.py`
+- `S237` `T` `src/aeat/application/wizard/_compiler.py`
+- `S238` `T` `src/aeat/application/wizard/_persistence.py`
+- `S239` `T` `src/aeat/application/wizard/_status.py`
+- `S240` `T` `src/aeat/application/aggregation/_iva_ledger.py`
+- `S241` `T` `src/aeat/application/aggregation/_ledger_filing_snapshot.py`
+- `S242` `T` `src/aeat/application/aggregation/_source_mesh.py`
+- `S243` `T` `src/aeat/application/aggregation/_source_profile.py`
+- `S244` `T` `src/aeat/application/invoices/__init__.py`
+- `S245` `T` `src/aeat/application/invoices/_queries.py`
+- `S246` `T` `src/aeat/application/invoices/_reconciliation.py`
+- `S247` `T` `src/aeat/application/invoices/_source_resolver.py`
+- `S248` `T` `src/aeat/application/workflow/_models.py`
+- `S249` `T` `src/aeat/application/workflow/_persistence.py`
+- `S250` `T` `src/aeat/application/workflow/_profile_health.py`
+- `S251` `T` `src/aeat/application/workflow/_protocols.py`
+- `S252` `T` `src/aeat/application/review/_actions.py`
+- `S253` `T` `src/aeat/application/review/_adapters.py`
+- `S254` `T` `src/aeat/application/review/_models.py`
+- `S255` `T` `src/aeat/application/storage/calc_sheets/_evidence.py`
+- `S256` `T` `src/aeat/application/storage/calc_sheets/_parity_harness.py`
+- `S257` `T` `src/aeat/application/storage/calc_sheets/_records.py`
+- `S258` `T` `src/aeat/core/resources/_errors.py`
+- `S259` `T` `src/aeat/core/resources/_repos/iva_catalogues.py`
+- `S260` `T` `src/aeat/core/resources/_repos/iva_rate_tables.py`
+- `S261` `T` `src/aeat/domain/contribuyente/__init__.py`
+- `S262` `T` `src/aeat/domain/contribuyente/_descendant_facts.py`
+- `S263` `T` `src/aeat/domain/contribuyente/family.py`
+- `S264` `T` `src/aeat/domain/user_profile/_portable_export.py`
+- `S265` `T` `src/aeat/domain/user_profile/_registry_contract.py`
+- `S266` `T` `src/aeat/domain/user_profile/_values.py`
+- `S267` `T` `src/aeat/application/evidence/_models.py`
+- `S268` `T` `src/aeat/application/evidence/_service.py`
+- `S269` `T` `src/aeat/application/live/_filed_observation_persistence.py`
+- `S270` `T` `src/aeat/application/live/_iva_remote_state.py`
+- `S271` `T` `src/aeat/core/observability/_context.py`
+- `S272` `T` `src/aeat/core/observability/_models.py`
+- `S273` `T` `src/aeat/domain/invoices/_enums.py`
+- `S274` `T` `src/aeat/domain/invoices/_models.py`
+- `S275` `T` `src/aeat/domain/modelos/_calculation_revision.py`
+- `S276` `T` `src/aeat/domain/modelos/_work_unit.py`
+- `S277` `T` `src/aeat/domain/transactions/_models.py`
+- `S278` `T` `src/aeat/domain/transactions/_raw_transaction.py`
+- `S279` `T` `src/aeat/application/bucket_maintenance/_service.py`
+- `S280` `T` `src/aeat/application/config_reset.py`
+- `S281` `T` `src/aeat/application/diagnostics.py`
+- `S282` `T` `src/aeat/application/inventory/_service.py`
+- `S283` `T` `src/aeat/application/registry/_corpus.py`
+- `S284` `T` `src/aeat/application/setup/_service.py`
+- `S285` `T` `src/aeat/application/state_projection.py`
+- `S286` `T` `src/aeat/application/storage_write_policy.py`
+- `S287` `T` `src/aeat/application/transactions/_import.py`
+- `S288` `T` `src/aeat/core/config.py`
+- `S289` `T` `src/aeat/core/corpus_manifest/__init__.py`
+- `S290` `T` `src/aeat/core/json_contract.py`
+- `S291` `T` `src/aeat/core/logging.py`
+- `S292` `T` `src/aeat/domain/attachments/_models.py`
+- `S293` `T` `src/aeat/domain/deadlines/_models.py`
+- `S294` `T` `src/aeat/domain/fincas/_imputacion_parameters.py`
+- `S295` `T` `src/aeat/domain/iva/_recargo_equivalencia.py`
+- `S296` `T` `src/aeat/entrypoints/mcp/_tools.py`
+- `S297` `T` `src/aeat/locales/_fstring_registry.py`
+- `S298` `T` `src/aeat/locales/_modelo_manager.py`
+- `S299` `T` `src/aeat/domain/modelos (test consumers)`
+- `S300` `T` `src/aeat/domain/calculations/registry (test consumers)`
+- `S301` `T` `src/aeat/domain/deadlines (test consumers)`
+- `S302` `T` `src/aeat/domain/iva_compensation (test consumers)`
+- `S303` `T` `src/aeat/domain/transactions (test consumers)`
+- `S304` `T` `src/aeat/domain/user_profile (test consumers)`
+- `S305` `T` `src/aeat/domain/contribuyente (test consumers)`
+- `S306` `T` `src/aeat/domain/filing (test consumers)`
+- `S307` `T` `src/aeat/domain/buckets (test consumers)`
+- `S308` `T` `src/aeat/domain/submission (test consumers)`
+- `S309` `T` `src/aeat/domain (test consumers)`
+- `S310` `T` `src/aeat/domain/iva (test consumers)`
+- `S311` `T` `src/aeat/domain/invoices (test consumers)`
+- `S312` `T` `src/aeat/domain/attachments (test consumers)`
+- `S313` `T` `src/aeat/domain/portals (test consumers)`
+- `S314` `T` `src/aeat/domain/usage_ratios (test consumers)`
+- `S315` `T` `src/aeat/domain/justificante (test consumers)`
+- `S316` `T` `src/aeat/domain/retention (test consumers)`
+- `S317` `T` `src/aeat/domain/renta (test consumers)`
+- `S318` `T` `src/aeat/domain/calculations (test consumers)`
+- `S319` `T` `src/aeat/domain/calculations/registry/tests (test consumers)`
+- `S320` `T` `src/aeat/domain/manuals (test consumers)`
+- `S321` `T` `src/aeat/domain/auth/apoderamientos (test consumers)`
+- `S322` `T` `src/aeat/domain/fincas (test consumers)`
+- `S323` `T` `src/aeat/application/user_profile (test consumers)`
+- `S324` `T` `src/aeat/application/workflow (test consumers)`
+- `S325` `T` `src/aeat/application/calculations (test consumers)`
+- `S326` `T` `src/aeat/application/aggregation (test consumers)`
+- `S327` `T` `src/aeat/application/live (test consumers)`
+- `S328` `T` `src/aeat/application/modelo (test consumers)`
+- `S329` `T` `src/aeat/application/auth (test consumers)`
+- `S330` `T` `src/aeat/application/storage/calc_sheets (test consumers)`
+- `S331` `T` `src/aeat/application/ledger (test consumers)`
+- `S332` `T` `src/aeat/application/wizard (test consumers)`
+- `S333` `T` `src/aeat/application/filing (test consumers)`
+- `S334` `T` `src/aeat/application/review (test consumers)`
+- `S335` `T` `src/aeat/application/bucket_maintenance (test consumers)`
+- `S336` `T` `src/aeat/application/evidence (test consumers)`
+- `S337` `T` `src/aeat/application/overview (test consumers)`
+- `S338` `T` `src/aeat/application/invoices (test consumers)`
+- `S339` `T` `src/aeat/adapters/persistence/storage/bucket (test consumers)`
+- `S340` `T` `src/aeat/adapters/persistence/storage/crypto (test consumers)`
+- `S341` `T` `src/aeat/adapters/persistence/storage/sql (test consumers)`
+- `S342` `T` `src/aeat/adapters/persistence/storage/master_key (test consumers)`
+- `S343` `T` `src/aeat/adapters/outbound/aeat/sede (test consumers)`
+- `S344` `T` `src/aeat/adapters/inbound/pdf (test consumers)`
+- `S345` `T` `src/aeat/adapters/outbound/storage (test consumers)`
+- `S346` `T` `src/aeat/adapters/outbound/google (test consumers)`
+- `S347` `T` `src/aeat/adapters/inbound/financial/providers (test consumers)`
+- `S348` `T` `src/aeat/adapters/outbound/aeat/browser (test consumers)`
+- `S349` `T` `src/aeat/adapters/persistence/storage (test consumers)`
+- `S350` `T` `src/aeat/adapters/outbound/aeat/auth (test consumers)`
+- `S351` `T` `src/aeat/adapters/outbound/llm (test consumers)`
+- `S352` `T` `src/aeat/adapters/inbound/declaracion (test consumers)`
+- `S353` `T` `src/aeat/adapters/persistence/storage/blob_store (test consumers)`
+- `S354` `T` `src/aeat/adapters/inbound/borrador (test consumers)`
+- `S355` `T` `src/aeat/tests (test consumers)`
+- `S356` `T` `src/aeat/core/errors (test consumers)`
+- `S357` `T` `src/aeat/core (test consumers)`
+- `S358` `T` `src/aeat/core/i18n (test consumers)`
+- `S359` `T` `src/aeat/entrypoints/cli (test consumers)`
+- `S360` `T` `src/aeat/core/observability (test consumers)`
+- `S361` `T` `src/aeat/locales (test consumers)`
+- `S362` `T` `src/aeat/entrypoints/mcp (test consumers)`
+- `S363` `T` `src/aeat/core/decimal (test consumers)`
+- `S364` `T` `src/aeat/application/workflow/_utils.py`
+- `S368` `T` `src/aeat/core/setup_answers.py`
+- `S368` `T` `src/aeat/domain/deadlines/taxpayer_model.py`
+- `S369` `T` `src/aeat/core/setup_answers.py`
+- `S377` `T` `dev/import_hygiene_scan.py`
+- `S377` `T` `dev/import_hygiene_baseline.json`
+- `S377` `T` `src/aeat/domain/calculations/registry/tests/test_public_api_boundaries.py`
+- `S377` `T` `src/aeat/entrypoints/cli/tests/test_architecture_boundaries.py`
+- `S378` `T` `dev/import_hygiene_scan.py`
+- `S379` `T` `src/aeat/tests/test_import_hygiene_gate.py`
+- `S382` `T` `src/aeat`
+- `S383` `T` `src/aeat`
+- `S384` `T` `.vault/audit/2026-07-01-import-centralization-audit.md`
+- `S387` `T` `.vaultspec/rules/rules/`
+- `S388` `T` `dev/import_hygiene_scan.py`
+- `S388` `T` `dev/tests/test_import_hygiene_scan.py`
+- `S389` `T` `src/aeat/application/aggregation/_withholding_observations_repository.py`
+- `S389` `T` `src/aeat/application/aggregation/_percepciones_observations_repository.py`
+- `S389` `T` `src/aeat/application/aggregation/tests/test_withholding_observations_repository_roundtrip.py`
+- `S389` `T` `src/aeat/application/aggregation/tests/test_percepciones_observations_repository_roundtrip.py`
+- `S389` `T` `src/aeat/application/aggregation/__init__.py`
+- `S389` `T` `src/aeat/application/aggregation/_withholding_source.py`
+- `S389` `T` `src/aeat/entrypoints/cli/_modelo_aggregate_cli.py`
+- `S389` `T` `src/aeat/application/aggregation/tests/test_withholding_source_resolver.py`
+- `S389` `T` `src/aeat/application/modelo/tests/test_renta_annual_reconciliations_fold_in_live.py`
+- `S389` `T` `src/aeat/entrypoints/cli/tests/test_withholding_producer.py`
+- `S389` `T` `src/aeat/application/calculations/tests/test_modelo_190_percepciones_e2e.py`
+- `S389` `T` `src/aeat/application/user_profile/_custody_carry.py`
+- `S389` `T` `src/aeat/application/user_profile/tests/test_custody_store_matrix.py`
+- `S389` `T` `docs/api/aeat.application.aggregation.rst`
+- `S389` `T` `docs/api/aeat.application.aggregation._percepciones_observations_repository.rst`
+- `S389` `T` `docs/api/aeat.application.aggregation._withholding_observations_repository.rst`
+- `S390` `T` `src/aeat/entrypoints/cli/_config/__init__.py`
+- `S391` `T` `src/aeat/application/modelo/__init__.py`
+- `S391` `T` `src/aeat/entrypoints/cli/_modelo.py`
+- `S391` `T` `src/aeat/entrypoints/cli/_modelo_work_revision_cli.py`
+- `S391` `T` `src/aeat/application/calculations/tests/test_modelo_130_carry_forward_continuity.py`
+- `S392` `T` `src/aeat/application/modelo/__init__.py`
+- `S392` `T` `src/aeat/entrypoints/cli/_modelo.py`
+- `S393` `T` `src/aeat/application/modelo/__init__.py`
+- `S393` `T` `src/aeat/entrypoints/cli/_modelo_records_cli.py`
+- `S393` `T` `src/aeat/application/calculations/tests/test_modelo_130_carry_forward_continuity.py`
+- `S394` `T` `src/aeat/application/modelo/__init__.py`
+- `S394` `T` `src/aeat/entrypoints/cli/_modelo.py`
+- `S394` `T` `src/aeat/entrypoints/cli/_modelo_reconcile_cli.py`
+- `S394` `T` `src/aeat/entrypoints/cli/_modelo_work_calculate_cli.py`
+- `S394` `T` `src/aeat/entrypoints/cli/_modelo_work_revision_cli.py`
+- `S394` `T` `src/aeat/application/workflow/_resume.py`
+- `S395` `T` `src/aeat/application/invoices/__init__.py`
+- `S396` `T` `src/aeat/application/invoices/__init__.py`
+- `S397` `T` `src/aeat/application/invoices/__init__.py`
+- `S397` `T` `src/aeat/application/invoices/tests/test_queries.py`
+- `S398` `T` `src/aeat/domain/calculations/registry/tests/test_public_api_boundaries.py`
+- `S398` `T` `src/aeat/entrypoints/cli/tests/test_architecture_boundaries.py`
+- `S399` `T` `dev/import_hygiene_scan.py`
+- `S400` `T` `.vault/audit/2026-07-01-import-centralization-audit.md`
+- `S401` `T` `.vault/exec/2026-07-01-import-centralization`
+- `S402` `T` `dev/import_hygiene_scan.py`
+- `S402` `T` `dev/tests/test_import_hygiene_scan.py`
+- `S402` `T` `src/aeat/tests/test_import_hygiene_gate.py`
+- `S402` `T` `src/aeat/application/live/__init__.py`
+- `S402` `T` `src/aeat/application/live/tests/test_filed_capture_calculation_history.py`
+- `S402` `T` `src/aeat/application/live/tests/test_iva_remote_state_acquisition.py`
+- `S402` `T` `src/aeat/entrypoints/cli/_config/__init__.py`
+- `S402` `T` `src/aeat/entrypoints/cli/_config/tests/test_bucket_history_parsing.py`
+- `S403` `T` `dev/quality/import_hygiene_test_debt.json`
+- `S403` `T` `dev/quality/import_hygiene_scan.py`
+- `S403` `T` `dev/tests/test_import_hygiene_gate.py`
+- `S403` `T` `dev/tests/test_import_edge_integrity_gate.py`

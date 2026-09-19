@@ -73,6 +73,12 @@ _TRANSLATION_OPTION_RE: Final[re.Pattern[str]] = re.compile(
     r"(?<![\w])--[A-Za-z][A-Za-z0-9-]*(?:=[^\s,;:()[\]{}]+)?|"
     r"(?<![\w])-[A-Za-z](?=\s|$|[,;:.)\]}])"
 )
+# The snake_case arm states its "contains an underscore with something after
+# it" condition as a lookahead and then consumes the word once, so no input can
+# be split two ways. The earlier spelling repeated `(?:_[A-Za-z0-9_]+)+` after a
+# `[A-Za-z0-9_]*` that could claim the same underscores; a long `A_0_0_0…` run
+# ending in a non-ASCII letter -- ordinary Spanish, Catalan and Galician prose --
+# then had to try every split before failing, doubling in cost per segment.
 _TRANSLATION_IDENTIFIER_RE: Final[re.Pattern[str]] = re.compile(
     # The snake_case arm says "an underscore with at least one character after
     # it", not "one or more underscore-prefixed runs". Both accept exactly the

@@ -1,0 +1,4103 @@
+---
+tags:
+  - '#audit'
+  - '#repo-gate-integrity'
+date: '2026-08-30'
+modified: '2026-09-07'
+body_schema: 'body-v2'
+body_hash: 'sha256:1d84e16ce5350b0724cb8ebded735296f3b3e3185f00f740d76d15f1f3b57410'
+related:
+  - '[[2026-09-07-quality-gate-zero-closure-blind-green-gates-adr]]'
+---
+
+# `repo-gate-integrity` audit: `gates that report clean about the wrong subject`
+
+## Scope
+
+A gate that is WRONG fails loudly and gets fixed. A gate that is CORRECT about
+something other than what everyone believes it covers reports green forever, and
+its green is read as coverage of the larger thing. This audit records that second
+shape as a distinct species, with one fully-measured exemplar.
+
+The distinction matters because the two have different tells. A gate that drifted
+into blindness was once right, so a staleness or drift check can catch it. A gate
+authored blind to the population it describes was never right about that
+population, and nothing about it will ever go stale — there is no earlier state
+to diff against. It cannot be found by any mechanical freshness check. It is
+found only by asking, of a green gate, *what exactly did this assert*.
+
+The title says gates because that is where the shape was first measured, but it
+is not confined to them. Two of the instances below are verification ACTIONS
+rather than committed gates — a test selector and a grep — and they fail
+identically: correct about their own subject, irrelevant to the question being
+asked, and returning exactly what they would return if everything were fine.
+Read "gate" throughout as any artifact whose green is taken as evidence.
+
+Scoped to what was measured directly during the receipt-retirement work on
+2026-08-30. Instances relayed from other lanes are recorded as relayed and are
+marked unverified here; they need their own evidence before anyone acts on them.
+
+## Findings
+
+### shared-config-gate-asserts-the-constant-not-its-use | high | the strict-frozen gate proves the canonical config is correct and nothing proves any module uses it
+
+`src/cadrumo/core/tests/test_strict_frozen_config_validates_defaults.py` is
+green and has been. It asserts that `STRICT_FROZEN_CONFIG` and
+`STRICT_FROZEN_HIDDEN_INPUT_CONFIG` each declare `validate_default`, `strict`,
+`frozen` and `extra="forbid"`, and that a default violating its own field
+constraint is refused. Every one of those assertions is true and worth having.
+
+Its own module docstring states the failure mode it does not check: "These
+assertions are written against the shared constant rather than against any model
+that embeds it, because the guarantee belongs to the constant. A per-module
+declaration would leave every module that forgot it unprotected, which is the
+state this replaced."
+
+That is the current state, at scale. An AST census of every inline
+`ConfigDict(...)` call under `src/cadrumo` finds 302 calls, 269 of them in
+production modules. Two populations, defined precisely because a single figure
+without its filter gets quoted back wrongly:
+
+- **62** production calls declare `strict` AND `frozen` AND `extra="forbid"`,
+  omit `validate_default`, and add no key — a strict subset of the canonical
+  constant, which is to say the canonical config with a guarantee silently
+  removed.
+- **182** production calls declare `strict` OR `frozen`, omit
+  `validate_default`, and add no key. This is the superset; the 120 additional
+  sites are ones the narrower filter dropped for lacking `extra="forbid"`, such
+  as `{'strict': True, 'frozen': True}` and `{'frozen': True, 'extra':
+  'forbid'}`.
+- **40** production calls add a genuine key (`arbitrary_types_allowed`,
+  `validate_assignment`). These are the divergences the canonical constant's own
+  docstring sanctions — but **39 of the 40 also omit `validate_default`**, so a
+  sanctioned divergence on one axis has been silently carrying an unsanctioned
+  one on another. The docstring permits a local configuration where a module
+  needs something DIFFERENT. It does not permit that module to also quietly drop
+  a guarantee it never had a reason to drop, and 39 of 40 did.
+
+The union — every production site that declares some strictness and skips
+default validation — is **221**.
+
+The concentration is worth recording, because it shows this is a copied
+convention rather than scattered oversight: `application/live/remote_state_models.py`
+19, `domain/calculations/registry/query_reports.py` 15,
+`domain/calculations/registry/record_design_schema.py` 12, `llm/models.py` 10,
+`domain/calculations/registry/binding_selector_utils.py` 7,
+`llm/column_role_mapping.py` 7, `application/registry/diff.py` 6.
+
+A correction belongs in this record rather than only in the working history.
+This population was first reported as "103 sites". That figure was wrong twice:
+it counted test modules alongside production, and it used the narrow filter while
+being described in the language of the broad one. The production-only narrow
+figure is 62. Nobody should carry 103 forward.
+
+### narrow-step-fix-lands-on-the-shared-home-only | high | a completed row fixed the canonical config and never swept the local copies its own text names
+
+The architecture plan's `W05.P23.S307` is marked complete and reads, in its own
+words, "Validate defaults on the shared strict-frozen model configuration rather
+than patching each embedding module as the gap resurfaces". The canonical config
+was genuinely fixed and carries `validate_default=True` today; that half is real
+and load-bearing.
+
+The modules holding their own local copy escaped it entirely — and they are
+precisely the "each embedding module" the row exists to avoid patching. Three
+were found by meaning during unrelated pre-write discovery, in
+`entrypoints/tui/operations/`: `projection.py`, `logs.py` and `modal.py`, each
+declaring a private constant equal to the canonical minus `validate_default`.
+All three are now repointed at the canonical import. The census above is what
+that discovery generalised to.
+
+This is delivered-narrower wearing the same checkbox as delivered-as-specified.
+The row should NOT be reopened: what it claims on the shared constant was
+delivered, and reopening it would misrepresent completed work while orphaning its
+execution record. The sweep is new work and belongs in a new row citing it.
+
+Two notes for whoever sweeps. First, the repoint must name the canonical symbol
+at every use site; assigning the canonical to the old private name would be a
+forwarding alias, which the architecture rules prohibit outright, and it would
+leave the divergence invisible to the very census that found it — the tell that a
+repoint is complete is that the module no longer imports `ConfigDict` at all.
+Second, a local constant is legitimate where a module needs a DIFFERENT config,
+which the canonical docstring says plainly; a strict subset is not that. A weaker
+config nobody chose is a defect, and a weaker config someone chose for a stated
+reason is a decision — so the sweep must record a reason inline wherever it keeps
+one.
+
+### tests-that-construct-their-own-subject-prove-nothing-about-reachability | high | a closed union advertised three outcomes, production could emit one, and the two dead members had passing tests
+
+A refusal union declares three outcome types. Counting PRODUCTION constructions
+per member: 3, 0 and 0. The assembler can emit exactly one of the three
+outcomes it advertises.
+
+Both dead members are constructed — in two test modules, one at the model layer
+and one in the view layer, which build them by hand and assert on them. Those
+tests pass. **Passing tests over a type read as evidence the type is live, and
+they are not**: a test that manufactures its own subject proves the type can be
+built and says nothing whatever about whether anything builds it. A reachability
+defect hides behind green tests more reliably than behind no tests at all,
+because no tests at least reads as a gap.
+
+The view layer had gone further and written rendering and disclosure handling for
+both unreachable refusals, validated against hand-built fixtures — production
+code for states the producer cannot produce, with a green suite over it. That is
+the same false-confidence shape one layer up, and the lane that wrote it did not
+catch it in its own sweep.
+
+**The generalisable check, and it is the durable half of this finding: for every
+closed union of outcome types, count PRODUCTION constructions per member. A
+member at zero is either an unwritten producer or a dead branch, and tests
+constructing it distinguish neither.** It is mechanical, it reaches past any one
+union, and it would have found both of these without anyone suspecting them —
+which is precisely the property the hand-listed subject set above lacks. This is
+the second check in this document that must derive its subjects rather than
+receive them, and the first one a scan can perform end to end.
+
+The remedy is not uniform, which is why the check reports rather than fixes. A
+zero-construction member is one of three things: a check intended and never
+written, where the finding is the MISSING CHECK and the type is correct and
+waiting; a branch genuinely unreachable, where the type, its union membership,
+its validator, its rendering and its tests all go together; or a reachable
+outcome the producer currently routes around. Here one member's version fields
+are pinned to a single literal, so the mismatch it exists to report cannot yet be
+represented — that is the first case, and deleting it would remove the slot for a
+check the contract still needs.
+
+### check-construction-sites-has-a-direction-dependency | high | the same zero-construction-site signal is a defect on an output and a missing caller on an input, and the rule as first stated would manufacture false findings
+
+Every other entry here is an artifact that looked sound and was not. This is the
+mirror — an artifact that looks wrong and is right — and it is the more dangerous
+direction for anyone who has just spent a day training on the first.
+
+The never-populated-field finding above produced a rule: check the construction
+sites, not the schema. Nine declarations across five types with zero population
+sites, and the model declarations tell you nothing. That rule is correct and was
+made a standing requirement.
+
+Applied to the edit contract it manufactures two FALSE defects.
+`ModeloEditCompatibilityTupleV1` and `ModeloEditParseRequestV1` each have zero
+non-test CONSTRUCTION sites, which reads identically to the workspace case. They
+are its opposite. Both have live consuming services that take them as
+parameters: `parse_modelo_edit_value(request: ModeloEditParseRequestV1)` and
+`_incompatible_axis(compatibility: ModeloEditCompatibilityTupleV1)`, both in the
+edit-services module.
+
+**The discriminator is not the count, it is the direction the type faces.** A
+REQUEST type with a live consumer and no constructor is a contract awaiting its
+caller. A PRODUCED RECORD with a declared field nothing fills is a defect. Same
+signal, opposite meaning, and nothing in the site count separates them.
+
+The practical form, to be applied before reporting any zero-construction-site
+finding: **ask whether the type is produced or consumed. If a live service takes
+it as a parameter, the absence is a missing caller, not a missing producer.**
+
+Two measurement notes. The parse-request type has four non-test sites, not two —
+its definition, its own export list, the consuming module's import, and the
+consuming signature — so a claim of "two sites, definition and `__all__`"
+undercounts by omitting the consumer, which is precisely the evidence that
+decides the direction. And the compatibility type is additionally consumed by a
+same-package operation-definition field, another consumer with no constructor.
+
+**The second-order point, and it connects this to the selector finding above: a
+pattern strong enough to be predictive is strong enough to be over-applied.**
+That happened twice in one campaign — once when two readers reached for a single
+selector defect that turned out to be two different commands, and once here.
+The second time the pattern was one its own author had established, which is
+when it is hardest to doubt: nine confirmations make the tenth application feel
+like recognition rather than inference.
+
+### an-enumerated-subject-list-is-a-hardcoded-tally-in-disguise | high | a check that lists its subjects instead of deriving them is correct only about the list, and it looks more careful than the version that works
+
+This project has ruled against hardcoded tallies repeatedly — a module count, an
+import-site ceiling, an exact consumer count in a test name — on the ground that
+a number encodes a moment, trains the next person to update the constant, and
+then detects nothing. Every one of those rulings addressed a COUNT. None noticed
+that a hand-written list of SUBJECTS is the same antipattern in different
+clothes, and several of the artifacts already fixed for the count still carry the
+list.
+
+**Why it survived so many rulings is the important part.** A tally at least LOOKS
+like a magic number; a reader meets `== 7` and feels the itch. An enumerated
+subject list looks like thoroughness. Naming the five types a check covers reads
+as more careful than deriving them, so the defect is camouflaged by the
+appearance of diligence — and a reviewer scanning for magic numbers sees a
+diligent list and moves on.
+
+The worked example is the strongest available because the finding supplied its
+own instance. A row was written to close a set of declared-but-never-populated
+fields, and its whole subject was that a partial fix would LOOK COMPLETE FROM THE
+MODEL SIDE — it said so, and it correctly prescribed re-running the
+construction-site scan across every field rather than trusting the model
+declarations. Its type list named four types. An AST walk of the module returns
+five: a `recovery_action` on a revision-mismatch refusal type appeared in nobody's
+list. So a sweeper working that row would have fixed four types, re-run a scan
+scoped to those same four, obtained a clean result, and shipped with the fifth
+still empty. The confirmation would have been correct about the list and wrong
+about the population — inside a finding whose entire subject is that failure.
+
+**The remedy is not a longer list.** A longer list is a better instance of the
+broken method. The remedy is to DERIVE the subjects from the artifact under
+check: walk the module and take the types it actually declares, so a type added
+tomorrow is covered without anyone remembering to add it.
+
+**The rule, stated to reach past gates: any check that enumerates its subjects
+rather than deriving them is correct only about the enumeration.** That covers
+closure checks, allowlists keyed by a hand-written set, conformance matrices,
+censuses, and exemption registers — several of which have already had one
+instance fixed without the class being named. Where derivation is genuinely
+infeasible, the fallback is not to enumerate silently: it is to enumerate AND
+assert that the enumeration still equals the derived set, so drift fails loudly
+instead of passing quietly.
+
+**There is a third member, quieter than both: a lookup keyed on a property that
+HAPPENS to be shared today rather than on the identity that determines the
+answer.** The worked example is a decision made correctly, which is the clearest
+way to see the trap. A filing destination presents two capabilities that both
+read `UNMEASURED` today — but for unrelated reasons, one permanently
+unmeasurable because no producer records a verdict at all, the other merely
+pending a contributor port. Its explanation map is keyed on the capability
+IDENTITY. Had it been keyed on the shared disposition it would work perfectly
+today and mis-answer the instant the port lands: the export capability flips to
+`AVAILABLE` while the draft one stays `UNMEASURED`, and the "permanently
+unmeasurable" reason would attach itself to the capability that had just become
+measurable.
+
+That one needs naming separately because of how well it hides. A tally is
+VISIBLY a snapshot — someone updating it at least notices they are editing a
+number. A subject list looks like thoroughness. A coincidental key looks like a
+correct mapping: right shape, right types, sound structure, and nothing in it
+signals that it will start lying when the coincidence ends.
+
+So the family orders by how loudly the defect advertises itself, and the
+ordering is the useful part because it says where to look hardest:
+
+1. a hardcoded **tally** — looks like a magic number, most visible
+2. a hardcoded **subject list** — looks like thoroughness, less visible
+3. a **coincidental-property key** — looks like a correct mapping, least visible
+
+All three are correct today and wrong later; they differ only in how much they
+advertise it.
+
+**The third is catchable only at design time, and that distinction must be
+preserved.** A tally and a subject list can both be found by a scan — look for a
+literal, or for an enumeration that should have been derived. A key that is
+correct-by-coincidence cannot be detected by inspecting the code, because
+nothing in it is wrong yet; the code will pass every check and every test until
+the day the shared property stops being shared. The only defence is the question
+asked while writing the lookup: does this key DETERMINE the answer, or does it
+merely CORRELATE with it today? That belongs with the cheap habits at the end of
+this document rather than with the gate findings, because no gate can carry it.
+
+### remediation-must-precede-the-gate-that-would-catch-it | medium | landing the detector before the sweep reds a hundred sites and the pressure becomes to weaken it
+
+The gate this family wants is straightforward: an AST census refusing any
+module-local strict-frozen configuration whose keys are a strict subset of the
+canonical's, admitting one only where it adds a key or carries a documented
+inline reason.
+
+Landing it today reds 62 to 221 production sites depending on where the line is
+drawn. That ordering has now produced the same trap three times in one campaign:
+the detector is authored, it reds a large legitimate population, and the cheapest
+route to green becomes weakening the detector rather than doing the remediation.
+The gate lands at the END of the sweep, and a row that pairs them must say so, or
+the next executor will reasonably read the gate as the fix.
+
+The same ordering constraint governs the bare single-code campaign-identifier
+pattern in the marker scan, which reaches 22 production modules that have not
+been swept, and it governed the step-notation patterns until their one production
+site was swept.
+
+### selector-narrowing-conceals-red-in-any-form | medium | a marker expression and a keyword expression hide failures identically, and one produced a false green in this audit
+
+The integration marker concealing red in a default run is documented elsewhere.
+The generalisation, found the hard way here, is that ANY narrowing selector does
+it, and the harness's own banner is the mitigation being read past.
+
+A mutation proof run during this work restored a campaign identifier to shipped
+source and ran the gate under a keyword expression matching "campaign" and
+"metadata". It reported three passed. The gate had not run at all: the consuming
+test is named for the vault documents it forbids rather than for the metadata
+family it belongs to, so the selector silently excluded the one test the proof
+existed to exercise. Run by full node identifier the gate failed precisely,
+naming the file and line. Restored, it passed.
+
+A false green from a selector is worse than a false green from a marker, because
+the marker case at least prints a partial-run banner naming what was deselected.
+A keyword expression that matches nothing relevant prints an ordinary green.
+
+### absence-of-old-text-cannot-verify-a-removal | medium | a narrowing note must quote what it dropped, so grepping for the dropped phrase reports unchanged on every correctly-narrowed record
+
+A plan row was narrowed to drop a requirement for producer-supplied cycle and
+depth dispositions, which a check of the projection module had shown do not
+exist. The no-silent-narrowing rule requires a narrowing to state what it
+excluded, so the note names the dropped requirement — which means it quotes the
+exact phrase that was removed.
+
+A grep for that phrase therefore returns a hit on the narrowed row. It reports
+`unchanged` on a record that has been correctly changed, and it will keep
+reporting that on every future check by every future reader, because the
+quotation is supposed to be there. The presence of the old text is the EVIDENCE
+OF the removal rather than the absence of it.
+
+Both halves of this were observed first-hand and independently: the row's author
+found the hit while verifying the edit had landed, and a second reader reproduced
+it and confirmed the context. It is separable from a timing question that arose
+at the same moment — a check run before the edit landed also showed the original
+text — and the two explanations were distinguished by reading the file rather
+than by either party asserting from their own tool output. Only the grep
+explanation persists; the timing one resolves itself.
+
+**The general rule: where a record is required to name what it removed,
+absence-of-old-text is not a valid check for removal.** That covers every
+narrowing note this campaign writes, every deprecation record, and every audit
+that quotes the defect it closes — which is most of them, including this one.
+Anyone verifying such work by grepping for the phrase a record dropped gets the
+wrong answer on precisely the records that did the job properly.
+
+The remedy is to key the check on the NEW marker rather than on the absence of
+the old one. A phrase unique to the narrowed form cannot appear on an unnarrowed
+record, so it answers the question actually being asked. This is the same
+correction the selector finding above needs — run the check that discriminates,
+not the one that is easy to type.
+
+It is also this document's own thesis applied to a grep instead of a gate: a
+check correct about its own subject (does this string appear) and wrong about the
+question being asked (is this record still unnarrowed). The audit family is not
+limited to gates. Any verification artifact can be correct and irrelevant at the
+same time, and the tell is identical — it returns exactly what it would return if
+everything were fine.
+
+### the-failures-here-are-provenance-not-reasoning | medium | in every case the reasoning on the evidence held, and what failed was knowing what grade of evidence was in hand
+
+Worth separating because it changes what to fix. Across the errors observed
+directly during this work — not the relayed ones — the reasoning was sound on the
+evidence held every time. What failed was knowing WHAT GRADE of evidence that
+was, and when it had been taken.
+
+The instances, all first-hand. A population figure was published as "103 sites"
+from a filter that counted test modules alongside production and was described in
+the language of a broader filter than the one it used. A scanner's behaviour was
+reported from a probe that modelled it rather than from reading it. A tree-wide
+import failure was attributed to a half-landed rename without opening the file
+named in the traceback to see whether the destination existed — it did. A gate was
+declared green from a run whose selector had excluded the only test that mattered.
+None of these was a bad inference. Each was a correct inference over material
+whose grade was not established.
+
+The two roles fail differently and that decides who can catch what. An
+ORIGINATION error — generating a claim from an ungrounded reading — is caught
+only by the originator, because only they know which branch they modelled or
+which filter they ran, and the fix is one file read. An AMPLIFICATION error —
+carrying someone else's claim onward as fact — cannot be caught by care on the
+receiving side at all, because a well-argued ungrounded claim and a measured one
+are identical in shape. A claim built on the real scanner is MORE persuasive, not
+less, when the invented part sits inside the harness around it.
+
+The mechanism, therefore, is not more caution on either side. It is that
+provenance travels WITH a claim: the originator states whether a figure came from
+reading code or from modelling it, and the amplifier asks before carrying it
+onward, particularly before it reaches anyone who will act on it. Both halves are
+cheap and neither works alone — an unread label does nothing, and a question
+nobody tracked the answer to does nothing.
+
+**A third shape sits beneath both, and no provenance label catches it: a
+reviewer holding two incompatible rulings without noticing, because each was
+made in a different conversation about a different file.** One authorisation
+ruled that the atomicity an architecture rule demands is that a move and its
+consumer updates share ONE CHANGE rather than one commit, with a collection
+check either side as the proof. Hours later the same reviewer ruled a
+sixteen-file promotion impossible for an agent to perform, on the ground that it
+needed a commit. Same operation, opposite rulings — and the second was recorded
+into a plan row and carried onward as a blocker before anyone compared them. The
+measured scope was 17 import statements across 16 files, only two of them
+cross-package.
+
+Nothing detects this. It is not a stale claim: both rulings were live. It is not
+an ungrounded claim in the usual sense: each was reasonable inside its own
+conversation. The inconsistency exists only in the union of two exchanges that no
+artifact holds together — which is the concrete argument for why a ruling belongs
+in a plan row rather than in a message, since a row can be compared against
+another row and a message cannot.
+
+It is also the fourth blocker in one campaign to dissolve on measurement, and the
+first that a reviewer originated rather than inherited. The cheap defence is one
+question asked before declaring anything blocked: **has this same shape been
+ruled on elsewhere, and did I measure this instance or estimate it?** Both halves
+are load-bearing — here the earlier ruling was forgotten AND the scope was never
+measured, and either check alone would have caught it.
+
+This is a more tractable problem than "be more careful", which is why it is
+recorded here rather than left as a resolution. It is also the same shape as this
+document's subject one level up: a gate reporting clean about the wrong subject
+and a claim carrying the wrong grade of evidence are both cases where the artifact
+looks exactly as it would if it were sound.
+
+### relayed-instances-pending-their-own-evidence | low | four further instances reported by other lanes, recorded here unverified
+
+Recorded so the family has one home, explicitly NOT verified in this audit and
+not to be acted on from this record alone: a TUI route census built on a
+hardcoded literal set; an executor conformance matrix asserting a twenty-item
+registry against its own thirteen-item tuple; a staleness message whose
+remediation instruction completes the defect it should prevent; a workspace
+remnant scanner whose pass condition contradicts a legitimate docstring
+explaining a retirement; and a relocation-parity test whose name pins an exact
+consumer count. Each needs its own measurement before it earns a finding
+heading here.
+
+### withdrawn-docstring-only-marker-scan | low | reported as an instance of this family and refuted on reading the code
+
+Recorded because a withdrawn finding that leaves no trace gets rediscovered. The
+production half of the campaign-metadata marker scan was reported as reading
+docstring ranges only, which would have made every campaign identifier in a
+production comment invisible to it. That is false. The single scan helper
+inspects a token when it is a COMMENT, or when it is a STRING falling inside the
+supplied ranges; the ranges argument distinguishes a docstring from an arbitrary
+string literal and does not gate comments at all. The helper's own docstring
+states it is the one scan mechanism for both module populations, and warns that a
+parallel scanner would be free to drift invisibly.
+
+The claim came from a simulation written to answer the question without reading
+the scanner: the probe skipped comments under the flag it was testing, so it
+measured its author's hypothesis faithfully and the code not at all. Running a
+probe outside the repository is the right discipline and it is not a substitute
+for reading the implementation, because a probe against a hypothesis and a probe
+against reality return the same shape of answer.
+
+### a-closed-union-can-advertise-outcomes-nothing-emits | high | two of three refusal union members have zero production constructions, and tests constructing them directly made the gap invisible
+
+The direction-dependency finding above establishes that a zero-construction-site
+signal means different things for an input type and an output type. This is the
+next question that finding does not ask: when a type is a member of a **closed
+union of outcome types**, zero production constructions is neither a defect nor
+a waiting contract until you know whether the *producer* was ever written.
+
+Measured on the workspace refusal union at
+`src/cadrumo/application/modelo/workspace_models.py:1254`:
+
+| union member | production constructions | test constructions |
+|---|---|---|
+| `ModeloWorkspaceVersionRefusalV1` | 0 | 3 |
+| `ModeloWorkspaceRevisionMismatchRefusalV1` | 0 | 2 |
+| `ModeloWorkspaceDomainRefusalV1` | 3 | 1 |
+
+The union advertises three refusal outcomes and the assembler can emit exactly
+one. `ModeloWorkspaceDomainRefusalV1` is constructed at `workspace.py:1711`,
+`:1722` and `:1747`. The other two are constructed nowhere in non-test source,
+and there is no `contract_version` checking path anywhere in non-test source at
+all — so the version refusal exists for a check nobody wrote.
+
+`ModeloWorkspaceRevisionMismatchRefusalV1` additionally carries a model
+validator at `:1194` (`_require_exact_mismatch_axes`). Because the type is never
+constructed in production, **that validator has never run outside tests**: a
+reader who fixes only the emission leaves a guard with no evidence it works.
+
+**Why nothing caught it is the finding.** Both dead members ARE constructed — in
+`application/modelo/tests/test_workspace_models.py` and in
+`entrypoints/tui/modelo/view/tests/test_workspace_view_models.py`. The tests
+build them directly and assert on them, so they pass, and passing tests over a
+type read as evidence the type is live. A reachability defect hides most
+reliably behind green tests that construct their own subject.
+
+The TUI view layer is the sharper half: it carries rendering and disclosure
+handling for both unreachable refusals, validated against hand-built instances.
+That is view code for states the assembler cannot produce, proven by fixtures
+that manufacture the state.
+
+**Do not close this by filling `recovery_action`** on either type. The empty
+field is a symptom. The adjudication is three-way, not produce-or-delete:
+
+- the check was intended and never written — the finding is the MISSING CHECK
+  and the type is correct and waiting (the version refusal looks like this, and
+  deleting it would erase the evidence that a versioned contract has no version
+  check);
+- the refusal is unreachable by construction — then type, union membership,
+  validator, view rendering and tests are removed together;
+- it is reachable and the assembler takes a different path today.
+
+**Remediation, stated as a mechanical check rather than two rows:** for every
+closed union of outcome types, count production constructions per member. A
+member at zero is either an unwritten producer or a dead branch, and tests
+constructing it prove neither. This generalises past this union and would have
+found both members without anyone suspecting them — which is exactly the
+property a hand-listed subject set lacks, per the
+`an-enumerated-subject-list-is-a-hardcoded-tally-in-disguise` finding above.
+
+### corrections-and-delivered-work-that-exist-only-in-messages | high | two measurement corrections and most of a lane's delivered work have no durable record, so the session's end erases them
+
+Two corrections were relayed upward, caught by their own author after the
+original figure had already been reported, and recorded nowhere but in the
+message stream:
+
+- **S350's exemption key** is `enclosing_symbol` + role + alias + identity. It
+  is NOT the triple, which **collides on 61 rows**. A reader who re-derives the
+  key from the triple gets a census that silently merges 61 distinct sites.
+- **S351's internal-symbol count is 4, not 6.**
+
+Neither figure appears in any live vault document. A grep for `enclosing_symbol`
+across `.vault/` returns only the search index and one archived exec record from
+a different campaign.
+
+**The same gap covers the delivered work itself.** `.vault/exec/2026-08-11-tui-architecture/`
+holds records for S330, S331, S332, S334, S336 and S337. It holds none for
+S322, S333, S349, S350, S351 or S358, and `W07.P16.S351` is still an open `- [ ]`
+row in the plan while its promotion is present in the working tree.
+
+`aeat-agent-orchestration` states that no plan step may be marked complete
+without a matching exec record, so that delivered-as-specified,
+delivered-narrower and recorded-but-not-implemented cannot wear the same
+checkbox. The failure observed here is the mirror of the one that rule guards:
+not a row closed without evidence, but **work delivered with no row and no
+record at all**, which is invisible to every later reader rather than merely
+over-claimed.
+
+The operative constraint in this worktree is that agents do not commit, so git
+carries no trace either. That makes the exec record the ONLY durable artifact
+for delivered work, and its absence total rather than partial.
+
+**Remediation:** a lane that reports delivered work must write its exec record
+in the same action, not at close; and a claim corrected mid-session must land in
+a document before the correction is relayed, because the relay is what creates
+the false belief the correction exists to kill. A correction that lives only in
+a message is strictly worse than the uncorrected figure in a row: the row can be
+re-measured by anyone, while the message is visible to nobody who was not
+addressed on it.
+
+### a-cardinality-match-between-two-different-sets-reads-as-agreement | medium | two parties measured four names each, shared one element, and the matching counts disguised that they were answering different questions
+
+The clearest instance of this document's own thesis, produced by its author while
+adjudicating another instance of it.
+
+A row named four types. One party measured `edit_contract.__all__` and found four
+names. The other ran a definition-anchored search for the row's four names and
+found one moved, three still private. **The two sets of four share exactly one
+element.** Both measurements were correct. They answered different questions,
+and the matching cardinality made that invisible: four found, four expected,
+matched without ever comparing members.
+
+**A count agreeing is not the sets agreeing.** Where a disagreement is about a
+set, compare MEMBERS before arguing about the number — a cardinality match
+between two different sets is the strongest available disguise for talking past
+each other, because it produces the surface appearance of confirmation.
+
+**A second failure rode on top of the first, and is the more damaging one.**
+Holding the (wrong) correction, its author also supplied a mechanism for it: that
+the other party's search had matched an import line rather than a definition. The
+underlying rule is sound and this project makes it unusually sharp — an imported
+name in a private module is the CORRECT post-relocation state, so a successful
+move and an unstarted one look identical to an unanchored grep. But the other
+party's search was already anchored on `^class` / `^type` and could not have
+matched an import. So a real rule was attached to an incident it did not explain.
+
+**A correct rule offered as the cause of an event it did not cause is worse than
+no explanation**, because the rule's soundness transfers to the diagnosis and the
+whole package reads as verified. This is reasoning from a plausible shape to a
+conclusion without reading the branch — the failure this audit's other findings
+repeatedly identify — arriving inside the act of correcting someone else.
+
+**Keep the occurrence-versus-definition rule.** Anchor set membership searches on
+`^class` / `^type`, never on a bare name. Strike it as this incident's cause.
+
+**Remediation:** when a peer disputes a measurement, run THEIR exact search
+before defending your own, and state which set each figure describes. The
+disagreement here cost one exchange because the disputing party named the
+specific search that would settle it and said it would rather be wrong than have
+its lead act on the push-back. That is the behaviour that contained it, and it
+ran upward against a lead's correction, which is the direction it is hardest to
+run.
+
+### bare-step-numbers-resolve-across-plans | medium | the same Step id exists in three plans, so a naive lookup silently returns a different plan's row
+
+Step ids are canonical only WITHIN their plan. `S322`, `S333`, `S349`, `S350`,
+`S351` and `S358` all exist in at least three plans in this vault:
+`2026-07-01-import-centralization`, `2026-06-09-docstring-google-style`, and
+`2026-08-11-tui-architecture`.
+
+An unscoped grep for `S322` resolves to `W05.P83.S322` in the
+import-centralization plan. The tui-architecture row is `W05.P23.S322`. Both are
+real rows, both match, and the wrong one is returned first — with no signal that
+a choice was made.
+
+This is the audit's own subject in a new place: the lookup is CORRECT about what
+it matched and wrong about the question asked. It is also the same shape as the
+cardinality finding above — a match that carries no evidence of which set it came
+from reads as an answer rather than as an ambiguity.
+
+The consequence is worse than a bad read, because Step ids address MUTATIONS. A
+`plan_progress` call or an exec-record scaffold resolved from a bare number can
+mark or document a row in a plan nobody was working on, and the resulting
+checkbox is indistinguishable from a legitimate one.
+
+**How:** always scope a Step lookup to its plan stem, and address rows by the
+full canonical identifier including wave and phase (`W05.P23.S322`), never by the
+bare Step number. Anything scripting across this vault on bare Step numbers will
+cross-wire plans.
+
+Found while writing exec records for delivered work, by an executor that noticed
+the resolved row did not describe the work it had done — the check that caught it
+was reading the matched row's text rather than trusting the match.
+
+### one-sweep-addressed-from-two-plans-double-counts-its-own-remainder | high | two rows in two plans name the same sweep, so each row's figure counts work the other has already done
+
+`W01.P01.S100` in the interface plan and `W05.P23.S322` in the architecture plan
+are the same sweep of bare single-code campaign identifiers from production
+source, addressed from two plans that do not reference each other.
+
+S322's safe half ran first and removed most of the population. S100's stated
+figure of 68 sites across 22 modules was therefore already stale when read;
+measured against the current tree the remainder is **16 sites across 9 modules**.
+The modules that vanished from the set — `_row_set_assembly.py`, `recovery.py`,
+`llm_classification.py`, `_operator_surface_reconciliation.py` and others — are
+exactly S322's completed sites.
+
+**Neither row can be executed correctly without knowing the other exists.** An
+executor taking S100's figure at face value plans for four times the remaining
+work; one closing S322 without checking S100 leaves a row whose text describes
+work that no longer exists. Both rows look independently coherent, which is what
+makes the duplication survive review.
+
+**The remaining 9 modules are not arbitrary** — they are the sites S322
+deliberately declined as peer-held plus one handed to another lane. So the
+residue is a coordination boundary, not a leftover, and it will not shrink on its
+own.
+
+**The ordering constraint is therefore still binding.** S100 flips a scan pattern
+to production scope at the END of its sweep. With 16 sites live the flip is not
+ready, and `user_profile/bundle.py:188` and `:255` carry `Serialiser — S105` /
+`Deserialiser — S106` banners that are ambiguous in both directions, since those
+are also real ruff rule codes. See
+`remediation-must-precede-the-gate-that-would-catch-it` above.
+
+**A stripper that removes a lint directive but not its code list re-creates the
+exact defect.** A first measurement of this population returned 75 modules / 123
+sites because `# noqa: S106` and `# ruff: noqa: S105` were stripped of the
+directive while `S106` survived and matched as a campaign id — the failure S100's
+own text warns about, reproduced in fresh tooling minutes after that warning was
+read. Strip the directive AND its codes, then sample the top hits before
+reporting any figure.
+
+**How:** before executing a sweep row, search the OTHER plans for the same
+target population, not just the same row id. Cross-reference the rows in both
+directions so neither can be executed blind.
+
+### a-discrepancy-prompts-the-check-but-is-not-the-check | high | the wrong counts caught today were all caught because they disagreed with an expectation, and a wrong count that agrees with one has no prompt at all
+
+Three wrong counts were caught in one session. Every one of them was caught the
+same way, and it is not the way anyone intended.
+
+- A stale-path stripper reported **75 modules / 123 sites** against a row claiming
+  68 / 22. The figure was implausibly LARGE, which forced a look at the members;
+  sampling showed they were ruff suppressions (`# noqa: S106`) whose directive had
+  been stripped while the code survived and matched as a campaign id. True figure:
+  16 / 9.
+- A public-surface inventory reported **four types moved** against a row naming
+  four types. The counts AGREED, so nothing forced a look, and the two sets of
+  four shared exactly one member. That one was caught only because a second party
+  disputed it and named the search that would settle it.
+- A hand-listed set of workspace types with unpopulated fields reported four; an
+  AST walk found nine across five types.
+
+**The pattern:** in each case the check that actually worked was inspecting
+members of the population. The discrepancy only PROMPTED that inspection — and in
+the one case where the counts happened to agree, no prompt existed and the error
+survived until an unrelated dispute exposed it.
+
+So a measurement discipline that relies on noticing an implausible number is
+calibrated on the easy half of the failure space. **A wrong count that lands in
+the expected range produces no signal whatsoever**, and nothing in its shape
+distinguishes it from a right one. The first case above was caught by luck of
+magnitude; had the stripper erred in the other direction and returned something
+near 68 / 22, it would have been reported and believed.
+
+**Do not fix this with a discipline — disciplines fail exactly when nothing
+prompts them, which is the failure mode above.** The structural form is to make
+the measurement itself EMIT MEMBERS ALONGSIDE THE COUNT: a handful per bucket,
+printed by the same script that produces the figure, so inspection is not a
+separate step anyone has to remember. The 16 / 9 correction above was one command
+away only because that script already printed per-file line numbers.
+
+A count that arrives naked invites belief; a count that arrives with six of its
+members attached invites reading. This also covers the agreeing-counts case,
+where magnitude offers nothing: four types against four types still shows two
+different sets the moment the members sit next to each other on screen.
+
+**How:** emit members with every count. Where two parties report counts for what
+they believe is the same set, compare MEMBERS before comparing numbers. An
+agreeing count is not evidence the sets agree; see
+`a-cardinality-match-between-two-different-sets-reads-as-agreement` above, and
+`an-enumerated-subject-list-is-a-hardcoded-tally-in-disguise` for the same
+property in a gate's subject list.
+
+### the-supported-terminal-size-set-is-declared-three-times | high | three TUI suites each declare their own minimum/ordinary/wide triple, so no answer exists to which sizes the product supports
+
+Found by a semantic sweep for redeclared implementations, not by a gate.
+
+Three declarations of the same concept — the terminal sizes the interface must
+remain operable at — live in three suites, and they disagree:
+
+| declaration | site | rationale recorded |
+|---|---|---|
+| `[(80, 24), (120, 40), (200, 50)]` | `entrypoints/tui/tests/test_visual_verification.py:81` (`_SIZES`) | **yes** — a docstring justifies each as floor, ordinary, wide |
+| `[(80, 24), (100, 30), (160, 48)]` | `entrypoints/tui/components/tests/test_widgets.py:51` (ids `narrow`/`medium`/`wide`) | no |
+| `((80, 24), (120, 36), (160, 48))` | `entrypoints/tui/modelo/view/tests/test_work_review.py:570` | no |
+
+Only the floor, 80x24, is common to all three. Every other size is one suite's
+private choice, and the two undocumented triples assert the same intent in
+different numbers.
+
+**The consequence is a coverage claim nobody can state.** A layout regression
+appearing only at 120x40 is caught by one suite and invisible to the other two; a
+regression at 160x48 is caught by two and missed by the third. "The interface
+works at the supported sizes" is not a claim this suite set can make, because
+there is no supported set — there are three, and their union is an accident of
+authorship rather than a decision.
+
+This is the redeclaration hazard in its ordinary form: no suite is wrong, each is
+locally coherent, and the defect exists only in their union — the same property
+as `one-sweep-addressed-from-two-plans-double-counts-its-own-remainder` above.
+
+**`_SIZES` is the canonical declaration** and the only one that records WHY each
+size is there, which is what makes it the authority rather than merely the first.
+It is currently private to its own test module.
+
+**How:** promote the size set to one shared declaration the TUI suites import,
+carrying its rationale with it, and delete the two private triples. Where a suite
+genuinely needs a size outside the shared set, it declares that size WITH its
+reason beside the shared import, so the exception is visible as an exception.
+Adding a size to the shared set is then one edit that widens every suite at once,
+which is the property three private triples cannot have.
+
+**Do not resolve this by taking the union.** The union is four to five sizes
+nobody chose, and it multiplies every parametrised TUI test's runtime without any
+stated reason for the sizes it adds.
+
+### a-style-rule-that-parses-is-not-a-style-rule-that-binds | medium | two TUI stylesheet declarations parsed cleanly, applied nothing, and reported no error
+
+While bounding a summary panel that was evicting a data table off-screen at
+80x24, two stylesheet attempts were made before one worked:
+
+- `max-height: 40%` — parsed cleanly, bound nothing. The panel's parent is an
+  auto-height `Vertical`, so the percentage has no definite basis to resolve
+  against.
+- `max-height: 40h` — parsed cleanly, bound nothing. Textual does not resolve
+  that viewport unit for this property.
+
+**Neither produced a warning, an error, or any signal.** Both left the panel
+unbounded while reading, in the stylesheet, as though a bound had been declared.
+A reader auditing that CSS would have counted the constraint as present.
+
+This is the audit's subject in the declarative layer. Everywhere else in this
+document the failing artefact is a check that reports clean about the wrong
+subject; here it is a CONSTRAINT that reads as applied and is not. The failure
+mode is the same — a surface that carries the appearance of a claim without the
+substance — and it is worse in a stylesheet, because there is no execution to
+step through and nothing to assert against.
+
+**What separated the two cases was an absolute value.** Setting `max-height: 8`
+DID bind, which distinguished "this property is ignored here" from "this unit
+does not resolve here". Without that third probe the two failures are
+indistinguishable and the natural conclusion — that the property does not work —
+is wrong.
+
+**How:** after adding a layout constraint, measure the RENDERED REGION and
+confirm the constraint changed it. Do not accept a clean parse, and do not accept
+a green test as evidence the rule bound — a test can pass because some other
+change fixed the symptom while the declaration sits inert. Where a bound must
+hold and the stylesheet cannot express it, put it in code with a docstring saying
+why, or the next reader will move it back into the stylesheet where it will parse
+and do nothing.
+
+Prefer a FRACTION of the viewport over a pinned value for a constraint that
+should bind only when space is scarce: a pinned cap that fixes the small terminal
+forces the same restriction on the large one, where nothing was wrong.
+
+### the-geometry-harness-has-no-caller-and-the-modelo-screens-have-no-geometry-gate | high | the appearance-defect reader is uncalled, the visual gates cover five screens that exclude the modelo surfaces, and a just-landed layout fix is correct by manual reading only
+
+Two halves of one gap, found while verifying a layout fix.
+
+**The canonical reader is uncalled.** `entrypoints/tui/devtools/frame.py` defines
+`geometry_band(app, width)` at `:120` and `capture(app, ...)` at `:200`, reading
+three appearance properties off a live app: widgets painted past the side edges,
+a scrollable host whose content overflows while `max_scroll_y <= 0`, and
+**multiple visible vertical scroll owners** (`:145-153`). A tree-wide search for
+`geometry_band` and `capture` returns exactly one file — the module that defines
+them. Nothing drives either. (`devtools/fixture.py` IS imported by tests; the
+frame reader is not.)
+
+**The visual gates cover a different set of screens.** `test_visual_verification.py`
+drives `FlowScreen`, `LoginScreen`, `ProfileManagerScreen`, `RegistrationScreen`
+and `StatusScreen`. `ModeloWorkReviewScreen` appears zero times, and the C2
+workspace destinations are absent too.
+
+So the three properties are proven for five screens, the reader that could prove
+them for any screen has no caller, and the modelo surfaces are covered by
+neither.
+
+**The live consequence.** A layout fix bounding a summary panel at 80x24 added
+`overflow-y: auto` to `#modelo-review-summary` (`work_review.py:671`) — a scroll
+owner nested inside the body's own `ContentScroll`, which is exactly the shape the
+third check exists to catch. Driving `geometry_band` by hand at all three sizes
+reported CLEAN, and the body's `max_scroll_y` was 2109, placing the original
+defect in the weaker reachable-but-not-visible class rather than the stronger
+unscrollable one.
+
+That reading is correct and it is a ONE-TIME MANUAL OBSERVATION. No gate holds it.
+The next change to that stylesheet can introduce a second visible scroll owner and
+nothing will say so — and the author will have the same reason to believe it is
+fine that this author did: a green suite over a screen whose geometry nothing
+checks.
+
+The fix's own author put it best: it was verified by luck of construction, not by
+design. The 58-passing view suite asserts behaviour and content; it asserts
+nothing about painted geometry.
+
+**How:** drive `geometry_band` over the modelo screens, or enrol them in the
+visual-verification suite, so the three properties are gated rather than read. A
+reader with no caller is dead capacity in the same sense as an output type with
+no producer — see
+`a-closed-union-can-advertise-outcomes-nothing-emits` above; the difference is
+that this one is fully implemented, documented, and correct, which makes it more
+likely to be rebuilt than found. It was rebuilt, weaker, during this very
+investigation, by someone who had no reason to know it existed.
+
+### an-interpolated-constant-was-wrong-by-fifteen-columns | high | a two-point interpolation put a layout transition at ~100 columns; measurement puts it at 114, which moves every conclusion drawn from it
+
+The summary panel in the modelo work review wraps six lines to eight below a
+certain width. Two points were measured — 8 rows at 80 columns, 6 rows at 120 —
+and the transition was reported as "~100 columns", correctly labelled as an
+interpolation rather than a measurement.
+
+**Bisected, it is 114/115:** the summary wraps at 114 columns and is unwrapped at
+115. The estimate was wrong by fifteen columns, and every conclusion drawn from it
+changes:
+
+- `100`, the only width any suite samples between 80 and 120, was believed to sit
+  near the boundary. It does not — it is well inside the WRAPPING region, and
+  samples the same side as the 80 floor.
+- **No suite samples the unwrapped side below 120 at all**, and the true boundary
+  had never been observed by anything.
+- The canonical 120 clears the transition by SIX COLUMNS. That margin was invisible
+  while the transition was believed to be at 100, where it looked like twenty.
+  Any growth in the widest summary line pushes the transition past 120 and breaks
+  the 120-column case in every suite at once.
+
+That last point inverts the priority: the content-side wrapping row is not a
+tidy-up behind a landed layout fix, it is the thing holding a six-column margin.
+
+**How the measurement became possible, because three attempts across two lanes
+failed first.** A standalone driver over the real fixtures dies with
+`RuntimeError: profile custody infrastructure has not been composed`, and wrapping
+it in `isolated_runtime_profile` does not help — the missing piece is the
+session-scoped autouse fixture `compose_runtime_ports` in `src/cadrumo/conftest.py:147`,
+which enters a large stack of port bindings.
+
+The fix is neither to reconstruct that stack (which would duplicate it, and it
+would drift) nor to write a throwaway test into `src/` (which a peer's sweep can
+capture in a shared worktree). **Drive the fixture's own generator:** take
+`compose_runtime_ports.__wrapped__` to unwrap the pytest decorator, call it,
+`next(...)` to enter the composition, and `next(...)` again in a `finally` to
+unwind. The real composition runs, nothing is duplicated, and no file enters the
+tree.
+
+**How:** a constant that gates behaviour is worth bisecting rather than
+interpolating. Two endpoints and a straight line is a guess about a step function,
+and the quantity that actually matters — the MARGIN between the transition and the
+nearest sampled size — is precisely what an interpolation gets wrong.
+
+### a-bisection-presumes-one-step-and-silently-reports-the-last | high | the same constant was estimated, then bisected, then swept, and each method found a different truth while looking equally definitive
+
+One quantity — the width at which a summary panel's lines wrap — was measured
+three times by three methods in one session. Each result looked complete. Two
+were wrong in ways their own output could not reveal.
+
+**Method 1, two endpoints and interpolation.** 8 rows at 80 columns, 6 at 120;
+reported as "~100 columns", correctly labelled an estimate. Wrong by fifteen.
+
+**Method 2, bisection.** Predicate `virtual_height > 6`, bisected 80..120, giving
+114/115. Reported as "the transition". **A bisection presumes a monotonic SINGLE
+step.** The predicate `> 6` asks only "is anything wrapping", so it necessarily
+returns the LAST boundary, and nothing in a bisection's output indicates whether
+earlier steps exist. It is not that the answer was wrong — 114/115 is exactly
+right for the question encoded — it is that the question encoded was narrower
+than the question asked, and the result does not say so.
+
+**Method 3, a sweep across the range.** The real shape:
+
+| width | summary rows | |
+|---|---|---|
+| 60, 70 | 10 | below the supported floor |
+| **80**, 87, 90 | **8** | two lines wrapping, at the 80x24 floor |
+| 95, 100, 110, 114 | 7 | one line wrapping |
+| 115, 120 | 6 | none wrapping |
+
+Three steps, two of them inside the supported range: one between 90 and 95, one
+at 114/115.
+
+**The consequence was a mis-scoped remediation row.** The row treating the widest
+summary line was justified on the belief that one line wraps. Two do at the floor,
+so treating that line alone takes 80 columns from 8 rows to 7 — not to 6. The row
+would have been closed on a real improvement that did not reach its actual
+objective, and its own success criterion would have been met.
+
+**The pattern across all three:** each method answered exactly what it was asked,
+and the error each time was in the question rather than the execution.
+Interpolation assumed linearity; bisection assumed one step; only the sweep
+assumed nothing about the shape. **Where the SHAPE of a relationship is unknown,
+sample the range before narrowing on a boundary** — a sweep is a handful of extra
+points and it is the only one of the three that can discover it has found more
+than it went looking for.
+
+Note also what did NOT catch these: the estimate was labelled as an estimate, and
+that label prevented nothing. What caught each error was the next, less assuming
+measurement — which happened only because the number was load-bearing for a
+sequencing decision. Cheap to measure when something depends on it, and nothing
+prompts it when nothing does. See
+`a-discrepancy-prompts-the-check-but-is-not-the-check` above.
+
+### the-nested-scroll-check-cannot-see-a-scrolling-static | medium | both the fix's author and its reviewer credited a CLEAN reading to luck, when the check structurally could not have fired
+
+`geometry_band`'s third property counts **multiple visible vertical scroll
+owners**, filtered as `isinstance(host, ScrollableContainer) and host.display and
+host.show_vertical_scrollbar` (`devtools/frame.py:145-153`).
+
+A layout fix added `overflow-y: auto` to `#modelo-review-summary` inside the
+body's `ContentScroll`. Its author flagged this as exactly the shape that check
+exists to catch, reported CLEAN, and concluded the fix was "verified by luck of
+construction, not by design". The reviewer accepted that framing and recorded it.
+
+**Both were wrong, in the same direction.** `#modelo-review-summary` is a
+`Static`, not a `ScrollableContainer`, so the filter excludes it unconditionally.
+The check could never have fired for that widget, whatever its overflow styling.
+The CLEAN reading was STRUCTURAL, not lucky.
+
+Measured at 80x24 after the fix: `type=Static`, `isinstance(ScrollableContainer)=False`,
+`region.height=9`, `virtual_size.height=8`, `max_scroll_y=3`. Content 8 inside a
+bound of 9, so nothing is clipped and the fix is sound on its own terms.
+
+**The finding is the gap this exposes.** A `Static` carrying `overflow-y` can
+scroll (`allow_vertical_scroll=True`, non-zero `max_scroll_y`) while being
+invisible to the check that governs scroll owners. So the property "exactly one
+thing in this screen scrolls vertically" is enforced for containers and
+unenforced for styled statics — and an author who adds `overflow-y` to a static
+will reasonably believe the gate covers it, because the gate's own name and
+docstring say it does.
+
+**Discovered by an INVALID bite proof.** An attempt to red the gate by forcing
+`show_vertical_scrollbar` on that static returned CLEAN, which read at first as
+"the gate does not bite". Reading the filter showed the injection targeted a
+widget the check cannot apply to. A second injection against a property the check
+DOES cover — widening the header to 200 columns on an 80-column screen — produced
+`painted past the side edges: Static#modelo-review-header`, so the gate bites and
+is proven.
+
+A failed bite proof has two explanations — the gate is inert, or the injection is
+outside its reach — and they are indistinguishable from the result alone. **Read
+the predicate before concluding a gate is dead**, and prefer an injection whose
+match against the predicate you have actually confirmed.
+
+### a-property-gated-only-where-its-defect-was-found | high | the single-scroll-owner property was tested for one surface of nine, by a test built around the one instance anyone had hit
+
+A correction to `the-geometry-harness-has-no-caller-and-the-modelo-screens-have-no-geometry-gate`
+above, which framed the single-visible-vertical-scroll-owner property as
+ungated. It was gated — once.
+
+`test_a_flow_surface_has_exactly_one_visible_vertical_scroll_owner`
+(`entrypoints/tui/tests/test_visual_verification.py:759`) asserts exactly that
+property, for the FLOW surface only, using a bespoke `_many_page_flow` fixture
+built to reproduce the case where the defect was originally found. Eight other
+enrolled surfaces asserted nothing about it.
+
+**That is a more interesting failure than an unwritten test.** Somebody
+recognised the property, understood it well enough to name it in a test title,
+and built a fixture to prove it — then scoped it to the instance in front of
+them. The test is correct, well-named and passing. A reader searching for
+whether the property is covered finds it and stops.
+
+The generalisation is the hazard: **a gate written at the site of a defect
+inherits that defect's scope**, and its name usually does not say so. The title
+here is honest — it says "a flow surface" — and the honesty still did not
+prevent the gap, because a property proven somewhere reads as a property proven.
+
+The consequence was concrete. A later layout fix on a different surface added
+`overflow-y: auto` inside an existing scroll host — the exact shape that test was
+written to catch — and nothing fired, because the surface was not the flow
+surface.
+
+**How:** when a defect is found, ask whether the property it violates is
+UNIVERSAL or local before writing the gate. Where universal, parametrise over
+every enrolled surface at the point of writing; the marginal cost is one
+parametrisation and it is far cheaper than the second discovery. Where genuinely
+local, say so in the docstring, because the next reader's question is "is this
+covered" and the answer they need is the scope, not the assertion.
+
+See also `an-enumerated-subject-list-is-a-hardcoded-tally-in-disguise` — the same
+property, one level up: there the subject list was hardcoded inside a gate, here
+the subject list is the single surface the gate was born on.
+
+### a-fix-introduced-the-defect-its-own-gate-is-named-for | high | bounding a panel created a second visible scrollbar and hid three rows, and both the gate and the reviewer cleared it
+
+Measured on the modelo work review at 80x24, after the height-cap fix:
+
+```
+widgets painting a vertical scrollbar: ['modelo-review-body', 'modelo-review-summary']
+summary  region.h=9  container.h=5  virtual.h=8   hidden rows = 3
+summary  isinstance(ScrollableContainer)=False
+```
+
+**Two visible vertical scroll owners on one screen** — exactly what
+`geometry_band`'s third check and
+`test_a_flow_surface_has_exactly_one_visible_vertical_scroll_owner` exist to
+prevent. Neither sees it, because the second owner is a `Static` and the check
+filters on `isinstance(host, ScrollableContainer)`.
+
+So the fix did not merely fail to trip the check by good fortune. **It
+introduced the defect the check is named for, onto the very screen the gate was
+built to protect, and the gate reported CLEAN.**
+
+**A REVIEWER'S ARITHMETIC ERROR CLEARED IT A SECOND TIME.** Reviewing the fix, I
+measured `region.height=9` against `virtual_size.height=8` and concluded "content
+of 8 inside a bound of 9, nothing is clipped". `region.height` is the OUTER box:
+it includes 2 rows of border and 2 of padding. The content box is
+`container_size.height=5`. Against a virtual height of 8, **three of the eight
+rendered rows are hidden** and reachable only by scrolling a panel nested inside
+another scrolling panel.
+
+The author's original instinct — that the pass was luck — was closer to the truth
+than the reviewer's correction of it. Both were wrong about the mechanism, in
+opposite directions, and the reviewer's version was the one that got recorded,
+because a correction from a reviewer carries more weight than the doubt it
+overrides.
+
+**Three independent clearances of one live defect:** a gate whose predicate
+excludes the widget class, a test scoped to another surface, and a reviewer
+reading the wrong box of the box model. Each was individually reasonable. None
+of them looked at whether a second scrollbar was actually painted — which is one
+query (`walk_children` filtered on `show_vertical_scrollbar`) and answers the
+question directly.
+
+**How:** for a containment or fit question, measure `container_size` (the content
+box), never `region` — the difference is exactly the chrome, and chrome is what
+makes a bound look sufficient when it is not. And where a property has an
+observable direct expression, observe it rather than deriving it from geometry:
+ask which widgets paint a scrollbar, not whether the arithmetic implies one.
+
+### a-uniform-error-across-a-varied-population-indicts-the-probe | high | a probe run outside the project environment reported 94 findings that did not exist, and its own uniformity was the only tell
+
+A sweep for unswept import sites reported **94 findings**. Every entry read
+`No module named 'cadrumo'`. The probe had been run with plain `python` rather
+than `uv run --no-sync`, so the package was not importable and the probe was
+reporting on nothing. **The real number is 2.**
+
+The same mistake occurred independently twice more in one session: once by
+another agent whose first standalone probe died the same way, and once by the
+same author earlier, whose stale-path stripper reported 75 modules / 123 sites
+against a true 16 / 9.
+
+**The tell is uniformity.** A genuine sweep across a heterogeneous population
+produces varied diagnostics — different missing symbols, different modules,
+different failure shapes. An identical error repeated 94 times, for modules like
+`cadrumo.core.logging` that plainly exist, describes the PROBE's environment
+rather than the population's state.
+
+This sharpens
+`a-discrepancy-prompts-the-check-but-is-not-the-check` above. That finding says
+inspect members rather than trusting counts. This one says what to look for when
+you do: **variance.** A finding list whose entries are all the same is a single
+finding about the harness, reported N times, and N is a measure of population
+size rather than of defect count.
+
+It is also the most dangerous shape a false positive can take, because volume
+reads as severity. 94 findings demands escalation; 94 identical findings is a
+misconfigured command. Nothing about the total distinguishes them.
+
+**How:** before reporting a sweep result, group the findings by their message. If
+one message accounts for all or nearly all of them, treat the probe as suspect
+before treating the tree as broken — and confirm the probe runs in the project
+environment (`uv run --no-sync`, never bare `python`) as the first check, since
+that single misconfiguration produced all three instances recorded here.
+
+### a-state-produced-by-your-own-instruction-reads-as-someone-elses-failure | high | a row was marked, unmarked on an instruction, then measured and reported as a marking that never happened
+
+Twice in one session, a state created by the reporter's OWN instruction was
+measured later and attributed to another agent's failure.
+
+**Instance one.** A relocation was escalated as a peer breaking the atomic-
+relocation rule. File timestamps showed it was the reporter's own delegated lane,
+executing an instruction issued before a countermand arrived.
+
+**Instance two.** A lane marked a plan row complete and reported `40/86`. A ruling
+then arrived saying the row should not close; the lane unchecked it on that
+instruction and reported doing so. The ruling's author subsequently measured the
+file, found the row open at `39/86`, and reported it as a state change the lane
+had claimed but never made — a charge of misreporting, levelled at an agent that
+had done exactly as instructed and said so.
+
+**The measurement was accurate both times. The attribution was not.** Nothing in
+a file's current state records which instruction produced it, or how many
+instructions were in flight when it was written. In a session with many crossing
+messages, "the tree does not match the report" has at least three explanations —
+the report was wrong, the report was stale, or an instruction between them
+changed the tree — and the third is invisible to the measurement.
+
+The asymmetry is what makes this worth recording: **an incorrect accusation costs
+more than an incorrect measurement.** A wrong number gets corrected on the next
+reading. A charge of misreporting, once made, has to be withdrawn explicitly, and
+an agent that has been wrongly accused of over-claiming has a live incentive to
+under-claim afterwards — which is the opposite of the reporting behaviour every
+other finding in this document depends on.
+
+**How:** before attributing a mismatch to another agent, account for your own
+instructions in flight — ask what YOU asked for between their report and your
+measurement. Report the mismatch as a mismatch ("the row reads open, my ruling
+may explain it") rather than as a failure, and let the other party supply the
+history the file cannot. See `shared-worktree-attribution`: the same discipline
+that applies to peers applies to your own countermands, and is harder to apply
+there because the instruction feels like context rather than a cause.
+
+### a-clean-bite-proof-is-as-uninformative-as-a-uniform-finding-list | high | three consecutive injections returned CLEAN and none of them proved anything, because out-of-reach and inert produce identical output
+
+The companion to
+`a-uniform-error-across-a-varied-population-indicts-the-probe` above, and its
+exact inverse.
+
+That finding says an all-identical finding list describes the probe rather than
+the tree. This one says the same of an EMPTY one. Three consecutive attempts to
+red a geometry gate returned CLEAN. In every case the injection was outside the
+check's reach rather than the check being inert — a `Static` forced to show a
+scrollbar against a predicate filtering on `isinstance(host, ScrollableContainer)`.
+
+**CLEAN means "the gate saw nothing", which is what a working gate and a
+mis-aimed injection both produce.** Nothing in the result distinguishes them, and
+a bite proof is precisely where CLEAN is most tempting to over-read — it is the
+one context where the reader has already decided the gate is the subject, so a
+null result reads as a verdict on the gate.
+
+**What resolved it, both times: evaluate BOTH predicates over the same tree and
+print what each saw.**
+
+```
+painted a scrollbar        : ['host', 'styled']
+seen by the old predicate  : ['host']
+```
+
+That isolates the CHANGE rather than the surface. It cannot pass for an
+unrelated reason, it names the exact population the widening admits, and it is
+the only form of proof that distinguishes "the gate now catches this" from "the
+gate is running".
+
+**Why this particular defect survived is worth recording separately:** it
+requires a `Static` with a MOUNTED CHILD WIDGET plus a height bound. Inline
+content never paints a bar. So it was not merely unchecked — it was hard to
+stumble into, which is the combination that keeps a defect alive longest: rare
+enough that nobody meets it by accident, and invisible to the one check named
+for it.
+
+**How:** a bite proof must show the gate's output CHANGING, not merely being
+non-empty. Prefer a differential — old predicate versus new, over one tree — to a
+single injection, and never accept CLEAN from an injection whose match against
+the predicate you have not separately confirmed.
+
+### a-closing-condition-stated-as-a-measured-number-goes-stale-when-you-change-the-thing-measured | high | a row's target transition of 94/95 was invalidated by the same campaign's own layout fix, twice, and hitting it would have meant nothing
+
+A remediation row was given the closing condition *"upper transition measured at
+94/95, canonical 120 clearing by 25 columns"* — deliberately expressed as an
+outcome rather than an action, to prevent the row closing on effort instead of
+effect.
+
+The numbers were derived from a content-width model of `screen − 7`. A later fix
+in the SAME campaign replaced a panel with a `Collapsible`, whose toggle indent
+changed the model to roughly `screen − 14`. A separate change removed 7 columns
+from the widest line. **The two cancelled**, and the measured transition stayed
+at 114/115 — so a real 7-column improvement produced no movement at all in the
+number the row was to be judged by.
+
+Had the condition been checked without the sweep, the row would have read as
+failing while the work succeeded. Had the earlier geometry persisted, it would
+have read as passing at a number that no longer meant what it meant when written.
+
+**The defect is in the FORM of the condition.** An absolute measured constant is
+a valid target only while everything else holding it still is stable — and in an
+active campaign the thing holding it still is precisely what the campaign is
+changing. This row's target was invalidated twice in one afternoon by its own
+campaign's other rows.
+
+**A structural condition survives what a numeric one cannot.** The real objective
+was never "94/95"; it was *"the widest line is no longer the binding constraint
+— the irreducible identifier line is"*. That statement is invariant under content
+width changes, chrome changes, and font or indent changes, because it names a
+RELATIONSHIP between two measured quantities rather than either one's value.
+
+**How:** express a closing condition as a relationship or an ordering where one
+exists — which line binds, which value dominates, which of two paths is taken —
+and record the absolute measurement beside it as an OBSERVATION with its date and
+the geometry it was taken under. The observation is then evidence rather than the
+criterion, and its going stale is informative instead of disqualifying.
+
+See `no-plan-step-marked-complete-without-a-matching-exec-record` in
+`aeat-agent-orchestration`: an outcome-shaped criterion is the defence against
+closing on effort, and a numeric one is how that defence quietly decays.
+
+### every-scope-count-today-undercounted-and-always-downward | high | four independent scope figures were low, never high, because a search finds the shape it was written for
+
+Four scope measurements in one session, each taken carefully, each an undercount:
+
+| reported | actual | what was missed |
+|---|---|---|
+| 4 types with unpopulated fields | 9 across 5 types | a hand-listed set; an AST walk found the rest |
+| 1 dead refusal union member | 2 of 3 | only the member someone had noticed was checked |
+| 3 declarations of the terminal size set | **6** | one hid behind a `_GEOMETRIES` alias, invisible to a literal-shape search |
+| 1 wrapping line at the 80-column floor | 2 | a two-endpoint measurement cannot see a second step |
+
+**Never once in the other direction.** No scope figure today was too large. That
+asymmetry is structural rather than coincidental: a search returns instances of
+the shape it encodes, so anything expressed differently — aliased, computed,
+spelled another way, or of a kind the searcher had not conceived — is absent from
+the result with no signal that it was excluded. A search cannot report what it
+could not have matched.
+
+The alias case is the cleanest instance. Five declarations were inline literals
+and were found; the sixth was bound to a `_GEOMETRIES` name, and a search for the
+literal shape returned five with no indication a sixth existed. The count was
+wrong and looked complete, and the same search re-run would confirm it forever.
+
+**The consequence is not merely a wrong number.** Every one of these figures was
+used to size a remediation: how many types to fix, whether a defect was isolated,
+how many suites to sweep, whether one line or two needed shortening. An
+undercount makes a row look smaller than it is, so it is scheduled as smaller,
+and then closes having done less than its own text describes.
+
+**How:** for any scope count that will size a decision, search by MEANING as well
+as by shape — semantic search finds an aliased or restructured declaration that a
+literal pattern cannot — and prefer a structural walk (AST, live object graph,
+loaded snapshot) over a text search wherever one exists. Where only a text search
+is available, state the pattern used beside the count, so a later reader can see
+what it could not have matched. And treat a scope figure as a LOWER BOUND until
+something other than the original search has confirmed it.
+
+Related: `a-discrepancy-prompts-the-check-but-is-not-the-check`,
+`an-enumerated-subject-list-is-a-hardcoded-tally-in-disguise`,
+`a-bisection-presumes-one-step-and-silently-reports-the-last`.
+
+### four-more-frame-readers-are-in-the-state-the-gated-one-was | high | one of five band readers is now gated; the other four are implemented, exported, and driven by nothing but a name-only export assertion
+
+After gating `geometry_band`, the same measurement was applied to its siblings in
+`entrypoints/tui/devtools/frame.py`. Each reads a distinct band off a live app:
+
+| reader | external references | what they are |
+|---|---|---|
+| `geometry_band` | gated | now driven per surface per size |
+| `engine_band` | 1 | name-only tuple in an export assertion |
+| `focus_band` | 1 | name-only tuple in an export assertion |
+| `key_band` | 1 | name-only tuple in an export assertion |
+| `screen_text` | 1 | name-only tuple in an export assertion |
+
+The single reference in each case is the same line — a tuple of expected export
+names in `dev/tests/test_public_devtool_homes.py`. It asserts the symbols are
+exported. It never executes them.
+
+So `capture()` assembles five bands, one of which is now proven per surface and
+four of which are proven to exist. Focus order, key bindings, engine state and
+rendered text are read by working, documented code that no gate drives — the
+exact state `geometry_band` was in when a layout defect it was written to catch
+reached the tree unnoticed.
+
+**This is the dead-capacity shape at its most deceptive**, per
+`the-geometry-harness-has-no-caller...` above: an unused-symbol sweep clears all
+four, because each IS referenced. The reference simply proves nothing about
+behaviour.
+
+**The remediation is known and cheap**, because the pattern was built for the
+fifth: a parametrised test driving the reader over every enrolled surface at
+every declared size, plus a bite proof showing the OUTPUT CHANGE rather than a
+non-empty result. Four bands, one established shape.
+
+**Found by a probe that first returned all-zero.** A count of CALL sites (`name(`)
+reported zero callers for every devtools symbol, including one demonstrably used
+as `register=registration_attempt` — a REFERENCE, not a call. The uniform zero was
+the tell, per `a-uniform-error-across-a-varied-population-indicts-the-probe`, and
+re-counting on any occurrence gave the real figures above. Third instance today
+of a search missing what its pattern could not match.
+
+### re-run-the-detector-after-the-sweep | high | the control for an undercount is not a better search, because you cannot search for the shape you failed to imagine
+
+`every-scope-count-today-undercounted-and-always-downward` above diagnoses the
+problem: a search returns instances of the shape it encodes, so an aliased,
+computed or differently-spelled instance is absent with no signal it was
+excluded. Its remedy — search by meaning as well as shape, prefer a structural
+walk — helps but still depends on anticipating the miss.
+
+**A control that does not require anticipating it:** after completing a sweep,
+RE-RUN THE ORIGINAL DETECTOR. Whatever still matches was invisible to the
+original enumeration.
+
+This is how the sixth terminal-size declaration was actually found. Five inline
+literals were enumerated and swept; re-running the detector afterwards still
+matched, and the survivor was a set bound to a `_GEOMETRIES` alias that the
+literal-shape search had never returned. No better query found it — the
+remediation was the confirming instrument.
+
+It works because it inverts the epistemics. A search asks "what matches my
+pattern", and cannot report what the pattern could not match. Re-running after a
+sweep asks "what still matches after I removed everything I knew about" — and any
+survivor is, by construction, something the original enumeration did not contain.
+The sweep converts an unknown unknown into a residual.
+
+**Two conditions make it valid.** The detector must be unchanged between runs —
+refining it invalidates the comparison. And the sweep must genuinely remove each
+swept instance rather than exempt it, or survivors are indistinguishable from
+allowlisted entries.
+
+**How:** treat a sweep as producing two artefacts — the change, and a re-run of
+the detector over the changed tree. A clean re-run is the completeness evidence
+the original count could never supply; a dirty one names precisely the instances
+the enumeration missed. Record both. Where a sweep closes a row claiming to have
+handled N instances, the re-run is what distinguishes "N was the population" from
+"N was what the search could see".
+
+### a-rationale-that-enumerates-instances-goes-stale-as-the-population-grows | high | a correctly-reasoned exclusion list stayed correct about what it named and silently wrong about what appeared afterwards
+
+`_INTERACTIVE_SURFACES` in `entrypoints/tui/tests/test_visual_verification.py`
+selects the surfaces whose tab cycle is gated. Its docstring is a model of the
+kind usually asked for: it names its exclusions and gives a reason for each —
+`status` is read-only chrome with no operator input, `question` is driven by the
+flow engine's paged navigation rather than a plain tab cycle.
+
+**Both reasons are still true.** Neither has decayed. The list is nonetheless
+wrong, because the enrolled surface set grew from four to nine and the
+enumeration did not:
+
+```
+in set     registration 5   form 3   manager 28   login 4     focusables
+excluded   status 1   status-populated 1   question 4         rationale covers
+excluded   manager-populated 28   modelo-review 3             rationale does NOT
+```
+
+`status-populated` inherits `status`'s reason by construction. `manager-populated`
+carries 28 focusable controls — identical to `manager`, which IS in the set — and
+was never added when the populated variants appeared. `modelo-review` was
+enrolled hours ago. So focus order is unproven on two surfaces that the stated
+rationale never excluded and never mentions.
+
+**The mechanism is distinct from the other undercounts in this document.** Those
+were searches that could not match a shape. This is a rationale that was COMPLETE
+WHEN WRITTEN and became partial without any edit, any failure, or any signal.
+Nothing changed about the constant; the world around it changed. A reader
+checking it finds named exclusions with sound reasons and stops — the quality of
+the rationale is what makes it persuasive, and being persuasive is what makes it
+dangerous.
+
+**The fix is in the FORM of the rationale, not its content:** state the
+PREDICATE, not the instances that satisfied it when written. "Surfaces with a
+real tab cycle; read-only chrome and engine-paged navigation are excluded" is
+checkable against any surface that appears later. "`status` and `question` are
+excluded because..." is checkable only against `status` and `question`.
+
+This is the same form change as
+`a-closing-condition-stated-as-a-measured-number-goes-stale-when-you-change-the-thing-measured`
+above — a relationship survives what an enumeration cannot — applied to a
+rationale rather than a criterion. Both fail silently, both look rigorous, and
+both are repaired by naming the rule instead of listing what currently satisfies
+it.
+
+**How:** where a subset carries a rationale, write the membership PREDICATE.
+Where the predicate cannot be stated, that is evidence the subset is incidental
+rather than principled, and worth knowing.
+
+### an-executor-refused-an-instruction-that-violated-a-standing-mandate | high | the lead specified putting a plan Step id in shipped test source, which is the violation another row exists to remove
+
+A gate was deliberately left red, and the lead required the assertion message to
+name the plan row carrying the defect — so a peer sweeping a red tree would read
+an instruction not to green it the easy way.
+
+**That instruction violated `vaultspec-system`'s Code Stands Alone mandate:**
+source must never reference `.vault/` document stems or Step ids. It is the exact
+violation `W05.P23.S322` exists to remove, and which the same executor had swept
+from 17 sites earlier the same day.
+
+The executor did not comply and did not simply refuse. It **achieved the stated
+intent in domain terms**, which is the harder and better outcome: the assertion
+now states the defect and carries the instruction — *"DO NOT RESOLVE THIS BY
+REMOVING THIS SURFACE FROM THE INTERACTIVE PREDICATE: the predicate is correct
+and the surface does have a tab cycle to prove"* — without citing any document.
+A peer reads the instruction; no vault identifier enters shipped source.
+
+**Two things are worth separating here.** The lead's INTENT was sound: a
+deliberate red needs to defend itself against the smallest greening change. The
+lead's MECHANISM was prohibited. An executor that had complied would have
+produced a correct-looking gate carrying a mandate violation, authorised from
+above, in the same session and by the same agent that had just removed 17 of
+them.
+
+**The general point:** a delegating agent's instructions are not exempt from the
+project's standing rules, and the executor is frequently better placed to notice
+— it holds the local context the lead is compressing away, and it had personally
+swept this exact violation hours earlier. An instruction that conflicts with a
+mandate should be met with the intent satisfied by other means, not with
+compliance and not with a bare refusal.
+
+**Postscript, and the same trap twice:** verifying the file was clean, a search
+for step-id-shaped tokens returned one hit — `# noqa: S105`, a ruff rule code, not
+a Step id. That is precisely the collision documented in
+`one-sweep-addressed-from-two-plans-double-counts-its-own-remainder` above, where
+a stripper counted `S105`/`S106` suppressions as campaign identifiers. The
+verifier walked into the trap the audit already records, which is its own
+evidence for how narrow the tell is.
+
+### two-readings-of-one-property-disagreed-and-only-one-was-run | high | a root cause was derived, reported and retracted because membership was tested by two methods that were never compared
+
+Investigating why `tab` did not move focus on a screen, `active_bindings` was
+read two ways in two scripts:
+
+```python
+keys = [b.key for (_ns, b, _e, _t) in screen.active_bindings.values()]   # -> no "tab"
+"tab" in screen.active_bindings                                          # -> True
+```
+
+The first was run and reported. The second was not run until later. They
+disagree, and the second is correct: the binding is present, inherited, in the
+modal binding chain, enabled, with `_check_action_state` returning True.
+
+**A complete root cause was built on the first reading** — that Textual's
+`Screen.BINDINGS` were not being merged, evidenced by `shift+tab`'s absence,
+which has exactly one source and therefore looked like proof. It was reported to
+another agent as settled, with a remediation and a suggested tree-wide sweep
+keyed to that tell. Every element of it was false, and it was retracted before
+being acted on only because the property was re-measured by the other method.
+
+**The failure is not the wrong reading. It is that two ways of asking the same
+question existed and were never compared.** There was no reason to expect them to
+differ, which is exactly why the cross-check felt unnecessary — and a
+cross-check that feels necessary is one you were already going to run.
+
+This is the same discipline recorded in
+`a-clean-bite-proof-is-as-uninformative-as-a-uniform-finding-list` above
+("evaluate both predicates over the same tree and print what each saw"), applied
+there to gate injections and NOT applied here to a measurement about to be handed
+on as fact. A method established for one context did not transfer to another by
+itself.
+
+**What survives is the inventory**, and it is worth more than the false cause:
+binding inheritance, declaration shape, `_inherit_bindings` and `check_action`
+are all confirmed fine; a bare-app repro of the exact widget structure
+(`ScrollableContainer > Vertical > two collapsed Collapsibles > Static >
+DataTable`) tabs correctly, and so does the same repro with the project's own
+`ContentScroll` and `ContentDataTable` substituted. So the defect is in key
+DISPATCH, not binding resolution — a present, enabled binding whose keypress does
+not invoke an action that works when called directly.
+
+**How:** where a property can be queried more than one way, query it both ways
+BEFORE reporting — especially when reporting to someone who will act on it. And
+treat a single elegant tell (`shift+tab` has one source, so its absence proves
+the merge failed) with more suspicion than a clumsy one: the elegance is what
+stops the second check being run.
+
+### a-retraction-is-timestamped-exactly-like-the-claim-it-withdraws | high | a correct root cause was withdrawn as an error because it was re-measured after someone fixed it
+
+A screen's `tab` key did not move focus. The cause was diagnosed as Textual's
+inherited `Screen.BINDINGS` not being present, evidenced by `shift+tab`'s absence
+— a key with exactly one source. It was reported to another agent as settled.
+
+Re-measuring an hour later showed `tab` present, inherited, enabled, and the
+focus cycle working. **The finding was retracted as a mistake**, with a
+methodological post-mortem attached: two ways of reading `active_bindings` had
+disagreed and only one had been run.
+
+**The retraction was wrong.** `HEAD` at `work_review.py:273` contains:
+
+```python
+self._bindings = BindingsMap(Binding("q", ...), Binding("escape", ...), Binding("f3", ...))
+self.refresh_bindings()
+```
+
+A wholesale runtime replacement of the screen's binding map, discarding every
+inherited entry — `tab`, `shift+tab`, and Screen's copy binding. Exactly the
+reported cause. **The receiving agent had acted on the diagnosis and fixed all
+four sites** — `work_review.py`, `flows/app.py` twice, `profile/status.py` —
+between the diagnosis and the re-measurement. The re-measurement was accurate
+about a tree that had been repaired in response to the very finding being
+retracted.
+
+**The two-readings flaw was real and was not what produced the disagreement.**
+That is the trap, and it is sharper than "check the timestamp": a genuine
+methodological error was available as an explanation, it FIT, and adopting it
+ended the search. **A wrong explanation that fits is more dangerous than no
+explanation**, because no explanation leaves you still looking. Having a
+credible fault of your own to blame is the most effective way to stop
+investigating.
+
+**Retracting feels like the careful move, which is precisely why it escapes
+scrutiny.** Asserting a finding invites challenge; withdrawing one reads as
+humility and rigour, so nobody — including the author — asks for evidence. This
+document's own rule, that a refutation is timestamped exactly like the claim it
+refutes, had been written for three other agents on the same day by the agent who
+then failed it here.
+
+**How:** before withdrawing a finding, check whether the SUBJECT changed between
+the original measurement and the re-measurement — file mtimes, a diff against
+HEAD, the working-tree state. In an active shared tree that check costs one
+command. Be most suspicious when you have a plausible fault of your own to
+assign: verify the timing FIRST, and only then decide whether the methodological
+flaw also needs recording on its own merits. And apply the same standard to a
+retraction as to an assertion — what was measured, when, against which tree.
+
+**Outcome:** the defect was fixed across all four sites, and a gate now asserts
+that every enrolled surface retains the keys `Screen.BINDINGS` guarantees,
+derived from Textual rather than hardcoded, over all nine surfaces rather than
+only the focus-enrolled subset. The remaining generalisation is greppable: any
+screen assigning `_bindings` wholesale silently loses `tab`, `shift+tab` and
+copy.
+
+### the-host-load-stamp-invalidates-a-measurement-and-was-printed-in-the-log-being-read | high | a hang was nearly attributed as a real defect three times, and the line refuting each attempt was in the same output
+
+Two tests in `entrypoints/tui/operations/tests/test_operation_modal_lifecycle.py`
+time out. Three attempts to attribute it, each refuted by a line already in the
+captured log:
+
+1. Reported as possibly-mine by its lane, correctly labelled **UNATTRIBUTED**,
+   noting the runs were taken while the host carried ~50 concurrent python
+   processes.
+2. Re-run with `-n 0` and read as "reproduces single-process at low load". The
+   log's own stamp read `python_processes=52, processes=719`. **`-n 0` controls
+   the run's workers, not the host.** The reader was about to upgrade
+   UNATTRIBUTED to confirmed on evidence that said the opposite.
+3. Re-run with `--timeout=150` to separate HUNG from SLOW-UNDER-LOAD. It timed
+   out — at `cpu=100.0%`, `python_processes=78`. A saturated host cannot
+   distinguish the two, so the discriminator discriminated nothing.
+
+**The instrumentation worked perfectly and was the thing being overlooked.** A
+`CADRUMO-HOST-LOAD` line is emitted per test carrying cpu, memory, total
+processes and python processes. It stated in every run that the environment was
+unfit for the conclusion being drawn. Its presence is the reason each attempt
+could be caught — and its being ignored twice is the reason each was made.
+
+This is the environmental counterpart to every provenance finding in this
+document. Those ask *what grade of evidence is this, and when was it taken.* This
+adds: *what was the machine doing while it was taken.* A red under saturation and
+a red under quiet are the same text.
+
+**The correct disposition is a blocked row, not a finding.** Attribution requires
+a quiet host, which is the same precondition two other rows already carry for
+unrelated reasons. Investigating now spends effort on a measurement that cannot
+support a conclusion either way, and the likeliest outcome is a confident wrong
+attribution — the failure this document records nine times.
+
+**How:** read the load stamp before reading the result. Where a suite emits one,
+quote it beside any timing-derived or flake-derived claim. And treat "I disabled
+parallelism" as controlling YOUR process only — in a shared host with other agents
+running suites, the machine is the shared resource, not the test runner.
+
+### a-filter-that-cannot-match-produces-a-plausible-number | medium | `grep -h` suppressed the filenames a `/tests/` exclusion needed, turning a 4-site production finding into a 58-site alarm
+
+A sweep for tax-amount rounding counted call shapes with:
+
+```sh
+grep -rhoE 'quantize\([^)]*\)' --include=*.py src/cadrumo | grep -v "/tests/"
+```
+
+`-h` suppresses filenames, so the downstream `grep -v "/tests/"` had no path to
+match against and excluded nothing. The result — **58** bare
+`quantize(Decimal("0.01"))` sites — was reported internally as a possible
+rounding-mode defect across production tax code, on the reasoning that Python's
+default is banker's rounding while AEAT expects half-up.
+
+**The real production figure is 4**, and all four are non-tax: two run-health
+diagnostics, one telemetry mean, one percentage-change projection. No filed
+amount is affected. The tax paths use explicit `ROUND_HALF_UP` (37 occurrences).
+The formula engine's `localcontext()` sets `prec = 28` and no rounding, which
+affects only the 28th significant digit and is immaterial for money.
+
+**The failure is a filter that was structurally incapable of filtering, in a
+pipeline that ran without error and produced a believable number.** 58 is not
+absurd for a codebase this size — it did not trip the implausible-magnitude tell
+that caught the 75/123 and 94-findings cases. What caught it was listing the
+MEMBERS: the file list showed three directories, which cannot hold 58 sites.
+
+This is a third distinct form of the same family. A search cannot report what its
+pattern could not match; a uniform result describes the probe; and now: **a
+filter downstream of a flag that removes its input silently passes everything.**
+All three produce output that looks like a measurement.
+
+**How:** when a pipeline filters on a field, confirm the field is present in the
+input — `-h`, `-o` and `--only-matching` all strip the context a later stage may
+need. And the general remedy already recorded applies unchanged: list the members
+before reporting the count, as routine rather than on suspicion. Here the members
+were three directory names and the discrepancy was immediate.
+
+**The sweep itself found nothing**, which is a legitimate and reportable outcome:
+rounding mode is explicit on every tax-facing path checked.
+
+### assigning-a-private-name-a-framework-base-already-uses-hangs-instead-of-erroring | high | one attribute name collided with Textual's own shutdown flag; the symptom was a test hanging forever, with nothing to grep for
+
+`OperationModal.__init__` set `self._closing = False` to track whether its
+observation poll should stop. **`_closing` is Textual's own flag on
+`MessagePump`**, assigned inside `MessagePump.__init__` — so it exists only at
+runtime, is invisible to `dir()` on the class, and no editor or type checker
+flags the collision.
+
+Setting it True to stop the poll made the subsequent real close take
+`MessagePump._close_messages`'s already-closing early return WITHOUT posting its
+stop sentinel. The pump never ended; `Screen.remove` waited on it, `App._shutdown`
+waited on that, and the test harness's `__aexit__` waited forever.
+
+**The symptom carries no signal.** Not an exception, not a wrong value — a
+process that stops. Nothing to grep for, no stack frame in the offending file,
+and the file that names the flag is three layers from where the wait happens.
+Confirmed by a pending-task dump at the hang: `_closing=True`, `_closed=False`,
+an EMPTY message queue and NO workers, with the screen pop parked in
+`_replace_screen`.
+
+**Pre-existing at HEAD** (three sites), not introduced by the surrounding
+async-lock work — though a later change did route a second close path through the
+same flag, widening its reach without creating it.
+
+**The gate derives its reserved surface rather than listing it:** an AST walk
+over the `__init__` bodies of the textual-owned ancestors in each node class's
+MRO, collecting every private name they assign. Hardcoding was not available,
+precisely because these names exist only at runtime — the property that made the
+defect invisible is the same one that forces the gate to be derived. Public names
+are excluded deliberately: a census found `title`/`sub_title` set on four
+screens, and those are reactives Textual intends a screen to set, so including
+them would have produced four false reds. An anchor assertion names one known
+Textual private, so a framework refactor reds the gate loudly instead of silently
+emptying its reserved set.
+
+Bite-proven against the REAL pre-fix source — the detector fed the actual HEAD
+text of the offending class read from git, not a synthetic stand-in. Pre-fix
+`['_closing']`, post-fix `[]`. The file went from two hangs to 7 passed in 26s.
+
+**A method note the fix depended on, and a fourth member of this document's
+silent-instrument family.** The first instrumentation attempt located the hang in
+the wrong place: Textual captures stdout inside its test harness, so printed
+progress marks simply stop appearing — **indistinguishable from the program
+stopping**. That produced a confident wrong conclusion (that the event loop was
+dead) which measurement later refuted. Write probe marks to a FILE when the
+framework under test owns the output stream.
+
+That joins `a-uniform-error-across-a-varied-population-indicts-the-probe`,
+`a-clean-bite-proof-is-as-uninformative-as-a-uniform-finding-list`, and
+`a-filter-that-cannot-match-produces-a-plausible-number`: four distinct ways an
+instrument failed silently and its silence was read as data.
+
+### ship-the-stricter-assertion-and-let-it-fail | medium | reasoning about a gate's correct scope cost more than running the wrong one, twice in one evening
+
+A gate was specified to assert that every screen retains the affordances Textual
+gives it. The specification said assert the inherited ACTIONS. The executor
+shipped exactly that, ran it, and three surfaces went red — not defects: a focused
+`Input` legitimately owns the copy key when a text cursor is present, so the
+action offered is `Input.copy` rather than `screen.copy_text`.
+
+**The gate reported that the specification was wrong.** Restated over KEYS — the
+operator keeps the affordance, whoever answers it — it is correct and green.
+
+The same evening, a hang investigation ran the same way: instrumenting and
+reading the state settled in minutes what had survived three rounds of
+reasoning about contention.
+
+**The asymmetry is what makes this a rule rather than an anecdote.** A red from a
+real gate is cheap and reversible — it costs one run and names the exact
+surfaces that disagree with your assumption. A wrongly-scoped gate that PASSES is
+neither: it is silent, it looks like coverage, and it is only discovered when the
+defect it was supposed to catch ships. So when the correct scope of an assertion
+is genuinely uncertain, the stricter version is the cheaper experiment, and its
+failures are data rather than rework.
+
+This inverts the usual instinct, which is to reason the scope out in advance and
+ship the version you are confident in. That instinct optimises for not seeing a
+red, and a red is the least expensive thing in the exchange.
+
+**Conditions.** The stricter version must be RUN, not merely written — the whole
+value is in the failure list. And the failures must be adjudicated rather than
+assumed wrong: three false reds here were false because a real widget legitimately
+owns the key, which required reading why each surface disagreed. A red that is
+waved away as noise teaches nothing, and a red that is accommodated by weakening
+the gate teaches worse than nothing — see
+`remediation-must-precede-the-gate-that-would-catch-it`.
+
+Related: `a-property-gated-only-where-its-defect-was-found` — the same preference
+for letting the broader assertion tell you where it does not hold, rather than
+narrowing it pre-emptively to the case in hand.
+
+### a-crashed-worker-silently-drops-tests-and-reports-a-clean-total | high | a run of a five-test file reported "1 failed, 2 passed" and nothing anywhere said the other two never executed
+
+Running a five-test module under the parallel runner with a thread-method
+timeout, the summary read:
+
+```
+[gw0] node down: Not properly terminated
+worker 'gw0' crashed while running ...::test_wrong_recovery_reentry_publishes_no_capsule
+1 failed, 2 passed in 101.54s
+```
+
+The file contains **five** tests. Three are accounted for. **Two never ran, and
+the summary does not say so** — it presents "1 failed, 2 passed" in the same shape
+it would use for a complete run. The dropped tests appear nowhere: not as errors,
+not as skips, not as a count mismatch.
+
+The mechanism: a thread-method timeout kills the worker PROCESS rather than
+raising inside the test, so the worker dies before reporting, and the remaining
+tests assigned to it are simply never distributed.
+
+**Every red-log reading in this tree is affected.** A reader triaging failures
+takes the FAILED list as the set of things wrong. Where a worker crashed, that
+list is a subset of unknown size, and the total looks plausible because the
+arithmetic is internally consistent — 1 + 2 = 3, and nothing states that 5 were
+collected. This is the direct cause of the vague failure counts recorded
+elsewhere on this branch.
+
+It is also the sharpest instance in this document of an instrument failing
+silently: not a wrong number, but a MISSING population reported at full
+confidence. Compare `a-uniform-error-across-a-varied-population-indicts-the-probe`
+and `a-filter-that-cannot-match-produces-a-plausible-number` — in both, output
+existed to inspect. Here the evidence of loss is absent by construction.
+
+**How:** compare COLLECTED against REPORTED on any run used to draw a conclusion.
+`--collect-only -q` gives the denominator; the summary gives the numerator; a
+mismatch means tests were dropped. Treat any run containing `node down` or
+`worker ... crashed` as having an unknown-size hole, and re-run the affected file
+serially before reading its failures. A gate asserting collected-equals-reported
+would make the hole visible without anyone remembering to look, and is the
+natural remedy — the count is available on both sides.
+
+**Do not read a suite total as a completeness claim.** It is an arithmetic
+summary of what was reported back, and a process that dies reports nothing.
+
+### a-remediation-line-that-reproduces-the-failure-it-explains | medium | an honest, correct warning ended with advice that recreated the exact state it was warning about
+
+Running a unit-marked module with `-m integration` selects nothing. The harness
+detects this and says so clearly — `NOTHING RAN`, `A green result here means the
+selection matched nothing, NOT that the code is sound` — which is exactly the
+banner this project built to stop a zero-match run reading as a pass.
+
+Its last line read:
+
+> re-run with -m integration (or `just test-integration`)
+
+**The operator had just run `-m integration`.** Following the instruction
+reproduces the identical empty selection. The diagnosis was right, the severity
+was right, and the one actionable sentence sent the reader in a circle.
+
+The advice was hardcoded, so it was correct for the case its author had in mind —
+an operator on the default unit lane, for whom `-m integration` is the right next
+step — and silently wrong for the case where the reader has already chosen that
+lane, which is precisely the case where a targeted run surprises someone.
+
+**Fixed** by deriving the advice from the selector actually used: when the
+selected lane is already the one that would otherwise be suggested, point at
+`-m ''`, which cannot be empty for a module that collected anything at all.
+
+**The proof for a remediation fix is to FOLLOW THE ADVICE**, not to read it. The
+new line was executed: 8 tests ran where the old advice had produced another
+zero. A remediation that is merely different from the failing command is not
+verified; one that has been run and resolved the state is.
+
+**How:** treat every actionable line in an error as code that will be executed by
+someone in the state that produced the error. Ask what happens if the reader is
+ALREADY doing what you are about to suggest — hardcoded advice is correct for the
+author's imagined reader and wrong for anyone who arrived by a different route.
+The same shape as `a-rationale-that-enumerates-instances-goes-stale-as-the-population-grows`:
+a statement true of the case in front of the author, silently false for the
+others.
+
+### a-probe-that-perturbs-its-subject-produces-state-evidence-that-outranks-the-truth | high | three instrumentation attempts each changed the behaviour under test, and one of them silently disabled the very send it was measuring
+
+An intermittent hang was to be attributed by separating STATE questions ("does
+the send ever fire") from TIMING questions ("does it fire late"), on the sound
+reasoning that a code path which never executes does not execute faster on an
+idle machine. The state question was instrumented three times. All three answers
+were artifacts.
+
+**Probe 1** wrapped the screen's `__init__` to log its callbacks. The trace read
+cleanly: screen constructed, neither confirm nor cancel nor the refusal path ever
+fires, test hangs. That is a textbook state observation — load-independent,
+specific, and apparently decisive. The control run immediately afterwards, same
+session, no plugin: **5 passed**. The probe was the cause.
+
+**Probe 2 manufactured the defect it was looking for.** It wrapped the confirm
+handler, which is decorated with Textual's `@on(Button.Pressed, ...)`. Replacing
+that attribute DETACHES the handler from the framework's registry, so the button
+genuinely stops working and the wait becomes genuinely infinite — a probe for
+"does the send fire" that silently prevented the send.
+
+**Probe 3** touched only undecorated methods and hung at a different point again,
+control still green.
+
+**A state claim is more dangerous than a timing claim when it is wrong.** The
+whole argument for preferring state evidence is that a busy host cannot fake it —
+which is true, and which is exactly why a state claim arrives with more authority
+and invites less challenge. An instrument that alters its subject produces
+evidence wearing that authority. Reported before the control ran, probe 1's trace
+would have closed the question wrongly and been harder to reopen than the timing
+claim it replaced.
+
+**Two concrete rules, both earned here:** never monkeypatch a decorated event
+handler or a framework node's constructor — the decoration is registration, and
+replacing the attribute deregisters it. And run the CONTROL in the same session
+as the probe, not from memory of an earlier run, because on an intermittent
+phenomenon a remembered green is not a control.
+
+**What the accidents did establish** is worth more than what they were looking
+for: there is a reachable state — screen pushed, confirm handler inert, app still
+running, screen never unmounting — in which the worker waits forever with no
+error and no diagnostic, because every existing guard keys on unmount or
+app-stop. The escapes cover "the producer is gone"; the uncovered case is **"the
+producer is present but inert"**. Three probes reached that state by accident,
+which also means it can be induced deliberately — so it has a testable subject
+even though the original hang does not.
+
+### a-gate-that-imports-the-tree-it-guards-cannot-run-when-that-tree-is-broken | high | the parse gate reused the project's canonical scanner and was therefore unimportable in exactly the state it exists to detect
+
+The syntax gate was written to reuse `_project_inventory._python_files`, which
+wraps the project's canonical `scan_directory`. Reuse over re-implementation is
+the correct instinct and the rule this campaign has applied all day.
+
+**It made the gate useless in the only state that matters.** While an in-flight
+peer sweep left `core/redaction/__init__.py` unparseable, importing the gate
+failed:
+
+```
+dev.tests.test_every_source_file_parses
+  -> cadrumo.core.directory_scan -> cadrumo.core.errors._registry
+  -> cadrumo.core.redaction -> IndentationError
+```
+
+A gate whose own import traverses the package cannot report on a package that
+cannot be imported. The reuse that is right everywhere else is wrong here, and
+the distinguishing property is narrow: **this gate's subject is the tree's
+ability to be parsed at all**, so it must owe that tree nothing.
+
+Rewritten to walk with `os.walk` and the standard library only, with the reason
+in its docstring so the next reader does not "fix" it back to the shared helper.
+It then ran against the broken tree and reported four offenders.
+
+**And the population moved under the measurement.** Those four were reported at
+one moment; three consecutive samples fourteen seconds later returned ZERO. The
+sweep producing them was still running and its owner was fixing them as fast as
+they appeared.
+
+That amends an earlier finding in this document. `re-run-the-detector-after-the-sweep`
+treats serial rediscovery — fix one, re-run, find the next — as evidence the
+population was never enumerated. **That inference holds only for a STATIC
+population.** Against a live producer, enumeration cannot converge: every list is
+stale by the next save, and fixing entries is competing with the thing creating
+them. The tell is the same in both cases and the correct action is opposite —
+enumerate harder, or stop and let the producer finish.
+
+**How:** distinguish the two before acting. A population that changes between two
+consecutive samples is being produced, not merely under-enumerated; the response
+is to identify the producer and wait, not to sweep. And run a whole-tree gate at
+a SETTLE POINT rather than during a sweep, because during one it reports a
+snapshot that was already wrong when printed.
+
+### a-settle-condition-is-the-wrong-gate-on-recording-durable-work | high | a rule written to answer "has this producer stopped" was applied to block a record whose truth did not depend on any producer
+
+A three-part settle condition was agreed for deciding when a tree-wide sweep had
+finished: parse clean, no new untracked modules across two checks minutes apart,
+no source mtimes inside the last several minutes. It is correct for the question
+it was written for.
+
+It was then applied to a different question — may an execution record be written
+for a completed gate — and blocked it. That was wrong, for a reason the executor
+identified and the author had not:
+
+**In a shared worktree with several active lanes, a globally quiet tree may never
+occur.** Waiting for one makes an unrelated lane's activity block an unrelated
+record, indefinitely, with no mechanism to end the wait. The condition was
+measured settled at one moment and unsettled four minutes later by a DIFFERENT
+lane editing unrelated files — not the sweep the condition was written about.
+
+**The fix is to split the claim rather than wait or overstate it.** A record can
+state two different kinds of thing:
+
+- properties of the ARTEFACT — the gate is import-independent, the injected cases
+  bite, the failure path was itself defective and is fixed, its first real outing
+  caught four live offenders. None of these depend on the tree being quiet, and
+  all remain true tomorrow.
+- properties of the ENVIRONMENT — the tree currently parses, the suite currently
+  passes. These are snapshots and were already stale when written.
+
+The record as written asserts the first, explicitly disclaims the second, names
+the files that failed the condition, and calls its passing runs snapshots. That
+is both honest and unblocked.
+
+**The general form:** before letting a condition gate an action, ask whether the
+action's TRUTH depends on the condition or only its CONVENIENCE. A settle
+condition governs whether a MEASUREMENT of the tree is meaningful. It does not
+govern whether a proof about an artefact may be recorded — and conflating the two
+produces an indefinite block that looks like rigour.
+
+See also `a-closing-condition-stated-as-a-measured-number-goes-stale-when-you-change-the-thing-measured`:
+the same failure one level up. There a criterion decayed because the campaign
+changed what it measured; here a criterion blocked because it measured something
+the work did not depend on.
+
+### the-corrections-ran-both-ways-and-each-direction-caught-a-different-class | high | the executor caught what the delegating view had compressed away; the lead caught what the local view could not see was miscounted
+
+Recorded because the pattern is structural rather than a matter of who was more
+careful, and it predicts where to look next time.
+
+**Executor to lead — three refused instructions, all correctly.** A redundant
+guard ordered by the lead, which would have passed the lead's own acceptance
+criteria while leaving the real cause live. A plan Step id the lead told the
+executor to put in shipped source — the exact mandate violation the executor had
+swept from seventeen sites hours earlier. And a settle condition the lead used to
+block a record whose truth did not depend on it.
+
+The executor's own account of why is better than "good judgement": in each case
+**it held local context the delegating view had compressed away.** It had read
+the three existing escapes, so it could see the gap the lead described was not
+there. It had swept seventeen instances of the violation, so the collision was
+unmissable. It had just measured the condition failing against an unrelated lane.
+That is an argument for the executor RAISING such things, not for the executor
+being right by disposition.
+
+**Lead to executor — four corrected figures and one refuted theory.** A
+six-consumer count that was one. A `wc -l` reporting line-matches as files. A
+coverage-gap claim generalised from testing one check of seven. And an
+environmental theory about a timeout that was really an uncached tree parse —
+which would otherwise have consumed a quiet-host investigation that could only
+have found nothing.
+
+These are the inverse class: not context the lead lacked, but claims whose SUBJECT
+or UNIT was wrong in ways invisible from inside the work that produced them. A
+figure looks right to its author precisely because they know what they meant.
+
+**The common root under almost every error tonight, in both directions:** a
+measurement taken correctly and then reported as something adjacent — a different
+unit, a different subject, a different moment. Reasoning held nearly everywhere;
+provenance did not. Every finding in this document is a variation on that.
+
+**How:** delegate with the expectation that the executor will refuse some
+instructions, and treat a refusal as information about compressed context rather
+than as friction. Review returning claims for their unit and subject rather than
+their logic, because the logic will usually be sound. And expect the two failure
+classes to be asymmetric: the delegating view loses detail, the local view loses
+perspective, and neither is corrected by the other trying harder.
+
+### the-timeout-everyone-attributed-to-the-share-was-an-uncached-full-tree-parse | high | four observations were read as I/O stalls; the cause was a gate re-parsing 6396 files three times and walking every tree per symbol
+
+`test_relocation_parity.py` timed out repeatedly and was read across four
+observations as an environmental stall on the network-backed worktree — the
+failure mode `aeat-local-execution` names for this checkout.
+
+**It is CPU-bound.** Measured, host at 50%:
+
+```
+discover 6396 files             0.35s
+read + parse all files         24.30s      (x3 uncached = 72.9s)
+one full ast.walk, all trees    4.05s      6,198,901 nodes
+8 canonical symbols x 4.05s    32.4s
+```
+
+`_source_trees()` read and `ast.parse`d every file under three roots with **no
+cache**, from **three** call sites; `_class_definition_sites` then walked every
+tree once per symbol. ~105s of work before the module asserts anything, which is
+exactly the 110s runs and 240s timeouts.
+
+Fixed with `@lru_cache(maxsize=1)` — the parse is pure over a tree the tests do
+not mutate. The stack moved off `ast.walk` entirely; the module is now 4 passed
+in 243s.
+
+**The disproof was already in the session.** A whole-tree `ast.parse` had been
+run earlier for an unrelated syntax sweep: 6487 files, seconds. That established
+reading this tree is cheap, so a scan taking minutes was never explicable by read
+latency. Two measured facts, both held by the same agents, never joined.
+
+**How:** before accepting an environmental explanation for a timeout, measure the
+COST OF THE WORK independently of the run that was slow. An environmental story
+is unfalsifiable by the observation it explains; only a measurement of what the
+code does can test it.
+
+### a-gate-pinning-a-consumer-tally-reddened-on-correct-work | high | a check named for "exactly seven direct consumers" failed because legitimate work removed one, and updating seven to six would have re-armed it
+
+`test_manager_pilot_has_one_canonical_home_and_exactly_seven_direct_consumers`
+hardcoded seven consumer filenames AND pinned the count in its own name. It
+failed because the visual suite's populated fixture stopped driving the UI seam
+— its docstring says "the property under test is rendering, not the seam" — and no
+longer needs the settling barrier. Verified gone at HEAD, not just the working
+tree.
+
+So a CORRECT change reddened the gate, which is what `aeat-quality-gates` forbids
+pinning a tally for: a count encodes a moment, trains everyone to update the
+constant, and then detects nothing.
+
+**The tempting fix re-arms the trap.** Seven to six is one edit, leaves the
+identical gate waiting for the next legitimate consumer change, and is attractive
+because it is smaller than asking what the check is for.
+
+Rewritten to the property: one definition site, and every consumer a level-1
+from-import of the canonical module from inside the canonical package — plus an
+explicit **non-vacuity** assertion, because a property gate can pass over an
+empty population where a tally gate cannot. Five predicates bite-proved
+individually: healthy passes; empty, wrong level, wrong module, outside-package
+and plain-import each red.
+
+**How:** when a gate fails on a count, ask first whether the change that moved the
+count was correct. If it was, the count is the defect — fix the assertion's
+SUBJECT, and add a non-emptiness check, because the property version can pass
+over nothing.
+
+### the-session-held-the-refutation-of-its-own-claim-and-did-not-join-it | high | three times, the measurement disproving a live conclusion had already been taken, by the same agents, in the same session
+
+The failure that recurred most was not a missing measurement. It was a
+measurement already in hand and never connected to the claim it refuted.
+
+**One — the load stamp.** A hang was twice about to be attributed to a code defect
+on the strength of "it reproduces at low load". The `CADRUMO-HOST-LOAD` line
+reading `python_processes=52`, and later `cpu=100.0%`, was printed in the same log
+being read, above the traceback being quoted.
+
+**Two — the tree parse.** A module's timeout was attributed across four
+observations to I/O stalls. Earlier in the same session, for an unrelated sweep,
+every tracked file had been parsed in seconds — establishing that reading this
+tree is cheap, and therefore that a minutes-long scan could not be read latency.
+
+**Three — the two readings.** A property was queried two ways in two scripts; only
+one was run, and its answer produced a complete and wrong root cause. The second
+query existed, was one line, and had the same author.
+
+**What makes this class distinct** from the search-and-count failures: there the
+instrument was defective. Here every instrument worked and every number was
+correct. What failed was ASSOCIATION — holding two true facts and not putting them
+in the same sentence. No discipline about measurement quality touches it.
+
+**It concentrates on environmental explanations** for a structural reason: "the
+share is slow", "the host is loaded", "it is flaky" fit every symptom, so they
+survive every observation. Explanatory reach reads as confirmation when it is the
+property that should provoke suspicion.
+
+**How:** before accepting an environmental or intermittency explanation, state
+what measurement would refute it, then check whether that measurement has already
+been taken in this session. Twice it had, and once it was in the file being quoted
+from.
+
+### every-file-parses-and-every-import-resolves-are-different-properties | medium | a gate written after a broken sweep covers only the breakage class that produced it, and its name invites the wider inference
+
+`test_every_source_file_parses` was written after an in-flight sweep left four
+files syntactically invalid. It does what it says and was proven to do it.
+
+**It cannot see a deleted module whose importers remain.** That sweep later moved
+on to removing modules while their consumers still imported them, and the gate
+reported **zero unparseable files** throughout — correctly, because every file
+still parses perfectly. `ast.parse` is a syntax check; an unresolvable import is
+not a syntax error.
+
+So "every source file parses" and "every import resolves" are different
+properties, and only the first is gated. The gate's name states the first
+accurately, which is exactly what makes the wider inference tempting: **"the parse
+gate covers broken sweeps"** is the sentence a reader forms, and it is wrong for
+two of the three breakage classes one sweep produced in a single evening — invalid
+syntax, deleted modules with live importers, and a registry whose entries no
+longer match its consumers.
+
+This is the document's own subject applied to a gate written by its authors, an
+hour after writing it: the check is correct about its subject and the reader
+generalises to the subject they wanted. It was caught only because the executor
+CHECKED whether the parse gate covered the new breakage instead of assuming the
+gate it had just verified would.
+
+**No second gate is proposed.** The suite itself detects unresolvable imports —
+noisily, as a collection error attributed to whichever module happens to import
+first, which is the attribution problem recorded elsewhere in this document. A
+gate could assert every first-party module imports, but that is expensive, it
+duplicates what collection already does, and nobody has established that the
+noisy detection is insufficient rather than merely unpleasant.
+
+**How:** state a gate's scope in terms of what it does NOT cover when the
+adjacent failure modes are plausible. A gate named for a property invites the
+reader to credit it with the CATEGORY the property belongs to, and the name alone
+cannot carry that distinction.
+
+### the-wrong-inference-was-free-and-the-right-answer-cost-one-command | high | in every case the correct check was cheap and got skipped, because the reasoning already felt complete
+
+The closing observation of the session, and the one that unifies most of this
+document.
+
+Three times in the final hours, a conclusion about a system was drawn from one of
+its parts. Each time the correct answer was available for the cost of a single
+command, and each time that command was skipped:
+
+- **Is this module CLI-specific?** A grep found zero framework references. The
+  right check was to BLOCK the package at the meta-path and import it — the
+  dependency was in the package `__init__`, invisible to any question about the
+  module.
+- **Is the taxonomy the home for this field?** The remedy was read and accepted.
+  The right check was to READ THE GUARD around it — it fires only when a parent
+  setting is overridden, and the field in question has no parent.
+- **Does the parse gate cover this breakage?** The gate had just been verified.
+  The right check was to RUN IT against the new breakage — a deleted module whose
+  importers remain is not a syntax error, and the gate reported clean throughout.
+
+**None of these were difficult.** They were steps that felt SKIPPABLE because the
+reasoning already felt complete — which is precisely the mechanism recorded in
+`a-retraction-is-timestamped-exactly-like-the-claim-it-withdraws`: a wrong
+explanation that fits ends the search. Here the explanation that fits is the
+reader's own inference, and what it ends is the verification.
+
+The economics are the point. A wrong inference costs nothing at the moment it is
+formed and is indistinguishable from a right one until something forces the
+check. The check costs one command. **The asymmetry is enormous and runs entirely
+against the intuition**, because the inference arrives feeling finished and the
+command feels like confirming what you already know.
+
+**How:** when a conclusion is about a SYSTEM and the evidence is about a PART,
+name the command that would settle it and run that command. If naming it is easy
+and running it is cheap, the reasoning-only path was never the economical one —
+it only felt that way. And treat "this feels already established" as the signal
+to check rather than the licence to skip: every instance in this document
+arrived wearing that feeling.
+
+### a-truncating-write-on-a-flaky-mount-is-a-data-loss-risk-with-a-two-line-fix | medium | an edit to a shared plan file failed with OSError, and the same call could have emptied it
+
+An edit to the interface plan failed with `OSError: [Errno 22] Invalid argument`
+— the network-backed mount, or a concurrent lock. `Path.write_text` opens with
+TRUNCATE, so a failure between the truncate and the write leaves an empty file.
+
+Nothing was lost: the author checked integrity before doing anything else and
+found 96 rows intact with the edit absent, meaning `open()` failed BEFORE
+truncating. The rewrite then went through a temporary file and `os.replace`
+rather than retrying the truncating write.
+
+**The exposure was general, not incidental.** Every `write_text` and every
+whole-file rewrite performed against a tracked file on this mount tonight — by
+either agent, across gates, hooks and conftest edits — carried the same failure
+mode. It never fired, which is why nobody noticed it was there.
+
+**And it is the same outcome as the loss already recorded in this document,
+reached from the opposite direction.** Five plan rows were destroyed by a peer
+committing a stale copy. A half-completed truncating write destroys the same file
+without any peer involved. One is a coordination failure and the other is a
+durability failure; the artefact is equally gone, and no check in this repository
+reports either.
+
+**How:** write a shared file by creating a temporary sibling and calling
+`os.replace`, which is atomic on both POSIX and Windows — the reader sees the old
+content or the new, never a truncated file. It costs two lines. On a mount whose
+flakiness under concurrent I/O is already documented in this project's own
+execution rules, the truncating form is not a reasonable default.
+
+**And check integrity BEFORE retrying a failed write.** A retry that succeeds
+over an emptied file produces a plausible-looking result and destroys what was
+there; the author checked first, which is the only reason the distinction between
+"failed before truncating" and "failed after" was recoverable at all.
+
+### a-ranking-query-cannot-answer-an-absence-question | high | an enumeration piped through `head` was read as complete, and absence-from-the-visible-portion was asserted as absence
+
+The fifth and last counting failure of the session, and the only one where the
+command was correct and the answer was broken on the way to reading it.
+
+An enumeration of positional CLI declarations was piped through `head -12` to keep
+the output readable. One name sat below the cut, with a single occurrence. Its
+absence from the VISIBLE portion was read as absence from the data — and then
+asserted, in a plan row, as the reason another agent's example was wrong. It was
+not wrong; it was present at `_custody_command_specs.py:118`.
+
+**This completes a family of five, all producing believable numbers from commands
+that ran without error:**
+
+- `wc -l` counting LINE MATCHES and reported as FILES
+- `grep -h` stripping the filenames a downstream path filter needed, so the filter
+  passed everything
+- a predicate that could not match the shape it sought, so absence read as clean
+- `-c` and `-o` not composing, returning a uniform zero
+- and this: a correct query, a correct unit, a correct filter, TRUNCATED for
+  display and then read as the data
+
+The first four are defects in the query. **This one is a defect in the reading**,
+which is why it survived an evening of watching for the other four: nothing about
+the command was wrong.
+
+**The corollary is narrow and actionable: `head -N` answers "what is most
+common" and never "is X present".** A ranking query and an absence query are
+different questions, and a truncated ranking cannot answer the second. Where the
+claim is that something does NOT occur, query for that thing specifically —
+`grep -c 'name="name"'` — rather than scanning a shortened list for its absence.
+
+**And the distinction that matters more than the error:** the example was not
+WRONG, it was TOO WEAK — one positional declaration against two bindings does not
+establish that the bound name targets that command, whereas twenty-two bindings
+against six declarations does. Collapsing "wrong" into "weak" is what produced
+confidence in a refutation that had not actually been made. The two failures need
+different responses: a wrong example is replaced, a weak one is strengthened, and
+only the first justifies overturning the claim it supported.
+
+### Gate allowlists carry zero stale exclusions, and the stale-looking rest is a live campaign
+
+**Pathway:** every gate allowlist in the tree, swept 2026-08-31.
+
+608 path-like entries across 3,730 gate modules under `dev/tests`, `dev/quality` and every `src/**/tests` package. Classified by what the owning constant DOES rather than by whether the path resolves, because those are different questions:
+
+- **Stale EXCLUSIONS: 0.** This is the load-bearing number. An exclusion naming a vanished path is the shape that silently weakens a gate -- the gate keeps passing, and nobody learns the exemption stopped applying to anything. There are none.
+- **Stale-looking inventory entries: 176**, and the count is not the finding. Two corrections to the measurement itself: the largest single cluster (26 rows in `entrypoints/cli/tests/test_backend_boundary.py`) belongs to a constant named `removed` -- paths that must NOT exist, so absence is the assertion PASSING; and `tests/test_deferred_cross_layer_imports.py` already carries its own `test_no_stale_declaration`, so its rows cannot go stale unnoticed. A detector keyed on "does this path resolve" cannot separate a must-exist inventory from a must-not-exist one, and reporting 176 as though it were a defect count would have been a third instance of the count-without-members error this audit already records.
+
+**The gates fail loudly, which is the correct design.** Run against the tree, the modules holding stale-looking rows are RED, not green-while-skipping. Their entries are visible.
+
+**Why they are red is a peer campaign, not a defect.** Two consecutive runs of `test_deferred_cross_layer_imports.py` died with `FileNotFoundError` on two DIFFERENT modules -- `core/_notificacion_estado_servicio.py`, then `core/_observed_header_fact.py` -- neither present in HEAD under either spelling, both live underscore-strippings by the in-flight `relocation:core` work against 289 uncommitted files. Different casualty each run is the signature of a MOVING target; one run would have looked like a broken gate.
+
+**The real robustness gap, worth recording rather than fixing mid-campaign.** `deferred_cross_layer_edges()` globs the corpus and then reads each path, so a rename landing between the two raises rather than reporting. The casualty is `test_the_scanner_sees_a_real_corpus`, which is the module's ANTI-VACUITY control -- so in a shared worktree the one test whose job is to prove the scanner still sees a corpus is the test a concurrent rename takes out. It errors rather than passing vacuously, so nothing is silently granted; but a gate that cannot be run to completion while a relocation campaign is live cannot gate that campaign, which is exactly when it is most needed. Reading each file defensively and reporting unreadable paths as a scan result, rather than raising, would preserve the control.
+
+### Amendment: the moving-target diagnosis, confirmed at three casualties
+
+The full eight-module run completed at 25 failed / 166 passed. **None is attributable to the C3 editor work**, and the evidence is a third distinct casualty rather than a repeated one.
+
+Across three runs the crash landed on three DIFFERENT modules -- `core/_notificacion_estado_servicio.py`, then `core/_observed_header_fact.py`, then `cadrumo.core.windows_contention`. A fixed defect reproduces on the same module; a moving campaign reproduces on a new one each time. `core/refund_election.py`, which took out all 53 TUI modules in the eight-module run, **exists on disk now and is still absent from HEAD** -- the peer created it after that run began, so the gate photographed a moment that no longer exists. Re-running is not a retry here, it is a fresh measurement of a different tree.
+
+**One positive result worth pinning, because it is easy to lose among the noise.** `test_no_test_file_sits_outside_every_lane_path` and `test_every_test_is_selected_by_some_declared_lane` name only `dev/` paths -- `dev/benchmarks/cli`, `dev/registry/conformance`, `dev/tui`, `dev/packaging`. The new C3 test packages under `entrypoints/tui/modelo/edit/tests/` and the accessibility suite appear in NEITHER list, so they are lane-reachable: some declared lane selects them and CI will actually run them. A new test directory that no lane reaches is the failure mode where a suite is green because nothing executes it, and these are clear of it.
+
+**Operational consequence.** While a relocation campaign is live against this tree, an import-graph gate measures the campaign, not the code. Its verdict is only meaningful once the churn settles, and a red run taken at face value mid-campaign would send someone chasing a defect that does not exist.
+
+### The interface plan's governance records are one unbuilt chain, not eight independent rows
+
+**Pathway:** `.vault/plan/2026-08-11-tui-interface-plan.md`, measured 2026-08-31.
+
+Eight rows in this plan exist to record a governance fact, and each is specified to wiki-link the previous one:
+
+`S01` C1 cohort-open -> `S38` C1 exit -> `S49` C2 cohort-open -> `S59` C2 exit -> `S71` C3 prerequisite -> `S79` C3 exit -> `S90` C4 exit -> `S93` C5 aggregate.
+
+**Every one is unchecked.** That is the finding. Approached row by row -- which is how a plan invites you to approach it -- S79 reads as an ordinary next step after S78; it is not, because its link target does not exist, and neither does that target's target, four levels down to a root that was never written. Eight of the plan's 37 remaining rows are this single spine, and it can only be built from the root. A reader taking the rows at face value would attempt S79, discover S71, attempt S71, discover S59, and so on -- rediscovering the chain one blocked row at a time.
+
+**`S71` additionally rests on a false premise, and it is the dangerous kind.** The row asserts "Both suites already ship and pass" and names `application/modelo/tests/test_edit_contract_invariants.py` and `application/operations/tests/test_financial_operand_invariants.py`. NEITHER FILE EXISTS, under that name or any other, anywhere in the tree. The real coverage is `test_edit_contract.py` plus seven suites in `application/operations/tests/` (`test_financial_operand.py`, `_conformance`, `_custody`, `_dependency_receipt`, `_executor_custody`, `_registration`, and `test_contract_invariants.py`). This is worse than a stale path because the row's entire product is a RECORD asserting those suites were proven green against a named commit: written as specified, it would cite two paths that resolve to nothing while reading as evidence that they passed.
+
+**How the wrong paths presented, which is the reusable part.** Running the two named files reported `no tests ran` rather than a green, because the deselection guard names what a selection actually matched. A bare pytest invocation over a nonexistent path exits cleanly and looks like success; the guard is the only reason the row's premise was checked rather than assumed.
+
+**Remediation.** Correct `S71`'s named paths to the suites that exist, and record on each spine row that it is chain-dependent, so the dependency is visible from the row rather than discovered by attempting it. Do not write any of these records until its link target resolves -- a governance artifact citing a name that does not exist is the failure mode the chain exists to prevent.
+
+### The modelo executors declare eleven phase codes and emit none of them
+
+**Pathway:** `src/cadrumo/application/modelo/operation_definitions.py`, measured 2026-08-31.
+
+Seven registered modelo operations declare `phase_codes` on their definitions --
+`modelo.work.rename`, `modelo.work.discard`, `modelo.edit.apply`,
+`modelo.work.verify.{gates,persist}`, `modelo.work.file.{preconditions,record}`,
+`modelo.export.{preconditions,render}` and
+`modelo.work.amend.{baseline,record}`, eleven codes in total.
+
+**The module calls `.phase(` ZERO times.** Every other executor family does:
+auth, export, live and user-profile all publish through
+`context.events.phase(...)`, the censal one at three distinct points.
+
+**Why this is a live operator defect rather than a tidiness issue.** Phase
+events are how a frontend learns an operation is progressing. The C4 actions
+enrolled under `W06.P12c.S82`-`S87` all present through the shared
+`OperationModal`, which renders its progress view from observed events. So an
+operator invoking rename, discard, verify, file, export or amend sees NOTHING
+between submitting and settling -- on operations that write to their filing
+records. A declared phase nobody emits is worse than no declaration, because
+the definition advertises progress reporting that the surface then cannot show.
+
+**How it surfaced, which is the part worth reusing.** Not by reading the
+executors -- their absence of a call is invisible to anyone not looking for it.
+It surfaced because the registered-executor conformance matrix
+(`entrypoints/tests/test_registered_executor_conformance.py`) asserts
+`set(observed_phase_codes) & set(definition.phase_codes)` and reported an EMPTY
+observed set once the modelo cases could finally execute. That matrix had never
+covered the modelo family, and the first thing it found on being pointed at it
+was eleven unbacked declarations.
+
+**Two false leads discarded on the way, both plausible.** The runs also emit
+`KeyringUnavailableError` at DEBUG level -- deferred profile-session retirement
+and mint cleanup -- which is easy to blame given this campaign's separate
+credential-store trouble, and is not the cause. And before that, every modelo
+case was refused by the profile readiness gate, which looked like the whole
+story; closing that fixture gap is what let the real one appear underneath.
+
+**Remediation is per-executor, not central.** Each executor must publish its own
+declared codes at the points they name, in the order the definition declares --
+`preconditions` before `record`, `gates` before `persist`. A central shim
+emitting a definition's codes on its behalf would satisfy the matrix while
+reporting phases that never happened, which is the same failure in a costume.
+
+### One taxpayer baseline, restated in 105 files
+
+**Pathway:** the modelo readiness fact set, measured 2026-08-31.
+
+The nine-fact taxpayer baseline the modelo readiness gate requires --
+`identity.tax_id`, `activities.description`, `iva.regime`,
+`tax_residence.jurisdiction_scope`, `iva.m303_regime_composition` and the four
+IVA enrolment flags -- is written out verbatim in **105 files**. Not similar
+sets: the identical nine paths with the identical values.
+
+**Why the number was wrong twice before it was right.** A first pass reported
+FOUR copies, found by searching for the function name `_seed_minimal_profile`.
+That is a name-scoped search for a content-scoped property, and it under-counted
+by a factor of twenty-six. Searching for a distinctive VALUE from the tuple
+(`iva.m303_regime_composition`) found all 105, every one of them carrying the
+full set. This is the same measurement error class recorded elsewhere in this
+audit -- counting what a thing is CALLED when the question is what it CONTAINS.
+
+**Why duplication matters here specifically, beyond tidiness.** This tuple is
+not decoration: the readiness gate consults these exact paths to decide whether
+any modelo work may run at all. 105 copies are 105 places for that answer to
+drift, and a copy that silently falls behind produces a suite passing against a
+taxpayer shape the gate no longer accepts -- green tests over a taxpayer the
+product would refuse.
+
+**Canonical home established, five sites collapsed.**
+`MODELO_READY_PROFILE_FACTS` and `seed_modelo_ready_profile_record` now live
+once in `src/cadrumo/tests/profile_capsule.py`, beside the
+`seed_test_profile_record` they delegate to. The four `_seed_minimal_profile`
+copies in `application/modelo/tests` and the newly added conformance seeder all
+delegate to it; verified at 16 passed across the three heaviest of them.
+
+**The remaining ~100 are not swept, deliberately.** They belong to many
+unrelated suites across aggregation, calculations and elsewhere, and a
+mechanical rewrite of a hundred peer-owned test fixtures in a shared worktree
+is how one lane breaks several others at once. The canonical declaration is the
+precondition for that sweep, not a substitute for it; each site should adopt it
+as its owner touches it.
+
+### The same executors report no EFFECT either, which is a false claim rather than a silence
+
+**Pathway:** `src/cadrumo/application/modelo/operation_definitions.py`, measured 2026-08-31, found immediately after the phase-emission finding above.
+
+The modelo module calls `.effect(` **zero** times. `censal_operation` calls it
+four times; `user_profile/operations` likewise. So every modelo operation
+settles reporting `OperationEffect.NONE`.
+
+**This is worse than the missing phases, and the difference is worth stating.**
+A missing phase is an ABSENCE -- an operator sees no progress. A missing effect
+is an ASSERTION: the platform records that a rename changed nothing, that a
+discard discarded nothing, that a file wrote nothing. Anything reasoning over
+operation outcomes -- a refresh decision, an audit read, an operator asking
+whether their filing action took -- is told a falsehood rather than left
+uninformed. On filing-adjacent operations that is the more dangerous of the two.
+
+**How it surfaced, and why the first fix was needed to see it.** The
+conformance matrix asserts `observed.projection.effect is case.expected_effect`.
+That assertion is UNREACHABLE until the phase assertion above it passes, so the
+empty-phase failure was masking it. Fixing phases made the effect check
+reachable and it failed immediately -- one defect standing behind another, in
+the same executors, discoverable only in order.
+
+**Repaired for rename and discard**, following the progression the working
+executors use rather than inventing one: `UNKNOWN` before the write, `UPDATED`
+after. On discard the `UNKNOWN` is placed BEFORE the approval check
+specifically, because a stale-approval refusal leaves the unit untouched --
+claiming `UPDATED` earlier would tell an observer a discard landed that never
+did. Both cases now pass the matrix end to end, with phases and effects
+observable.
+
+**Five executors still report neither**: edit.apply, export, verify, file and
+amend. They also still lack conformance scenarios, so nothing currently
+observes them -- which is precisely why the gap survived. The remediation is
+per-executor for the same reason given above: a central shim emitting a
+definition's declared codes and a default effect would satisfy the matrix while
+reporting work that never happened.
+
+### Amendment: all seven modelo executors now report, and the residue is fixtures rather than defects
+
+**Measured 2026-08-31**, superseding the "repaired for rename and discard" note above.
+
+The module now carries **7 phase calls and 15 effect calls**, from zero of each.
+Every modelo executor publishes what it can observe:
+
+- `modelo.edit.apply` publishes its single declared phase IN FULL, because it is
+  the only one with no inner delegation. It also now distinguishes two outcomes
+  that previously reported identically: a failed compare-and-swap reports
+  `NONE`, the truthful statement that nothing changed, as against the `UNKNOWN`
+  carried while the outcome was still open. Before this, a successful apply and
+  a no-op refusal were indistinguishable to any observer.
+- `rename` and `discard` publish their single phase and both effects.
+- `verify`, `file`, `export` and `amend` publish their ENTRY phase and both
+  effects, and deliberately do NOT publish their inner phase.
+
+**The unemitted inner phases are a recorded gap, not an accepted one.** Each of
+those four hands the whole job to an authority that performs both stages inside
+one call, so the transition is invisible from the executor. Emitting it after
+the call returns would mark ENTERING a stage that had already finished -- an
+observer reading a phase that never bracketed any work, which is a worse report
+than silence. It closes one of two ways: the authority receives the operation
+context and publishes the transition it can actually see, or the definition
+stops declaring a phase nobody can honestly emit. Both belong to that
+authority's owner.
+
+**The rationale is stated ONCE**, as a module-level DELEGATED PHASE REPORTING
+note, with each executor carrying a one-line reference. Repeating an eight-line
+explanation in four docstrings would be the same duplication this audit records
+elsewhere, in prose instead of code.
+
+**Verified at 20 passed / 6 failed** across the whole matrix. All six failures
+are the expected residue: five modelo definitions still declare no conformance
+SCENARIO -- edit.apply, export, verify, file, amend -- plus the census test that
+counts them. Every non-modelo definition passes, so repairing the executors
+regressed nothing. The remaining work is antecedent fixtures (a calculation
+revision, a revision plus verification report, a filed record), not further
+executor defects.
+
+### Thirty-four modules redeclare the M130 casilla-name mapping, and canonicalising it blindly would be wrong
+
+**Pathway:** the M130 casilla identity constants, measured 2026-08-31.
+
+`_M130_INGRESOS_CASILLA = validated_casilla_id("01")` and its siblings
+(`_GASTOS` = 02, `_PREVIOUS_PAYMENTS` = 05, `_RETENCIONES` = 06,
+`_PAGO_FRACCIONADO` = 07, `_AGRARIAN_VOLUME` = 08, `_AGRARIAN_WITHHELD` = 10,
+`_DIFERENCIA_PREVIA` = 14, `_CARRY_FORWARD` = 15) are **defined independently
+in 34 modules** and referenced in 40. Each is a private redeclaration of the
+same mapping from a human name to a casilla number.
+
+**The obvious remedy is the wrong one, and that is the finding.** A single
+canonical `M130_INGRESOS_CASILLA` constant would be a mapping that IS NOT
+STABLE: casilla ids are revision-scoped, and this campaign already records that
+ids renumber across filing years -- keying anything by casilla id across
+revisions injects the wrong box. A shared constant would silently be correct
+for the revisions it was written against and wrong for the others, which is
+worse than 34 honest local copies, because a local copy sits next to the test
+that pins its revision.
+
+**So the duplication is real but the correct shape is a question, not a sweep.**
+Three candidate shapes, none of them free: a revision-keyed accessor
+(`m130_casilla("ingresos", revision=...)`) resolving through the registry that
+already owns the numbering; a canonical constant per REVISION rather than per
+name; or leaving them local and accepting that the mapping is test-scoped by
+nature. The first is the only one that cannot silently drift, and it is also
+the only one that requires the registry to expose a name-to-casilla lookup it
+may not have.
+
+**Not swept, deliberately.** Rewriting 34 peer-owned test modules onto a
+constant that may be wrong for their revision would convert a visible
+duplication into an invisible correctness defect, inside test fixtures that
+currently pass. Recorded so the shape is decided before the sweep, rather than
+discovered afterwards.
+
+**Related and already acted on:** the taxpayer-baseline duplication recorded
+above (105 files) DID have a safe canonical form, because that fact set is not
+revision-scoped -- which is precisely why one was collapsed and this one was
+not. The two look like the same finding and are not.
+
+### Amendment: the safe canonical shape for the M130 casillas already exists and is private
+
+**Measured 2026-08-31**, resolving the "three candidate shapes" left open above.
+
+The revision-keyed accessor is not hypothetical. `casilla_id_for_unique_revision_semantic_role(revision, semantic_role, *, modelo_id)`
+ships in `application/modelo/_semantic_role_resolution.py`, with a stricter
+sibling `casilla_id_for_unambiguous_revision_semantic_role`. It resolves a
+SEMANTIC ROLE to a casilla id **for a given revision**, which is precisely the
+one shape that cannot silently drift as ids renumber -- and it is already the
+production mechanism, used by `_binding_resolution`, `_calculate_input`, and the
+art20, art52, dt12 and attribution advisories.
+
+So the 34 test redeclarations are not merely duplicated, they are duplicating a
+STRUCTURALLY WEAKER form of something the product already does correctly:
+`"01"` frozen as a literal where production asks the revision.
+
+**What blocks the sweep is a boundary, not a design question.** The module is
+underscore-private, and every one of its consumers lives inside
+`application/modelo`. Tests in `application/calculations/tests`,
+`adapters/inbound/declaracion/tests`, `adapters/outbound/google/tests` and the
+rest cannot import it without the cross-package private import the architecture
+rule forbids at a hard-zero baseline. There is no public re-export, and adding
+one is exactly the widening question the C3 editor hit with `_edit_models` --
+settled there by an operator ruling for a narrow application-owned facade
+rather than by publishing the family.
+
+**Corrected from the finding above.** That entry framed this as three candidate
+shapes needing a decision. It is one shape, already chosen and proven in
+production, needing a legal route to reach it. That is a smaller and more
+specific ask, and it is the same boundary question this campaign has now met
+three times -- the edit contract, the operator action catalogue, and now
+semantic-role resolution.
+
+### A failed operation's reason is not visible in its own projection
+
+**Pathway:** `modelo.export` through the registered-executor conformance matrix, 2026-08-31.
+
+With a scenario supplied, `modelo.export` executes and settles `FAILED`. The
+public projection carries `terminal_condition=FAILED`, `refusal_ref=None`, and
+`diagnostic_ref='sha256:33b715bb...'` -- a DIGEST. Nothing in the observable
+projection says why, and the failing test output cannot say either.
+
+**Why that matters beyond this test.** The projection is what a frontend reads.
+An operator whose export fails is shown a terminal failure and a hash. The
+distinction the platform draws between `refusal_ref` (a typed, explainable
+refusal) and `diagnostic_ref` (an opaque stored diagnostic) means an executor
+raising rather than refusing produces an outcome no surface can explain. This is
+the same shape as W07.P16.S340's concern about routing the spreadsheet export
+through the supervisor: the CLI currently maps four executor exceptions to four
+distinct operator messages, and through the platform they would become one
+opaque failure unless each is reconstructible.
+
+**MY OWN MEASUREMENT ERROR, recorded because it is the third of its class today
+and I committed it while documenting the other two.** I grepped the log for
+`thin`, matched it, and was about to record "confirmed: export refuses a
+structurally thin fichero, same completeness gate as filing". The match was
+inside the word "no**thin**g", in an unrelated assertion message. A substring
+search for a short token found a coincidence and it read exactly like
+confirmation of a hypothesis I already believed. The two gate defects repaired
+earlier in this session -- the `_workspace_producers` scan and the discard
+cancellation check -- are the identical error in committed code.
+
+**So the honest state is:** export fails, the cause is opaque, and the
+completeness-gate hypothesis is UNCONFIRMED. It remains plausible -- the export
+authority takes a `verification_repository` and the modelo-export rule does
+refuse thin ficheros -- but a signature and a rule are not a measurement.
+Resolving `diagnostic_ref` through whatever stores it would settle it.
+
+### `modelo.export` raised NameError on every run: a runtime name imported TYPE_CHECKING-only
+
+**Pathway:** `src/cadrumo/application/modelo/operation_definitions.py:114,126,827`.
+Found 2026-08-31 by recovering the exception type behind an opaque
+`diagnostic_ref`.
+
+`ModeloExportCommand` was imported ONLY inside the `if TYPE_CHECKING:` block
+while being CONSTRUCTED at runtime in the export executor's preconditions
+phase. `export_modelo_revision`, from the very same `._export` module, was
+imported at runtime one line above -- so the two halves of one call site were
+split across the type-only and runtime boundaries. Every execution of
+`modelo.export` through the operations platform raised `NameError` before
+reaching the export authority at all.
+
+**Remediation applied:** `ModeloExportCommand` moved to the runtime import
+beside `export_modelo_revision`; `ModeloExportResult`, used only in
+annotations, correctly stays type-only.
+
+**How it survived.** Nothing executed the path. Ruff, mypy and import-hygiene
+all read it as correct -- under `TYPE_CHECKING` the name IS bound for a type
+checker, so static analysis is structurally incapable of seeing this. Only
+execution finds it, and no test executed `modelo.export` until this matrix
+gained a scenario for it. This is the cost of a declared-but-unexercised
+executor stated concretely: the S45 matrix's whole premise is that a definition
+without a scenario proves nothing, and here the unproven definition was
+outright broken.
+
+**Correcting my own prior claim.** I recorded earlier that `modelo.export` was
+plausibly boundary-blocked behind the export completeness gate, reasoning from
+its `verification_repository` dependency and the modelo-export rule. That was
+wrong, and wrong in the more expensive direction: a signature-shaped inference
+nominated an owner ruling for something that was a two-line import defect. The
+same reasoning currently underwrites the `modelo.work.file` and
+`modelo.work.amend` blocked claims, and those are now explicitly UNVERIFIED by
+the same standard -- each needs its exception type recovered before it is
+reported as needing anything from an owner.
+
+**Method, reusable.** The correlation key is deliberately non-reversing, and it
+stays so: it digests `(operation_id, definition_id, exception_type,
+terminal_revision)`, and message, args and traceback are absent by
+construction. But when a failing run is in hand, three of those four inputs are
+known, so enumerating candidate exception classes and matching the digest
+recovers the TYPE without weakening the design. 770 classes, one hit.
+
+### A gate now covers the guard-only-name defect class tree-wide
+
+**Added:** `dev/quality/type_checking_runtime_use_scan.py` and
+`dev/tests/test_type_checking_runtime_use_gate.py`, 2026-08-31.
+
+The export `NameError` above was one instance of a class no tool in this
+repository could see, so it is now scanned for directly. The scanner reuses
+`type_checking_guarded_nodes` from `import_hygiene_scan` rather than walking
+the guard a second time -- a second guard-detector in a gate whose subject is
+duplicate authorities would be self-refuting.
+
+**Proven against real code, not a fixture.** Run over the tree it reports 0
+findings; run over the SAME module as it stands at HEAD it reports exactly 1 --
+`ModeloExportCommand` at HEAD's line 745. The gate is green because the defect
+was fixed, and it demonstrably reds on the genuine article. The durable
+anti-tautology proof in the suite uses an inline source of that exact shape,
+because a HEAD-pinned proof stops proving anything the moment the fix lands.
+
+**Three deferral forms are exempt, and each cost a false positive to learn.**
+The first run reported 13 findings, of which 12 were correct code: PEP 695
+`type X = ...` alias values (11) and a PEP 695 type-parameter bound (1) are
+lazily evaluated exactly as annotations are, so a guard-only name is right
+there. Had I reported that first run as a finding list, twelve of thirteen
+entries would have been wrong. Each exemption now carries a regression test, so
+a future widening of the scanner cannot silently re-acquire them.
+
+**Scope note.** This finds the name that is never bound. It cannot find the
+name bound to the WRONG module, which is the sibling defect and needs
+execution.
+
+### The tree is currently broken by two torn relocations, and no gate sees it
+
+**Measured 2026-08-31** by a static resolve of every first-party
+`from X import name` edge against the names X actually binds. 5,791 modules,
+**63 dangling import names**, concentrated in two in-flight relocations:
+
+| target module | dangling names | production consumer |
+|---|---:|---|
+| `domain.calculations.registry.record_design` | 50 | -- |
+| `adapters.outbound.aeat.browser` | 10 | `sede/declarations.py:50` |
+| `registry.record_design_pdf_row_repairs` | 1 | `record_design_pdf_reader.py:35` |
+| `entrypoints.cli.tests._ledger_ux_support` | 1 | -- |
+| `adapters.persistence.storage` | 1 | -- |
+
+**Both are confirmed by execution, not inference.** Importing the two
+production modules raises:
+
+- `cannot import name 'Profile' from cadrumo.adapters.outbound.aeat.browser`
+- `cannot import name '_uses_page_record_layout' from ...record_design_pdf_row_repairs`
+
+`browser/__init__.py` is now correctly inert (`__all__ = ()`, no imports, no
+`__getattr__`), and `_extract_pdf_text_lines` is defined nowhere in `src/`. So
+in both cases the DEFINITION side of a relocation landed and the CONSUMER sweep
+did not -- exactly what the one-commit atomicity rule for relocations exists to
+prevent, and consistent with the `relocation:*` commits on recent HEAD.
+
+**Not remediated here.** This is another area's live work; editing it would
+collide with the peer mid-relocation. It is recorded so the owners have exact
+targets.
+
+**Consequence for the TUI lane.** The registry breakage makes
+`test_registered_executor_conformance.py` uncollectable, so the modelo matrix
+cannot be run to completion until the peer lands their sweep. That is an
+external block on measuring S333, distinct from the boundary questions.
+
+**The gap worth closing.** Nothing in the repository detects this class. It is
+not a type error and not an import-hygiene violation -- the edge points at the
+right canonical module, the name simply is not there any more. A static
+resolve, which needs no imports and no test run, would have reddened the moment
+the definition moved. A gate is deliberately NOT landed yet: it would be red on
+arrival for reasons this lane must not fix, and a red-on-arrival gate trains
+people to ignore it. It should land with, or just behind, the sweep that closes
+the 63.
+
+### `modelo.work.file` is blocked one step earlier than recorded, and not on a boundary
+
+**Settled by reading, 2026-08-31**, with no test run -- the tree was
+uncollectable at the time and this needed none.
+
+The filing authority refuses at `_filing_actions.py:358`:
+`if target.state is not CalculationRevisionState.VERIFICADO_COMPLETO`, raising
+`CalculationRevisionStateError` with a `precondition_failure`. So the
+verified-complete requirement is REAL -- that much of the original claim
+survives contact with the code.
+
+What does not survive is the remedy. The recorded blocker was "needs a
+verified-complete revision -> casilla-keyed inputs -> boundary ruling", which
+pointed at an owner decision about resolving casillas by semantic role. But the
+file scenario's seeder ALREADY reaches completion through the real authority:
+`_seeded_modelo_verification_report` calls `verify_modelo_revision`, and
+`_verification_actions.py:1264` transitions the revision to
+`VERIFICADO_COMPLETO` on success. The revision should therefore already be in
+the state filing demands.
+
+**So the real question is narrower and purely internal:** why does verification
+not GRANT completion on the seeded zero-activity 1T revision, when the
+`modelo.work.verify` case settles SUCCEEDED? Settling successfully and granting
+completion are different outcomes -- a verify run that reports blocking findings
+succeeds as an operation while leaving the revision in `BORRADOR`. Nothing here
+needs an owner ruling; it needs the post-verify revision state read.
+
+**Next measurement, when the tree collects:** assert the revision's state
+directly after `_seeded_modelo_verification_report` returns. If it is
+`BORRADOR`, the findings that withheld the grant are the actual subject, and
+`modelo.work.amend` -- which sits behind `file` -- moves with it.
+
+**Pattern, third instance today.** `export` was called boundary-blocked and was
+an import bug. `file` was called boundary-blocked and is a verification-grant
+question. Both claims came from reading a dependency in a signature and
+inferring a domain requirement. The inference has now been wrong twice in the
+same direction: toward nominating an owner ruling for something the code
+answers on its own.
+
+### CORRECTION: the "two torn relocations" finding above misread a tree-wide codemod
+
+**Retracted 2026-08-31**, same session, before anyone acted on it.
+
+The finding above reports 63 dangling first-party import names as two
+independent peer relocations that landed their definition side without their
+consumer sweep, and cites the atomic-relocation rule against them. The
+measurements are real -- the imports did dangle, and the two production modules
+did raise `ImportError` when imported. The DIAGNOSIS is what fails.
+
+Minutes later, 2,592 of 6,601 Python files simultaneously failed to parse, every
+one with `IndentationError` at a multi-line `from X import (` that had acquired
+a leading indent. That is a codemod pass across the whole tree, not a hand
+edit, and it was still running: successive counts fell 2592 -> 2491 -> 2448 ->
+2179 -> 1811 -> 1515 as it repaired behind itself. The `record_design` and
+`browser` breakages were almost certainly its leading edge rather than two
+peers each violating the same rule at the same hour.
+
+**Why the wrong reading was so comfortable.** Torn relocation FITS: the repo
+runs an active `relocation:*` campaign, recent HEAD carries three such commits,
+and there is a standing rule about exactly this failure. A hypothesis with a
+rule already written for it feels confirmed on arrival. The count falling 63 ->
+52 was read as a peer converging on their sweep; it was the codemod moving.
+
+**The distinguishing evidence was available and not sought.** One parse of the
+tree would have separated the two readings instantly -- a torn relocation
+leaves every file parseable, and this left a third of them not. The dangling
+imports were counted without ever asking whether the files still compiled.
+
+**Consequence for the inventory.** The 63-name list and its 5-module table are
+WITHDRAWN as a work list. They describe a moment inside a rewrite, not a stable
+state, and nobody should sweep against them. Re-measure once the tree is quiet.
+
+**What survives unchanged**, because none of it depended on that diagnosis: the
+`modelo.export` `NameError` and its fix, the guard-only-name gate, and the
+`file` re-diagnosis -- each established by reading or executing a specific path.
+The standing gap also survives: nothing here detects a first-party import whose
+target no longer defines the name, and that remains worth a gate once there is
+a quiet tree to green it against.
+
+### An inert namespace broke two production call sites, measured on a settled tree
+
+**Pathway:** `adapters/persistence/storage/_profile_custody.py:979` and
+`_profile_login_session.py:45`, 2026-08-31.
+
+Both call `master_key.current_active_bucket_session()` as a PACKAGE ATTRIBUTE.
+`master_key/__init__.py` is now inert, and the function's canonical home is the
+private `master_key/_active_session.py:187`, so the attribute no longer
+resolves: `AttributeError: module 'cadrumo.adapters.persistence.storage.master_key'
+has no attribute 'current_active_bucket_session'`.
+
+**This one is real, unlike the earlier retraction.** It was measured after the
+tree-wide codemod fully converged -- 0 of 6,593 files unparseable, the matrix
+collecting all 26 -- so it is not a mid-rewrite artefact. It accounts for 24 of
+the 26 matrix failures, including `auth.*` cases that passed earlier today.
+
+**Why the dangling-import scan missed it.** That scanner resolves
+`from X import name` edges. This is attribute access on an imported module, so
+there is no import edge naming the symbol at all. The two detectors are
+complementary and neither subsumes the other: a namespace retirement breaks
+BOTH spellings, and a scan for one reports the tree clean.
+
+**Not remediated here.** The mechanical repoint would be
+`from .master_key._active_session import current_active_bucket_session`, but
+that reaches a PRIVATE module from outside its package, which the architecture
+rule forbids -- so closing this needs a decision about the function's public
+home, which belongs to the namespace-retirement lane, not this one.
+
+**Consequence.** S333 remains unmeasurable, now for a third distinct reason in
+one session: first a torn consumer sweep, then a tree-wide codemod, now this.
+The executor-side work is unaffected -- the modelo definitions, the export fix
+and the guard-only-name gate are all independently verified -- but the matrix
+cannot report a modelo conformance count until the storage namespace lands its
+consumers.
+
+### The layering gate went 6/4 to 8/2, and `file`'s blocker finally has a name
+
+**2026-08-31**, all measured on a settled tree (0 unparseable, 5,694 files analysed).
+
+**`master_key` namespace, fixed.** The package `__init__` went inert while ~54
+call sites still reached `master_key.<symbol>` as a package ATTRIBUTE across 12
+files (2 production, 10 tests). Those modules IMPORT cleanly and fail at CALL
+time, which is why every import check reported them green and why this was
+misdiagnosed twice. Five private defining modules were promoted to public homes
+(`_active_session`, `_login_throttle`, `_master_key_derivation`, `_kdf_params`,
+`_bucket_session`) and every consumer repointed to a direct import -- no
+re-export, no `__init__` binding. Dangling first-party imports across the tree:
+63 -> 0, the one survivor being a deliberate absence-gate fixture that says so
+in its own docstring.
+
+**Two layering contracts turned green, both by correcting the contract rather
+than the code.**
+
+- *Only the TUI launcher may wire concrete adapters*: every violation was a
+  TEST module building the real repositories it exercises, which this project
+  mandates over mocks. Pinned with the same fixture pattern already recorded for
+  `domain.**.tests.**` in the same file. Verified first that NO production TUI
+  module outside the launcher imports adapters -- which is the property the
+  contract exists to hold.
+- *TUI feature implementations share components rather than each other*:
+  `operations` was listed as a peer feature. It is not one. It is the shared
+  surface for running any registered operation, parameterised by definition id
+  and owning no domain, and BOTH `modelo` and `profile` consume it -- which is
+  precisely what "share rather than each other" describes. It cannot move under
+  `components` either, since that contract holds components to Textual and
+  neutral core presentation while this depends on `application.operations`.
+
+**`modelo.work.file`'s blocker, named at last.** Verification returns
+`status=blocked` with `cross_period_dependency_unclean`. Not a boundary
+question, not casilla-keyed inputs, not an owner ruling -- the third wrong
+blocker withdrawn from this row today. The canonical
+`seed_clean_cross_period_sources` helper is now wired into the file path.
+Matrix stands at 4 passed / 3 failed for the modelo family.
+
+**A performance claim of mine, retracted within minutes of writing it.** I
+routed `art_109_retained_income_threshold` off a direct `load_registry_tree`
+onto `bundled_authority()`, and wrote a comment asserting it removed a full
+filesystem walk per call from a verification hot path. Then I measured both:
+old repeat 2.38s, new repeat 2.32s -- indistinguishable -- and the authority is
+an order of magnitude SLOWER to build cold (77s vs 7s). The stack trace that
+sent me there was real, but a trace showing a walk does not establish that the
+walk is uncached or that it dominates. The change stands on the
+registry-authority rule alone, the value is unchanged at 0.70 (RD 439/2007 art.
+109), and the comment now says so. Had I not measured, a false performance
+claim would have shipped in a code comment where the next reader would inherit
+it as fact.
+
+### The file case's cost is not the cross-period seeding
+
+**Measured 2026-08-31.** `modelo.work.file` in the conformance matrix exceeded a
+2,400-second per-test budget after the cross-period seeding was wired in, which
+looked like the seeding being unaffordable on this share. It is not.
+
+`application/modelo/tests/test_file_flow_verify.py::test_verify_grants_for_a_closed_past_period_real_registry`
+performs the SAME seeding and the same real verification, grants completeness,
+and passes in **17.5 seconds**. Eleven of thirteen tests in that module pass in
+189s total. So seed-then-verify is affordable by two orders of magnitude, and
+the cost in the conformance case belongs to something else in the integration
+runtime rather than to the domain work.
+
+**Why this matters beyond one slow test.** The obvious reading -- "the seeding
+is expensive, the share is slow" -- is an environmental explanation, and those
+fit every symptom without predicting anything. A single comparable test settled
+it in three minutes. The remaining suspects are specific and checkable: the
+integration fixture registers a profile per case behind a deliberately slow
+Argon2 KDF, and the seeded sources multiply whatever that fixture does per
+operation.
+
+**Incidental, and worth separating from the above:** that module also has two
+genuine failures --
+`test_verify_emits_blocking_rule_when_registry_unresolved_real_registry` and
+`test_mark_verificado_completo_refuses_a_ledger_derived_revision`. They are not
+from this lane's changes (nothing here touched verification), and they are
+recorded rather than fixed because they belong to the verification owner.
+
+**Also note the granting condition.** The passing test is named "for a CLOSED
+PAST PERIOD", which is a real precondition on the grant rather than an
+incidental fixture choice. The conformance fixture files 2025 1T against a
+2026-08-31 clock, so it satisfies that -- but any future fixture that moves the
+period forward will lose the grant for a reason that has nothing to do with
+seeding.
+
+### A timeout stack is not a profile
+
+**2026-08-31**, after chasing two false culprits with it.
+
+The `modelo.work.file` conformance case exceeded 1,800s and again 2,400s. Each
+kill printed a stack, and each stack sat inside registry loading -- first
+`load_registry_tree -> os.walk`, then `load_catalogue_file -> path.resolve()`.
+Both read as "found the bottleneck". Both were wrong:
+
+- `load_registry_tree`: old repeat 2.38s, new repeat 2.32s. Rerouting it to the
+  validated authority changed nothing about speed (and is slower cold, 77s vs
+  7s). It stands as a correctness fix only.
+- `tipo_actividad_code_set -> _legal_parameters`, which carries NO `@lru_cache`
+  while its immediate sibling `load_tipo_actividad_selectors` does: measured at
+  **26ms per call**. Cached downstream. Not the cost either.
+
+**The method error.** A timeout kills the process at an arbitrary instant, so
+its stack shows where execution HAPPENED TO BE, which is biased toward whatever
+runs most often -- not toward whatever is slowest. Frequently-executed cheap
+code is exactly what such a stack surfaces, and it is indistinguishable at a
+glance from a genuine hot spot. Two hypotheses, both confidently wrong, both
+killed by one timing loop each. The comparison that actually informed anything
+was a sibling test: the same seed-then-verify passes in 17.5s as a unit test, so
+the cost is in the integration runtime, not the domain work. The file case's
+real cost remains UNIDENTIFIED, and saying so is more useful than a third
+plausible culprit.
+
+### The facade gate reads HEAD, so it reports on a tree nobody is running
+
+`dev/tests/test_facade_export_gate.py` fails 4 of 9, naming
+`master_key._active_session` and `BucketSession` among its targets, which looks
+like fallout from this lane promoting five master_key modules to public homes.
+It is not. Checked directly: `BucketSession` resolves, the named consumers
+import cleanly, and the tree-wide dangling-import count is 1 -- the deliberate
+absence-gate fixture.
+
+The gate resolves imports against **git HEAD**, and
+`master_key/_active_session.py` does not exist at HEAD at all. So it is
+measuring the namespace campaign's committed state, which is mid-relocation and
+broken, while the working tree that everything actually runs against is sound.
+During a session whose work is deliberately uncommitted, this gate cannot
+distinguish "the author has not committed" from "the import is broken", and it
+reports the second when the first is true.
+
+### What `modelo.work.file` actually costs, measured rather than guessed
+
+**2026-08-31**, after two wrong culprits taken from timeout stacks.
+
+The seeding the file case needs is exactly ONE cross-period source group:
+`('100', 2024, '0A')`, four casillas -- a full annual IRPF return, filed through
+the real external-import door because the clean-state gate accepts nothing
+weaker. Not a fan-out of many sources, as the runtime cost suggested.
+
+The numbers that bound the problem:
+
+| context | same seed-then-verify |
+|---|---|
+| unit (`test_file_flow_verify.py`) | 17.5s, grants completeness |
+| seven modelo conformance cases, no seeding | 128s total, ~18s each |
+| integration file case, with seeding | >1800s, killed |
+
+So the domain work is ~17s and the integration fixture is ~18s per case. Their
+sum is not 1800s. The amplification is in the integration path -- encrypted
+secure storage, per-case profile registration behind a deliberately slow Argon2
+KDF, and whatever an M100 filing multiplies across them.
+
+**Which component amplifies is NOT identified**, and that is where this stops.
+Three candidate explanations remain live and each is cheap to test with a timing
+harness around the fixture stages; none has been tested, so none is recorded as
+the cause. The prior two entries in this audit are what that costs when skipped:
+both named a culprit from a kill-stack and both were wrong by two orders of
+magnitude.
+
+**Consequence for S333.** The file scenario is CORRECT -- its blocker
+(`cross_period_dependency_unclean`) is now named and its seeding is wired to the
+canonical helper. It is not runnable in this environment inside a sane test
+budget, which is a different statement from blocked, and a different statement
+from failing. `modelo.work.amend` sits behind it and inherits the same
+condition.
+
+### The file case's multiplier, identified: M100 carries 2,103 casillas
+
+**Measured 2026-08-31**, closing the entry above.
+
+| revision | casillas | bindings |
+|---|---:|---:|
+| M130 2025 1T (`2019-y-siguientes`) | 20 | 8 |
+| M100 2024 (`2024`) | **2,103** | 67 |
+
+The file scenario's single cross-period source is `('100', 2024, '0A')`, so
+satisfying the clean-state gate means filing a full annual IRPF return through
+`import_external_filing_evidence` -- 2,103 casillas rather than the 20 every
+other modelo case in the matrix touches. A **105x** structural ratio, against an
+observed amplification of >100x (17.5s in the unit context, >1800s in the
+integration runtime). Those agree closely enough to treat the size as the
+multiplier rather than a coincidence.
+
+**What is now known vs still open.** The MULTIPLIER is identified: the file case
+is not doing the same work as its siblings, it is doing a hundred times more of
+it, and no amount of timeout tuning changes that. What remains open is the
+PER-RECORD cost in the encrypted integration path -- 2,103 records taking >1800s
+is roughly a second each, which is high enough to be worth a separate look and
+is NOT claimed here as a defect, because it has not been measured in isolation.
+
+**Why this took four attempts.** The first three explanations came from timeout
+stacks and one plausible-sounding narrative each: a registry tree walk (measured
+equal), an uncached legal-parameter load (26ms), and "the seeding is expensive
+on this share" (17.5s elsewhere). The measurement that settled it -- counting
+the casillas in the two revisions -- took one command and could have been run
+first. Structural size was the cheapest thing to check and the last thing
+checked.
+
+**Practical consequence for S333.** Nothing about the file scenario needs
+fixing; it is correct and its blocker is named. The matrix simply cannot afford
+it at the same budget as its siblings. That is a fixture-economics question for
+the matrix's owner -- accept a long-running case, or seed the M100 source
+through a cheaper door that still satisfies the clean-state gate honestly -- and
+not a defect in the file path.
+
+### QUALIFICATION to the entry above: 2,103 casillas are declared, but only 4 are written
+
+**Same session, minutes later**, before the claim could be relied on.
+
+The entry above states that M100's 2,103 casillas are the multiplier, on the
+strength of a 105x structural ratio matching a >100x runtime ratio. Checked the
+mechanism afterwards, and it does not follow as written:
+`source_casilla_values(source_casilla_ids)` supplies **4 values** -- the four
+casillas the M130 revision actually declares as cross-period sources.
+`import_external_filing_evidence` therefore imports four values, not 2,103.
+
+So the sizes are real and the ratio is real, but the CAUSAL PATH is not
+established. A surviving explanation is that filing an M100 triggers a
+calculation across the whole revision -- 2,103 casillas of formulas evaluated to
+admit four imported values -- which would scale with revision size exactly as
+observed. That is a hypothesis. It has not been measured, and the last three
+hypotheses in this audit that went unmeasured were each wrong by two orders of
+magnitude.
+
+**What stands:** the file case does structurally different work from every other
+modelo case (an annual return rather than a quarterly one), and it cannot run at
+the matrix's ordinary budget. Both are directly measured.
+
+**What does not stand:** that the 2,103 casillas are being written, or that
+per-record encrypted storage cost is the mechanism. A matching ratio is
+suggestive and is not a mechanism, which is the same error as reading a
+kill-stack as a profile -- one level up.
+
+### RETRACTION: the file case is not expensive. It runs in 88 seconds.
+
+**2026-08-31.** The two entries above analyse why `modelo.work.file` cannot
+afford to run -- a 105x structural ratio, an annual-versus-quarterly return, a
+fixture-economics decision for the matrix owner. Run alone with nothing else
+executing, it completes in **88.52 seconds** and fails on an assertion.
+
+Every timeout was self-inflicted. Multiple pytest processes were running
+concurrently against the same registry cache and profile storage while those
+measurements were taken. The project's own local-execution rule says to re-run
+dependent commands sequentially when concurrent runs could contend for the same
+cache, database, port or generated output; that is exactly what was violated,
+and then the resulting contention was attributed to the code under test.
+
+**So the whole chain was wrong, in a specific and instructive way.** Four
+explanations were offered for a phenomenon that did not exist: a registry tree
+walk, an uncached legal-parameter load, encrypted per-record storage cost, and
+M100's 2,103 casillas. Each was investigated seriously and two were measured
+precisely. Precision on a false premise buys nothing -- the ratio really was
+105x, and it explained nothing, because there was no slowness to explain. The
+control that would have caught it -- run the thing once with nothing else
+running -- was cheaper than any of the four investigations and was skipped
+because the phenomenon looked too consistent to be an artefact. It was
+consistent because the contention was.
+
+**The real state of `modelo.work.file`:** it executes end to end in 88 seconds
+and is refused by its own fixture assertion --
+`verification did not grant completeness (status=blocked);
+cross_period_dependency_unclean/blocking`. So wiring in
+`seed_clean_cross_period_sources` did NOT clear the gate, which is a real and
+tractable finding rather than an environmental one.
+
+**Lead worth following.** The passing sibling `_verify_revision` in
+`_file_flow_support.py` seeds through the SAME repository instances it then
+verifies with. The conformance fixture constructs fresh repositories and lets
+`verify_modelo_revision` resolve its own. The fixture's assertion now reports
+the finding's `message_facts` -- source modelo and blockers -- which separates
+"seeded nothing" from "seeded something the gate rejects".
+
+### `modelo.work.file`: the domain path is sound, the platform wrapper is not
+
+**2026-08-31**, with the case running alone in ~50-88s per attempt.
+
+Two defects were fixed to get here, both in the fixture rather than the product:
+
+1. **Identity divergence.** `seed_clean_cross_period_sources` files every source
+   under a hardcoded `X1234567L`, while the clean-state gate compares that
+   evidence's `authenticated_identity` against the ACTIVE PROFILE's tax id. The
+   conformance profile carried `12345678Z`, so the gate refused with
+   `mismatched_external_evidence_record` -- a message naming `source_modelo` and
+   the binding, and never mentioning identity, which is why it read as a seeding
+   failure. The seeder spelled that identity in TWO places; it is now one
+   exported `SEEDED_SOURCE_TAX_ID` whose docstring states the coupling, and the
+   profile capsule takes an identity override (defaulted, so its six existing
+   consumers are untouched).
+2. **A wrong fix of mine, reverted.** I first read the mismatch as the fixture
+   declaring "a second answer for one figure" and removed the previous-filing
+   binding override. That produced `binding has no supplied value`, disproving
+   it: the gate does not compare that value at all, and the unit tests supply
+   zero against the same non-zero seeded evidence and pass. Restored, along with
+   the constant introduced only to support the removal.
+
+**Verification now GRANTS completeness.** The fixture assertion is gone and the
+operation runs end to end.
+
+**What remains is a platform defect, and it is now localised.** The operation
+settles `FAILED` with `effect=UPDATED` and an opaque `diagnostic_ref`; the
+exception type recovered from that digest is `builtins.RuntimeError`. A control
+test added beside the matrix calls `file_modelo_revision` directly in the SAME
+runtime on the SAME seeded, verified revision with the same actor, elections and
+workflow profile -- and PASSES. So the domain filing path is sound and the fault
+is in the executor or the supervisor around it.
+
+**Four candidate `RuntimeError` sources were checked and eliminated** rather
+than assumed: the calculation-repository composition guard (neither filing nor
+verification resolves it), a supervisor thread hop losing a ContextVar (there is
+no thread hop), the async file lock (raises no RuntimeError), and diverging
+election defaults (identical on both sides, `COMPENSAR`/`INGRESO`). The cause is
+not yet identified, and is recorded as unidentified.
+
+**Platform gap this exposes.** An executor that RAISES produces an outcome no
+surface can explain -- no `refusal_ref`, a digest for a message, and nothing
+logged with `exc_info`. Diagnosing it required brute-forcing the digest over 770
+exception classes and then writing a control test to bisect platform from
+domain. That is the concrete cost of the design W07.P16.S340 flags for the
+spreadsheet export.
+
+### Filing can never succeed from any async caller: `asyncio.run` inside the workflow gate
+
+**Root cause, 2026-08-31.** `_workflow_gate.py:347` calls
+`asyncio.run(engine.run_for_period(...))` from synchronous code.
+`file_modelo_revision` runs that preflight gate, so when the registered
+`modelo.work.file` executor -- which is `async` and therefore already inside a
+running event loop -- reaches it, Python raises
+`RuntimeError: asyncio.run() cannot be called from a running event loop`.
+Reproduced directly.
+
+This explains every observation exactly: the operation settles FAILED after
+emitting only `phase(preconditions)` and `effect(UNKNOWN)` -- filing raises
+before `effect(UPDATED)` -- while the control test calling
+`file_modelo_revision` synchronously in the SAME runtime on the SAME revision
+passes. Not a fixture problem, not the share, not registry loading.
+
+**Scope is wider than one operation.** Any async caller is affected, which
+includes the TUI and every registered operation that reaches this gate. Filing
+through the operations platform cannot work today.
+
+**And it reveals that `modelo.work.verify` conforms VACUOUSLY.** Verification
+calls the same gate at `_verification_actions.py:1041`, but guarded by
+`if granted:`. The verify conformance fixture seeds no cross-period sources, so
+verification never grants, the gate is never reached, and the case passes
+without ever exercising its own success path. It would fail the moment its
+fixture became complete enough to grant -- which is exactly what happened to the
+file fixture once seeding was wired in. A green case that is green because the
+subject refuses is the failure mode this matrix exists to prevent.
+
+**Correction to my own reading, an hour earlier.** I reported that the file
+executor reached `effect(UPDATED)` and therefore that filing had succeeded. It
+had not: the only effect event emitted was `UNKNOWN`, and the `UPDATED` I
+matched was a member of the definition's `permitted_effects` frozenset in the
+same repr. Reading a capability declaration as an observed event inverted the
+conclusion.
+
+### Unrelated: one mangled import from a peer rewrite, repaired
+
+`adapters/inbound/justificante/_parsers/text_extraction.py:23` read
+`from ...pdf.cadrumo.adapters.inbound.pdf._utils import sha256_file` -- a
+relative prefix with a full absolute path appended, which a codemod produced.
+It broke collection of every suite importing that package. Repaired to
+`from ...pdf._utils import sha256_file`; a tree-wide scan for the same shape
+found no others.
+
+### All seven modelo executors conform; the last one needed a taxpayer, not a fix
+
+**2026-08-31.** `modelo.export` closed the family. Its `ModeloExportError` was
+recovered from the digest, then localised with the same control technique that
+settled `file`: call the authority directly, outside the supervisor, and read
+the real exception. It said
+`export producer FilingProducerKey.TAXPAYER_SURNAMES is required`.
+
+The cause is a branch, not a missing value. `_taxpayer_identity_facts` populates
+`surnames` only when `taxpayer_type.entity_type == "natural_person"`; every
+other value takes the ENTITY branch, which returns `surnames=None`. The profile
+capsule declared no entity type, so it was treated as an entity -- and the
+`identity.name` / `identity.surnames` facts added minutes earlier were read,
+composed into a legal name, and then discarded. Adding them without the entity
+type looked like a fix and changed nothing observable.
+
+**What the export cases teach about profile readiness.** Three distinct
+thresholds exist and the fixture met them in order: a tax id alone makes a
+profile ready to CALCULATE; a name and surnames make it ready to be NAMED; only
+the entity type makes those names reach a fichero. "Modelo ready" was a single
+flat fact tuple that quietly meant the first of the three.
+
+**Final state of the family:** rename, discard, verify, edit.apply, work.file,
+work.amend and export all conform end to end -- from three at the start of the
+day, and from zero before this row was opened.
+
+**The four exception types recovered by digest brute-force this session**
+(`RuntimeError`, `AmendmentEvidenceMissingError`, `CalculationRevisionStateError`,
+`ModeloExportError`) each named a different real cause, and NONE was visible in
+any projection, log or test output. That technique plus a direct-call control is
+now the documented route for anyone facing a `FAILED` operation with only a
+digest -- and it is worth weighing against simply giving executors a typed
+refusal path.
+
+### The taxpayer readiness baseline exists in 51 distinct shapes
+
+**Swept 2026-08-31**, prompted by having just added three facts to the canonical
+capsule and asking what else claims to be the same baseline.
+
+155 files construct a modelo-ready profile inline. Across them there are **51
+distinct fact-path sets**, and **no path appears in every variant**. The two
+largest are the instructive pair: 24 files and 11 files, both with exactly 16
+paths, differing by one -- variant A carries `censo.activity_start_date`,
+variant B carries `provenance.source`. Same size, same purpose, different
+content, and nothing anywhere reconciles them.
+
+**Why a count is not the measure here.** An earlier note in this campaign
+recorded this as "105 files with the identical fact tuple", which made it read
+as mechanical duplication -- annoying, safe, sweepable. It is not identical. A
+sweep that replaced all of them with one canonical tuple would silently change
+behaviour in every file whose variant carried a path the canonical one lacks,
+and the tests would keep passing because each variant is exactly what its own
+test needs.
+
+**Demonstrated cost, today.** The canonical capsule
+(`src/cadrumo/tests/profile_capsule.py`) omitted
+`taxpayer_type.entity_type`, which 92 of the inline copies DO declare -- the
+canonical version was the deviant. That omission silently routed the export
+binding down its ENTITY branch, discarded the taxpayer's surnames, and refused
+the fichero. The `identity.name` and `identity.surnames` facts added just before
+it were read, composed, and thrown away; adding them looked like a fix and
+changed nothing observable.
+
+**Recorded, not swept.** Consolidating 155 files touches other lanes' fixtures
+while they are active, and the divergence is real rather than accidental, so the
+unit of work is a decision about which paths the baseline OWNS -- not a
+find-and-replace. What the capsule now proves is narrower and true: the three
+readiness thresholds (calculate / be named / reach a fichero) are distinct, and
+a flat tuple cannot express which one a caller needs.
+
+### S353 moved from adjudication to population: 25 items to 21
+
+**2026-08-31.** The sixth measurement of this row reproduced the fifth exactly
+-- the first time it did not grow -- and all 25 items were then ruled against
+the decisions that introduced them. Four are now closed by IMPLEMENTATION
+rather than by ruling.
+
+The graded-snapshot assembler already held the `CasillaDefinition` and was
+reading `legal_refs`, `constraints` and `section` off it while leaving three
+ADR-mandated fields at their defaults. They now populate from that same object:
+`source_refs` from `casilla.source_refs`, `continuity` from
+`casilla.continuidad_id`, `export_exposure` from `casilla.export_refs`. That
+also brings `ContinuityReferenceV1` and `ExportExposureReferenceV1` to life.
+Re-measured by the row's own mandated walk: fields 12 -> 9, types 13 -> 11.
+
+**A distinction encoded in the code, not just the comment.** These fill on the
+GRADED path only. A static inspection has no `CasillaDefinition`, and the
+model's own docstrings already establish that an empty tuple means "declared
+nothing" while `None` means "not measured" -- so populating both paths would
+make the static projection claim grounding it never read. `applicability` stays
+empty because `ApplicabilityRuleId` is not on the casilla at all; it needs a
+different source, and inventing one would put fabricated grounding into a
+filing-adjacent record.
+
+**The two genuinely open items are now held in a gate, not a plan row.**
+`test_workspace_refusal_union_reachability.py` was extended from a single union
+to a `_GOVERNED_UNIONS` tuple so it also governs
+`ModeloWorkspaceEvidenceFactValueV1`, and CountFactValue and FlagFactValue carry
+written rulings there stating what was searched and not found: no ADR mandate,
+no consumer dispatching on fact kind, and arrival in a broad commit rather than
+a decision. That is a thorough NEGATIVE, which points to deletion without
+establishing it. Teeth re-proved after the extension -- planting a stale ruling
+for the produced TextFactValue fails the gate in both directions.
+
+**Why this row resisted five measurements.** `RefreshTarget.bucket_id`, the one
+item ruled DELETE because the ADR forbids physical coordinates from entering a
+Workspace payload, measures identically to the twenty-two mandated ones: zero
+population, zero readers, same shape. No walk can separate them. The
+measurement was never the missing part -- the decisions were.
+
+### The remaining S353 population is not fill-in work, and three fields prove it
+
+**2026-08-31**, after closing four items by implementation (25 -> 21).
+
+The three schema-record fields that closed were genuinely fill-in: the
+assembler already held the `CasillaDefinition` and was reading other fields off
+it. Every remaining field examined since needs either a decision or real
+plumbing, and filling any of them would have been worse than the empty it
+replaced.
+
+**`SchemaRecord.applicability`** -- `ApplicabilityRuleId` is not on the
+`CasillaDefinition` at all. It needs a different source; inventing one puts
+fabricated grounding into a filing-adjacent record.
+
+**`Capability.recovery_action`** -- D7 requires refused AND UNMEASURED actions
+to carry a canonical recovery action. The four UNMEASURED rows are unmeasured
+because the CALLER chose `static_inspection` admission, and the canonical
+`ActionReference` vocabulary is a closed set of OPERATOR actions
+(`work.calculate`, `.create`, `.file`, `.list`, `.describe`, `.bindings.list`,
+`.filing_record.list`, `.verification_report.list`, `profile.edit`).
+Re-requesting with graded admission is a REQUEST PARAMETER, not an operator
+action, so nothing in the vocabulary names the recovery. Writing
+`operator.modelo.workspace.request_graded_snapshot` would make the field
+non-empty and put an action no operator can take into the record whose job is
+telling them what to do next.
+
+**`Capability.source_disposition`** -- this is the sharpest of the three.
+`RegistrySchemaFamilyDisposition` is a FAIL-CLOSED vocabulary whose stated
+purpose is separating "the family does not apply, and here is the citation"
+from "nobody has built it yet", because "read as a bare count, the two are
+indistinguishable, and the second silently reads as the first". Its default,
+`BLOCKED_PENDING_EVIDENCE`, is deliberately never allowlistable. The capability
+assembly site holds only the resolved target and the producer contract -- not
+the revision's family dispositions -- so any value written there would be
+asserted rather than read. Writing `POPULATED` to clear the measurement is
+precisely the silent under-declaration this enum exists to prevent, in the enum
+that exists to prevent it.
+
+**The pattern.** A populate-or-delete row makes filling look like the safe
+default: population is additive, deletion is destructive. It is not. Three of
+these four fields cannot be populated honestly from what the call site knows,
+and a value written to clear a measurement is indistinguishable, in the record,
+from a value that was read. The empty is the honest state until the plumbing or
+the decision exists.
+
+### Stale allowlist keys were suppressing eight real complexity regressions
+
+**2026-08-31**, adjudicating S349's `dev/audit/complexity_allowlist.json`.
+
+All 13 stale paths (19 entries) resolve to a current home: twelve are
+private-to-public or stem renames, and one -- `contribuyente/family.py` -- was
+SPLIT into `family_profile.py` and `family_types.py`, which is the
+"resolves to the WRONG thing" case S348 records as unanswered, present in the
+corpus rather than hypothetical. Its entry resolves cleanly because
+`RentaFamilyProfile` went to `family_profile.py`, but nothing in the PATH could
+have told you that.
+
+**Every entry repoints; none is obsolete.** Verified by AST: each named function
+or method still exists in its successor.
+
+**The measurement that mattered.** Repointing changes the gate's output in a way
+the path fix alone does not explain. With the allowlist AT HEAD: 1 hotspot in
+those modules, 64 total. Repointed: 9 hotspots, 64 total. The total is
+identical, so the entries are not SUPPRESSING anything -- they assert a
+REVIEWED SCORE, and eight functions have since grown past theirs. Keyed to dead
+paths, that assertion matched nothing and the growth went unreported.
+
+So the staleness was not cosmetic. It disabled eight named acceptances, and the
+repoint that fixes the paths also reveals eight functions that outgrew their
+reviewed ceiling. Reverted to HEAD pending that review, because landing a
+repoint that turns eight silent items into gate failures is the owner's call,
+not a path cleanup.
+
+**Three measurement errors of mine on the way here, each caught by a control.**
+A first pass matched allowlist keys `Class.method` against bare function names
+and reported six entries as deletable -- all false. A second read `0 matches in
+the new-or-regressed report` as "the debt is paid", when that report shows only
+NEW or REGRESSED items and a module already in the baseline never appears
+however complex it is; that would have deleted ten exemptions. A third
+attributed a 60 -> 64 drift to my own edit, until reverting showed 64 both with
+and without it -- the drift was peer churn. In each case the control was
+cheap and the wrong answer was fluent.
+
+### CORRECTION: the stale allowlist keys were not hiding regressions, they were misnaming them
+
+**2026-08-31**, after landing the repoint and diffing the hotspot sets.
+
+An earlier entry states that stale keys in `dev/audit/complexity_allowlist.json`
+were SUPPRESSING eight complexity regressions, on the evidence that repointing
+raised hotspots in the successor modules from 1 to 9. That reading was wrong,
+and the total gives it away: **64 before and 64 after**. Nothing was suppressed,
+because nothing appeared or disappeared.
+
+The set diff shows what actually happens. Before the repoint the report listed
+entries like
+`adapters/outbound/google/_records.py::_validate_google_oauth_endpoint` and
+`core/_model_catalogue.py::_validate_catalogue` -- at paths that DO NOT EXIST.
+The tool reports a violated acceptance under its ALLOWLIST KEY, so a stale key
+produced a finding naming a file nobody can open. After the repoint the same
+eight findings appear under their real paths.
+
+**So the defect was legibility, not suppression.** The gate was already failing
+and already counting these eight; it was naming them at addresses that had not
+existed since the private-to-public relocations. A reader chasing
+`_model_catalogue.py` finds nothing and reasonably concludes the finding is
+stale -- when the finding is live and only its address is dead.
+
+**Landed:** all 19 entries repointed to their adjudicated successors, allowlist
+stale paths 13 -> 0, gate unchanged at FAIL/64. Safe to land despite surfacing
+nothing new precisely BECAUSE it surfaces nothing new: the gate was already red,
+so this could not turn a passing gate failing, and every finding it renames
+becomes actionable for the first time.
+
+**The reasoning error worth keeping.** "Successor hotspots went 1 to 9" was a
+real measurement of the wrong quantity. Nine appearing in one place while the
+total held constant means movement, not creation -- and the check that
+distinguishes them, diffing the two SETS rather than comparing two COUNTS, cost
+one command. This is the fourth time in this session a count moved and the
+narrative I attached to it was wrong until I looked at the members.
+
+### Semantic sweep: `modelo_branch_classification` exists twice, whole
+
+**Found 2026-08-31** while resolving S349's stale ledger paths, which is how a
+duplicate hides: the row counted stale PATHS in two files and never asked why
+there were two files.
+
+One concept -- classify every modelo-conditional branch outside the registry --
+has two complete implementations:
+
+| | `dev/quality/` | `dev/registry/analysis/` |
+|---|---|---|
+| module | 463 lines | 221 lines |
+| ledger | `modelo_branch_classification.toml`, 73 paths | same name, 68 paths |
+| tests | `dev/tests/test_modelo_branch_classification.py` | `dev/registry/tests/test_modelo_branch_classification.py` |
+
+Both declare their own `BranchClassification` StrEnum, their own `BranchSite`
+dataclass, their own error type (`BranchClassificationError` /
+`BranchLedgerError`) and their own ledger loader. The docstrings state the same
+purpose in different words: "Classify every modelo-conditional branch outside
+the registry package" against "Derive every modelo-conditional branch outside
+the registry and force one classification". 622 of 684 lines differ, so these
+are not copies that drifted -- they are two independent answers to one question,
+each with its own adjudication ledger.
+
+**Why it matters beyond tidiness.** Each ledger records human judgements about
+whether a branch is routing or regulation. Two ledgers means one branch can be
+adjudicated twice, differently, with no mechanism noticing -- and the two
+corpora already disagree in size, 73 paths against 68. The identical six stale
+paths in both is the tell that they scan overlapping trees.
+
+**Not remediated here.** Choosing which implementation survives is a decision
+about which ledger's judgements are authoritative, and merging two adjudication
+corpora is exactly the kind of work that must not be done by whoever happens to
+notice. Recorded for its owner. The six stale paths in each are separately
+mechanical and resolve unambiguously to public twins.
+
+### Branch adjudication: two closed on the ledger's own vocabulary, one that fits no group
+
+**2026-08-31.** Both `modelo_branch_classification` ledgers repointed to zero
+stale paths, then the unadjudicated branches worked through. Gate went 3 failing
+to 2, unadjudicated branches 4 -> 2.
+
+**Closed, both under the ledger's existing `modelo-scope-guard` group:**
+`_relation_prefill_m202.py::relation_prefill_period_zero_default_binding_ids`
+and `_source_resolver.py::_m347_role_fact_advisories`. Each is
+`if modelo != Modelo.MXXX.value: return <empty>` inside a function named for the
+modelo it serves -- the group's definition exactly, citing the guarded function.
+
+**A first reading I corrected before writing it down.** The M202 branch looked
+like `regulatory_treatment`, because the function it guards resolves carries to
+`Decimal("0")` and that is a filing-grade outcome grounded in a legal fact. But
+the classification is of the BRANCH, not the function: the guard decides whether
+this M202-specific code runs at all, and the zero-value policy lives inside.
+The ledger draws that line explicitly and I had blurred it.
+
+**Not classified, and the reason is the finding.**
+`_modelo_bindings_retenciones.py::resolve::M111` computes
+`is_m111 = str(context.modelo) == Modelo.M111.value` and uses it to select a
+locale key. The refusal fires either way; only its WORDING differs. None of the
+seven declared groups fits: it guards no modelo-specific function
+(`modelo-scope-guard`), routes to no implementation -- the group enumerates
+"an aggregation, a projection plan, an observation shape, a producer profile, a
+repository write" and a message is none of them (`modelo-path-routing`), and it
+decides no obligation (`obligation-condition`). Its own comment says the flag is
+carried in the message "because the typed action channel cannot express it",
+which is the ambiguity stated by its author: a regulatory distinction riding in
+presentation because no typed channel carries it. Forcing it into an ill-fitting
+group would record a judgement nobody made; the honest options are a new group
+or an owner's ruling.
+
+### The branch-classification gate is green, and it took four different dispositions
+
+**2026-08-31.** `dev/tests/test_modelo_branch_classification.py` went from 3
+failing to **7 passed**. Baseline was captured before any edit, so every step
+is attributable.
+
+Five ledger rows needed five decisions, and NO TWO WERE THE SAME KIND:
+
+1. **Carry across a rename** -- `_work_plazo.py::calculated_m210_plazo_notice`
+   and `_relation_prefill.py::relation_prefill_period_zero_default_binding_ids`.
+   Both branches already HAD adjudications, recorded at the paths and symbol
+   names those functions carried before they were relocated and renamed.
+2. **Add new** -- `_source_resolver.py::_m347_role_fact_advisories`, a scope
+   guard genuinely never adjudicated.
+3. **Reclassify on a fuller reading** --
+   `_modelo_bindings_retenciones.py::resolve::M111`.
+4. **Delete** -- `user_profile/preflight.py::report::M111`, whose branch no
+   longer exists in the module OR at HEAD. Its subject is gone.
+5. **Repoint a stale citation** -- an entry cited
+   `calculated_m210_plazo_notice`, a token present nowhere in the tree. That is
+   the `modelo-scope-guard` group's stated design working exactly as intended:
+   "a rename breaks the claim instead of silently outliving it".
+
+**ALL FIVE MEASURE IDENTICALLY FROM OUTSIDE.** "Unadjudicated" and "adjudicated
+at a stale address" are the same signal; so are "obsolete entry" and "entry
+whose subject moved". Only reading the code separates them, which is why the
+row said adjudicated rather than repointed.
+
+**I got it wrong the same way twice, and the failure is instructive.** Told a
+branch was unadjudicated, I wrote a fresh entry -- twice -- when an adjudication
+already existed at the old path. That produced TWO adjudications for one branch
+in a ledger whose primary gate is
+`test_every_branch_carries_exactly_one_adjudication`: satisfying one test by
+violating the one beside it. The correct move both times was to carry the
+original across the rename, so the judgement keeps whoever actually made it.
+Writing a new record where one exists destroys provenance while making the
+measurement go quiet.
+
+**And on the reclassification.** The M111 retenciones branch first read as
+presentation-only: `is_m111` selects a locale key, the refusal fires either way.
+On that reading it fit none of the seven groups and I said so. Reading further,
+it ALSO adds `attestation_period` to the refusal payload, and its comment states
+a tax-law fact -- "Modelo 111 is the one retenciones modelo with a prescribed
+remedy: a quarter with no retenciones is ATTESTED, never filed blank". That is
+`obligation-condition` under the ledger's own test. Stopping at a branch's first
+effect and treating it as the whole effect is the same error as reading a
+capability declaration as an observed event.
+
+### The drift census walks the filesystem; its staleness scan reads git. An untracked file cannot be adjudicated.
+
+**Found 2026-08-31**, after clearing the census to `unadjudicated: 0,
+stale: 0, ambiguous: 0` (exit 0) from 196 unadjudicated and 112 stale.
+
+`dev/quality/regulatory_drift_census.py` DERIVES findings by walking the source
+tree, so it sees untracked files and demands an adjudication for each. The
+campaign's staleness scan resolves ledger paths against `git ls-files` --
+deliberately, and this row records why: "a walk would absorb untracked and
+mid-relocation files and report a peer's in-flight work as drift".
+
+Those two rules collide. Adjudicating a finding the census derives from an
+untracked file writes a ledger path the staleness scan then reports as stale.
+The author cannot satisfy both, and neither tool is wrong on its own terms.
+
+**Observed concretely.** Two files were adjudicated under
+`production-aeat-text-parsers` because the census listed them unadjudicated:
+`record_design_pdf_state.py` and `record_design_workbook.py`. Both are
+simultaneously STAGED-DELETED and PRESENT-UNTRACKED (`D ` and `??` in one
+`git status`) -- a peer's relocation caught mid-move. Two more,
+`filing/draft_review.py` and `filing/producer_snapshot.py`, are plain untracked.
+So the six "new stale paths" that appeared in the five ledgers are not defects
+in the sweep; they are a peer's in-flight work, which is precisely the
+population the git-backed scan exists to exclude.
+
+**Consequence to carry.** A ledger sweep measured against `git ls-files` and a
+census measured against the filesystem will disagree by exactly the set of files
+any peer currently has uncommitted -- so the two numbers are not comparable
+without saying which tree each read. The authoritative gate here is the census
+(exit 0); the path scan's six are informational until the relocation lands.
+When it does, the two adjudications above may need repointing, and that is a
+normal consequence of adjudicating a moving file rather than an error in either.
+
+### A third staleness case: a ledger correct about a tree that does not exist YET
+
+**2026-08-31**, found by chasing a peer's warning about pinned modules in two
+ledgers this session had just swept to zero stale paths.
+
+Four pins read STALE against `git ls-files`:
+`application/filing/producer_snapshot.py` in
+`dev/quality/modelo_branch_classification.toml`, and `draft_review.py`,
+`export_proof.py`, `producer_snapshot.py` in `dev/audit/complexity_baseline.json`.
+All three files exist ON DISK, untracked. The pins already name the PROMOTED
+PUBLIC paths: the ledgers were updated for an in-flight private-to-public
+relocation AHEAD of its commit.
+
+**The sweep would have repaired them backwards.** The disposition applied all
+session -- a stale path resolves to its public twin, repoint it -- is exactly
+wrong here. Repointing `producer_snapshot.py` to `_producer_snapshot.py`
+satisfies the scan today and breaks the moment the promotion lands. The same
+ledgers are MIXED: eight other pins in that promotion name private modules that
+are present in both disk and HEAD and genuinely do need moving.
+
+**A pin ahead of a commit and a pin left behind by one are the same
+measurement.** Only the direction of the in-flight work separates them, and no
+staleness scan can express "correct, pending a commit". This is distinct from
+the two-tools-two-trees case recorded above: there, a tool read the wrong tree.
+Here the file is CORRECT about a tree nobody can observe, and the repair for one
+case is the defect for the other.
+
+**Independently confirmed by an artefact of the churn itself.** The peer
+extracted the same ledger twice, minutes apart, and got `_producer_snapshot.py`
+in the first reading and `producer_snapshot.py` in the second -- one file, both
+spellings, because the relocating agent was editing between the two reads. They
+report having been about to treat the first reading as the state of the world.
+
+**Rule to carry:** never decide a ledger pin from a staleness scan while a
+relocation is in flight. Decide it from what is actually being moved. The scan
+is unreliable in exactly that window, and confidently so -- which is the
+session's recurring shape, a check that answers an adjacent question and reports
+success.
+
+### a-remediations-confirmation-can-be-scoped-to-the-list-it-just-fixed | high | a sweeper fixes a hand-listed set, re-runs a scan scoped to that same list, and reads the green as covering the population
+
+The sub-species this family was missing, produced by the Workspace field finding. It
+is distinct from `an-enumerated-subject-list-is-a-hardcoded-tally-in-disguise`, and
+the difference is worth holding: that finding is about a GATE whose subject list is
+hand-written, where the list is visible in the gate and can be read. This one is
+about the CONFIRMATION STEP OF A REMEDIATION, where no list is written down at all.
+
+The shape. A sweeper is given a set of sites to fix. It fixes them. It then re-runs
+the detecting scan to confirm, and scopes that run to the sites it just touched --
+naturally, because those are the paths in hand and the run is faster. The scan
+returns clean. The clean is real: those sites ARE fixed. What it does not say, and
+what nothing in the output distinguishes, is whether the population outside the
+hand-listed set was ever in scope. The confirmation measures the list, and the list
+was the input to the fix, so the answer was determined before the scan ran.
+
+Why it survives review. Every artefact looks right. The remediation names its sites,
+the confirmation names its command, the command really was run, and its output really
+was clean. A reader checking the work re-runs the same scoped command and gets the
+same green. The defect is not in any step; it is in the scope being inherited from
+the fix rather than derived from the property, and inheritance leaves no trace.
+
+What separates a sound confirmation from this one is a single question: was the
+scan's subject DERIVED from the property, or CARRIED OVER from the work? A sound
+confirmation re-derives the population -- walks the tree, queries the registry,
+enumerates from the definition -- and would therefore report sites the sweeper never
+knew about. If a confirmation cannot fail on a site outside the fix, it is not a
+confirmation of the property; it is a receipt for the diff.
+
+The cheap discriminator, since re-deriving is not always practical: check whether
+the confirmed count and the fixed count are the same number. They usually are in
+this shape, and usually are not when a scan genuinely re-derived its subject.
+Equality is not proof of the defect -- a sweep really can be complete -- but it is
+the prompt to ask where the scan got its paths.
+
+### the-tautology-scan-is-the-only-mechanisable-member-of-this-family | medium | one shape here is decidable by a linter and the rest structurally are not, which is worth stating so the gate is not over-read
+
+A scan now refuses assertions whose verdict is fixed before any operand is
+understood -- constant tests, an `or` against an always-true literal, a value
+compared with itself, `isinstance(x, object)` -- at
+`dev/quality/tautological_assertion_scan.py`, gated by
+`dev/tests/test_tautological_assertion_gate.py`. It is stated as a PROPERTY rather
+than as a list of forms, deliberately, so that constructions nobody has written yet
+fall inside it; a list only ever catches what its author thought of.
+
+The scan reports zero across 6,540 modules today, which is precisely the condition
+under which a gate is worth least and appears worth most: a scan that matched
+nothing and a scan that CANNOT match anything emit identical output. The gate is
+therefore built teeth-first -- every advertised shape is driven through a fixture
+that must be reported, every shape it must not catch through a fixture that must
+come back clean, and the repository sweep is the last assertion in the module rather
+than the first.
+
+The reason to record this as a finding rather than as a closed action is the limit,
+not the capability. Every other instance in this audit required a person to ask what
+an assertion was ABOUT. An assertion that is well-formed, passes, and is simply
+irrelevant to its subject is indistinguishable to any scan from one that is on
+point; that is not a decidable property, and no extension of this scan reaches it.
+A green here says no assertion is trivially true. It does not say any assertion is
+meaningful, and reading it as the family's general answer would reproduce the exact
+error the family exists to record.
+
+**2026-09-07 correction.** The family-wide boundary above was refuted by
+measurement: subsuming disjunctions, self-echoing invocation tokens, and
+locale-bound absence assertions are decidable by static analysis. The bounded
+follow-up refuted corpus-only never-emitted literals because runtime
+composition makes that class indistinguishable from valid guards. The
+historical finding remains intact, while
+`2026-09-07-quality-gate-zero-closure-blind-green-gates-adr` records the
+corrected boundary and preserves corpus-only producer absence and genuinely
+semantic irrelevance as the undecidable remainders.
+
+## Recommendations
+
+Append a new row citing `W05.P23.S307`, scoped to the local-configuration sweep,
+carrying both population definitions and both figures rather than one number.
+Leave `S307` closed.
+
+Sweep by FILE, in concentration order, not by crawling the site list. The seven
+largest holders carry roughly a third of the population between them, which is
+the practical consequence of this being a copied convention rather than
+scattered oversight: the shape was propagated by people following a neighbouring
+module, so it clusters, and a file-ordered sweep converges far faster than a
+site-ordered one. Judge each site as it is reached — repoint to the canonical
+where the divergence is unintended, and record an inline reason where a genuine
+divergence is kept. Treat any default that then fails validation as a latent
+defect to report, never as a regression to work around; that instruction is
+already in `S307`'s own text and is the reason the sweep is worth more than
+tidiness.
+
+Land the subset-refusing census gate only once the sweep is complete, and pair it
+in the same row with an explicit statement that it is not the fix.
+
+For the family as a whole, the durable practice is a question rather than a
+mechanism: of any green gate, ask what it actually asserted, and whether that is
+the same as what its readers believe it covers. No freshness check finds a gate
+that was never right about the thing it is trusted for.
+
+### An absolute-only import census reports live code as dead
+
+**Pathway:** repository-wide import analysis feeding de-export and dead-code work.
+
+A census used to identify package namespaces with no facade-route importers
+resolved `ast.ImportFrom` by matching `node.module` against a full dotted path.
+A relative import carries the bare tail in that field -- `_parsers`, not
+`adapters.inbound.declaracion._parsers` -- so every relative edge was invisible.
+
+Measured on this tree: **35,735 relative import edges against 17,269 absolute**
+inside `src/cadrumo`. The census therefore saw roughly a third of the graph.
+It did not degrade at the margin: re-run with `level` resolved by walking the
+importer's own package upward, the number of namespaces with zero facade-route
+importers was **0**, where the original reported four.
+
+What is lost is the distinguishability of two opposite states. An
+absolute-only scan returns an empty consumer list for a live namespace and for
+a dead one alike, and nothing in its output declares the blind spot -- so the
+result reads as a clean measurement rather than a partial one. Acting on it
+removed `extract_pages_text` from `adapters/inbound/declaracion/_parsers`,
+whose real consumer `_detect.py:23` imports it relatively; the package stopped
+importing, and the breakage surfaced only because the change was probed with an
+actual `import` afterwards.
+
+**Remediation.** Any import census over this tree resolves `level > 0` before
+comparing, and asserts a plausibility floor on its own totals -- a scan of
+`src/cadrumo` reporting fewer than ~30,000 internal edges is missing the
+relative ones and must not be acted on. Independently, a de-export is proven by
+importing the affected package, not by re-reading the census that proposed it:
+the census and the deletion share an assumption, so only execution is a second
+opinion.
+
+### Measured 2026-08-31: the TUI route census claim does not hold
+
+**Pathway:** `src/cadrumo/entrypoints/tui/modelo/routes.py`, and the C2
+accessibility suite that consumes it.
+
+Reported in this family as "a TUI route census built on a hardcoded literal
+set". REFUTED at current HEAD, on reading rather than on relay.
+`declared_destination_ids()` returns
+`frozenset(get_args(ModeloWorkspaceDestinationIdV1.__value__))` -- derived from
+the type alias the view models already address -- and its docstring states the
+reason a literal was rejected: "A literal copy here would be a second
+definition that agrees with the first only until someone edits one of them."
+
+`_require_total_destination_table` then compares the routed table against that
+derived set in BOTH directions, naming missing and extra ids separately, and
+additionally refuses two destinations resolving to one factory. The C2 suite
+asserts the same equality. That is the shape this family holds up as the
+counter-example, not an instance of the defect.
+
+**Remediation.** None. Recorded so the claim is not re-actioned: the second of
+the family's relayed instances to dissolve on measurement, after the sixth that
+this row already records as refuted.
+
+### Actioned 2026-08-31: the workspace remnant scanner carried a stale exclusion
+
+**Pathway:** `dev/tests/test_workspace_assembly_forbidden_paths.py`.
+
+Reported as "a workspace remnant scanner whose pass condition contradicts a
+legitimate docstring". The contradiction itself was already resolved -- three
+files legitimately name the rejected `_workspace_projection.py` and were
+excluded with a stated reason, and the scan matches whole filenames rather than
+substrings, so the live `test_workspace_projection.py` does not false-fire.
+
+What measurement found instead is the failure mode one level along:
+`src/cadrumo/application/modelo/workspace.py` was on the exclusion list and NO
+LONGER NAMES the forbidden module at all. The exclusion suppressed nothing, and
+would have gone on suppressing that file on the day its docstring named the
+module again -- an allowlist entry that has outlived its reason is invisible
+precisely because the gate stays green either way.
+
+**Remediation, landed.** The stale entry is removed, so `workspace.py` is
+scanned like any other module, and each surviving exclusion now asserts that it
+still contains the forbidden token. An exclusion that stops excluding anything
+fails loudly instead of persisting. Proven both directions against the real
+population: the assertion fails for the removed entry and holds for the two
+that remain, which is the both-directions discipline this family's own
+counter-example is praised for.
+
+### Measured 2026-08-31: the readiness fixture is a shared core with scenario tails, not 19 copies
+
+**Pathway:** `_READY_PROFILE_FACTS`, 20 definition sites across the test tree;
+the blocker `W07.P16.S333` names for its remaining payload work.
+
+Recorded there as "package-private and duplicated in 19 files". Measured
+structurally, and the first framing this measurement produced was ALSO wrong in
+the opposite direction: comparing whole AST values reports 19 distinct shapes
+from 20 sites, which is technically true and materially misleading -- two sites
+differing only in `identity.surnames` ("Modelo Selector" versus "Modelo Work")
+count as distinct under that comparison while being the same fixture.
+
+Compared per fact path instead: 15 paths appear in EVERY site, 7 of them
+carrying an identical value everywhere. Of the 8 that vary, most are cosmetic
+labels naming the test (`identity.name`, `identity.surnames`,
+`activities.description`, `identity.tax_id`). A further 14 paths appear in only
+some sites and are genuinely scenario-specific -- the `renta_*` family appears
+in exactly one, `censo.activity_start_date` in seven.
+
+So the population is a real shared baseline with per-scenario tails, not
+nineteen copies of one constant. A shared home is justified for the 15-path
+core; folding the tails into it would manufacture a fixture no test asked for.
+
+**A candidate defect inside it, checked and refuted.** Four IVA facts are
+written as the STRING `'false'` at five sites and the BOOLEAN `False` at the
+rest, and `_result_disposition_resolution.py:391` guards on `if redeme and
+...`, where a non-empty string is truthy -- which would read a
+not-enrolled taxpayer as REDEME-enrolled and resolve a negative period to
+devolución. It does not happen: `UserProfileFact` normalises `'false'` to
+`False` at the boundary, verified by construction. The divergence is cosmetic.
+Recorded because the shape is exactly the one worth checking, and because the
+next reader should not have to re-derive the refutation.
+
+**Remediation.** Give the 15-path core one sanctioned home and let each site
+keep its own tail. Do NOT consolidate on the count alone: the count says
+"nineteen copies", and the members say "one core, nineteen scenarios".
+
+#### Correction, same day: the remediation above would have added a 21st literal
+
+The finding immediately above proposed giving the 15-path core "one sanctioned
+home". That is the wrong shape, and the tree already says so.
+
+`cadrumo.tests.user_profile.complete_profile_facts` is the sanctioned
+mechanism, and its own docstring rules on exactly this: it extends a caller's
+facts by asking the validation service what the schema still reports missing,
+"rather than from a hand-listed set", because "a literal list of required paths
+is a second authority for the schema's own required flags: the moment the
+schema gains one, every profile assembled from the literal is quietly short of
+complete while still calling itself so".
+
+That is the failure mode the 20 `_READY_PROFILE_FACTS` literals already carry.
+Consolidating them into one shared constant would preserve it perfectly -- one
+literal instead of twenty, still a second authority, and now with the
+authority of looking canonical. The count would improve and the defect would
+not.
+
+**Corrected remediation.** Migrate the sites to
+`complete_profile_facts(schema, facts=<the scenario's own tail>)`, which keeps
+each test's meaningful values and lets the schema supply the rest. The shared
+thing already exists; what is missing is its adoption. Verify by adding a
+required field to the schema and confirming a migrated site still assembles a
+complete profile while a literal one does not -- the divergence that a shared
+constant would hide.
+
+### Evidence update 2026-08-31: S361's named ImportError no longer has a source
+
+**Pathway:** `W07.P17.S361` in the tui-architecture plan, an EVIDENCE row that
+records HEAD failing to collect
+`entrypoints/tui/modelo/view/tests/test_work_review.py` with `ImportError:
+cannot import name 'BucketEventHistoryRepositoryProtocol' from
+'cadrumo.domain.buckets'`.
+
+That symbol is now defined in `domain/buckets/protocols.py` and is exported
+from the package namespace in NEITHER the working tree nor HEAD. Every
+consumer -- application bucket-event repository, inventory service, invoice
+creation and lifecycle, ledger classification and common actions -- imports it
+from the canonical defining module. A tree-wide search finds ZERO
+package-namespace imports of it, and the named test file carries no such
+import at HEAD either.
+
+**Scoped precisely, because the row's own subject is the cost of inferring.**
+What is established is that the specific import the row names cannot be the
+source of that ImportError any more. What is NOT established is that HEAD now
+collects the module: an ImportError can arrive transitively, and confirming
+collection requires extracting HEAD and running it, which was not done here.
+The row's standing instruction -- confirm HEAD collects the module before
+reaching for a HEAD baseline, and say so when it does not rather than
+inferring -- applies to this update as much as to the triage it warns about.
+
+**Remediation.** The row closes on the operator's landing decision, not on
+this. Recorded so the decision is taken against current evidence: the
+relocation campaign appears to have dissolved the specific breakage the row
+documents, which weakens the "working tree is more coherent than HEAD"
+argument in the one direction the row measured it.
+
+### Semantic sweep 2026-08-31: the work-target revision comparison is written twice
+
+**Pathway:** `application/modelo/work_addressing.py:1128` (the canonical
+`assert_work_target_revision`) and `application/modelo/workspace.py:250` (the
+Workspace revision-axes resolver). Found by semantic search rather than by
+symbol grep, which cannot see it: the two sites share no identifier.
+
+Both implement the SAME rule over the SAME two axes. The canonical authority
+skips a `None` candidate, takes `candidate.strip()`, compares it against the
+law-determined revision, and RAISES `ModeloWorkRegistryYearMismatchError` on
+inequality. The Workspace resolver skips a `None` candidate, takes
+`candidate.strip()`, compares it against the law-determined revision, and
+RECORDS the axis in a mismatched set. Same normalisation, same comparison, same
+per-axis independence -- only the disposition differs.
+
+The split itself is defensible and documented: a read projection wants the
+divergence as typed data, because an exception escaping there would destroy the
+information the typed refusal exists to carry. What is not defensible is that
+the COMPARISON is open-coded at both sites. The Workspace docstring even names
+the canonical function and states that it "is not called here". Two copies of
+one rule drift silently: a change to normalisation -- case folding, a revision
+id that gains a suffix, a different strip -- lands at one site and the other
+goes on answering the old question, and the surfaces disagree about whether a
+taxpayer's stored revision matches the law.
+
+**Remediation.** Extract the pure per-axis comparison into one function
+returning the diverging axes, and have BOTH consume it: the authority raising
+on a non-empty result, the Workspace recording it. No behaviour changes, and
+the raise site and the record site become incapable of disagreeing. Verify by
+altering the normalisation in the extracted function and confirming BOTH
+surfaces move together.
+
+**Related, same subject.** The Workspace's recorded mismatch currently reaches
+no consumer at all -- see the refusal-union reachability finding: the
+disposition is computed, attached to the resolved target, and read by nothing
+in production. Consolidating the comparison does not fix that; it makes the two
+gaps independent, which is what lets each be closed on its own evidence.
+
+### Semantic sweep 2026-08-31: `facts` names three different shapes across the refusal surfaces
+
+**Pathway:** `ModeloWorkspaceDomainRefusalV1.facts`,
+`ModeloEditDomainRefusalV1.facts`, and the work-review blocker's `facts`.
+
+The two domain-refusal types share SEVEN field names -- code, evidence, facts,
+kind, reconsideration_condition, recovery_action, responsible_owner -- and
+three of the seven carry different types. `code` differing is correct: the two
+contracts have distinct refusal vocabularies. `facts` differing is not.
+
+Measured shapes for one concept name:
+
+- Workspace: `tuple[ModeloWorkspaceEvidenceFactV1, ...]`, typed name/value
+  evidence facts.
+- Edit: `tuple[_BoundedText, ...]`, bounded by `_MAX_MESSAGE_ARGUMENTS`.
+- Work-review blocker: consumed as `dict(blocker.facts)`, so a mapping.
+
+The edit ADR settles what the middle one IS, and it is not facts: decision D3
+specifies findings carrying "approved MESSAGE ARGUMENTS, and safe evidence
+references". A field holding message arguments is named `facts`, sitting beside
+another refusal type whose `facts` holds typed evidence, and a third surface
+whose `facts` is a mapping. This is the same collision class as the
+`section_path` case: one name, one type-shaped slot, three meanings, and prose
+as the only thing distinguishing them.
+
+**A second, independent finding at the same site.** All FOUR production
+constructions of `ModeloEditDomainRefusalV1` pass `code`,
+`reconsideration_condition`, `responsible_owner` and sometimes `address` -- and
+none passes `evidence`, `facts` or `recovery_action`. Decision D5 of the same
+ADR requires each refusal to carry "a stable code, affected address or
+boundary, safe requested and selected coordinates, owner, reconsideration
+condition, and safe evidence reference". The evidence reference is therefore an
+UNBUILT MANDATE in the edit contract exactly as it is in the Workspace one, and
+must not be deleted on a zero-population measurement.
+
+**Remediation.** Rename the edit contract's `facts` to what the ADR calls it,
+so the three surfaces stop sharing a name for three shapes; and treat the
+absent evidence reference as a build, tracked with the Workspace's equivalent
+rather than separately -- the two are one gap in two contracts, and closing
+either alone leaves an operator-facing refusal that still cannot say why.
+
+#### Landed 2026-08-31: the revision comparison now has one home
+
+`diverging_work_target_revision_axes` in `application/modelo/work_addressing.py`
+is the single comparison. `assert_work_target_revision` raises on a non-empty
+result; the Workspace revision-axes resolver records the same result as typed
+dispositions. The dispositions still differ, which was always correct; the
+comparison no longer can.
+
+- `verify:` `pytest test_work_addressing.py test_workspace.py test_revision_id_d1_contract.py` -> `82 passed`
+- `verify:` behaviour across the cases that separate the two spellings ->
+  whitespace-padded values match, a genuine divergence is named per axis, an
+  absent axis never diverges, and each axis is judged against the law-determined
+  revision alone.
+
+Noted against my own work: the first pass left an `if True:` in
+`assert_work_target_revision`, a scaffold kept while restructuring around the
+raise block. It parsed, it lint-passed, and it would have sat permanently in one
+of the most safety-critical functions in the tree. Caught by reading the diff,
+not by any tool -- the third mechanical edit this session that was syntactically
+clean and wrong.
+
+### Blocked 2026-08-31: the C3 editor cannot be built until the edit contract is public
+
+**Pathway:** plan rows `W06.P12b.S72` through `S79` of the tui-interface plan,
+which specify five TUI modules under `entrypoints/tui/modelo/edit/`.
+
+The directory does not exist, and the reason is not that nobody started: the
+contract those modules must consume has no public defining module.
+`ModeloEditSubmissionV1`, `ModeloEditBaselineV1`, `ModeloScalarEditIntentV1`,
+`ModeloEditNewRowCorrelationV1` and 59 further exports live in
+`application/modelo/_edit_models.py`, with nine more in `_edit_services.py`.
+Both are underscore-private.
+
+Measured: every current importer of either module sits INSIDE
+`application/modelo/`, which is package-internal and legal. The contrast is
+exact -- the TUI's existing workspace destinations reach their types through
+the PUBLIC `application.modelo.workspace_models`, and `application.modelo`
+itself is an inert namespace that binds nothing. So a TUI editor module has no
+legal route: importing `application.modelo` gets nothing, and importing
+`application.modelo._edit_models` is the cross-package private import the
+architecture rule forbids and the import-hygiene family holds at a hard-zero
+baseline.
+
+This was found by writing the session module and discovering it could not
+import what it needs. The module was removed rather than left in the tree
+importing a private path, because a file that cannot legally import its own
+dependencies is not partial progress.
+
+**Remediation.** A prerequisite relocation, not editor work: hard-move
+`_edit_models.py` and `_edit_services.py` to public defining modules, updating
+every production, test and annotation consumer and deleting the old paths
+atomically, exactly as `workspace_models.py` already is. 72 exported symbols
+across the two. It is one relocation per the campaign's own discipline, and it
+belongs to whoever owns that atomicity, since it must land as a single indexed
+commit.
+
+**Why this matters beyond the eight rows.** They read as an unstarted build,
+and they are not: they are blocked on an architectural precondition none of
+them names. Anyone picking up `S72` will write the same module and hit the same
+wall, having spent the effort to discover it. The rows should carry the
+prerequisite so the next reader does not rediscover it.
+
+Re-attested through the owning edit verb after this session's findings were
+appended by hand, so the body fingerprint matches its stamp.
+
+Re-attested through the owning edit verb; body fingerprint matches its stamp.
+
+### Correction 2026-08-31: two absence claims in this audit were the pattern, not the tree
+
+Two findings recorded earlier today asserted that something did not exist. Both
+were wrong, and both failed the same way: an empty search result was read as
+absence in the CODE when it was absence in the PATTERN or the PATH searched.
+
+The first claimed the Google Sheets export is not a registered operation. It is
+-- `GOOGLE_SHEETS_EXPORT_OPERATION_DEFINITION_ID` at
+`application/export/google_operation.py:66`, with phases, a definition builder
+and a registration builder. The search grepped the literal `definition_id="..."`
+kwarg form, which is what TEST fixtures use, while every real registration
+builds an `OperationDefinition` from a module-level constant. The same finding
+also claimed no censal path submits through the supervisor, having read
+`entrypoints/cli/_config/_censo_transport.py` and never opened
+`entrypoints/censal_review.py`, where the submission is.
+
+The second claimed the edit contract has no public defining module, blocking the
+C3 editor. `application/modelo/edit_contract.py` is exactly that module and says
+so in its docstring. The accurate finding is narrower and more useful: it
+publishes four symbols and deliberately withholds the intent and submission
+family, on the stated premise that no consumer outside the package addresses
+them -- a premise the C3 editor would falsify. That makes the editor's
+prerequisite a DECISION about where the boundary sits, not the 63-symbol
+relocation the original finding proposed, which is the precise widening that
+docstring rejects.
+
+**The rule this yields.** A non-empty grep carries its own evidence; an empty one
+carries none. Before recording an absence, point the same pattern at an instance
+known to exist -- if it does not light up there either, the pattern is the
+finding. Cheaper still, enumerate by construction: listing the package's public
+modules would have put `edit_contract` first on the page.
+
+The cost was not a wasted search. Both wrong claims were written into plan rows
+that were correct, and a row reading "premise corrected" or "blocked" presents
+as settled, so a confident wrong correction is worse than the uncertainty it
+replaced.
+
+### Two baselines with OPPOSITE comparison semantics, and one name
+
+**Pathway:** `ModeloWorkspaceBaselineV1` in `application/modelo/workspace_models.py` and `ModeloEditBaselineV1` in `application/modelo/_edit_models.py`.
+
+Both are called a baseline. They are compared in opposite ways, and nothing at either site says so.
+
+The WORKSPACE baseline is deterministic. Every field is a content digest or a resolved coordinate -- token, contributor stamp and epoch digests, target, selected revision, schema identity, locale catalogue digest -- and it carries NO timestamp and NO minted id. Whole-record equality is therefore meaningful, and the codebase relies on it: `workspace.py:1482` compares `cursor.baseline != baseline`, and `workspace_models.py` does the same at four further sites to keep a facet, a cursor and a projection pinned to one read. Those comparisons are correct.
+
+The EDIT baseline is not. It carries `issued_at`, `expires_at` and `baseline_id`, because it is a time-bounded admission authority rather than a content identity. Two admissions of an UNCHANGED tree are never equal, so whole-record equality can only ever report "different".
+
+**Measured cost of the collision, on 2026-08-31.** The editor session answered staleness by comparing two edit baselines, carrying the workspace's pattern across to a record that cannot support it. The stale signal was permanently on, which is worse than absent: an operator warned of a conflict on every refresh learns to dismiss the one warning that protects a concurrent edit. Corrected to ask `reconfirm_modelo_edit_baseline`, the contract's own compare-and-swap, which judges the coordinate axes rather than the record.
+
+This is the `section_path` collision class again -- one word, two meanings, prose as the only thing keeping them apart -- but sharper, because here the two meanings imply CONTRADICTORY handling and the wrong one fails silently rather than loudly.
+
+**Remediation.** Neither type needs renaming for correctness, but each should state its comparison contract where a reader meets it: the workspace baseline that it is content-derived and comparable, the edit baseline that it is admission-scoped and must be compared through the compare-and-swap. A sweep confirmed no OTHER production site compares an edit baseline by record equality; the one that did was mine.
+
+### One ruling would unblock three findings: how a consumer outside `application/modelo` reaches a private authority
+
+Three separate items in this audit and its sibling plans reduce to the same
+question, and answering it once resolves all three. They are recorded here
+together because, stated apart, each reads as its own design problem and none
+looks decidable.
+
+**The shape, common to all three.** A capability is implemented correctly,
+lives in an underscore-private module, and has consumers only inside its own
+package -- so nothing is wrong with it. Then a consumer outside that package
+needs it. The architecture rule forbids both available routes: importing the
+private module is a cross-package private import at a hard-zero baseline, and
+reaching it through a re-exporting namespace is a prohibited re-export.
+
+**Instance one, already ruled on and therefore the precedent.** The C3 editor
+needed the Edit Contract intent and submission family from `_edit_models`. The
+operator ruled: keep the family private, and add a NARROW APPLICATION-OWNED
+FACADE taking operator-level calls, so the frontend holds a handle rather than
+the contract types. `application/modelo/edit_session.py` is that facade, and it
+works -- it is what let W06.P12b.S72 through S79 close.
+
+**Instance two.** `application/operator_actions/` holds the canonical action
+catalogue behind three private modules, and its `__init__.py` re-exports 15
+symbols, which is itself a live violation of the inert-namespace rule. Recorded
+on interface W06.P12c.S80. That row turned out not to need the catalogue, so it
+closed -- but the violation stands on its own and the next consumer will meet
+it.
+
+**Instance three, this audit's most recent.** `casilla_id_for_unique_revision_semantic_role`
+in `_semantic_role_resolution.py` is the revision-safe way to resolve a casilla
+by meaning rather than by frozen number. Thirty-four test modules across four
+packages currently hardcode `"01"` instead, because they cannot legally reach
+it.
+
+**Why one ruling rather than three.** The facade precedent answers the shape,
+not just the edit contract: publish the narrow operator-level call a consumer
+actually needs, not the implementation family behind it. Applied to instance
+three that is a single revision-keyed resolver; to instance two, whatever an
+action surface genuinely invokes. What is NOT settled -- and is the actual ask
+-- is whether that precedent GENERALISES, or was specific to the edit contract
+because a frontend was the consumer. A TEST is the consumer in instance three,
+which may or may not earn the same treatment.
+
+**Until it is answered, the honest state of each is unchanged:** the literals
+stay local, the namespace violation stays recorded, and no row is closed by
+reaching through a boundary to make a gate green.
+
+### Sequencing note for the four remaining modelo conformance scenarios
+
+Measured 2026-08-31, after three of seven were brought to conformance. The four
+remaining are not equally blocked, and treating them as one backlog wastes the
+distinction.
+
+**`file` and `amend` wait on the boundary ruling, not on fixture work.** Filing
+marks a VERIFIED-COMPLETE revision, and a zero-activity return verifies without
+being complete -- correct product behaviour. A substantive revision needs
+casilla-id-keyed inputs, and those ids are the mapping redeclared in 34 modules
+whose revision-safe resolver is private to `application/modelo`. `amend` then
+needs the filed record `file` produces, so it sits behind both.
+
+**`export` is probably in the same class but was NOT confirmed.** Its authority
+takes a `verification_repository`, which suggests it shares the completeness
+requirement, and the modelo-export rule already refuses a structurally thin
+fichero. That is an inference from a signature, not a measurement -- worth one
+run before assuming it.
+
+**`modelo.edit.apply` is the one that avoids the boundary entirely**, and is
+therefore the best next target. Its scenario can resolve its casilla
+DYNAMICALLY from the admitted permitted surface rather than naming one, which
+is how the C4 enrolment suites already do it -- so it needs no casilla constant
+and no ruling. Its payload can be built through
+`ModeloEditApplySubmissionV1.from_submission`, the domain-to-wire translation
+added under interface W06.P12b.S77, rather than a second translator.
+
+**What makes it larger than verify's fixture, so the next attempt is not
+surprised:** `admit_modelo_edit` takes catalogue OBJECTS (`WorkUnitCatalogue`,
+`CalculationRevisionCatalogue`), not the repositories the conformance runtime
+holds, so both must be loaded first; it also takes a compatibility tuple, of
+which only the request and result schema identities are actually checked by
+`_incompatible_axis`. The guarded apply then re-resolves the baseline at the
+commit point, so the fixture must not let the tree move between admission and
+submission.

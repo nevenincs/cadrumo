@@ -1,0 +1,779 @@
+---
+tags:
+  - '#exec'
+  - '#cli-distribution-consolidation'
+date: '2026-09-02'
+modified: '2026-09-17'
+body_schema: 'body-v2'
+body_hash: 'sha256:1c26d859dffcadce533e080bc42de1aa008807a56062174f3486a36ad35fe437'
+related:
+  - "[[2026-09-02-cli-distribution-consolidation-plan]]"
+---
+
+# `cli-distribution-consolidation` ledger
+
+## Changes
+
+- `S01` `T`
+- `S02` `T`
+- `S03` `T`
+- `S03` `verify:` `curl -s -o /dev/null -w '%{http_code}' https://pypi.org/pypi/cadrumo/json` -> `404`
+- `S04` `T`
+- `S05` `T`
+- `S06` `T`
+- `S07` `T`
+- `S08` `T`
+- `S09` `T`
+- `S10` `T`
+- `S11` `T`
+- `S12` `T`
+- `S13` `T`
+- `S14` `T`
+- `S15` `T`
+- `S16` `T`
+- `S17` `T`
+- `S18` `T`
+- `S19` `T`
+- `S20` `T`
+- `S21` `T`
+- `S22` `T`
+- `S23` `T`
+- `S24` `T`
+- `S25` `T`
+- `S26` `T`
+- `S27` `T`
+- `S28` `T`
+- `S29` `T`
+- `S30` `T`
+- `S31` `T`
+- `S32` `T`
+- `S33` `M` `RELEASING.md`
+- `S34` `A` `dev/packaging/distribution_cap.py`
+- `S34` `A` `dev/packaging/tests/test_distribution_cap.py`
+- `S34` `M` `justfile`
+- `S34` `M` `.github/workflows/publish.yml`
+- `S34` `verify:` `just packaging-distributions` -> `pass`
+- `S34` `verify:` `uv run --no-sync pytest -q -n0 dev/packaging/tests/test_distribution_cap.py` -> `pass`
+- `S35` `M` `dev/smoke/smoke_check.py`
+- `S35` `verify:` `uv run --isolated --no-project --find-links var/distributions --with cadrumo==0.2.2 dev/smoke/smoke_check.py` -> `pass`
+- `S36` `T`
+- `S36` `verify:` `python packaging/scoop/generate.py --cohort-dir var/cohort --version 0.2.2 --release-base-url ... --output ...` -> `pass`
+- `S36` `verify:` `python packaging/homebrew/generate.py --cohort-dir var/cohort --lock uv.lock --version 0.2.2 --release-base-url ... --output-dir ...` -> `pass`
+- `S38` `D` `dev/packaging/publication_inputs.py`
+- `S38` `D` `dev/packaging/tests/test_publication_inputs.py`
+- `S38` `verify:` `uv run --no-sync pytest -q -n0 --collect-only dev/packaging/` -> `pass`
+- `S40` `D` `dev/packaging/evidence_leak_sweep.py`
+- `S40` `D` `dev/packaging/tests/test_evidence_leak_sweep.py`
+- `S40` `verify:` `uv run --no-sync pytest -q -n0 --collect-only dev/packaging/` -> `pass`
+- `S41` `D` `dev/release/environment_inventory.py`
+- `S41` `D` `dev/release/promote_python_cohort.py`
+- `S41` `D` `dev/release/version_bump.py`
+- `S41` `D` `dev/release/_asset_transport.py`
+- `S41` `D` `dev/release/tests/test_environment_inventory.py`
+- `S41` `D` `dev/release/tests/test_promote_python_cohort.py`
+- `S41` `D` `dev/release/tests/test_promote_pypi_destinations.py`
+- `S41` `D` `dev/release/tests/test_version_bump.py`
+- `S41` `M` `dev/release/tests/test_justfile_release_guidance.py`
+- `S41` `M` `RELEASING.md`
+- `S41` `verify:` `uv run --no-sync pytest -q -n0 dev/release/tests/test_justfile_release_guidance.py` -> `pass`
+- `S41` `verify:` `uv run --no-sync ruff check dev/release/` -> `pass`
+- `S42` `M` `RELEASING.md`
+- `S42` `M` `docs/_release_notes_template.md`
+- `S42` `M` `dev/packaging/_distribution_limits.py`
+- `S42` `verify:` `uv run --no-sync pytest -q -n0 dev/packaging/tests/test_cadrumo_data_distribution.py dev/packaging/tests/test_distribution_cap.py` -> `pass`
+- `S43` `M` `justfile`
+- `S43` `verify:` `just --list` -> `pass`
+- `S43` `verify:` `just release-readiness` -> `blocked, as documented`
+- `S44` `M` `.github/workflows/packaging-quick.yml`
+- `S44` `M` `.github/workflows/packaging-smoke.yml`
+- `S44` `M` `.github/workflows/ci-full.yml`
+- `S44` `M` `dev/ci/tests/test_wall_advisory.py`
+- `S44` `verify:` `uv run --no-sync pytest -q -n0 dev/ci/tests/ dev/packaging/tests/test_packaging_quick_workflow.py dev/packaging/tests/test_evidence_release_transport.py` -> `pass`
+- `S45` `M` `RELEASING.md`
+- `S45` `M` `src/cadrumo/tests/test_release_config.py`
+- `S46` `M` `docs/_release_checklist.yaml`
+- `S46` `M` `dev/containers/runner_capabilities.py`
+- `S46` `M` `dev/runners/README.md`
+- `S47` `M` `dev/packaging/tests/test_distribution_evidence_emit.py`
+- `S47` `M` `dev/packaging/tests/_release_cohort_support.py`
+- `S47` `M` `dev/packaging/distribution_evidence_emit.py`
+- `S47` `M` `dev/packaging/_installed_wheel_binding.py`
+- `S47` `A` `dev/packaging/tests/test_launcher_stub_projection.py`
+- `S47` `M` `.github/workflows/ci-full.yml`
+- `S48` `M` `dev/release/version_identity.py`
+- `S48` `M` `dev/release/tests/test_version_identity.py`
+- `S48` `A` `dev/release/tests/test_publish_workflow.py`
+- `S48` `M` `dev/packaging/tests/test_packaging_smoke_workflow.py`
+- `S48` `M` `.github/workflows/publish.yml`
+- `S48` `M` `.github/workflows/packaging-smoke.yml`
+- `S48` `M` `Dockerfile`
+- `S48` `M` `dev/containers/runner_capabilities.py`
+- `S48` `M` `dev/runners/runner-entry-linux.sh`
+- `S48` `M` `dev/runners/README.md`
+- `S49` `M` `dev/packaging/python_cohort.py`
+- `S49` `M` `dev/packaging/runtime_wheelhouse.py`
+- `S49` `M` `dev/packaging/release_cohort.py`
+- `S49` `M` `dev/packaging/build_scratch_reclaim.py`
+- `S49` `A` `dev/packaging/tests/test_var_scratch_mint_sites_are_registered.py`
+- `S49` `M` `dev/packaging/tests/test_python_cohort.py`
+- `S49` `M` `dev/packaging/tests/test_runtime_wheelhouse.py`
+- `S49` `M` `dev/packaging/tests/test_release_cohort_integration.py`
+- `S49` `M` `dev/packaging/tests/test_build_scratch_reclaim.py`
+- `S49` `M` `packaging/scoop/tests/test_scoop_generate.py`
+- `S49` `M` `packaging/homebrew/tests/test_homebrew_generate.py`
+- `S50` `A` `dev/packaging/build_scratch_reclaim.py`
+- `S50` `A` `dev/packaging/conftest.py`
+- `S50` `A` `dev/packaging/tests/test_build_scratch_reclaim.py`
+- `S50` `M` `dev/packaging/tests/test_release_cohort_integration.py`
+- `S51` `M` `bucket/README.md`
+- `S51` `M` `dev/deploy/docs_static_site.py`
+- `S51` `M` `dev/ci/tests/test_workflow_tool_invocation.py`
+- `S51` `M` `.github/workflows/runner-fleet-health.yml`
+- `S51` `M` `dev/ci/tests/test_scratch_prefixes_are_reclaimed.py`
+- `S52` `M` `dev/release/version_identity.py`
+- `S52` `M` `dev/release/burned_versions.py`
+- `S52` `M` `dev/release/tests/test_version_identity.py`
+- `S52` `A` `dev/release/tests/test_version_identity_probes.py`
+- `S52` `M` `src/cadrumo/tests/test_release_config.py`
+- `S52` `M` `RELEASING.md`
+- `S52` `M` `docs/_release_checklist.yaml`
+- `S53` `A` `dev/ci/workflow_runner_targets.py`
+- `S53` `M` `dev/ci/tests/test_self_hosted_fleet.py`
+- `S53` `M` `dev/ci/tests/test_runner_queue_watchdog.py`
+- `S53` `M` `dev/ci/tests/test_ci_workflow.py`
+- `S53` `M` `dev/ci/tests/test_machine_aware_load.py`
+- `S54` `M` `justfile`
+- `S54` `M` `dev/ci/lane_reachability.py`
+- `S54` `M` `dev/tests/test_lane_reachability.py`
+- `S54` `M` `dev/ci/tests/test_machine_aware_load.py`
+- `S55` `M` `dev/packaging/tests/test_smoke_core_payload.py`
+- `S55` `M` `packaging/scoop/tests/test_scoop_generate.py`
+- `S55` `M` `packaging/homebrew/tests/test_homebrew_generate.py`
+- `S56` `M` `packaging/scoop/tests/test_scoop_generate.py`
+- `S56` `M` `packaging/homebrew/tests/test_homebrew_generate.py`
+- `S57` `M` `dev/packaging/_smoke_common.py`
+- `S57` `M` `dev/packaging/tests/test_smoke_core_payload.py`
+- `S58` `M` `src/cadrumo/core/resources/bundled_data.py`
+- `S58` `M` `src/cadrumo/domain/calculations/registry/record_design_sources.py`
+- `S58` `A` `src/cadrumo/domain/calculations/registry/tests/test_record_design_annotation_survives_the_data_split.py`
+- `S58` `M` `src/cadrumo/core/resources/tests/test_corpus_companion_seam.py`
+- `S60` `A` `dev/scripted_registration_channels.py`
+- `S60` `A` `dev/packaging/_recovery_enrollment.py`
+- `S60` `A` `dev/packaging/tests/test_recovery_enrollment.py`
+- `S60` `M` `dev/packaging/_command.py`
+- `S60` `M` `dev/packaging/installed_tax_oracle.py`
+- `S60` `M` `dev/packaging/tests/test_command_execution.py`
+- `S60` `M` `dev/agent_eval/tests/_scripted_registration_channels.py`
+- `S60` `M` `dev/agent_eval/tests/test_lifecycle_contradiction_golden.py`
+- `S60` `M` `dev/agent_eval/tests/test_active_profile_confirmation_golden.py`
+- `S61` `M` `dev/packaging/tests/test_container_base_image_singularity.py`
+- `S61` `M` `dev/packaging/tests/test_preflight_recipe_selection.py`
+- `S62` `M` `dev/packaging/campaign.py`
+- `S62` `M` `dev/packaging/tests/test_preflight_recipe_selection.py`
+- `S62` `M` `justfile`
+- `S63` `T`
+- `S63` `verify:` `pytest dev/quality/tests/test_namespace_retirement_sweep.py -n0 -m ''` -> `pass`
+- `S64` `M` `dev/packaging/_installed_wheel_binding.py`
+- `S64` `A` `dev/packaging/tests/test_installed_interpreter_binding.py`
+- `S65` `M` `dev/packaging/python_cohort.py`
+- `S65` `M` `dev/packaging/tests/test_python_cohort.py`
+- `S66` `M` `dev/packaging/tests/test_smoke_scoop_harness.py`
+- `S66` `M` `dev/packaging/tests/test_command_spec_source_lanes.py`
+- `S66` `verify:` `pytest dev/packaging/tests/test_smoke_scoop_harness.py -n0 -m ''` -> `pass`
+- `S66` `verify:` `pytest dev/packaging/tests/test_command_spec_source_lanes.py -n0 -m ''` -> `pass`
+- `S66` `verify:` `ruff check` -> `pass`
+- `S66` `verify:` `python -m dev.quality.types` -> `pass`
+- `S67` `M` `dev/ci/runner_queue_watchdog.py`
+- `S67` `M` `dev/ci/tests/test_runner_queue_watchdog.py`
+- `S67` `verify:` `pytest dev/ci/tests/test_runner_queue_watchdog.py -n0 -m ''` -> `pass`
+- `S67` `verify:` `ruff check dev/ci/` -> `pass`
+- `S67` `verify:` `python -m dev.quality.types` -> `pass`
+- `S68` `M` `release-please-config.json`
+- `S68` `M` `.github/workflows/release-please.yml`
+- `S68` `verify:` `pytest dev/ci/tests/test_action_pinning.py -n0 -m 'unit or integration'` -> `pass`
+- `S68` `verify:` `release-please tagged v0.5.1 and set autorelease: tagged unaided` -> `pass`
+- `S68` `verify:` `pypi.org serves cadrumo 0.5.0 and 0.5.1, wheel and sdist` -> `pass`
+- `S69` `M` `dev/packaging/installed_mcp_oracle.py`
+- `S69` `M` `dev/packaging/tests/test_missing_llm_extra_refuses_instructively.py`
+- `S69` `M` `dev/packaging/tests/test_distribution_evidence_emit.py`
+- `S69` `verify:` `ruff check` -> `pass`
+- `S69` `verify:` `python -m dev.quality.types` -> `pass`
+- `S69` `verify:` `_guarded_definition_names() derives 7 guards, previously 0` -> `pass`
+
+## Notes
+
+- `S02` No source change was required. The contracts landed in the preceding Step were
+- `S02` verified against the probe's own conditions - the three distributions built,
+- `S02` installed into an isolated site, and the probe run with `AEAT_INSTALL_SITE` and
+- `S02` `AEAT_DEPENDENCY_SITE` bound to it - and returned the same deltas with a zero exit
+- `S02` for all three paths. The Step's purpose was confirmation, and the values it would
+- `S02` have re-pinned were already correct.
+- `S03` The reservation is held by a PyPI pending publisher rather than by an uploaded
+- `S03` distribution, so no path in this tree changed and the index still reports 404 for the
+- `S03` name - the expected observable state, because a pending publisher reserves a name
+- `S03` without creating a project. The binding claims owner `nevenincs`, repository `cadrumo`,
+- `S03` workflow `publish.yml` and environment `pypi`. The `pypi` deployment environment was
+- `S03` absent from the repository and was created; without it the publish job claims an
+- `S03` environment the OIDC token cannot attest.
+- `S04` The preceding Step in this Phase, publishing the primary name's reservation, is left
+- `S04` open: it is an irreversible write to an external index and needs credentials that are
+- `S04` not available to the executing agent. The binding specification landed here is what
+- `S04` makes that Step actionable for whoever holds them.
+- `S07` The check ships asserting metadata, import, the version report and the root command
+- `S07` families. The MCP console script and the headless full-screen start are not asserted
+- `S07` yet: neither exists until the harness merges into the wheel and the root option is
+- `S07` routed. Both assertions are carried by the Steps that create the surfaces they test.
+- `S09` The repository-wide prohibition was retired rather than narrowed to an allowed list.
+- `S09` Ten jobs across four workflows already relied on artifact storage to hand a built
+- `S09` cohort from the job producing it to the jobs proving it, and three of those lanes
+- `S09` survive this decision. An allowed list would have left the gate permanently red over
+- `S09` legitimate use. The invariant that holds is that no workflow reads an artifact from
+- `S09` another run, which is asserted directly and carries a defect proof.
+- `S10` The per-job polling exemption in the self-hosted gate named two jobs of the retired
+- `S10` orchestrator, so it is removed; the workflow-level split covers the release path.
+- `S10` `dev/release/alerting.py` survives because the documentation delivery workflow still
+- `S10` invokes it, but its gate asserted which release-path workflows carry an alert job and
+- `S10` had no subject left once those three were deleted. It is retired with them, so the
+- `S10` alerting module's remaining consumer is currently ungated. That coverage gap is real
+- `S10` and is not closed by this Step.
+- `S10` The publish workflow gained a checkout in its upload job: the toolchain pin gate
+- `S10` requires the repository's own interpreter pin to be readable before the toolchain is
+- `S10` set up.
+- `S11` The smoke assertion this Step's action names is not added here: it belongs with the
+- `S11` smoke check itself, and the command surface it would probe cannot currently start
+- `S11` because of an unrelated import failure in the CLI's command-spec support module.
+- `S11` The directional gate keeps its import half and loses its metadata half. The import
+- `S11` assertion - that no module under the command tree reaches the agent package - still
+- `S11` holds and still has teeth. The metadata assertions did not survive the merge: one
+- `S11` forbade a published dependency edge between two distributions that are now one, and
+- `S11` another forbade a product console script pointing into the agent package, which is
+- `S11` precisely what the decision mandates.
+- `S11` The package rose two levels in the tree, so four modules computing the repository root
+- `S11` from their own file depth were resolving outside it. One of them was the directional
+- `S11` gate, which scanned an empty file set and passed on an empty assertion rather than
+- `S11` failing - a gate finding nothing to scan is indistinguishable from a gate finding no
+- `S11` violations.
+- `S11` The constraint export previously named the agent distribution deliberately, because as
+- `S11` a workspace member its resolution was the union of both distributions' third-party
+- `S11` closures. With one distribution the product's own closure is that whole surface, so the
+- `S11` coverage guard that asserted the union became tautological and is retired with the
+- `S11` helper that fed it.
+- `S12` Carried by the merge Step: the sub-project's own project file, the workspace table, the
+- `S12` path source pin and the development-group self-reference all had to go in the same
+- `S12` change that moved the package, or the environment would have resolved a distribution
+- `S12` that no longer builds. The lockfile no longer records the distribution at all, and a
+- `S12` frozen sync uninstalls it.
+- `S13` The artifact-kind members for the two host-extension channels are deliberately left in
+- `S13` place. The channel descriptor still declares those channels, and a parity gate requires
+- `S13` every kind to be surfaced by exactly one channel, so removing them here would break that
+- `S13` gate. They retire with the descriptor.
+- `S13` Two surfaces beyond the Step's literal scope had no subject left once the channels went:
+- `S13` the distribution-identity verifier, which checked identity text across the plugin,
+- `S13` marketplace and bundle manifests, and two oracle tests driving the marketplace plugin and
+- `S13` the real-client emitter.
+- `S13` `dev/packaging/publication_inputs.py` still names the retired capture command in a
+- `S13` refusal string. Nothing invokes that module now that the orchestrator is gone, and the
+- `S13` module retires with the launch-phase vocabulary, so the reference is left for that Step
+- `S13` rather than edited twice.
+- `S14` The configuration collapses from three keys, a package selector and an absolute
+- `S14` working directory to a single command name. The guide's checkout preparation section
+- `S14` goes with it: there is nothing to clone, because the server is on the reader's path
+- `S14` once the product is installed. The instruction not to use a normal install "until
+- `S14` public distribution is announced" is removed with the arrangement that made it true.
+- `S15` The local descriptor is gone with the host-extension channel it served, so nothing in
+- `S15` this repository advertises the plugin any more. The live listing is a separate
+- `S15` repository and remains published: it still serves the pre-rename plugin under the
+- `S15` former product name. Withdrawing it is an outward action on that repository, not a
+- `S15` change here, and it is not covered by this Step.
+- `S16` The enrolment gate carried a hardcoded set of enrolled command keys that the new
+- `S16` declaration falsified, and a second gate asserted the bare root path refuses as
+- `S16` unimplemented. Both expectations were stale rather than wrong in kind: the root path
+- `S16` now refuses on console capability instead, which is what proves the request is routed.
+- `S18` The console-capability refusal protects an interactive operator from a terminal that
+- `S18` cannot render. A runner proving an installed artifact starts has no terminal at all, so
+- `S18` the check is lowered for the self-test alone and its default leaves every existing
+- `S18` caller unchanged.
+- `S18` The session runs out of process, so the flag is carried to the child rather than acted
+- `S18` on in the command layer; the module-execution surface reads it and runs the session
+- `S18` headless.
+- `S18` The wiring is verified end to end: the flag is accepted, the console refusal is
+- `S18` bypassed, and the child session starts. It then fails inside the operation registry's
+- `S18` own composition, identically when the module is executed directly, so that defect is
+- `S18` not in this path.
+- `S19` Each locale carries a real translation rather than a copy of the source string.
+- `S20` The smoke-check assertion this Step's action names is not added: the distribution smoke
+- `S20` check probes an installed artifact, and the full-screen session cannot currently reach a
+- `S20` clean exit because of a defect in the operation registry's composition. Adding an
+- `S20` assertion known to fail would make the smoke check dishonest.
+- `S21` No new probe was written. Five forms already prove the cohort installs and runs without
+- `S21` a container - a uv virtual environment, plain pip, an sdist build, the optional extras,
+- `S21` and the joined three-wheel cohort - and each holds the artifact under test and nothing
+- `S21` else. The container form's only additional claim was a clean operating system, bought
+- `S21` with a daemon the fleet cannot supply on every target, and it is the reason one declared
+- `S21` platform has never produced a passing row.
+- `S22` Both lanes that carried a container form lose it, and every profile that selected one
+- `S22` drops the entry. No prove leg now requires a reachable container daemon, so the same
+- `S22` lane set runs on each declared target rather than passing on some and being
+- `S22` unschedulable on others.
+- `S23` The descriptor is now an inventory at schema version two: identity, platform, install
+- `S23` commands, package and repository names, artifact kinds and evidence rows. The tier
+- `S23` vocabulary, the availability states, the product-property block feeding the
+- `S23` cross-product tier rule and the pending-tier register are all gone.
+- `S24` Both enums, the tier rule, the product-property model, its cross-check validator, the
+- `S24` claim derivation and the availability note are removed. Rendering no longer withholds a
+- `S24` channel's commands.
+- `S24` The unevidenced-claims gate is scoped to hand-authored prose rather than retired. A
+- `S24` generated zone is derived from the inventory, and every channel in the inventory owes
+- `S24` its rows before a release publishes - the readiness gate holds that half. Prose that
+- `S24` advertises a channel by hand still needs evidence already on disk, which is the half
+- `S24` this gate holds, and it is the half with teeth.
+- `S25` Rows are the union over every listed channel. A channel that cannot be proven leaves
+- `S25` the inventory rather than sitting in it unproven, so there is no longer a state where a
+- `S25` declared channel blocks nothing.
+- `S26` No rename was needed. The sealed candidate record retired with the bespoke release
+- `S26` path, so the field naming the claimed channel set no longer exists to carry the
+- `S26` vocabulary.
+- `S27` The page names the primary registry and defers to the generated channel table for the
+- `S27` commands themselves, rather than repeating them in prose. Duplicating them was the
+- `S27` defect: install commands have one authoritative home, the channel inventory, and a hand
+- `S27` written copy both forks that fact and makes an acquisition claim the page cannot back.
+- `S27` The generated table is safe to carry the commands because documentation is delivered
+- `S27` downstream of a release, and a release cannot publish without the evidence rows its
+- `S27` channels owe. A reader therefore only ever sees commands for a version that shipped.
+- `S27` The page's beta framing, its checkout instructions and its links to a release page that
+- `S27` does not exist are gone with it.
+- `S28` Verified by building the wheel, installing it into a 3.14 environment, and running
+- `S28` both console scripts there: the command reports its version and renders its full
+- `S28` command tree, and the agent server responds. That is the artifact a user receives.
+- `S28` The development test suite was not executed on 3.14: doing so needs the whole developer
+- `S28` toolchain resolved for that interpreter, which the frozen environment does not carry.
+- `S28` The closure resolves and every compiled dependency publishes 3.14 wheels for all three
+- `S28` shipped platforms, so nothing is known to block it.
+- `S29` Workflows select runners by label set, not by name, so the rename itself is an
+- `S29` operator action on the runner registrations and the fleet manifest rather than a change
+- `S29` here. Two in-repo surfaces named a runner and are corrected.
+- `S29` The label comment claimed the Scoop label keeps other Windows lanes off the publication
+- `S29` runner. Labels are additive and this fleet has one Windows runner, so the label selects
+- `S29` that runner for the Scoop lane and excludes nothing. Isolating the publication path
+- `S29` needs a second runner, not a second label.
+- `S30` Deleting them exposed a gate that had been passing on them: the watchdog gate required
+- `S30` the shared module to be invoked by script path, and only the probes did that. Every
+- `S30` shipping lane invokes it as a module, so the gate had never actually constrained them.
+- `S30` It now names the form the lanes use.
+- `S31` Six sites cited the document for one fact - that runners share machines with other
+- `S31` repositories' runners, so a pool is sized for co-residency rather than for the whole
+- `S31` box. Each now states it where the sizing decision is made.
+- `S32` The gate opened by naming a runner count that three documents disagreed about. It
+- `S32` asserts that no lane uses an unbounded worker count, which holds at any number, so the
+- `S32` count is gone rather than corrected to a fourth value.
+- `S33` The two corpus distributions carry project-level Trusted Publishers, and the primary name
+- `S33` its pending one. Confirmed by the operator, which is the only evidence that exists: a
+- `S33` publisher registration lives inside the account and no probe from this repository or
+- `S33` request to the index can observe one.
+- `S33` The runbook previously stated the two corpus bindings as outstanding. That was inferred
+- `S33` from the distributions existing on the index and never measured, so it was an assertion
+- `S33` about a surface this repository cannot see. It now states the rule that decides the
+- `S33` binding form and says plainly that the first publish run is what demonstrates all three.
+- `S34` The publish workflow carried a bash copy of the index cap as the literal
+- `S34` `100000000`, which is the drifting duplicate `dev/packaging/_distribution_limits`
+- `S34` exists to prevent. The check now reaches that single declaration. It lives in its own
+- `S34` module rather than as a subcommand of the cohort builder because the publish job runs
+- `S34` before any development dependency is installed, and importing the cohort builder there
+- `S34` fails on its unresolved third-party imports; the new module imports only the standard
+- `S34` library and was exercised under a bare system interpreter to prove it.
+- `S34` All six distributions build and clear the cap: the two product distributions at 74.5 MB
+- `S34` and 59.6 MB, and the four corpus files between 76.2 MB and 77.5 MB. Measured on Windows
+- `S34` against the local interpreter rather than a hosted runner.
+- `S34` The immutable cohort builder refuses to run here at all, because it requires a clean
+- `S34` source snapshot and this worktree carries other contributors' work. Cohort-based
+- `S34` evidence needs a detached worktree at `HEAD`, which is how the remaining Phase `P09`
+- `S34` steps should obtain it.
+- `S35` The check covered one console script and asserted nothing about the second, so an
+- `S35` artifact that shipped without a working `cadrumo-mcp` would have passed. It now proves
+- `S35` the script resolves, offers its real option, and that the server runtime the entry point
+- `S35` defers importing is actually present in the artifact. The server is not started: it is a
+- `S35` stdio transport and would block until its peer closed the stream.
+- `S35` Teeth demonstrated by running an altered copy naming a console script that does not
+- `S35` exist; the run failed at the new check with a non-zero exit while every earlier check
+- `S35` still passed. The altered copy was kept outside the tree.
+- `S35` Measured against the locally built wheel on Windows rather than on the three hosted
+- `S35` runners the publish workflow uses.
+- `S36` No file in the tree changed: the step proves the two generators produce channel artifacts
+- `S36` from a real cohort, and both do. The Scoop manifest carries the three wheel digests and
+- `S36` the Homebrew formula the source-archive digest, each matching the cohort the builder
+- `S36` sealed at `0.2.2`.
+- `S36` The cohort itself cannot be built in a shared worktree - the builder requires a clean
+- `S36` source snapshot - so it was built in a detached worktree at `107286084c`. The generators
+- `S36` are invoked as scripts rather than modules because the repository root holds a directory
+- `S36` named `packaging`, which the installed distribution of the same name shadows on the
+- `S36` module path; the workflows already invoke them by path for this reason.
+- `S36` Measured on Windows. The Homebrew formula was not audited by `brew`, which needs a macOS
+- `S36` or Linux host.
+- `S36` Two divergences from the target surfaced and are recorded in the research document:
+- `S36` neither channel exposes the second console script, and both source their artifacts from
+- `S36` release assets rather than from the index.
+- `S38` The module was not merely unreachable, it could no longer be imported: it binds
+- `S38` `claimed_channels` out of the download matrix, and that function went when the tier and
+- `S38` availability model was deleted. Its whole purpose was deriving dispatch inputs for
+- `S38` `publish-release.yml`, a workflow the adopted release path replaced.
+- `S38` The name also appears in the registry tests, where `_publication_inputs` is a local
+- `S38` fixture builder with no relationship to this module. Read in context rather than counted,
+- `S38` so the deletion is not driven by a collision.
+- `S40` The sweep was held open because whether it was dead or merely dormant depended on how the
+- `S40` managed channels sourced their artifacts. That is now settled: both generators address
+- `S40` the index, no workflow attaches an asset to a release, and a standing gate forbids the
+- `S40` packaging workflows from reaching the releases API at all. The hazard it guarded - a
+- `S40` runner hostname or an operating-system username riding into an asset published on a
+- `S40` release - has no path to occur.
+- `S40` Deleting a security control needs the hazard gone rather than the control unreferenced,
+- `S40` which is why this waited on the channel decision rather than being counted as residue
+- `S40` alongside the other unreferenced modules.
+- `S41` The family is down to four modules, each with live consumers: readiness, version
+- `S41` identity, burned versions and alerting.
+- `S41` Each deletion was checked for a hazard it still guards rather than counted as
+- `S41` unreferenced. `version_bump` executed the bump stage of a workflow that no longer
+- `S41` exists, and the release pull request does that now. `promote_python_cohort` validated a
+- `S41` cohort for a publication flow that was replaced by building from the tag; its index
+- `S41` guard delegated to `version_identity.assert_version_available`, which survives with
+- `S41` consumers, so no refusal was lost. `_asset_transport` documented one remaining consumer,
+- `S41` and that consumer was the evidence-collection recipe removed in the preceding step.
+- `S41` `environment_inventory` was the closest call. Its capability is real - it reads forge
+- `S41` environment state, which is the class of gap that hid a missing deployment environment
+- `S41` earlier in this work - but it carried operator-obligation identifiers in its code and
+- `S41` prose, which the codebase does not admit, and its expected environment list named a
+- `S41` design that is gone while omitting the one the publish job actually claims. The
+- `S41` capability is preserved in the runbook as two commands whose output was checked against
+- `S41` this repository rather than assumed.
+- `S41` One failure in this run was mine: removing the evidence-collection recipe left the gate
+- `S41` that asserted its contents behind. Removed with it.
+- `S42` The runbook drove `release-orchestrator.yml` as the command that starts a release, eight
+- `S42` times, and that workflow no longer exists. It also described a rehearsal mode, a sealed
+- `S42` candidate namespace, and a close step, none of which the adopted path has. A reader
+- `S42` following it could not have released anything.
+- `S42` It now describes what merging the release pull request actually does, and states two
+- `S42` things an operator would otherwise discover the hard way: the readiness gate blocks on
+- `S42` an evidence set that cannot be satisfied before a first release, and the managed
+- `S42` channels address release assets no workflow produces.
+- `S42` Two consequential corrections came with it. The release-notes template linked to a
+- `S42` `#rollback-procedure` anchor that never existed in the runbook, and the limits module
+- `S42` listed the runbook among the surfaces stating the cap in prose, which it no longer does.
+- `S43` `release-collect-evidence` is gone in both host variants. It downloaded evidence rows
+- `S43` from draft releases tagged `evidence-<lane>-<run-id>`, a transport a live gate forbids
+- `S43` every workflow from creating; its own comment asserted the inverse of the current design,
+- `S43` claiming Actions artifacts were retired; it named a companion emitter that does not
+- `S43` exist; and it counted toward a row total the descriptor no longer declares.
+- `S43` Four stale references went with it: the release group's own preamble still named the
+- `S43` retired publication workflow and its environment, the release preview printed that an
+- `S43` orchestrator applies the bump, and two recipes linked to a runbook anchor that never
+- `S43` existed.
+- `S43` No recipe invokes a module or workflow that is absent - checked across the whole file
+- `S43` rather than the release group. The surface stays large at ninety-nine recipes against
+- `S43` the siblings' handful, but the remainder are live developer commands, and cutting those
+- `S43` would be a judgement about what is used rather than a removal of what is broken.
+- `S44` Three workflows described a publication authority that no longer exists, pinning gate
+- `S44` contracts to `publish-release.yml`. No workflow now names a file absent from the tree,
+- `S44` checked across the whole family rather than the packaging group.
+- `S44` `ci-full` also carried project metanarration in two shapes forbidden in the codebase: a
+- `S44` note that it was formerly another filename, and two steps introduced as replacements for
+- `S44` numbered gates in a retired workflow. Both are gone; what each step asserts is unchanged.
+- `S44` A second red gate surfaced while verifying and was repaired rather than left. The wall
+- `S44` advisory's consumer-parity check named two files and read them directly, and one had
+- `S44` been deleted, so the check raised a missing-file error that reads as a threshold failure
+- `S44` and is not one. It now discovers declarations under `dev/` instead of naming them, and
+- `S44` counts what it read: a discovery check that finds no consumer is indistinguishable from
+- `S44` one where every consumer agrees, so finding nothing is now itself a failure. Teeth added
+- `S44` for a consumer that widens its own copy.
+- `S44` The family stays at sixteen workflows against the siblings' eight. The packaging and
+- `S44` acquisition lanes prove channels whose source is unresolved, so consolidating them
+- `S44` further waits on that decision.
+- `S49` The cohort's artifacts are byte-reproducible only under the release path's
+- `S49` environment stamp. A parity build without it produced identical member
+- `S49` listings with sizes differing by one to several hundred bytes -- archive
+- `S49` timestamps, not content. Under the stamp the release build sets, all eight
+- `S49` digests match the reference. This is a property of the builder rather than a
+- `S49` defect, and is recorded because a future parity check run bare will look
+- `S49` broken and is not.
+- `S49` Five failures remain in the packaging suites, all one root cause and all
+- `S49` predating this work: the runtime wheelhouse is a required manifest key, and
+- `S49` three hand-assembled cohort fixtures never add one, so the loader refuses on
+- `S49` drifted keys. The helper those fixtures need already exists.
+- `S53` One failure remains in the suite and is left deliberately: the ledger scale benchmark's CPU budget. The breaching quarter moves between runs while the workload is strictly monotonic, and a fixed first-quarter workload varied 34% on the same tree, so the reading is host contention rather than a regression. The budget was not widened.
+- `S54` The new directory-level gate is RED against the tree, and deliberately so. It
+- `S54` reports five test directories no lane sweeps: the container, registry
+- `S54` conformance, registry parity, smoke and TUI packages. All five were added the
+- `S54` same day by other campaigns, several carry failing tests of their own, and the
+- `S54` pre-existing file-level gate already reports the same five. Wiring them into a
+- `S54` lane here would import another contributor's failures into a lane this change
+- `S54` owns, so the finding is left visible and unclaimed rather than silenced or
+- `S54` absorbed.
+- `S54` The class was larger than the Step assumed. Seven directories qualified, and
+- `S54` the one the Step named was not among those the file-level gate could see: its
+- `S54` single module IS named by a recipe, so every file-level question passed while a
+- `S54` second module added beside it would have run nowhere. That asymmetry is the
+- `S54` reason the directory question needed asking.
+- `S55` The three fixtures assembled a cohort without the runtime wheelhouse the
+- `S55` manifest requires, so the loader refused each one before any assertion in
+- `S55` those tests ran. Two of them also hand-rolled a source archive carrying no
+- `S55` lock at all, which would have failed the next check even once the wheelhouse
+- `S55` landed; both now route through the paired helpers, whose archive and
+- `S55` wheelhouse bind to the same lock by construction.
+- `S55` Repairing the fixtures made three assertions reachable for the first time,
+- `S55` and all three fail. That is a strictly better state than the refusal that hid
+- `S55` them, not a regression introduced here, and the three are tracked separately.
+- `S55` One of them contradicts a generator change made earlier in this campaign and
+- `S55` could never have passed since; it went unseen because a different refusal
+- `S55` fired first, which is what a suite too slow to run locally costs.
+- `S56` All three assertions were gate defects; neither generator changed.
+- `S56` The Scoop manifest installs by name at an exact version from the index, so no
+- `S56` filename can appear in its install hook. Three assertions still demanded one,
+- `S56` and only the first was ever reported because it aborted the test. The rewrite
+- `S56` pins what the adopted design does guarantee -- the exact-version requirement,
+- `S56` the cache and constraint flags -- and closes the companion chain by reading the
+- `S56` built root wheel's own metadata. The cohort's filename and digest binding is
+- `S56` genuinely no longer provable through that manifest, and no assertion was
+- `S56` invented to pretend otherwise.
+- `S56` The excluded client library had a recorded reason: it belonged to a separate
+- `S56` distribution the formula does not install. Folding that workspace member into
+- `S56` the main package retired the reason and made the library a mandatory
+- `S56` requirement of the distribution the formula does install. Excluding it
+- `S56` generator-side would ship a formula missing a dependency, since each resource
+- `S56` installs without its own dependency resolution.
+- `S56` The build-backend comparison drew its expectation from every locked row, a set
+- `S56` far wider than the formula's contract, so an unrelated development pin governed
+- `S56` a build backend and moved with every lock refresh. It now asserts the
+- `S56` properties that must hold -- an immutable digest-derived index address, an
+- `S56` archive, a name that normalises to the resource -- and that every declared
+- `S56` backend is emitted with no fourth escaping. Two further restatements of the
+- `S56` same constants were removed with it.
+- `S57` The expectation was the defect, not the build root. The wheel is identical on
+- `S57` both branches -- the builder's file selection already honours version-control
+- `S57` ignore rules -- so only the expectation moved, which is why the refusal always
+- `S57` read as missing paths and never as surplus ones. A filesystem walk counted
+- `S57` ignored artifacts as payload the wheel must carry; every other inventory in the
+- `S57` pipeline already asks version control, and one consumer had been passing the
+- `S57` live repository as its build root unconditionally, so the sealed-extract
+- `S57` invariant the docstring asserted was never upheld anywhere.
+- `S57` The replacement tightens rather than relaxes the gate: under the old walk an
+- `S57` ignored artifact that genuinely leaked into a wheel was expected, and passed
+- `S57` silently. It now fails as surplus.
+- `S57` Repairing this reached a further defect that the earlier refusal had hidden by
+- `S57` aborting before the install: corpus annotations ship in a different
+- `S57` distribution from the binaries they annotate, so an installed split reads two
+- `S57` record designs as partial while the same validation passes from source. It is
+- `S57` tracked separately.
+- `S58` The defect reached three times as far as the failing gate showed. Ten annotated
+- `S58` record designs diverged under an installed split, not two, because only two of
+- `S58` them are reached by the validating load at all. One modelo reported itself
+- `S58` COMPLETE across both revisions while silently not applying two declared
+- `S58` corrections, which is worse than the incomplete reading that raised the alarm:
+- `S58` wrong values, nothing missing, nothing said. Another raised outright.
+- `S58` Nothing moved between distributions. The companions' partition contract already
+- `S58` states that only binary suffixes travel and derived surfaces stay, and one
+- `S58` annotation family cannot be colocated at all -- its extracted text must remain
+- `S58` in the root wheel for grounding search while its binaries ship in a companion.
+- `S58` Colocation was therefore never available as an invariant, only as a
+- `S58` coincidence that each new annotation family would have to re-earn in two
+- `S58` exclude lists and a build hook.
+- `S58` The resolution seam already existed and was documented as canonical; the
+- `S58` annotation loader was the one caller that had escaped it with a raw sibling
+- `S58` lookup. Two divergent copies across roots is now a refusal naming both, since
+- `S58` spanning roots to find an annotation means a mis-partitioned cohort could offer
+- `S58` two and installation order would otherwise decide a grounding question.
+- `S58` Two correction sidecars annotate a binary that exists in neither the source
+- `S58` tree nor any companion. They duplicate a live sibling whose own recorded reason
+- `S58` says the two containers carry one defect between them. They are dead
+- `S58` declarations, and removing corpus data is a grounding act rather than a
+- `S58` packaging one, so they are reported and left.
+- `S60` The reported defect was one of four stacked in the same path. Beyond the
+- `S60` missing recovery channel: the declared profile facts had fallen behind the
+- `S60` obligation a claimed tax-regime block carries, the readiness verb was never
+- `S60` run so filing work refused, and ambient isolation was observed but never
+- `S60` established -- the development environment's own executable sat on the path,
+- `S60` so the record refused itself for want of isolation it had not been asked to
+- `S60` create.
+- `S60` The security control was satisfied, not bypassed. Descriptor inheritance is
+- `S60` unavailable on Windows, and the product already ships the handle-based
+- `S60` bootstrap for exactly that; the oracle now uses it there and file descriptors
+- `S60` elsewhere. A relay thread answers the possession proof, because the verb
+- `S60` writes the phrase and then blocks reading it back inside one call.
+- `S60` One instance of the same defect is knowingly left: a second oracle creates a
+- `S60` profile the same way. No operating-system lane invokes it and it has no
+- `S60` non-test caller, so it was left rather than changed unverified -- but the
+- `S60` integration test owning this path depends on it and therefore did not run.
+- `S61` The premise that the per-lane preflight is redundant did not survive
+- `S61` measurement. Eighty-one of five hundred tests carry a real behavioural fork on
+- `S61` the operating system -- junctions against symlinks, permission bits, descriptor
+- `S61` inheritance, launcher stubs -- and this campaign is the ONLY place the
+- `S61` directory runs anywhere but Linux. Skipping the preflight would have deleted
+- `S61` that coverage to buy speed.
+- `S61` But the cost is not in that subset: one platform-sensitive test appears in the
+- `S61` twenty-five slowest, and the top ten are platform-invariant static analysis.
+- `S61` So the answer was neither skipping nor partitioning, but making the invariant
+- `S61` work cheap. A declaring-surface scan visited seven hundred thousand paths to
+- `S61` reach thirty-nine thousand because it pruned after walking rather than during,
+- `S61` and a recipe collection booted the same pytest twice per case. Both fixed with
+- `S61` the surface set proven identical, not merely similar.
+- `S61` Partitioning was refused for a second reason worth keeping: the preflight
+- `S61` passes no marker expression at all, so it inherits the project default and
+- `S61` silently drops a hundred and nine tests, holding thirty-eight more as a warning
+- `S61` rather than a failure. The guard that exists to catch exactly that reads the
+- `S61` recipe surface and never the driver, so the driver sits outside it. Optimising
+- `S61` a selection that is already wrong would have built on sand.
+- `S62` The silent deselection was worse than a count suggested. Every one of the
+- `S62` hundred and nine dropped tests was an integration test -- the default
+- `S62` expression's other exclusions matched nothing at all in that directory -- so
+- `S62` the preflight was excluding exactly the platform-sensitive surface it exists
+- `S62` to prove, on the only lanes that run this directory off one operating system.
+- `S62` The selection now covers everything but the performance cohort, which stays
+- `S62` out on its own registered policy rather than on cost.
+- `S62` A premise in the brief was wrong and the correction is worth keeping: the
+- `S62` thirty-eight serial tests reported as held are counted before the marker
+- `S62` expression is applied, so they were never dropped from a selection. The number
+- `S62` that mattered was two, and those two were executed by nothing anywhere --
+- `S62` selected by a parallel pass that holds them, and outside every serial lane.
+- `S62` The guard now reads the argument list the driver actually builds rather than a
+- `S62` second declaration of it, which is what let the driver sit outside its own
+- `S62` check for so long.
+- `S62` One change was made and reverted within the work: excluding the performance
+- `S62` cohort from the serial recipe immediately broke lane reachability, because a
+- `S62` comment claiming those tests were owned by a performance lane elsewhere was
+- `S62` false -- no such lane exists, and that recipe was their only owner. The comment
+- `S62` was corrected rather than the ownership moved.
+- `S63` The fix was landed on `main` by the concurrent object-name campaign, not by
+- `S63` this Step. What this Step adds is the off-Linux verification the plan required
+- `S63` and no lane had supplied: 13 of 13 pass on Windows, including the two gates
+- `S63` that hold the module inert at import, `test_importing_the_sweep_runs_no_pass`
+- `S63` and `test_importing_the_sweep_does_not_arm_it`.
+- `S63` Independently confirmed rather than read: the module was imported from a
+- `S63` working directory holding no `src/cadrumo` tree, with `--apply` planted in
+- `S63` `sys.argv`. It set `apply=True`, wrote nothing, and left the directory empty.
+- `S63` The rewrite passes are reachable only through `main()` under the
+- `S63` `__main__` guard.
+- `S64` The attestation resolved the console script's interpreter through its
+- `S64` symbolic links. On this operating system a virtual environment's interpreter
+- `S64` is a real copy, so resolving it changes nothing; on the others it is a link to
+- `S64` the base interpreter, so resolving it walked out of the very environment the
+- `S64` attestation exists to describe. The check then asked a interpreter that had
+- `S64` never seen the installed distribution, and reported it missing.
+- `S64` That asymmetry is why the path passed on this workstation for hours while
+- `S64` failing on both other platforms, and why the failure looked platform-specific
+- `S64` when it was one dereference.
+- `S64` The install was correct and the link is deliberate: a copied interpreter loses
+- `S64` the relative reference to its own runtime library and aborts on one platform,
+- `S64` which the smoke helpers already document. So the check was wrong, not the
+- `S64` install, and pointing it at the environment it attests strengthens rather than
+- `S64` relaxes it.
+- `S64` Running the pre-change code against a real environment on another platform
+- `S64` surfaced a second break from the same cause: the console entry-point assertion
+- `S64` looked for the launcher beside the resolved interpreter, in the managed
+- `S64` runtime's own directory. That path had never worked anywhere.
+- `S65` The cohort identifier was not a function of the commit. The command-spec probe
+- `S65` recorded the absolute filesystem location of every module it read -- fifteen
+- `S65` hundred paths carrying the build's own process id and a fresh unique directory
+- `S65` name -- and that reading was sealed into the attestation envelope, the manifest
+- `S65` and therefore the identifier. Two builds of one commit produced two identities
+- `S65` while ten of the eleven artifacts were byte-identical; only the manifest moved,
+- `S65` and inside it only the probe reading and the envelope derived from it.
+- `S65` The environment stamp was never the cause. The builder sets every one of those
+- `S65` variables itself before producing an artifact, which is why the artifact
+- `S65` digests always agreed. No stamp can reach a field that records where the build
+- `S65` happened to run.
+- `S65` So the identifier was reproducible only under a condition nothing enforced,
+- `S65` and the missing enforcement belonged to the builder rather than to its caller.
+- `S65` The probe reading is now expressed relative to the installed tree, in the same
+- `S65` form the wheel listing already uses, and a reading that escapes that tree is
+- `S65` refused by the parent rather than trusted from across a process boundary.
+- `S65` This also corrects an acceptance recorded earlier in this campaign. Two prior
+- `S65` pieces of work observed these same two fields diverging, classified them as
+- `S65` benign path dependence, and carried that classification into later briefs as
+- `S65` settled. It was the defect, seen twice and excused twice.
+- `S66` Both files were absorbed into commit `9f0f673c41`, whose subject describes
+- `S66` unrelated reachability work. No contributor chose that: this worktree runs an
+- `S66` auto-committer, and every commit it makes stages the whole tree, so one subject
+- `S66` routinely spans files from several unrelated areas. The content is correct and
+- `S66` present in `HEAD`; history was not rewritten. The rationale is recorded here
+- `S66` because the commit message cannot carry it, and a commit subject in this
+- `S66` repository is not evidence of what that commit contains.
+- `S66` Only two of the four macOS lane failures were macOS-specific. The completion
+- `S66` leg used `--show-completion`, which takes no shell argument and detects the
+- `S66` shell from the process tree, so it asserted whatever shell happened to be the
+- `S66` runner's parent; it was reproduced failing on Windows, and now renders for a
+- `S66` named shell through Click's public generator against the real command tree.
+- `S66` Two defects in `src/cadrumo/tests/_marker_hook.py` were found and left
+- `S66` untouched, that module belonging to another campaign: the serial holdout runs
+- `S66` before pytest's own `-m` deselection, so a lane invoked with `not serial` still
+- `S66` trips the hold and warns that tests it never selected did not execute; and
+- `S66` `record_held_from_node` and `fail_session_on_held_serials` are called from no
+- `S66` conftest, leaving the false-green they were written to close still open. Wiring
+- `S66` that enforcement before fixing the ordering would fail every correctly
+- `S66` configured lane. Both were relayed to the owning session.
+- `S67` Run 34016654501 was cancelled by its own canary on a race, not on a starved
+- `S67` lane. The Windows wheel job occupied `[Windows, X64, self-hosted]` for 67
+- `S67` minutes; it completed at 08:24:03, the Windows oracle that had been queued
+- `S67` behind it started at 08:24:04, and the watchdog polled at 08:24:06. That single
+- `S67` sample saw a job queued 3992s and nothing running on its labels, which is
+- `S67` indistinguishable from a lane no runner serves, so it cancelled the run and the
+- `S67` six lanes still in it, including the three that mint the acquisition-evidence
+- `S67` rows.
+- `S67` The occupancy discriminator was sound; what was missing is that occupancy is
+- `S67` sampled, and one empty sample is not proof. A handoff gap closes on the next
+- `S67` poll and a genuinely unservable lane never does, so the verdict must now hold
+- `S67` across consecutive polls before the run is cancelled. Two, by default. The
+- `S67` cancel is destructive and unrecoverable, so it is the side that pays the extra
+- `S67` poll interval against a 300s threshold.
+- `S67` The tally is rebuilt from each poll rather than decremented, so two unrelated
+- `S67` handoff gaps minutes apart cannot add up to a cancellation neither justified.
+- `S67` The debounce is a pure function so it is exercised without stubbing the HTTP
+- `S67` boundary, matching the module's existing shape. Three cases cover it: the
+- `S67` single-sample shape that killed the run stays silent, a verdict holding across
+- `S67` consecutive polls still cancels, and a recovered lane restarts its count. The
+- `S67` silent case additionally asserts that the same input under the pre-fix
+- `S67` threshold does confirm, so it cannot pass against a function that confirms
+- `S67` nothing.
+- `S68` Cadrumo had never completed an automated release. Every run reported SUCCESS
+- `S68` while creating nothing, which is why six months passed without anyone
+- `S68` investigating: a red run gets looked at, a green one that silently did nothing
+- `S68` does not.
+- `S68` Two independent faults in the configuration, both in the same file.
+- `S68` `package-name: cadrumo` set a component the release PR title never carried, so
+- `S68` the merged PR matched zero releases for the path. And
+- `S68` `separate-pull-requests: false` ran the Merge plugin, which aggregates the
+- `S68` single root package into a PR titled `chore: release main` -- carrying no
+- `S68` version, so the release half could not read the version back out of the merged
+- `S68` PR. With no release created, the next run then aborted on the PR its own
+- `S68` predecessor had left untagged: "There are untagged, merged release PRs
+- `S68` outstanding".
+- `S68` The artefacts told the story once read. `v0.4.0`'s tag and GitHub release were
+- `S68` created by hand five hours after PR #670 merged, so the repository had tags
+- `S68` without working automation, and #670 kept the `autorelease: pending` label that
+- `S68` blocked every later run.
+- `S68` Repairs: the component is explicitly empty, matching what the PR carries;
+- `S68` aggregation is off, since one package has nothing to aggregate;
+- `S68` `release-please.yml` also accepts `workflow_dispatch`, because recovering from
+- `S68` a stuck release state previously required inventing a commit.
+- `S68` 0.5.0 was completed with a hand-created tag, the state having already been
+- `S68` deadlocked. 0.5.1 was the proof: release-please cut the tag, created the
+- `S68` release, and advanced the label to `autorelease: tagged` with no manual step.
+- `S68` A gate is worth adding and does not exist: a release-please run that finds a
+- `S68` merged untagged release PR and aborts should fail rather than report success.
+- `S68` That green abort is what hid this.
+- `S69` All three presented as platform-specific and none were. They were invisible
+- `S69` because the campaign's serial pass is one pytest invocation over eight
+- `S69` modules: the first wedges past its ceiling, and on Windows the thread-based
+- `S69` timeout cannot interrupt `subprocess.wait`, so pytest dies with no summary
+- `S69` line and the remaining seven modules never run.
+- `S69` The MCP oracle never performed the recovery enrollment that profile creation
+- `S69` requires, while its sibling tax oracle did, so its create always exited
+- `S69` non-zero. It also discarded the child's stdout and stderr, leaving a bare
+- `S69` sentence -- a large part of why failures in that lane cost a full rerun to
+- `S69` read. The product was the correct side throughout; the oracle was stale.
+- `S69` The LLM extra-boundary lane still assumed the package re-export layer that was
+- `S69` retired. Its guard derivation ended by intersecting with `llm.__all__`, now
+- `S69` literally `()`, so it could only ever return empty and the caller's
+- `S69` `assert derived` failed on a tree where every guard was present. Its probe
+- `S69` imported from the inert namespace and died before reaching any surface, which
+- `S69` reads as a surface failing to refuse when the probe never ran.
+- `S69` `copytree(copy_function=os.link)` cannot link across volumes. The template is
+- `S69` built in the OS temp directory while the campaign pins its basetemp inside the
+- `S69` repository's `var/`; one filesystem on the runners, two on any machine whose
+- `S69` checkout is off the system drive.

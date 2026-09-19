@@ -72,7 +72,7 @@ def authoring_authority_root(repo_root: Path) -> Path:
     that has never published has none, and the caller reports that against its
     own contract rather than having an empty path substituted here.
     """
-    override = os.environ.get(AUTHORITY_ROOT_ENV)
+    override = os.environ.get(AUTHORITY_ROOT_ENV, "").strip()
     if override:
         return Path(override)
     return repo_root / AUTHORING_AUTHORITY_DIRECTORY

@@ -1,0 +1,117 @@
+---
+tags:
+  - '#exec'
+  - '#test-harness-sanity'
+date: '2026-08-14'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:9bc66d55fa8b7941c48451264c7d4c00065a5796b9ca1562da4c37b091e81b10'
+related:
+  - "[[2026-08-14-test-harness-sanity-plan]]"
+---
+
+# `test-harness-sanity` ledger
+
+## Changes
+
+- `S47` `T` `dev/quality/fixture_census.py`
+- `S48` `T` `dev/quality/tests/test_fixture_census.py`
+- `S49` `T` `dev/quality/fixture_ownership.toml`
+- `S50` `T` `justfile`
+- `S51` `T` `.github/workflows/ci.yml`
+- `S52` `T` `dev/ci/tests/test_ci_workflow.py`
+- `S53` `T` `src/cadrumo/llm/conftest.py`
+- `S53` `T` `src/cadrumo/adapters/outbound/llm/conftest.py`
+- `S54` `T` `src/cadrumo/tests/secure_sql.py`
+- `S54` `T` `src/cadrumo/tests/profile_capsule.py`
+- `S55` `T` `src/cadrumo/application/aggregation/tests`
+- `S55` `T` `src/cadrumo/application/modelo/tests`
+- `S56` `T` `src/cadrumo/adapters/persistence/storage`
+- `S57` `T` `src/cadrumo/application/wizard/tests`
+- `S57` `T` `src/cadrumo/entrypoints/cli/tests`
+- `S58` `T` `src/cadrumo/entrypoints/cli/tests/test_overview_verbs.py`
+- `S58` `T` `src/cadrumo/entrypoints/cli/conftest.py`
+- `S59` `T` `src/cadrumo/entrypoints/cli/tests/test_ledger_view_ux.py`
+- `S59` `T` `src/cadrumo/entrypoints/cli/conftest.py`
+- `S60` `T` `src/cadrumo/domain/user_profile/tests`
+- `S61` `T` `src/cadrumo/application/modelo/tests`
+- `S62` `T` `src/cadrumo/domain/calculations/registry/tests`
+- `S63` `T` `src/cadrumo/domain/calculations/registry/tests`
+- `S64` `T` `src/cadrumo/domain/calculations/registry/tests`
+- `S65` `T` `dev/registry/tests`
+- `S66` `T` `src/cadrumo`
+- `S67` `T` `dev`
+- `S68` `T` `packaging`
+- `S69` `T` `conftest.py`
+- `S69` `T` `src/cadrumo/tests`
+- `S70` `T` `dev/quality/tests/test_fixture_census.py`
+- `S70` `T` `dev/quality/fixture_ownership.py`
+- `S70` `T` `dev/quality/fixture_ownership.toml`
+- `S71` `T` `src/cadrumo/tests/_marker_hook.py`
+- `S72` `T` `conftest.py`
+- `S73` `T` `src/cadrumo/tests/conftest.py`
+- `S74` `T` `src/cadrumo/tests/test_marker_integrity.py`
+- `S75` `T` `src/cadrumo/adapters/inbound/financial/providers/tests/test_ofx.py`
+- `S76` `T` `src/cadrumo/application/calculations/tests/test_previous_filing_absence_versus_malformed.py`
+- `S77` `T` `src/cadrumo/domain/calculations/registry/tests/test_relation_closure.py`
+- `S78` `T` `src/cadrumo/domain/calculations/registry/tests/test_validate_previous_filing_year_coverage.py`
+- `S79` `T` `src/cadrumo/tests/test_monkeypatch_inventory.py`
+- `S80` `T` `src/cadrumo/tests/test_worker_count_hook.py`
+- `S81` `T` `src/cadrumo/tests/test_every_test_module_is_collectable.py`
+- `S82` `T` `src/cadrumo/tests/_worker_count_hook.py`
+- `S82` `T` `src/cadrumo/tests/test_worker_count_hook.py`
+- `S83` `T` `justfile`
+- `S83` `T` `dev/ci/lane_reachability.py`
+- `S83` `T` `dev/ci/tests/test_machine_aware_load.py`
+- `S83` `T` `dev/ci/tests/test_ci_workflow.py`
+- `S83` `T` `src/cadrumo/tests/test_lane_reachability.py`
+- `S84` `T` `src/cadrumo/tests/test_cli.py`
+- `S84` `T` `src/cadrumo/core/i18n/tests`
+- `S85` `T` `src/cadrumo/tests/test_output_language.py`
+- `S85` `T` `src/cadrumo/application/user_profile/tests`
+- `S86` `T` `src/cadrumo/conftest.py`
+- `S87` `T` `src/cadrumo/tests/test_test_inventory.py`
+- `S88` `T` `dev/quality/fixture_ownership.toml`
+- `S89` `T` `src/cadrumo/tests`
+- `S90` `T` `justfile`
+- `S90` `T` `.github/workflows/ci.yml`
+- `S91` `T` `justfile`
+- `S92` `T` `.vault/audit`
+- `S93` `T` `.vault/audit`
+- `S94` `T` `.vault/audit`
+- `S95` `T` `pyproject.toml`
+- `S96` `T` `.vault`
+- `S97` `T` `.vault/exec/2026-08-14-test-harness-sanity`
+- `S98` `T` `.vault/plan/2026-08-14-test-harness-sanity-plan.md`
+- `S99` `T` `dev/ci/lane_reachability.py`
+- `S99` `T` `src/cadrumo/tests/test_lane_reachability.py`
+- `S100` `T` `dev/ci/tests/test_machine_aware_load.py`
+- `S100` `T` `dev/ci/tests/test_ci_workflow.py`
+- `S101` `T` `src/cadrumo/tests/test_every_test_module_is_collectable.py`
+- `S102` `T` `src/cadrumo/adapters/persistence/storage/custody`
+- `S102` `T` `src/cadrumo/core/_storage_taxonomy_locations.py`
+- `S102` `T` `src/cadrumo/tests`
+- `S103` `T` `dev/quality/import_hygiene_scan.py`
+- `S103` `T` `src/cadrumo/tests/test_import_hygiene_gate.py`
+- `S104` `T` `src/cadrumo/adapters/outbound/llm/tests`
+- `S104` `T` `src/cadrumo/adapters/persistence/tests`
+- `S104` `T` `src/cadrumo/adapters/persistence/profile/tests`
+- `S104` `T` `src/cadrumo/application/aggregation/tests`
+- `S104` `T` `src/cadrumo/application/modelo/tests`
+- `S105` `T` `dev/quality/fixture_census.py`
+- `S105` `T` `dev/quality/fixture_ownership.py`
+- `S105` `T` `dev/quality/tests/test_fixture_census.py`
+- `S106` `T` `dev/quality/fixture_census.py`
+- `S106` `T` `dev/quality/tests/test_fixture_census.py`
+- `S107` `T` `src/cadrumo`
+- `S108` `T` `src/cadrumo/application/setup/tests`
+- `S108` `T` `src/cadrumo/application/wizard/tests`
+- `S109` `T` `dev/quality/fixture_ownership.py`
+- `S109` `T` `dev/quality/tests/test_fixture_census.py`
+- `S110` `T` `src/cadrumo`
+- `S110` `T` `dev`
+- `S119` `T` `src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py`
+- `S119` `T` `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_write_batching.py`
+- `S119` `T` `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py`
+- `S119` `T` `dev/quality/tests/test_helper_body_census.py`
+- `S120` `T` `.vault/audit/2026-08-15-test-harness-sanity-fixture-census-audit.md`

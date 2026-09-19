@@ -1,0 +1,23 @@
+---
+tags:
+  - '#exec'
+  - '#declaracion-extraction-architecture'
+date: '2026-05-28'
+modified: '2026-07-17'
+body_hash: 'sha256:9b5e77aa3044b0be9cd83c91dd9171debb238b1b262d97ae8efc189a5fbf46e7'
+related: []
+---
+
+# `declaracion-extraction-architecture` historical placeholder exec
+
+This file was a template placeholder discovered during the 2026-06-05 VaultSpec semantic cleanup pass.
+
+It does not provide reliable execution evidence. It is retained in place for non-destructive vault history and should not brief implementation work. Use the feature's linked ADR, research, plan, audit, or concrete step records as the authority source.
+
+## Description
+
+The previous body contained only template markers rather than verifiable file paths, so no file-level execution summary is asserted here.
+
+## Tests
+
+No test evidence is asserted by this placeholder retirement.

@@ -1,0 +1,55 @@
+---
+tags:
+  - '#audit'
+  - '#source-casilla-integration'
+date: '2026-08-23'
+modified: '2026-08-23'
+body_schema: 'body-v1'
+body_hash: 'sha256:32ffb08c1893abb96fed8409437048f50827e1a74978e5c7894fac276a668e10'
+related:
+  - "[[2026-08-22-source-casilla-integration-plan]]"
+---
+
+# `source-casilla-integration` audit: `s166 closing authority review`
+
+## Scope
+
+Independent review of the S166 physical-closing observation, authority decision, prior-closing continuity, conflict retention, hard cutover, and tamper-sensitive provenance contracts.
+
+## Findings
+
+### s166-closing-authority-review | high | resolved resolution provenance was incomplete
+
+The resolution now retains the authority-decision identity and fingerprint, selected or competing physical-observation identity and fingerprint, and prior-continuity-link fingerprint. Strict consistency checks refuse forged selected values, conflicts, coordinates, identities, and fingerprints.
+
+### s166-closing-authority-review | medium | resolved prior continuity was self-asserted
+
+The link now validates a canonical fingerprint of the immediately prior authoritative closing across activity, year, value, source fingerprint, and evidence. Valid source or value substitutions with a stale binding fail closed.
+
+### s166-closing-authority-review | medium | resolved authority chronology admitted impossible provenance
+
+The resolver now requires an authority decision to occur on or after the physical observation it names. The invariant applies to both physical-selected and movement-selected decisions retaining a competing observation.
+
+### s166-closing-authority-review | low | resolved cents and evidence-role ambiguity
+
+Closing resolutions and conflict diagnostics refuse sub-cent values, while physical-closing evidence admits each required closed role exactly once. FIFO, PMP, and COSTE_MEDIO remain distinct grounded acquisition-price bases.
+
+### s166-closing-authority-review | pass | final domain contract is complete
+
+Final independent review reported zero critical, high, medium, or low findings. Fifty focused domain tests, Ruff, and the type checker were clean.
+
+### s166-closing-authority-review | high | resolved authority inputs lacked a canonical persistence seam
+
+The first reviewed types were standalone and could not travel through the encrypted inventory repository without a parallel schema. The amended domain owns one strict immutable `InventoryClosingAuthorityRecord` on each ledger and revalidates it exclusively through the canonical resolution function.
+
+### s166-closing-authority-review | high | resolved persisted schema admitted silent old-shape tolerance
+
+The authority slot is nullable but required on wire, every constructor states absence explicitly, and inventory schema version 3 refuses both version 2 and a missing slot. Serialize, rehydrate, coordinate-substitution, and nested-fingerprint mutation tests prove the stored bundle remains authoritative rather than decorative.
+
+### s166-closing-authority-review | pass | ledger-owned amendment is complete
+
+The repeated independent review reported zero findings. Fifty-three focused domain tests, Ruff, the type checker, and the diff hygiene check were clean.
+
+## Recommendations
+
+S167 must remove or refuse the legacy CLI `InventoryLedgerPayload.closing_stock` shape and carry the new authority inputs through secure ingress. S168 must compose the reviewed authority resolution into projection without rebuilding its invariants.

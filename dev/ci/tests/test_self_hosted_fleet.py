@@ -31,6 +31,7 @@ before it reached an assertion.
 
 from __future__ import annotations
 
+import time
 from pathlib import Path
 from typing import Any, Final
 
@@ -42,6 +43,7 @@ from dev._paths import REPO_ROOT
 
 from ..workflow_runner_targets import (
     UNRESOLVED_ZERO_TARGETS,
+    _runner_label_literals,
     calls_local_workflow,
     is_fleet_label_set,
     is_hosted_image,
@@ -457,3 +459,32 @@ def test_a_local_reusable_workflow_call_is_gated_where_it_is_defined(tmp_path: P
     )
 
     assert _collect_violations(tmp_path) == [("caller.yml", "remote", None)]
+
+
+def test_a_truncated_label_set_is_rejected_without_exponential_backtracking() -> None:
+    """An unterminated bracketed label set must fail fast, not stall the gate.
+
+    The gate reads producer scripts as free text, so an unclosed `[` followed
+    by many quoted labels is an ordinary shape to meet — a truncated line, a
+    label set built across a heredoc. With an ambiguous separator the matcher
+    has to try every way of splitting the whitespace between members before
+    concluding there is no closing bracket, which doubles in cost per member;
+    the bound below is exceeded by orders of magnitude when that is so.
+    """
+    truncated = '["self-hosted"' + ' "Linux"' * 40
+
+    started = time.perf_counter()
+    targets = _runner_label_literals(truncated)
+    elapsed = time.perf_counter() - started
+
+    assert elapsed < 2.0
+    # No closing bracket, so no label SET was read; the per-literal reading
+    # still names the one label in its narrow vocabulary. ``Linux`` is a set
+    # member, never a target on its own, so it is not read here.
+    assert targets == ["self-hosted"]
+
+
+def test_a_closed_label_set_is_still_read_as_one_fleet_target() -> None:
+    """The positive control for the refusal above: a real set stays a set."""
+    assert _runner_label_literals('["self-hosted", "Linux", "X64"]') == [["self-hosted", "Linux", "X64"]]
+    assert _runner_label_literals('["self-hosted" "Linux" "X64"]') == [["self-hosted", "Linux", "X64"]]

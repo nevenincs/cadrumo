@@ -1,0 +1,4963 @@
+---
+tags:
+  - '#exec'
+  - '#reachability-burndown'
+date: '2026-09-04'
+modified: '2026-09-17'
+body_schema: 'body-v2'
+body_hash: 'sha256:c6409febf83f5a938d5dea234574af74cf716b73b91c46db78a50707ceb9ff8e'
+related:
+  - "[[2026-09-04-reachability-burndown-plan]]"
+---
+
+# `reachability-burndown` ledger
+
+## Changes
+
+- `S01` `A` `dev/audit/reachability_classification.toml`
+- `S01` `A` `dev/audit/tests/test_reachability_classification.py`
+- `S01` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_reachability_classification.py` -> `pass`
+- `S02` `M` `dev/audit/reachability_classification.toml`
+- `S02` `M` `dev/audit/tests/test_reachability_classification.py`
+- `S02` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_reachability_classification.py` -> `pass`
+- `S03` `M` `dev/audit/reachability_classification.toml`
+- `S03` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S03` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_reachability_classification.py` -> `pass`
+- `S04` `M` `dev/audit/reachability_classification.toml`
+- `S04` `M` `dev/audit/tests/test_reachability_classification.py`
+- `S04` `M` `.vault/adr/2026-09-04-reachability-burndown-adr.md`
+- `S04` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S04` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S04` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_reachability_classification.py` -> `pass`
+- `S05` `T`
+- `S05` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `pass`
+- `S06` `T`
+- `S06` `verify:` `uv run --no-sync python -m dev.quality.unreachable_module_ratchet` -> `pass`
+- `S07` `M` `dev/audit/reachability_classification.toml`
+- `S07` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_reachability_classification.py` -> `pass`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S08` `M` `src/cadrumo/domain/calculations/registry/schema_scalars.py`
+- `S08` `M`
+- `S08` `M` `dev/audit/reachability_classification.toml`
+- `S08` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/calculations/registry/tests -k "data_type or scalar or schema"` -> `3 pre-existing failures, 364 passed`
+- `S09` `M` `src/cadrumo/entrypoints/cli/command_spec.py`
+- `S09` `M`
+- `S09` `A` `src/cadrumo/entrypoints/cli/tests/test_builtin_value_contracts_are_canonical.py`
+- `S09` `M` `dev/audit/reachability_classification.toml`
+- `S09` `verify:` `uv run --no-sync pytest -q src/cadrumo/entrypoints/cli/tests/test_builtin_value_contracts_are_canonical.py` -> `pass`
+- `S09` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/cli/` -> `pass`
+- `S10` `M` `src/cadrumo/application/modelo/_calculation_preparation.py`
+- `S10` `M` `src/cadrumo/application/modelo/_verification_predicates.py`
+- `S10` `M` `dev/audit/reachability_classification.toml`
+- `S10` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests -k "calculation_prep or verification_predicate or predicate"` -> `pass`
+- `S10` `verify:` `uv run --no-sync ty check src/cadrumo/application/modelo/_calculation_preparation.py src/cadrumo/application/modelo/_verification_predicates.py` -> `pass`
+- `S11` `A` `dev/quality/unused_symbol_ratchet.py`
+- `S11` `A` `dev/quality/unused_symbol_ratchet.toml`
+- `S11` `M` `justfile`
+- `S11` `M` `dev/quality/suite.py`
+- `S11` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_ratchet` -> `pass`
+- `S11` `verify:` `uv run --no-sync ty check dev/quality/unused_symbol_ratchet.py` -> `pass`
+- `S12` `T`
+- `S12` `verify:` `uv run --no-sync python -m dev.audit.duplication` -> `pass`
+- `S12` `verify:` `uv run --no-sync python -m dev.audit.dead_code` -> `pass`
+- `S12` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_ratchet` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_reachability_classification.py` -> `pass`
+- `S12` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_duplication.py dev/audit/tests/test_duplication_scan.py` -> `pass`
+- `S12` `verify:` `uv run --no-sync lint-imports` -> `pass`
+- `S12` `verify:` `uv run --no-sync python -m dev.quality.unreachable_module_ratchet` -> `fail, peer-owned`
+- `S13` `M` `src/cadrumo/domain/modelos/calculation_repository.py`
+- `S13` `M` `src/cadrumo/domain/modelos/filing_repository.py`
+- `S13` `M` `src/cadrumo/domain/modelos/verification_repository.py`
+- `S13` `M` `src/cadrumo/application/wizard/commands.py`
+- `S13` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_consent_cli.py`
+- `S13` `M` `src/cadrumo/core/external_constants.py`
+- `S13` `M` `dev/audit/reachability_classification.toml`
+- `S13` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/modelos/tests src/cadrumo/core/tests -k "repository or external_constant or tabular"` -> `pass`
+- `S13` `verify:` `uv run --no-sync ty check <the six modules>` -> `pass`
+- `S14` `M` `dev/audit/reachability_classification.toml`
+- `S14` `M` `dev/audit/tests/test_reachability_classification.py`
+- `S14` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_reachability_classification.py` -> `pass`
+- `S15` `M` `dev/quality/unreachable_module_ratchet.toml`
+- `S15` `M` `dev/audit/reachability_classification.toml`
+- `S15` `verify:` `uv run --no-sync python -m dev.quality.unreachable_module_ratchet` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -q -m "unit or integration" dev/audit/tests/test_reachability_classification.py` -> `pass`
+- `S16` `A` `src/cadrumo/core/decimal/constants.py`
+- `S16` `A` `src/cadrumo/core/decimal/tests/test_decimal_constants_are_canonical.py`
+- `S16` `M`
+- `S16` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/notifications src/cadrumo/domain/contribuyente/inventory src/cadrumo/domain/prorrata_register` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/calculations/registry -k "formula_runtime or convenio or saturation or initial_values"` -> `pass`
+- `S16` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/decimal/tests/test_decimal_constants_are_canonical.py` -> `pass`
+- `S17` `A` `src/cadrumo/core/url_validation.py`
+- `S17` `A` `src/cadrumo/core/tests/test_url_adapter_is_canonical.py`
+- `S17` `M`
+- `S17` `verify:` `uv run --no-sync lint-imports` -> `pass`
+- `S17` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/categories src/cadrumo/adapters/inbound/justificante` -> `pass`
+- `S17` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/tests/test_url_adapter_is_canonical.py` -> `pass`
+- `S18` `M` `src/cadrumo/adapters/persistence/storage/errors.py`
+- `S18` `M`
+- `S18` `A` `src/cadrumo/adapters/persistence/storage/tests/test_storage_degradation_errors_are_canonical.py`
+- `S18` `verify:` `uv run --no-sync lint-imports` -> `pass`
+- `S18` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/storage/tests/test_storage_degradation_errors_are_canonical.py` -> `pass`
+- `S19` `M` `src/cadrumo/core/text_fold.py`
+- `S19` `M` `src/cadrumo/application/corpus_search/terminology.py`
+- `S19` `M` `src/cadrumo/adapters/outbound/aeat/sede/_adapter_utils.py`
+- `S19` `M` `src/cadrumo/adapters/inbound/pdf/label_regex.py`
+- `S19` `A` `src/cadrumo/core/tests/test_fold_for_matching_is_canonical.py`
+- `S19` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/tests/test_fold_for_matching_is_canonical.py` -> `pass`
+- `S19` `verify:` `uv run --no-sync lint-imports` -> `pass`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/master_key/master_key_derivation.py`
+- `S20` `M` `src/cadrumo/adapters/persistence/storage/custody/records.py`
+- `S20` `M` `src/cadrumo/application/user_profile/bundle_encryption.py`
+- `S20` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S20` `verify:` `uv run --no-sync pytest src/cadrumo/adapters/persistence/storage/custody src/cadrumo/adapters/persistence/storage/master_key -q` -> `pass`
+- `S20` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_ratchet` -> `fail`
+- `S21` `M` `dev/quality/constant_value_agreement.py`
+- `S21` `M` `dev/quality/tests/test_constant_value_agreement.py`
+- `S21` `verify:` `uv run --no-sync pytest dev/quality/tests/test_constant_value_agreement.py -q` -> `pass`
+- `S21` `verify:` `uv run --no-sync python -m dev.quality.constant_value_agreement --kind stem_restatement` -> `pass`
+- `S22` `M` `src/cadrumo/adapters/inbound/einvoice/shape.py`
+- `S22` `M` `src/cadrumo/adapters/outbound/aeat/auth/_clave_movil_page_flow.py`
+- `S22` `M` `src/cadrumo/adapters/outbound/aeat/sede/_adapter_utils.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/profile/invoices.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`
+- `S22` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S22` `M` `src/cadrumo/application/aggregation/iva_ledger.py`
+- `S22` `M` `src/cadrumo/application/corpus_search/terminology.py`
+- `S22` `M` `src/cadrumo/application/filing/draft_review.py`
+- `S22` `M` `src/cadrumo/application/flows/review.py`
+- `S22` `M` `src/cadrumo/application/invoices/catalogue_reads.py`
+- `S22` `M` `src/cadrumo/application/ledger/counterparty_establishment.py`
+- `S22` `M` `src/cadrumo/application/modelo/workspace_models.py`
+- `S22` `M` `src/cadrumo/application/registry/source_connectivity_coverage.py`
+- `S22` `M` `src/cadrumo/core/config.py`
+- `S22` `M` `src/cadrumo/core/filing_projection_ref.py`
+- `S22` `M` `src/cadrumo/core/orden_anual_html.py`
+- `S22` `M` `src/cadrumo/core/text_fold.py`
+- `S22` `M` `src/cadrumo/core/tests/test_text_fold.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/_m303_orden_projection_compiler.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/_m303_orden_source.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/applicability.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/detail_record_bindings.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/record_design.py`
+- `S22` `M` `src/cadrumo/domain/calculations/registry/record_design_pdf_state.py`
+- `S22` `M` `src/cadrumo/domain/contribuyente/marriage_facts.py`
+- `S22` `M` `src/cadrumo/domain/prorrata_register/register.py`
+- `S22` `M` `src/cadrumo/domain/transactions/classification_rule.py`
+- `S22` `M` `src/cadrumo/domain/transactions/irpf_categories.py`
+- `S22` `M` `src/cadrumo/domain/user_profile/values.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/_app_live_auth_preflight.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/_common.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/_ledger.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_consent_cli.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/_ledger_read_cli.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/_ledger_review_cli.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/_ledger_support.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/_modelo_work_lifecycle_cli.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/_modelo_work_verification_cli.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/_participation_cli.py`
+- `S22` `M` `src/cadrumo/entrypoints/cli/config/_profile_support.py`
+- `S22` `M` `dev/audit/reachability_classification.toml`
+- `S22` `M` `dev/audit/unreachable_code.py`
+- `S22` `M` `dev/audit/tests/test_unreachable_code.py`
+- `S22` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S22` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_ratchet` -> `fail`
+- `S22` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py -m ""` -> `pass`
+- `S23` `M` `dev/audit/reachability_classification.toml`
+- `S23` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py -m ""` -> `pass`
+- `S24` `A` `dev/quality/unconsumed_export_ratchet.py`
+- `S24` `A` `dev/quality/unconsumed_export_ratchet.toml`
+- `S24` `A` `dev/quality/tests/test_unconsumed_export_ratchet.py`
+- `S24` `M` `dev/audit/reachability_classification.toml`
+- `S24` `M` `dev/quality/suite.py`
+- `S24` `M` `justfile`
+- `S24` `verify:` `uv run --no-sync pytest dev/quality/tests/test_unconsumed_export_ratchet.py` -> `pass`
+- `S24` `verify:` `just check-unconsumed-export-ratchet` -> `pass`
+- `S25` `M` `dev/audit/unreachable_code.py`
+- `S25` `M` `dev/audit/tests/test_unreachable_code.py`
+- `S25` `verify:` `uv run --no-sync pytest -q dev/audit/tests/test_unreachable_code.py` -> `pass`
+- `S25` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `pass`
+- `S25` `verify:` `uv run --no-sync ruff check dev/audit` -> `pass`
+- `S25` `verify:` `uv run --no-sync python -m dev.quality.unconsumed_export_ratchet` -> `pass`
+- `S25` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_ratchet` -> `fail, peer-owned`
+- `S26` `M` `dev/quality/unreachable_module_ratchet.py`
+- `S26` `verify:` `uv run --no-sync python -m dev.quality.unreachable_module_ratchet` -> `fail, three modules unresolved by design of this step`
+- `S26` `verify:` `uv run --no-sync ruff check dev/quality` -> `pass`
+- `S27` `T`
+- `S27` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `pass`
+- `S27` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_ratchet` -> `fail, two peer-owned symbols unrelated to this step`
+- `S28` `D` `src/cadrumo/application/ledger/import_preparation.py`
+- `S28` `D` `src/cadrumo/application/ledger/tests/test_import_preparation.py`
+- `S28` `D` `docs/api/cadrumo.application.ledger.import_preparation.rst`
+- `S28` `M` `docs/api/cadrumo.application.ledger.rst`
+- `S28` `M` `dev/audit/reachability_classification.toml`
+- `S28` `verify:` `python -m dev.quality.unreachable_module_ratchet`
+- `S28` `verify:`
+- `S29` `M` `dev/audit/unreachable_code.py`
+- `S29` `M` `dev/audit/tests/test_unreachable_code.py`
+- `S29` `verify:` `uv run --no-sync pytest -q dev/audit/tests/test_unreachable_code.py` -> `pass`
+- `S29` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `pass`
+- `S29` `verify:` `uv run --no-sync ruff check dev/audit` -> `pass`
+- `S29` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_ratchet` -> `fail, two peer-owned symbols unrelated to this step`
+- `S30` `M` `dev/audit/reachability_classification.toml`
+- `S30` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `pass`
+- `S30` `verify:` `uv run --no-sync python -m dev.quality.suite` -> `fail, 3 of 12, all peer-owned`
+- `S30` `verify:` `uv run --no-sync pytest -q dev/audit/tests/test_classification_taxonomy_invariants.py` -> `pass`
+- `S31` `M` `dev/audit/unreachable_code.py`
+- `S31` `M` `dev/audit/tests/test_unreachable_code.py`
+- `S31` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S31` `verify:` `uv run --no-sync pytest -q dev/audit/tests/test_unreachable_code.py` -> `pass`
+- `S31` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `pass`
+- `S31` `verify:` `uv run --no-sync ruff check dev/audit` -> `pass`
+- `S32` `A` `dev/quality/tests/test_workspace_doors_are_wholly_wired.py`
+- `S32` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S32` `verify:` `uv run --no-sync pytest dev/quality/tests src/cadrumo/entrypoints/tui -q` -> `pass`
+- `S33` `M` `dev/quality/unreachable_module_ratchet.py`
+- `S33` `M` `dev/quality/unreachable_module_ratchet.toml`
+- `S33` `M` `dev/quality/unused_symbol_ratchet.py`
+- `S33` `A` `dev/quality/tests/test_declared_by_contract_dispositions.py`
+- `S33` `verify:` `uv run --no-sync pytest dev/quality/tests dev/audit/tests -q` -> `pass`
+- `S34` `M` `dev/audit/reachability_classification.toml`
+- `S34` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py -m ""` -> `pass`
+- `S35` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S35` `M` `dev/audit/reachability_classification.toml`
+- `S35` `verify:` `uv run --no-sync pytest dev/quality/tests dev/audit/tests/test_reachability_classification.py -m ""` -> `pass`
+- `S36` `A` `dev/audit/tests/test_ledger_measurements_are_dated.py`
+- `S36` `M` `dev/audit/reachability_classification.toml`
+- `S36` `verify:` `uv run --no-sync pytest dev/audit/tests -m ""` -> `pass`
+- `S37` `A` `dev/audit/tests/test_ledger_citations_resolve.py`
+- `S37` `M` `dev/audit/reachability_classification.toml`
+- `S37` `verify:` `uv run --no-sync pytest dev/audit/tests -m ""` -> `pass`
+- `S38` `M` `dev/audit/reachability_classification.toml`
+- `S38` `verify:` `uv run --no-sync pytest dev/audit/tests -m "" -n 0` -> `pass`
+- `S39` `M` `dev/audit/reachability_classification.toml`
+- `S39` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_measurements_are_dated.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0` -> `pass`
+- `S40` `M` `dev/audit/reachability_classification.toml`
+- `S40` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py -m "" -n 0` -> `pass`
+- `S41` `M` `dev/audit/reachability_classification.toml`
+- `S41` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py -m "" -n 0` -> `pass`
+- `S42` `M` `dev/audit/reachability_classification.toml`
+- `S42` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting"` -> `pass`
+- `S43` `M` `dev/audit/reachability_classification.toml`
+- `S43` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S44` `M` `dev/audit/reachability_classification.toml`
+- `S44` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S45` `M` `dev/audit/reachability_classification.toml`
+- `S45` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S46` `M` `dev/audit/reachability_classification.toml`
+- `S46` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S47` `M` `dev/audit/reachability_classification.toml`
+- `S47` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S48` `M` `dev/audit/reachability_classification.toml`
+- `S48` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S49` `M` `dev/audit/reachability_classification.toml`
+- `S49` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S50` `M` `dev/audit/reachability_classification.toml`
+- `S50` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S51` `M` `dev/audit/reachability_classification.toml`
+- `S51` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S52` `M` `dev/audit/reachability_classification.toml`
+- `S52` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S53` `M` `dev/audit/reachability_classification.toml`
+- `S53` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S54` `M` `dev/audit/reachability_classification.toml`
+- `S54` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S55` `M` `dev/audit/reachability_classification.toml`
+- `S55` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S56` `M` `dev/audit/reachability_classification.toml`
+- `S56` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S57` `M` `dev/audit/reachability_classification.toml`
+- `S57` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S58` `M` `dev/audit/reachability_classification.toml`
+- `S58` `verify:` `uv run --no-sync pytest dev/audit/tests/test_reachability_classification.py dev/audit/tests/test_classification_taxonomy_invariants.py dev/audit/tests/test_ledger_citations_resolve.py -m "" -n 0 -k "closed_taxonomy or evidence_behind or stopped_reporting or taxonomy or citation or cited"` -> `pass`
+- `S59` `M` `dev/audit/reachability_classification.toml`
+- `S59` `verify:`
+- `S60` `M` `dev/audit/reachability_classification.toml`
+- `S60` `verify:`
+- `S61` `M` `dev/audit/reachability_classification.toml`
+- `S61` `verify:`
+- `S62` `M` `src/cadrumo/entrypoints/cli/_tty.py`
+- `S62` `M` `src/cadrumo/entrypoints/cli/_framework_localisation.py`
+- `S62` `M` `src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py`
+- `S62` `M` `dev/audit/reachability_classification.toml`
+- `S62` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli` -> `pass`
+- `S62` `verify:` `CADRUMO_FORCE_COLOR=1` -> `NO_COLOR=1` -> `True` -> `False`
+- `S63` `M` `src/cadrumo/entrypoints/cli/_modelo_review_package_cli.py`
+- `S63` `M` `src/cadrumo/entrypoints/cli/config/_collab.py`
+- `S63` `M` `dev/audit/reachability_classification.toml`
+- `S63` `verify:` `uv run --no-sync ruff check src/cadrumo` -> `pass`
+- `S63` `verify:`
+- `S64` `M` `src/cadrumo/application/flows/line_frontend.py`
+- `S64` `M` `dev/audit/reachability_classification.toml`
+- `S64` `verify:` `uv run --no-sync ruff check src/cadrumo/application/flows` -> `pass`
+- `S64` `verify:`
+- `S65` `M` `src/cadrumo/entrypoints/_cli_main.py`
+- `S65` `M` `dev/audit/reachability_classification.toml`
+- `S65` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints` -> `pass`
+- `S65` `verify:` `None`
+- `S66` `M` `src/cadrumo/core/model_catalogue.py`
+- `S66` `M` `dev/audit/reachability_classification.toml`
+- `S66` `verify:` `uv run --no-sync ruff check src/cadrumo/core` -> `pass`
+- `S66` `verify:`
+- `S67` `M` `dev/audit/reachability_classification.toml`
+- `S67` `verify:`
+- `S68` `M` `dev/audit/reachability_classification.toml`
+- `S68` `verify:`
+- `S69` `M` `dev/audit/reachability_classification.toml`
+- `S69` `verify:`
+- `S70` `A` `dev/quality/secure_store_write_path.py`
+- `S70` `A` `dev/quality/secure_store_write_path.toml`
+- `S70` `A` `dev/quality/tests/test_secure_store_write_path.py`
+- `S70` `M` `dev/audit/reachability_classification.toml`
+- `S70` `verify:` `python -m dev.quality.secure_store_write_path`
+- `S70` `verify:` `pytest dev/quality/tests/test_secure_store_write_path.py`
+- `S70` `verify:` `ruff check` -> `ty check`
+- `S70` `verify:`
+- `S71` `M` `src/cadrumo/application/modelo/workflow_gate.py`
+- `S71` `A` `src/cadrumo/application/modelo/tests/test_file_flow_draft_persistence.py`
+- `S71` `M` `dev/quality/secure_store_write_path.py`
+- `S71` `M` `dev/quality/secure_store_write_path.toml`
+- `S71` `M` `dev/quality/tests/test_secure_store_write_path.py`
+- `S71` `M` `justfile`
+- `S71` `M` `dev/audit/reachability_classification.toml`
+- `S71` `verify:` `python -m dev.quality.secure_store_write_path`
+- `S71` `verify:` `pytest dev/quality/tests/test_secure_store_write_path.py`
+- `S71` `verify:` `pytest src/cadrumo/application/modelo/tests/test_file_flow_draft_persistence.py`
+- `S71` `verify:` `pytest .../test_workflow_gate_error_boundary.py .../test_verification_substance_workflow.py`
+- `S71` `verify:` `ruff check` -> `ty check`
+- `S71` `verify:`
+- `S72` `M` `src/cadrumo/application/review/_adapters.py`
+- `S72` `A` `src/cadrumo/application/review/tests/test_adapters_approval_staleness.py`
+- `S72` `M` `dev/audit/reachability_classification.toml`
+- `S72` `verify:` `pytest .../test_adapters_approval_staleness.py`
+- `S72` `verify:` `pytest .../review/tests/test_adapters.py`
+- `S72` `verify:` `python -m dev.audit.unreachable_code`
+- `S72` `verify:` `ruff check` -> `ty check`
+- `S73` `M` `src/cadrumo/application/review/models.py`
+- `S73` `M` `src/cadrumo/application/review/_adapters.py`
+- `S73` `M` `src/cadrumo/application/review/operator.py`
+- `S73` `M` `src/cadrumo/application/review/tests/test_adapters_approval_staleness.py`
+- `S73` `M` `dev/audit/reachability_classification.toml`
+- `S73` `verify:` `python -m dev.audit.unreachable_code`
+- `S73` `verify:` `pytest .../test_adapters_approval_staleness.py`
+- `S73` `verify:` `python -m dev.quality.unreachable_module_ratchet`
+- `S73` `verify:` `ruff check` -> `ty check` -> `application/review/`
+- `S74` `M` `src/cadrumo/entrypoints/cli/_common.py`
+- `S74` `M` `dev/audit/reachability_classification.toml`
+- `S74` `verify:` `python -m dev.audit.unreachable_code`
+- `S74` `verify:` `python -m dev.quality.unreachable_module_ratchet`
+- `S74` `verify:` `ruff check` -> `ty check`
+- `S74` `verify:`
+- `S75` `A` `src/cadrumo/tests/bucket_aggregation_calculate.py`
+- `S75` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S75` `M` `src/cadrumo/application/modelo/_calculation_source_staging.py`
+- `S75` `M` `application/{modelo,aggregation,calculations}/tests`
+- `S75` `M` `dev/ci/tests/test_ledger_scale_benchmark.py`
+- `S75` `M` `dev/audit/reachability_classification.toml`
+- `S75` `verify:` `python -m dev.audit.unreachable_code`
+- `S75` `verify:` `python -m dev.quality.unreachable_module_ratchet`
+- `S75` `verify:`
+- `S75` `verify:` `ruff check` -> `ty check`
+- `S76` `M` `src/cadrumo/application/modelo/workflow_gate.py`
+- `S76` `M` `src/cadrumo/application/modelo/tests/test_file_flow_draft_persistence.py`
+- `S76` `M` `dev/audit/reachability_classification.toml`
+- `S76` `verify:`
+- `S76` `verify:`
+- `S76` `verify:` `ruff check` -> `ty check`
+- `S76` `verify:`
+- `S77` `A` `src/cadrumo/application/filing/tests/test_approval_basis_is_bucket_derived.py`
+- `S77` `verify:` `pytest .../test_approval_basis_is_bucket_derived.py`
+- `S77` `verify:`
+- `S77` `verify:` `ruff check` -> `ty check`
+- `S78` `M` `src/cadrumo/domain/contribuyente/keys.py`
+- `S78` `M` `src/cadrumo/domain/contribuyente/__init__.py`
+- `S78` `M` `src/cadrumo/application/user_profile/keys_validation.py`
+- `S78` `M` `src/cadrumo/application/wizard/compiler.py`
+- `S78` `M` `contribuyente` -> `user_profile` -> `wizard` -> `registry`
+- `S78` `M` `dev/audit/reachability_classification.toml`
+- `S78` `verify:` `python -m dev.audit.unreachable_code`
+- `S78` `verify:` `python -m dev.quality.unreachable_module_ratchet`
+- `S78` `verify:` `pytest`
+- `S78` `verify:` `ruff check` -> `ty check`
+- `S79` `M` `src/cadrumo/tests/test_lazy_facade_static_bindings.py`
+- `S79` `verify:` `pytest .../test_lazy_facade_static_bindings.py`
+- `S79` `verify:`
+- `S79` `verify:`
+- `S79` `verify:` `ruff check` -> `ty check`
+- `S80` `M` `dev/audit/reachability_classification.toml`
+- `S80` `verify:` `python -m dev.audit.unreachable_code`
+- `S80` `verify:` `python -m dev.quality.unreachable_module_ratchet`
+- `S80` `verify:`
+- `S81` `M` `dev/quality/unreachable_module_ratchet.py`
+- `S81` `M` `dev/tests/test_unreachable_module_ratchet_gate.py`
+- `S81` `M` `dev/audit/reachability_classification.toml`
+- `S81` `verify:` `python -m dev.quality.unreachable_module_ratchet`
+- `S81` `verify:` `pytest .../test_unreachable_module_ratchet_gate.py -k clean_verdict`
+- `S81` `verify:` `ruff check` -> `ty check`
+- `S81` `verify:`
+- `S82` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S82` `M` `dev/quality/docstring_reference_ratchet.py`
+- `S82` `M` `dev/quality/tests/test_docstring_reference_ratchet.py`
+- `S82` `verify:` `python -m dev.quality.unused_symbol_ratchet`
+- `S82` `verify:` `python -m dev.quality.docstring_reference_ratchet`
+- `S82` `verify:` `pytest dev/quality/tests/test_docstring_reference_ratchet.py`
+- `S82` `verify:` `ruff check` -> `ty check`
+- `S83` `M` `src/cadrumo/application/preflight.py`
+- `S83` `M` `src/cadrumo/application/tests/test_preflight.py`
+- `S83` `M` `dev/audit/reachability_classification.toml`
+- `S83` `verify:` `pytest .../test_preflight.py`
+- `S83` `verify:`
+- `S83` `verify:`
+- `S83` `verify:` `ruff check` -> `ty check`
+- `S84` `M` `dev/audit/reachability_classification.toml`
+- `S84` `verify:`
+- `S84` `verify:`
+- `S84` `verify:`
+- `S84` `verify:`
+- `S85` `M` `src/cadrumo/application/user_profile/custody_ports.py`
+- `S85` `M` `src/cadrumo/adapters/persistence/storage/profile_custody.py`
+- `S85` `M` `src/cadrumo/application/user_profile/language_resolver.py`
+- `S85` `M` `src/cadrumo/application/user_profile/fact_write.py`
+- `S85` `M` `src/cadrumo/application/user_profile/tests/test_language_resolver.py`
+- `S85` `M` `dev/audit/reachability_classification.toml`
+- `S85` `verify:`
+- `S85` `verify:` `None == 'ca'`
+- `S85` `verify:` `pytest .../test_language_resolver.py .../test_fact_write_door_contract.py`
+- `S85` `verify:` `ruff check` -> `ty check`
+- `S85` `verify:`
+- `S86` `M` `dev/audit/reachability_classification.toml`
+- `S86` `verify:`
+- `S86` `verify:`
+- `S86` `verify:`
+- `S86` `verify:`
+- `S87` `M` `dev/audit/reachability_classification.toml`
+- `S87` `M` `dev/audit/tests/test_ledger_citations_resolve.py`
+- `S87` `verify:` `pytest dev/audit/tests/test_reachability_classification.py`
+- `S87` `verify:`
+- `S87` `verify:`
+- `S88` `M` `dev/audit/reachability_classification.toml`
+- `S88` `verify:` `pytest dev/audit/tests/test_reachability_classification.py`
+- `S88` `verify:`
+- `S88` `verify:`
+- `S88` `verify:`
+- `S88` `verify:` `test_module`
+- `S89` `M` `dev/audit/reachability_classification.toml`
+- `S89` `verify:` `test_unreachable_module_ratchet_gate.py`
+- `S89` `verify:`
+- `S89` `verify:`
+- `S90` `M` `src/cadrumo/application/operator_surface/models.py`
+- `S90` `M` `dev/audit/reachability_classification.toml`
+- `S90` `verify:` `pytest dev/locales/tests/test_contract.py`
+- `S90` `verify:` `docstring_reference_ratchet`
+- `S90` `verify:`
+- `S90` `verify:` `ruff check` -> `ty check`
+- `S91` `M` `src/cadrumo/core/corpus_manifest/manifest.py`
+- `S91` `M` `src/cadrumo/domain/renta/_first_slice_routing.py`
+- `S91` `M` `dev/audit/reachability_classification.toml`
+- `S91` `verify:`
+- `S91` `verify:` `docstring_reference_ratchet`
+- `S91` `verify:`
+- `S91` `verify:` `ruff check` -> `ty check`
+- `S92` `M` `src/cadrumo/entrypoints/cli/config/_spec_policies.py`
+- `S92` `M` `src/cadrumo/entrypoints/cli/config/tests/test_spec_policies.py`
+- `S92` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S92` `M` `dev/audit/reachability_classification.toml`
+- `S92` `verify:` `python -m dev.audit.unreachable_code`
+- `S92` `verify:` `pytest .../config/tests/test_spec_policies.py`
+- `S92` `verify:`
+- `S92` `verify:` `ruff check` -> `ty check`
+- `S92` `verify:`
+- `S93` `M` `src/cadrumo/application/modelo/tests/test_workspace_producers.py`
+- `S93` `M` `dev/audit/reachability_classification.toml`
+- `S93` `verify:` `pytest .../test_workspace_producers.py`
+- `S93` `verify:`
+- `S93` `verify:`
+- `S93` `verify:`
+- `S93` `verify:` `ruff check` -> `ty check`
+- `S94` `M` `src/cadrumo/domain/calculations/registry/tests/test_static_generated_source_applicability.py`
+- `S94` `M` `src/cadrumo/application/modelo/tests/test_workspace_producers.py`
+- `S94` `M` `dev/audit/reachability_classification.toml`
+- `S94` `verify:` `pytest .../test_static_generated_source_applicability.py`
+- `S94` `verify:`
+- `S94` `verify:`
+- `S94` `verify:`
+- `S94` `verify:` `ruff check` -> `ty check`
+- `S95` `M` `src/cadrumo/core/external_constants.py`
+- `S95` `M` `dev/audit/reachability_classification.toml`
+- `S95` `verify:` `pytest src/cadrumo/core/tests/test_external_constants.py`
+- `S95` `verify:` `docstring_reference_ratchet`
+- `S95` `verify:`
+- `S95` `verify:` `ruff check` -> `ty check`
+- `S96` `A` `dev/audit/tests/test_external_constants_are_applied_or_adjudicated.py`
+- `S96` `verify:` `pytest .../test_external_constants_are_applied_or_adjudicated.py`
+- `S96` `verify:`
+- `S96` `verify:`
+- `S96` `verify:` `ruff check` -> `ty check`
+- `S97` `M` `src/cadrumo/domain/iva/prorrata.py`
+- `S97` `M` `dev/audit/reachability_classification.toml`
+- `S97` `verify:` `pytest src/cadrumo/domain/iva/tests/`
+- `S97` `verify:` `docstring_reference_ratchet`
+- `S97` `verify:`
+- `S97` `verify:` `ruff check` -> `ty check`
+- `S98` `M` `src/cadrumo/domain/transactions/retencion_parameters.py`
+- `S98` `M` `dev/audit/reachability_classification.toml`
+- `S98` `verify:` `pytest src/cadrumo/domain/transactions/tests/`
+- `S98` `verify:` `docstring_reference_ratchet`
+- `S98` `verify:`
+- `S98` `verify:` `ruff check` -> `ty check`
+- `S99` `M` `src/cadrumo/application/live/filed_data_capture.py`
+- `S99` `M` `dev/audit/reachability_classification.toml`
+- `S99` `verify:` `pytest src/cadrumo/application/live/tests/ -k "filed_data or filed_history"`
+- `S99` `verify:` `docstring_reference_ratchet`
+- `S99` `verify:`
+- `S99` `verify:` `ruff check` -> `ty check`
+- `S100` `M` `src/cadrumo/application/user_profile/custody_ports.py`
+- `S100` `M` `dev/audit/reachability_classification.toml`
+- `S100` `verify:` `pytest src/cadrumo/application/user_profile/tests/ -k "custody_port or port"`
+- `S100` `verify:` `docstring_reference_ratchet`
+- `S100` `verify:`
+- `S100` `verify:` `ruff check` -> `ty check`
+- `S101` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S101` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S101` `M` `dev/audit/tests/test_ledger_citations_resolve.py`
+- `S101` `M` `dev/audit/reachability_classification.toml`
+- `S101` `verify:` `python -m dev.audit.unreachable_code`
+- `S101` `verify:` `pytest .../modelo/tests/ -k operation`
+- `S101` `verify:`
+- `S101` `verify:`
+- `S101` `verify:` `ruff check` -> `ty check`
+- `S102` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule.py`
+- `S102` `M` `dev/audit/reachability_classification.toml`
+- `S102` `verify:` `pytest .../storage/tests/ -k "capsule or custody"`
+- `S102` `verify:` `docstring_reference_ratchet`
+- `S102` `verify:`
+- `S102` `verify:` `ruff check` -> `ty check`
+- `S103` `M` `src/cadrumo/domain/calculations/registry/handoffs.py`
+- `S103` `M` `relation_consumption_channels`
+- `S103` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S103` `M` `dev/audit/reachability_classification.toml`
+- `S103` `verify:` `python -m dev.audit.unreachable_code`
+- `S103` `verify:` `pytest`
+- `S103` `verify:`
+- `S103` `verify:`
+- `S103` `verify:` `ruff check` -> `ty check`
+- `S104` `M` `src/cadrumo/application/prorrata_register/seed.py`
+- `S104` `M` `src/cadrumo/application/prorrata_register/sector_lifecycle.py`
+- `S104` `M` `src/cadrumo/core/prorrata_register.py`
+- `S104` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S104` `M` `dev/audit/reachability_classification.toml`
+- `S104` `verify:` `python -m dev.audit.unreachable_code`
+- `S104` `verify:` `pytest .../prorrata_register/tests/`
+- `S104` `verify:`
+- `S104` `verify:`
+- `S104` `verify:` `ruff check` -> `ty check`
+- `S105` `M` `src/cadrumo/domain/iva/place_of_supply.py`
+- `S105` `M` `place_of_supply_rule`
+- `S105` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S105` `M` `dev/audit/reachability_classification.toml`
+- `S105` `verify:` `python -m dev.audit.unreachable_code`
+- `S105` `verify:` `pytest`
+- `S105` `verify:`
+- `S105` `verify:`
+- `S105` `verify:` `ruff check` -> `ty check`
+- `S106` `M` `src/cadrumo/domain/iva/place_of_supply.py`
+- `S106` `M` `src/cadrumo/application/user_profile/custody_carry.py`
+- `S106` `M` `src/cadrumo/application/user_profile/tests/test_custody_roundtrip.py`
+- `S106` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S106` `M` `dev/audit/reachability_classification.toml`
+- `S106` `verify:` `docstring_reference_ratchet`
+- `S106` `verify:` `python -m dev.audit.unreachable_code`
+- `S106` `verify:` `pytest .../test_custody_roundtrip.py`
+- `S106` `verify:`
+- `S106` `verify:`
+- `S107` `M` `src/cadrumo/domain/calculations/registry/censo_modelos.py`
+- `S107` `M` `src/cadrumo/domain/calculations/registry/tests/test_censo_modelo_foundation.py`
+- `S107` `A` `dev/quality/narrowing_delegators.py`
+- `S107` `A` `dev/quality/tests/test_narrowing_delegators.py`
+- `S107` `M` `dev/audit/reachability_classification.toml`
+- `S107` `M` `justfile`
+- `S107` `verify:` `just check-narrowing-delegators` -> `pass`
+- `S107` `verify:` `uv run --no-sync python -m pytest dev/quality/tests/test_narrowing_delegators.py src/cadrumo/domain/calculations/registry/tests/test_censo_modelo_foundation.py -n0` -> `pass`
+- `S107` `verify:` `uv run --no-sync python -m pytest dev/audit/tests -n0` -> `pass`
+- `S107` `verify:` `uv run --no-sync python -m dev.quality.docstring_reference_ratchet` -> `pass`
+- `S108` `M` `src/cadrumo/entrypoints/cli/__init__.py`
+- `S108` `M` `src/cadrumo/entrypoints/cli/tests/test_capability_family_isolation.py`
+- `S108` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_resolution_cost_budget.py`
+- `S108` `M` `src/cadrumo/entrypoints/cli/tests/test_cli_side_effect_contract.py`
+- `S108` `M` `src/cadrumo/entrypoints/cli/tests/test_resolution_defers_capabilities.py`
+- `S108` `M` `src/cadrumo/entrypoints/cli/tests/test_state_free_capability_isolation.py`
+- `S108` `M` `src/cadrumo/core/tests/test_external_constants_centralisation_part2.py`
+- `S108` `M` `dev/agent_eval/_runner.py`
+- `S108` `M` `dev/quality/narrowing_delegators.py`
+- `S108` `M` `dev/quality/tests/test_narrowing_delegators.py`
+- `S108` `M` `dev/quality/unconsumed_export_ratchet.toml`
+- `S108` `verify:` `uv run --no-sync python -m pytest dev/quality/tests/test_narrowing_delegators.py -n0` -> `pass`
+- `S108` `verify:` `just check-narrowing-delegators` -> `pass`
+- `S108` `verify:` `uv run --no-sync python -m dev.quality.import_hygiene_scan` -> `pass`
+- `S108` `verify:` `uv run --no-sync python -m dev.quality.facade_export_scan` -> `pass`
+- `S108` `verify:` `uv run --no-sync python -m pytest src/cadrumo/entrypoints/cli/tests/test_cli_resolution_cost_budget.py src/cadrumo/entrypoints/cli/tests/test_resolution_defers_capabilities.py src/cadrumo/entrypoints/cli/tests/test_state_free_capability_isolation.py src/cadrumo/core/tests/test_external_constants_centralisation_part2.py -m '' -n0` -> `fail`
+- `S109` `M` `src/cadrumo/entrypoints/tui/devtools/surfaces.py`
+- `S109` `A` `src/cadrumo/entrypoints/tui/devtools/tests/test_every_fixture_registry_is_registered.py`
+- `S109` `M` `dev/audit/reachability_classification.toml`
+- `S109` `verify:` `uv run --no-sync python -m pytest dev/audit/tests src/cadrumo/entrypoints/tui/devtools/tests -n0` -> `pass`
+- `S109` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/tui/devtools/surfaces.py` -> `pass`
+- `S110` `M` `dev/audit/reachability_classification.toml`
+- `S110` `M` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S109.md`
+- `S110` `verify:` `uv run --no-sync python -m pytest dev/audit/tests -n0` -> `pass`
+- `S111` `A` `src/cadrumo/entrypoints/tui/devtools/profile_fixtures.py`
+- `S111` `M` `src/cadrumo/entrypoints/tui/devtools/surfaces.py`
+- `S111` `verify:` `uv run --no-sync python -m pytest src/cadrumo/entrypoints/tui/devtools/tests dev/tui/tests -n0` -> `pass`
+- `S111` `verify:` `uv run --no-sync python -m dev.tui inventory` -> `pass`
+- `S111` `verify:` `uv run --no-sync ty check src/cadrumo/entrypoints/tui/devtools/profile_fixtures.py` -> `pass`
+- `S112` `A` `dev/quality/tui_render_coverage_ratchet.py`
+- `S112` `A` `dev/quality/tui_render_coverage_ratchet.toml`
+- `S112` `A` `dev/quality/tests/test_tui_render_coverage_ratchet.py`
+- `S112` `M` `dev/audit/reachability_classification.toml`
+- `S112` `M` `justfile`
+- `S112` `verify:` `just check-tui-render-coverage` -> `pass`
+- `S112` `verify:` `uv run --no-sync python -m pytest dev/quality/tests/test_tui_render_coverage_ratchet.py -n0` -> `pass`
+- `S112` `verify:` `uv run --no-sync python -m pytest dev/audit/tests -n0` -> `pass`
+- `S113` `M` `dev/audit/reachability_classification.toml`
+- `S113` `verify:` `uv run --no-sync python -m pytest dev/audit/tests -n0` -> `pass`
+- `S113` `verify:` `uv run --no-sync python -m pytest dev/audit/tests/test_duplication_scan.py -m '' -n0` -> `pass`
+- `S113` `verify:` `uv run --no-sync python -m dev.quality.unreachable_module_ratchet` -> `pass`
+- `S114` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S114` `A` `dev/quality/tests/test_orphan_test_records_agree.py`
+- `S114` `verify:` `uv run --no-sync python -m pytest dev/quality/tests/test_orphan_test_records_agree.py -n0` -> `pass`
+- `S114` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_ratchet` -> `fail`
+- `S115` `M` `dev/quality/suite.py`
+- `S115` `M` `src/cadrumo/application/provisioning.py`
+- `S115` `M` `dev/audit/reachability_classification.toml`
+- `S115` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S115` `verify:` `uv run --no-sync python -m pytest dev/audit/tests dev/quality/tests/test_orphan_test_records_agree.py -n0` -> `pass`
+- `S115` `verify:` `uv run --no-sync python -m pytest dev/quality/tests/test_suite_gate_table.py -n0` -> `fail`
+- `S115` `verify:` `uv run --no-sync python -m dev.quality.docstring_reference_ratchet` -> `pass`
+- `S116` `M` `dev/quality/suite.py`
+- `S116` `verify:` `uv run --no-sync python -m pytest dev/quality/tests/test_suite_gate_table.py -n0` -> `pass`
+- `S116` `verify:` `uv run --no-sync python -m dev.quality.modelo_workspace_action_denominator` -> `pass`
+- `S117` `M` `.github/ci-control-plane.md`
+- `S117` `verify:` `uv run --no-sync python -m pytest dev/quality/tests/test_doc_privacy.py -n0` -> `pass`
+- `S118` `M` `src/cadrumo/entrypoints/tui/devtools/profile_fixtures.py`
+- `S118` `M` `src/cadrumo/entrypoints/tui/devtools/modelo_fixtures.py`
+- `S118` `A` `src/cadrumo/entrypoints/tui/devtools/tests/test_profile_fixtures.py`
+- `S118` `M` `dev/quality/unconsumed_export_ratchet.toml`
+- `S118` `verify:` `uv run --no-sync python -m pytest src/cadrumo/entrypoints/tui/devtools/tests -n0` -> `pass`
+- `S118` `verify:` `uv run --no-sync python -m dev.quality.unconsumed_export_ratchet` -> `fail`
+- `S119` `M` `dev/audit/reachability_classification.toml`
+- `S119` `verify:` `uv run --no-sync python -m pytest dev/audit/tests -n0` -> `pass`
+- `S120` `M` `src/cadrumo/application/modelo/result_disposition_resolution.py`
+- `S120` `M` `src/cadrumo/application/user_profile/custody_ports.py`
+- `S120` `M` `src/cadrumo/core/refund_election.py`
+- `S120` `M` `dev/audit/reachability_classification.toml`
+- `S120` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S120` `verify:` `uv run --no-sync python -m pytest dev/audit/tests -n0` -> `pass`
+- `S120` `verify:` `uv run --no-sync python -m dev.quality.docstring_reference_ratchet` -> `pass`
+- `S120` `verify:` `uv run --no-sync python -m pytest src/cadrumo/application/user_profile/tests -n0` -> `fail`
+- `S121` `M` `src/cadrumo/entrypoints/cli/_tty.py`
+- `S121` `M` `src/cadrumo/domain/calculations/registry/modelo_localization.py`
+- `S121` `M` `src/cadrumo/application/auth/certificate_sources.py`
+- `S121` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S121` `M` `src/cadrumo/application/user_profile/bundle.py`
+- `S121` `M` `src/cadrumo/application/user_profile/commands.py`
+- `S121` `M` `src/cadrumo/application/user_profile/login_session_port.py`
+- `S121` `M` `dev/audit/reachability_classification.toml`
+- `S121` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S121` `M` `dev/quality/unconsumed_export_ratchet.toml`
+- `S121` `verify:` `uv run --no-sync python -m pytest dev/audit/tests dev/quality/tests/test_orphan_test_records_agree.py -n0` -> `pass`
+- `S121` `verify:` `uv run --no-sync python -m dev.quality.docstring_reference_ratchet` -> `pass`
+- `S122` `M` `.github/workflows/ci.yml`
+- `S122` `M` `.vault/adr/2026-08-24-tui-modelo-workspace-interface-adr.md`
+- `S122` `M` `.vault/adr/2026-09-04-reachability-burndown-adr.md`
+- `S122` `D` `dev/audit/reachability_classification.toml`
+- `S122` `D` `dev/audit/tests/test_classification_taxonomy_invariants.py`
+- `S122` `D` `dev/audit/tests/test_external_constants_are_applied_or_adjudicated.py`
+- `S122` `D` `dev/audit/tests/test_ledger_citations_resolve.py`
+- `S122` `D` `dev/audit/tests/test_ledger_measurements_are_dated.py`
+- `S122` `D` `dev/audit/tests/test_reachability_classification.py`
+- `S122` `D` `dev/quality/modelo_workspace_action_classification.py`
+- `S122` `D` `dev/quality/modelo_workspace_action_classification_table.py`
+- `S122` `D` `dev/quality/modelo_workspace_action_denominator.py`
+- `S122` `M` `dev/quality/suite.py`
+- `S122` `D` `dev/quality/tests/test_cited_constants_are_protected.py`
+- `S122` `D` `dev/quality/tests/test_no_unconsumed_consumer_claim.py`
+- `S122` `D` `dev/quality/tests/test_orphan_test_records_agree.py`
+- `S122` `A` `dev/quality/tests/test_tui_render_coverage.py`
+- `S122` `D` `dev/quality/tests/test_tui_render_coverage_ratchet.py`
+- `S122` `A` `dev/quality/tui_render_coverage.py`
+- `S122` `D` `dev/quality/tui_render_coverage_ratchet.py`
+- `S122` `D` `dev/quality/tui_render_coverage_ratchet.toml`
+- `S122` `M` `dev/quality/unconsumed_export_ratchet.py`
+- `S122` `M` `dev/quality/unconsumed_export_ratchet.toml`
+- `S122` `M` `dev/quality/unused_symbol_ratchet.py`
+- `S122` `M` `dev/quality/unused_symbol_ratchet.toml`
+- `S122` `D` `dev/tests/test_modelo_workspace_action_denominator.py`
+- `S122` `M` `dev/tests/test_modelo_workspace_fixed_point.py`
+- `S122` `M` `dev/tui/_coverage.py`
+- `S122` `M` `dev/tui/cli.py`
+- `S122` `M` `dev/tui/tests/test_tui_surface_identity_resolution.py`
+- `S122` `M` `dev/tui/tests/test_tui_visual_inventory.py`
+- `S122` `M` `justfile`
+- `S122` `M` `src/cadrumo/domain/calculations/registry/inventory_bindings.py`
+- `S122` `M` `src/cadrumo/entrypoints/tui/devtools/surfaces.py`
+- `S122` `M` `src/cadrumo/entrypoints/tui/ledger/controller.py`
+- `S122` `M` `src/cadrumo/entrypoints/tui/ledger/routes.py`
+- `S122` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_destination_pairing_is_canonical.py`
+- `S122` `verify:` `uv run --no-sync pytest -q -n0 dev/tui/tests/test_tui_visual_inventory.py dev/tui/tests/test_tui_surface_identity_resolution.py dev/quality/tests/test_tui_render_coverage.py dev/quality/tests/test_suite_gate_table.py dev/tests/test_every_source_file_parses.py` -> `65 passed, 1 skipped`
+- `S122` `verify:` `uv run --no-sync ruff check <changed Python paths>` -> `pass`
+- `S122` `verify:` `just check-tui-render-coverage` -> `expected red: 10 concrete interfaces have no executable fixture surface`
+- `S123` `D` `src/cadrumo/entrypoints/tui/devtools/home_candidates.py`
+- `S123` `D` `src/cadrumo/entrypoints/tui/devtools/tests/test_home_candidates.py`
+- `S123` `verify:` `uv run --no-sync pytest -q -n0 dev/tests/test_every_source_file_parses.py dev/tui/tests/test_tui_visual_inventory.py dev/tui/tests/test_tui_surface_identity_resolution.py` -> `55 passed, 1 skipped`
+- `S123` `verify:` `just check-tui-render-coverage` -> `expected red: reduced from 10 to 8 concrete interfaces`
+- `S124` `D` `dev/quality/unreachable_module_ratchet.toml`
+- `S124` `D` `dev/quality/unused_symbol_ratchet.toml`
+- `S124` `D` `dev/quality/unconsumed_export_ratchet.toml`
+- `S124` `D` `dev/quality/unreachable_module_ratchet.py`
+- `S124` `D` `dev/quality/unused_symbol_ratchet.py`
+- `S124` `D` `dev/quality/unconsumed_export_ratchet.py`
+- `S124` `A` `dev/quality/unreachable_module_coverage.py`
+- `S124` `A` `dev/quality/unused_symbol_coverage.py`
+- `S124` `A` `dev/quality/unconsumed_export_coverage.py`
+- `S124` `D` `dev/tests/` -> `dev/quality/tests/`
+- `S124` `A` `dev/quality/tests/`
+- `S124` `M` `justfile` -> `dev/quality/suite.py` -> `.github/workflows/ci.yml`
+- `S124` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S124` `grounding:` `2026-09-07-quality-gate-zero-closure-blind-green-gates-adr`
+- `S124` `verify:` `17 passed`
+- `S124` `verify:` `all checks passed`
+- `S124` `verify:` `just check-unreachable-module-coverage` -> `50`
+- `S124` `verify:` `just check-unused-symbol-coverage` -> `385` -> `21`
+- `S124` `verify:` `just check-unconsumed-export-coverage` -> `275`
+- `S125` `D` `src/cadrumo/entrypoints/tui/devtools`
+- `S125` `A` `dev/tui/harness`
+- `S125` `D` `dev/tests/test_public_devtool_homes.py`
+- `S125` `M` `dev/tui/_harness.py` -> `dev/tui/cli.py` -> `dev.tui.harness`
+- `S125` `M` `dev/audit/tests/test_unreachable_code.py`
+- `S125` `M`
+- `S125` `M` `2026-08-11-tui-interface-adr` -> `2026-08-11-tui-architecture-adr`
+- `S125` `M` `50` -> `32`
+- `S125` `verify:` `python -m dev.tui.harness surfaces`
+- `S125` `verify:` `141 passed` -> `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S125` `verify:` `11 passed`
+- `S125` `verify:` `9 passed, 1 skipped`
+- `S125` `verify:` `all checks passed`
+- `S125` `verify:` `cadrumo.entrypoints.tui.devtools` -> `entrypoints/tui/devtools`
+- `S125` `verify:` `just check-tui-render-coverage` -> `8`
+- `S125` `verify:` `just check-unreachable-module-coverage` -> `50` -> `32`
+- `S126` `D` `MODELO_ACTIONS_WITHOUT_REGISTERED_OPERATIONS`
+- `S126` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_create_deferred.py`
+- `S126` `D` `dev/tests/test_modelo_workspace_fixed_point.py`
+- `S126` `M` `src/cadrumo/entrypoints/tui/modelo/actions.py`
+- `S126` `M` `src/cadrumo/entrypoints/tui/modelo/tests/test_actions.py`
+- `S126` `grounding:` `2026-08-24-tui-modelo-workspace-interface-adr`
+- `S126` `verify:`
+- `S126` `verify:` `19 passed, 1 skipped`
+- `S126` `verify:` `all checks passed`
+- `S127` `M` `src/cadrumo/application/auth/catalogue.py`
+- `S127` `M` `src/cadrumo/application/auth/operator.py`
+- `S127` `M` `src/cadrumo/application/auth/operator_cleanup.py`
+- `S127` `M` `src/cadrumo/application/auth/operator_results.py`
+- `S127` `M` `src/cadrumo/application/auth/tests/test_catalogue.py`
+- `S127` `M` `src/cadrumo/application/auth/tests/test_operator.py`
+- `S127` `M` `src/cadrumo/application/auth/tests/test_operator_storage_session.py`
+- `S127` `M` `src/cadrumo/application/user_profile/tests/test_first_run_config_cli_surface.py`
+- `S127` `M` `src/cadrumo/core/errors/registry/_application_part1.py`
+- `S127` `M` `src/cadrumo/core/tests/test_locale_coverage_hardened_errors.py`
+- `S127` `M` `src/cadrumo/entrypoints/cli/config/_auth.py`
+- `S127` `M` `src/cadrumo/entrypoints/cli/config_payloads.py`
+- `S127` `M` `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`
+- `S127` `M` `src/cadrumo/locales/_intentional_identical.json`
+- `S127` `M` `src/cadrumo/locales/ca/application.yml`
+- `S127` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S127` `M` `src/cadrumo/locales/ca/common.yml`
+- `S127` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S127` `M` `src/cadrumo/locales/en/application.yml`
+- `S127` `M` `src/cadrumo/locales/en/cli.yml`
+- `S127` `M` `src/cadrumo/locales/en/common.yml`
+- `S127` `M` `src/cadrumo/locales/en/errors.yml`
+- `S127` `M` `src/cadrumo/locales/es/application.yml`
+- `S127` `M` `src/cadrumo/locales/es/cli.yml`
+- `S127` `M` `src/cadrumo/locales/es/common.yml`
+- `S127` `M` `src/cadrumo/locales/es/errors.yml`
+- `S127` `M` `src/cadrumo/locales/hu/application.yml`
+- `S127` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S127` `M` `src/cadrumo/locales/hu/common.yml`
+- `S127` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S127` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/auth/tests/test_catalogue.py src/cadrumo/application/auth/tests/test_operator.py::test_configure_operator_auth_unknown_provider_emits_no_event src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py::test_config_auth_accepts_supported_provider_and_rejects_others src/cadrumo/application/user_profile/tests/test_first_run_config_cli_surface.py::test_setup_auth_rejects_unsupported_provider src/cadrumo/core/tests/test_locale_coverage_hardened_errors.py` -> `pass`
+- `S127` `verify:` `uv run --no-sync ruff check ...` -> `pass`
+- `S128` `M` `dev/locales/_ast_scanner.py`
+- `S128` `M` `dev/locales/_status.py`
+- `S128` `M` `dev/locales/cli.py`
+- `S128` `M` `dev/locales/manager.py`
+- `S128` `D` `dev/locales/tests/test_allow_identical.py`
+- `S128` `M` `dev/locales/tests/test_locale_translation_honesty.py`
+- `S128` `M` `dev/locales/tests/test_scaffold_admits_no_unvalued_key.py`
+- `S128` `M` `dev/locales/tests/test_status.py`
+- `S128` `M` `dev/tests/test_text_writer_newline_pinning.py`
+- `S128` `M` `src/cadrumo/application/user_profile/tests/test_overview_localization.py`
+- `S128` `D` `src/cadrumo/locales/_intentional_identical.json`
+- `S128` `verify:` `uv run --no-sync pytest -q dev/locales/tests/test_status.py dev/locales/tests/test_locale_translation_honesty.py dev/locales/tests/test_scaffold_admits_no_unvalued_key.py src/cadrumo/application/user_profile/tests/test_overview_localization.py` -> `pass`
+- `S128` `verify:` `uv run --no-sync ruff check ...` -> `pass`
+- `S129` `M` `.vault/adr/2026-08-22-source-casilla-integration-adr.md`
+- `S129` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S129` `M` `dev/audit/size_budget_baseline.json`
+- `S129` `M` `dev/registry/analysis/modelo_branch_classification.toml`
+- `S129` `M` `dev/registry/conformance/authorities.py`
+- `S129` `M` `dev/registry/conformance/cli.py`
+- `S129` `M` `dev/registry/conformance/closure.py`
+- `S129` `M` `dev/registry/conformance/tests/test_closure.py`
+- `S129` `M` `dev/registry/conformance/tests/test_real_closure_outcomes.py`
+- `S129` `D` `dev/source_connectivity/__init__.py`
+- `S129` `D` `dev/source_connectivity/check.py`
+- `S129` `D` `dev/source_connectivity/cli.py`
+- `S129` `D` `dev/source_connectivity/discovery.py`
+- `S129` `D` `dev/source_connectivity/live_proof.py`
+- `S129` `D` `dev/source_connectivity/source_connectivity_authority.py`
+- `S129` `D` `dev/source_connectivity/tests/__init__.py`
+- `S129` `D` `dev/source_connectivity/tests/conftest.py`
+- `S129` `D` `dev/source_connectivity/tests/test_campaign_close.py`
+- `S129` `D` `dev/source_connectivity/tests/test_census_completeness.py`
+- `S129` `D` `dev/source_connectivity/tests/test_check.py`
+- `S129` `D` `dev/source_connectivity/tests/test_cli.py`
+- `S129` `D` `dev/source_connectivity/tests/test_command_spec_handler_table_resolution.py`
+- `S129` `D` `dev/source_connectivity/tests/test_command_spec_policy_declaration.py`
+- `S129` `D` `dev/source_connectivity/tests/test_discovery.py`
+- `S129` `D` `dev/source_connectivity/tests/test_discovery_resolves_the_real_tree.py`
+- `S129` `D` `dev/source_connectivity/tests/test_live_proof.py`
+- `S129` `D` `dev/source_connectivity/tests/test_m182_deferral.py`
+- `S129` `D` `dev/source_connectivity/tests/test_m193_deferral.py`
+- `S129` `D` `dev/source_connectivity/tests/test_m232_deferral.py`
+- `S129` `D` `dev/source_connectivity/tests/test_m296_deferral.py`
+- `S129` `D` `dev/source_connectivity/tests/test_m360_deferral.py`
+- `S129` `D` `dev/source_connectivity/tests/test_source_connectivity_authority.py`
+- `S129` `D` `dev/source_connectivity/tests/test_source_connectivity_authority_contract.py`
+- `S129` `M` `dev/tests/test_governance_corpus_isolation.py`
+- `S129` `M` `pyproject.toml`
+- `S129` `D` `src/cadrumo/_data/source_connectivity/census.toml`
+- `S129` `M` `src/cadrumo/application/modelo/tests/test_workspace.py`
+- `S129` `M` `src/cadrumo/application/modelo/tests/test_workspace_projection.py`
+- `S129` `M` `src/cadrumo/application/modelo/workspace.py`
+- `S129` `M` `src/cadrumo/application/modelo/workspace_producers.py`
+- `S129` `M` `src/cadrumo/application/registry/closure.py`
+- `S129` `M` `src/cadrumo/application/registry/closure_capture.py`
+- `S129` `D` `src/cadrumo/application/registry/source_connectivity.py`
+- `S129` `D` `src/cadrumo/application/registry/source_connectivity_coverage.py`
+- `S129` `M` `src/cadrumo/application/registry/tests/test_closure_capture.py`
+- `S129` `M` `src/cadrumo/application/registry/tests/test_closure_models.py`
+- `S129` `D` `src/cadrumo/application/registry/tests/test_source_connectivity_coverage.py`
+- `S129` `D` `src/cadrumo/application/registry/tests/test_source_connectivity_inventory.py`
+- `S129` `D` `src/cadrumo/core/source_connectivity.py`
+- `S129` `D` `src/cadrumo/core/tests/test_source_connectivity.py`
+- `S129` `M` `src/cadrumo/domain/calculations/registry/tests/test_filing_grade_binding_resolution.py`
+- `S129` `verify:` `uv run ruff check <S129 Python paths>` -> `pass`
+- `S129` `verify:` `uv run pytest -q registry closure and Modelo workspace tests` -> `pass`
+- `S129` `verify:` `rg exact deleted source-connectivity imports and types across src/dev` -> `pass`
+- `S130` `M` `.vault/adr/2026-06-10-calculation-aggregation-taxonomy-adr.md`
+- `S130` `M` `.vault/adr/2026-06-26-binding-resolver-contract-unification-adr.md`
+- `S130` `M` `src/cadrumo/_data/registry/aeat/modelos/182/revisions/2025/revision.toml`
+- `S130` `M` `src/cadrumo/application/aggregation/__init__.py`
+- `S130` `M` `src/cadrumo/application/aggregation/_source_mesh.py`
+- `S130` `D` `src/cadrumo/application/aggregation/tests/test_source_kind_enrollment_status.py`
+- `S130` `M` `src/cadrumo/application/calculations/tests/test_grouping_dispatch_coverage.py`
+- `S130` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S130` `M` `src/cadrumo/application/modelo/calculation_route.py`
+- `S130` `M` `src/cadrumo/application/modelo/calculation_source_policy.py`
+- `S130` `D` `src/cadrumo/application/modelo/tests/test_binding_source_kind_mesh_parity.py`
+- `S130` `M` `src/cadrumo/application/modelo/tests/test_calculation_route.py`
+- `S130` `D` `src/cadrumo/application/modelo/tests/test_deferred_detalle_source_advisories.py`
+- `S130` `M` `src/cadrumo/application/modelo/tests/test_source_boundary_and_enrollment.py`
+- `S130` `M` `src/cadrumo/application/modelo/tests/test_source_mesh_missing_sources.py`
+- `S130` `A` `src/cadrumo/application/modelo/tests/test_unrouted_source_refusal.py`
+- `S130` `M` `src/cadrumo/core/aggregation.py`
+- `S130` `M` `src/cadrumo/domain/calculations/registry/donativo_bindings.py`
+- `S130` `M` `src/cadrumo/domain/calculations/registry/queries.py`
+- `S130` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_build_validation.py`
+- `S130` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_coverage_breadth.py`
+- `S130` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_source_kind_taxonomy.py`
+- `S130` `M` `src/cadrumo/domain/calculations/registry/tests/test_selector_shape.py`
+- `S130` `D` `src/cadrumo/domain/calculations/registry/tests/test_source_enrollment.py`
+- `S130` `verify:` `uv run ruff check <S130 Python paths>` -> `pass`
+- `S130` `verify:` `uv run pytest -q -n0 route, source-refusal, grouping, selector, validator, taxonomy, and breadth tests` -> `pass`
+- `S130` `verify:` `uv run pytest -q -n0 src/cadrumo/application/modelo/tests/test_source_boundary_and_enrollment.py` -> `pass`
+- `S130` `verify:` `rg exact retired disposition symbols across src/dev` -> `pass`
+- `S131` `D` `dev/registry/analysis/modelo_branch_classification.py`
+- `S131` `D` `dev/registry/analysis/modelo_branch_classification.toml`
+- `S131` `A` `dev/registry/analysis/modelo_regulatory_literal_scan.py`
+- `S131` `D` `dev/registry/tests/test_modelo_branch_classification.py`
+- `S131` `A` `dev/registry/tests/test_modelo_regulatory_literal_scan.py`
+- `S131` `A` `dev/quality/modelo_regulatory_literals.py`
+- `S131` `M` `dev/quality/suite.py`
+- `S131` `M` `justfile`
+- `S131` `verify:` `uv run ruff check <S131 Python paths>` -> `pass`
+- `S131` `verify:` `rg exact retired branch-classification vocabulary across src/dev` -> `pass`
+- `S132` `M` `src/cadrumo/application/aggregation/_inventory.py`
+- `S132` `M` `src/cadrumo/application/aggregation/tests/test_inventory_source.py`
+- `S132` `verify:` `uv run ruff check inventory resolver and regulatory-literal detector paths` -> `pass`
+- `S132` `verify:` `uv run pytest -q -n0 selector-coordinate refusal and regulatory-literal detector tests` -> `pass`
+- `S132` `verify:` `uv run --no-sync python -m dev.quality.modelo_regulatory_literals` -> `pass`
+- `S133` `M` `.vault/adr/2026-07-09-size-budget-refactor-adr.md`
+- `S133` `M` `.github/workflows/ci.yml`
+- `S133` `D` `dev/audit/size_budget.py`
+- `S133` `D` `dev/audit/size_budget_baseline.json`
+- `S133` `D` `dev/audit/tests/test_size_budget_baseline.py`
+- `S133` `D` `dev/audit/tests/test_size_budget_dev_corpus.py`
+- `S133` `M` `dev/audit/advisory.py`
+- `S133` `M` `dev/quality/default_lane_visibility.py`
+- `S133` `M` `dev/quality/tests/test_default_lane_visibility.py`
+- `S133` `M` `dev/tests/test_text_writer_newline_pinning.py`
+- `S133` `M` `justfile`
+- `S133` `M` `src/cadrumo/tests/__init__.py`
+- `S133` `D` `src/cadrumo/tests/size_budget.py`
+- `S133` `verify:` `uv run ruff check <S133 Python paths>` -> `pass`
+- `S133` `verify:` `uv run pytest -q -n0 dev/quality/tests/test_default_lane_visibility.py` -> `pass`
+- `S133` `verify:` `import cadrumo.tests and dev.audit.advisory` -> `pass`
+- `S133` `verify:` `rg exact retired size-budget mechanism symbols and commands` -> `pass`
+- `S134` `R` `dev/registry/analysis/modelo_embed_classification.py` -> `dev/registry/analysis/modelo_embed_scan.py`
+- `S134` `D` `dev/registry/analysis/modelo_embed_classification.toml`
+- `S134` `D` `dev/registry/tests/test_modelo_specific_embed_classification.py`
+- `S134` `A` `dev/registry/tests/test_modelo_specific_embed_scan.py`
+- `S134` `A` `dev/quality/modelo_regulatory_embeds.py`
+- `S134` `M` `dev/quality/suite.py`
+- `S134` `M` `justfile`
+- `S134` `M` `.vault/adr/2026-06-10-modelo-enum-hardening-adr.md`
+- `S134` `verify:` `uv run --no-sync pytest -q -n0 dev/registry/tests/test_modelo_specific_embed_scan.py` -> `pass`
+- `S134` `verify:` `uv run --no-sync ruff check dev/registry/analysis/modelo_embed_scan.py dev/registry/tests/test_modelo_specific_embed_scan.py dev/quality/modelo_regulatory_embeds.py dev/quality/suite.py` -> `pass`
+- `S135` `M` `dev/registry/analysis/modelo_embed_scan.py`
+- `S135` `M` `dev/registry/tests/test_modelo_specific_embed_scan.py`
+- `S135` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S135` `verify:` `uv run --no-sync ruff check dev/registry/analysis/modelo_embed_scan.py dev/registry/tests/test_modelo_specific_embed_scan.py` -> `pass`
+- `S135` `verify:` `uv run --no-sync pytest -q -n0 dev/registry/tests/test_modelo_specific_embed_scan.py` -> `pass`
+- `S136` `M` `src/cadrumo/domain/calculations/registry/_validate_relation_sources.py`
+- `S136` `M` `src/cadrumo/domain/calculations/registry/tests/test_relation_closure.py`
+- `S136` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/_validate_relation_sources.py src/cadrumo/domain/calculations/registry/tests/test_relation_closure.py` -> `pass`
+- `S136` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/domain/calculations/registry/tests/test_relation_closure.py` -> `pass`
+- `S137` `M` `src/cadrumo/domain/calculations/registry/validate_registry_scope.py`
+- `S137` `D` `src/cadrumo/domain/calculations/registry/_validate_previous_filing_year_coverage.py`
+- `S137` `D` `src/cadrumo/domain/calculations/registry/tests/test_validate_previous_filing_year_coverage.py`
+- `S137` `D` `src/cadrumo/domain/calculations/registry/tests/test_registry_reviewability.py`
+- `S137` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/validate_registry_scope.py src/cadrumo/domain/calculations/registry/_validate_relation_sources.py` -> `pass`
+- `S137` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/domain/calculations/registry/tests/test_authority.py src/cadrumo/domain/calculations/registry/tests/test_committed_registry.py src/cadrumo/domain/calculations/registry/tests/test_relation_closure.py` -> `pass`
+- `S138` `M` `dev/registry/analysis/load_census.py`
+- `S138` `D` `dev/registry/analysis/load_census_classification.py`
+- `S138` `D` `dev/registry/analysis/load_claim_verification.py`
+- `S138` `R` `dev/registry/tests/test_load_census_classification.py` -> `dev/registry/tests/test_load_census.py`
+- `S138` `D` `dev/registry/tests/test_load_claim_verification.py`
+- `S138` `verify:` `uv run --no-sync ruff check dev/registry/analysis/load_census.py dev/registry/tests/test_load_census.py` -> `pass`
+- `S138` `verify:` `uv run --no-sync pytest -q -n0 dev/registry/tests/test_load_census.py` -> `pass`
+- `S138` `verify:` `uv run --no-sync python -m dev.registry.analysis.load_census` -> `pass`
+- `S139` `M` `src/cadrumo/application/operator_surface/models.py`
+- `S139` `M` `src/cadrumo/application/operator_surface/manifest.py`
+- `S139` `M` `src/cadrumo/application/operator_surface/tests/test_manifest_reconciliation.py`
+- `S139` `M` `src/cadrumo/entrypoints/cli/_operator_surface_reconciliation.py`
+- `S139` `M` `src/cadrumo/entrypoints/cli/_verb_input_schema.py`
+- `S139` `M` `src/cadrumo/entrypoints/cli/command_api.py`
+- `S139` `M` `src/cadrumo/entrypoints/cli/config_payloads.py`
+- `S139` `M` `src/cadrumo/entrypoints/cli/tests/test_profile_export_roundtrip.py`
+- `S139` `M` `src/cadrumo_harness/mcp/_action_capabilities.py`
+- `S139` `M` `dev/locales/_colanding.py`
+- `S139` `M` `dev/locales/cli.py`
+- `S139` `M` `dev/locales/tests/test_contract.py`
+- `S139` `M` `dev/locales/tests/test_parity.py`
+- `S139` `M` `dev/tests/test_suggestion_command_conformance.py`
+- `S139` `verify:` `uv run ruff check <focused S139 paths>` -> `pass`
+- `S139` `verify:` `uv run pytest -q src/cadrumo_harness/mcp/tests/test_action_projection.py src/cadrumo/entrypoints/cli/tests/test_command_graph_consumers.py dev/tests/test_suggestion_command_conformance.py` -> `pass`
+- `S139` `verify:` `uv run pytest -q src/cadrumo/application/operator_surface/tests/test_manifest_reconciliation.py dev/locales/tests/test_contract.py dev/locales/tests/test_parity.py src/cadrumo/entrypoints/cli/tests/test_profile_export_roundtrip.py` -> `fail`
+- `S140` `M` `.vault/adr/2026-08-07-aeat-liabilities-sanciones-adr.md`
+- `S140` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S140` `D` `dev/quality/write_path_backlog.py`
+- `S140` `D` `dev/quality/write_path_backlog.toml`
+- `S140` `A` `dev/quality/write_path_coverage.py`
+- `S140` `M` `dev/quality/suite.py`
+- `S140` `M` `dev/audit/write_path_coverage.py`
+- `S140` `M` `dev/tests/test_write_path_coverage_gate.py`
+- `S140` `M` `dev/identity/tests/test_identifier_namespace_enrollment_gate.py`
+- `S140` `M` `justfile`
+- `S140` `D` `src/cadrumo/adapters/outbound/aeat/sede/deudas.py`
+- `S140` `D` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_deudas_schema.py`
+- `S140` `M` `src/cadrumo/adapters/outbound/aeat/sede/__init__.py`
+- `S140` `M` `src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py`
+- `S140` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S140` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S140` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S140` `D` `src/cadrumo/application/live/deudas.py`
+- `S140` `D` `src/cadrumo/application/live/tests/test_deudas_service.py`
+- `S140` `M` `src/cadrumo/application/live/tests/test_live_refusal_message_key_only.py`
+- `S140` `D` `src/cadrumo/core/deuda_direccion.py`
+- `S140` `D` `src/cadrumo/core/objeto_tributario.py`
+- `S140` `D` `src/cadrumo/core/tests/test_deuda_direccion.py`
+- `S140` `D` `src/cadrumo/core/tests/test_objeto_tributario.py`
+- `S140` `M` `src/cadrumo/core/errors/registry/_domain_part1.py`
+- `S140` `M` `src/cadrumo/entrypoints/cli/_app_live_command_specs.py`
+- `S140` `D` `src/cadrumo/entrypoints/cli/_app_live_deudas_cli.py`
+- `S140` `D` `src/cadrumo/entrypoints/cli/_app_live_deudas_command_specs.py`
+- `S140` `D` `src/cadrumo/entrypoints/cli/_app_live_deudas_payloads.py`
+- `S140` `M` `src/cadrumo/entrypoints/cli/tests/test_app_live_command_specs.py`
+- `S140` `D` `src/cadrumo/entrypoints/cli/tests/test_live_deudas_verbs.py`
+- `S140` `M` `src/cadrumo/locales/{ca,en,es,hu}/application.yml`
+- `S140` `M` `src/cadrumo/locales/{ca,en,es,hu}/cli.yml`
+- `S140` `M` `src/cadrumo/locales/{ca,en,es,hu}/errors.yml`
+- `S140` `M` `docs/how-to/check-aeat-notifications.md`
+- `S140` `verify:` `uv run ruff check <focused S140 paths>` -> `pass`
+- `S140` `verify:` `uv run pytest -q -n 0 --confcutdir=dev/tests -m integration dev/tests/test_write_path_coverage_gate.py` -> `pass`
+- `S140` `verify:` `just check-write-path-coverage` -> `pass`
+- `S140` `verify:` `uv run python -c <live command graph and namespace absence assertions>` -> `pass`
+- `S140` `verify:` `uv run pytest -q <focused unit paths>` -> `fail`
+- `S141` `M` `dev/audit/complexity.py`
+- `S141` `M` `dev/audit/report.py`
+- `S141` `D` `dev/audit/tests/test_complexity_classification.py`
+- `S141` `A` `dev/audit/tests/test_complexity_scan.py`
+- `S141` `verify:` `uv run pytest -q -n 0 --confcutdir=dev/audit/tests -m unit dev/audit/tests/test_complexity_scan.py` -> `pass (4 passed)`
+- `S141` `verify:` `uv run ruff check dev/audit/complexity.py dev/audit/report.py dev/audit/tests/test_complexity_scan.py` -> `pass`
+- `S141` `verify:` `dev/audit` -> `dev/tests` -> `justfile` -> `pass (zero matches)`
+- `S141` `verify:` `scan_complexity()` -> `pass (664 current findings: 545 cyclomatic, 21 maintainability, 98 cognitive)`
+- `S142` `M` `dev/audit/report.py`
+- `S142` `A` `dev/audit/tests/test_report_shadowing.py`
+- `S142` `verify:` `uv run pytest -q -n 0 --confcutdir=dev/audit/tests -m unit dev/audit/tests/test_report_shadowing.py` -> `pass (2 passed)`
+- `S142` `verify:` `uv run ruff check dev/audit/report.py dev/audit/tests/test_report_shadowing.py` -> `pass`
+- `S142` `verify:` `dev/audit/report.py` -> `dev/audit/tests` -> `pass (zero matches)`
+- `S142` `verify:` `audit_shadowing()` -> `pass (GREEN, zero current findings)`
+- `S143` `M` `src/cadrumo/adapters/persistence/storage/envelope/secure_bound_repository.py`
+- `S143` `M` `src/cadrumo/core/decimal/coercion.py`
+- `S143` `M` `src/cadrumo/core/decimal/formatting.py`
+- `S143` `M` `src/cadrumo/entrypoints/tui/components/theme.py`
+- `S143` `M` `dev/quality/docstring_reference_targets.py`
+- `S143` `M` `dev/quality/tests/test_docstring_reference_targets.py`
+- `S143` `M` `dev/quality/suite.py`
+- `S143` `M` `justfile`
+- `S143` `M` `.github/workflows/ci.yml`
+- `S143` `D` `dev/quality/docstring_reference_ratchet.py`
+- `S143` `D` `dev/quality/docstring_reference_ratchet.toml`
+- `S143` `D` `dev/quality/tests/test_docstring_reference_ratchet.py`
+- `S143` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S143` `verify:` `uv run pytest -q -n 0 --confcutdir=dev/quality/tests -m unit dev/quality/tests/test_docstring_reference_targets.py` -> `pass (14 passed)`
+- `S143` `verify:` `uv run ruff check` -> `pass`
+- `S143` `verify:` `pass (zero matches)`
+- `S143` `verify:` `uv run python -m dev.quality.docstring_reference_targets` -> `pass (zero dangling targets across zero modules)`
+- `S143` `verify:` `pass (check-docstring-references)`
+- `S144` `M` `src/cadrumo/core/config.py`
+- `S144` `M` `src/cadrumo/domain/manuals/verify.py`
+- `S144` `M` `src/cadrumo/domain/manuals/tests/test_verify.py`
+- `S144` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S144` `verify:` `uv run pytest -q -n 0 src/cadrumo/domain/manuals/tests/test_verify.py` -> `pass (7 passed)`
+- `S144` `verify:` `uv run ruff check src/cadrumo/core/config.py src/cadrumo/domain/manuals/verify.py src/cadrumo/domain/manuals/tests/test_verify.py` -> `pass`
+- `S144` `verify:` `pass (zero matches)`
+- `S145` `M` `src/cadrumo/domain/transactions/repository.py`
+- `S145` `M` `src/cadrumo/application/ledger/tests/test_actions_import_transactions.py`
+- `S145` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S145` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/ledger/tests/test_actions_import_transactions.py src/cadrumo/application/ledger/tests/test_actions_import_export.py` -> `pass (6 passed)`
+- `S145` `verify:` `uv run ruff check` -> `pass`
+- `S145` `verify:` `pass (zero matches)`
+- `S146` `M` `src/cadrumo/domain/iva/errors.py`
+- `S146` `M` `src/cadrumo/core/errors/registry/_domain_part1.py`
+- `S146` `M` `src/cadrumo/locales/en/errors.yml`
+- `S146` `M` `src/cadrumo/locales/es/errors.yml`
+- `S146` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S146` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S146` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S146` `verify:` `uv run pytest -q -n 0 src/cadrumo/core/errors/tests/test_registry_enforcement.py` -> `pass (7 passed, 1 existing Pydantic warning)`
+- `S146` `verify:` `uv run ruff check` -> `pass`
+- `S146` `verify:` `pass (zero matches)`
+- `S146` `verify:` `uv run python -m dev.locales audit` -> `fail (unrelated pre-existing four-locale missing ` -> ` / extra ` -> ` drift)`
+- `S147` `M` `src/cadrumo/application/ledger/actions_manual.py`
+- `S147` `M` `src/cadrumo/locales/en/application.yml`
+- `S147` `M` `src/cadrumo/locales/es/application.yml`
+- `S147` `M` `src/cadrumo/locales/ca/application.yml`
+- `S147` `M` `src/cadrumo/locales/hu/application.yml`
+- `S147` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S147` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/ledger/tests/test_actions_update_evidence.py` -> `pass (8 passed)`
+- `S147` `verify:` `uv run ruff check src/cadrumo/application/ledger/actions_manual.py` -> `pass`
+- `S147` `verify:` `pass (zero matches)`
+- `S148` `M` `src/cadrumo/adapters/outbound/aeat/browser/_site_health_parsers.py`
+- `S148` `M` `src/cadrumo/adapters/outbound/aeat/browser/tests/test_site_health.py`
+- `S148` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S148` `verify:` `uv run pytest -q -n 0 src/cadrumo/adapters/outbound/aeat/browser/tests/test_site_health.py` -> `pass (29 passed)`
+- `S148` `verify:` `uv run ruff check` -> `pass`
+- `S148` `verify:` `pass (zero matches)`
+- `S149` `M` `src/cadrumo/adapters/inbound/financial/providers/detection.py`
+- `S149` `M` `src/cadrumo/adapters/inbound/financial/providers/__init__.py`
+- `S149` `M` `src/cadrumo/adapters/inbound/financial/providers/_constants.py`
+- `S149` `D` `src/cadrumo/adapters/inbound/financial/providers/tests/test_detection.py`
+- `S149` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S149` `verify:` `uv run pytest -q -n 0 src/cadrumo/adapters/inbound/financial/providers/tests` -> `pass`
+- `S149` `verify:` `uv run ruff check src/cadrumo/adapters/inbound/financial/providers/detection.py src/cadrumo/adapters/inbound/financial/providers/__init__.py src/cadrumo/adapters/inbound/financial/providers/_constants.py` -> `pass`
+- `S149` `verify:` `rg -n "provider_for_extension" src dev .vault --glob '!*.pyc'` -> `pass`
+- `S149` `verify:` `uv run python -c "from dev.quality.unused_symbol_coverage import run_gate; ..."` -> `pass`
+- `S150` `M` `src/cadrumo/adapters/outbound/aeat/sede/_browser_constants.py`
+- `S150` `M` `src/cadrumo/tests/test_hardcoded_constants_inventory.py`
+- `S150` `M` `src/cadrumo/tests/test_enum_constant_extraction_inventory.py`
+- `S150` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S150` `verify:` `uv run pytest -q -n 0 src/cadrumo/tests/test_hardcoded_constants_inventory.py src/cadrumo/tests/test_enum_constant_extraction_inventory.py` -> `pass`
+- `S150` `verify:` `uv run ruff check src/cadrumo/adapters/outbound/aeat/sede/_browser_constants.py src/cadrumo/tests/test_hardcoded_constants_inventory.py src/cadrumo/tests/test_enum_constant_extraction_inventory.py` -> `pass`
+- `S150` `verify:` `rg -n "SEDE_BODY_ENCODING" src dev .vault --glob '!*.pyc'` -> `pass`
+- `S150` `verify:` `uv run python -c "from dev.quality.unused_symbol_coverage import run_gate; ..."` -> `pass`
+- `S152` `M` `src/cadrumo/adapters/outbound/aeat/auth/certificate.py`
+- `S152` `M` `src/cadrumo/application/auth/certificate_source_operations.py`
+- `S152` `D` `src/cadrumo/application/auth/tests/test_certificate_source_tax_id.py`
+- `S152` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S152` `verify:` `uv run ruff check src/cadrumo/application/auth/certificate_source_operations.py src/cadrumo/adapters/outbound/aeat/auth/certificate.py` -> `pass`
+- `S152` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/auth/tests/test_certificate_sources.py src/cadrumo/application/auth/tests/test_certificate_sources_check.py src/cadrumo/application/auth/tests/test_certificate_sources_health.py src/cadrumo/adapters/outbound/aeat/auth/tests/test_certificate.py` -> `pass`
+- `S152` `verify:` `rg -n "CertificateSubjectNifReader|certificate_source_tax_id|read_certificate_subject_nif" src dev .vault --glob '!*.pyc'` -> `pass`
+- `S152` `verify:` `uv run python -c "from dev.quality.unused_symbol_coverage import run_gate; ..."` -> `pass`
+- `S153` `M` `dev/quality/tests/test_no_test_only_public_alias.py`
+- `S153` `M` `src/cadrumo/adapters/outbound/aeat/sede/iva_compensation_wallet.py`
+- `S153` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_iva_compensation_wallet.py`
+- `S153` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_landed_origin_refusal.py`
+- `S153` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_observation_store_namespace_binding.py`
+- `S153` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_observation_store_roundtrip.py`
+- `S153` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_observation_store_row_identity.py`
+- `S153` `M` `src/cadrumo/application/aggregation/tests/test_source_mesh_profile_live.py`
+- `S153` `M` `src/cadrumo/application/calculations/tests/_iva_compensation_history_support.py`
+- `S153` `M` `src/cadrumo/application/calculations/tests/test_iva_wallet_reconciliation.py`
+- `S153` `M` `src/cadrumo/application/live/tests/test_iva_wallet_capture_backend.py`
+- `S153` `M` `src/cadrumo/application/modelo/tests/_iva_wallet_engine_support.py`
+- `S153` `M` `src/cadrumo/application/modelo/calculation_source_policy.py`
+- `S153` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S153` `M` `src/cadrumo/application/modelo/tests/test_operator_override_advisory.py`
+- `S153` `M` `src/cadrumo/application/modelo/tests/test_source_mesh_missing_sources.py`
+- `S153` `M` `src/cadrumo/application/modelo/tests/test_unrouted_source_refusal.py`
+- `S153` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S153` `verify:` `uv run pytest -q -n 0 dev/quality/tests/test_no_test_only_public_alias.py` -> `pass`
+- `S153` `verify:` `uv run ruff check ...` -> `pass`
+- `S153` `verify:` `rg -n "IVA_COMPENSATION_WALLET_URL" src dev .vault --glob '!*.pyc'` -> `pass`
+- `S153` `verify:` `uv run python -c "from dev.quality.unused_symbol_coverage import run_gate; ..."` -> `pass`
+- `S154` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S154` `M` `src/cadrumo/application/modelo/tests/test_source_mesh_missing_sources.py`
+- `S154` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S154` `verify:` `uv run pytest -q -n 0 src/cadrumo/application/modelo/tests/test_source_mesh_missing_sources.py -k "novel_source_binding or row_producing_binding"` -> `pass`
+- `S154` `verify:` `uv run ruff check src/cadrumo/application/modelo/calculation_actions.py src/cadrumo/application/modelo/tests/test_source_mesh_missing_sources.py` -> `pass`
+- `S155` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/bindings/0002-bindings.toml`
+- `S155` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2024/casillas/cdecl.persona-contacto-telefono__cdecl.naturaleza-declarante.toml`
+- `S155` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/bindings/0002-bindings.toml`
+- `S155` `M` `src/cadrumo/_data/registry/aeat/modelos/193/revisions/2025-y-siguientes/casillas/cdecl.persona-contacto-telefono__cdecl.naturaleza-declarante.toml`
+- `S155` `M` `src/cadrumo/domain/calculations/registry/gasto193_bindings.py`
+- `S155` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_193_registry.py`
+- `S155` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S155` `verify:` `uv run pytest -q -n 0 src/cadrumo/domain/calculations/registry/tests/test_modelo_193_registry.py src/cadrumo/application/modelo/tests/test_source_mesh_missing_sources.py` -> `pass`
+- `S155` `verify:` `uv run ruff check ...` -> `pass`
+- `S155` `verify:` `rg -n "resolve_gasto193_binding_values|gastos_sum|modelo-193-gastos-total|DEFERRED_SOURCE_KINDS|ACCEPTED_BUCKET_AGGREGATION_SOURCE_KINDS|BUCKET_AGGREGATION_OWNED_SOURCES" src/cadrumo --glob '*.py' --glob '*.toml' --glob '!**/tests/**'` -> `pass`
+- `S155` `verify:` `uv run python -c "from dev.quality.unused_symbol_coverage import run_gate; ..."` -> `pass`
+- `S156` `M` `src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py`
+- `S156` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule.py`
+- `S156` `verify:` `uv run ruff check src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py src/cadrumo/adapters/persistence/storage/custody/capsule.py` -> `pass`
+- `S156` `verify:` `uv run pytest -q src/cadrumo/adapters/persistence/storage/custody/tests -x` -> `pass`
+- `S156` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S157` `M` `src/cadrumo/adapters/persistence/storage/storage_path_definitions.py`
+- `S157` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry_taxonomy_consumer.py`
+- `S157` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S157` `verify:` `uv run ruff check <S157 paths>` -> `pass`
+- `S157` `verify:` `uv run pytest -q <taxonomy-consumer file> <two focused namespace tests>` -> `pass`
+- `S157` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S158` `M` `src/cadrumo/adapters/persistence/storage/storage_path_definitions.py`
+- `S158` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry_taxonomy_consumer.py`
+- `S158` `verify:` `uv run ruff check <S158 paths>` -> `pass`
+- `S158` `verify:` `uv run pytest -q src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry_taxonomy_consumer.py` -> `pass`
+- `S158` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S159` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S159` `D` `src/cadrumo/core/tests/test_persisted_format_enrolment_binding.py`
+- `S159` `verify:` `rg -n "SECURE_OBJECT_SCHEMA_VERSION_V3|CONSTANTS_AWAITING_CLASSIFICATION|CONSTANTS_OUTSIDE_THE_INVENTORY|VERSIONED_FORMAT_IMPLEMENTATIONS|UNVERSIONED_FORMAT_REASONS" src/cadrumo --glob '*.py'` -> `pass`
+- `S159` `verify:` `uv run ruff check src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py` -> `pass`
+- `S159` `verify:` `uv run pytest -q <compatibility and schema-lineage focused paths> -x` -> `pass`
+- `S159` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S160` `M` `src/cadrumo/core/tests/test_compatibility_lifecycle_gate.py`
+- `S160` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S160` `verify:` `uv run ruff check src/cadrumo/core/tests/test_compatibility_lifecycle_gate.py` -> `pass`
+- `S160` `verify:` `uv run pytest -q src/cadrumo/core/tests/test_compatibility_lifecycle_gate.py` -> `pass`
+- `S160` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S161` `D` `src/cadrumo/core/tests/test_regenerable_persisted_format_floors.py`
+- `S161` `verify:` `rg -n "misclassified_floor_keys\\(RELEASED_FORMAT_FLOORS, PERSISTED_FORMATS\\)" src/cadrumo --glob '*.py'` -> `pass`
+- `S161` `verify:` `uv run pytest -q src/cadrumo/core/tests/test_compatibility_lifecycle_gate.py` -> `pass`
+- `S161` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S162` `M` `src/cadrumo/adapters/persistence/storage/tests/test_storage_path_directory_agreement_gate.py`
+- `S162` `verify:` `rg -n "UNDECLARED_DIRECTORY_EXEMPTIONS" src/cadrumo --glob '*.py'` -> `pass`
+- `S162` `verify:` `uv run ruff check src/cadrumo/adapters/persistence/storage/tests/test_storage_path_directory_agreement_gate.py` -> `pass`
+- `S162` `verify:` `uv run pytest -q src/cadrumo/adapters/persistence/storage/tests/test_storage_path_directory_agreement_gate.py` -> `pass`
+- `S162` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S163` `M` `src/cadrumo/core/tests/test_settings_single_surface_invariant.py`
+- `S163` `M` `src/cadrumo/core/resources/tests/test_single_surface_invariant.py`
+- `S163` `verify:` `rg -n "_ALLOWLIST|PENDING_RETIREMENT_ALLOWLIST|SANCTIONED_CHECKOUT_ROOT_OWNERS" <S163 paths>` -> `pass`
+- `S163` `verify:` `uv run ruff check <S163 paths>` -> `pass`
+- `S163` `verify:` `uv run pytest -q <S163 paths>` -> `pass`
+- `S163` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S164` `M` `src/cadrumo/entrypoints/cli/tests/test_output_surface_inventory.py`
+- `S164` `verify:` `rg -n "_EXCLUDED_MODULES" src/cadrumo/entrypoints/cli/tests/test_output_surface_inventory.py` -> `pass`
+- `S164` `verify:` `uv run ruff check src/cadrumo/entrypoints/cli/tests/test_output_surface_inventory.py` -> `pass`
+- `S164` `verify:` `uv run pytest -q src/cadrumo/entrypoints/cli/tests/test_output_surface_inventory.py` -> `fail`
+- `S164` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S165` `M` `src/cadrumo/entrypoints/cli/config/_censo_review_cli.py`
+- `S165` `M` `src/cadrumo/entrypoints/cli/tests/test_output_surface_inventory.py`
+- `S165` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S165` `verify:` `uv run ruff check src/cadrumo/entrypoints/cli/config/_censo_review_cli.py src/cadrumo/entrypoints/cli/tests/test_output_surface_inventory.py` -> `pass`
+- `S165` `verify:` `uv run pytest -q src/cadrumo/entrypoints/cli/tests/test_output_surface_inventory.py` -> `pass`
+- `S165` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S166` `M` `src/cadrumo/entrypoints/cli/config/_censo_transport.py`
+- `S166` `M` `dev/locales/_ast_scanner.py`
+- `S166` `M` `dev/locales/tests/test_row_table_tr_argument_discovery.py`
+- `S166` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S166` `verify:` `uv run ruff check dev/locales/_ast_scanner.py dev/locales/tests/test_row_table_tr_argument_discovery.py src/cadrumo/entrypoints/cli/config/_censo_transport.py` -> `pass`
+- `S166` `verify:` `uv run pytest -q dev/locales/tests/test_row_table_tr_argument_discovery.py src/cadrumo/entrypoints/cli/config/tests/test_censo_pull_verb.py` -> `pass`
+- `S166` `verify:` `uv run python -m dev.locales audit` -> `fail`
+- `S166` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S167` `M` `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py`
+- `S167` `M` `src/cadrumo/entrypoints/cli/tests/test_command_specs.py`
+- `S167` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S167` `verify:` `rg -n "LedgerCliAdapterOwnership|LedgerCliCensusAnnotation|LedgerCliCommandCensusEntry|LEDGER_CLI_COMMAND_CENSUS|_LEDGER_CLI_CENSUS_ANNOTATIONS|_build_ledger_cli_command_census|transport-only|policy-bearing" src/cadrumo -g "*.py"` -> `pass`
+- `S167` `verify:` `uv run ruff check src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py src/cadrumo/entrypoints/cli/tests/test_command_specs.py` -> `pass`
+- `S167` `verify:` `uv run pytest -q src/cadrumo/entrypoints/cli/tests/test_command_specs.py src/cadrumo/entrypoints/cli/tests/test_ledger_rule_ratio_command_specs.py` -> `pass`
+- `S167` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S168` `M` `src/cadrumo/entrypoints/cli/_bootstrap_exempt.py`
+- `S168` `M` `src/cadrumo/entrypoints/cli/tests/test_login_gated_verbs_never_exempt.py`
+- `S168` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S168` `verify:` `rg -n "LOGIN_GATED_VERB_PATHS|LoginGatedVerb|_NOT_YET_MOUNTED" src/cadrumo -g "*.py"` -> `pass`
+- `S168` `verify:` `uv run ruff check src/cadrumo/entrypoints/cli/_bootstrap_exempt.py src/cadrumo/entrypoints/cli/tests/test_login_gated_verbs_never_exempt.py` -> `pass`
+- `S168` `verify:` `uv run pytest -q src/cadrumo/entrypoints/cli/tests/test_login_gated_verbs_never_exempt.py src/cadrumo/entrypoints/cli/tests/test_bootstrap_exempt_entries_resolve.py` -> `fail`
+- `S168` `verify:` `uv run pytest -q -m integration src/cadrumo/entrypoints/cli/tests/test_login_gated_verbs_never_exempt.py src/cadrumo/entrypoints/cli/tests/test_bootstrap_exempt_entries_resolve.py` -> `pass`
+- `S168` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S169` `M` `src/cadrumo/entrypoints/tui/search.py`
+- `S169` `M` `src/cadrumo/entrypoints/tui/tests/test_search.py`
+- `S169` `M` `dev/locales/_ast_scanner.py`
+- `S169` `M` `dev/locales/tests/test_dynamic_prefix_registry_coverage.py`
+- `S169` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S169` `verify:` `rg -n "_SEARCH_LOCALE_KEYS" src/cadrumo -g "*.py"` -> `pass`
+- `S169` `verify:` `uv run ruff check dev/locales/_ast_scanner.py dev/locales/tests/test_dynamic_prefix_registry_coverage.py src/cadrumo/entrypoints/tui/search.py src/cadrumo/entrypoints/tui/tests/test_search.py` -> `pass`
+- `S169` `verify:` `pass`
+- `S169` `verify:` `scan_source_tree(Path("src/cadrumo"))` -> `pass`
+- `S169` `verify:` `uv run python -m dev.locales audit` -> `fail`
+- `S169` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S170` `M` `src/cadrumo/application/auth/apoderado_flow.py`
+- `S170` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S170` `verify:` `rg -n "APODERADO_FLOW_LOCALE_KEYS" src/cadrumo dev -g "*.py"` -> `pass`
+- `S170` `verify:` `pass`
+- `S170` `verify:` `uv run ruff check src/cadrumo/application/auth/apoderado_flow.py` -> `pass`
+- `S170` `verify:` `uv run pytest -q src/cadrumo/application/auth/tests/test_apoderado.py` -> `pass`
+- `S170` `verify:` `uv run python -m dev.locales audit` -> `fail`
+- `S170` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S171` `M` `src/cadrumo/application/wizard/descendant_group.py`
+- `S171` `M` `src/cadrumo/application/wizard/descendant_door.py`
+- `S171` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S171` `verify:` `rg -n "DESCENDANT(_DOOR)?_LOCALE_KEYS" src/cadrumo dev -g "*.py"` -> `pass`
+- `S171` `verify:` `scan_source_text descendant_group.py descendant_door.py` -> `pass`
+- `S171` `verify:` `uv run ruff check src/cadrumo/application/wizard/descendant_group.py src/cadrumo/application/wizard/descendant_door.py` -> `pass`
+- `S171` `verify:` `uv run pytest -q -n0 src/cadrumo/application/wizard/tests/test_descendant_group.py src/cadrumo/application/wizard/tests/test_descendant_door.py` -> `pass`
+- `S171` `verify:` `uv run pytest -q -n0 -m integration src/cadrumo/application/wizard/tests/test_descendant_group.py src/cadrumo/application/wizard/tests/test_descendant_door.py` -> `pass`
+- `S171` `verify:` `uv run python -m dev.locales audit` -> `fail`
+- `S171` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S172` `M` `src/cadrumo/application/modelo/work_create_policy.py`
+- `S172` `M` `src/cadrumo/core/config.py`
+- `S172` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_unsupported_work_refusal.py`
+- `S172` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_work_readiness_ux.py`
+- `S172` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S172` `M` `src/cadrumo/locales/en/cli.yml`
+- `S172` `M` `src/cadrumo/locales/es/cli.yml`
+- `S172` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S172` `M` `dev/locales/tests/test_parity.py`
+- `S172` `A` `dev/quality/production_metastate.py`
+- `S172` `A` `dev/quality/tests/test_production_metastate.py`
+- `S172` `M` `dev/quality/suite.py`
+- `S172` `M` `justfile`
+- `S172` `M` `.vault/adr/2026-06-02-modelo-multiyear-renta-adr.md`
+- `S172` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S172` `verify:` `rg -n "STUB_MODELO_LOCALE_KEYS|STUB_ONLY_MODELOS|cadrumo_m210_engine_live|create_stub_modelo_(151|210|714|721)_refused" src/cadrumo -g "*.py" -g "*.yml"` -> `pass`
+- `S172` `verify:` `uv run ruff check <S172 Python paths>` -> `pass`
+- `S172` `verify:` `uv run pytest -q -n0 -m integration src/cadrumo/entrypoints/cli/tests/test_modelo_unsupported_work_refusal.py` -> `pass`
+- `S172` `verify:` `uv run pytest -q dev/quality/tests/test_production_metastate.py dev/quality/tests/test_suite_gate_table.py` -> `pass`
+- `S172` `verify:` `uv run python -m dev.quality.production_metastate` -> `pass`
+- `S172` `verify:` `uv run python -m dev.locales audit` -> `fail`
+- `S172` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S172` `verify:` `uv run pytest -q -n0 -m integration src/cadrumo/entrypoints/cli/tests/test_modelo_work_readiness_ux.py -k "m210_work_create"` -> `fail`
+- `S173` `D` `src/cadrumo/domain/calculations/registry/_supported_filing_years.py`
+- `S173` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S173` `D` `src/cadrumo/domain/calculations/registry/tests/test_filing_bound_cell_advisories.py`
+- `S173` `M` `src/cadrumo/domain/calculations/registry/tests/test_supported_filing_years_catalogue.py`
+- `S173` `A` `dev/registry/supported_filing_years.py`
+- `S173` `M` `dev/registry/analysis/coverage_residue_worklist.py`
+- `S173` `M` `dev/quality/production_metastate.py`
+- `S173` `M` `dev/quality/tests/test_production_metastate.py`
+- `S173` `M` `.vault/adr/2026-08-14-registry-temporal-coverage-authority-grade-coverage-adr.md`
+- `S173` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S173` `verify:` `rg -n "SupportedFilingYearGap|audit_supported_filing_years|supported_filing_year_gaps|filing_bound_advisories_for_cell" src/cadrumo -g "*.py"` -> `pass`
+- `S173` `verify:` `uv run ruff check <S173 Python paths>` -> `pass`
+- `S173` `verify:` `uv run pytest -q -n0 src/cadrumo/domain/calculations/registry/tests/test_authority.py` -> `pass`
+- `S173` `verify:` `uv run pytest -q -n0 src/cadrumo/domain/calculations/registry/tests/test_supported_filing_years_catalogue.py dev/registry/tests/test_temporal_coverage.py` -> `pass`
+- `S173` `verify:` `uv run pytest -q dev/quality/tests/test_production_metastate.py dev/quality/tests/test_suite_gate_table.py` -> `pass`
+- `S173` `verify:` `uv run python -m dev.quality.production_metastate` -> `pass`
+- `S173` `verify:` `uv run python -m dev.registry.analysis.coverage_residue_worklist` -> `pass`
+- `S173` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S174` `M` `src/cadrumo/domain/transactions/retencion_parameters.py`
+- `S174` `M` `dev/quality/production_metastate.py`
+- `S174` `M` `dev/quality/tests/test_production_metastate.py`
+- `S174` `M` `.vault/adr/2026-08-07-calculation-chain-integrity-activity-type-placement-adr.md`
+- `S174` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S174` `verify:` `rg -n "sectoral_activity_retencion_rates" src/cadrumo dev -g "*.py"` -> `pass`
+- `S174` `verify:` `uv run ruff check src/cadrumo/domain/transactions/retencion_parameters.py dev/quality/production_metastate.py dev/quality/tests/test_production_metastate.py` -> `pass`
+- `S174` `verify:` `uv run pytest dev/quality/tests/test_production_metastate.py src/cadrumo/domain/transactions/tests/test_retencion_parameters.py -q -k "not shipped_production_has_no_development_metastate"` -> `pass`
+- `S174` `verify:` `uv run python -m dev.quality.production_metastate` -> `fail`
+- `S174` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S175` `M` `src/cadrumo/domain/iva/prorrata.py`
+- `S175` `M` `src/cadrumo/domain/iva/tests/test_prorrata.py`
+- `S175` `M` `src/cadrumo/domain/iva/errors.py`
+- `S175` `M` `src/cadrumo/core/external_constants.py`
+- `S175` `M` `src/cadrumo/core/prorrata_register.py`
+- `S175` `M` `src/cadrumo/core/errors/registry/_domain_part2.py`
+- `S175` `M` `src/cadrumo/_data/registry/aeat/legal/iva.toml`
+- `S175` `M` `src/cadrumo/locales/en/errors.yml`
+- `S175` `M` `src/cadrumo/locales/es/errors.yml`
+- `S175` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S175` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S175` `M` `.vault/adr/2026-07-07-prorrata-sectores-diferenciados-adr.md`
+- `S175` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S175` `verify:` `rg -n "ProrrataSectorError|ERROR_IVA_PRORRATA_SECTOR|error_iva_prorrata_sector|ProrrataSector|requires_sectoral_separation|compute_sectoral_prorrata|PRORRATA_SECTORAL_SEPARATION_SPREAD_PP" src/cadrumo dev -g "*"` -> `pass`
+- `S175` `verify:` `uv run ruff check <S175 Python paths>` -> `pass`
+- `S175` `verify:` `uv run pytest <S175 prorrata, live sector aggregation, and register paths> -q -n0` -> `pass`
+- `S175` `verify:` `uv run pytest src/cadrumo/core/errors/tests/test_registry.py src/cadrumo/core/errors/tests/test_registry_enforcement.py -q -n0` -> `pass`
+- `S175` `verify:` `uv run --no-sync python -m dev.locales audit` -> `fail`
+- `S175` `verify:` `uv run python -m dev.quality.production_metastate` -> `fail`
+- `S175` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S175` `verify:` `git diff --check -- <S175 paths>` -> `pass`
+- `S176` `M` `src/cadrumo/application/user_profile/custody_ports.py`
+- `S176` `M` `src/cadrumo/adapters/persistence/storage/profile_custody.py`
+- `S176` `verify:` `rg -n --glob "*.py" "\\b(ProfileSecureObjectInventoryPort|default_profile_secure_object_inventory|_PersistenceProfileSecureObjectInventory)\\b|secure_object_inventory\\(" src/cadrumo dev` -> `pass`
+- `S176` `verify:` `uv run ruff check src/cadrumo/application/user_profile/custody_ports.py src/cadrumo/adapters/persistence/storage/profile_custody.py` -> `pass`
+- `S176` `verify:` `uv run pytest src/cadrumo/application/user_profile/tests/test_custody_port.py src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py -q -n0` -> `pass`
+- `S176` `verify:` `uv run python -m dev.quality.production_metastate` -> `fail`
+- `S176` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S177` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule.py`
+- `S177` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule.py`
+- `S177` `verify:` `rg -n --glob "*.py" "\\bload_committed_profile_custody_summary_witness\\b" src/cadrumo dev` -> `pass`
+- `S177` `verify:` `uv run ruff check src/cadrumo/adapters/persistence/storage/custody/capsule.py src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule.py` -> `pass`
+- `S177` `verify:` `uv run pytest src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule.py -q -n0` -> `pass`
+- `S177` `verify:` `uv run pytest src/cadrumo/application/user_profile/tests/test_profile_summary_inventory.py -q -n0` -> `pass`
+- `S177` `verify:` `git diff --check -- <S177 paths>` -> `pass`
+- `S177` `verify:` `uv run python -m dev.quality.production_metastate` -> `fail`
+- `S177` `verify:` `uv run python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S178` `M` `src/cadrumo/adapters/persistence/storage/custody/_capsule_data.py`
+- `S178` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule.py`
+- `S178` `A` `src/cadrumo/adapters/persistence/storage/custody/tests/support.py`
+- `S178` `M` `src/cadrumo/tests/profile_capsule.py`
+- `S178` `M` `src/cadrumo/application/user_profile/tests/test_capsule_lifecycle.py`
+- `S178` `verify:` `rg -n "replace_committed_profile_custody_data_file|replace_data_file|replace_test_profile_custody_data_file" src/cadrumo dev` -> `pass`
+- `S178` `verify:` `uv run ruff check <S178 Python paths>` -> `pass`
+- `S178` `verify:` `uv run pytest -q src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_data_path_validation.py src/cadrumo/application/user_profile/tests/test_capsule_lifecycle.py src/cadrumo/entrypoints/cli/tests/test_active_profile_env_override_name.py src/cadrumo/entrypoints/cli/config/tests/test_profile_label_ambiguity_refusal.py` -> `pass`
+- `S178` `verify:` `git diff --check -- <S178 paths>` -> `pass`
+- `S178` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `fail`
+- `S178` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S179` `M` `src/cadrumo/application/live/filed_data_capture.py`
+- `S179` `M` `src/cadrumo/application/live/tests/test_filed_history_discovery.py`
+- `S179` `M` `src/cadrumo/application/live/tests/test_filed_history_operation.py`
+- `S179` `verify:` `uv run ruff check <S179 Python paths>` -> `pass`
+- `S179` `verify:` `uv run pytest -q -n0 src/cadrumo/application/live/tests/test_filed_history_discovery.py src/cadrumo/application/live/tests/test_filed_history_operation.py` -> `pass`
+- `S179` `verify:` `uv run pytest -q src/cadrumo/application/live/tests/test_filed_history_discovery.py src/cadrumo/application/live/tests/test_filed_history_operation.py src/cadrumo/application/live/tests/test_filed_history_onboarding.py src/cadrumo/entrypoints/cli/tests/test_filed_history_onboarding_result.py` -> `pass`
+- `S179` `verify:` `git diff --check -- <S179 paths>` -> `pass`
+- `S179` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `fail`
+- `S179` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S180` `M` `src/cadrumo/application/live/filed_data_capture.py`
+- `S180` `M` `src/cadrumo/application/live/filed_history_operation.py`
+- `S180` `M` `src/cadrumo/application/live/tests/test_filed_history_discovery.py`
+- `S180` `M` `src/cadrumo/application/live/tests/test_filed_history_onboarding.py`
+- `S180` `M` `src/cadrumo/application/live/tests/test_filed_history_operation.py`
+- `S180` `M` `src/cadrumo/entrypoints/cli/_app_live.py`
+- `S180` `M` `src/cadrumo/locales/ca/common.yml`
+- `S180` `M` `src/cadrumo/locales/en/common.yml`
+- `S180` `M` `src/cadrumo/locales/es/common.yml`
+- `S180` `M` `src/cadrumo/locales/hu/common.yml`
+- `S180` `verify:` `rg -n "FiledPeriodSelection|filed_period_selection_rows|selection_rows|found_more_than_expected" src/cadrumo -g "*.py"` -> `pass`
+- `S180` `verify:` `uv run ruff check <S180 Python paths>` -> `pass`
+- `S180` `verify:` `uv run pytest -q -n0 src/cadrumo/application/live/tests/test_filed_history_discovery.py src/cadrumo/application/live/tests/test_filed_history_onboarding.py` -> `pass`
+- `S180` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S180` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S180` `verify:` `uv run --no-sync python -m dev.locales audit` -> `fail`
+- `S180` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S181` `M` `src/cadrumo/adapters/inbound/pdf/label_regex.py`
+- `S181` `M` `src/cadrumo/adapters/inbound/pdf/tests/test_label_regex.py`
+- `S181` `M` `src/cadrumo/adapters/inbound/pdf/__init__.py`
+- `S181` `verify:` `rg -n "\\bapply_label_regex\\b|\\bLabelHit\\b" src/cadrumo dev -g "*.py"` -> `pass`
+- `S181` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/inbound/pdf/tests/test_label_regex.py` -> `pass`
+- `S181` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/inbound/pdf/label_regex.py src/cadrumo/adapters/inbound/pdf/tests/test_label_regex.py src/cadrumo/adapters/inbound/pdf/__init__.py` -> `pass`
+- `S181` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S181` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S182` `M` `src/cadrumo/adapters/outbound/aeat/auth/clave_permanente.py`
+- `S182` `M` `src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_permanente.py`
+- `S182` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S182` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_permanente.py` -> `pass`
+- `S182` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/outbound/aeat/auth/tests/test_auth_provider_real_lifecycle.py -k "clave_permanente"` -> `pass`
+- `S182` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/outbound/aeat/auth/clave_permanente.py src/cadrumo/adapters/outbound/aeat/auth/tests/test_clave_permanente.py` -> `pass`
+- `S182` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S182` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S183` `M` `src/cadrumo/adapters/outbound/aeat/sede/censal_datos.py`
+- `S183` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_censal_no_write_surface.py`
+- `S183` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_censal_datos.py`
+- `S183` `verify:` `rg -n "\\bis_forbidden_censal_landing\\b" src/cadrumo dev -g "*.py"` -> `pass`
+- `S183` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/outbound/aeat/sede/tests/test_censal_no_write_surface.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_censal_datos.py` -> `pass`
+- `S183` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/outbound/aeat/sede/censal_datos.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_censal_no_write_surface.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_censal_datos.py` -> `pass`
+- `S183` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S183` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S184` `M` `.vault/adr/2026-08-07-justificante-identity-matching-adr.md`
+- `S184` `M` `.vault/reference/2026-08-07-justificante-identity-matching-reference.md`
+- `S184` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations.py`
+- `S184` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_capture.py`
+- `S184` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py`
+- `S184` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/_declarations_support.py`
+- `S184` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_live.py`
+- `S184` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part3.py`
+- `S184` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_pdf_response_contract.py`
+- `S184` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/outbound/aeat/sede/tests/test_pdf_response_contract.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part3.py::test_register_capture_empty_nif_carries_translated_message` -> `pass`
+- `S184` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S184` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S184` `M` `src/cadrumo/_data/registry/aeat/modelos/*/revisions/*/application_links/*filed-declarations-observation*.toml`
+- `S184` `A` `dev/quality/application_link_consumers.py`
+- `S184` `A` `dev/quality/tests/test_application_link_consumers.py`
+- `S184` `M` `dev/quality/suite.py`
+- `S184` `M` `justfile`
+- `S184` `verify:` `uv run --no-sync pytest -q -n0 -m unit dev/quality/tests/test_application_link_consumers.py` -> `pass`
+- `S184` `verify:` `uv run --no-sync python -m dev.quality.application_link_consumers` -> `pass`
+- `S184` `verify:` `pass`
+- `S185` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S185` `M` `src/cadrumo/adapters/outbound/aeat/sede/_declarations_fetch.py`
+- `S185` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_recorded_origin.py`
+- `S185` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_recorded_origin.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_pdf_response_contract.py` -> `pass`
+- `S185` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/outbound/aeat/sede/_declarations_fetch.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_recorded_origin.py` -> `pass`
+- `S185` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S186` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py`
+- `S186` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/_declarations_support.py`
+- `S186` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part2.py`
+- `S186` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part3.py`
+- `S186` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part3.py` -> `pass`
+- `S186` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part2.py::TestFiledObservationBindings` -> `pass`
+- `S186` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py src/cadrumo/adapters/outbound/aeat/sede/tests/_declarations_support.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part2.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part3.py` -> `pass`
+- `S187` `M` `src/cadrumo/adapters/outbound/aeat/sede/notifications.py`
+- `S187` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_auth_state.py`
+- `S187` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_notifications.py`
+- `S187` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/outbound/aeat/sede/tests/test_auth_state.py::test_fetch_notifications_query_carries_translated_message_on_none_path src/cadrumo/adapters/outbound/aeat/sede/tests/test_notifications.py src/cadrumo/application/live/tests/test_notifications.py` -> `pass`
+- `S187` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/outbound/aeat/sede/notifications.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_notifications.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_auth_state.py` -> `pass`
+- `S187` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S187` `verify:` `pass`
+- `S188` `M` `src/cadrumo/adapters/outbound/google/impersonation.py`
+- `S188` `M` `src/cadrumo/adapters/outbound/google/tests/test_impersonation.py`
+- `S188` `M` `src/cadrumo/adapters/outbound/google/tests/test_impersonation_live.py`
+- `S188` `M` `src/cadrumo/entrypoints/cli/config/_google_credential_source_cli.py`
+- `S188` `M` `.vault/adr/2026-07-04-google-sa-impersonation-adr.md`
+- `S188` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/outbound/google/tests/test_impersonation.py src/cadrumo/adapters/outbound/google/tests/test_impersonation_live.py src/cadrumo/entrypoints/cli/config/tests/test_google_credential_source_cli.py` -> `pass`
+- `S188` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/outbound/google/impersonation.py src/cadrumo/adapters/outbound/google/tests/test_impersonation.py src/cadrumo/adapters/outbound/google/tests/test_impersonation_live.py src/cadrumo/entrypoints/cli/config/_google_credential_source_cli.py` -> `pass`
+- `S188` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S188` `verify:` `uv run --no-sync vaultspec-core vault check --feature google-sa-impersonation` -> `pass`
+- `S188` `verify:` `independent S188 code review and re-review` -> `pass`
+- `S189` `D` `src/cadrumo/adapters/persistence/profile/assets.py`
+- `S189` `D` `src/cadrumo/domain/contribuyente/assets/__init__.py`
+- `S189` `D` `src/cadrumo/domain/contribuyente/assets/records.py`
+- `S189` `D` `src/cadrumo/adapters/persistence/profile/tests/test_assets.py`
+- `S189` `D` `src/cadrumo/adapters/persistence/profile/tests/test_assets_concurrent_add.py`
+- `S189` `D` `src/cadrumo/adapters/persistence/profile/tests/test_assets_identifier_uniqueness.py`
+- `S189` `D` `src/cadrumo/adapters/persistence/profile/tests/test_assets_namespace_binding.py`
+- `S189` `D` `src/cadrumo/adapters/persistence/profile/tests/test_assets_roundtrip.py`
+- `S189` `D` `src/cadrumo/adapters/persistence/storage/tests/test_active_bucket_consumer_coverage.py`
+- `S189` `M` `src/cadrumo/adapters/persistence/profile/__init__.py`
+- `S189` `M` `src/cadrumo/adapters/persistence/profile/bienes_inversion.py`
+- `S189` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S189` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S189` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S189` `M` `src/cadrumo/adapters/persistence/storage/tests/_runtime_attached_repositories_support.py`
+- `S189` `M` `src/cadrumo/adapters/persistence/storage/tests/test_runtime_attached_repositories_part1.py`
+- `S189` `M` `src/cadrumo/adapters/persistence/storage/tests/test_ephemeral_key_hygiene.py`
+- `S189` `M` `src/cadrumo/adapters/persistence/profile/tests/test_singleton_mutation_routing.py`
+- `S189` `M` `src/cadrumo/adapters/persistence/profile/tests/test_secure_model_document.py`
+- `S189` `M` `src/cadrumo/adapters/persistence/profile/tests/test_bienes_inversion_roundtrip.py`
+- `S189` `M` `src/cadrumo/core/errors/registry/_domain_part3.py`
+- `S189` `M` `src/cadrumo/domain/contribuyente/errors.py`
+- `S189` `M` `src/cadrumo/domain/bienes_inversion/register.py`
+- `S189` `M` `src/cadrumo/application/bienes_inversion/declare_command.py`
+- `S189` `M` `src/cadrumo/application/bienes_inversion/tests/test_declare_command.py`
+- `S189` `M` `src/cadrumo/entrypoints/cli/_bienes_inversion_payloads.py`
+- `S189` `M` `src/cadrumo/entrypoints/cli/_bienes_inversion_cli.py`
+- `S189` `M` `src/cadrumo/entrypoints/cli/_app_ledger_bienes_inversion_command_specs.py`
+- `S189` `M` `src/cadrumo/locales/en/adapters.yml`
+- `S189` `M` `src/cadrumo/locales/en/errors.yml`
+- `S189` `M` `src/cadrumo/locales/en/cli.yml`
+- `S189` `M` `src/cadrumo/locales/es/adapters.yml`
+- `S189` `M` `src/cadrumo/locales/es/errors.yml`
+- `S189` `M` `src/cadrumo/locales/es/cli.yml`
+- `S189` `M` `src/cadrumo/locales/ca/adapters.yml`
+- `S189` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S189` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S189` `M` `src/cadrumo/locales/hu/adapters.yml`
+- `S189` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S189` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S189` `M` `.vault/adr/2026-08-23-amortization-casilla-mapping-adr.md`
+- `S189` `M` `.vault/adr/2026-07-01-iva-bienes-inversion-regularizacion-adr.md`
+- `S189` `D` `docs/api/cadrumo.adapters.persistence.profile.assets.rst`
+- `S189` `D` `docs/api/cadrumo.domain.contribuyente.assets.rst`
+- `S189` `D` `docs/api/cadrumo.domain.contribuyente.assets.records.rst`
+- `S189` `M` `docs/api/cadrumo.adapters.persistence.profile.rst`
+- `S189` `M` `docs/api/cadrumo.domain.contribuyente.rst`
+- `S189` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/bienes_inversion src/cadrumo/application/bienes_inversion src/cadrumo/entrypoints/cli/_bienes_inversion_payloads.py src/cadrumo/entrypoints/cli/_bienes_inversion_cli.py src/cadrumo/entrypoints/cli/_app_ledger_bienes_inversion_command_specs.py src/cadrumo/adapters/persistence/profile/bienes_inversion.py src/cadrumo/adapters/persistence/storage src/cadrumo/core/errors/registry/_domain_part3.py` -> `pass`
+- `S189` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/bienes_inversion/tests/test_declare_command.py src/cadrumo/adapters/persistence/profile/tests/test_bienes_inversion_roundtrip.py src/cadrumo/entrypoints/cli/tests/test_bienes_inversion_cli.py src/cadrumo/adapters/persistence/storage/tests/test_ephemeral_key_hygiene.py src/cadrumo/adapters/persistence/profile/tests/test_singleton_mutation_routing.py src/cadrumo/adapters/persistence/profile/tests/test_secure_model_document.py` -> `pass`
+- `S189` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S189` `verify:` `uv run --no-sync pytest -q -n0 dev/docs/tests/test_api_stubs.py` -> `pass`
+- `S189` `verify:` `mcp__vaultspec_core__check({"feature":"amortization-casilla-mapping","fix":false})` -> `pass`
+- `S189` `verify:` `mcp__vaultspec_core__check({"feature":"iva-bienes-inversion-regularizacion","fix":false})` -> `pass`
+- `S189` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S189` `verify:` `uv run --no-sync python -m dev.locales audit` -> `fail`
+- `S190` `M` `src/cadrumo/adapters/persistence/profile/inventory.py`
+- `S190` `M` `src/cadrumo/adapters/persistence/profile/tests/test_inventory.py`
+- `S190` `M` `src/cadrumo/adapters/persistence/profile/tests/test_inventory_actividad_year_uniqueness.py`
+- `S190` `M` `src/cadrumo/adapters/persistence/storage/tests/_runtime_attached_repositories_support.py`
+- `S190` `M` `src/cadrumo/adapters/persistence/storage/tests/test_runtime_attached_repositories_part1.py`
+- `S190` `M` `src/cadrumo/domain/contribuyente/inventory/records.py`
+- `S190` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/profile/inventory.py src/cadrumo/adapters/persistence/profile/tests/test_inventory.py src/cadrumo/adapters/persistence/profile/tests/test_inventory_actividad_year_uniqueness.py src/cadrumo/adapters/persistence/storage/tests/_runtime_attached_repositories_support.py src/cadrumo/adapters/persistence/storage/tests/test_runtime_attached_repositories_part1.py src/cadrumo/domain/contribuyente/inventory/records.py` -> `pass`
+- `S190` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/persistence/profile/tests/test_inventory.py src/cadrumo/adapters/persistence/profile/tests/test_inventory_actividad_year_uniqueness.py src/cadrumo/domain/contribuyente/inventory/tests/test_closing_authority.py src/cadrumo/adapters/persistence/storage/tests/test_runtime_attached_repositories_part1.py::test_current_runtime_defaults_refuse_missing_session src/cadrumo/adapters/persistence/storage/tests/test_runtime_attached_repositories_part1.py::test_current_runtime_defaults_refuse_route_session_mismatch src/cadrumo/adapters/persistence/storage/tests/test_runtime_attached_repositories_part1.py::test_adapter_repository_defaults_isolate_active_profile_writes` -> `pass`
+- `S190` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S191` `M` `src/cadrumo/adapters/persistence/profile/prorrata_register.py`
+- `S191` `M` `src/cadrumo/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py`
+- `S191` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/profile/prorrata_register.py src/cadrumo/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py src/cadrumo/application/prorrata_register/service.py` -> `pass`
+- `S191` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/persistence/profile/tests/test_prorrata_register_roundtrip.py` -> `pass`
+- `S191` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S192` `M` `src/cadrumo/adapters/persistence/storage/bucket/directory_layout.py`
+- `S192` `M` `src/cadrumo/adapters/persistence/storage/bucket/__init__.py`
+- `S192` `D` `src/cadrumo/adapters/persistence/storage/bucket/tests/test_trash_rename_and_remove.py`
+- `S192` `M` `src/cadrumo/tests/test_qualified_docstring_references_resolve.py`
+- `S192` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/bucket/directory_layout.py src/cadrumo/adapters/persistence/storage/bucket/__init__.py src/cadrumo/tests/test_qualified_docstring_references_resolve.py` -> `pass`
+- `S192` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/persistence/storage/bucket/tests` -> `pass`
+- `S192` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S192` `verify:` `uv run --no-sync python -m dev.quality.unused_symbol_coverage` -> `fail`
+- `S192` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/persistence/storage/bucket/tests src/cadrumo/tests/test_qualified_docstring_references_resolve.py` -> `fail`
+- `S193` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S193` `M` `src/cadrumo/adapters/persistence/storage/__init__.py`
+- `S193` `M` `src/cadrumo/adapters/persistence/storage/crypto/__init__.py`
+- `S193` `M` `src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py`
+- `S193` `M` `src/cadrumo/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py`
+- `S193` `M` `src/cadrumo/adapters/persistence/storage/crypto/tests/test_type_guard_errors.py`
+- `S193` `M` `src/cadrumo/adapters/persistence/storage/master_key/master_key.py`
+- `S193` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_unsecured_bucket_canary_branches.py`
+- `S193` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_unsecured_canary_judges_a_stored_profile.py`
+- `S193` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_unsecured_provider_entry_refuses_a_real_profile.py`
+- `S193` `M` `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`
+- `S193` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py src/cadrumo/adapters/persistence/storage/crypto/tests/test_type_guard_errors.py src/cadrumo/adapters/persistence/storage/master_key/tests/test_unsecured_provider_entry_refuses_a_real_profile.py src/cadrumo/adapters/persistence/storage/master_key/tests/test_unsecured_canary_judges_a_stored_profile.py src/cadrumo/adapters/persistence/storage/master_key/tests/test_unsecured_bucket_canary_branches.py` -> `pass`
+- `S193` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/__init__.py src/cadrumo/adapters/persistence/storage/crypto/__init__.py src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py src/cadrumo/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py src/cadrumo/adapters/persistence/storage/crypto/tests/test_type_guard_errors.py src/cadrumo/adapters/persistence/storage/master_key/master_key.py src/cadrumo/adapters/persistence/storage/master_key/tests/test_unsecured_bucket_canary_branches.py src/cadrumo/adapters/persistence/storage/master_key/tests/test_unsecured_canary_judges_a_stored_profile.py src/cadrumo/adapters/persistence/storage/master_key/tests/test_unsecured_provider_entry_refuses_a_real_profile.py src/cadrumo/adapters/persistence/storage/sql/secure_objects.py` -> `pass`
+- `S193` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S193` `verify:` `rg -n "EncryptedBytes|EncryptedJSON|EncryptedPayload|decrypt_encrypted_bytes_column|_AAD_BYTES|_AAD_JSON" src docs .vault/adr --glob '!*.pyc'` -> `pass`
+- `S193` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `pass (334 unused symbols; 18 orphan tests)`
+- `S194` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule_discovery.py`
+- `S194` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule.py`
+- `S194` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/custody/capsule_discovery.py src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule.py` -> `pass`
+- `S194` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule.py` -> `pass (23 passed)`
+- `S194` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S194` `verify:` `rg -n "detect_retired_profile_custody_member_paths" src docs .vault/adr --glob '!*.pyc'` -> `pass`
+- `S194` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (61 unreachable modules; 900 unused symbols; 18 orphan tests; removed symbol absent)`
+- `S195` `M` `src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py`
+- `S195` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py`
+- `S195` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/custody/kdf_supervision.py src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py` -> `pass`
+- `S195` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py` -> `pass (21 passed)`
+- `S195` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S195` `verify:` `rg -n "ProfileCustodyKdfRatchetProposal|propose_profile_kdf_ratchet" src docs .vault/adr --glob '!*.pyc'` -> `pass`
+- `S195` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (61 unreachable modules; 900 unused symbols; 18 orphan tests; removed cluster absent)`
+- `S196` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S196` `M` `src/cadrumo/adapters/persistence/storage/custody/recovery.py`
+- `S196` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule.py`
+- `S196` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_envelope_rotation.py`
+- `S196` `M` `src/cadrumo/application/user_profile/tests/test_recovery_enrollment_at_creation.py`
+- `S196` `M` `src/cadrumo/application/user_profile/tests/test_passphrase_rotation_key_material_contract.py`
+- `S196` `M` `src/cadrumo/application/user_profile/tests/test_passphrase_rotation.py`
+- `S196` `M` `src/cadrumo/application/user_profile/tests/test_capsule_restore.py`
+- `S196` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/custody/recovery.py src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule.py src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_envelope_rotation.py src/cadrumo/application/user_profile/tests/test_recovery_enrollment_at_creation.py src/cadrumo/application/user_profile/tests/test_passphrase_rotation_key_material_contract.py src/cadrumo/application/user_profile/tests/test_passphrase_rotation.py src/cadrumo/application/user_profile/tests/test_capsule_restore.py` -> `pass`
+- `S196` `verify:` `uv run --no-sync pytest -q -n0 -m "" src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule.py src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_envelope_rotation.py src/cadrumo/application/user_profile/tests/test_recovery_enrollment_at_creation.py src/cadrumo/application/user_profile/tests/test_passphrase_rotation_key_material_contract.py src/cadrumo/application/user_profile/tests/test_passphrase_rotation.py src/cadrumo/application/user_profile/tests/test_capsule_restore.py` -> `pass (62 passed)`
+- `S196` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S196` `verify:` `rg -n "parse_profile_custody_recovery_envelope|unlock_profile_custody_recovery\\b|profile_custody_recovery_aad\\b" src docs .vault/adr --glob '!*.pyc'` -> `pass`
+- `S196` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (61 unreachable modules; 898 unused symbols; 18 orphan tests)`
+- `S197` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S197` `M` `src/cadrumo/adapters/persistence/storage/__init__.py`
+- `S197` `M` `src/cadrumo/adapters/persistence/storage/crypto/aead.py`
+- `S197` `M` `src/cadrumo/adapters/persistence/storage/envelope/__init__.py`
+- `S197` `M` `src/cadrumo/adapters/persistence/storage/envelope/contract.py`
+- `S197` `D` `src/cadrumo/adapters/persistence/storage/envelope/tests/test_cipher_envelope_version_gate.py`
+- `S197` `D` `src/cadrumo/adapters/persistence/storage/envelope/tests/test_envelope_ciphertext.py`
+- `S197` `M` `src/cadrumo/adapters/persistence/storage/master_key/master_key.py`
+- `S197` `M` `src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_version_check_shape.py`
+- `S197` `M` `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`
+- `S197` `M` `src/cadrumo/tests/test_llm_subpackage_persists_nothing.py`
+- `S197` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/envelope/contract.py src/cadrumo/adapters/persistence/storage/envelope/__init__.py src/cadrumo/adapters/persistence/storage/__init__.py src/cadrumo/adapters/persistence/storage/crypto/aead.py src/cadrumo/adapters/persistence/storage/master_key/master_key.py src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_version_check_shape.py src/cadrumo/tests/test_llm_subpackage_persists_nothing.py` -> `pass`
+- `S197` `verify:` `uv run --no-sync pytest -q -n0 -m "" src/cadrumo/adapters/persistence/storage/envelope/tests/test_envelope.py src/cadrumo/adapters/persistence/storage/envelope/tests/test_secure_bound_repository.py src/cadrumo/adapters/persistence/storage/envelope/tests/test_secure_bound_repository_contract.py src/cadrumo/adapters/persistence/storage/envelope/tests/test_secure_bound_envelope_gates.py src/cadrumo/adapters/persistence/storage/blob_store/tests/test_blob_store.py src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_version_check_shape.py src/cadrumo/tests/test_llm_subpackage_persists_nothing.py` -> `fail (73 passed; 2 unrelated policy-inventory failures)`
+- `S197` `verify:` `uv run --no-sync pytest -q -n0 -m "" src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py::test_sensitive_financial_surfaces_do_not_bypass_secure_object_backend` -> `pass`
+- `S197` `verify:` `rg -n "CIPHER_ENVELOPE_SCHEMA_VERSION|CipherEnvelope|save_encrypted_envelope|load_encrypted_envelope|reencrypt_envelope_file|derive_envelope_key|build_aad" src docs .vault/adr --glob '!*.pyc'` -> `pass`
+- `S197` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S197` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (61 unreachable modules; 897 unused symbols; 18 orphan tests)`
+- `S198` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S198` `M` `src/cadrumo/adapters/persistence/storage/master_key/_live_sessions.py`
+- `S198` `M` `src/cadrumo/adapters/persistence/storage/master_key/tests/test_live_session_registry.py`
+- `S198` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/master_key/_live_sessions.py src/cadrumo/adapters/persistence/storage/master_key/tests/test_live_session_registry.py` -> `pass`
+- `S198` `verify:` `uv run --no-sync pytest -q -n0 -m "" src/cadrumo/adapters/persistence/storage/master_key/tests/test_live_session_registry.py src/cadrumo/adapters/persistence/storage/master_key/tests/test_interpreter_exit_seals_live_sessions.py` -> `pass (5 passed)`
+- `S198` `verify:` `rg -n "live_bucket_session_count" src --glob '!*.pyc'` -> `pass (zero residue)`
+- `S198` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S198` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (61 unreachable modules; 896 unused symbols; 18 orphan tests)`
+- `S199` `M` `.vault/adr/2026-08-15-profile-password-custody-per-profile-recovery-mnemonic-adr.md`
+- `S199` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S199` `M` `src/cadrumo/adapters/persistence/storage/recovery_key.py`
+- `S199` `M` `src/cadrumo/adapters/persistence/storage/tests/test_recovery_key_codec.py`
+- `S199` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/recovery_key.py src/cadrumo/adapters/persistence/storage/tests/test_recovery_key_codec.py` -> `pass`
+- `S199` `verify:` `uv run --no-sync pytest -q -n0 -m "" src/cadrumo/adapters/persistence/storage/tests/test_recovery_key_codec.py src/cadrumo/application/user_profile/tests/test_recovery_enrollment_at_creation.py src/cadrumo/application/user_profile/tests/test_recovery_custody.py` -> `pass (38 passed)`
+- `S199` `verify:` `rg -n "decode_mnemonic|_WORD_TO_INDEX" src docs --glob '!*.pyc'` -> `pass (zero residue)`
+- `S199` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S199` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (61 unreachable modules; 895 unused symbols; 18 orphan tests)`
+- `S199` `verify:` `uv run --no-sync vaultspec-core vault check all --json` -> `fail (persistent unrelated vault-wide hygiene findings; changed ADR has no reported diagnostic)`
+- `S200` `M` `src/cadrumo/adapters/persistence/storage/custody/_kdf_codec.py`
+- `S200` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/custody/_kdf_codec.py` -> `pass`
+- `S200` `verify:` `uv run --no-sync pytest -q -n0 -m "" src/cadrumo/adapters/persistence/storage/custody/tests/test_kdf_supervision.py` -> `pass (21 passed)`
+- `S200` `verify:` `rg -n "kdf_strength" src docs --glob '!*.pyc'` -> `pass (zero residue)`
+- `S200` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S200` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (61 unreachable modules; 894 unused symbols; 18 orphan tests)`
+- `S201` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S201` `M` `src/cadrumo/application/auth/certificate_secret_backend.py`
+- `S201` `M` `src/cadrumo/application/auth/certificate_source_operations.py`
+- `S201` `M` `src/cadrumo/application/auth/tests/test_certificate_secret_backend.py`
+- `S201` `M` `src/cadrumo/entrypoints/cli/config/_certificate.py`
+- `S201` `verify:` `uv run --no-sync ruff check src/cadrumo/application/auth/certificate_secret_backend.py src/cadrumo/application/auth/tests/test_certificate_secret_backend.py src/cadrumo/application/auth/certificate_source_operations.py src/cadrumo/entrypoints/cli/config/_certificate.py` -> `pass`
+- `S201` `verify:` `uv run --no-sync pytest -q -n0 -m "" src/cadrumo/application/auth/tests/test_certificate_secret_backend.py src/cadrumo/application/auth/tests/test_revocation_reachability.py` -> `pass (26 passed)`
+- `S201` `verify:` `rg -n "\\bCertificateSecretBackend\\b" src docs --glob '!*.pyc'` -> `pass (zero residue)`
+- `S201` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S201` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (61 unreachable modules; 893 unused symbols; 18 orphan tests)`
+- `S202` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S202` `M` `src/cadrumo/application/invoices/bulk_import.py`
+- `S202` `M` `src/cadrumo/application/tests/test_field_role_importer_coverage.py`
+- `S202` `verify:` `uv run --no-sync ruff check src/cadrumo/application/invoices/bulk_import.py src/cadrumo/application/tests/test_field_role_importer_coverage.py` -> `pass`
+- `S202` `verify:` `uv run --no-sync pytest -q -n0 -m "" src/cadrumo/application/tests/test_field_role_importer_coverage.py src/cadrumo/entrypoints/cli/tests/test_catalogue_invoice_bulk_import.py` -> `pass (30 passed)`
+- `S202` `verify:` `rg -n "BULK_INVOICE_IMPORT_ALLOWED_COLUMNS|BULK_INVOICE_IMPORT_OPTIONAL_COLUMNS" src docs --glob '!*.pyc'` -> `pass (zero residue)`
+- `S202` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S202` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (61 unreachable modules; 893 unused symbols; 18 orphan tests)`
+- `S203` `M` `src/cadrumo/application/aggregation/_evidence_advisory.py`
+- `S203` `verify:` `uv run --no-sync ruff check src/cadrumo/application/aggregation/_evidence_advisory.py` -> `pass`
+- `S203` `verify:` `uv run --no-sync pytest -q -n0 -m "" src/cadrumo/application/aggregation/tests/test_evidence_advisory.py src/cadrumo/application/modelo/tests/test_modelo_303_deductible_evidence_gate.py` -> `pass (23 passed)`
+- `S203` `verify:` `rg -n "transaction_missing_deductible_iva_evidence|transaction_missing_output_iva_evidence" src docs --glob '!*.pyc'` -> `pass (zero residue)`
+- `S203` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S203` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (61 unreachable modules; 890 unused symbols; 18 orphan tests)`
+- `S204` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S204` `M` `src/cadrumo/application/aggregation/_counterpart.py`
+- `S204` `M` `src/cadrumo/application/aggregation/_retenciones.py`
+- `S204` `M` `src/cadrumo/application/aggregation/tests/test_counterpart.py`
+- `S204` `M` `src/cadrumo/application/aggregation/tests/test_retenciones.py`
+- `S204` `verify:` `uv run --no-sync ruff check src/cadrumo/application/aggregation/_counterpart.py src/cadrumo/application/aggregation/_retenciones.py src/cadrumo/application/aggregation/tests/test_counterpart.py src/cadrumo/application/aggregation/tests/test_retenciones.py` -> `pass`
+- `S204` `verify:` `uv run --no-sync pytest -q -n0 -m "" src/cadrumo/application/aggregation/tests/test_counterpart.py src/cadrumo/application/aggregation/tests/test_retenciones.py` -> `pass (70 passed)`
+- `S204` `verify:` `rg -n "COUNTERPART_MODELO_KIND_CATALOGUE|RETENCIONES_MODELO_SCHEME_CATALOGUE" src docs --glob '!*.pyc'` -> `pass (zero residue)`
+- `S204` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S204` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (61 unreachable modules; 888 unused symbols; 18 orphan tests)`
+- `S205` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S205` `M` `src/cadrumo/application/filing/draft_review.py`
+- `S205` `M` `src/cadrumo/application/filing/tests/test_approval_basis_integrity.py`
+- `S205` `M` `src/cadrumo/application/filing/tests/test_filing.py`
+- `S205` `M` `src/cadrumo/application/filing/tests/test_review_prior_filing_staleness.py`
+- `S205` `M` `src/cadrumo/application/filing/tests/test_review_prior_filing_staleness_unit.py`
+- `S205` `M` `src/cadrumo/application/filing/tests/test_review_profile_activity_staleness.py`
+- `S205` `M` `src/cadrumo/application/filing/tests/test_review_profile_activity_staleness_unit.py`
+- `S205` `M` `src/cadrumo/tests/filing.py`
+- `S205` `verify:` `uv run --no-sync ruff check src/cadrumo/application/filing/draft_review.py src/cadrumo/tests/filing.py src/cadrumo/application/filing/tests/test_approval_basis_integrity.py src/cadrumo/application/filing/tests/test_filing.py src/cadrumo/application/filing/tests/test_review_profile_activity_staleness_unit.py src/cadrumo/application/filing/tests/test_review_profile_activity_staleness.py src/cadrumo/application/filing/tests/test_review_prior_filing_staleness_unit.py src/cadrumo/application/filing/tests/test_review_prior_filing_staleness.py` -> `pass`
+- `S205` `verify:` `uv run --no-sync pytest -q -n0 -m "" src/cadrumo/application/filing/tests/test_approval_basis_integrity.py src/cadrumo/application/filing/tests/test_review_profile_activity_staleness_unit.py src/cadrumo/application/filing/tests/test_review_prior_filing_staleness_unit.py` -> `pass (64 passed)`
+- `S205` `verify:` `uv run --no-sync pytest -q --collect-only -m "" src/cadrumo/application/filing/tests/test_filing.py src/cadrumo/application/filing/tests/test_review_profile_activity_staleness.py src/cadrumo/application/filing/tests/test_review_prior_filing_staleness.py` -> `pass (29 collected)`
+- `S205` `verify:` `rg -n "^def empty_prior_filing_observations_fingerprint|^def empty_profile_activity_fingerprint" src/cadrumo/application --glob '*.py'` -> `pass (zero production residue)`
+- `S205` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S205` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --json` -> `findings (62 unreachable modules; 888 unused symbols; 18 orphan tests)`
+- `S206` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S206` `M` `src/cadrumo/application/overview/calendar_warnings.py`
+- `S206` `M` `src/cadrumo/application/overview/tests/test_calendar.py`
+- `S206` `verify:` `uv run --no-sync ruff check src/cadrumo/application/overview/calendar_warnings.py src/cadrumo/application/overview/tests/test_calendar.py` -> `pass`
+- `S206` `verify:` `uv run --no-sync pytest -q -n0 -m "" --basetemp <isolated-workspace-temp> <four focused censo enrolment tests>` -> `pass`
+- `S206` `verify:` `rg -n "calendar_censo_enrolment_profile_keys" src/cadrumo --glob '*.py'` -> `pass`
+- `S206` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S206` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `findings`
+- `S207` `M` `.vault/adr/2026-09-07-tuimodelo-filing-lifecycle-adr.md`
+- `S207` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S207` `M` `src/cadrumo/application/modelo/declarations_workspace.py`
+- `S207` `M` `src/cadrumo/application/modelo/tests/test_declarations_workspace.py`
+- `S207` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/declarations_workspace.py src/cadrumo/application/modelo/tests/test_declarations_workspace.py` -> `pass`
+- `S207` `verify:` `uv run --no-sync pytest -q -n0 -m "" --basetemp <isolated-workspace-temp> src/cadrumo/application/modelo/tests/test_declarations_workspace.py` -> `pass`
+- `S207` `verify:` `rg -n "DECLARATION_LIFECYCLE_EVENT_KINDS|DECLARATION_LIFECYCLE_EXCLUDED_EVENTS|DeclarationsLifecycleExclusion" src/cadrumo --glob '*.py'` -> `pass`
+- `S207` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S207` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `findings`
+- `S207` `verify:` `vaultspec-core vault check --feature tuimodelo` -> `pass`
+- `S208` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S208` `M` `src/cadrumo/application/filing/runtime.py`
+- `S208` `M` `src/cadrumo/application/filing/tests/test_runtime.py`
+- `S208` `verify:` `uv run --no-sync ruff check src/cadrumo/application/filing/runtime.py src/cadrumo/application/filing/tests/test_runtime.py` -> `pass`
+- `S208` `verify:` `uv run --no-sync pytest -q -n0 -m "" --basetemp <isolated-workspace-temp> src/cadrumo/application/filing/tests/test_runtime.py::test_registry_tree_fingerprint_ttl_cache` -> `pass`
+- `S208` `verify:` `rg -n "clear_runtime_fingerprint_cache" src/cadrumo --glob '*.py'` -> `pass`
+- `S208` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S208` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `findings`
+- `S209` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S209` `M` `src/cadrumo/application/filing/runtime.py`
+- `S209` `M` `src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py`
+- `S209` `verify:` `uv run --no-sync ruff check src/cadrumo/application/filing/runtime.py src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py` -> `pass`
+- `S209` `verify:` `uv run --no-sync pytest -q -n0 -m "" --basetemp <isolated-workspace-temp> src/cadrumo/entrypoints/cli/tests/test_workflow_surface.py::test_profile_create_set_deadlines_and_filing_runtime_share_profile_bucket` -> `pass`
+- `S209` `verify:` `rg -n "load_default_filing_profile" src/cadrumo --glob '*.py'` -> `pass`
+- `S209` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S209` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `findings`
+- `S210` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S210` `M` `src/cadrumo/application/filing/_export_parity.py`
+- `S210` `verify:` `uv run --no-sync ruff check src/cadrumo/application/filing/_export_parity.py` -> `pass`
+- `S210` `verify:` `uv run --no-sync pytest -q -n0 -m "" --basetemp <isolated-workspace-temp> <two focused DID account tests>` -> `pass`
+- `S210` `verify:` `rg -n '^did_page_required\\s*=' ...` -> `pass`
+- `S210` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S210` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `findings`
+- `S211` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S211` `M` `src/cadrumo/application/live/notification_documents.py`
+- `S211` `M` `src/cadrumo/application/live/tests/test_notification_documents_service.py`
+- `S211` `verify:` `uv run --no-sync ruff check src/cadrumo/application/live/notification_documents.py src/cadrumo/application/live/tests/test_notification_documents_service.py` -> `pass`
+- `S211` `verify:` `uv run --no-sync pytest -q -n0 -m "" --basetemp <isolated-workspace-temp> <four focused notification custody retry/divergence tests>` -> `pass`
+- `S211` `verify:` `rg -n "_BYTE_DERIVED_FIELDS|_NON_IDENTITY_FIELDS" src/cadrumo --glob '*.py'` -> `pass`
+- `S211` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S211` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `findings`
+- `S212` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S212` `M` `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`
+- `S212` `M` `src/cadrumo/application/modelo/tests/test_calculation_modelo_adjustments.py`
+- `S212` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/_calculation_modelo_adjustments.py src/cadrumo/application/modelo/tests/test_calculation_modelo_adjustments.py` -> `pass`
+- `S212` `verify:` `uv run --no-sync pytest -q -n0 -m "" --basetemp <isolated-workspace-temp> src/cadrumo/application/modelo/tests/test_calculation_modelo_adjustments.py` -> `pass`
+- `S212` `verify:` `rg -n "uncovered_detail_row_kinds|_uncovered_row_kinds" src/cadrumo --glob '*.py'` -> `pass`
+- `S212` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S212` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `findings`
+- `S213` `M` `.vault/adr/2026-08-24-tui-registry-api-gate-adr.md`
+- `S213` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S213` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S213` `M` `src/cadrumo/application/modelo/workspace_producers.py`
+- `S213` `M` `src/cadrumo/application/modelo/tests/test_workspace_producers.py`
+- `S213` `M` `src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py`
+- `S213` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S213.md`
+- `S213` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/workspace_producers.py src/cadrumo/application/modelo/tests/test_workspace_producers.py src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py` -> `pass`
+- `S213` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_workspace_producers.py src/cadrumo/application/modelo/tests/test_workspace_dependency_receipt.py` -> `pass`
+- `S213` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S213` `verify:` `rg -n "ModeloWorkspaceProducerContractInventoryV1|MODELO_WORKSPACE_PRODUCER_CONTRACT_INVENTORY_V1|producer_contract_inventory_digest" src dev --glob '*.py'` -> `pass`
+- `S213` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 63 unreachable modules, 313 exact unused symbols, 15 orphaned tests, 2028/2092 shipped modules reachable)`
+- `S214` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S214` `M` `src/cadrumo/application/modelo/local_observation_spreadsheet.py`
+- `S214` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S214.md`
+- `S214` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_local_observation_spreadsheet.py src/cadrumo/entrypoints/cli/tests/test_modelo_local_observation_spreadsheet_cli.py` -> `pass (32 passed)`
+- `S214` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/local_observation_spreadsheet.py src/cadrumo/application/modelo/tests/test_local_observation_spreadsheet.py src/cadrumo/entrypoints/cli/tests/test_modelo_local_observation_spreadsheet_cli.py` -> `pass`
+- `S214` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S214` `verify:` `rg -n "CSV_EXTENSIONS" src/cadrumo/application/modelo src/cadrumo/entrypoints --glob '*.py'` -> `pass (no matches)`
+- `S214` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 63 unreachable modules, 312 exact unused symbols, 15 orphaned tests, 2028/2092 shipped modules reachable)`
+- `S215` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S215` `M` `src/cadrumo/application/modelo/operation_definitions.py`
+- `S215` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S215.md`
+- `S215` `verify:` `uv run --no-sync pytest -q src/cadrumo/entrypoints/tui/modelo/tests/test_c4_verify_action.py` -> `pass (10 passed)`
+- `S215` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/operation_definitions.py src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py src/cadrumo/entrypoints/tui/modelo/tests/test_c4_verify_action.py` -> `pass`
+- `S215` `verify:` `uv run --no-sync python -m dev.quality.production_metastate` -> `pass`
+- `S215` `verify:` `rg -n "MODELO_WORK_VERIFY_PROGRESS_UNIT" src dev --glob '*.py'` -> `pass (no matches)`
+- `S215` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_lifecycle_operation_conformance.py src/cadrumo/entrypoints/tui/modelo/tests/test_c4_verify_action.py` -> `fail (2 unrelated existing writer-census failures: file and verify)`
+- `S215` `verify:` `uv run --no-sync pytest -q src/cadrumo/entrypoints/tui/modelo/tests/test_c4_verify_action.py src/cadrumo/application/modelo/tests/test_file_flow_verify.py` -> `fail (1 unrelated existing parent-coordinate fixture failure; 23 passed)`
+- `S215` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 63 unreachable modules, 311 exact unused symbols, 15 orphaned tests, 2028/2092 shipped modules reachable)`
+- `S216` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S216` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S216` `M` `src/cadrumo/application/modelo/calculation_route.py`
+- `S216` `M` `src/cadrumo/application/modelo/tests/test_calculation_route.py`
+- `S216` `M` `src/cadrumo/application/operator_surface/__init__.py`
+- `S216` `D` `src/cadrumo/core/calculation_route.py`
+- `S216` `D` `src/cadrumo/application/operator_surface/calculation_workflows.py`
+- `S216` `D` `src/cadrumo/application/operator_surface/tests/test_calculation_workflows.py`
+- `S216` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S216.md`
+- `S216` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_calculation_route.py dev/quality/tests/test_no_test_only_public_alias.py` -> `pass (32 passed)`
+- `S216` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/calculation_route.py src/cadrumo/application/modelo/tests/test_calculation_route.py src/cadrumo/application/operator_surface/__init__.py dev/quality/tests/test_no_test_only_public_alias.py` -> `pass`
+- `S216` `verify:` `rg -n "CALCULATION_ROUTE_ID|ModeloCalculationRouteId|SupportedModeloCalculationWorkflow|calculation_workflows" src dev --glob '*.py'` -> `pass (no matches)`
+- `S216` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 62 unreachable modules, 310 exact unused symbols, 15 orphaned tests, 2027/2090 shipped modules reachable)`
+- `S217` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S217` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S217` `D` `src/cadrumo/application/aggregation/tests/test_source_resolver_enrollment.py`
+- `S217` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S217.md`
+- `S217` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_calculation_route.py dev/quality/tests/test_no_test_only_public_alias.py` -> `pass (32 passed)`
+- `S217` `verify:` `uv run --no-sync python -m py_compile src/cadrumo/application/export/google_operation.py` -> `pass (peer-owned parse blocker cleared)`
+- `S217` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 62 unreachable modules, 311 exact unused symbols, 16 orphaned tests, 2028/2091 shipped modules reachable; concurrent graph drift classified separately)`
+- `S218` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S218` `D` `src/cadrumo/application/user_profile/tests/test_custody_retryable_codes_are_declared.py`
+- `S218` `M` `src/cadrumo/tests/test_no_handler_flattens_a_divergent_retryability.py`
+- `S218` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S218.md`
+- `S218` `verify:` `uv run --no-sync ruff check src/cadrumo/tests/test_no_handler_flattens_a_divergent_retryability.py` -> `pass`
+- `S218` `verify:` `rg -n "test_custody_retryable_codes_are_declared|_RETRYABLE_BECAUSE|_OWNED_QUALNAME_FRAGMENTS" src dev --glob '*.py'` -> `pass (no matches)`
+- `S218` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_no_handler_flattens_a_divergent_retryability.py src/cadrumo/core/errors/tests/test_registry.py src/cadrumo/core/errors/tests/test_registry_enforcement.py` -> `fail (material retained detector found 2 live flattening handlers; 27 passed)`
+- `S218` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 62 unreachable modules, 311 exact unused symbols, 15 orphaned tests, 2028/2091 shipped modules reachable)`
+- `S219` `M` `src/cadrumo/adapters/persistence/storage/profile_custody.py`
+- `S219` `M` `src/cadrumo/application/user_profile/profile_repository.py`
+- `S219` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S219.md`
+- `S219` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/profile_custody.py src/cadrumo/application/user_profile/profile_repository.py src/cadrumo/tests/test_no_handler_flattens_a_divergent_retryability.py src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py` -> `pass`
+- `S219` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s219 src/cadrumo/tests/test_no_handler_flattens_a_divergent_retryability.py src/cadrumo/adapters/persistence/storage/tests/test_profile_custody_adapter.py` -> `pass (9 passed)`
+- `S219` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 62 unreachable modules, 311 exact unused symbols, 15 orphaned tests, 2029/2092 shipped modules reachable)`
+- `S220` `M` `.vault/adr/2026-07-08-released-data-durability-adr.md`
+- `S220` `M` `.vault/adr/2026-07-09-compatibility-lifecycle-adr.md`
+- `S220` `M` `.vault/adr/2026-08-10-current-schema-only-purge-adr.md`
+- `S220` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S220` `M` `.vault/reference/2026-07-10-compatibility-lifecycle-reference.md`
+- `S220` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S220` `M` `src/cadrumo/adapters/persistence/storage/secret_store/store.py`
+- `S220` `M` `src/cadrumo/adapters/persistence/storage/secret_store/tests/test_secret_index_version_gate.py`
+- `S220` `M` `src/cadrumo/adapters/persistence/storage/storage_path_definitions.py`
+- `S220` `M` `src/cadrumo/adapters/persistence/storage/tests/test_schema_lineage.py`
+- `S220` `M` `src/cadrumo/application/modelo/workspace_models.py`
+- `S220` `D` `src/cadrumo/core/compatibility_lifecycle.py`
+- `S220` `D` `src/cadrumo/core/tests/test_compatibility_lifecycle.py`
+- `S220` `D` `src/cadrumo/core/tests/test_compatibility_lifecycle_gate.py`
+- `S220` `D` `src/cadrumo/tests/test_persisted_format_enrollment.py`
+- `S220` `M` `src/cadrumo/tests/test_release_config.py`
+- `S220` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S220.md`
+- `S220` `verify:` `rg -n "compatibility_lifecycle|COMPATIBILITY_REGIME|RELEASED_FORMAT_FLOORS|PERSISTED_FORMATS|PersistedFormatClass" src --glob '*.py'` -> `pass (no matches)`
+- `S220` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/tests/test_schema_lineage.py src/cadrumo/adapters/persistence/storage/secret_store/tests/test_secret_index_version_gate.py src/cadrumo/adapters/persistence/storage/secret_store/store.py src/cadrumo/application/modelo/workspace_models.py src/cadrumo/tests/test_release_config.py` -> `pass`
+- `S220` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s220c src/cadrumo/adapters/persistence/storage/tests/test_schema_lineage.py src/cadrumo/adapters/persistence/storage/secret_store/tests/test_secret_index_version_gate.py` -> `pass (15 passed)`
+- `S220` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 61 unreachable modules, 311 exact unused symbols, 13 orphaned tests, 2029/2091 shipped modules reachable)`
+- `S221` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S221` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S221` `M` `src/cadrumo/adapters/persistence/storage/__init__.py`
+- `S221` `M` `src/cadrumo/adapters/persistence/storage/schema_lineage.py`
+- `S221` `M` `src/cadrumo/adapters/persistence/storage/sql/_secure_object_row_codec.py`
+- `S221` `M` `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_decode_order.py`
+- `S221` `D` `src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_schema_lineage.py`
+- `S221` `M` `src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_vacuity_invariants.py`
+- `S221` `M` `src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_version_check_shape.py`
+- `S221` `M` `src/cadrumo/adapters/persistence/storage/tests/test_schema_lineage.py`
+- `S221` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S221.md`
+- `S221` `verify:` `rg -n "register_secure_object_schema_upgrader|deregister_secure_object_schema_upgrader|upgrade_secure_object_payload|missing_upgrade_hops|SECURE_OBJECT_DURABILITY_FLOOR|SecureObjectSchemaUpgrader" src/cadrumo --glob '*.py'` -> `pass (no production or executable-test references; only detector fixture text was replaced)`
+- `S221` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/schema_lineage.py src/cadrumo/adapters/persistence/storage/sql/_secure_object_row_codec.py src/cadrumo/adapters/persistence/storage/tests/test_schema_lineage.py src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_vacuity_invariants.py src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_version_check_shape.py src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_decode_order.py src/cadrumo/adapters/persistence/storage/__init__.py` -> `pass`
+- `S221` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s221 src/cadrumo/adapters/persistence/storage/tests/test_schema_lineage.py src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_vacuity_invariants.py src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_version_check_shape.py src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_object_decode_order.py src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part1.py src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part2.py src/cadrumo/adapters/persistence/storage/sql/tests/test_secure_objects_part3.py` -> `pass (79 passed)`
+- `S221` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 61 unreachable modules, 308 exact unused symbols, 12 orphaned tests, 2029/2091 shipped modules reachable)`
+- `S222` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S222` `M` `.vault/reference/2026-08-07-canonical-identifiers-reference.md`
+- `S222` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S222` `M` `dev/registry/parity/_workbook_parity.py`
+- `S222` `M` `src/cadrumo/core/identity/__init__.py`
+- `S222` `M` `src/cadrumo/core/identity/_namespace.py`
+- `S222` `D` `src/cadrumo/domain/calculations/registry/snapshot_coordinate.py`
+- `S222` `M` `src/cadrumo/domain/calculations/registry/tests/_scenarios.py`
+- `S222` `D` `src/cadrumo/domain/calculations/registry/tests/test_snapshot_coordinate.py`
+- `S222` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S222.md`
+- `S222` `verify:` `rg -n "RegistrySnapshotId|snapshot_coordinate|registry_snapshot_id_for|registry_snapshot_id\\(" src/cadrumo dev --glob '*.py'` -> `pass (no matches)`
+- `S222` `verify:` `uv run --no-sync ruff check src/cadrumo/core/identity/_namespace.py src/cadrumo/core/identity/__init__.py dev/registry/parity/_workbook_parity.py src/cadrumo/domain/calculations/registry/tests/_scenarios.py` -> `pass`
+- `S222` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s222 src/cadrumo/domain/calculations/registry/tests/test_registry_scenarios.py dev/registry/parity/tests` -> `pass (19 passed)`
+- `S222` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 60 unreachable modules, 308 exact unused symbols, 11 orphaned tests, 2029/2090 shipped modules reachable)`
+- `S223` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S223` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S223` `M` `src/cadrumo/domain/contribuyente/constants.py`
+- `S223` `D` `src/cadrumo/domain/contribuyente/tests/test_constants.py`
+- `S223` `M` `src/cadrumo/entrypoints/cli/tests/test_calculate_boundary_fault_attribution.py`
+- `S223` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S223.md`
+- `S223` `verify:` `rg -n "ProfileName" src/cadrumo dev --glob '*.py'` -> `pass (only distinct ProfileNameCollisionError matches)`
+- `S223` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/contribuyente/constants.py src/cadrumo/entrypoints/cli/tests/test_calculate_boundary_fault_attribution.py` -> `pass`
+- `S223` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s223 src/cadrumo/domain/contribuyente/tests src/cadrumo/entrypoints/cli/tests/test_calculate_boundary_fault_attribution.py` -> `pass (466 passed, 4 deselected)`
+- `S223` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 60 unreachable modules, 307 exact unused symbols, 10 orphaned tests, 2029/2090 shipped modules reachable)`
+- `S224` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S224` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S224` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_explain_verb.py`
+- `S224` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S224.md`
+- `S224` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/tests/test_overview_explain_verb.py src/cadrumo/entrypoints/cli/tests/test_overview_command_specs.py` -> `pass`
+- `S224` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s224 src/cadrumo/entrypoints/cli/tests/test_overview_command_specs.py src/cadrumo/entrypoints/cli/tests/test_overview_explain_verb.py` -> `pass (3 passed, 6 integration tests deselected)`
+- `S224` `verify:` `uv run --no-sync pytest -q -n 0 -m integration --basetemp .tmp/pytest-s224-integration src/cadrumo/entrypoints/cli/tests/test_overview_explain_verb.py` -> `pass (6 passed)`
+- `S224` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 60 unreachable modules, 307 exact unused symbols, 9 orphaned tests, 2029/2090 shipped modules reachable)`
+- `S225` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S225` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S225` `M` `dev/audit/unreachable_code.py`
+- `S225` `M` `dev/audit/tests/test_unreachable_code.py`
+- `S225` `M` `src/cadrumo/entrypoints/cli/_windows_profile_secret_bootstrap.py`
+- `S225` `M` `src/cadrumo/entrypoints/cli/tests/_machine_secret_channels_support.py`
+- `S225` `M` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `S225` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S225.md`
+- `S225` `verify:` `uv run --no-sync ruff check dev/audit/unreachable_code.py dev/audit/tests/test_unreachable_code.py src/cadrumo/entrypoints/cli/_windows_profile_secret_bootstrap.py src/cadrumo/entrypoints/cli/tests/_machine_secret_channels_support.py src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py` -> `pass`
+- `S225` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s225 dev/audit/tests/test_unreachable_code.py` -> `pass (51 passed)`
+- `S225` `verify:` `uv run --no-sync pytest -q -n 0 -m integration --basetemp .tmp/pytest-s225-integration src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py -k 'platform_descriptor_bootstrap or platform_recovery_descriptors'` -> `pass (2 passed, 16 deselected)`
+- `S225` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 60 unreachable modules, 306 exact unused symbols, 8 orphaned tests, 2029/2090 shipped modules reachable; five derived roots plus workspace sibling)`
+- `S225` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s225-fast dev/audit/tests/test_unreachable_code.py -k 'module_execution_surface or repository_discovers_its_module_execution_roots'` -> `pass (2 passed, 49 deselected after text-prefilter refinement)`
+- `S226` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S226` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S226` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S226` `D` `src/cadrumo/domain/contabilidad/__init__.py`
+- `S226` `D` `src/cadrumo/domain/contabilidad/ajuste.py`
+- `S226` `D` `src/cadrumo/domain/contabilidad/cuenta.py`
+- `S226` `D` `src/cadrumo/domain/contabilidad/direccion.py`
+- `S226` `D` `src/cadrumo/domain/contabilidad/errors.py`
+- `S226` `D` `src/cadrumo/domain/contabilidad/saldo.py`
+- `S226` `D` `src/cadrumo/domain/contabilidad/tests/__init__.py`
+- `S226` `D` `src/cadrumo/domain/contabilidad/tests/test_ajuste.py`
+- `S226` `D` `src/cadrumo/domain/contabilidad/tests/test_cuenta.py`
+- `S226` `D` `src/cadrumo/domain/contabilidad/tests/test_direccion.py`
+- `S226` `D` `src/cadrumo/domain/contabilidad/tests/test_saldo.py`
+- `S226` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S226.md`
+- `S226` `verify:` `rg -n 'CONTABILIDAD_|domain\\.contabilidad|AjusteExtracontable|CuentaPgc|ContabilidadDireccion|SaldoCuenta|SumasYSaldos' src/cadrumo dev --glob '*.py' --glob '*.toml'` -> `pass (no matches)`
+- `S226` `verify:` `uv run --no-sync ruff check src/cadrumo/core/errors/registry/_application_part2.py` -> `pass`
+- `S226` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s226-clean src/cadrumo/core/errors/tests/test_registry.py src/cadrumo/core/errors/tests/test_registry_enforcement.py src/cadrumo/core/errors/tests/test_error_base_binding_order.py src/cadrumo/core/errors/tests/test_error_message_never_blank.py src/cadrumo/domain/calculations/registry/tests/test_modelo_200_base_determination.py src/cadrumo/domain/calculations/registry/tests/test_modelo_200_registry.py` -> `pass (49 passed)`
+- `S226` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (expected nonzero with live findings: 54 unreachable modules, 306 exact unused symbols, 5 orphaned tests, 2029/2084 shipped modules reachable)`
+- `S227` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S227` `D` `src/cadrumo/domain/is_compensation/__init__.py`
+- `S227` `D` `src/cadrumo/domain/is_compensation/bin_carry_forward.py`
+- `S227` `D` `src/cadrumo/domain/is_compensation/errors.py`
+- `S227` `D` `src/cadrumo/domain/is_compensation/tests/__init__.py`
+- `S227` `D` `src/cadrumo/domain/is_compensation/tests/test_bin_carry_forward.py`
+- `S227` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S227` `verify:` `uv run --no-sync ruff check src/cadrumo/core/errors/registry/_application_part2.py` -> `pass`
+- `S227` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s227-direct src/cadrumo/core/errors/tests/test_registry.py src/cadrumo/core/errors/tests/test_registry_enforcement.py src/cadrumo/core/errors/tests/test_error_base_binding_order.py src/cadrumo/core/errors/tests/test_error_message_never_blank.py src/cadrumo/application/calculations/tests/test_modelo_200_bin_carry_forward_continuity.py` -> `pass`
+- `S227` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S228` `M` `src/cadrumo/application/filing/draft_review.py`
+- `S228` `M` `src/cadrumo/application/filing/__init__.py`
+- `S228` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S228` `verify:` `uv run --no-sync ruff check src/cadrumo/application/filing/draft_review.py src/cadrumo/application/filing/__init__.py` -> `pass`
+- `S228` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s228 src/cadrumo/application/filing/tests/test_filing.py src/cadrumo/application/filing/tests/test_review_runtime_storage.py` -> `pass`
+- `S228` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S229` `M` `src/cadrumo/application/invoices/catalogue_reads.py`
+- `S229` `M` `src/cadrumo/application/invoices/tests/test_queries.py`
+- `S229` `M` `src/cadrumo/application/invoices/__init__.py`
+- `S229` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S229` `verify:` `uv run --no-sync ruff check src/cadrumo/application/invoices/catalogue_reads.py src/cadrumo/application/invoices/tests/test_queries.py src/cadrumo/application/invoices/__init__.py` -> `pass`
+- `S229` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s229 src/cadrumo/application/invoices/tests/test_queries.py` -> `pass`
+- `S229` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s229-cli src/cadrumo/entrypoints/cli/tests/test_business_invoice_verbs.py src/cadrumo/entrypoints/cli/tests/test_ledger_interface_contract_payloads.py` -> `pass`
+- `S229` `verify:` `uv run --no-sync pytest -q -n 0 -m "not unit" --basetemp .tmp/pytest-s229-cli-held src/cadrumo/entrypoints/cli/tests/test_business_invoice_verbs.py src/cadrumo/entrypoints/cli/tests/test_ledger_interface_contract_payloads.py` -> `pass`
+- `S229` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S230` `M` `src/cadrumo/application/ledger/llm_review_workflow.py`
+- `S230` `M` `src/cadrumo/application/ledger/tests/test_llm_review_workflow_types.py`
+- `S230` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S230` `verify:` `uv run --no-sync ruff check src/cadrumo/application/ledger/llm_review_workflow.py src/cadrumo/application/ledger/tests/test_llm_review_workflow_types.py` -> `pass`
+- `S230` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s230 src/cadrumo/application/ledger/tests/test_llm_review_workflow_types.py src/cadrumo/application/ledger/tests/test_llm_review_workflow.py src/cadrumo/application/ledger/tests/test_llm_reject.py src/cadrumo/application/ledger/tests/test_reviewed_invoice_draft_terminal.py` -> `pass`
+- `S230` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S231` `M` `src/cadrumo/application/review/enums.py`
+- `S231` `M` `src/cadrumo/application/review/errors.py`
+- `S231` `M` `src/cadrumo/application/review/tests/test_operator.py`
+- `S231` `M` `src/cadrumo/core/errors/registry/_application_part1.py`
+- `S231` `M` `src/cadrumo/entrypoints/cli/tests/test_error_registry_contract.py`
+- `S231` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S231` `verify:` `uv run --no-sync ruff check src/cadrumo/application/review/enums.py src/cadrumo/application/review/errors.py src/cadrumo/application/review/tests/test_operator.py src/cadrumo/entrypoints/cli/tests/test_error_registry_contract.py src/cadrumo/core/errors/registry/_application_part1.py` -> `pass`
+- `S231` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s231 src/cadrumo/application/review/tests/test_operator.py src/cadrumo/application/review/tests/test_filter.py src/cadrumo/entrypoints/cli/tests/test_error_registry_contract.py` -> `pass`
+- `S231` `verify:` `uv run --no-sync pytest -q -n 0 -m "not unit" --basetemp .tmp/pytest-s231-nonunit src/cadrumo/application/review/tests/test_operator.py src/cadrumo/application/review/tests/test_filter.py src/cadrumo/entrypoints/cli/tests/test_error_registry_contract.py` -> `pass`
+- `S231` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S232` `M` `src/cadrumo/application/live/borrador_100.py`
+- `S232` `M` `src/cadrumo/application/live/tests/test_borrador_100.py`
+- `S232` `M` `src/cadrumo/application/live/tests/test_borrador_100_roundtrip.py`
+- `S232` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S232` `verify:` `uv run --no-sync ruff check src/cadrumo/application/live/borrador_100.py src/cadrumo/application/live/tests/test_borrador_100.py src/cadrumo/application/live/tests/test_borrador_100_roundtrip.py` -> `pass`
+- `S232` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s232 src/cadrumo/application/live/tests/test_borrador_100.py src/cadrumo/application/live/tests/test_borrador_100_roundtrip.py` -> `pass`
+- `S232` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S233` `M` `src/cadrumo/application/user_profile/capsule_record.py`
+- `S233` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S233` `verify:` `uv run --no-sync ruff check src/cadrumo/application/user_profile/capsule_record.py` -> `pass`
+- `S233` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s233 src/cadrumo/application/user_profile/tests/test_capsule_record.py src/cadrumo/application/user_profile/tests/test_profile_record_persistence_roundtrip.py` -> `pass`
+- `S233` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S234` `M` `src/cadrumo/application/user_profile/bundle.py`
+- `S234` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S234` `verify:` `uv run --no-sync ruff check src/cadrumo/application/user_profile/bundle.py` -> `pass`
+- `S234` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s234 src/cadrumo/application/user_profile/tests/test_bundle_encryption_kdf_window.py src/cadrumo/domain/user_profile/tests/test_portable_export_schema.py src/cadrumo/domain/user_profile/tests/test_portable_export_outer_instant.py src/cadrumo/domain/user_profile/tests/test_portable_export_instant_contract.py src/cadrumo/core/tests/test_persisted_version_single_declaration.py` -> `pass`
+- `S234` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S235` `M` `src/cadrumo/entrypoints/cli/_command_schema.py`
+- `S235` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/_command_schema.py` -> `pass`
+- `S235` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s235-focused src/cadrumo/entrypoints/cli/tests/test_command_graph_consumers.py src/cadrumo/entrypoints/cli/tests/test_command_policy.py src/cadrumo/entrypoints/cli/tests/test_capability_family_isolation.py src/cadrumo/entrypoints/cli/tests/test_profile_authentication_contract.py` -> `pass`
+- `S235` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S236` `M` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_spec_authority.py`
+- `S236` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S236` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/tests/test_machine_secret_spec_authority.py` -> `pass`
+- `S236` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s236 src/cadrumo/entrypoints/cli/tests/test_machine_secret_spec_authority.py` -> `pass`
+- `S237` `M` `src/cadrumo/entrypoints/cli/_common.py`
+- `S237` `M` `src/cadrumo_harness/mcp/tests/test_closed_value_axis_gate.py`
+- `S237` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S237` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/_common.py src/cadrumo_harness/mcp/tests/test_closed_value_axis_gate.py` -> `pass`
+- `S237` `verify:` `uv run --no-sync pytest -q -n 0 -m "" --basetemp .tmp/pytest-s237 src/cadrumo_harness/mcp/tests/test_closed_value_axis_gate.py` -> `fail`
+- `S237` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S238` `M` `src/cadrumo/entrypoints/cli/_app_live_portals_command_specs.py`
+- `S238` `M` `src/cadrumo/entrypoints/cli/_app_live_portals_cli.py`
+- `S238` `M` `src/cadrumo/entrypoints/cli/tests/test_live_portals_verbs.py`
+- `S238` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/_app_live_portals_command_specs.py src/cadrumo/entrypoints/cli/_app_live_portals_cli.py src/cadrumo/entrypoints/cli/tests/test_live_portals_verbs.py` -> `pass`
+- `S238` `verify:` `uv run --no-sync pytest -q -n 0 -m "" --basetemp .tmp/pytest-s238 src/cadrumo/entrypoints/cli/tests/test_live_portals_verbs.py src/cadrumo_harness/mcp/tests/test_closed_value_axis_gate.py` -> `fail`
+- `S239` `D` `src/cadrumo_harness/mcp/tests/test_closed_value_axis_gate.py`
+- `S239` `M` `.vault/adr/2026-08-09-mcp-closed-value-axes-adr.md`
+- `S239` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S239` `verify:` `uv run --no-sync pytest -q -n 0 -m "" --basetemp .tmp/pytest-s239 src/cadrumo/entrypoints/cli/tests/test_live_portals_verbs.py src/cadrumo/entrypoints/cli/tests/test_machine_secret_spec_authority.py` -> `pass`
+- `S240` `M` `src/cadrumo/domain/calculations/registry/tests/test_export_split_part_rendering.py`
+- `S240` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S240` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/tests/test_export_split_part_rendering.py` -> `pass`
+- `S240` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s240 src/cadrumo/domain/calculations/registry/tests/test_export_split_part_rendering.py` -> `pass`
+- `S241` `D` `src/cadrumo/tests/test_deferred_cross_layer_imports.py`
+- `S241` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S241` `verify:` `uv run --no-sync lint-imports` -> `pass`
+- `S242` `M` `src/cadrumo/core/errors/error_codes.py`
+- `S242` `M` `src/cadrumo/core/errors/tests/test_registry.py`
+- `S242` `verify:` `uv run --no-sync ruff check src/cadrumo/core/errors/error_codes.py src/cadrumo/core/errors/tests/test_registry.py` -> `pass`
+- `S242` `verify:` `uv run --no-sync pytest -q -n 0 --basetemp .tmp/pytest-s242 src/cadrumo/core/errors/tests/test_registry.py` -> `pass`
+- `S242` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S243` `M` `src/cadrumo/application/auth/sessions.py`
+- `S243` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S243` `verify:` `uv run --no-sync ruff check src/cadrumo/application/auth/sessions.py` -> `pass`
+- `S243` `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/application/auth/tests/test_clave_credential_resolution.py src/cadrumo/application/auth/tests/test_blank_profile_identity_refusal.py src/cadrumo/application/auth/tests/test_live_provider_kind_resolution.py` -> `pass`
+- `S243` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S244` `D` `src/cadrumo/entrypoints/tui/components/_safe_text.py`
+- `S244` `D` `src/cadrumo/entrypoints/tui/components/errors.py`
+- `S244` `D` `src/cadrumo/entrypoints/tui/components/logs.py`
+- `S244` `D` `src/cadrumo/entrypoints/tui/components/tests/test_errors.py`
+- `S244` `D` `src/cadrumo/entrypoints/tui/components/tests/test_logs.py`
+- `S244` `M` `src/cadrumo/entrypoints/tui/components/tests/test_feedback.py`
+- `S244` `M` `src/cadrumo/entrypoints/tui/components/tests/test_component_boundary.py`
+- `S244` `M` `.vault/adr/2026-08-11-tui-architecture-adr.md`
+- `S244` `M` `.vault/reference/2026-09-02-unreachable-capability-disconnected-capability-inventory-reference.md`
+- `S244` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S244` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tui/components src/cadrumo/entrypoints/tui/operations` -> `pass`
+- `S244` `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/entrypoints/tui/components/tests/test_feedback.py src/cadrumo/entrypoints/tui/components/tests/test_component_boundary.py src/cadrumo/entrypoints/tui/operations/tests/test_operation_modal_lifecycle.py` -> `pass`
+- `S244` `verify:` `uv run --no-sync pytest -q -n 0 -m "integration" src/cadrumo/entrypoints/tui/components/tests/test_feedback.py src/cadrumo/entrypoints/tui/components/tests/test_component_boundary.py src/cadrumo/entrypoints/tui/operations/tests/test_operation_modal_lifecycle.py` -> `pass`
+- `S244` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S245` `D` `src/cadrumo/entrypoints/tui/operations/facade.py`
+- `S245` `M` `src/cadrumo/entrypoints/tui/aeat_sync/models.py`
+- `S245` `M` `src/cadrumo/entrypoints/tui/modelo/action/rename.py`
+- `S245` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S245` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tui/aeat_sync/models.py src/cadrumo/entrypoints/tui/modelo/action/rename.py src/cadrumo/entrypoints/tui/operations` -> `pass`
+- `S245` `verify:` `uv run --no-sync pytest -q -n 0 -m "integration" src/cadrumo/entrypoints/tui/operations/tests/test_operation_modal_lifecycle.py` -> `pass`
+- `S245` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S246` `D` `src/cadrumo/domain/fincas/__init__.py`
+- `S246` `D` `src/cadrumo/domain/fincas/aggregates.py`
+- `S246` `D` `src/cadrumo/domain/fincas/amortization_ledger.py`
+- `S246` `D` `src/cadrumo/domain/fincas/enums.py`
+- `S246` `D` `src/cadrumo/domain/fincas/errors.py`
+- `S246` `D` `src/cadrumo/domain/fincas/expense_rollup.py`
+- `S246` `D` `src/cadrumo/domain/fincas/imputacion_parameters.py`
+- `S246` `D` `src/cadrumo/domain/fincas/models.py`
+- `S246` `D` `src/cadrumo/domain/fincas/repository_ports.py`
+- `S246` `D` `src/cadrumo/domain/fincas/source_readiness.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tier_resolver.py`
+- `S246` `D` `src/cadrumo/domain/fincas/titularidad.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tests/__init__.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tests/test_aggregates.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tests/test_amortizacion_rate_registry_grounded.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tests/test_amortization_ledger.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tests/test_expense_rollup.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tests/test_imputacion_parameters.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tests/test_imputacion_regime.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tests/test_rehab_lookback_is_calendar_relative.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tests/test_threshold_registry_grounded.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tests/test_tier_resolver.py`
+- `S246` `D` `src/cadrumo/domain/fincas/tests/test_titularidad_attribution.py`
+- `S246` `D` `src/cadrumo/adapters/persistence/profile/fincas.py`
+- `S246` `D` `src/cadrumo/adapters/persistence/profile/tests/_fincas_engine_fixture.py`
+- `S246` `D` `src/cadrumo/adapters/persistence/profile/tests/test_fincas_repository.py`
+- `S246` `D` `src/cadrumo/adapters/persistence/profile/tests/test_fincas_roundtrip_anti_tautology.py`
+- `S246` `M` `src/cadrumo/adapters/persistence/storage/sql/__init__.py`
+- `S246` `M` `src/cadrumo/adapters/persistence/storage/sql/orm.py`
+- `S246` `M` `src/cadrumo/core/errors/registry/_domain_part2.py`
+- `S246` `M` `src/cadrumo/domain/tests/regulatory_cap_witnesses.py`
+- `S246` `M` `src/cadrumo/domain/iva/tests/test_legal_basis_rate_grounding.py`
+- `S246` `M` `src/cadrumo/domain/iva/recargo_equivalencia.py`
+- `S246` `M` `src/cadrumo/core/tests/test_persisted_version_single_declaration.py`
+- `S246` `M` `src/cadrumo/core/tests/test_external_constants_centralisation_part2.py`
+- `S246` `M` `src/cadrumo/core/external_constants.py`
+- `S246` `M` `src/cadrumo/_data/registry/aeat/legal/irpf.toml`
+- `S246` `M` `src/cadrumo/locales/es/errors.yml`
+- `S246` `M` `src/cadrumo/locales/en/errors.yml`
+- `S246` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S246` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S246` `M` `.vault/audit/2026-07-12-rental-income-hardening-audit.md`
+- `S246` `M` `.vault/reference/2026-09-02-unreachable-capability-disconnected-capability-inventory-reference.md`
+- `S246` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S246` `verify:` `uv run --no-sync ruff check <focused S246 paths>` -> `pass`
+- `S246` `verify:` `uv run --no-sync pytest -q -n 0 -m "" <focused regulatory, error, schema, IVA, and SQL suites>` -> `pass`
+- `S246` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S247` `M` `src/cadrumo/adapters/persistence/storage/crypto/encrypted_columns.py`
+- `S247` `M` `src/cadrumo/adapters/persistence/storage/crypto/__init__.py`
+- `S247` `M` `src/cadrumo/adapters/persistence/storage/__init__.py`
+- `S247` `M` `src/cadrumo/adapters/persistence/storage/envelope/secure_bound_repository.py`
+- `S247` `M` `src/cadrumo/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py`
+- `S247` `M` `src/cadrumo/adapters/persistence/storage/crypto/tests/test_type_guard_errors.py`
+- `S247` `M` `src/cadrumo/application/calculations/tests/_observation_lookup_support.py`
+- `S247` `M` `src/cadrumo/application/calculations/tests/test_modelo_347_informativa_fidelity.py`
+- `S247` `M` `src/cadrumo/application/calculations/tests/test_modelo_184_informativa_fidelity.py`
+- `S247` `M` `src/cadrumo/application/calculations/tests/test_modelo_232_operaciones_vinculadas_fidelity.py`
+- `S247` `M` `src/cadrumo/application/calculations/tests/test_modelo_036_censal_continuity.py`
+- `S247` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S247` `verify:` `uv run --no-sync ruff check <focused S247 paths>` -> `pass`
+- `S247` `verify:` `uv run --no-sync pytest -q -n 0 -m "" src/cadrumo/adapters/persistence/storage/crypto/tests/test_encrypted_columns.py src/cadrumo/adapters/persistence/storage/crypto/tests/test_type_guard_errors.py src/cadrumo/adapters/persistence/storage/sql/tests src/cadrumo/adapters/persistence/storage/envelope/tests` -> `pass`
+- `S247` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S248` `M` `src/cadrumo/application/modelo/workspace_models.py`
+- `S248` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S248` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/workspace_models.py` -> `pass`
+- `S248` `verify:` `uv run --no-sync pytest -q -n 0 -m "" src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace_refusal_union_reachability.py` -> `pass`
+- `S248` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S249` `M` `src/cadrumo/application/modelo/workspace_models.py`
+- `S249` `M` `src/cadrumo/application/modelo/workspace.py`
+- `S249` `M` `src/cadrumo/application/modelo/tests/test_workspace_models.py`
+- `S249` `M` `src/cadrumo/application/modelo/tests/test_workspace.py`
+- `S249` `D` `src/cadrumo/application/modelo/tests/test_workspace_refusal_union_reachability.py`
+- `S249` `M` `src/cadrumo/entrypoints/tui/modelo/view/models.py`
+- `S249` `M` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_view_models.py`
+- `S249` `M` `dev/tests/test_workspace_field_population_gate.py`
+- `S249` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S249` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/workspace_models.py src/cadrumo/application/modelo/workspace.py src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/entrypoints/tui/modelo/view/models.py src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_view_models.py dev/tests/test_workspace_field_population_gate.py` -> `pass`
+- `S249` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_workspace_models.py src/cadrumo/application/modelo/tests/test_workspace.py src/cadrumo/entrypoints/tui/modelo/view/tests/test_workspace_view_models.py dev/tests/test_workspace_field_population_gate.py` -> `pass`
+- `S249` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S250` `D` `src/cadrumo/core/address_components.py`
+- `S250` `D` `src/cadrumo/core/tests/test_address_component_vocabulary.py`
+- `S250` `M` `src/cadrumo/core/filing_producer_key.py`
+- `S250` `M` `src/cadrumo/application/filing/producer_snapshot.py`
+- `S250` `M` `.vault/reference/2026-09-02-unreachable-capability-disconnected-capability-inventory-reference.md`
+- `S250` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S250` `verify:` `uv run --no-sync ruff check src/cadrumo/core/filing_producer_key.py src/cadrumo/application/filing/producer_snapshot.py` -> `pass`
+- `S250` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/filing/tests/test_producer_snapshot.py src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py src/cadrumo/domain/calculations/registry/tests/test_export_semantic_vocabulary.py dev/registry/tests/test_modelo_210_party_key_coverage.py` -> `pass`
+- `S250` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S251` `M` `dev/registry/pipeline/_export_tree.py`
+- `S251` `M` `dev/registry/tests/test_export_tree.py`
+- `S251` `D` `src/cadrumo/domain/calculations/registry/record_spec.py`
+- `S251` `D` `src/cadrumo/domain/calculations/registry/tests/test_record_spec.py`
+- `S251` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S251` `verify:` `uv run --no-sync ruff check dev/registry/pipeline/_export_tree.py dev/registry/tests/test_export_tree.py` -> `pass`
+- `S251` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_export_tree.py` -> `pass`
+- `S251` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S252` `M` `src/cadrumo/application/preflight.py`
+- `S252` `M` `src/cadrumo/application/tests/test_preflight.py`
+- `S252` `D` `src/cadrumo/domain/portals/drift.py`
+- `S252` `D` `src/cadrumo/domain/portals/tests/test_drift.py`
+- `S252` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S252` `verify:` `uv run --no-sync ruff check src/cadrumo/application/preflight.py src/cadrumo/application/tests/test_preflight.py` -> `pass`
+- `S252` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/tests/test_preflight.py src/cadrumo/domain/portals/tests` -> `fail`
+- `S252` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/tests/test_preflight.py -k portal_health` -> `pass`
+- `S252` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S253` `M` `src/cadrumo/application/aggregation/ledger_filing_snapshot.py`
+- `S253` `M` `src/cadrumo/application/aggregation/tests/test_ledger_filing_snapshot.py`
+- `S253` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S253` `verify:` `uv run --no-sync ruff check src/cadrumo/application/aggregation/ledger_filing_snapshot.py src/cadrumo/application/aggregation/tests/test_ledger_filing_snapshot.py src/cadrumo/application/modelo/_ledger_anchor_capture.py` -> `pass`
+- `S253` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/aggregation/tests/test_ledger_filing_snapshot.py` -> `pass`
+- `S253` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/modelo/tests/test_ledger_evidence_recapture.py` -> `pass`
+- `S253` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S254` `M` `src/cadrumo/application/calculations/prorrata_regularizacion.py`
+- `S254` `D` `src/cadrumo/application/calculations/tests/test_prorrata_interrumpida_seed.py`
+- `S254` `M` `src/cadrumo/application/prorrata_register/sector_lifecycle.py`
+- `S254` `M` `.vault/adr/2026-07-07-prorrata-art105-cinco-interrupted-adr.md`
+- `S254` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S254` `verify:` `uv run --no-sync ruff check src/cadrumo/application/calculations/prorrata_regularizacion.py src/cadrumo/application/prorrata_register/sector_lifecycle.py` -> `pass`
+- `S254` `verify:` `uv run --no-sync python -c "from cadrumo.application.calculations import prorrata_regularizacion; from cadrumo.application.prorrata_register import sector_lifecycle"` -> `pass`
+- `S254` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/calculations/tests/test_prorrata_regularizacion.py src/cadrumo/application/prorrata_register/tests` -> `fail`
+- `S254` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S255` `M` `src/cadrumo/application/corpus_search/terminology.py`
+- `S255` `M` `src/cadrumo/application/corpus_search/tests/test_terminology_lifecycle.py`
+- `S255` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S255` `verify:` `uv run --no-sync ruff check src/cadrumo/application/corpus_search/terminology.py src/cadrumo/application/corpus_search/tests/test_terminology_lifecycle.py` -> `pass`
+- `S255` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/corpus_search/tests/test_terminology_lifecycle.py src/cadrumo/application/corpus_search/tests/test_terminology_fragment_shape.py` -> `pass`
+- `S255` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/corpus_search/tests` -> `fail`
+- `S255` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S256` `M` `src/cadrumo/application/filing/export_proof.py`
+- `S256` `M` `dev/registry/filing_export_proof.py`
+- `S256` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S256` `verify:` `uv run --no-sync ruff check src/cadrumo/application/filing/export_proof.py dev/registry/filing_export_proof.py` -> `pass`
+- `S256` `verify:` `uv run --no-sync pytest -q -n0 dev/registry/tests/test_filing_export_two_channel_proof.py dev/registry/tests/test_filing_export_live_proof.py dev/registry/tests/test_pinned_conformance_vector.py src/cadrumo/application/filing/tests/test_export_proof_contracts.py` -> `pass`
+- `S256` `verify:` `uv run --no-sync pytest -q -n0 -m integration dev/registry/tests/test_filing_export_two_channel_proof.py dev/registry/tests/test_filing_export_live_proof.py dev/registry/tests/test_pinned_conformance_vector.py src/cadrumo/application/filing/tests/test_export_proof_contracts.py` -> `pass`
+- `S256` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S257` `M` `src/cadrumo/application/filing/export_proof.py`
+- `S257` `M` `dev/registry/filing_export_proof.py`
+- `S257` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S257` `verify:` `uv run --no-sync ruff check src/cadrumo/application/filing/export_proof.py dev/registry/filing_export_proof.py` -> `pass`
+- `S257` `verify:` `uv run --no-sync pytest -q -n0 dev/registry/tests/test_filing_export_two_channel_proof.py dev/registry/tests/test_filing_export_live_proof.py dev/registry/tests/test_pinned_conformance_vector.py src/cadrumo/application/filing/tests/test_export_proof_contracts.py` -> `pass`
+- `S257` `verify:` `uv run --no-sync pytest -q -n0 -m integration dev/registry/tests/test_filing_export_two_channel_proof.py dev/registry/tests/test_filing_export_live_proof.py dev/registry/tests/test_pinned_conformance_vector.py src/cadrumo/application/filing/tests/test_export_proof_contracts.py` -> `pass`
+- `S257` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S258` `D` `src/cadrumo/adapters/persistence/profile/filing_export_replay.py`
+- `S258` `D` `src/cadrumo/adapters/persistence/profile/tests/test_filing_export_replay_custody.py`
+- `S258` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S258` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S258` `M` `.vault/reference/2026-09-02-unreachable-capability-disconnected-capability-inventory-reference.md`
+- `S258` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S258` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py` -> `pass`
+- `S258` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py dev/registry/tests/test_filing_export_two_channel_proof.py dev/registry/tests/test_filing_export_live_proof.py dev/registry/tests/test_pinned_conformance_vector.py src/cadrumo/application/filing/tests/test_export_proof_contracts.py` -> `fail`
+- `S258` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S259` `M` `src/cadrumo/application/filing/export_proof.py`
+- `S259` `M` `dev/registry/filing_export_proof.py`
+- `S259` `M` `src/cadrumo/application/filing/tests/test_export_proof_contracts.py`
+- `S259` `verify:` `uv run --no-sync ruff check src/cadrumo/application/filing/export_proof.py dev/registry/filing_export_proof.py src/cadrumo/application/filing/tests/test_export_proof_contracts.py` -> `pass`
+- `S259` `verify:` `uv run --no-sync pytest -q -n0 dev/registry/tests/test_filing_export_two_channel_proof.py dev/registry/tests/test_filing_export_live_proof.py dev/registry/tests/test_pinned_conformance_vector.py src/cadrumo/application/filing/tests/test_export_proof_contracts.py` -> `pass`
+- `S259` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S260` `M` `src/cadrumo/application/flows/capability.py`
+- `S260` `D` `src/cadrumo/application/flows/tests/test_capability.py`
+- `S260` `M` `src/cadrumo/tests/test_wizard_prompter_singularity.py`
+- `S260` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S260` `verify:` `uv run --no-sync ruff check src/cadrumo/application/flows/capability.py src/cadrumo/tests/test_wizard_prompter_singularity.py` -> `pass`
+- `S260` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/flows/tests/test_line_frontend.py src/cadrumo/tests/test_wizard_prompter_singularity.py` -> `pass`
+- `S260` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S261` `M` `src/cadrumo/application/flows/engine.py`
+- `S261` `M` `src/cadrumo/application/flows/tests/test_engine.py`
+- `S261` `D` `src/cadrumo/tests/test_regulatory_cap_term_dominance.py`
+- `S261` `D` `src/cadrumo/domain/tests/test_regulatory_cap_term_binding.py`
+- `S261` `D` `src/cadrumo/domain/tests/regulatory_cap_witnesses.py`
+- `S261` `M` `dev/packaging/tests/_release_cohort_support.py`
+- `S261` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S261` `verify:` `uv run --no-sync ruff check src/cadrumo/application/flows/engine.py src/cadrumo/application/flows/tests/test_engine.py dev/packaging/tests/_release_cohort_support.py` -> `pass`
+- `S261` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/flows/tests/test_engine.py src/cadrumo/domain/contribuyente/tests/test_incremento_guarderia_prorrateo.py src/cadrumo/domain/contribuyente/tests/test_deduccion_maternidad_0611.py src/cadrumo/domain/renta/tests/test_maritime_exemption.py src/cadrumo/domain/renta/tests/test_ledger_expenses.py` -> `pass`
+- `S261` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S262` `M` `src/cadrumo/application/ledger/extraction_draft_store.py`
+- `S262` `M` `src/cadrumo/application/ledger/tests/test_extraction_draft_store.py`
+- `S262` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S262` `verify:` `uv run --no-sync ruff check src/cadrumo/application/ledger/extraction_draft_store.py src/cadrumo/application/ledger/tests/test_extraction_draft_store.py` -> `pass`
+- `S262` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/ledger/tests/test_extraction_draft_store.py src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_review_cli.py` -> `pass`
+- `S262` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/application/ledger/tests/test_extraction_draft_store.py src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_review_cli.py` -> `pass`
+- `S262` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S263` `M` `src/cadrumo/application/ledger/grounding_anchor.py`
+- `S263` `M` `src/cadrumo/application/ledger/tests/test_grounding_anchor.py`
+- `S263` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S263` `verify:` `uv run --no-sync ruff check src/cadrumo/application/ledger/grounding_anchor.py src/cadrumo/application/ledger/tests/test_grounding_anchor.py` -> `pass`
+- `S263` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/ledger/tests/test_grounding_anchor.py src/cadrumo/application/ledger/tests/test_grounded_reading_wiring.py src/cadrumo/entrypoints/cli/tests/test_evidence_provenance_reaches_the_operator.py src/cadrumo/entrypoints/cli/tests/test_evidence_field_notices.py` -> `pass`
+- `S263` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/application/ledger/tests/test_grounding_anchor.py src/cadrumo/application/ledger/tests/test_grounded_reading_wiring.py src/cadrumo/entrypoints/cli/tests/test_evidence_provenance_reaches_the_operator.py src/cadrumo/entrypoints/cli/tests/test_evidence_field_notices.py` -> `fail`
+- `S263` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S264` `M` `src/cadrumo/application/live/filed_observation_persistence.py`
+- `S264` `M` `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`
+- `S264` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S264` `verify:` `uv run --no-sync ruff check src/cadrumo/application/live/filed_observation_persistence.py src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py` -> `pass`
+- `S264` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py -k "justificante"` -> `pass`
+- `S264` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py -k "justificante"` -> `fail`
+- `S264` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S265` `M` `src/cadrumo/application/live/iva_remote_state.py`
+- `S265` `M` `src/cadrumo/application/live/tests/test_iva_remote_state_acquisition.py`
+- `S265` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S265` `verify:` `uv run --no-sync ruff check src/cadrumo/application/live/iva_remote_state.py src/cadrumo/application/live/tests/test_iva_remote_state_acquisition.py` -> `pass`
+- `S265` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/live/tests/test_iva_remote_state_acquisition.py -k "manifest"` -> `pass`
+- `S265` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S266` `D` `src/cadrumo/core/tests/test_external_constants_centralisation_part2.py`
+- `S266` `M` `src/cadrumo/application/overview/calendar.py`
+- `S266` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S266` `verify:` `uv run --no-sync ruff check src/cadrumo/application/overview/calendar.py` -> `pass`
+- `S266` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/core/tests/test_external_constants.py src/cadrumo/application/overview/tests/test_calendar_regime_warnings.py src/cadrumo/application/overview/tests/test_calendar.py` -> `pass`
+- `S266` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S267` `M` `src/cadrumo/application/provisioning.py`
+- `S267` `M` `src/cadrumo/application/tests/test_provisioning.py`
+- `S267` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S267` `verify:` `uv run --no-sync ruff check src/cadrumo/application/provisioning.py src/cadrumo/application/tests/test_provisioning.py` -> `pass`
+- `S267` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/tests/test_provisioning.py` -> `pass`
+- `S267` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S268` `M` `src/cadrumo/application/repair_integrity.py`
+- `S268` `M` `src/cadrumo/application/tests/test_repair_integrity.py`
+- `S268` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S268` `verify:` `uv run --no-sync ruff check src/cadrumo/application/repair_integrity.py src/cadrumo/application/tests/test_repair_integrity.py` -> `pass`
+- `S268` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/tests/test_repair_integrity.py src/cadrumo/application/tests/test_diagnostics.py -k "repair or quarantine or remediation"` -> `pass`
+- `S268` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S269` `D` `src/cadrumo/application/ledger/extracted_document_cache.py`
+- `S269` `D` `src/cadrumo/adapters/persistence/profile/extracted_document_cache.py`
+- `S269` `D` `src/cadrumo/application/ledger/tests/test_extracted_document_cache.py`
+- `S269` `M` `src/cadrumo/application/ledger/consent_withdrawal.py`
+- `S269` `M` `src/cadrumo/application/ledger/document_transcription.py`
+- `S269` `M` `src/cadrumo/application/ledger/evidence_textlayer.py`
+- `S269` `M` `src/cadrumo/application/ledger/preconditions.py`
+- `S269` `M` `src/cadrumo/application/ledger/tests/test_consent_withdrawal.py`
+- `S269` `M` `src/cadrumo/application/ledger/tests/test_document_transcription.py`
+- `S269` `M` `src/cadrumo/application/ledger/tests/test_document_transcription_textlayer.py`
+- `S269` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S269` `M` `src/cadrumo/entrypoints/cli/_app_ledger_evidence_followup_command_specs.py`
+- `S269` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_consent_cli.py`
+- `S269` `M` `src/cadrumo/entrypoints/cli/ledger_business_payloads.py`
+- `S269` `M` `src/cadrumo/entrypoints/cli/tests/test_evidence_consent_cli.py`
+- `S269` `M` `src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py`
+- `S269` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S269` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S269` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S269` `M` `src/cadrumo/core/errors/registry/_domain_part1.py`
+- `S269` `M` `src/cadrumo/conftest.py`
+- `S269` `M` `src/cadrumo/llm/evidence_draft_vision.py`
+- `S269` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S269` `M` `src/cadrumo/locales/en/cli.yml`
+- `S269` `M` `src/cadrumo/locales/es/cli.yml`
+- `S269` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S269` `M` `.vault/adr/2026-08-07-unstructured-document-ingestion-operations-adr.md`
+- `S269` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S269` `verify:` `uv run --no-sync ruff check <focused cache/consent/storage files>` -> `pass`
+- `S269` `verify:` `uv run --no-sync pytest -q -n0 <focused consent/transcription/namespace tests>` -> `fail`
+- `S269` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/entrypoints/cli/tests/test_evidence_consent_cli.py` -> `pass`
+- `S269` `verify:` `uv run --no-sync python -m dev.locales audit` -> `fail`
+- `S269` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S270` `M` `src/cadrumo/application/live/iva_remote_state.py`
+- `S270` `M` `src/cadrumo/application/live/remote_state_models.py`
+- `S270` `M` `src/cadrumo/application/live/tests/test_iva_wallet_capture_backend.py`
+- `S270` `M` `src/cadrumo/application/live/tests/test_iva_remote_state_acquisition.py`
+- `S270` `M` `src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py`
+- `S270` `M` `src/cadrumo/application/live/tests/test_live_iva_diagnostic_ref_shape.py`
+- `S270` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S270` `verify:` `uv run --no-sync ruff check <focused IVA live-state files>` -> `pass`
+- `S270` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/live/tests/test_iva_wallet_capture_backend.py src/cadrumo/application/live/tests/test_iva_remote_state_acquisition.py src/cadrumo/application/live/tests/test_live_iva_diagnostic_ref_shape.py` -> `fail`
+- `S270` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/live/tests/test_filed_capture_calculation_history.py -k multiyear_303_submitted_file_parser_promotes_sanitized_iva_history` -> `pass`
+- `S270` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/live/tests/test_iva_wallet_capture_backend.py -k "iva_wallet_history_report_surfaces_lots_and_authority_decisions or remote_iva_evidence_roundtrips_through_profile_secure_sql"` -> `pass`
+- `S270` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S271` `M` `src/cadrumo/application/repair_integrity.py`
+- `S271` `D` `src/cadrumo/application/tests/test_repair_integrity.py`
+- `S271` `M` `src/cadrumo/application/tests/test_error_envelope_enrollment.py`
+- `S271` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S271` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S271` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S271` `M` `src/cadrumo/adapters/persistence/storage/tests/_runtime_attached_repositories_support.py`
+- `S271` `M` `src/cadrumo/adapters/persistence/storage/tests/test_runtime_attached_repositories_part1.py`
+- `S271` `M` `src/cadrumo/core/errors/registry/_application_part1.py`
+- `S271` `D` `src/cadrumo/core/tests/test_persisted_version_single_declaration.py`
+- `S271` `M` `src/cadrumo/locales/ca/application.yml`
+- `S271` `M` `src/cadrumo/locales/en/application.yml`
+- `S271` `M` `src/cadrumo/locales/es/application.yml`
+- `S271` `M` `src/cadrumo/locales/hu/application.yml`
+- `S271` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S271` `M` `src/cadrumo/locales/en/errors.yml`
+- `S271` `M` `src/cadrumo/locales/es/errors.yml`
+- `S271` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S271` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S271` `verify:` `uv run --no-sync ruff check <focused repair/storage/error files>` -> `pass`
+- `S271` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/entrypoints/cli/tests/test_repair_policy_coverage.py src/cadrumo/application/tests/test_diagnostics.py -k "repair or quarantine"` -> `pass`
+- `S271` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/adapters/persistence/storage/tests/test_runtime_attached_repositories_part1.py -k "current_runtime_defaults_refuse_missing_session or runtime_default_surfaces_isolate_active_profile_writes"` -> `fail`
+- `S271` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S272` `M` `src/cadrumo/application/repair_integrity.py`
+- `S272` `D` `src/cadrumo/entrypoints/cli/tests/test_repair_policy_coverage.py`
+- `S272` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S272` `verify:` `no matches`
+- `S272` `verify:` `uv run --no-sync pytest -q -n0 src/cadrumo/application/tests/test_diagnostics.py -k "repair or quarantine"` -> `10 passed, 29 deselected`
+- `S272` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail (live findings remain)`
+- `S273` `D` `src/cadrumo/application/modelo/_review_package_review_only_workspace.py`
+- `S273` `D` `src/cadrumo/application/modelo/tests/test_review_package_review_only_workspace.py`
+- `S273` `M` `src/cadrumo/application/modelo/review_package_collab_audit.py`
+- `S273` `M` `src/cadrumo/application/modelo/tests/test_review_package_collab_audit.py`
+- `S273` `M` `src/cadrumo/domain/buckets/event.py`
+- `S273` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S273` `M` `src/cadrumo/locales/{ca,en,es,hu}/application.yml`
+- `S273` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S273` `verify:` `pass`
+- `S273` `verify:` `3 passed, 12 deselected`
+- `S273` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail (live findings remain)`
+- `S274` `M` `src/cadrumo/application/modelo/_row_source_identity_replay.py`
+- `S274` `M` `src/cadrumo/application/modelo/tests/test_row_source_identity_replay.py`
+- `S274` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S274` `verify:` `pass`
+- `S274` `verify:` `6 passed`
+- `S274` `verify:` `1 passed, 13 deselected`
+- `S274` `verify:` `267 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S275` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S275` `M` `src/cadrumo/application/modelo/tests/test_edit_models.py`
+- `S275` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S275` `verify:` `pass`
+- `S275` `verify:` `uv run --no-sync pytest -q -n0 -m integration src/cadrumo/application/modelo/tests/test_edit_models.py` -> `14 passed`
+- `S275` `verify:` `266 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S276` `M` `src/cadrumo/application/modelo/edit_services.py`
+- `S276` `M` `src/cadrumo/application/modelo/edit_models.py`
+- `S276` `M` `src/cadrumo/application/modelo/tests/test_edit_contract.py`
+- `S276` `M` `src/cadrumo/application/modelo/tests/test_edit_models.py`
+- `S276` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S276` `verify:` `no matches`
+- `S276` `verify:` `pass`
+- `S276` `verify:` `16 passed`
+- `S276` `verify:` `265 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S277` `M` `src/cadrumo/application/modelo/m145_communication_records.py`
+- `S277` `M` `src/cadrumo/application/modelo/tests/test_m145_communication_create.py`
+- `S277` `M` `src/cadrumo/application/modelo/tests/test_m145_communication_transitions.py`
+- `S277` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S277` `verify:` `no matches`
+- `S277` `verify:` `pass`
+- `S277` `verify:` `15 passed`
+- `S277` `verify:` `264 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S278` `M` `src/cadrumo/application/modelo/m303_regimen_simplificado_scope.py`
+- `S278` `M` `src/cadrumo/application/modelo/tests/test_m303_regimen_simplificado_scope.py`
+- `S278` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S278` `verify:` `no matches`
+- `S278` `verify:` `pass`
+- `S278` `verify:` `6 passed`
+- `S278` `verify:` `263 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S279` `M` `src/cadrumo/application/modelo/review_package_recipient_encryption.py`
+- `S279` `M` `src/cadrumo/application/modelo/review_package_feedback.py`
+- `S279` `M`
+- `S279` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S279` `M` `src/cadrumo/locales/{ca,en,es,hu}/application.yml`
+- `S279` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S279` `verify:` `no matches`
+- `S279` `verify:` `pass`
+- `S279` `verify:` `6 passed, 22 deselected`
+- `S279` `verify:` `4 passed, 8 deselected`
+- `S279` `verify:` `3 passed, 7 unrelated readiness failures`
+- `S279` `verify:` `261 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S280` `M` `src/cadrumo/application/modelo/review_package_signing.py`
+- `S280` `M` `src/cadrumo/application/modelo/tests/test_review_package_signing.py`
+- `S280` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S280` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S280` `verify:` `no matches`
+- `S280` `verify:` `pass`
+- `S280` `verify:` `8 passed, 9 deselected`
+- `S280` `verify:` `260 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S281` `M` `src/cadrumo/domain/calculations/registry/tests/test_temporal.py`
+- `S281` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S281` `verify:` `select_revision` -> `no matches`
+- `S281` `verify:` `pass`
+- `S281` `verify:` `19 passed`
+- `S281` `verify:` `260 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S282` `M` `src/cadrumo/application/user_profile/bundle.py`
+- `S282` `M` `src/cadrumo/application/user_profile/custody_carry.py`
+- `S282` `M` `src/cadrumo/application/user_profile/custody_ports.py`
+- `S282` `M` `src/cadrumo/adapters/persistence/storage/profile_custody.py`
+- `S282` `M` `src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py`
+- `S282` `M` `src/cadrumo/application/user_profile/tests/test_custody_roundtrip.py`
+- `S282` `D` `src/cadrumo/application/user_profile/tests/test_custody_restore_atomicity.py`
+- `S282` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S282` `verify:` `no matches`
+- `S282` `verify:` `pass`
+- `S282` `verify:` `1 passed`
+- `S282` `verify:` `pass`
+- `S282` `verify:` `259 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S283` `M` `src/cadrumo/application/user_profile/cotejo_apply.py`
+- `S283` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S283` `verify:` `no matches`
+- `S283` `verify:` `pass`
+- `S283` `verify:` `14 passed`
+- `S283` `verify:` `258 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S284` `M` `src/cadrumo/application/wizard/persistence.py`
+- `S284` `M` `src/cadrumo/application/wizard/tests/test_setup_runtime.py`
+- `S284` `M` `src/cadrumo/application/wizard/tests/test_persistence_canonical.py`
+- `S284` `M` `src/cadrumo/locales/ca/application.yml`
+- `S284` `M` `src/cadrumo/locales/en/application.yml`
+- `S284` `M` `src/cadrumo/locales/es/application.yml`
+- `S284` `M` `src/cadrumo/locales/hu/application.yml`
+- `S284` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S284` `verify:` `no production matches`
+- `S284` `verify:` `pass`
+- `S284` `verify:` `36 passed`
+- `S284` `verify:` `257 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S285` `M` `src/cadrumo/application/workflow/adapters.py`
+- `S285` `D` `src/cadrumo/application/workflow/tests/test_adapters.py`
+- `S285` `M` `src/cadrumo/domain/submission/engine.py`
+- `S285` `M` `src/cadrumo/core/tests/test_locale_coverage_hardened_errors.py`
+- `S285` `M` `src/cadrumo/locales/ca/application.yml`
+- `S285` `M` `src/cadrumo/locales/en/application.yml`
+- `S285` `M` `src/cadrumo/locales/es/application.yml`
+- `S285` `M` `src/cadrumo/locales/hu/application.yml`
+- `S285` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S285` `verify:` `no matches`
+- `S285` `verify:` `pass`
+- `S285` `verify:` `10 passed`
+- `S285` `verify:` `254 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S286` `M` `src/cadrumo/application/workflow/persistence.py`
+- `S286` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S286` `verify:` `no matches`
+- `S286` `verify:` `pass`
+- `S286` `verify:` `8 passed, 3 peer-owned envelope-schema failures`
+- `S286` `verify:` `253 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S287` `M` `src/cadrumo/application/workflow/resume.py`
+- `S287` `M` `src/cadrumo/application/workflow/tests/test_resume.py`
+- `S287` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S287` `verify:` `no matches`
+- `S287` `verify:` `pass`
+- `S287` `verify:` `6 passed, 7 peer-owned envelope-schema failures`
+- `S287` `verify:` `251 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S288` `M` `src/cadrumo/application/workflow/state_models.py`
+- `S288` `M` `src/cadrumo/application/workflow/tests/test_state_persistence_roundtrip.py`
+- `S288` `D` `src/cadrumo/application/workflow/tests/test_declaration_key.py`
+- `S288` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S288` `verify:` `no relevant production matches`
+- `S288` `verify:` `pass`
+- `S288` `verify:` `2 passed`
+- `S288` `verify:` `250 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S289` `D` `src/cadrumo/core/access_gate/authorization.py`
+- `S289` `D` `src/cadrumo/_data/registry/aeat/authorization.d/`
+- `S289` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S289` `M` `src/cadrumo/domain/calculations/registry/_loader_internals.py`
+- `S289` `M` `src/cadrumo/application/modelo/calculate_input.py`
+- `S289` `M` `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py`
+- `S289` `M` `src/cadrumo/application/calculations/multi_year.py`
+- `S289` `M` `src/cadrumo/application/calculations/__init__.py`
+- `S289` `D` `src/cadrumo/core/access_gate/tests/test_authorization_manifest.py`
+- `S289` `D` `src/cadrumo/core/tests/test_modelo_authorization_gate.py`
+- `S289` `D` `src/cadrumo/entrypoints/cli/tests/test_modelo_authorization_advisory_banner.py`
+- `S289` `D` `src/cadrumo/application/calculations/tests/test_multi_year_recorder.py`
+- `S289` `D` `src/cadrumo/application/calculations/tests/test_enrollment_recorder_context_mode_guard.py`
+- `S289` `D` `src/cadrumo/application/calculations/tests/test_calculation_refusal_message_key_only.py`
+- `S289` `M` `src/cadrumo/application/calculations/tests/`
+- `S289` `R` `src/cadrumo/application/calculations/tests/test_modelo_100_multiyear_renta_enrollment.py -> src/cadrumo/application/calculations/tests/test_modelo_100_cross_year_carry_continuity.py`
+- `S289` `R` `src/cadrumo/application/calculations/tests/test_modelo_130_multiyear_renta_enrollment.py -> src/cadrumo/application/calculations/tests/test_modelo_130_cross_year_carry_continuity.py`
+- `S289` `M` `src/cadrumo/tests/registry_conformance.py`
+- `S289` `M` `dev/registry/conformance/manager.py`
+- `S289` `M` `dev/registry/conformance/cli.py`
+- `S289` `M` `src/cadrumo/core/errors/registry/`
+- `S289` `M` `src/cadrumo/locales/`
+- `S289` `M` `src/cadrumo/_data/registry/aeat/modelos/136/revisions/2026/revision.toml`
+- `S289` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S289` `verify:` `uv run --no-sync ruff check <focused authorization/conformance/calculation surface>` -> `pass`
+- `S289` `verify:` `pytest --collect-only` -> `774 collected`
+- `S289` `verify:` `202 passed, 10 unrelated M303 fixture failures; 2 source-census failures removed with their tests`
+- `S289` `verify:` `no matches`
+- `S289` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `249 unused symbols, 31 unreachable modules, 0 orphaned tests`
+- `S290` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S290` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S290` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/calculation_actions.py` -> `pass`
+- `S290` `verify:` `rg -n "mark_revision_verificado_completo|_refuse_direct_cross_period_verification" src dev` -> `pass`
+- `S290` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S290` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_file_flow_verify.py src/cadrumo/application/modelo/tests/test_cross_period_clean_state_enforcement.py src/cadrumo/application/modelo/tests/test_profile_readiness_gate.py src/cadrumo/application/modelo/tests/test_import_flow_mutation_guards.py` -> `fail`
+- `S291` `M` `src/cadrumo/core/classification/policies.py`
+- `S291` `M` `src/cadrumo/core/classification/__init__.py`
+- `S291` `M` `src/cadrumo/core/tests/test_redaction.py`
+- `S291` `M` `src/cadrumo/core/tests/test_redaction_rule_enrolment.py`
+- `S291` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S291` `verify:` `rg -n "OutputSensitivityClass|OutputClassificationPolicy|default_output_policy_for|_DEFAULT_OUTPUT_POLICY_TABLE" src dev` -> `pass`
+- `S291` `verify:` `uv run --no-sync ruff check src/cadrumo/core/classification/policies.py src/cadrumo/core/classification/__init__.py src/cadrumo/core/tests/test_redaction.py src/cadrumo/core/tests/test_redaction_rule_enrolment.py` -> `pass`
+- `S291` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/tests/test_redaction.py src/cadrumo/core/tests/test_redaction_rule_enrolment.py` -> `pass`
+- `S291` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S292` `M` `src/cadrumo/core/amendment_kind_regime.py`
+- `S292` `M` `src/cadrumo/core/tests/test_amendment_kind_regime.py`
+- `S292` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S292` `verify:` `rg -n "modelo_has_codified_amendment_regime" src dev` -> `pass`
+- `S292` `verify:` `uv run --no-sync ruff check src/cadrumo/core/amendment_kind_regime.py src/cadrumo/core/tests/test_amendment_kind_regime.py` -> `pass`
+- `S292` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/tests/test_amendment_kind_regime.py` -> `pass`
+- `S292` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S293` `D` `src/cadrumo/application/storage/calc_sheets/workbook_export.py`
+- `S293` `A` `src/cadrumo/application/storage/calc_sheets/export_tables.py`
+- `S293` `D` `src/cadrumo/application/storage/calc_sheets/tests/test_workbook_export_evidence.py`
+- `S293` `D` `src/cadrumo/application/storage/calc_sheets/tests/test_workbook_evidence_digest_contract.py`
+- `S293` `D` `src/cadrumo/application/storage/calc_sheets/tests/test_row_set_calculation_roundtrip.py`
+- `S293` `D` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_offline_online_conformance.py`
+- `S293` `D` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_transport_facet_parity.py`
+- `S293` `D` `src/cadrumo/entrypoints/cli/tests/test_modelo_export_evidence.py`
+- `S293` `M` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply_values.py`
+- `S293` `M` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply_formatting.py`
+- `S293` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_apply_evidence.py`
+- `S293` `M` `src/cadrumo/application/storage/__init__.py`
+- `S293` `M` `src/cadrumo/application/storage/calc_sheets/__init__.py`
+- `S293` `M` `src/cadrumo/application/storage/calc_sheets/_styling.py`
+- `S293` `M` `src/cadrumo/application/storage/calc_sheets/engine.py`
+- `S293` `M` `src/cadrumo/application/storage/calc_sheets/records.py`
+- `S293` `M` `src/cadrumo/application/storage/calc_sheets/theme.py`
+- `S293` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_engine_evidence_threading.py`
+- `S293` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_modelo_export_formatting.py`
+- `S293` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_modelo_export_styling.py`
+- `S293` `M` `dev/docs/preprocess/_workbook.py`
+- `S293` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S293` `verify:` `rg -n "workbook_export|offline workbook|offline XLSX|offline xls|offline export|OfflineWorkbook|serialize_offline|openpyxl_argb" src dev -g "*.py"` -> `pass`
+- `S293` `verify:` `uv run --no-sync ruff check <focused calc-sheets and Google apply paths>` -> `pass`
+- `S293` `verify:` `uv run --no-sync pytest -q <focused live plan and Google Evidencia tests>` -> `pass`
+- `S293` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S294` `M` `src/cadrumo/application/storage_management/service.py`
+- `S294` `M` `src/cadrumo/application/storage_management/models.py`
+- `S294` `M` `src/cadrumo/application/storage_management/tests/test_inventory_and_tree.py`
+- `S294` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S294` `verify:` `rg -n "collect_storage_inventory|StorageInventoryReport|StorageInventoryRow" src dev` -> `pass`
+- `S294` `verify:` `uv run --no-sync ruff check src/cadrumo/application/storage_management/service.py src/cadrumo/application/storage_management/models.py src/cadrumo/application/storage_management/tests/test_inventory_and_tree.py` -> `pass`
+- `S294` `verify:` `uv run --no-sync pytest -q <two live area-inventory tests>` -> `pass`
+- `S294` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/storage_management/tests` -> `fail`
+- `S294` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S295` `M` `src/cadrumo/application/user_profile/commands.py`
+- `S295` `D` `dev/identity/tests/test_identifier_namespace_enrollment_gate.py`
+- `S295` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S295` `verify:` `rg -n <deleted DTO and adjudication-list names> src dev` -> `pass`
+- `S295` `verify:` `uv run --no-sync ruff check src/cadrumo/application/user_profile/commands.py` -> `pass`
+- `S295` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/user_profile/tests/test_services.py` -> `fail`
+- `S295` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S296` `D` `dev/tests/test_text_writer_newline_pinning.py`
+- `S296` `M` `pyproject.toml`
+- `S296` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S296` `verify:` `rg -n "text_writer_newline_pinning|MIN_SCANNED_MODULES|_MINIMUM_SCANNED_BY_TREE|text-writer newline gate" src dev justfile pyproject.toml` -> `pass`
+- `S296` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S297` `D` `dev/tests/test_dev_governance_isolation.py`
+- `S297` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S297` `verify:` `uv run --no-sync pytest -q dev/tests/test_governance_corpus_isolation.py` -> `pass`
+- `S297` `verify:` `rg -n <deleted dev-isolation identifiers> src dev justfile pyproject.toml` -> `pass`
+- `S297` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S298` `D` `src/cadrumo/core/tests/test_modelo_string_usage.py`
+- `S298` `M` `src/cadrumo/core/tests/test_clock_seam_usage.py`
+- `S298` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S298` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S298` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S298.md`
+- `S298` `verify:` `rg -n "test_modelo_string_usage|bare_modelo_code_offenders" pyproject.toml justfile dev .github src -g "!dev/.logs/**"` -> `pass`
+- `S298` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S299` `D` `src/cadrumo/tests/test_every_module_has_test_coverage.py`
+- `S299` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S299` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S299` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S299.md`
+- `S299` `verify:` `rg -n "test_every_module_has_test_coverage|_DYNAMIC_DISPATCH_EXEMPTIONS|test_every_production_module_is_exercised_by_a_test" pyproject.toml justfile dev .github src -g "!dev/.logs/**"` -> `pass`
+- `S299` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S300` `D` `src/cadrumo/tests/test_classification_enrollment_inventory.py`
+- `S300` `M` `src/cadrumo/adapters/persistence/storage/schema_lineage.py`
+- `S300` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S300` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S300` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S300.md`
+- `S300` `verify:` `rg -n "test_classification_enrollment_inventory|_CLASSIFICATION_COMPARE_EXEMPTIONS|classification_compare_violations" pyproject.toml justfile dev .github src -g "!dev/.logs/**"` -> `pass`
+- `S300` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S301` `D` `src/cadrumo/tests/test_decimal_enrollment_inventory.py`
+- `S301` `D` `src/cadrumo/tests/_decimal_parse_inventory.py`
+- `S301` `M` `src/cadrumo/tests/test_text_fold_enrollment_inventory.py`
+- `S301` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S301` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S301` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S301.md`
+- `S301` `verify:` `rg -n "test_decimal_enrollment_inventory|_decimal_parse_inventory|_STRING_PARSE_EXEMPTIONS|string_parse_decimal_violations" pyproject.toml justfile dev .github src -g "!dev/.logs/**"` -> `pass`
+- `S301` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S302` `M` `src/cadrumo/tests/test_text_fold_enrollment_inventory.py`
+- `S302` `M` `src/cadrumo/adapters/inbound/notificacion/_sancion.py`
+- `S302` `M` `src/cadrumo/domain/calculations/registry/record_design_pdf_rows.py`
+- `S302` `M` `src/cadrumo/domain/calculations/registry/record_design_workbook.py`
+- `S302` `M` `src/cadrumo/entrypoints/tui/declarations/controller.py`
+- `S302` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S302` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S302` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S302.md`
+- `S302` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_text_fold_enrollment_inventory.py` -> `pass`
+- `S302` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S303` `M` `src/cadrumo/tests/test_type_ignore_rationale_inventory.py`
+- `S303` `M` `src/cadrumo/application/modelo/projection.py`
+- `S303` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S303` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S303` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S303.md`
+- `S303` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_type_ignore_rationale_inventory.py` -> `pass`
+- `S303` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S304` `D` `src/cadrumo/tests/test_any_param_rationale_inventory.py`
+- `S304` `M` `src/cadrumo/tests/test_type_ignore_rationale_inventory.py`
+- `S304` `M` `src/cadrumo/tests/test_cast_rationale_inventory.py`
+- `S304` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S304` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S304` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S304.md`
+- `S304` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_type_ignore_rationale_inventory.py` -> `pass`
+- `S304` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_cast_rationale_inventory.py` -> `fail`
+- `S304` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S305` `D` `src/cadrumo/tests/test_cast_rationale_inventory.py`
+- `S305` `M` `src/cadrumo/tests/inventory.py`
+- `S305` `M` `src/cadrumo/tests/__init__.py`
+- `S305` `M` `src/cadrumo/tests/test_type_ignore_rationale_inventory.py`
+- `S305` `M` `dev/tests/test_test_inventory.py`
+- `S305` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S305` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S305` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S305.md`
+- `S305` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_type_ignore_rationale_inventory.py dev/tests/test_test_inventory.py` -> `pass`
+- `S305` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S306` `D` `src/cadrumo/tests/test_type_ignore_rationale_inventory.py`
+- `S306` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S306` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S306` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S306.md`
+- `S306` `verify:` `uv run --no-sync pytest -q dev/tests/test_test_inventory.py` -> `pass`
+- `S306` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S307` `D` `src/cadrumo/tests/test_parsing_enrollment_inventory.py`
+- `S307` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S307` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S307` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S307.md`
+- `S307` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/parsing/tests` -> `pass`
+- `S307` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S308` `M` `src/cadrumo/tests/test_utc_validator_enrollment_inventory.py`
+- `S308` `M` `src/cadrumo/domain/contribuyente/inventory/records.py`
+- `S308` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S308` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S308` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S308.md`
+- `S308` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_utc_validator_enrollment_inventory.py src/cadrumo/domain/contribuyente/inventory/tests/test_closing_authority.py` -> `pass`
+- `S308` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S309` `D` `src/cadrumo/tests/test_locale_tr_positional_inventory.py`
+- `S309` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S309` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S309` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S309.md`
+- `S309` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/errors/tests/test_envelope.py src/cadrumo/core/errors/tests/test_error_message_never_blank.py src/cadrumo/entrypoints/cli/tests/test_language_flag_override.py` -> `pass`
+- `S309` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S310` `D` `src/cadrumo/tests/test_session_vocabulary_custody_split.py`
+- `S310` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S310` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S310` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S310.md`
+- `S310` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py src/cadrumo/adapters/outbound/aeat/auth/tests/test_session_store_roundtrip.py src/cadrumo/application/user_profile/tests/test_login_session_port.py` -> `pass`
+- `S310` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S311` `D` `src/cadrumo/tests/test_canonical_record_encoding_owner.py`
+- `S311` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S311` `M` `.vault/plan/2026-09-04-reachability-burndown-plan.md`
+- `S311` `A` `.vault/exec/2026-09-04-reachability-burndown/2026-09-04-reachability-burndown-W05-P12-S311.md`
+- `S311` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/tests/test_hashing.py src/cadrumo/core/tests/test_hashing_adoption.py` -> `pass`
+- `S311` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S312` `M` `src/cadrumo/tests/test_cross_module_imports_resolve.py`
+- `S312` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S312` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_cross_module_imports_resolve.py` -> `fail`
+- `S313` `M` `src/cadrumo/adapters/persistence/storage/custody/_filesystem_records.py`
+- `S313` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S313` `verify:` `uv run --no-sync python -m py_compile src/cadrumo/adapters/persistence/storage/custody/_filesystem_records.py` -> `pass`
+- `S313` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_witness_contract.py` -> `pass`
+- `S314` `D` `src/cadrumo/tests/test_persisted_version_literal_inventory.py`
+- `S314` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S314` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/outbound/aeat/auth/tests/test_persisted_session_validation.py src/cadrumo/adapters/outbound/aeat/auth/tests/test_persisted_session_instant_contract.py src/cadrumo/adapters/persistence/storage/tests/test_profile_login_session_adapter.py src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py` -> `pass`
+- `S315` `D` `src/cadrumo/tests/test_filename_live_marker_lint.py`
+- `S315` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S315` `verify:` `uv run --no-sync pytest --collect-only -q -n0 -o addopts='' src/cadrumo/application/live/tests` -> `pass`
+- `S316` `D` `src/cadrumo/tests/test_acceptance_wall_catalogue.py`
+- `S316` `D` `src/cadrumo/tests/acceptance_wall_catalogue.py`
+- `S316` `M` `src/cadrumo/tests/test_host_load_hook.py`
+- `S316` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S316` `verify:` `uv run --no-sync pytest -q -n0 -o addopts='' dev/ci/tests/test_ci_workflow.py -k integration` -> `fail`
+- `S317` `D` `src/cadrumo/tests/test_generic_module_modelo_carveouts.py`
+- `S317` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S317` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/modelo/tests/test_projection_decimal_overrides.py src/cadrumo/application/modelo/tests/test_calculation_modelo_adjustments.py src/cadrumo/application/modelo/tests/test_cross_period_clean_state_enforcement.py` -> `fail`
+- `S318` `M` `src/cadrumo/tests/test_aeat_csv_normalisation_singularity.py`
+- `S318` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S318` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_aeat_csv_normalisation_singularity.py` -> `pass`
+- `S318` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/tests/test_aeat_csv_shape.py` -> `pass`
+- `S319` `M` `src/cadrumo/application/operations/projection_services.py`
+- `S319` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S319` `verify:` `uv run --no-sync python -m py_compile src/cadrumo/application/operations/projection_services.py` -> `pass`
+- `S319` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/operations/tests/test_projection_services.py src/cadrumo/application/operations/tests/test_cancellation_cleanup.py` -> `pass`
+- `S320` `D` `src/cadrumo/tests/test_canonical_decimal_string_uniqueness.py`
+- `S320` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S320` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/inbound/financial/tests/test_decimal.py src/cadrumo/core/decimal/tests/test_grammar.py` -> `pass`
+- `S321` `M` `src/cadrumo/tests/test_fx_stamp_singularity.py`
+- `S321` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S321` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_fx_stamp_singularity.py src/cadrumo/domain/currency/tests` -> `pass`
+- `S322` `M` `src/cadrumo/tests/test_invoice_kind_singularity.py`
+- `S322` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S322` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_invoice_kind_singularity.py src/cadrumo/application/aggregation/tests/test_non_arising_category_side_is_refused.py` -> `pass`
+- `S323` `D` `src/cadrumo/tests/test_mask_profile_field_singularity.py`
+- `S323` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S323` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/user_profile/tests/test_overview.py src/cadrumo/application/user_profile/tests/test_status_projection.py` -> `pass`
+- `S324` `D` `src/cadrumo/tests/test_wizard_prompter_singularity.py`
+- `S324` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S324` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/flows/tests/test_line_frontend.py src/cadrumo/application/flows/tests/test_localized_failure_surface.py` -> `pass`
+- `S325` `M` `src/cadrumo/tests/test_override_seam_singularity.py`
+- `S325` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S325` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_override_seam_singularity.py` -> `pass`
+- `S326` `D` `src/cadrumo/tests/test_iva_category_singularity.py`
+- `S326` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S326` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_ledger_tax_fact_manipulations.py src/cadrumo/tests/test_ledger_modelo_staleness.py src/cadrumo/tests/test_ledger_corpus_fidelity.py` -> `pass`
+- `S326` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S327` `D` `src/cadrumo/tests/test_iva_observation_carries_its_rate.py`
+- `S327` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S327` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/aggregation/tests/test_iva_ledger_candidates.py src/cadrumo/application/aggregation/tests/test_iva_deduction_fact_taxonomy.py src/cadrumo/domain/calculations/registry/tests/test_ledger_iva_aggregation_binding.py src/cadrumo/domain/calculations/registry/tests/test_rate_specific_box_pins_its_rate.py` -> `pass`
+- `S327` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S328` `D` `src/cadrumo/tests/test_hardcoded_constants_inventory.py`
+- `S328` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S328` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/outbound/aeat/sede/tests/test_playwright_wait_constants.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_pdf_response_contract.py` -> `pass`
+- `S328` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S329` `D` `src/cadrumo/tests/test_enum_constant_extraction_inventory.py`
+- `S329` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S329` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/calculations/registry/tests/test_audit_oracle_bindings.py src/cadrumo/entrypoints/cli/tests/test_modelo_aggregate_payload_parity.py src/cadrumo/domain/filing/tests/test_binding_value_provenance_roundtrip.py` -> `pass`
+- `S329` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S330` `D` `src/cadrumo/tests/test_modelo_232_codigo_singularity.py`
+- `S330` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S330` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/modelos/tests/test_m232_row_capacity.py src/cadrumo/domain/calculations/registry/tests/test_modelo_232_registry.py src/cadrumo/application/calculations/tests/test_modelo_232_operaciones_vinculadas_fidelity.py` -> `pass`
+- `S330` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S331` `D` `dev/tests/test_loopback_llm_singularity.py`
+- `S331` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S331` `verify:` `uv run --no-sync pytest -q src/cadrumo/llm/tests/test_client.py src/cadrumo/llm/tests/test_transport_retry_policy.py src/cadrumo/application/tests/test_provisioning.py` -> `pass`
+- `S331` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S332` `M` `dev/tui/tests/test_tui_frame_theme_ownership.py`
+- `S332` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S332` `verify:` `uv run --no-sync pytest -q dev/tui/tests/test_tui_frame_theme_ownership.py dev/tui/tests/test_tui_viewport_geometry_ownership.py` -> `pass`
+- `S332` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S333` `M` `dev/tui/tests/test_tui_visual_inventory.py`
+- `S333` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S333` `verify:` `uv run --no-sync pytest -q dev/tui/tests/test_tui_visual_inventory.py -m "not tui_render"` -> `pass`
+- `S333` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S334` `D` `dev/packaging/tests/test_container_base_image_singularity.py`
+- `S334` `A` `dev/packaging/tests/test_container_base_image.py`
+- `S334` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S334` `verify:` `uv run --no-sync pytest -q dev/packaging/tests/test_container_base_image.py` -> `pass`
+- `S334` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S335` `D` `dev/packaging/tests/test_runtime_floor_singularity.py`
+- `S335` `A` `dev/packaging/tests/test_runtime_floor.py`
+- `S335` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S335` `verify:` `uv run --no-sync pytest -q dev/packaging/tests/test_runtime_floor.py dev/packaging/tests/test_container_base_image.py` -> `pass`
+- `S335` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S336` `M` `dev/packaging/tests/test_recovery_enrollment.py`
+- `S336` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S336` `verify:` `uv run --no-sync pytest -q -n0 dev/packaging/tests/test_recovery_enrollment.py -m unit` -> `pass`
+- `S336` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S337` `M` `dev/ci/tests/test_command_spec_authority_gate.py`
+- `S337` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S337` `verify:` `uv run --no-sync pytest -q dev/ci/tests/test_command_spec_authority_gate.py` -> `pass`
+- `S337` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S338` `D` `dev/quality/relative_imports.py`
+- `S338` `D` `dev/quality/tests/test_relative_imports.py`
+- `S338` `D` `src/cadrumo/tests/test_relative_imports_only.py`
+- `S338` `M` `dev/quality/suite.py`
+- `S338` `M` `dev/quality/changed_paths.py`
+- `S338` `M` `justfile`
+- `S338` `M` `.github/workflows/ci.yml`
+- `S338` `M` `.github/workflows/ci-full.yml`
+- `S338` `M` `pyproject.toml`
+- `S338` `M` `src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py`
+- `S338` `M` `src/cadrumo/application/tests/test_storage_namespace_adoption.py`
+- `S338` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S338` `verify:` `uv run --no-sync pytest -q -n0 dev/quality/tests/test_changed_paths.py dev/quality/tests/test_suite_gate_table.py` -> `pass`
+- `S338` `verify:` `uv run --no-sync ruff check dev/quality/suite.py dev/quality/changed_paths.py src/cadrumo_harness/mcp/tests/test_stdio_lifetime.py src/cadrumo/application/tests/test_storage_namespace_adoption.py` -> `pass`
+- `S338` `verify:` `just --list` -> `pass`
+- `S338` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S339` `D` `src/cadrumo/application/tests/test_storage_namespace_adoption.py`
+- `S339` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S339` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py src/cadrumo/adapters/persistence/storage/tests/test_namespace_key_grammar.py src/cadrumo/adapters/persistence/profile/tests/test_secure_bound_namespace_binding.py src/cadrumo/application/modelo/tests/test_review_package_namespace_binding.py` -> `fail`
+- `S339` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `fail`
+- `S340` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S340` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S340` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py` -> `pass`
+- `S340` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py` -> `pass`
+- `S340` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S341` `M` `src/cadrumo/adapters/persistence/storage/tests/test_storage_degradation_errors_are_canonical.py`
+- `S341` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S341` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/storage/tests/test_storage_degradation_errors_are_canonical.py` -> `pass`
+- `S341` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/tests/test_storage_degradation_errors_are_canonical.py` -> `pass`
+- `S341` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S342` `D` `src/cadrumo/adapters/persistence/storage/tests/test_sensitive_persistence_policy.py`
+- `S342` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S342` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_secure_sql.py src/cadrumo/domain/invoices/tests/test_secure_storage_roundtrip.py src/cadrumo/domain/submission/tests/test_secure_storage_roundtrip.py src/cadrumo/application/modelo/tests/test_review_package.py src/cadrumo/application/user_profile/tests/test_recovery_custody.py` -> `pass`
+- `S342` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S343` `D` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry_taxonomy_consumer.py`
+- `S343` `M` `src/cadrumo/core/tests/test_storage_taxonomy_name_unification.py`
+- `S343` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S343` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/tests/test_storage_taxonomy_name_unification.py src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py` -> `pass`
+- `S343` `verify:` `uv run --no-sync ruff check src/cadrumo/core/tests/test_storage_taxonomy_name_unification.py` -> `pass`
+- `S343` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S344` `D` `dev/tests/test_no_skip_xfail.py`
+- `S344` `D` `src/cadrumo/tests/test_invoice_kind_singularity.py`
+- `S344` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S344` `verify:` `rg -n "pytest\\.(skip|xfail)|pytest\\.mark\\.(skip|skipif|xfail)|unittest\\.SkipTest|from pytest import .*\\b(skip|xfail)\\b" src dev -g "*.py"` -> `pass`
+- `S344` `verify:` `uv run --no-sync pytest -q dev/tests/test_test_inventory.py` -> `pass`
+- `S344` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/aggregation/tests/test_non_arising_category_side_is_refused.py` -> `pass`
+- `S344` `verify:` `uv run --no-sync ruff check dev/tests/test_test_inventory.py` -> `pass`
+- `S344` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S345` `M` `dev/tests/test_test_inventory.py`
+- `S345` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S345` `verify:` `uv run --no-sync pytest -q dev/tests/test_test_inventory.py` -> `pass`
+- `S345` `verify:` `uv run --no-sync ruff check dev/tests/test_test_inventory.py` -> `pass`
+- `S345` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S346` `D` `src/cadrumo/tests/test_utc_validator_enrollment_inventory.py`
+- `S346` `D` `src/cadrumo/tests/test_text_fold_enrollment_inventory.py`
+- `S346` `D` `src/cadrumo/tests/test_override_seam_singularity.py`
+- `S346` `D` `src/cadrumo/tests/test_fx_stamp_singularity.py`
+- `S346` `D` `src/cadrumo/tests/test_aeat_csv_normalisation_singularity.py`
+- `S346` `D` `src/cadrumo/tests/test_canonical_clock_usage.py`
+- `S346` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S346` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/time/tests/test_utc.py src/cadrumo/core/tests/test_text_fold.py src/cadrumo/core/tests/test_fold_for_matching_is_canonical.py src/cadrumo/application/invoices/tests/test_fx_conversion_provenance.py src/cadrumo/domain/justificante/tests/test_csv_bound_conformance.py src/cadrumo/adapters/outbound/aeat/sede/tests/test_renta_web_open_safety.py` -> `pass`
+- `S346` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/time/tests` -> `pass`
+- `S346` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S347` `M` `src/cadrumo/entrypoints/cli/command_spec.py`
+- `S347` `M` `src/cadrumo/entrypoints/cli/tests/test_command_spec_kernel.py`
+- `S347` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S347` `verify:` `uv run --no-sync pytest -q src/cadrumo/entrypoints/cli/tests/test_command_spec_kernel.py src/cadrumo/entrypoints/cli/tests/test_command_graph_consumers.py src/cadrumo/entrypoints/cli/tests/test_command_spec_deferred_targets.py src/cadrumo/entrypoints/cli/tests/test_command_specs.py -k "not handler_target_modules_do_not_import_the_cli_package_facade"` -> `pass`
+- `S347` `verify:` `uv run --no-sync aeat --help` -> `pass`
+- `S347` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/command_spec.py src/cadrumo/entrypoints/cli/tests/test_command_spec_kernel.py` -> `pass`
+- `S347` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S348` `D` `src/cadrumo/adapters/outbound/aeat/sede/renta_web_open.py`
+- `S348` `D` `src/cadrumo/adapters/outbound/aeat/sede/_renta_web_open_safety.py`
+- `S348` `D` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_renta_web_open.py`
+- `S348` `D` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_renta_web_open_safety.py`
+- `S348` `D` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_renta_web_open_safety_live_proof.py`
+- `S348` `D` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_renta_web_open_capture_replay.py`
+- `S348` `D` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_browser_timeouts.py`
+- `S348` `D` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_landing_refusal_enrollment.py`
+- `S348` `M` `src/cadrumo/adapters/outbound/aeat/sede/schema.py`
+- `S348` `M` `src/cadrumo/domain/calculations/registry/tests/test_renta_web_open_oracle.py`
+- `S348` `M` `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification_verifiers.py`
+- `S348` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S348` `verify:` `uv run --no-sync pytest -q src/cadrumo/domain/calculations/registry/tests/test_renta_web_open_oracle.py src/cadrumo/domain/calculations/registry/tests/test_renta_web_open_replay_corpus.py src/cadrumo/domain/calculations/registry/tests/test_renta_web_open_replay_parity.py` -> `pass`
+- `S348` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/tests/test_renta_web_open_oracle.py src/cadrumo/adapters/outbound/aeat/sede/schema.py src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification_verifiers.py` -> `pass`
+- `S348` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S349` `D` `src/cadrumo/entrypoints/cli/config/_manager_frontend.py`
+- `S349` `D` `src/cadrumo/entrypoints/cli/config/tests/test_manager_frontend_routing.py`
+- `S349` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S349` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/wizard/tests/test_commands_helpers.py src/cadrumo/application/wizard/tests/test_flow_description_keys.py src/cadrumo/application/wizard/tests/test_wizard_validation_localization.py` -> `pass`
+- `S349` `verify:` `uv run --no-sync aeat config profile --help` -> `pass`
+- `S349` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S350` `D` `src/cadrumo/application/wizard/_registered_values.py`
+- `S350` `D` `src/cadrumo/application/wizard/legal_zone.py`
+- `S350` `D` `src/cadrumo/application/wizard/tests/test_registered_values.py`
+- `S350` `D` `src/cadrumo/application/wizard/tests/test_legal_zone.py`
+- `S350` `D` `src/cadrumo/application/wizard/tests/test_public_definition_identity.py`
+- `S350` `M` `dev/locales/tests/test_tr_constant_naming_convention.py`
+- `S350` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S350` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/flows/tests/test_definition.py src/cadrumo/application/flows/tests/test_copy_assembly.py src/cadrumo/application/flows/tests/test_line_frontend.py src/cadrumo/application/wizard/tests/test_commands_helpers.py src/cadrumo/application/wizard/tests/test_flow_description_keys.py` -> `pass`
+- `S350` `verify:` `uv run --no-sync ruff check dev/locales/tests/test_tr_constant_naming_convention.py` -> `pass`
+- `S350` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S351` `D` `src/cadrumo/entrypoints/tui/flows/__init__.py`
+- `S351` `D` `src/cadrumo/entrypoints/tui/flows/_question_pane.py`
+- `S351` `D` `src/cadrumo/entrypoints/tui/flows/_review_pane.py`
+- `S351` `D` `src/cadrumo/entrypoints/tui/flows/app.py`
+- `S351` `D` `src/cadrumo/entrypoints/tui/flows/tests/__init__.py`
+- `S351` `D` `src/cadrumo/entrypoints/tui/flows/tests/test_guided_flow_pages.py`
+- `S351` `D` `src/cadrumo/entrypoints/tui/flows/tests/test_guided_flows.py`
+- `S351` `D` `src/cadrumo/entrypoints/tui/tests/test_flow_tui_app.py`
+- `S351` `D` `src/cadrumo/entrypoints/tui/tests/test_frontend_parity.py`
+- `S351` `D` `dev/tui/harness/modelo_work_wizard.py`
+- `S351` `M` `dev/tui/harness/surfaces.py`
+- `S351` `M` `src/cadrumo/entrypoints/tui/tests/test_terminal_sizes.py`
+- `S351` `M` `src/cadrumo/entrypoints/tui/tests/test_visual_verification.py`
+- `S351` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S351` `verify:` `uv run --no-sync pytest src/cadrumo/application/flows/tests src/cadrumo/entrypoints/cli/tests/test_modelo_work_wizard.py src/cadrumo/entrypoints/cli/tests/test_modelo_amend_wizard.py -q` -> `pass`
+- `S351` `verify:` `uv run --no-sync pytest dev/tui/harness/tests/test_modelo_fixtures.py src/cadrumo/entrypoints/tui/tests/test_terminal_sizes.py -q` -> `pass`
+- `S351` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tui/tests/test_visual_verification.py src/cadrumo/entrypoints/tui/tests/test_terminal_sizes.py dev/tui/harness/surfaces.py` -> `pass`
+- `S351` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (24 unreachable modules; down from 28)`
+- `S352` `D` `src/cadrumo/application/user_profile/status_projection.py`
+- `S352` `D` `src/cadrumo/application/user_profile/tests/test_status_projection.py`
+- `S352` `D` `src/cadrumo/application/user_profile/tests/test_status_indexed_fact_masking.py`
+- `S352` `D` `src/cadrumo/application/user_profile/tests/test_public_definition_identity.py`
+- `S352` `D` `src/cadrumo/entrypoints/tui/profile/status.py`
+- `S352` `D` `src/cadrumo/entrypoints/tui/tests/test_status_screen.py`
+- `S352` `D` `src/cadrumo/entrypoints/tui/tests/test_status_notices_wiring.py`
+- `S352` `D` `src/cadrumo/entrypoints/tui/tests/test_status_session_deadlines.py`
+- `S352` `D` `src/cadrumo/entrypoints/tui/tests/test_visual_verification.py`
+- `S352` `M` `src/cadrumo/entrypoints/tui/tests/test_theme.py`
+- `S352` `M` `dev/tui/harness/surfaces.py`
+- `S352` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S352` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/tui/tests/test_theme.py -q` -> `pass (33 passed)`
+- `S352` `verify:` `uv run --no-sync ruff check dev/tui/harness/surfaces.py src/cadrumo/entrypoints/tui/tests/test_theme.py` -> `pass`
+- `S352` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (22 unreachable modules; down from 24)`
+- `S353` `D` `src/cadrumo/entrypoints/tui/profile/app.py`
+- `S353` `D` `src/cadrumo/entrypoints/tui/profile/journey_status.py`
+- `S353` `D` `src/cadrumo/entrypoints/tui/profile/tests/test_profile_journey.py`
+- `S353` `D` `dev/tui/harness/profile_fixtures.py`
+- `S353` `D` `dev/tui/harness/tests/test_profile_fixtures.py`
+- `S353` `M` `dev/tui/harness/surfaces.py`
+- `S353` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S353` `verify:` `uv run --no-sync pytest src/cadrumo/application/user_profile/tests/test_presentation.py src/cadrumo/application/user_profile/tests/test_overview.py src/cadrumo/entrypoints/tui/profile/tests/test_acquisition_source_capability.py -q` -> `pass (25 passed)`
+- `S353` `verify:` `uv run --no-sync ruff check dev/tui/harness/surfaces.py` -> `pass`
+- `S353` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (20 unreachable modules; down from 22)`
+- `S354` `D` `src/cadrumo/entrypoints/tui/profile/sync_review.py`
+- `S354` `D` `src/cadrumo/entrypoints/tui/profile/tests/test_sync_review.py`
+- `S354` `D` `src/cadrumo/entrypoints/tui/profile/tests/test_census_sync_review.py`
+- `S354` `D` `src/cadrumo/entrypoints/tui/profile/tests/test_filed_history_operation_view.py`
+- `S354` `M` `src/cadrumo/entrypoints/tui/modelo/view/models.py`
+- `S354` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S354` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/tui/modelo/view/models.py` -> `pass`
+- `S354` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/application/user_profile/tests/test_censal_operation.py` -> `pass (7 passed in combined owner run)`
+- `S354` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (19 unreachable modules; down from 20)`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/action/__init__.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/action/amend.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/action/discard.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/action/export.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/action/file.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/action/rename.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/action/verify.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/actions.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/edit/__init__.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/edit/controller.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/edit/fields.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/edit/review.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/edit/rows.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/edit/screen.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/view/work_review.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/view/work_select.py`
+- `S355` `D` `src/cadrumo/application/modelo/edit_session.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/components/form_screen.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/components/keyboard.py`
+- `S355` `D` `src/cadrumo/application/modelo/tests/test_edit_session.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/components/tests/test_form_screen.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/edit/tests/__init__.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/edit/tests/test_controller.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/edit/tests/test_fields.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/edit/tests/test_rows_and_review.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_actions.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_c1_bounded_review.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_c3_editor_accessibility.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_c3_editor_screen.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_action_accessibility.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_amend_action.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_discard_action.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_export_action.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_file_action.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_rename_action.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/tests/test_c4_verify_action.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_review.py`
+- `S355` `D` `src/cadrumo/entrypoints/tui/modelo/view/tests/test_work_select.py`
+- `S355` `D` `dev/tui/harness/modelo_fixtures.py`
+- `S355` `D` `dev/tui/harness/tests/test_modelo_fixtures.py`
+- `S355` `D` `dev/tui/harness/tests/test_every_fixture_registry_is_registered.py`
+- `S355` `M` `dev/tui/harness/surfaces.py`
+- `S355` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S355` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/application/modelo/tests/test_edit_services.py src/cadrumo/application/modelo/tests/test_edit_execution.py src/cadrumo/entrypoints/cli/tests/test_modelo_work_review_envelope.py -q` -> `pass (21 passed)`
+- `S355` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/entrypoints/tui/modelo/view/tests/test_installed_workspace.py -q` -> `pass (2 passed)`
+- `S355` `verify:` `uv run --no-sync ruff check dev/tui/harness/surfaces.py` -> `pass`
+- `S355` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (0 unreachable modules; down from 19)`
+- `S356` `M` `src/cadrumo/application/operations/persistence/journal.py`
+- `S356` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S356` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/application/operations/tests/test_journal.py -q` -> `pass (15 passed)`
+- `S356` `verify:` `uv run --no-sync ruff check src/cadrumo/application/operations/persistence/journal.py` -> `pass`
+- `S356` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (267 unused symbols; down from 278)`
+- `S357` `M` `src/cadrumo/application/operations/registry.py`
+- `S357` `M` `src/cadrumo/application/operations/tests/test_credential_free_field_tripwire.py`
+- `S357` `M` `src/cadrumo/application/wizard/_format_hints.py`
+- `S357` `M` `dev/locales/tests/test_tr_constant_naming_convention.py`
+- `S357` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S357` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/application/operations/tests/test_credential_free_field_tripwire.py -q` -> `pass (18 passed)`
+- `S357` `verify:` `uv run --no-sync ruff check src/cadrumo/application/operations/registry.py src/cadrumo/application/operations/tests/test_credential_free_field_tripwire.py src/cadrumo/application/wizard/_format_hints.py dev/locales/tests/test_tr_constant_naming_convention.py` -> `pass`
+- `S357` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (264 unused symbols; down from 267)`
+- `S358` `M` `src/cadrumo/application/flows/engine.py`
+- `S358` `M` `src/cadrumo/application/flows/tests/test_engine.py`
+- `S358` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S358` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/application/flows/tests/test_engine.py -q` -> `pass (16 passed)`
+- `S358` `verify:` `uv run --no-sync ruff check src/cadrumo/application/flows/engine.py src/cadrumo/application/flows/tests/test_engine.py` -> `pass`
+- `S358` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (263 unused symbols; down from 264)`
+- `S359` `M` `src/cadrumo/core/external_constants.py`
+- `S359` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S359` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/core/tests/test_external_constants.py -q` -> `pass (23 passed)`
+- `S359` `verify:` `uv run --no-sync ruff check src/cadrumo/core/external_constants.py` -> `pass`
+- `S359` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact --full` -> `pass (262 unused symbols; down from 263)`
+- `S360` `M` `src/cadrumo/entrypoints/cli/command_spec.py`
+- `S360` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S360` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/entrypoints/cli/tests/test_command_spec_kernel.py -q` -> `pass (14 passed)`
+- `S360` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/command_spec.py` -> `pass`
+- `S360` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (250 unused symbols; down from 262)`
+- `S361` `M` `src/cadrumo/domain/calculations/registry/_withholding_rows.py`
+- `S361` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S361` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/domain/calculations/registry/tests/test_modelo_190_193_round_trip.py src/cadrumo/domain/calculations/registry/tests/test_modelo_193_records_fill_the_declared_length.py -q` -> `pass (5 passed)`
+- `S361` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/_withholding_rows.py` -> `pass`
+- `S361` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (240 unused symbols; down from 250)`
+- `S362` `M` `src/cadrumo/core/external_constants.py`
+- `S362` `M` `src/cadrumo/domain/contribuyente/deduccion_maternidad.py`
+- `S362` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S362` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/domain/contribuyente/tests/test_deduccion_maternidad_0611.py src/cadrumo/core/tests/test_external_constants.py -q` -> `pass (78 passed)`
+- `S362` `verify:` `uv run --no-sync ruff check src/cadrumo/core/external_constants.py src/cadrumo/domain/contribuyente/deduccion_maternidad.py` -> `pass`
+- `S362` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (235 unused symbols; down from 240)`
+- `S363` `M` `src/cadrumo/core/flows.py`
+- `S363` `M` `src/cadrumo/core/tests/test_flows_enums.py`
+- `S363` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S363` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/core/tests/test_flows_enums.py src/cadrumo/application/flows/tests -q` -> `pass (141 passed)`
+- `S363` `verify:` `uv run --no-sync ruff check src/cadrumo/core/flows.py src/cadrumo/core/tests/test_flows_enums.py` -> `pass`
+- `S363` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass (233 unused symbols; down from 235)`
+- `S364` `M` `src/cadrumo/core/wizard_catalogue.py`
+- `S364` `M` `src/cadrumo/application/wizard/catalogue.py`
+- `S364` `M` `src/cadrumo/core/tests/test_wizard_catalogue.py`
+- `S364` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S364` `verify:` `uv run --no-sync ruff check src/cadrumo/core/wizard_catalogue.py src/cadrumo/application/wizard/catalogue.py src/cadrumo/core/tests/test_wizard_catalogue.py` -> `pass`
+- `S364` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/core/tests/test_wizard_catalogue.py src/cadrumo/core/tests/test_wizard_catalogue_errors.py src/cadrumo/application/wizard/tests/test_profile_id_resolution_by_mode.py -q` -> `pass`
+- `S364` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S365` `M` `src/cadrumo/entrypoints/cli/_tty.py`
+- `S365` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S365` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/_tty.py` -> `pass`
+- `S365` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/entrypoints/cli/tests/test_tty_error_locale.py -q` -> `pass`
+- `S365` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S366` `M` `src/cadrumo/domain/calculations/registry/donativo_bindings.py`
+- `S366` `M` `src/cadrumo/application/calculations/row_set_assembly.py`
+- `S366` `M` `src/cadrumo/domain/calculations/registry/tests/test_detail_record_observations.py`
+- `S366` `D` `src/cadrumo/domain/calculations/registry/tests/test_detail_row_field_declaration_coverage.py`
+- `S366` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S366` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/donativo_bindings.py src/cadrumo/domain/calculations/registry/tests/test_detail_record_observations.py src/cadrumo/application/calculations/row_set_assembly.py` -> `pass`
+- `S366` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/domain/calculations/registry/tests/test_detail_record_observations.py src/cadrumo/application/calculations/tests/test_row_set_assembly.py -q` -> `pass`
+- `S366` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S367` `M` `src/cadrumo/domain/calculations/registry/fixed_width_codec.py`
+- `S367` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S367` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/fixed_width_codec.py` -> `pass`
+- `S367` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/domain/calculations/registry/tests/test_fixed_width_codec.py src/cadrumo/adapters/outbound/aeat/export/tests/test_registry_record_renderer.py -q` -> `pass`
+- `S367` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S368` `M` `src/cadrumo/domain/calculations/registry/gasto193_bindings.py`
+- `S368` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S368` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/gasto193_bindings.py` -> `pass`
+- `S368` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/application/calculations/tests/test_row_set_assembly.py -q` -> `pass`
+- `S368` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/domain/calculations/registry/tests/test_modelo_193_registry.py -q` -> `pass`
+- `S368` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S369` `M` `src/cadrumo/domain/calculations/registry/withholding296_bindings.py`
+- `S369` `D` `src/cadrumo/domain/calculations/registry/tests/test_withholding296_row_builders.py`
+- `S369` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S369` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/withholding296_bindings.py` -> `pass`
+- `S369` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/application/calculations/tests/test_row_set_assembly.py -q` -> `pass`
+- `S369` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S370` `M` `src/cadrumo/domain/filing/protocols.py`
+- `S370` `M` `src/cadrumo/adapters/persistence/profile/__init__.py`
+- `S370` `M` `src/cadrumo/adapters/persistence/profile/_filing_runtime.py`
+- `S370` `M` `src/cadrumo/adapters/persistence/profile/filing_drafts.py`
+- `S370` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S370` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/filing/protocols.py src/cadrumo/adapters/persistence/profile/__init__.py src/cadrumo/adapters/persistence/profile/_filing_runtime.py src/cadrumo/adapters/persistence/profile/filing_drafts.py` -> `pass`
+- `S370` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/application/filing/tests/test_repository.py -q` -> `pass`
+- `S370` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S371` `M` `src/cadrumo/domain/modelos/protocols.py`
+- `S371` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S371` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/modelos/protocols.py` -> `pass`
+- `S371` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/domain/modelos/tests/test_filing_record_repository_roundtrip.py -q` -> `pass`
+- `S371` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S372` `M` `src/cadrumo/domain/submission/protocols.py`
+- `S372` `M` `src/cadrumo/domain/submission/__init__.py`
+- `S372` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S372` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/submission/protocols.py src/cadrumo/domain/submission/__init__.py` -> `pass`
+- `S372` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/domain/submission/tests -q` -> `pass`
+- `S372` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S373` `M` `src/cadrumo/domain/manuals/fetch.py`
+- `S373` `M` `src/cadrumo/domain/manuals/tests/test_fetch.py`
+- `S373` `M` `src/cadrumo/core/atomic_write.py`
+- `S373` `M` `src/cadrumo/core/tests/test_atomic_write.py`
+- `S373` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S373` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/manuals/fetch.py src/cadrumo/domain/manuals/tests/test_fetch.py src/cadrumo/core/atomic_write.py src/cadrumo/core/tests/test_atomic_write.py` -> `pass`
+- `S373` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/domain/manuals/tests/test_fetch.py src/cadrumo/core/tests/test_atomic_write.py -q` -> `pass`
+- `S373` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S374` `M` `src/cadrumo/domain/attachments/models.py`
+- `S374` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S374` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/attachments/models.py` -> `pass`
+- `S374` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/domain/attachments/tests -q` -> `pass`
+- `S374` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S375` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S375` `M` `.vault/reference/2026-09-04-reachability-burndown-reference.md`
+- `S375` `verify:` `uv run --no-sync ruff check src/cadrumo/entrypoints/operation_composition.py` -> `pass`
+- `S375` `verify:` `uv run --no-sync pytest -n0 -m "" src/cadrumo/entrypoints/tests/test_operation_composition.py -q` -> `pass`
+- `S375` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact` -> `pass`
+- `S376` `D` `src/cadrumo/application/filing/_export_proof_contracts.py`
+- `S376` `D` `src/cadrumo/application/filing/export_proof.py`
+- `S376` `D` `src/cadrumo/application/registry/closure_capture.py`
+- `S376` `D` `src/cadrumo/application/registry/filing_export_coverage.py`
+- `S376` `M` `src/cadrumo/application/modelo/calculation.py`
+- `S376` `D` `src/cadrumo/application/modelo/tests/test_calculation_capture.py`
+- `S376` `M` `src/cadrumo/application/modelo/work_review.py`
+- `S376` `M` `src/cadrumo/application/state_projection.py`
+- `S376` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S376` `M` `src/cadrumo/locales/en/errors.yml`
+- `S376` `M` `src/cadrumo/locales/es/errors.yml`
+- `S376` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S376` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S376` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact --full` -> `pass`
+- `S376` `verify:` `uv run --no-sync ruff check src/cadrumo/application/modelo/calculation.py src/cadrumo/application/modelo/work_review.py src/cadrumo/application/state_projection.py src/cadrumo/core/errors/registry/_application_part2.py` -> `pass`
+- `S377` `D` `src/cadrumo/domain/calculations/registry/_withholding_193_fields.py`
+- `S377` `D` `src/cadrumo/domain/calculations/registry/_withholding_rows.py`
+- `S377` `D` `src/cadrumo/domain/calculations/registry/tests/test_withholding_observations.py`
+- `S377` `M` `src/cadrumo/domain/calculations/registry/censo_modelos.py`
+- `S377` `M` `src/cadrumo/domain/calculations/registry/external_grounding.py`
+- `S377` `M` `src/cadrumo/domain/calculations/registry/live_parity.py`
+- `S377` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact --full` -> `pass`
+- `S378` `M` `src/cadrumo/entrypoints/cli/_ledger_evidence_cli.py`
+- `S378` `verify:` `uv run --no-sync python -m dev.audit.unreachable_code --confidence exact --full` -> `pass`
+- `S378` `verify:` `uv run --no-sync pytest -q -m integration src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_confirm_cli.py src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_confirm_resolution_cli.py src/cadrumo/entrypoints/cli/tests/test_ledger_evidence_confirm_duplicate_cli.py` -> `fail`
+
+## Notes
+
+- `S01` All 17 in-scope module findings are classified; the other 26 are inside the deferred TUI
+- `S01` prefix and belong to its owning campaign.
+- `S01` The dominant finding is that most of this population is not dead code. Nine modules are
+- `S01` `staged-capability`, each backed by an ACCEPTED decision that records the dependency it
+- `S01` waits on -- the fincas titularidad record, the modelo edit contract, the compatibility
+- `S01` lifecycle. Four are `harness-code` whose only non-test consumers live in `dev/`: the
+- `S01` source-connectivity authority, the CRUD contract drift gate, and the registry export
+- `S01` pipeline. Two are `deferred-by-ownership` through the TUI supplier closure, one of which
+- `S01` the ratchet itself already reported as such. Exactly one, `application.wizard`
+- `S01` `_registered_values`, has no non-test consumer anywhere and is marked `orphaned` with its
+- `S01` remedy flagged as requiring an owner decision.
+- `S01` Grounding order mattered. Querying the decision corpus first was what separated staged
+- `S01` capability from orphans, and it inverted the naive reading: a name-based sweep would have
+- `S01` reported nine deletable modules that are in fact awaiting work someone already decided to
+- `S01` do. The semantic probe over production code is what surfaced the CRUD catalogue's real
+- `S01` consumer, whose own docstring then confirmed it.
+- `S01` The ledger is deliberately stricter than the duplication one in a way that matters: it may
+- `S01` NOT over-declare. A duplication entry outliving its clone is a landed consolidation, but a
+- `S01` classification entry outliving its finding leaves a reviewed-looking name that a future
+- `S01` regression could land on unnoticed, so a stale entry fails.
+- `S01` Five gates cover the ledger, all reading the live audit rather than a recorded count:
+- `S01` complete coverage, no stale entries, a closed class vocabulary, evidence present on every
+- `S01` entry, and a refusal to smuggle deferred modules into scope. Teeth proven for all six
+- `S01` defect shapes -- invented class, missing class, blank evidence, missing evidence, a
+- `S01` smuggled deferred module, and a dropped entry.
+- `S02` All 19 in-scope orphaned test modules are recorded; the remaining two are inside the
+- `S02` deferred TUI prefix.
+- `S02` The finding is structural and changes how this population should be treated. Every one of
+- `S02` the nineteen is DERIVATIVE: ten follow a module finding this campaign already classifies,
+- `S02` nine follow an unused symbol in a module that is otherwise reachable, and none has mixed
+- `S02` subjects. Not one is decided on its own terms.
+- `S02` The entries therefore record `follows` and `anchor` rather than a class from the taxonomy.
+- `S02` Every class in that taxonomy names an action, and none of these carries one. A test whose
+- `S02` subject is a `staged-capability` module is not dead code -- it is the proof that
+- `S02` capability still works, and deleting it would leave a staged module unguarded until its
+- `S02` dependency lands. A test following a symbol finding resolves when that symbol does.
+- `S02` The practical consequence is that this count cannot be burned down directly and must not
+- `S02` be treated as independent debt. It falls as its anchors resolve, and a test still reported
+- `S02` after its anchor is resolved is a real defect: a test that outlived its subject.
+- `S02` Corroboration for the previous Step's classification arrived here unprompted.
+- `S02` `domain.fincas.tests.test_imputacion_regime` exercises `cadrumo.domain.fincas.titularidad`
+- `S02` the exact module the accepted fincas titularidad decision is about -- so that staged
+- `S02` capability is demonstrably part-landed rather than abandoned.
+- `S02` Three gates added over the derivative entries: complete coverage against the live audit, a
+- `S02` valid `follows`/`anchor` pair on every entry, and a chain check that a module-following
+- `S02` test anchors to a module this ledger actually classifies, so the chain cannot dead-end.
+- `S02` Teeth proven for blank anchor, invalid `follows`, missing anchor, and a dangling chain.
+- `S03` The headline 1408 overstates the actionable population by more than half. 602 findings are
+- `S03` `exact`, resolved through the import graph; the other 806 are `name-match` and
+- `S03` `name-match-data`, members reached by attribute access the scan cannot bind to a type. The
+- `S03` exact tier contains only functions, constants and classes -- every enum-member, attribute
+- `S03` and method finding sits in the lower tiers -- so this campaign's symbol work is bounded by
+- `S03` 602, not 1408.
+- `S03` The exact population splits by outside use exactly as the modules did: 350 test-only, 198
+- `S03` unreferenced, 54 dev-reached. That split, not the area, is what determines the remedy.
+- `S03` Supersession proved detectable rather than guessed. For a constant, the test is whether its
+- `S03` literal VALUE still appears in production outside its defining module -- the value moved to
+- `S03` a declaration and the name was left behind. Applied to the sixteen unreferenced constants
+- `S03` carrying an inspectable string literal, eleven proved superseded with the live holder named
+- `S03` in each: the error-code registry, the namespace registry, and the CommandSpec declarations.
+- `S03` `_GROUP_HELP_LOCALE_KEY` is the clearest case, its literal now carried by a `TranslationKey`
+- `S03` in the evidence command specs. A name search cannot produce that evidence, which is why the
+- `S03` governing decision requires it for this class.
+- `S04` Nothing was relocated, and that is the result. Attempting this Step's remedy disproved the
+- `S04` classification it depended on.
+- `S04` All four modules recorded as `harness-code` are product declarations. `crud_registry` is
+- `S04` the locked CRUD design for the operator CLI and `crud_contract` the verb vocabulary it
+- `S04` instantiates; no entrypoints module uses `CrudVerb`, `CANONICAL_CRUD_VERBS` or
+- `S04` `get_builtin_catalogue`, and the reader is a drift gate checking shipped Typer subgroups
+- `S04` against the declared design. `calculation_workflows` is a pydantic contract over the
+- `S04` operator-surface reconciliation. `record_spec` names itself the single authoritative home
+- `S04` for constants governing how registry record declarations are validated, placed there to
+- `S04` avoid a circular import.
+- `S04` Relocating any of them into `dev/` would have moved the product's own design out of the
+- `S04` product, and for `record_spec` would have moved filing-grade registry constants out of the
+- `S04` registry authority.
+- `S04` The class already existed in the tree without a name: `cadrumo.core.address_components`
+- `S04` carries `design_time_authority` in the module ratchet for exactly this shape -- a
+- `S04` declaration constraining other declarations, with no runtime caller by design. The
+- `S04` taxonomy now names it, the ledger reclassifies the four, the gate's closed vocabulary
+- `S04` accepts it, and the governing decision carries an amendment recording why the original
+- `S04` single `harness-code` class conflated two different things.
+- `S04` The generalisable lesson is recorded in the reference: who reads a module does not
+- `S04` establish what it is, and a classification is only safe once its remedy has been attempted
+- `S04` against the tree. A relocation done on the first reading would have been a regression that
+- `S04` every gate here would have passed.
+- `S05` No relocation: this Phase has no in-scope subjects, and that was established against the
+- `S05` tree rather than read off the classification ledger.
+- `S05` Searching the shipped package for test-support-shaped modules outside the wheel-excluded
+- `S05` test tree returns twelve `_support`, `helper` and `factory` modules, none of which the
+- `S05` audit reports -- every one is reachable from a console script and is ordinary production
+- `S05` code whose name merely resembles scaffolding. The only support-shaped modules the audit
+- `S05` does report are four TUI devtools fixture builders: `fixture`, `modelo_fixtures`,
+- `S05` `home_fixtures` and `workbench_fixtures`.
+- `S05` All four sit under the deferred `cadrumo.entrypoints.tui` prefix, so they belong to the
+- `S05` TUI campaign, not this one. They are worth naming for that campaign: fixture builders
+- `S05` shipping inside the distributed wheel is exactly the shape this Phase exists to correct,
+- `S05` and the wheel-excluded test tree is where they would belong once their owner can move
+- `S05` them.
+- `S05` Checking the tree rather than the ledger is the discipline this campaign learned when
+- `S05` attempting a remedy disproved a whole class. Had this Step trusted the ledger's empty
+- `S05` `test-support` set, the four fixture modules would never have been named at all.
+- `S06` Already resolved by the corrected remedy Step in the preceding Phase, and recorded here so
+- `S06` the Step is closed by its evidence rather than left open against work that has landed.
+- `S06` The cluster's adjudication is that `crud_contract` and `crud_registry` are design-time
+- `S06` authorities, not code awaiting a caller. `crud_registry` carries the locked CRUD design for
+- `S06` the operator CLI and `crud_contract` the verb vocabulary it instantiates; the reader is
+- `S06` `dev/quality/crud_contract_drift.py`, which checks the shipped Typer subgroups against the
+- `S06` declaration. No entrypoints module uses `CrudVerb`, `CANONICAL_CRUD_VERBS` or
+- `S06` `get_builtin_catalogue`, and that absence is the contract holding rather than a gap.
+- `S06` Both now carry typed `[[intentional]]` dispositions in the module ratchet naming that
+- `S06` reader, and both left the `allowed` backlog, which shrank from 14 to 10.
+- `S07` Adjudicating the staged-capability population against its authorising decisions moved two
+- `S07` entries out of it and surfaced one defect in a different gate.
+- `S07` The seven that remain stay in the ratchet's `allowed` backlog rather than becoming
+- `S07` `[[intentional]]`, and that is the honest placement. The ratchet's intentional vocabulary
+- `S07` is a closed enum whose sole member is `design_time_authority`, and a module awaiting a
+- `S07` dependency is not one: it is debt that resolves when the dependency lands. Widening the
+- `S07` enum to admit them would be exactly the instrument-weakening this campaign forbids. Each
+- `S07` stays anchored to its accepted decision -- the fincas titularidad record, the modelo edit
+- `S07` contract, the compatibility lifecycle -- so the backlog states what each is waiting for.
+- `S07` `cadrumo.core.address_components` was reclassified to `design-time-authority`. The evidence
+- `S07` recorded against it already said so: it carries that exact kind in the module ratchet, and
+- `S07` the class was assigned before the taxonomy separated the two.
+- `S07` `cadrumo.domain.portals.drift` was reclassified to `should-be-live`, and it is the finding
+- `S07` of this Step. `application.preflight.probe_portal_registry_health` accepts `drift_events`
+- `S07` and grades a divergence by the URL stability tier it was promised, treating a drift on a
+- `S07` BOE-referenced stable-protocol URL as an error. No production caller ever passes them:
+- `S07` `evaluate_portal_drift`, the only producer, is reached solely by tests. The
+- `S07` `portal-registry:health` row therefore always receives the offline default and always
+- `S07` reports OK.
+- `S07` The row's own docstring is honest about the default, so nothing here is a lie. The concern
+- `S07` is that the row cannot distinguish no drift from drift never evaluated, which is the
+- `S07` distinction `no-silent-under-declaration` exists to protect. Reachability found a false
+- `S07` green inside a different gate, which is the strongest argument yet that this signal is
+- `S07` worth burning down rather than baselining.
+- `S07` The remedy is a product behaviour change -- wiring the producer under the live-read access
+- `S07` gate -- so the entry is flagged `remedy_requires_decision` rather than actioned here.
+- `S08` A two-layer alias chain, and the second layer was only visible after the first was
+- `S08` removed.
+- `S08` `schema_scalars` defined each validator privately, used the private name in its own
+- `S08` `Annotated` type, and bound a PUBLIC alias to it. `schema.py` imported that public alias
+- `S08` under an `_impl` name and bound a second private alias, so tests could import the validator
+- `S08` from `schema`. Neither layer had a production consumer: each `_impl` appeared exactly twice
+- `S08` in `schema.py` -- its import and its alias -- and the public aliases carried a comment
+- `S08` stating they existed to let the schema facade preserve its historical private names.
+- `S08` Removing the outer layer made the count go UP by one rather than down by five, which is
+- `S08` what exposed the inner layer: the public aliases lost their only consumer and became
+- `S08` findings themselves. Both layers are now gone, tests import the private implementation
+- `S08` directly, and `schema_scalars` reports zero exact findings where it previously reported
+- `S08` five. The tree-wide count moved from 1391 to 1387.
+- `S08` One near-miss worth recording. `validate_country_code` appeared to have seven consumers,
+- `S08` which would have blocked its removal. Checking the import SOURCE rather than the name
+- `S08` showed every one of them resolves to `domain.invoices.validators.validate_country_code` --
+- `S08` a different function that happens to share the name. That is the same rule the test-only
+- `S08` triage Step had to adopt, and the second time in this campaign that a name match alone
+- `S08` would have produced the wrong answer.
+- `S08` Three failures in the registry schema suite are pre-existing, proven by A/B against copies
+- `S08` of both unmodified modules and the five unmodified tests: 3 failed and 364 passed
+- `S08` identically with and without this change.
+- `S09` Twenty-five modules each declared their own `ValueContract(DeferredTarget("builtins", ...))`
+- `S09` for str, int or bool, under ELEVEN different local names: `_STR`, `_INT`, `_BOOL`,
+- `S09` `_TEXT_VALUE`, `_WHOLE_NUMBER_VALUE`, `_FLAG_VALUE`, `_STRING`, `_STRING_VALUE`,
+- `S09` `_OPTIONAL_STRING`, `_MODELO_OPEN` and `_INTEGER_VALUE`. The value is immutable and carries
+- `S09` no per-module state, so every copy was a duplicate definition rather than a convenience.
+- `S09` `TEXT_VALUE`, `WHOLE_NUMBER_VALUE` and `FLAG_VALUE` now live in `command_spec` beside
+- `S09` `ValueContract` itself -- the module that defines the type is the canonical home -- and
+- `S09` every use site was repointed to the canonical name rather than left aliasing a shared
+- `S09` value under a local one. Two of the displaced copies were this campaign's own: the
+- `S09` `_TEXT_VALUE` and `_FLAG_VALUE` pairs added to the ledger and modelo parameter support
+- `S09` modules during the duplication work, which had created a third home for the same concept.
+- `S09` Equivalence is proven across the whole package rather than per module: all 133 exported
+- `S09` command-spec tuples hash to
+- `S09` `sha256:5512cffa1766098951c774d9ce18f322c025d881a7371272501cf86c9cc5bfd5` before and after.
+- `S10` Six module-level alias facades removed, taking the unused-symbol count from 1403 to 1397.
+- `S10` Each was verified individually before removal: one reference tree-wide, which was its own
+- `S10` assignment; absent from every `__all__`; and its private original still used three or more
+- `S10` times inside the defining module. Removing the alias therefore changed no behaviour, which
+- `S10` 150 owning tests, ty, ruff and an import smoke confirm. The audit no longer reports any of
+- `S10` the six.
+- `S10` These came from the tree-wide sweep rather than from reading files: an AST scan for
+- `S10` module-level public-to-private assignment found 157 alias layers across the shipped
+- `S10` package, a construct the architecture boundaries forbid outright. Seventeen were
+- `S10` audit-flagged; six met all three removal conditions.
+- `S10` `did_page_required` was found by the same sweep and deliberately left alone. It is declared
+- `S10` in its module's `__all__`, so it is exported public API with no consumer rather than a dead
+- `S10` alias, and removing it would change the published surface. That is a different problem
+- `S10` needing its own decision.
+- `S11` The false green this campaign was built to close is now gated. The module ratchet
+- `S11` adjudicates modules no console script reaches and says nothing about a symbol inside a
+- `S11` module that IS reachable, nor about a test whose every shipped subject is a finding. Those
+- `S11` two populations -- 555 exact-confidence symbols across 315 modules, and 23 orphaned test
+- `S11` modules -- sat outside every gate, so the suite reported green over them.
+- `S11` The baseline records a COUNT per module rather than a list of names. Names churn as code
+- `S11` moves; a count answers the question the gate exists to ask, which is whether a reachable
+- `S11` module started carrying unused code. It fails in four directions, each proven: a module
+- `S11` absent from the file while carrying findings, a module carrying more than recorded, a
+- `S11` module carrying fewer than recorded, and a recorded module carrying none. The last two
+- `S11` matter as much as the first: they are how paid debt gets recorded rather than silently
+- `S11` absorbed, which is what keeps the file shrink-only.
+- `S11` Only the `exact` tier is ratcheted. `name-match` and `name-match-data` findings are members
+- `S11` reached by attribute access the scan cannot bind to a type, so gating them would ratchet
+- `S11` guesses rather than facts. That is why the gated number is 555 rather than the headline
+- `S11` 1384, and the headline is not the actionable population.
+- `S11` The `cadrumo.entrypoints.tui` prefix is out of scope here exactly as in the module ratchet,
+- `S11` so its churn cannot fail a gate its own campaign owns.
+- `S11` Wired into `just check-unused-symbol-ratchet` and into the static-check suite, so it runs
+- `S11` where the module ratchet already does rather than only on request.
+- `S12` Measured at revision b3fb20a985. Every gate this campaign owns is green: duplication and
+- `S12` dead-code exit 0, the new unused-symbol ratchet exits 0, the classification ledger's eight
+- `S12` gates pass, the duplication instrument's twenty-eight pass, and all eleven import contracts
+- `S12` hold.
+- `S12` The claim this Step had to prove is that no FALSE green remains, and it does. When the
+- `S12` campaign opened, `check-unreachable-ratchet` exited 0 while 1408 symbol findings and 21
+- `S12` orphaned test modules sat outside every gate. Those populations are now gated: 555
+- `S12` exact-confidence symbols across 315 modules and 23 orphaned test modules are recorded in a
+- `S12` shrink-only baseline that fails in four directions, each proven by teeth.
+- `S12` The module ratchet is RED on `cadrumo.domain.contabilidad` and
+- `S12` `cadrumo.domain.is_compensation`, and that does not contradict the claim. A red gate is the
+- `S12` opposite of a false green: it is the instrument working. Those two packages arrived from
+- `S12` concurrent work as new capability whose consumers are not written yet, they were classified
+- `S12` `staged-capability` in this campaign's ledger with their commits named, and they were
+- `S12` deliberately never baselined -- the gate's own text forbids it, and adding a line is the
+- `S12` erosion this campaign exists to prevent. Resolving them belongs to whoever is landing that
+- `S12` capability.
+- `S13` The shared tree's module ratchet remains RED on `cadrumo.domain.contabilidad` and
+- `S13` `cadrumo.domain.is_compensation`, unchanged from the previous Step and still not this
+- `S13` campaign's breakage. It was again left red rather than baselined.
+- `S14` The triage rule needs three conditions, and each was added because dropping it gave a wrong
+- `S14` answer against this tree. A production module reaches a test-only symbol only when it
+- `S14` from-imports the name, the import's source is the DEFINING module, and the name appears in
+- `S14` its body.
+- `S14` Name-matching alone reported 84 seams, inflated by private names colliding across unrelated
+- `S14` modules -- several define their own `_ZERO` or `_LISTING_URL`. Requiring an import but not
+- `S14` its source reported 18, still counting `csv.py` binding `CSV_EXTENSIONS` from a sibling
+- `S14` `_constants` module rather than from the flagged one. All three conditions give 9. Two
+- `S14` intermediate numbers were measured and discarded before the third; neither was recorded as
+- `S14` a finding.
+- `S14` RESULT: of 350 test-only exact symbols, 341 retire with their tests and 9 are reached only
+- `S14` from a module that is itself a finding -- `_edit_facade`, `edit_session`,
+- `S14` `_registered_values`, `renta_web_open`, and one inside the `domain.fincas` finding package
+- `S14` so they are transitively dead and resolve when their importer does.
+- `S14` No live-module seam exists in this population. The `portals.drift` shape, a live surface
+- `S14` declaring an input nothing produces, occurs at module level but not among these symbols.
+- `S14` That is what makes the 341 ordinary removals rather than 341 wiring decisions, and it is
+- `S14` the answer the domain-symbol Step was waiting on.
+- `S15` The four design-time authorities moved from the ratchet's `allowed` backlog to typed
+- `S15` `[[intentional]]` dispositions, each naming the conformance gate that reads it. `allowed`
+- `S15` shrank from 14 to 10; the list only ever shrinks, and this is a real shrink rather than a
+- `S15` relabel because the modules are endorsed with a stated reason rather than carried as debt.
+- `S15` The closed `kind` vocabulary already had exactly the member these need,
+- `S15` `design_time_authority`, so no vocabulary was widened to admit them.
+- `S15` Teeth proven against the live gate, all three directions: dropping an `allowed` entry -
+- `S15` which is what a newly unreachable module looks like - exits 1; adding an entry the tree
+- `S15` does not report exits 1; and an `[[intentional]]` entry whose rationale is blank is
+- `S15` refused outright by the disposition type before any comparison runs.
+- `S15` The teeth probe initially reported a false pass. `$?` after a pipeline reports the last
+- `S15` command in it, so `ratchet | tail -3; echo $?` was reporting tail's status rather than the
+- `S15` gate's. Re-run with the output redirected and the exit code read directly, the gate fails
+- `S15` exactly as designed. The lesson is recorded in the cadence memory because it invalidates
+- `S15` any teeth result gathered the first way.
+- `S15` `cadrumo.application.modelo.edit_session` was reclassified from `staged-capability` to
+- `S15` `deferred-by-ownership`. The ratchet's own deferral report names four TUI edit modules as
+- `S15` its importers, so while the accepted edit-contract decision governs the capability, the
+- `S15` operative fact for this campaign is that its consumers belong to the TUI campaign. The
+- `S15` classification ledger now records that, with the importers named.
+- `S16` Thirty-six modules declared their own Decimal constants. They are now four canonical
+- `S16` definitions in `core/decimal/constants.py`, and the split between two of them is the
+- `S16` finding of this Step.
+- `S16` `_ZERO` meant TWO different values: `Decimal("0")` in twenty-two modules and
+- `S16` `Decimal("0.00")` in four. They compare equal, so no equality assertion anywhere would
+- `S16` have caught a module reaching the wrong one, but they carry different exponents and
+- `S16` Decimal arithmetic propagates the larger scale. Measured directly:
+- `S16` `str(Decimal("0") + Decimal("5"))` is `5` while `str(Decimal("0.00") + Decimal("5"))` is
+- `S16` `5.00`. Four modules depend on the two-decimal form, among them the sancion
+- `S16` `reducciones_total` sum that is returned for rendering and the inventory valuation whose
+- `S16` result reaches casillas 0177 and 0182. Merging all twenty-six into one constant would have
+- `S16` silently changed how amounts render on a filing surface.
+- `S16` They are therefore `ZERO` and `MONEY_ZERO`, named for the distinction rather than the
+- `S16` number, and the gate asserts the exponents stay different.
+- `S17` Six modules each built their own `TypeAdapter(AnyHttpUrl)` under FOUR different names:
+- `S17` `_ANY_HTTP_URL_ADAPTER`, `_HTTP_URL_ADAPTER`, `_URL_ADAPTER` and
+- `S17` `_SITE_HEALTH_URL_ADAPTER`. The adapter is stateless and identical wherever it is built,
+- `S17` so each copy was a duplicate. They are now `ANY_HTTP_URL_ADAPTER` in `core/url_validation`,
+- `S17` which every layer may import.
+- `S17` The names mattered more than the copies. `_URL_ADAPTER` is ALSO the name
+- `S17` `domain/portals/_entries/common` gives to a `TypeAdapter(HttpUrl)` -- a different
+- `S17` validator. Merging on the name rather than on the validated type would have swapped one
+- `S17` check for another at a call site that never asked for it, so the portals adapter was
+- `S17` deliberately left alone and the canonical module is named for the type it validates.
+- `S17` Because this adds a `core` import to domain and adapter modules, the layered architecture
+- `S17` was verified rather than assumed: `lint-imports` reports 11 contracts kept, 0 broken.
+- `S18` Adjudicating the different-value collisions found that most are not hazards at all. The
+- `S18` largest are per-module idiom whose value differs only because the module does: `_log`,
+- `S18` `_logger`, `_LOGGER` and `_LOG` are all `get_logger(__name__)` across 161 sites, `ENTRY` is
+- `S18` one portal record per portal module, and `_METADATA`, `_READ`, `READ_GUARD_POLICY` and
+- `S18` `_COLUMN_KEYS` are per-command or per-view declarations that are supposed to differ. The
+- `S18` sweep counts them because it compares rendered values, not because they collide.
+- `S18` Two were real, and one was a latent defect.
+- `S18` `STORAGE_DEGRADATION_ERRORS` was declared nine times. Seven modules carried the same three
+- `S18` errors; `prorrata_regularizacion` added `ProrrataRegisterError` and
+- `S18` `_modelo_bindings_support` added four persistence errors. The extensions are legitimate,
+- `S18` but the base set was restated nine times, so adding a fourth error the engine should
+- `S18` degrade on means editing nine places -- and the copy nobody edits keeps RAISING where its
+- `S18` siblings report an incomplete source. That failure runs in the direction
+- `S18` `no-silent-under-declaration` forbids: a caller that does not degrade produces a total
+- `S18` rather than an advisory.
+- `S18` The set now lives once in the module that defines the error classes, consumers import it,
+- `S18` and the two extenders compose it. All three tuples were verified to reproduce their exact
+- `S18` previous members. Because this adds a persistence-layer import to application modules, the
+- `S18` architecture was checked rather than assumed: 11 contracts kept, 0 broken.
+- `S18` `_WHITESPACE_RE` is the second, recorded here and not yet resolved: `adapters/inbound/pdf`
+- `S18` compiles `\s` while three other modules compile `\s+`. Those are different matchers --
+- `S18` one whitespace character against a run -- so a substitution written for one collapses runs
+- `S18` and the other does not. It needs its own Step rather than a blind merge.
+- `S19` The collision was two operations sharing one name. Three modules compiled a run pattern
+- `S19` and substituted a single space -- collapsing whitespace. The PDF label reader compiled a
+- `S19` single-whitespace pattern and substituted the empty string -- DELETING whitespace. A merge
+- `S19` on the name would have changed how PDF labels are matched.
+- `S19` The deleting pattern is therefore renamed `_WHITESPACE_TO_DELETE_RE`, named for its
+- `S19` operation, and left where it is. Nothing about the PDF reader changed but the name.
+- `S19` Underneath the collision sat real semantic duplication the textual detector cannot see.
+- `S19` `terminology._fold` and `_adapter_utils.normalize_response_text` were the SAME function:
+- `S19` fold diacritics, collapse whitespace, trim, casefold. They differed only in ordering the
+- `S19` casefold before or after the collapse, which is why neither the clone detector nor a name
+- `S19` search found them. Both now delegate to `fold_for_matching` in the module that already owns
+- `S19` `fold_diacritics`.
+- `S19` That module's docstring states callers compose their own trailing transform, so adding this
+- `S19` function was a deliberate narrowing of that rule rather than a contradiction of it: where
+- `S19` two callers compose the SAME transform, the composition earns a name. The docstring records
+- `S19` that.
+- `S19` Equivalence was measured before the merge, not assumed: the casefold orders agree across
+- `S19` Turkish dotted capital I, sharp S, digraphs, non-breaking space and the empty string, and
+- `S19` both call sites reproduce their previous output on every sample. 31 and 42 owning tests
+- `S19` pass, and the layered architecture holds at 11 contracts kept.
+- `S20` The ratchet exits 1 naming two modules this Step did not touch -
+- `S20` `cadrumo.domain.calculations.registry._validate_parameter_temporal` and
+- `S20` `cadrumo.entrypoints.cli._app_ledger_command_specs` - both introduced by
+- `S20` concurrent peer work and both exported with test-only consumers. The two
+- `S20` modules this Step owns carry zero findings and their baseline entries were
+- `S20` removed rather than lowered.
+- `S22` The ratchet exits 1 naming three modules this Step did not touch -
+- `S22` `_validate_parameter_temporal`, `domain.invoices.service` and
+- `S22` `_app_ledger_command_specs` - each introduced by concurrent peer work or by a
+- `S22` cascade this Step recorded rather than resolved.
+- `S22` Two findings were the audit's own false positives, not code: `_AttachmentFileReader`
+- `S22` and `_ResponseWaiter` are named only inside `cast("X | None", ...)` strings, which
+- `S22` the dotted-spec reader could not resolve. The audit now reads forward references
+- `S22` in type positions and reports neither.
+- `S22` `resolve_ledger_transaction_id` was NOT deleted despite appearing unused; the
+- `S22` same applies to every symbol recorded in the classification ledger under
+- `S22` `should-be-live`, `staged-capability`, `design-time-authority` and
+- `S22` `deferred-by-ownership`. Deleting those would have removed capability, ports or
+- `S22` staged features rather than dead code.
+- `S23` The inventory proposes no blanket disposition, because the reason a name went
+- `S23` unconsumed differs by area and the areas have different owners. Three areas
+- `S23` hold 135 of the 368, so a per-area ruling is tractable where a per-name sweep
+- `S23` would not be.
+- `S23` Two areas carry a documented trap rather than a simple choice. In
+- `S23` `entrypoints/cli` an exported constant may be unconsumed because consuming it
+- `S23` is structurally blocked: wiring `MODELO_CODE_CHOICE_ALL` into the portal filter
+- `S23` it was written for broke the live-subtree demand-loading contract. In
+- `S23` `adapters/persistence` a row type or namespace constant may be the only
+- `S23` declaration of a persisted shape, so removing one changes the schema rather
+- `S23` than the API.
+- `S24` The 368 were inventoried but ungated: nothing stopped the number growing while
+- `S24` the owner review waited. The gate asks nobody to resolve them and refuses a new
+- `S24` one, which is the half needing no decision -- and the cheapest moment to ask who
+- `S24` imports a name is while its author still remembers exporting it.
+- `S24` Calibration mattered more than construction. Counting every exported name no
+- `S24` module imports gives 2247, mostly ordinary published API whose consumer is a
+- `S24` test or an external caller; a gate on that would fire on any new public
+- `S24` interface before its first importer landed. Intersecting with the reachability
+- `S24` audit narrows it to the population actually under review. A first narrowing
+- `S24` then gave 136 rather than 368, because it counted test modules as consumers
+- `S24` while the inventory does not -- two records disagreeing about what they count
+- `S24` is the defect class this campaign exists to remove, so the gate now excludes
+- `S24` tests as publishers AND consumers, matching the inventory exactly.
+- `S24` The ledger also gained two triage dimensions for whoever rules on the 368: by
+- `S24` area, and by shape. 72 of the 368 are single-return pass-throughs, which makes
+- `S24` each a cheaper decision because a reader sees what is behind it. Only ONE
+- `S24` delegates to a public member of its own argument -- the `find_invoice` shape
+- `S24` that made that symbol cheap to retire -- and that one documents why it exists.
+- `S24` So the population holds no further illusions of that kind: the 368 are
+- `S24` decisions, not deferred work.
+- `S24` Four faults in the gate were found by testing it rather than by reading it: two
+- `S24` `ty` diagnostics, one of which was a real correctness fix (an `__all__` entry
+- `S24` need not be a string); a lookup key hardcoded to the repository root, so the
+- `S24` function could only ever scan the real tree; an `evaluate` that ran a full audit
+- `S24` of the real repository when handed a fixture; and an edit that silently did not
+- `S24` apply because the target string had reformatted underneath it, leaving the old
+- `S24` call in place while it read as fixed.
+- `S25` The tier was an instrument gap, not dead code. `_DATA_SHAPED_KINDS` already
+- `S25` admitted enum members and the data consult already read the registry and locale
+- `S25` payloads, but it matched the member NAME while a declaration addresses a StrEnum
+- `S25` member by its VALUE, so no binding could ever be seen. The member's declared
+- `S25` literal is now carried on the definition record and consulted.
+- `S25` The binding rule is deliberately stricter than the existing token match and
+- `S25` kept separate from it, so the name match keeps its reach. A first attempt reused
+- `S25` the loose regex tokens over the raw payload text and cleared 191 findings, but
+- `S25` inspection showed 15 of those rested on a single short word and at least seven
+- `S25` were prose: `flows.BACK` cleared because a registry sentence reads "created and
+- `S25` read back", `capabilities.PROCESS` because another reads "Another process is
+- `S25` acquiring AEAT", and `records.CONTRACT` on a comment. Suppressing a live finding
+- `S25` is worse than over-reporting it, so the accepted rule parses the payload and
+- `S25` counts only a complete mapping key or a complete string value. That clears 175
+- `S25` with no single-short-word clear remaining.
+- `S25` Symbol findings fall 1322 to 1147. The reduction is in the UNGATED population:
+- `S25` `dev/quality/unused_symbol_ratchet.py` ratchets the `exact` tier only, and enum
+- `S25` members are `name-match-data`, so no baseline moved and none was rewritten. No
+- `S25` threshold, exclusion, baseline, skip or allowlist was changed.
+- `S26` Classification was attempted against the governing taxonomy and is recorded here
+- `S26` rather than in the ratchet, because none of the three earns an entry.
+- `S26` `cadrumo.application.ledger.import_preparation` is capability that should be
+- `S26` live. Its TUI caller was retired on 2026-09-05, but the ledger capability
+- `S26` contract in `dev/quality/clitui_ledger_capability_matrix.py` still names
+- `S26` `import_preparation:prepare_ledger_import_command` as required, and only its own
+- `S26` test imports it. The remedy for the class is wiring, not an intentional entry,
+- `S26` and the wiring belongs to the surface retirement in flight.
+- `S26` `cadrumo.domain.contabilidad` and `cadrumo.domain.is_compensation` are candidate
+- `S26` deliberately-staged capability: complete domain packages with tests and no
+- `S26` production importer. Staging must be evidenced by an accepted decision recording
+- `S26` the dependency being waited on, and no accepted decision names either package.
+- `S26` Classification is evidenced, not asserted, so the class cannot be recorded and
+- `S26` they stay visible.
+- `S26` The narrowness of the intentional taxonomy is NOT what blocks these. The kind
+- `S26` enum admits one value, design-time authority, while the governing taxonomy names
+- `S26` eight classes; but each of these three falls in a class whose remedy is wiring or
+- `S26` an owner's withdrawal decision, so no additional kind would let them pass, and
+- `S26` none was added.
+- `S26` One defect was found and fixed. The gate's own failure text offered two remedies
+- `S26` only, relocation or deletion, and directed the reader to delete capability that
+- `S26` lost its caller. Following it for `import_preparation` would have deleted a
+- `S26` module a live capability contract requires, breaking that contract. The text now
+- `S26` names re-wiring and owner withdrawal, and says to check what still DECLARES a
+- `S26` module before deleting it.
+- `S26` No threshold, exclusion, baseline, skip or allowlist was changed, and the
+- `S26` `allowed` list was not written.
+- `S27` No code changed: the defect this step exists to find does not exist, and the
+- `S27` measurement is the deliverable.
+- `S27` Every subject of all 25 orphaned test modules resolves to a live finding in the
+- `S27` same run: zero name a module or symbol the audit no longer reports. That is
+- `S27` structural rather than lucky. The population is derived inside the scan from the
+- `S27` module and symbol findings it has just computed, so a test cannot outlive its
+- `S27` anchor by one run; the failure mode the step was written against cannot occur
+- `S27` while the derivation stays in-scan.
+- `S27` All 25 carry `exact` confidence, which is why the value-binding fix in the
+- `S27` preceding step moved the symbol count by 175 and left this population at 25:
+- `S27` these tests are anchored on dead MODULES, not on the weak tiers that fix
+- `S27` corrected.
+- `S27` The gating is sound in both directions. The ratchet records 23 orphaned test
+- `S27` modules and reports both a module the tree newly orphans and a recorded module
+- `S27` the tree no longer reports; the live population is 25, of which 2 are deferred
+- `S27` under the frozen entrypoints prefix, so the 23 match exactly.
+- `S27` One blind spot was found and is not a defect in the tree. The orphan walk skips
+- `S27` any test module naming no shipped subject, and 239 of 3334 test modules under
+- `S27` the package are skipped that way. Sampling them shows they are not subjectless:
+- `S27` they reach shipped code one hop away through a support module inside their own
+- `S27` test package, and that support module imports the real code. Subject extraction
+- `S27` follows imports and does not traverse the hop. These 239 are therefore live
+- `S27` tests wrongly invisible rather than dead tests wrongly hidden, but a genuinely
+- `S27` dead test sitting behind such a support module could never be reported, which
+- `S27` is a completeness gap in the population this step measured.
+- `S27` No threshold, exclusion, baseline, skip or allowlist was changed.
+- `S28` The step asked to re-wire or withdraw the capability. Withdrawn, because the
+- `S28` capability was never absent: the guard the module performs runs unconditionally
+- `S28` inside the action every caller already reaches, `_require_readable_source` at
+- `S28` `actions_import.py:483`, invoked first thing in `import_ledger_source` and again
+- `S28` from `_validate_import_source`. Both carry the same `--provider auto` rationale
+- `S28` in nearly the same words, which is what the deleted module's docstring meant by
+- `S28` mirroring the action's guard.
+- `S28` That also retires the remedy the old ledger entry named. It blamed the missing
+- `S28` TUI workspace route host, but a prepared import is submitted to
+- `S28` `import_ledger_source` like every other command, so the route host landing would
+- `S28` not have given the preparer a job.
+- `S28` The two staged domain packages this step also named need no further decision:
+- `S28` `domain.contabilidad` and `domain.is_compensation` each carry a
+- `S28` `declared_by_contract` intentional entry naming the production error codes
+- `S28` registered against their error classes, which is the recorded decision the step
+- `S28` asked for.
+- `S28` Regenerating the Sphinx stubs also scaffolded twelve stubs for modules a peer
+- `S28` added, since the tree had drifted. Those files are correct output for the live
+- `S28` tree and were left in place rather than reverted to a stale state.
+- `S29` Test modules are excluded from the shipped population, so a test importing a
+- `S29` helper inside its own tests package resolved that import to nothing and looked
+- `S29` subjectless. The walk skipped it, and a dead test sitting behind such a helper
+- `S29` could never be reported. Subject resolution now takes one hop through a support
+- `S29` module in the test's own package.
+- `S29` The hop is applied ONLY to a test that resolved no shipped subject of its own,
+- `S29` and that restriction is the safety property, not an optimisation: it can give a
+- `S29` subjectless test some subjects, so a test whose support reaches nothing but dead
+- `S29` code is newly reportable, but it can never add a live subject to a test that is
+- `S29` already reported and thereby silence an existing finding. The real tree confirms
+- `S29` the direction: orphaned tests 25 before and 25 after, zero newly reported, zero
+- `S29` no longer reported.
+- `S29` That zero delta is the honest outcome and not a no-op, which was checked rather
+- `S29` than assumed. Test modules naming no shipped subject fall from 239 of 3334 to
+- `S29` 78, so 161 tests gained subjects through the hop and every one of them reaches
+- `S29` live code. The remaining 78 sit behind deeper indirection or genuinely exercise
+- `S29` no shipped subject.
+- `S29` Both directions carry teeth in the synthetic tree. A test importing only a
+- `S29` helper that imports the dead module is reported; a test importing only a helper
+- `S29` that reaches live code is not, so the change cannot trade a blind spot for a
+- `S29` false accusation. Four pinned fixture expectations moved because the tree gained
+- `S29` a deliberately-orphaned test.
+- `S29` One support module serves many tests, so parsing it per importer took the walk
+- `S29` past ten minutes; parsed support subjects are cached per path.
+- `S29` No threshold, exclusion, baseline, skip or allowlist was changed.
+- `S30` The routing this Step asks for is stated here rather than performed, because what
+- `S30` remains needs decisions the campaign cannot take.
+- `S30` Of 427 exact non-deferred symbol findings, 80 now carry an adjudication across 50
+- `S30` clusters: 61 orphaned, 35 should-be-live, 26 design-time-authority, 26 superseded,
+- `S30` 12 staged-capability, 1 deferred-by-ownership. 347 are unexamined, split 263
+- `S30` functions, 61 constants, 23 classes, and concentrated in calculations (58),
+- `S30` application/modelo (35), entrypoints/cli (29) and adapters/persistence (26).
+- `S30` Every mechanically resolvable class is now closed, which is why the residue needs
+- `S30` people. Four instrument gaps were fixed rather than adjudicated, each removing
+- `S30` false findings: enum members bound by their declared VALUE in registry data; CLI
+- `S30` handlers whose names are assembled by f-string; handlers derived by an affix
+- `S30` stripper from a declared key; and classes named as a binding target in registry
+- `S30` TOML. Three deletable shapes were exhausted: unused module-level loggers, aliases
+- `S30` whose target production already uses, and superseded one-line wrappers. Five gates
+- `S30` now hold the shapes that recurred, so none of them can regrow.
+- `S30` What is left is not cruft. The classified population names capability that was
+- `S30` built and never connected, and the same reading applies to most of the 347: a
+- `S30` declared KDF warmup no measurement performs, a locale-key convention whose
+- `S30` scaffold gate does not exist, IVA evidence advisories nothing raises, an encrypted
+- `S30` asset-ledger persistence surface with no writer or reader, a tty and colour rule
+- `S30` set no command consults while Click's default decides instead. Each names
+- `S30` behaviour the product does not do, so deleting it would remove the record that it
+- `S30` was intended, and wiring it changes shipped behaviour. Both are owner calls.
+- `S30` The two ratchet blockers are unchanged and both peer-owned. One of them,
+- `S30` LEDGER_CLI_COMMAND_CENSUS, is correctly classified design-time-authority and
+- `S30` cannot be recorded as such: the symbol ratchet offers only a count baseline where
+- `S30` the module ratchet has an intentional entry, so a correctly-kept symbol can only
+- `S30` sit red or be baselined, and baselining is barred.
+- `S30` No threshold, exclusion, baseline, skip or allowlist was widened.
+- `S31` The CLI command tables bind a handler through
+- `S31` `DeferredTarget(module, handler_name or f"work_{name}")`, where the leaf token
+- `S31` is declared in the same table. The module string is a literal and was already
+- `S31` read, which is why these modules were reachable, but the handler name exists
+- `S31` only after formatting, so every spec-bound command handler was reported unused
+- `S31` while its command was live. `aeat app modelo work create` runs; `work_create`
+- `S31` was a finding.
+- `S31` Subject resolution now derives the assembled names. The reader is narrow in
+- `S31` three ways, each guarding the direction that matters: a prefix counts only when
+- `S31` the f-string opens with a constant that is a valid identifier fragment ending in
+- `S31` an underscore, so a format string like `f"{count} rows"` contributes nothing;
+- `S31` tokens come only from string literals in the SAME module, so a prefix cannot
+- `S31` combine with a name declared elsewhere; and a token must match the command-leaf
+- `S31` shape. A looser reader would suppress real findings, which is worse than the
+- `S31` over-report it fixes.
+- `S31` Symbol findings fall 1107 to 1089. All 18 are live command handlers -- create,
+- `S31` discard, list, status, rename, calculate, observations, revision, revisions,
+- `S31` resume, run, run-details, runs, select and their siblings -- each confirmed
+- `S31` present in the live `--help` output before the change. Seven spent baseline
+- `S31` entries were removed; no entry was added.
+- `S31` No threshold, exclusion, baseline, skip or allowlist was widened. The scan was
+- `S31` taught to resolve a binding it could not previously follow.
+- `S33` The module ratchet still reports `cadrumo.application.ledger.import_preparation`.
+- `S33` It is deliberately left red rather than dispositioned: its only declarer is the
+- `S33` dev capability matrix, and the TUI import door that would consume it can never
+- `S33` open, so a `declared_by_contract` entry would quiet a module whose contract is
+- `S33` itself unsatisfiable. That decision remains `W05.P12.S28`.
+- `S35` The unused-symbol ratchet stays red on one added finding,
+- `S35` `non_filing_axis_parameters` in `_validate_parameter_temporal`, landed two
+- `S35` commits earlier by peer work grounding the non-filing axis. Its only reader is
+- `S35` its own test, and the governing ADR requires the admission be "enumerable and
+- `S35` gated in both directions", so it is capability in flight rather than residue. It
+- `S35` was deliberately NOT given an intentional disposition: 225 findings in this tree
+- `S35` have a test as their only reader, and admitting that as design-time authority
+- `S35` would empty the ratchet of meaning.
+- `S36` The stale counts were dated rather than refreshed. Refreshing the three
+- `S36` top-level totals would have left the per-shape breakdowns beneath them keyed to
+- `S36` the old denominator (`of_total = 368`, `names = 72`), and re-deriving those
+- `S36` needs the shape analysis rerun, which this Step did not do. A consistently
+- `S36` dated snapshot is honest; a half-refreshed one is not.
+- `S37` `STATE_DIR` in `entrypoints/tui/devtools/fixture.py` was left unclassified. It
+- `S37` is dev-only by the same measurement, but sits under the `cadrumo.entrypoints.tui`
+- `S37` prefix both ratchets defer to that campaign.
+- `S38` Three investigations closed negative and are recorded so they are not reopened.
+- `S38` There is no transitive-deadness cluster: no finding is referenced only from
+- `S38` inside another finding, once reference sites are resolved to their enclosing
+- `S38` definition. The package initialisers are genuinely inert, so the symbols they
+- `S38` appear to reference are named in prose, not re-exported. And the names those
+- `S38` docstrings advertise are not gateable: of ten that resolve nowhere, five are a
+- `S38` sentence correctly recording that the sandbox lifecycle verbs WERE REMOVED, and
+- `S38` the rest are attribute-access false positives.
+- `S39` The execution-policy cluster was first recorded as a capability divergence: the
+- `S39` public `CALCULATION_WRITE` names `profile-custody` and the private
+- `S39` `_CALCULATION_WRITE` the live specs use does not. That reading was wrong and is
+- `S39` corrected in the ledger. `command_spec._IMPLIED_CAPABILITIES` maps
+- `S39` `encrypted-facts` onto `profile-custody`, and every policy check runs against
+- `S39` `expanded_capabilities`, so the two declarations are equivalent. The finding is
+- `S39` displacement of a canonical home by private copies, not an under-declaration.
+- `S40` The secure-object upgrader cluster carries the one finding here an owner may
+- `S40` want to act on. `SECURE_OBJECT_DURABILITY_FLOOR` is 1, meaning every read path
+- `S40` keeps version 1 readable, while six namespaces declare schema version 2 and one
+- `S40` declares 4. No production code registers an upgrader, so a row stored at an
+- `S40` older version in those namespaces has no upgrade hop. The decode path is
+- `S40` documented fail-closed and returns the typed error rather than a placeholder,
+- `S40` so this surfaces as a refusal rather than a mis-read. Whether such a row exists
+- `S40` is deployment state the tree cannot answer.
+- `S42` `RepairRemediationDecisionRepository` is the finding worth an owner's attention.
+- `S42` The secure-object namespace `cadrumo.application.repair_integrity.decisions` is
+- `S42` registered for it, so an encrypted store is declared and provisioned, and
+- `S42` nothing writes or reads it. `application/diagnostics.py`, which the live
+- `S42` `config repair` verb uses instead, has no remediation-decision handling at all,
+- `S42` so this is not a displaced implementation with a survivor -- the capability has
+- `S42` no other home.
+- `S43` The censo entry is the one carrying a consequence. Modelo 036 is in the
+- `S43` registry, so this is not a substrate waiting for its modelo: the lifecycle
+- `S43` routing exists, serves a live form, and the application censo path never asks
+- `S43` it whether a form is active or historical.
+- `S44` The committed-custody entry is now the fourth instance of provisioned
+- `S44` persistence with no consumer, after the ledger import door, the repair
+- `S44` remediation decisions, and this package's own reader trio. The write side here
+- `S44` is live, so custody data is committed that the product cannot read back as a
+- `S44` summary witness or replace.
+- `S45` A gate over the secure-object namespace registry was investigated for the
+- `S45` recurring provisioned-persistence findings and rejected. Every namespace is
+- `S45` enumerated by `namespace_registry.py`, so "has a consumer" is trivially true;
+- `S45` excluding that enumerator leaves only the four test-fixture namespaces. The
+- `S45` registry cannot distinguish a store that is used from one that is merely
+- `S45` enumerated, so the audit's symbol-level finding remains the only honest signal
+- `S45` and the existing ratchet already carries it.
+- `S46` `grounding_anchor` is the clearest case yet for classifying symbols rather than
+- `S46` modules. Read as a file it looks like the anti-fabrication check going unrun,
+- `S46` which would be a serious finding for LLM-extracted values. Five of its symbols
+- `S46` are imported by live production modules, so the check runs; the two findings are
+- `S46` provenance-envelope wrappers whose callers build the envelope themselves.
+- `S47` The IVA remote-state entry is the fifth instance of capture-with-no-retrieval.
+- `S47` What makes it a finding rather than a staged surface is the contrast with the
+- `S47` deudas entry recorded in the same Step: deudas has a stated fail-closed reason
+- `S47` and no live read is attempted, while the IVA capture succeeds and the state
+- `S47` simply cannot be read back.
+- `S48` The review-only workspace joins the collaboration audit emitters recorded
+- `S48` earlier as one feature rather than two findings: no opener, no authority guard,
+- `S48` no audit trail, and the workspace type's only production consumer is those
+- `S48` unreached emitters. An official action inside a review-only workspace is
+- `S48` therefore refused by nothing.
+- `S49` The corrected transitive scan found no exploitable population, and the reason
+- `S49` is worth keeping. `entrypoints/cli/command_api.py` reads as a wholly-dead
+- `S49` module because it DEFINES only two functions and both are findings; everything
+- `S49` else in its `__all__` is re-exported from the modules that define it, and those
+- `S49` are live. A definition-based "is this module dead" test therefore mislabels
+- `S49` every re-export boundary. The eight symbols it appeared to hold alive are held
+- `S49` by that re-export list, not by dead code.
+- `S50` Both consequences are operator-visible and neither surfaces as a missing
+- `S50` consumer, because the consumer exists and reads a default. The register scoping
+- `S50` signal is always `INCONCLUSIVE`, hardcoded at both run construction sites and
+- `S50` equal to the field default. The filed period selection rows are always empty,
+- `S50` the run field defaulting to `()` with no site filling it. A constant standing in
+- `S50` for a computed value looks identical to a computed value from the type graph.
+- `S51` No gate was added for the producer-replaced-by-a-constant shape, and the reason
+- `S51` is the cost of the discriminating half. Finding fields whose type an unreached
+- `S51` producer returns is cheap and useless: 3844 matches with builtins included, 227
+- `S51` with them excluded, because an optional field defaulting to None is ordinary.
+- `S51` The defect requires that NO construction site ever passes a computed value,
+- `S51` which needs every construction site of every model resolved. The leading
+- `S51` candidate failed exactly there -- two of three sites pass a real work unit id.
+- `S51` The two confirmed instances were found by reading the consumer, not by scanning.
+- `S52` A limitation of the module-split tool surfaced here and is worth stating: it
+- `S52` counts references from OTHER modules, so `generate_modelo_workspace_field_manifest`
+- `S52` showed zero while `capture_modelo_workspace_manifest` calls it on the next line
+- `S52` of the same file. It is not a finding, and the audit agrees. Read a zero from
+- `S52` that tool as "no cross-module consumer", never as "unused".
+- `S53` `test-support` is used here for a symbol whose only readers are tests, which
+- `S53` this campaign otherwise refuses. The distinction that makes it honest: these are
+- `S53` inspection surfaces over state production ALREADY reaches by another contract --
+- `S53` `register`, `resolve_error_message` and `get_registered_error_code` are live at
+- `S53` twenty-two, sixteen and eight references. That is different from capability
+- `S53` awaiting a caller, which is what the refusal protects against.
+- `S54` The locale catalogue cache is the first finding in this campaign with a
+- `S54` quantified cost attached by the code itself: roughly 800 ms of YAML parsing per
+- `S54` process, against single-digit tens of milliseconds for the JSON reload the
+- `S54` cache would serve. The in-process half is live, which is why nothing looked
+- `S54` broken -- `compute_directory_source_digest` is imported and used to build the
+- `S54` cache key, and only the persisted read and write are unreached.
+- `S55` Two alarms were raised by the pair scan and neither survived grounding, which is
+- `S55` worth recording so they are not re-raised. A mnemonic that can be encoded and
+- `S55` not decoded reads as broken recovery; it is not, because the phrase itself is
+- `S55` the KDF secret. An encrypted envelope saved but never loaded reads as
+- `S55` unreadable data; it is not, because nothing writes through that tier at all --
+- `S55` its saver's only caller is also unreached.
+- `S55` Three pairs remain unadjudicated from the same scan: the extracted-document
+- `S55` transcription cache, the corpus manifest, and the already-recorded bucket
+- `S55` output-language hint.
+- `S56` The staleness gate caught a symbol added to a cluster on a `modulesplit` zero:
+- `S56` `load_extracted_document_cache` shows no cross-module reference but is NOT an
+- `S56` audit finding, because an intra-module caller reaches it. That is the tool
+- `S56` limitation recorded at `W05.P12.S52`, and this is the first time it produced a
+- `S56` wrong ledger entry rather than a wrong reading. The cluster now names the writer
+- `S56` only. Check a candidate against the audit's reported set before clustering it,
+- `S56` not just against the reference count.
+- `S57` The cache sweep is complete and the class is closed. Eight cache-shaped modules
+- `S57` ship; the locale catalogue and the stage-S1 transcription cache are the only
+- `S57` broken ones and both are already recorded. The LLM cache, the extracted-document
+- `S57` repository, the registry loader cache, the transaction catalogue memoiser and
+- `S57` the compiled-registry cache are healthy, and the verdict cache's read, write,
+- `S57` delete and path helpers are all reached intra-module rather than unused.
+- `S58` Both corrections came from the same missing step: an unreached symbol's own
+- `S58` docstring was taken as the statement of what SHOULD happen, without checking
+- `S58` what the live path says it does. Reading the live consumer reversed both. A
+- `S58` finding's docstring argues for the finding; only the reachable code states the
+- `S58` design in force.
+- `S58` The decision backlog drops from 35 clusters to 33, covering 81 symbols.
+- `S59` Recorded as the cluster "public types a live equivalent already covers". The
+- `S59` pass reversed four entries at once, which was the first sign that the
+- `S59` owner-decision backlog was holding findings that had never been re-tested
+- `S59` against the live design rather than findings awaiting a judgement.
+- `S60` Recorded as "snapshot-derived connectivity records the declared census
+- `S60` displaced". The module's declared TOML census is what the dev source-connectivity
+- `S60` check loads and validates, so the view is assembled from a declaration rather
+- `S60` than derived from a snapshot, and the derivation types have nothing to do.
+- `S61` Recorded across "bundle import surface the capsule archive path displaced" and
+- `S61` "path-taking restore wrappers the shared authority displaced". Portable profile
+- `S61` import is wired after all, through the capsule archive rather than the bundle
+- `S61` registrar: the restore CLI defines an archive import command, and the archive
+- `S61` module's read, inspect, export and both result types are each reached.
+- `S62` The colour fix was checked for a regression before landing: the override writes
+- `S62` to stderr while `should_use_color` tested stdout, so wiring it naively would
+- `S62` have dropped colour whenever stdout is piped and stderr is a terminal. The
+- `S62` helper gained an optional `stream_is_tty` probe and the call site passes
+- `S62` `stderr_is_tty`.
+- `S62` Two symbols leave the decision backlog by being wired rather than reclassified:
+- `S62` `should_use_color` and `emit_collab_package_encrypted_event`.
+- `S63` Five of the six collaboration emitters are now wired. The sixth,
+- `S63` `emit_collab_review_only_workspace_opened_event`, is left deliberately: there is
+- `S63` no producer to emit from, because the review-only workspace has no opener. That
+- `S63` is the same gap recorded beside it, so wiring the emitter would mean inventing
+- `S63` the flow rather than instrumenting it.
+- `S63` The recipient commands previously obtained their repository through a factory
+- `S63` that resolved the active bucket internally, so the command never held the
+- `S63` identifier. Both now resolve it once and construct the registry from it, which
+- `S63` keeps the repository and the audit event on the same bucket by construction
+- `S63` rather than by two independent lookups.
+- `S64` The restart path was checked first and is NOT the leak: a confirmed restart is
+- `S64` followed by saves that overwrite the checkpoint. The leak is submission, where
+- `S64` the run loop returned the projection and left the saved state behind. The
+- `S64` discard is placed after `assert_submit_eligible` has run, so a refused submit
+- `S64` does not destroy a resumable checkpoint.
+- `S65` The backstop deliberately does not mask two cases. A module outside the declared
+- `S65` inventory re-raises unchanged, because its absence is a broken installation
+- `S65` rather than a configuration choice. And an extra that IS installed also
+- `S65` re-raises, so a deep-import failure inside an installed package is not reported
+- `S65` as "install the extra" -- confirmed here, where playwright is present and the
+- `S65` simulated `playwright.async_api` failure fell through to the re-raise.
+- `S66` The candidate field was chosen against the alias's own stated criterion rather
+- `S66` than by name. `calendar_models` already spells its optional URL as
+- `S66` `SourceUrl | None`, which the alias docstring explicitly contrasts itself with
+- `S66` and which is correct for a model that carries absence as `None`. The alias is
+- `S66` for a surface that spells absence as the EMPTY STRING, and `ModelLicence` was
+- `S66` the field doing that with no bound at all.
+- `S67` Neither entry was wired, and in both cases wiring would have been wrong. The
+- `S67` localizable-field union has no correct annotation target: every site is narrower
+- `S67` by design, so applying it would widen a contract to accept kinds the surface
+- `S67` must refuse. The art-108 threshold has no value to compare against: the register
+- `S67` delegates eligibility to an operator flag and stores the input IVA borne rather
+- `S67` than the acquisition value, so the remedy is a schema change and a decision
+- `S67` about who judges the article, not a call site.
+- `S68` A near-miss worth recording: the first grep for idle-deadline handling returned
+- `S68` the AEAT BROWSER session, which refreshes its own `idle_deadline` against
+- `S68` `AEAT_SESSION_IDLE_TTL`. That is a different subject from the profile login
+- `S68` session, and reading it as the live path would have produced the right verdict
+- `S68` by the wrong evidence. The actual live path is the port method, called from the
+- `S68` login-session service and implemented in the storage adapter.
+- `S68` The port-facade cluster is now down to one symbol from four; three of the four
+- `S68` reversed on re-test, all for the same reason -- callers reach the behaviour
+- `S68` through the port object or a typed mapper rather than the module-level helper.
+- `S69` The "public types no caller constructs" cluster has now gone from seven symbols
+- `S69` to one. Six reversed, and the shape repeats: a type is unconstructed because a
+- `S69` DIFFERENT construct covers the same ground -- a live error type for the same
+- `S69` refusal, a whole tuple where a page envelope was drafted, a per-model version
+- `S69` Literal where a shared header was drafted, another implementer of the same
+- `S69` Protocol, an archive import path instead of a bundle registrar. The cluster's
+- `S69` premise, that an unconstructed public type marks capability the product does not
+- `S69` do, held for none of them.
+- `S70` The detector needed four rounds of tuning before it was worth shipping, and
+- `S70` each round is recorded in the module because each was a real false positive:
+- `S70` a repository passed as an annotated parameter is written through that
+- `S70` parameter name, not through a construction;
+- `S70` `x if x is not None else Repository()` and `x or Repository()` hide the
+- `S70` construction inside an `IfExp` or `BoolOp`, so the inject-or-default idiom
+- `S70` made the most carefully written repositories look unwritten;
+- `S70` mutation is not always the leading verb -- a repository in an atomic commit
+- `S70` exposes `to_secure_object_write`, which a prefix rule reads as a query;
+- `S70` excluding the defining module from writes hid every write helper sited beside
+- `S70` its repository, which is where they belong. The exclusion is right for reads
+- `S70` and wrong for writes.
+- `S70` The false-positive count fell 5 to 5 to 5 to 4 across those rounds while the
+- `S70` membership changed almost completely, which is the useful signal: a stable
+- `S70` count concealed that the detector was wrong about nearly every store.
+- `S70` Two of the four survivors are worse than unreached. `RetencionObservationRepository`
+- `S70` and `PercepcionObservationRepository` back filing-grade aggregation sources, and
+- `S70` their `save_observation` has no caller anywhere, so the aggregation reads an empty
+- `S70` store and contributes zero withholding where the honest answer is that the source
+- `S70` is absent.
+- `S70` ### Correction, 2026-09-06
+- `S70` Three of the four stores this record named were detector false positives, found
+- `S70` by extending the same detector rather than by reading the code again. Only
+- `S70` `ModeloDraftRepository` was genuinely unwritten.
+- `S70` `PurchaseInvoiceEvidenceRepository` is written at `evidence.py:425` through a
+- `S70` module-level accessor annotated with the repository type.
+- `S70` `RetencionObservationRepository` and `PercepcionObservationRepository` are
+- `S70` written by `persist_retencion_observations` and
+- `S70` `persist_percepcion_observations`, which the aggregate CLI calls. The detector
+- `S70` missed a method named `replace_observations` because `replace` was absent
+- `S70` from its mutating verbs.
+- `S70` Both gaps are closed and both are covered by the detector-teeth cases. The
+- `S70` declaration is now empty: every secure store the application reads has a
+- `S70` production writer.
+- `S70` The claim that two withholding stores fed filing-grade aggregations from empty
+- `S70` stores was wrong, and it was wrong in the direction that reads as most alarming.
+- `S70` A detector's first output is a hypothesis; this one needed six rounds before it
+- `S70` stopped producing false positives, and the count moved 5, 5, 5, 4, 2, 0.
+- `S71` One of the four stores was genuinely unwritten, and it was the consequential one.
+- `S71` The workflow gate built a filing draft, approved it, handed it to preflight and
+- `S71` dropped it, so the encrypted filing-draft namespace had no writer at all while
+- `S71` three surfaces rendered from it. The builder now persists the approved draft
+- `S71` before returning it. `draft_id` is a content address, so re-running the gate over
+- `S71` unchanged inputs rewrites one row; the test asserts that, and asserts the store
+- `S71` is empty before the run so a pass cannot be inherited from something else.
+- `S71` A persistence failure raises rather than being swallowed. A filing artefact that
+- `S71` silently failed to durably exist is precisely the absence its readers cannot
+- `S71` distinguish from an empty workspace.
+- `S71` The other three were detector false positives, and finding them was the more
+- `S71` useful half of the step. Extending the detector to follow a repository accessor
+- `S71` a function whose return annotation names the repository, which is how a
+- `S71` lazily bucket-bound store is reached -- cleared the purchase-evidence store and
+- `S71` proved the new draft write at the same time. Counting `replace_observations` as
+- `S71` a write cleared both withholding stores, whose single shared persist helper the
+- `S71` aggregate CLI calls. Adding a verb to the list retired a claim that a
+- `S71` filing-grade aggregation was reading an empty store.
+- `S71` Enrolment was the other real gap: the gate was a module nobody invoked. It is now
+- `S71` a `check-secure-store-write-path` recipe and an assertion inside the test lane
+- `S71` that already collects `dev/quality/tests`.
+- `S72` The sibling case in `test_adapters` writes a draft that is ALREADY stale and
+- `S72` proves the row renders. That cannot distinguish a queue which detects staleness
+- `S72` from one that only repeats what it was told, which is why the new cases write an
+- `S72` `APROBADO` draft and require the queue to reach the verdict itself.
+- `S72` The refresh is deliberately not written back. The module's own docstring says
+- `S72` its adapters are pure readers, and the verdict is derived state: freezing it into
+- `S72` the store on a read would make the stored status depend on when someone happened
+- `S72` to open the review queue. Only `APROBADO` drafts are recomputed -- every other
+- `S72` status either has no basis to compare or is already downstream of approval, and
+- `S72` the recomputation loads catalogues and a registry snapshot.
+- `S72` `describe_stale_reason` was the obvious next symbol to wire and I started to,
+- `S72` appending rendered reason phrases to the row's summary. That was wrong and the
+- `S72` type surface said so: `FindingReviewItem.summary` is a `Translatable`, an
+- `S72` abstract i18n KEY, so concatenating rendered text into it produces a value no
+- `S72` catalogue can translate. Reverted. The function belongs at the presentation
+- `S72` boundary that renders the row, which must first carry the stale reasons as
+- `S72` stable tokens. Its ledger entry now records that as a understood shape rather
+- `S72` than an open question.
+- `S73` This closes a chain that took three steps, each unblocking the next: nothing
+- `S73` wrote the draft store, so nothing could go stale; nothing recomputed the
+- `S73` verdict, so staleness could not be detected; and the row could not say what
+- `S73` moved, so detection was not yet useful. The whole approval-staleness lifecycle
+- `S73` is now reached.
+- `S73` The reasons ride on `FindingReviewItem` as enum tokens and are rendered only in
+- `S73` the queue projection. That placement is forced rather than stylistic:
+- `S73` `summary` is a `Translatable`, an abstract catalogue key, so the earlier attempt
+- `S73` to concatenate rendered phrases into it produced a value no catalogue could
+- `S73` translate. The projection is where a key becomes words, so it is the only place
+- `S73` a reason may be described.
+- `S73` Three sibling tests in `test_adapters` failed mid-step with
+- `S73` `ProfileCustodyRefusedError: KDF_RESOURCE_LIMIT` raised from
+- `S73` `open_test_profile_session`. Two of the three exercise transactions and invoices,
+- `S73` which this step never touched. All three passed when re-run alone. The refusal is
+- `S73` the memory-hard KDF declining to run under machine contention, not a regression.
+- `S73` The first projection test was written against `project_review_queue` inside a
+- `S73` profile session and hit the same refusal. Rewritten against `_to_row`, which is
+- `S73` pure: the assertion was always about rendering, not about storage, and routing it
+- `S73` through the capsule bought nothing but a dependency on available memory.
+- `S74` The duplicated `ctx.meta` key is the more interesting of the two. The
+- `S74` constant-agreement screen already sees it and reports one name with one value in
+- `S74` two modules WITHOUT judgement, which is the right default for ordinary
+- `S74` repetition. It is not ordinary for a meta-key protocol: the writer and the reader
+- `S74` agree only while both copies say the same string, and nothing fails when one is
+- `S74` edited. The owning module now holds the only definition.
+- `S74` `load_transactions` was the quieter half of the same shape. A grep for the name
+- `S74` returned the dead CLI copy alongside the live review-adapter function, which
+- `S74` takes different arguments and answers a different question.
+- `S74` Four cases in `test_root_guard_typed_projection.py` fail on this tree. A/B
+- `S74` against `git show HEAD:` of the same file reproduces all four identically, so
+- `S74` they are pre-existing and unrelated -- both deleted symbols had no caller, and
+- `S74` the failures concern requested-leaf binding not clearing between invocations.
+- `S75` Production now has ONE way into the bucket source mesh, and it returns the
+- `S75` diagnostics with the revision rather than beside it. The deleted wrapper's
+- `S75` hazard was its existence rather than its disuse: the shorter of two adjacent
+- `S75` names is the one a future caller reaches for, and it was the one that silently
+- `S75` dropped the advisories.
+- `S75` The shim forwards `**kwargs` rather than restating twenty-one parameters. A
+- `S75` second copy of the calculate signature is a second declaration of the contract
+- `S75` that can drift from the real one while still type-checking, and it would have
+- `S75` dragged twenty-one production type imports into test support. The wrapper's own
+- `S75` filing-repository default turned out to be redundant: the diagnostics variant
+- `S75` resolves the same default itself, so the delegation is exact.
+- `S75` Two failures were investigated and neither is this step's.
+- `S75` `test_modelo_349_refuses_intracom_ledger_rows_without_operator_rows` fails
+- `S75` identically against `git show HEAD:` copies of both changed files.
+- `S75` `test_derived_aggregate_override_real_path.py` first failed with
+- `S75` `LedgerEvidenceRecaptureRefusedError is missing a declared ErrorCode registry
+- `S75` entry` -- a peer was mid-write across `action_errors.py` and
+- `S75` `_domain_part2.py`, exactly the concurrency the error text names. It passed once
+- `S75` their tree settled.
+- `S76` This is a defect the campaign CREATED, and neither step that built it was wrong
+- `S76` on its own. Persisting the approved draft gave the staleness lifecycle a
+- `S76` subject. Recomputing the verdict in the review queue made the aged-out row
+- `S76` reachable. Together they compared a digest stamped over a transient empty
+- `S76` transaction catalogue against one recomputed from the bucket's real contents,
+- `S76` which disagree by construction wherever a ledger exists. Every stored draft
+- `S76` would have carried a permanent high-severity row that is always wrong.
+- `S76` The catalogue reaches approval as a fingerprint and nothing else, so approving
+- `S76` against the bucket's own catalogue does not give the calculation revision's
+- `S76` evidence a second owner. It makes the recorded digest mean what the refresh
+- `S76` already assumed it meant.
+- `S76` The first version of the test passed against the broken code. Its bucket had no
+- `S76` transactions, so the digest of a transient empty catalogue and the digest of the
+- `S76` bucket's own agreed by accident and the assertion held however the basis was
+- `S76` stamped. Seeding one transaction is what gave it teeth. An earlier draft of the
+- `S76` same test asserted through `drafts_pending`, whose empty result is the CORRECT
+- `S76` answer for a healthy approved draft and therefore cannot distinguish a working
+- `S76` invariant from a queue that saw nothing.
+- `S76` Two failures in `test_file_flow_verify.py` reproduce identically against
+- `S76` `git show HEAD:` of the gate and are unrelated: a modelo 180 revision lookup for
+- `S76` a year the registry does not declare, and a locale-key assertion.
+- `S77` The invariant belongs to the PAIR, not to either function, which is why nothing
+- `S77` caught the original defect: approval and refresh were each internally correct
+- `S77` and only their exchanged digest was wrong. Stating it as a rule over call sites
+- `S77` is what makes it checkable before a draft is ever stored.
+- `S77` `=None` is an offence too. Spelling an override out says the caller believes it
+- `S77` controls that axis, and the value a caller passes today is the one it stops
+- `S77` passing tomorrow; the honest way to self-load is to omit the argument. The teeth
+- `S77` case uses exactly that harmless-looking form and the gate still fires.
+- `S77` The module lives under `src/cadrumo/` rather than `dev/quality/` on purpose: the
+- `S77` default pytest `testpaths` covers `src/cadrumo`, so it runs in the normal lane
+- `S77` without any enrolment step, unlike the secure-store gate added earlier which
+- `S77` needed both a `just` recipe and a lane assertion before it could fail CI.
+- `S77` `draft_review.py` is skipped by the scan. It declares the override parameters and
+- `S77` forwards them between its own functions, so it is the boundary the rule protects
+- `S77` rather than a caller that can violate it.
+- `S78` The hook was not merely unused, it was hurting the only callers it had. `from
+- `S78` ... import PROFILE_KEYS` fires a module `__getattr__` at the IMPORTER's import
+- `S78` time, which is precisely the race `profile_keys()` was written to avoid and
+- `S78` which that function's own docstring describes. Two of the four importers bound
+- `S78` it at module level. They now call the function production already used.
+- `S78` Deleting an attribute that exists only through a hook has a long tail the
+- `S78` compiler cannot see. `__all__` advertised it, a `TYPE_CHECKING` block declared
+- `S78` it, the package docstring called the lazy resolution a deliberate ordering
+- `S78` contract, and five `:data:` references across three modules named it. The
+- `S78` ordering contract is real -- reading before registration raises -- but it lives
+- `S78` in the registration check, not in the lazy attribute. The docstring-reference
+- `S78` ratchet caught the dangling prose; nothing else would have.
+- `S78` `required_profile_keys` is reached only by tests and is deliberately kept. It is
+- `S78` the REQUIRED half of a symmetric pair whose OPTIONAL half is consumed in
+- `S78` production. Deleting one side leaves a registry that can report its optional
+- `S78` keys and not its required ones, which is a worse surface than an unused
+- `S78` function.
+- `S78` Renaming `PROFILE_KEYS` to `profile_keys()` collided with local variables of
+- `S78` that name in two of the four test modules, silently producing
+- `S78` `TypeError: 'set' object is not callable`. Imported under
+- `S78` `registered_profile_keys` there. A rename that turns a CONSTANT into a call has
+- `S78` to check for locals holding the lowercase form.
+- `S79` The gate had outlived its subject without failing. It was written to keep a
+- `S79` retreating mechanism honest while shipped package facades gave up their dispatch
+- `S79` maps one at a time, and its own docstring said that when the last map went the
+- `S79` file should be DELETED rather than left passing over an empty population.
+- `S79` Removing the profile-key registry's hook in the previous step took the last
+- `S79` shipped one, and the file kept passing -- because its non-vacuity guard asserted
+- `S79` only that SOME lazy facade was found, and `cadrumo.tests` keeps a deliberate,
+- `S79` permanent facade of its own. A gate protecting shipped code was green on a test
+- `S79` helper.
+- `S79` Deleting it was the documented end state but the wrong move, because the ruling
+- `S79` it enforced is permanent while the mechanism it watched is not: a package
+- `S79` namespace is inert, and PEP 562 resolution types every consumer's view of a name
+- `S79` as `object`. So the file now asserts the ABSENCE, which cannot go vacuous, with a
+- `S79` population floor so a scan that finds almost nothing fails rather than passes.
+- `S79` The two original checks are kept for the one permitted facade, because the drift
+- `S79` they catch is still possible there, and `_permitted_facade` refuses outright if
+- `S79` that facade ever stops dispatching -- the same trap, closed this time by a
+- `S79` failure rather than by a docstring.
+- `S80` The previous step found a gate that had lost its subject without failing, so
+- `S80` this one asked whether the shape repeats. Two probes, both negative. Thirty-nine
+- `S80` tree-scanning gates assert emptiness with no population floor, which is the
+- `S80` vulnerable shape; none of them names a directory that no longer exists. The
+- `S80` twelve literal paths that do not resolve are all synthetic fixtures inside
+- `S80` detector-teeth cases -- `_impostor.py`, `test_leftover.py`, `a.py` -- which is
+- `S80` the opposite of the defect: those gates plant a file that must not exist in
+- `S80` order to prove they can see one.
+- `S80` A negative result is the outcome, not a failure to find work. The lazy-facade
+- `S80` gate lost its subject because a RETIREMENT completed under it; a gate whose
+- `S80` population is a standing corpus cannot go vacuous the same way, and thirty-nine
+- `S80` missing floors are a shape rather than thirty-nine defects.
+- `S80` `hydrate_scenario_filing_period` is reached by both consumers its docstring
+- `S80` names, and a first pass concluded the opposite. The grep was truncated by
+- `S80` `head -4` and the four lines it printed were all from one test module. This is
+- `S80` the third time in this campaign that a truncated command has manufactured a
+- `S80` finding.
+- `S80` The period enumerators are kept whole. They form a two-by-two family of
+- `S80` {registry, filing} x {codes, patterns}, and the registry selector token-parity
+- `S80` test enumerates THROUGH `accepted_period_codes` so its coverage cannot drift
+- `S80` from the accepted set. Deleting the members with fewest callers would leave a
+- `S80` vocabulary that can enumerate its registry codes but not its filing patterns.
+- `S81` The gate's own contract says intentional entries "must remain reported" and are
+- `S81` "carried separately so they cannot disappear into the actionable backlog". They
+- `S81` are excluded from both failure directions, which means the passing path is the
+- `S81` ONLY path that can report them -- and it wrote nothing. Every green run in this
+- `S81` campaign said less than it knew.
+- `S81` This is the standing instruction in the campaign brief made structural: never
+- `S81` treat a green ratchet as a zero backlog. Until now that was discipline a reader
+- `S81` had to supply; the tool now supplies it.
+- `S81` Found while investigating a transient `ratchet=1` that was green on the next
+- `S81` run. The peer was mid-edit across several application modules, and a module in
+- `S81` flux can look unreachable for one pass. Chasing the flap is what surfaced that
+- `S81` the clean path is silent, which is the more durable finding: a gate printing
+- `S81` nothing is indistinguishable from a gate that did nothing, and I had been
+- `S81` reading exit 0 as evidence for several iterations.
+- `S82` The symbol ratchet had been red on MY debt. Six modules carried fewer exact
+- `S82` findings than recorded and three carried none, all of them modules this campaign
+- `S82` resolved -- `draft_review`, `calculation_actions`, `contribuyente.keys`,
+- `S82` `cli._common`, `cli._tty` among them. Paying a symbol down and not lowering the
+- `S82` entry is the unrecorded-shrinkage direction the shrink-only baseline exists to
+- `S82` catch, and I had been leaving it for several iterations while reporting the
+- `S82` module ratchet green beside it.
+- `S82` The two remaining regressions are not mine and are left named rather than
+- `S82` baselined: `recapture_ledger_filing_evidence`, from a peer's in-flight ledger
+- `S82` evidence recapture gate, and `non_filing_axis_parameters`, the standing
+- `S82` registry red. Resolving a peer's just-landed symbol would be absorbing their
+- `S82` work; the baseline's own instruction is to resolve rather than record, and
+- `S82` neither is mine to resolve.
+- `S82` The silence sweep across every `dev/quality` entry point found one real
+- `S82` recurrence and one false lead. `docstring_reference_ratchet` returned 0 without
+- `S82` writing while its baseline records four modules; it now names them.
+- `S82` `crud_contract_drift` also printed nothing, but it has no `main` at all -- it is
+- `S82` a library a test consumes, so an empty `python -m` run is the absence of an
+- `S82` entry point rather than a silent gate.
+- `S83` The ledger entry was wrong about where the defect was, and asking how the live
+- `S83` path achieves the thing the symbol names is what settled it. Nothing in the
+- `S83` shipped tree reads `PORTAL_REGISTRY` except the health row itself, which counts
+- `S83` its entries; no adapter navigates to a registered URL. So the drift events are
+- `S83` not un-passed, they are unobservable, and the module docstring already says the
+- `S83` observation is produced elsewhere under a live-read access gate that does not
+- `S83` exist yet. Staged capability, not missing wiring.
+- `S83` The real defect was one line away from the claimed one. The row reported
+- `S83` `drift_count: 0` with nothing beside it, which asserts a zero the product has
+- `S83` never measured -- the absent-versus-zero collapse this codebase refuses
+- `S83` everywhere else. It now reports `drift_evaluated: False` too. Severity stays
+- `S83` `OK`, because the question this check owns is whether the registry assembled,
+- `S83` and it did.
+- `S83` The control is what keeps the disclaimer honest rather than permanent: with an
+- `S83` observation supplied the flag must flip to True. Hard-coding False would
+- `S83` otherwise satisfy the offline case forever.
+- `S84` The entry said the caller was gone. It is not: `project_registered_values`
+- `S84` produces the mapping `entrypoints/tui/flows/app.py` threads through `FlowScreen`
+- `S84` and reads at line 1257 for the review overview's registered cell. Every link in
+- `S84` that chain exists except the composition that would pass it --
+- `S84` `select_flow_frontend` takes `registered_values` and has no shipped caller, and
+- `S84` no module outside the TUI package references `FlowScreen` or `run_flow_tui` at
+- `S84` all.
+- `S84` So the projection belongs to the frozen TUI cluster, and wiring the composition
+- `S84` is not this campaign's to do.
+- `S84` The module ratchet could not have reached this on its own, and should not be
+- `S84` changed to. Its transitive deferral is read from the live import graph, and a
+- `S84` supplier whose consumer does not import it YET supplies nothing -- a bound its
+- `S84` own docstring states deliberately, because loosening it would exempt the entire
+- `S84` backlog. The judgement is exactly what this ledger exists to carry, and the
+- `S84` ratchet's `frozen_prefixes` comment already names the shape: the cluster's
+- `S84` application-layer projections live outside the prefix because the dependency
+- `S84` direction requires it.
+- `S84` Fifty-five symbol decisions remain open. Every one is now a symbol-level
+- `S84` question; the module tier is finished.
+- `S85` A read-never-written store again, and again the reader was the honest half. The
+- `S85` hint exists to answer what the encrypted preference cannot: which language to
+- `S85` speak BEFORE the profile is unlocked.
+- `S85` `resolve_active_profile_output_language` falls back to it whenever no bucket
+- `S85` session is bound, and the reader fails soft on absence -- so while nothing wrote
+- `S85` it the fallback always returned `None`, and a language the operator deliberately
+- `S85` chose during setup reverted to the settings default on every pre-login surface,
+- `S85` with nothing above DEBUG saying so.
+- `S85` The custody port carried only the read. Adding the write and the clear beside it
+- `S85` is a symmetric completion rather than a new boundary: the port already owned
+- `S85` this exact artefact.
+- `S85` The mirror sits at `apply_profile_fact_changes` because that is the sole door
+- `S85` through which the preference can change, and it already special-cased the same
+- `S85` path to clear the locale cache -- so the mirror sits beside the invalidation it
+- `S85` belongs with rather than in a second place that could drift.
+- `S85` Clearing the preference clears the hint, which is what stops the two disagreeing
+- `S85` about an absence, and is why both the writer and the clear were in the cluster.
+- `S85` The mirror swallows failure for the same reason the read does: it carries a
+- `S85` convenience, and a hint that could not be written must not fail the fact write
+- `S85` that owns the real value.
+- `S85` This is the shape the secure-store gate was built for, and that gate could not
+- `S85` see it: a file-backed hint is not a `SecureBoundRepository`, so the write-path
+- `S85` scan does not reach it.
+- `S86` The previous step closed a read-never-written pair the secure-store gate cannot
+- `S86` reach, so this one asked how many more the tree holds. Five, and four are
+- `S86` already in this ledger with evidence matching what the sweep independently
+- `S86` concluded -- the mnemonic decoder in particular, where the sweep's own reading
+- `S86` (the phrase is handed on as an opaque secret and never turned back into
+- `S86` entropy) is the recorded rationale almost word for word. The fifth, `load_trace`,
+- `S86` is not an exact finding: traces are written by `run_context` and read by a human
+- `S86` outside the product.
+- `S86` No unrecorded debt, and that is the useful result rather than a disappointing
+- `S86` one. An independently derived detector rediscovering only adjudicated symbols is
+- `S86` evidence the shape is covered.
+- `S86` No gate was added, deliberately. A fail-closed check over this population could
+- `S86` only ever report symbols that already carry a decision, and a check that cannot
+- `S86` change state is not a signal -- it is a second place for the same facts to
+- `S86` drift.
+- `S86` The detector's first run was almost entirely false positives and the fix was one
+- `S86` this campaign has already made once: excluding the DEFINING module from the call
+- `S86` scan. A same-module caller is a real caller, and `read_registry_identity_stamp`
+- `S86` and `save_run` were both reached from inside their own file. Handing a function
+- `S86` to a collaborator counts too -- `read_draft=read_extraction_draft` is a use no
+- `S86` call-node scan sees. Membership changed almost completely between runs while the
+- `S86` count moved six to five, which is the signal to distrust: diff the members, not
+- `S86` the number.
+- `S87` The uncomfortable finding is about this campaign's own method. I have been
+- `S87` validating the ledger with a script written here -- closed class vocabulary,
+- `S87` evidence present, no symbol in two clusters, cited paths resolve -- and reporting
+- `S87` it as "ledger validated". The OWNING gates check different things, and against
+- `S87` them thirteen clusters authored here were malformed: every one was missing the
+- `S87` required `area` key, which the staleness check reads before it can compare a
+- `S87` cluster to the tree. That check has therefore been erroring rather than passing
+- `S87` for as long as those entries have existed.
+- `S87` Running the owning gate found three more things it had been unable to reach.
+- `S87` Three clusters whose work this campaign finished were never marked `resolved`
+- `S87` `discard_checkpoint`, `OptionalSourceUrl`, `ModeloDraftBuilderAdapter` -- so
+- `S87` the ledger went on asserting outstanding work on symbols the audit had stopped
+- `S87` reporting. Five clusters had their `symbols` list emptied to mean "done", which
+- `S87` is not how this file records that: `resolved = true` is, and a cluster must name
+- `S87` at least one symbol. Two of those were never symbol adjudications at all but
+- `S87` step notes, and their exec records carry them; they are deleted.
+- `S87` The collaboration-audit entry had gone stale in prose while its symbol list
+- `S87` stayed honest. It described six emitters as reached by nothing; five were wired
+- `S87` earlier in this campaign and removed from the list at the time, and only the
+- `S87` review-only-workspace emitter remains -- which is not an independent decision,
+- `S87` because nothing opens such a workspace, so there is no moment at which to emit.
+- `S87` The symbol-level gate could not catch that: it compares the list, and the list
+- `S87` was right. Prose is authorial.
+- `S87` The citation gate I added earlier had become unsatisfiable and is narrowed
+- `S87` rather than weakened. It required EVERY cited file to name a subject, which
+- `S87` forbids two honest shapes: a citation to a CONSUMER, where "nothing reaches
+- `S87` this" is actually proved, and any citation at all from an entry whose symbols
+- `S87` list is empty. It now requires every cited file to exist, and at least one to
+- `S87` name a subject -- so the defect it was written for, an entry citing only a
+- `S87` sibling, still fails. Two teeth cases added, including the bound that emptying
+- `S87` `symbols` does not licence a dead path.
+- `S87` `test_reachability_classification.py` still fails on fourteen orphaned test
+- `S87` modules that are neither entered nor under a classified module. A/B against
+- `S87` `git show HEAD:` of the ledger reproduces it exactly, so it is pre-existing and
+- `S87` not this step's; it is peer test work outrunning the ledger's orphaned-test
+- `S87` section.
+- `S88` The previous step repaired the ledger's schema, which let the owning gate run
+- `S88` for the first time; this step pays what it then reported. Fourteen orphaned test
+- `S88` modules were neither entered nor under a classified module, which means nobody
+- `S88` had decided their fate -- the exact condition the gate exists to refuse.
+- `S88` None needed judgement invented for it. The audit already records, per orphaned
+- `S88` test, the module or symbol subjects it exercises, so the anchor is derivable
+- `S88` rather than assigned: four follow `core.compatibility_lifecycle`, two follow the
+- `S88` operator-surface CRUD contract, and the remaining eight follow an unused symbol
+- `S88` in a named module. Entered as derivative, which is what the whole non-TUI
+- `S88` orphaned-test population is -- each retires with its subject and carries no
+- `S88` independent remedy.
+- `S88` Two steps in a row have found debt that existed only because the owning gate was
+- `S88` not being run. The schema errors hid the coverage gap, and the coverage gap
+- `S88` would have hidden the next thing. Running the gate is the check; a script that
+- `S88` validates what its author remembered to check is not.
+- `S89` The sweep found nothing, which is the point: the previous two steps' repairs
+- `S89` were the debt, and running every owning gate rather than the one just touched is
+- `S89` now the check that says so.
+- `S89` The tty cluster carried two claims and both were wrong, in different ways. It
+- `S89` said no command refuses a request needing interactivity when stdin is not a tty.
+- `S89` One does, through a construct that considers strictly more:
+- `S89` `detect_frontend_capability` returns `NON_INTERACTIVE` when stdin OR stdout is
+- `S89` not a real tty or the host advertises a dumb terminal, and `_tui_policy.py`
+- `S89` refuses on that verdict. A helper displaced by a richer rule looks identical to
+- `S89` a helper nobody wired.
+- `S89` Its other claim -- that the localised usage-error path passes Click's own
+- `S89` `show_color`, so the project colour settings reach nothing -- was true when
+- `S89` written and was fixed early in this campaign. `should_use_color` was removed
+- `S89` from the symbols list at the time; the prose was not. That is the second cluster
+- `S89` this campaign has found stale in exactly that way, and both times the gated half
+- `S89` stayed honest while the ungated sentence drifted.
+- `S89` Split rather than reclassified, because the two remaining symbols are different
+- `S89` classes: the refusal is superseded, while the progress rule is staged -- no
+- `S89` module under `entrypoints` constructs a rich progress widget at all, so the
+- `S89` question it answers is never asked, and it is the rule that would govern the
+- `S89` widget on the day one lands.
+- `S89` The citation gate refused the first draft for citing only the DISPLACING
+- `S89` constructs and never the subject's own home. That is the defect it was written
+- `S89` for, caught on my own prose.
+- `S90` The sweep was a negative result and its limitation is the more useful half. It
+- `S90` looked for open clusters whose unreached-claim sentence names a symbol the audit
+- `S90` reports as live, and found five, all legitimate: each names the DISPLACING or
+- `S90` contrasting construct, which is what such a sentence is made of. An earlier
+- `S90` attempt matched prose against the ledger's own symbol lists and returned zero by
+- `S90` construction -- the defect is a sibling REMOVED from a list, which leaves no
+- `S90` trace in the ledger to match against. Both real instances were found by reading,
+- `S90` and prose drift stays authorial.
+- `S90` What the sweep did surface is that its subject carried a false docstring. The
+- `S90` filing-status token said it IS the canonical live-read token used by mounted
+- `S90` live command families. None reads it; outside its module the only true reference
+- `S90` is the locale-contract test. A docstring asserting a wiring the tree does not
+- `S90` have is a claim a reader has no way to check, and it outranked the code for as
+- `S90` long as it stood.
+- `S90` Corrected rather than deferred. Whether to route the live families through the
+- `S90` token or withdraw it is an owner's call and stays open, but the false half did
+- `S90` not have to wait on it. Reclassified staged rather than orphaned: the vocabulary
+- `S90` the token declares is the one a live family would report against, and its single
+- `S90` member names the only status such a family could report today.
+- `S91` Two more docstrings asserting a consumer that does not exist, found by scanning
+- `S91` for the shape the filing-status token carried. `assert_corpus_clean` called
+- `S91` itself the operator-facing assertion used by the CI gate; no gate calls it, only
+- `S91` its own package test. `first_slice_target_casillas` said the snapshot-time
+- `S91` referential-integrity gate uses it to confirm every routing target is a real
+- `S91` casilla; that confirmation IS performed, by the package's routing test, not at
+- `S91` snapshot build. The second correction is the more useful, because the check
+- `S91` exists and the sentence named the wrong runner -- a reader trusting it would
+- `S91` believe a snapshot build catches a casilla removal that in fact only a test run
+- `S91` catches.
+- `S91` The scan is NOT shipped as a gate. Six hits, and three are grammatical: the
+- `S91` claim verb attaches to a different noun, as in "every binding source used by the
+- `S91` revision", which describes the sources rather than a consumer of the function.
+- `S91` A fourth matched my own corrected docstring, because quoting a false sentence in
+- `S91` order to retract it reads exactly like making it. Half the population being
+- `S91` noise is the answer to whether this should fail closed.
+- `S91` The shape it does catch is worth carrying by hand: a docstring is the one claim
+- `S91` in the tree that no gate reads, and an unreached symbol is exactly where an
+- `S91` unchecked claim survives longest.
+- `S92` The entry said the canonical home had been displaced by private copies in the
+- `S92` modelo command specs. That was the wrong reading and checking the boundary rule
+- `S92` settled it: `config/_spec_policies.py` is a leading-underscore module, so it is
+- `S92` private to the config package and was never a legitimate source for the modelo
+- `S92` package. The modelo specs declaring their own is CORRECT, not a displacement.
+- `S92` What the five actually were is declarations the config package does not use.
+- `S92` The comparison that made it obvious is in-package consumer counts: the module's
+- `S92` other policies carry between two and twenty-six each, and these carried zero.
+- `S92` Their only reader was a hand-listed inventory asserting that profile-bound
+- `S92` policies declare custody authority. That test still covers the seven policies
+- `S92` that are used, so deleting the five costs no coverage -- an inventory test over
+- `S92` a module's own declarations shrinks with the module by construction.
+- `S92` Five symbols in one step, the largest movement in many, and it came from
+- `S92` re-reading a ledger entry rather than from finding new debt. A wrong framing had
+- `S92` made the cluster look like an architecture question when it was a deletion.
+- `S92` The symbol ratchet then showed two spent entries: this deletion, and the
+- `S92` output-language hint wired two steps ago whose entry I never lowered. Removed
+- `S92` both. That is the second time this campaign has owed the ratchet bookkeeping for
+- `S92` work already done, which is the argument for finishing it in the same step.
+- `S93` The sibling sweep is a negative result and worth recording as one. It compares
+- `S93` each open finding against the in-package consumer counts of its own module's
+- `S93` other public names, which is exactly what exposed the execution-policy cluster
+- `S93` last step -- siblings at two to twenty-six, findings at zero. At that threshold
+- `S93` nothing remains: the execution-policy cluster was the only one of its shape, and
+- `S93` the residue is not unused declarations sitting beside well-used siblings. The
+- `S93` scan located forty-one of the forty-six open symbols, so the silence is not
+- `S93` vacuity.
+- `S93` The public-types cluster went seven to one across this campaign and every
+- `S93` reversal was the same shape, a different construct covering the ground. The last
+- `S93` member is not. `ModeloWorkspaceAtomicProjectionPortV1` is the port its own
+- `S93` module says the eight envelopes exist to satisfy; the comment above them states
+- `S93` each is a thin adapter that exists BECAUSE the port binds its projection to a
+- `S93` pydantic model.
+- `S93` Structural typing is why nothing reached it and also why nobody noticed the
+- `S93` claim was unchecked: the realizations conform without naming it, so one could
+- `S93` rename a member and the comment would keep reading true.
+- `S93` The gate derives the required members from the Protocol rather than restating
+- `S93` them. A copied member list is a second declaration of the same contract and
+- `S93` drifts the moment the port gains a member -- the same reasoning that kept the
+- `S93` calculate shim forwarding `**kwargs` instead of repeating twenty-one parameters.
+- `S93` `__protocol_attrs__` was the obvious derivation and `ty` rejects it as an
+- `S93` unresolved attribute, being a CPython implementation detail. Narrowed to
+- `S93` `vars(port)` filtered to public names, which the checker models and which reads
+- `S93` better anyway.
+- `S94` The sweep looked for the shape the workspace port turned out to be: an unreached
+- `S94` Protocol with two or more members that shipped classes satisfy. Five hits, one
+- `S94` of them the port gated last step, which is the control that says the scan
+- `S94` reaches what it should.
+- `S94` `GeneratedArtifactInspection` was recorded as having NO implementer at all --
+- `S94` the entry said it requires a `sources` member no class in the shipped tree
+- `S94` provides. Two classes in its own module provide it and every other member.
+- `S94` The likely origin of that error is worth keeping, because a first draft of this
+- `S94` step's gate reproduced it exactly. Seven of the contract's eight members are
+- `S94` bare annotations and only `sources` carries a body, so a derivation reading the
+- `S94` class dictionary alone sees ONE member. `vars(protocol)` is the obvious
+- `S94` derivation and it is wrong for any Protocol that declares fields; the correct
+- `S94` one unions `__annotations__` with `vars`. The previous step's gate is hardened
+- `S94` the same way -- it happened to be right, because that port declares all three
+- `S94` members with a body, but it was right by luck.
+- `S94` Three unreached Protocols remain from the sweep and are left alone: they are
+- `S94` single-implementer contracts whose one conformer is named in their own module,
+- `S94` which is a weaker case for a gate than a contract several shapes are written to.
+- `S95` The recurrence check was quick and negative: no open cluster still makes a
+- `S95` structural-absence claim, so the `vars`-only derivation that produced the false
+- `S95` "no implementer" entry has no other victim in the ledger.
+- `S95` The escaso-valor threshold is a genuine owner decision and stays open. The
+- `S95` register takes `art108_elegible` as an operator-supplied boolean and stores
+- `S95` `cuota_soportada` rather than an acquisition value, so there is nothing to
+- `S95` compare the figure against; applying it means a schema change AND a ruling on
+- `S95` whether the product judges art. 108 or the operator does.
+- `S95` What did not have to wait on that ruling is the silence. The constant sat in
+- `S95` `external_constants.py` among thresholds that ARE enforced, with nothing
+- `S95` distinguishing it, and a legally grounded figure in that file reads as applied.
+- `S95` A reader had no way to learn otherwise short of grepping for callers. Its
+- `S95` comment now says it is declared and not yet applied, and why.
+- `S95` That is the third time this split has paid: the wiring question and the truth of
+- `S95` the claim are separable, and the second half is almost always fixable now. Here
+- `S95` it matters more than usual, because the claim is about tax law -- the file's
+- `S95` whole purpose is to be the place a reader trusts for what the product applies.
+- `S96` The rule is a disjunction and both halves are honest outcomes: a constant is
+- `S96` either referenced by shipped code, meaning the product applies it, or it carries
+- `S96` a ledger entry saying why it does not yet. What is refused is the third state, a
+- `S96` figure with neither, which asserts an enforcement nobody performs. No other gate
+- `S96` sees that: the constant imports, and every test of the file passes.
+- `S96` The sweep found eight unapplied constants and all eight already adjudicated --
+- `S96` the maternity-deduction set, two thresholds, the BOE encoding choices and the
+- `S96` escaso-valor figure closed last step. So the gate starts green over a real
+- `S96` population of sixty-three rather than over a population I had just repaired,
+- `S96` which is the difference between a gate and a ratchet on my own work.
+- `S96` A first draft reported FOURTEEN unapplied, and the six false ones taught the
+- `S96` detector rule worth keeping: `from x import RATE as _RATE` binds `_RATE` while
+- `S96` REFERENCING `RATE`, so recording only the bound name hides every aliased
+- `S96` consumer. Six of the fourteen were aliased at their single call site. The scan
+- `S96` now records both halves of an alias, and one of the teeth cases pins that
+- `S96` behaviour so it cannot regress.
+- `S96` This is the fourth distinct detector bug this campaign, and they rhyme: each
+- `S96` came from a resolution rule that is right for the common shape and silently
+- `S96` wrong for one the codebase actually uses.
+- `S97` The integrity check came first, because the aliased-import bug found last step
+- `S97` is exactly the kind that corrupts a "no caller" claim. Every open ledger symbol
+- `S97` was re-counted with alias-aware resolution, recording both halves of every
+- `S97` import: none has a production reference outside its own module. The ledger's
+- `S97` claims survive the bug that could have invalidated them.
+- `S97` The sectoral prorrata cluster is confirmed, not reversed, and the shape is worth
+- `S97` naming. Its module is MAJORITY LIVE -- six of its public functions are reached
+- `S97` by the calculation path -- and only the differentiated-sectors regime is not. A
+- `S97` reader of a module that is mostly wired has no way to tell which part is not,
+- `S97` and the consequence here is a deduction: a taxpayer whose activities form
+- `S97` distinct sectors deducts without the separation art. 9.1.c requires.
+- `S97` So the art. 9.1.c paragraph now says the sectoral regime is declared and not yet
+- `S97` reached. Wiring it is a filing-grade capability decision and stays open, and
+- `S97` that is the fourth time the wiring question and the truth of the claim have come
+- `S97` apart in this campaign with the second half fixable immediately.
+- `S97` A partially-live module is a worse place for an unreached path than a fully dead
+- `S97` one, because the surrounding evidence argues against the reader noticing.
+- `S98` Ranking the residue by how well its module hides it turns a flat backlog into an
+- `S98` ordered one. Sixteen open findings sit in modules at least sixty percent live,
+- `S98` and the ranking is the useful part -- it says where a reader is most likely to
+- `S98` be misled, which is not the same as where the largest cluster is.
+- `S98` The ordered list, live fraction first:
+- `S98` 97% `application.user_profile.custody_ports` -- one port facade
+- `S98` 95% `application.live.filed_data_capture` -- two producers replaced by defaults
+- `S98` 93% `application.operator_surface.models`, `application.modelo.operation_definitions`
+- `S98` 90% `domain.transactions.retencion_parameters` -- the sectoral rate set
+- `S98` 89% `application.user_profile.cotejo_apply`
+- `S98` 88% `adapters.persistence.storage.custody.capsule`
+- `S98` 87% `domain.calculations.registry.handoffs`
+- `S98` 83% `domain.iva.prorrata` -- annotated in the previous step
+- `S98` 82% `domain.calculations.registry.censo_modelos`, `application.live.iva_remote_state`
+- `S98` 77% `core.corpus_manifest.manifest` -- annotated two steps ago
+- `S98` 75% `adapters.persistence.storage.schema_lineage`
+- `S98` 74% `domain.calculations.registry.live_parity`
+- `S98` 73% `application.repair_integrity`
+- `S98` 60% `application.modelo._review_package_review_only_workspace`
+- `S98` The sectoral withholding set was taken first on stakes rather than rank. Its
+- `S98` professional and statutory siblings and the supported-rate ceiling all reach the
+- `S98` withholding inference; it alone is consulted by nothing, so a retención matching
+- `S98` 2 % or 1 % is classified by whatever general rule applies rather than as an
+- `S98` art. 95.4/95.5/95.6.1.º apartado. The docstring now says so.
+- `S98` No gate was added for this shape. Checking it mechanically would mean matching
+- `S98` prose for a marker phrase, which is the brittleness rejected for the
+- `S98` docstring-claim scan; the ranking is a worklist, not a rule.
+- `S99` Working the hiding-rank list in order, this entry was tested for wirability
+- `S99` before being annotated, because a cluster described as "replaced by constant
+- `S99` defaults" reads like a one-line fix. It is not, and the reason is the same on
+- `S99` both halves: the inputs do not survive the pipeline.
+- `S99` `classify_register_scoping_signal` needs the availability report.
+- `S99` `FiledHistoryDiscoveryReport` consumes it to build itself and does not retain
+- `S99` it, so classifying at the composition site means carrying it on that model.
+- `S99` `filed_period_selection_rows` needs `declarations_by_pair` and `selected`,
+- `S99` neither of which the capture stage passes up. Both are model changes and stay
+- `S99` open.
+- `S99` What an operator sees meanwhile is worth stating exactly, and now is: an always
+- `S99` empty selection table, and `INCONCLUSIVE` — a hedge, so not untrue, but the
+- `S99` LEAST informative one, reported even where the discriminator could say more.
+- `S99` That distinction is why this is not simply a false claim like the filing-status
+- `S99` token was; the value is honest and uninformative rather than wrong.
+- `S99` The five failing tests are pre-existing. A/B against `git show HEAD:` of the
+- `S99` only file this step changed gives the identical five, and the failure is an
+- `S99` operation receipt carrying no `result_ref`, which is peer work in flight on the
+- `S99` operation-definitions surface.
+- `S100` Top of the hiding-rank list, and the sibling comparison settled it in one
+- `S100` measurement: the record-crypto accessor carries four production consumers,
+- `S100` bucket storage three, the output-language hint two, and this one zero. Nothing
+- `S100` reaches the `secure_object_inventory` port method directly either, so the whole
+- `S100` inventory path through the application boundary is unreached.
+- `S100` That reads as a displaced facade -- the shape the profile-key alias turned out
+- `S100` to be -- and it is not. The operation IS performed:
+- `S100` `adapters/persistence/profile/participation_index.py` calls `list_keys` straight
+- `S100` on its own `SecureObjectRepository`. An adapter using persistence it owns is
+- `S100` allowed and is not a boundary violation, so what the measurement actually shows
+- `S100` is that no APPLICATION module lists namespaces, and this is the port through
+- `S100` which one would.
+- `S100` Staged rather than orphaned or superseded, and the distinction is load-bearing:
+- `S100` a superseded facade should be deleted, a staged port should not, and the same
+- `S100` zero-consumer count supports both readings until you find where the work is
+- `S100` actually done.
+- `S100` The module is ninety-seven percent live, which is exactly why the gap is
+- `S100` invisible from inside it, so the accessor's docstring now states that it is
+- `S100` declared and not yet reached and names the adapter doing the work.
+- `S101` The order of checks mattered more than the deletion. The evidence said the three
+- `S101` PublicResultV1 models had left this cluster because their projectors construct
+- `S101` them, and a construction counts as a use -- which would mean deleting the
+- `S101` projectors newly orphans three models and trades one finding for another. It
+- `S101` does not: each model is also bound as `result_type` on a live
+- `S101` `OperationDefinition`, so it stays reached on its own. Checking that BEFORE
+- `S101` deleting is what made this a clean three rather than a swap.
+- `S101` The displacement itself was already named rather than guessed: the command table
+- `S101` declares the verify leaf result schema as a `DeferredTarget` on
+- `S101` `entrypoints/cli/_modelo_payloads`, and the two shapes diverge deliberately --
+- `S101` the payload carries resolved and missing casilla ids, findings, run_at and
+- `S101` verified_by where the PublicResultV1 carries counts. The richer contract is the
+- `S101` one that ships.
+- `S101` The symbol-ratchet entry went five to two in this step. Twice before this
+- `S101` campaign has owed that bookkeeping to a later sweep; doing it here cost nothing.
+- `S101` The citation gate then refused the entry, correctly and for a shape I had only
+- `S101` half-anticipated. Resolution BY DELETION leaves a citation no live file can
+- `S101` satisfy -- the same impossibility as the empty-symbols case, arriving by a
+- `S101` different route. The subject rule now steps aside for a `resolved` entry, as the
+- `S101` staleness check already does, while existence is still required of every
+- `S101` citation; two teeth cases pin both halves.
+- `S101` Four tests in the modelo operation suite fail identically with and without this
+- `S101` change. Peer work in flight on the operation-definitions surface, consistent
+- `S101` with the receipt failures seen in the previous step.
+- `S102` A structural fact worth recording before the annotation: NO open cluster is
+- `S102` classed `superseded` any more. The forty-one remaining decisions are thirty-three
+- `S102` `should-be-live` and eight `staged-capability`. Every finding this campaign could
+- `S102` resolve by deleting displaced code has been deleted, and what is left needs a
+- `S102` capability decision or a wiring change rather than a judgement call. That is why
+- `S102` recent steps have been making the code honest rather than shrinking the count:
+- `S102` the count is not the thing left to move.
+- `S102` The custody entry is sharpened rather than reclassified, and the sharpening is a
+- `S102` sibling comparison. `replace_committed_profile_custody_envelope` sits directly
+- `S102` below the unreached `replace_committed_profile_custody_data_file`, carries two
+- `S102` production consumers because passphrase rotation performs it, and shares the CAS
+- `S102` design exactly. Same module, same guard, one wired and one not.
+- `S102` So no product operation replaces a committed custody DATA file, and a record
+- `S102` needing correction has no guarded path to it -- the guard being precisely the
+- `S102` unreached function, which refuses unless the capsule is recognized and the digest
+- `S102` matches. That connects to the repair-remediation decision this ledger records
+- `S102` separately, and it stays open with it.
+- `S102` Both docstrings now name the reached sibling. Naming what IS wired beside what is
+- `S102` not is the form these annotations should take: a reader who can see the contrast
+- `S102` does not have to take the claim on trust.
+- `S103` The finding here is about the ledger's own shape as much as the code. This
+- `S103` cluster was classed `should-be-live` and carried three symbols, and one of them
+- `S103` was not that class at all: `relation_is_consumed` returned
+- `S103` `bool(relation_consumption_channels(relation, index))` and nothing more. Its
+- `S103` sibling carries six production references -- `relation_prefill`, `work_review`
+- `S103` and `source_connectivity` each need the CHANNELS rather than a boolean, which is
+- `S103` exactly why the predicate collected only tests.
+- `S103` So a cluster's class can hide a member that belongs elsewhere, and the sibling
+- `S103` comparison is what surfaced it. The predicate is deleted with its `__all__`
+- `S103` entry and the two registry tests now call the function it wrapped; the cluster
+- `S103` keeps the two audits it was actually about.
+- `S103` That comparison sharpens what remains, too. Relation consumption IS computed
+- `S103` live, so the audits are not a missing capability to compute anything -- they are
+- `S103` a missing audit OVER a live computation, which is a different and smaller ask
+- `S103` than the entry implied.
+- `S103` One failure in the repointed modules reproduces identically against
+- `S103` `git show HEAD:` of all three changed files.
+- `S104` The sweep generalises the previous step: an unreached function whose entire body
+- `S104` delegates to a name that IS reached elsewhere. Twenty-one hits, and twelve
+- `S104` delegate to builtins -- `tuple`, `dict.get`, `frozenset`, `re.fullmatch` -- which
+- `S104` is noise, since wrapping a builtin is not displacement. The rule to keep is that
+- `S104` the delegation target must be project-owned.
+- `S104` Two of the remaining nine were false on reading, and both taught the same thing:
+- `S104` a single call in the body is not the same as a pure delegation.
+- `S104` `render_fixed_width_export_record_payload` appends the record's line terminator
+- `S104` to what it delegates to, and `required_supply_nature_for_rule` distinguishes
+- `S104` "not grounded" from "grounded and silent" with its own `Raises` clause. Both add
+- `S104` behaviour the target does not have.
+- `S104` The real hazard is the prorrata seed variant, and it is the calculate-wrapper
+- `S104` shape again: it returned only the seed and dropped the operator-facing blocker
+- `S104` and advisory findings, its own docstring told the reader to call the other
+- `S104` function when those are needed, and nothing called it -- not production, not
+- `S104` dev, not tests -- while the evaluator it wrapped is invoked by the register CLI.
+- `S104` Deleted, with the two production docstrings that pointed at it repointed.
+- `S104` `registry_snapshot_id_for` was left alone: it is reached by a dev parity harness
+- `S104` and a registry test scenario, which is harness-code rather than dead.
+- `S105` The sweep is the previous one sharpened to the body shape the three deletions
+- `S105` actually shared: `return sibling(...).attr` or `return bool(sibling(...))`.
+- `S105` Nineteen exist in the shipped tree and SIXTEEN are reached and entirely
+- `S105` legitimate -- `default_storage_root`, `get_active_master_key`,
+- `S105` `verify_modelo_revision` among them. A narrowing accessor is a normal thing to
+- `S105` write when something uses it, so the shape alone is not a defect and the
+- `S105` intersection with unreached is what makes it one. Three qualify.
+- `S105` One of those three is an entry a previous pass of mine got wrong, and how it was
+- `S105` wrong is the durable part. `required_supply_nature_for_rule` carries a `Raises`
+- `S105` clause distinguishing a rule that is not grounded from one grounded and silent,
+- `S105` and I read that as behaviour it adds. The clause documents what the CALLEE
+- `S105` raises. Its body is one line: `place_of_supply_rule(rule_id, on=on).supply_nature`.
+- `S105` Reading the body settled in a line what the docstring had argued the other way,
+- `S105` which is the same trap recorded earlier in this campaign when a module docstring
+- `S105` argued for a duplicate guard the action already performed. A docstring is
+- `S105` evidence about intent, never about behaviour.
+- `S105` The rule resolver carries six production references and the wrapper's four
+- `S105` consumers were all tests, which now read the field at the call site. The two
+- `S105` remaining unreached narrowings, `is_active_censo_modelo` and
+- `S105` `serialize_carried_objects`, are recorded for a later step rather than swept up
+- `S105` here: each has three to five test consumers to repoint, and one already belongs
+- `S105` to a censo cluster whose other members need their own re-test.
+- `S106` I broke the docstring-reference ratchet in the previous step and shipped it. The
+- `S106` deleted place-of-supply wrapper was named in its own module docstring, and the
+- `S106` sentence explaining refusal-rather-than-a-guess went on citing it. Worse than
+- `S106` the breakage is that I had seen a red from that gate one step earlier, re-ran
+- `S106` it, saw green, and moved on -- the two runs were not measuring the same thing
+- `S106` and I treated the disagreement as noise. A red that disappears on a re-run is a
+- `S106` question, not an answer. The sentence now describes the field on the rule rather
+- `S106` than the deleted accessor, and the ratchet is green.
+- `S106` The custody-carry narrowing is the fourth findings-discarding variant this
+- `S106` campaign has removed and the strongest of them. It dropped the coverage manifest
+- `S106` AND the refusal beside it: the live `build_secure_object_custody_payload` returns
+- `S106` the rows with their exact namespace-coverage fact and raises `ProfileExportError`
+- `S106` when a FULL profile carries unclassified namespaces. A caller reaching for the
+- `S106` shorter name got rows back where the product refuses.
+- `S106` Its target's VISIBILITY changed where the tests point. `_carry_material` is
+- `S106` private, so deleting the wrapper and sending tests there would have pushed them
+- `S106` onto a private name -- the opposite of the boundary rule. They point at the
+- `S106` public payload builder instead and discard the manifest explicitly at the call
+- `S106` site, which is the honest shape: the discarding is now visible in the test
+- `S106` rather than hidden in a function.
+- `S107` The detector was wrong before it was right, and both false positives were
+- `S107` caller-search scoping. Its first run reported four offences; three were real
+- `S107` callers it could not see. `check_m303_annual_orden_manifest` is imported and
+- `S107` called by `dev/registry/analysis/m303_orden_anual.py`, which the scan never
+- `S107` looked at because it searched only the tree that ships the definitions.
+- `S107` `generate_m303_annual_orden_manifest` and `read_total_system_memory_bytes` are
+- `S107` called from inside their own defining modules, which the scan skipped on the
+- `S107` assumption that an owner cannot be its own consumer. Both scoping rules are now
+- `S107` regression-tested rather than merely fixed.
+- `S108` The two failures in `test_resolution_defers_capabilities.py` are pre-existing and
+- `S108` not caused by this change. They were reproduced in a detached baseline worktree
+- `S108` checked out at the commit preceding the repoint, with the `command_graph` alias
+- `S108` still present: the same two cases fail there, 2 failed / 14 passed. The baseline
+- `S108` worktree was created for the comparison and removed afterwards.
+- `S108` `dev/quality/unconsumed_export_ratchet` remains red on one entry,
+- `S108` `application/modelo/edit_services.py`, introduced by a peer commit retiring the
+- `S108` edit facade. It is left unabsorbed rather than recorded, so it stays visible to
+- `S108` its owner. Every entry this campaign spent was lowered or removed in this step.
+- `S109` The devtools classification was written on a false premise and corrected before
+- `S109` the step closed. The first evidence claimed `modelo_fixtures` was design-time
+- `S109` authority read by `dev/tui/_coverage.py` and `dev/tui/_harness.py`; the ledger
+- `S109` citation gate refused it, and it was right -- those files name sibling devtools
+- `S109` modules and never this one. Its only reader was its own test. The module was
+- `S109` wired into `SURFACES` instead of classified, so both the module row and its
+- `S109` orphaned-test row were removed rather than kept.
+- `S109` The reach this achieved is `module-exec-only`, not full runtime reachability:
+- `S109` the devtools package is entered through `python -m`, which the audit roots
+- `S109` separately from the console scripts. Eight devtools modules moved from
+- `S109` `unreachable` to `module-exec-only` on this change, `modelo_fixtures` among
+- `S109` them. An earlier note in this record said `surfaces.py` was reachable; that
+- `S109` was imprecise and is corrected here.
+- `S109` Three `test_module` rows spent by the preceding step's facade retirement were
+- `S109` removed here rather than in that step, where they belonged.
+- `S110` `cadrumo.entrypoints.tui.operations.facade` was a deletion candidate on the
+- `S110` numbers -- no importers, no callers, not even a test -- and would have been the
+- `S110` wrong call. Three docstrings name it, one of them in a file belonging to a
+- `S110` concurrent migration that states presentation is `present_operation_modal`'s job
+- `S110` and returns a controller for a caller to hand to it. The module is an unwired
+- `S110` door in someone else's in-flight design, so it is classified, not removed.
+- `S111` The gate added two steps earlier caught this work in progress: with the fixture
+- `S111` registry written and not yet spread into `SURFACES`, it named all three new
+- `S111` fixture ids and failed. That is its detector teeth demonstrated against live
+- `S111` code rather than a synthetic fixture.
+- `S111` The TUI review inventory reports 60 interfaces, 17 not rendered, down from 18.
+- `S111` Nothing fails on that number today; it is a named backlog the coverage tool
+- `S111` derives from source, and the dispositions in `dev/tui/_coverage.py` distinguish
+- `S111` a development-only candidate from a gap to close.
+- `S111` `python -m dev.tui inventory` refuses outright when a review run on disk carries
+- `S111` an older manifest schema, although its own docstring says coverage is read from
+- `S111` the coverage table alone when no manifest exists. The reading above was taken by
+- `S111` naming a run with no manifest. Left as found: the tool belongs to another
+- `S111` surface and the refusal is fail-closed, not wrong.
+- `S112` The censal review screen was a wiring candidate on the same reasoning as the
+- `S112` journey shell and is not one. It takes five already-localized strings, and no
+- `S112` catalogue key or production caller supplies them, so a devtools fixture would
+- `S112` have to invent operator-facing copy -- which the harness's own form surface
+- `S112` warns produces findings about the harness rather than the product. The product
+- `S112` meanwhile declares the gap to the operator: the journey renders
+- `S112` `profile.journey.review.placeholder`, "Provenance and conflict review is not yet
+- `S112` available on this journey."
+- `S112` The ratchet is keyed by qualname rather than by count. A count accepts a swap:
+- `S112` one interface gaining a surface while another loses one nets to zero and reads
+- `S112` as no change. It is seeded at the 17 interfaces currently unrendered, which is
+- `S112` a recorded backlog, not an approved state.
+- `S113` Every module the audit reports as unreachable now carries a ledger
+- `S113` classification. The last one was the per-action package a concurrent migration
+- `S113` is building; both the source and the destination of that move are dark at once,
+- `S113` which is the migration's midpoint rather than two separate findings.
+- `S113` The module ratchet is green over a narrower scope than the audit reports:
+- `S113` `frozen_prefixes` excludes `cadrumo.entrypoints.tui` entirely, on the stated
+- `S113` ground that the subtree is in-flight work owned elsewhere and the gate must not
+- `S113` depend on its classification holding still. That is a scope decision, not an
+- `S113` exemption, and it is left as its owner set it -- unfreezing would make the gate
+- `S113` fail on another contributor's churn. The subtree is covered instead by the
+- `S113` reachability ledger, which records a classification without requiring one to
+- `S113` hold still, and by the render-coverage ratchet added in the preceding step.
+- `S113` The duplication campaign is complete on its amended closure condition: the live
+- `S113` scan observes ten clone groups, the disposition record reconciles all ten as
+- `S113` nine cluster-owned plus one intentional, and reports zero actionable and zero
+- `S113` advisory residue. Its gate carries vacuity guards in both directions -- an
+- `S113` unavailable scan cannot read as full coverage, and the record may not declare
+- `S113` fewer groups than the scan observes. Plan completion is 20 of 20.
+- `S114` The symbol ratchet had been reported as red on two peer-introduced symbols for
+- `S114` several steps. That was wrong. It was red on those AND on unpaid shrinkage this
+- `S114` campaign owed: five module counts lowered by deletions made here, plus three
+- `S114` orphaned-test rows removed from the classification ledger four steps ago and
+- `S114` left standing in the ratchet. Both files describe the same population and only
+- `S114` one was paid.
+- `S114` With the shrinkage paid, the remaining red is exactly the two peer symbols:
+- `S114` `recapture_ledger_filing_evidence`, which re-bundles a sealed revision's
+- `S114` evidence so an operator who attaches a missing invoice is not at a dead end,
+- `S114` and `non_filing_axis_parameters`, one half of the two-way enumerability an
+- `S114` accepted event-date decision requires. Both are implemented, unwired, and
+- `S114` owned elsewhere. They are left red rather than absorbed: the ratchet forbids
+- `S114` raising a number, and its `[[intentional]]` mechanism is for symbols kept by
+- `S114` design, not for another contributor's unfinished feature. A red naming
+- `S114` someone else's open work is the gate doing its job.
+- `S115` Both gates this campaign added carried a justfile recipe and no row in
+- `S115` `dev.quality.suite.GATES`, so `just check-all` never invoked either. Their own
+- `S115` test suites were green throughout, which is exactly how the defect stays
+- `S115` invisible: an unaggregated gate is not a weaker gate, it is an unrun one. The
+- `S115` table already carried a comment recording a previous instance of the same
+- `S115` defect, and this repeated it twice.
+- `S115` `test_every_static_check_recipe_is_either_aggregated_or_declared_exempt` still
+- `S115` fails on `check-modelo-action-denominator`, which belongs to a concurrent
+- `S115` migration, and `test_doc_privacy` fails on hostnames in
+- `S115` `.github/ci-control-plane.md`. Neither is this campaign's, and both are left
+- `S115` for their owners.
+- `S115` `clear_ollama_vision_probe_cache` was deleted rather than classified. Its own
+- `S115` docstring offered it "where a test needs the next call to reach the endpoint
+- `S115` again" and no test ever took it, while the same docstring explains that keying
+- `S115` the cache on the endpoint is what isolates a suite standing up its own reader,
+- `S115` with a TTL behind that. The affordance it named was already provided twice over.
+- `S116` The gate table carries a second consistency check beyond membership: a row must
+- `S116` run the same command its recipe does. The first attempt at this enrolment
+- `S116` guessed a `-m dev.quality.modelo_workspace_action_denominator` invocation, and
+- `S116` that check refused it -- the recipe drives the gate through pytest against
+- `S116` `dev/tests/test_modelo_workspace_action_denominator.py`, because the denominator
+- `S116` is asserted by a test rather than by a module entry point. Two halves that can
+- `S116` disagree is exactly what the check exists to prevent, and it caught the
+- `S116` disagreement on the way in.
+- `S116` The recipe belongs to a concurrent migration and was enrolled rather than left
+- `S116` red because the gate already passes: the only thing its absence changed was
+- `S116` whether `just check-all` ran it, so the row alters no one else's check logic.
+- `S116` `dev/quality/tests/test_doc_privacy.py` still fails on three runner hostnames in
+- `S116` `.github/ci-control-plane.md`. That one is not resolved here: scrubbing the
+- `S116` names would empty a control-plane document whose purpose is naming which runner
+- `S116` is which, and allowlisting them is a decision about the operator's own machine
+- `S116` identities rather than a mechanical fix.
+- `S117` Scrubbed rather than allowlisted, on the operator's instruction: the hostnames
+- `S117` were not necessary in a tracked GitHub document and the recorded values were
+- `S117` wrong besides. The table now names the two hosts by role, and the document says
+- `S117` that `ci-fleet` is where machine identity is declared -- which it already
+- `S117` identified as the binding declaration, so this file was restating an identity it
+- `S117` does not own and was restating it incorrectly.
+- `S117` The shapes the pins are derived from are unchanged, because the shape is what
+- `S117` the document actually needs from a host.
+- `S118` Both fixture modules this campaign added published a `resolve_*` accessor copied
+- `S118` from the workbench registry they were modelled on. In the workbench module that
+- `S118` accessor has a real consumer; in these two it had none, and one of them had no
+- `S118` consumer at all because the profile module shipped with no test file. The
+- `S118` pattern was mirrored without checking whether the mirrored part was carrying
+- `S118` anything.
+- `S118` The modelo resolver is kept and unpublished rather than deleted: its own tests
+- `S118` exercise the refusal path for an unknown fixture id, so it is a module-internal
+- `S118` helper with real coverage, not dead weight. The profile one was deleted -- it had
+- `S118` no caller and no test.
+- `S118` The remaining unconsumed exports belong to a concurrent migration. The export
+- `S118` ratchet is left red on those.
+- `S119` Six of the fifteen unclassified classes share one reason for being dark, and it
+- `S119` is a property of the design rather than a gap: an implementer satisfies them
+- `S119` structurally, so no import edge to them can exist and the scan is correct that
+- `S119` nothing imports them. `ModeloFinding` says so in its own docstring, naming the
+- `S119` protocol it conforms to and noting the engine reads only `severity`.
+- `S119` A first pass at counting this population was wrong in a way worth recording. An
+- `S119` `isupper()` filter reported a hundred unused classes; sixty of those were
+- `S119` SCREAMING_CASE constants. The real split is forty-seven classes, sixty
+- `S119` constants, and two hundred sixty-eight functions, and the ledger already
+- `S119` covered most of the classes.
+- `S119` A text search for consumers was wrong too, in the other direction: `Translation`
+- `S119` appeared to have seven production consumers, all of which were the English word
+- `S119` in prose. Counting importers by parsing imports rather than matching names gave
+- `S119` zero production importers for all fifteen.
+- `S120` Twenty-three clusters stood classified `superseded` and open, which is a
+- `S120` contradiction worth acting on: superseded means something replaced it, and
+- `S120` `no-legacy-compatibility` requires a displaced surface to go while the
+- `S120` compatibility regime is pre-release, which `core/compatibility_lifecycle`
+- `S120` confirms it is. Classification was the interim record, not the resolution.
+- `S120` Six single-symbol clusters were examined and only two were deletable.
+- `S120` `write_cached_transcription` backs a consent-withdrawal test that writes a cache
+- `S120` entry and checks withdrawal purges it; `save_corpus_manifest` and
+- `S120` `load_default_filing_profile` are likewise exercised by tests. Production having
+- `S120` displaced a symbol does not make it dead when a suite still drives it, and
+- `S120` deleting those would remove coverage rather than debt.
+- `S120` The failures in `src/cadrumo/application/user_profile/tests` are peer-introduced
+- `S120` and unrelated: capsule-generation retryable codes, custody lock ordering, and a
+- `S120` `workbench_bootstrap` module absent from the declared public inventory, added by
+- `S120` `499ef90ee0`. Neither deleted symbol is referenced anywhere in the tree.
+- `S121` Triaging all twenty-one open superseded clusters by real importer counts split
+- `S121` them cleanly: six clusters had no importer anywhere, fifteen are still driven by
+- `S121` tests. The triage script itself was wrong on one of the six. It counted only
+- `S121` `from X import Y`, so it missed a whole test file exercising the locale
+- `S121` catalogue cache through `import ... as cc` and attribute access, and would have
+- `S121` deleted a tested cache. Nine symbols across five clusters were deletable.
+- `S121` Two ratchets recorded the same deletions in different files. Paying the symbol
+- `S121` ratchet alone left the unconsumed-export ratchet carrying three spent entries;
+- `S121` both are paid here.
+- `S121` `src/cadrumo/domain/calculations/registry/schema.py` carries a pre-existing
+- `S121` import-ordering finding and is another contributor's modified file. It was left
+- `S121` untouched rather than swept up by a tree-wide autofix.
+- `S122` The Ledger owning test cannot collect because peer-modified calculation modules currently form a circular import through `application.aggregation` and `application.calculations`. The independent Modelo fixed-point test reaches its assertions but remains red on a peer duplicate `declared_destination_ids` authority in `entrypoints/tui/navigation.py`. Neither failure was absorbed or suppressed.
+- `S124` The former green results depended on identity snapshots, a frozen TUI namespace,
+- `S124` per-symbol intentional keeps, and module dispositions. All are deleted. The new gates
+- `S124` derive and print complete current finding sets and have no input through which a module,
+- `S124` symbol, test, or export can be assigned development status. Red is the honest standing
+- `S124` state until each finding is resolved through its product or development boundary owner.
+- `S125` Development code now imports the product it evaluates in the ordinary one-way direction.
+- `S125` No product module imports, discovers, cites, or registers the harness. The moved harness
+- `S125` is absent from package discovery and installed command surfaces. The product event-loop
+- `S125` gate now tolerates tracked files deleted in the working tree; that correction revealed
+- `S125` the unrelated `installed_session.py` site instead of masking it behind a stale path read,
+- `S125` and this Step does not absorb or allowlist that peer-owned finding.
+- `S126` `MODELO_ACTION_DISPATCH` is not development metastate: it is the executable runtime
+- `S126` mapping a controller consumes, keyed by operation definition ids imported from the
+- `S126` application authority. The deleted tuple described absent future registrations and was
+- `S126` never consumed by production behavior. Unknown operations continue to resolve to
+- `S126` `None`; no production list explains or classifies why they are absent.
+- `S127` The locale parity gate contains no residue from this change. It remains red only because all four catalogues lack the peer-owned live key `tui.declarations.lifecycle.verification_refused`.
+- `S128` The text-writer gate still reports four peer-owned unpinned writers and 21 tracked-but-deleted stale inputs; removal of the obsolete locale exemption introduced no additional finding.
+- `S129` The live filing-grade route gate reports 21 executable-source gaps (3 tests pass, 1 fails); these are current findings for the calculation-route owner, not classifications. The combined development closure lane has 30 passing tests and four failures in the concurrently changed filing-proof authority: three CLI invocations produce no report and the live proof adapter lacks the new `assess_for` method. No source-connectivity symbol participates in those failures.
+- `S129` Remeasurement: 32 unreachable modules, 381 exact unused symbols, 20 orphaned tests, 262 exact unconsumed exports, and 8 unrendered TUI interfaces.
+- `S130` The live zero-target route gate now fails on four mechanically derived source kinds across 21 bindings: `donativo_donor`, `gasto193_contributor`, `refund_operation`, and `related_party_operation`. Runtime detector-teeth tests prove every affected revision is refused with its exact current gap set. These findings remain open for executable resolver work; no development classification absorbs them.
+- `S131` The live zero-target gate reports one finding: `src/cadrumo/application/aggregation/_inventory.py::resolve` couples `Modelo.M100` routing to literal filing year `2025`. The focused detector suite has one detector-teeth pass and that expected live failure; the direct quality command reports the same single finding and exits 1.
+- `S134` The zero-target gate reports 97 live regulatory embeds. They are executable follow-on work, not accepted residue; the gate remains red until each finding moves to its owning registry or locale authority.
+- `S135` The live zero-target gate moved from 97 candidate findings to 26 semantically scoped findings and remains red. The 26 are nine module-level years, sixteen operator-facing applicability messages, and one non-identity decimal percentage.
+- `S137` The live modelo embed signal fell from 26 to 22. The deleted validator's stale row in the development load-classification subsystem is intentionally not updated; that authored metastate subsystem is the next owner.
+- `S138` The live census derives 194 registry modules and reports zero unreferenced registry candidates and zero unresolved registry-local dynamic imports. Six dynamic sites outside the registry remain visible in the report and belong to their respective owners.
+- `S139` The focused operator/locale run passed 66 tests and failed only `test_codebase_to_locale_parity` on peer-owned live catalogue drift in all four locales: `tui.declarations.lifecycle.verification_refused` is missing and `aggregation.source_mesh.errors.ambiguous_source_disposition` is extra. S139's exact forbidden-symbol scan is empty and its changed-path, command-graph, MCP, suggestion, manifest, contract, and payload checks pass.
+- `S140` The focused detector-teeth suite passes 8 tests and the live zero-target gate is green. The normal focused unit rerun cannot execute because the shared environment is missing `charset_normalizer.api`; all 57 selected tests fail in fixture setup before their bodies run. Direct command-graph and namespace assertions pass. An earlier runnable focused pass, before the environment broke, exposed and led to correction of the S140-owned live leaf-count and namespace-sequence expectations; its remaining failures were peer-owned identifier findings and one order-sensitive namespace discovery test.
+- `S146` The full locale audit remains red on one missing and one extra key repeated across all four locales. Neither key is in the edited `errors.yml` leaf set for this Step, and the removed IVA classification key has zero residue in every catalogue.
+- `S153` The broader affected application selection ran 86 tests: 85 passed and the live route-ownership gate named `donativo_donor`, `gasto193_contributor`, `refund_operation`, and `related_party_operation` as declared registry sources with no executable route. They remain red for their owning registry or resolver mechanisms; no deferred list or accepted-set alias was restored.
+- `S154` The full live gate now reports only `gasto193_contributor`; the three row-only source families were correctly removed from the scalar population. The remaining source has two scalar `sum` bindings and no secure resolver, so it remains red for the registry/input mechanism rather than being deferred.
+- `S157` The wider namespace-registry file reached 46 passes before the pre-existing production namespace enrollment failure at `test_every_discovered_production_secure_object_namespace_is_registered`: five discovered namespaces are absent from the current registry. The tests directly governing S157 pass independently.
+- `S164` The output gate reports one unowned censal `typer.echo`, one recovery-handoff `os.write`, and five helper-module pipe writes selected from the tests directory. The empty exclusion removal did not change the selected population; these are existing owning-mechanism and scanner-scope findings left live rather than suppressed.
+- `S165` The remaining live unused-symbol population is the next campaign input. This step removed no reachability finding; it corrected an output detector that had conflated test helpers and descriptor transport with production stream output, then resolved the surviving real bypass through the existing redacted success funnel.
+- `S166` The full locale audit remains red on `tui.declarations.lifecycle.verification_refused` missing and `aggregation.source_mesh.errors.ambiguous_source_disposition` plus `tui.aeat_sync.column.resolution` extra in every supported locale. None is introduced or hidden by this step; the deleted censal registry's three keys remain present in the derived codebase key set.
+- `S167` The accepted adapter-migration ADR requires the adapter boundary to be defined and detected positively by behavior shape and explicitly calls its inventory evidence rather than specification. The removed production census contradicted that implementation boundary; no ADR amendment was required.
+- `S168` The focused test now resolves the already-mounted archive-export leaf from `COMMAND_GRAPH` and tests the live default-deny matcher. The first pytest invocation was not accepted as evidence because the repository's default marker expression collected no integration tests; the explicit integration run is the owning verification.
+- `S169` The first whole-tree scan after deleting the aggregate exposed two undiscovered literal `mapping.get` fallbacks, and the broad scanner suite exposed that S166's direct-inline-table precision had regressed the older helper-argument inline-table form. Both detector gaps were fixed with positive and negative controls. The locale audit consequently stopped falsely reporting `tui.aeat_sync.column.resolution` as extra; its remaining cross-locale drift is unrelated.
+- `S170` The remaining locale audit drift is `tui.declarations.lifecycle.verification_refused` missing and `aggregation.source_mesh.errors.ambiguous_source_disposition` extra in each supported locale; neither relates to the deleted aggregate.
+- `S171` The initial parallel focused run passed 22 tests but reported five held serial tests; the explicit marker lanes account for all 27 tests. The locale audit retains the pre-existing drift in each of ca, en, es, and hu: missing `tui.declarations.lifecycle.verification_refused` and extra `aggregation.source_mesh.errors.ambiguous_source_disposition`. The live detector reports 360 exact unused symbols, down from 362, and the same 18 orphan test modules.
+- `S172` The locale audit retains the pre-existing drift in each of ca, en, es, and hu: missing `tui.declarations.lifecycle.verification_refused` and extra `aggregation.source_mesh.errors.ambiguous_source_disposition`. The live detector remains at 360 exact symbols and 18 orphan test modules; the removed metastate declarations were not live-signal rows. The focused M210 readiness test fails before reaching the changed guard because its process-scoped test login leaves `read_profile_bucket(_PROFILE_ID)` absent on this host; the direct guard proof in the eight-test integration module passes and establishes that M210 and the other former AEAT census members are admitted. Existing unrelated shared edits in the overlapping config, locale, suite, justfile, and CLI-test paths were preserved.
+- `S173` The live unused-symbol detector remains at 360 exact symbols and 18 orphan test modules; this Step removes derived development state from production rather than an exact-symbol row. The deleted production advisory API had no production caller. The development reporter continues to derive the same review worklist directly from canonical authority models and catalogues.
+- `S174` The selected exact unused symbol is absent after deletion, reducing the exact live signal from 360 to 359 while the orphan population remains 18. The legal parameters and their active loader, statutory set, professional set, legal-reference disclosure, and inference ceiling remain. The strengthened zero-target metastate gate reports six previously hidden peer declarations, including a module-level prorrata status; those findings remain live for subsequent Steps and were not suppressed.
+- `S175` The zero-target metastate gate improved from six findings to five. The exact unused signal improved from 359 to 357 while orphan tests remained at 18. The broader exception-base hygiene gate remains red on 23 unrelated peer exception classes, and the locale audit remains red on the same four peer-owned missing/extra pairs in every locale; neither red names an S175 identity.
+- `S176` The zero-target metastate gate improved from five findings to four. The exact unused signal improved from 357 to 356 while orphan tests remained at 18. Both touched modules carried earlier non-overlapping campaign deletions, which were preserved.
+- `S177` The zero-target metastate gate improved from four findings to three. The exact unused signal improved from 356 to 355 while orphan tests remained at 18. The remaining data-file replacement finding in the same module was left intact because its shipped test-facade dependency requires separate ownership analysis.
+- `S178` The zero-target metastate gate improved from three findings to two. The exact unused signal improved from 355 to 354 while orphan tests remained at 18. Both remaining metastate findings are in the peer-dirty `filed_data_capture.py` and were deliberately left for separately grounded steps.
+- `S179` The zero-target metastate gate improved from two findings to one. The exact unused signal improved from 354 to 353 while orphan tests remained at 18. The remaining selection-row projection requires its own capture-pipeline ownership step.
+- `S180` The first wiring attempt was withdrawn after review proved captured rows could not distinguish canonical winners from limited, failed, or unattempted rows. The final Step deletes the speculative reporting slice and leaves the canonical latest-per-period finalizer unchanged. Three routed operation tests remain red because the peer-owned observation-envelope validation edit rejects their older fixture; the S180 deletion restores their pre-Step behavior. Locale audit reports only the pre-existing verification-refused and ambiguous-source-disposition drift in all four locales.
+- `S181` The wider blank-box parser suite passed 19 cases and failed one peer-owned Modelo 390 case while constructing a filing-grade registry snapshot from a revision currently graded for applicability. The failure occurs before the extraction path runs and is unrelated to this Step.
+- `S184` The exact detector reports 348 unused symbols and 18 orphaned tests in the live shared tree while no longer reporting either retired declaration-capture symbol. The broader submitted-file tests remain red in concurrent registry/export-layout work, and the exact-row browser test cannot execute because the configured Playwright Chromium binary is absent.
+- `S186` The broader Modelo 130 submitted-file test remains red before resolver invocation because concurrent registry work makes its signed casilla fixture fail fixed-width parsing; the canonical prior-filing and relation resolver selections pass independently.
+- `S189` The exact reachability gate reports 341 exact unused symbols and 18 orphan test modules; S189 reduced the signal from 343 to 341 without a baseline, threshold, or disposition-list change.
+- `S189` The locale audit reports only peer-owned drift in every locale: missing `tui.declarations.lifecycle.verification_refused`, extra `adapters.sede.errors.cotejo_nav_failed`, and extra `aggregation.source_mesh.errors.ambiguous_source_disposition`. No removed activity-asset or bienes-inversión CLI key remains.
+- `S189` The API scaffold command also synchronized unrelated shared-worktree stubs; only the five directly S189-owned API paths above are attributed to this Step.
+- `S190` The exact detector reports 338 unused symbols and 18 orphan test modules, down from 341 and 18 before S190; no baseline, threshold, or disposition list changed.
+- `S190` The broader runtime-attached repository file has four peer-owned failures in workflow-envelope validation, verification-report registry provenance, M303 carry ingress provenance, and borrador snapshot registry provenance. The three inventory-owning cases pass in the focused command above.
+- `S191` The exact detector reports 337 unused symbols and 18 orphan test modules, down from 338 and 18 before S191; no baseline, threshold, or disposition list changed.
+- `S191` The combined adapter-and-application run passed the adapter roundtrip tests but has ten peer-owned application-fixture failures requiring official declaration or registry-snapshot provenance. None calls the deleted adapter facade.
+- `S192` The exact detector reports 336 unused symbols and 18 orphan test modules, down from 337 and 18 before S192; no baseline, threshold, or disposition list changed.
+- `S192` The combined qualified-docstring run passes all 132 retained bucket tests and fails four peer-owned resolver assertions: unrelated dangling references, a pre-existing population threshold, a Pydantic field resolution, and a lazy user-profile export. The removed trash helper has no remaining reference.
+- `S197` The broad focused run has two persistent failures outside S197: stale sensitive-surface paths for removed `domain/usage_ratios/_service.py` and `entrypoints/cli/config/_google.py`, and an unreviewed peer-owned `destination_session.py` outcome-file write. S197 neither changes those paths nor widens their inventory; the exact sensitive-backend assertion changed by S197 passes independently.
+- `S198` The removed count was a test-only diagnostic over the production weak registry. Retained tests now prove the owned behavior directly: cross-context sweeps seal and zeroise real key buffers, repeated sweeps are idempotent, and a weak reference becomes collectible after the caller drops the session. The live constructor registration and shutdown sweep remain unchanged. Vaultspec RAG was attempted for this step but its search and index-status endpoints returned execution errors, so grounding used the skill's exact-search fallback plus whole-file inspection and accepted-ADR search.
+- `S199` Vaultspec RAG search and index-status endpoints returned execution errors, so grounding used the skill's exact-search fallback, whole-file inspection, and full reads of the two accepted recovery-mnemonic ADRs. The accepted four-name codec prescription contradicted the live opaque-mnemonic custody flow and was amended in place before code removal. The canonical encoder is now tested against the external BIP-39 zero-entropy vector rather than its deleted inverse. Vault-wide checking remains red on pre-existing unrelated annotation, markdown, schema, and historical document findings; it reports no diagnostic for the amended ADR.
+- `S200` Vaultspec RAG remained unavailable despite confirming its service process was running, so this exact no-caller finding used the skill's fallback: whole-file inspection and exact symbol confirmation. The deleted projection had no caller or test; the live framed transport and supervised-custody paths are unchanged.
+- `S201` Vaultspec RAG remained unavailable, so grounding used the prescribed whole-file and exact-search fallback. The deleted runtime-checkable protocol was referenced only by its own isinstance and export-census tests; every production consumer already uses the sole concrete secure-storage backend.
+- `S202` The target exact symbol is absent after remeasurement, while the aggregate unused-symbol count remains 893 because concurrent worktree drift added or exposed another finding during the step. The gate now derives invoice-import columns from `BulkInvoiceImportRow.model_fields`; the live required-column subset remains runtime-owned.
+- `S203` The initial pytest selection named a nonexistent `test_verification_actions.py` path and collected zero tests; it was discarded as evidence. The corrected live suites passed. This step deleted two exact symbols; the aggregate fell by three because concurrent work resolved one additional finding.
+- `S204` The step-record scaffold reported unrelated invalid-UTF-8 metadata warnings for three peer-owned TUI ADRs; S204 does not touch those documents. The two public proxies existed only for generic helper tests; private live catalogues and behavioral aggregator coverage remain.
+- `S205` The target helpers are no longer shipped production symbols and now live under excluded shared test support. Concurrent peer changes altered the module graph during S205: shipped modules fell 2097 to 2096, reachable modules fell 2035 to 2033, and unreachable modules rose 61 to 62; the unused-symbol aggregate remained 888 even though both target findings disappeared.
+- `S206` The live post-change graph measured 65 unreachable modules, 322 exact unused symbols, 18 orphaned tests, and 2028/2094 shipped modules reachable. The exact `calendar_censo_enrolment_profile_keys` finding is absent. Concurrent peer edits changed both module totals and the aggregate unused-symbol count during this step, so no aggregate reduction is attributed to S206.
+- `S207` The exact unused-symbol count fell from 322 immediately before S207 to 320 after removal of the two production inventories; the live graph otherwise remained at 65 unreachable modules, 18 orphaned tests, and 2028/2094 shipped modules reachable. The targeted Vaultspec check reported no errors; its four warnings concern a pre-existing extra blank line in a different ADR, a stale feature index, and two retired-step records outside this campaign step.
+- `S208` The exact unused-symbol count fell from 320 immediately before S208 to 319 after removal of the cache-reset facade; the live graph otherwise remained at 65 unreachable modules, 18 orphaned tests, and 2028/2094 shipped modules reachable.
+- `S209` The exact unused-symbol count fell from 319 immediately before S209 to 318 after removal of the convenience bridge; the live graph otherwise remained at 65 unreachable modules, 18 orphaned tests, and 2028/2094 shipped modules reachable.
+- `S210` The exact unused-symbol count fell from 318 immediately before S210 to 317 after removal of the public alias; the live graph otherwise remained at 65 unreachable modules, 18 orphaned tests, and 2028/2094 shipped modules reachable.
+- `S211` The exact unused-symbol count fell from 317 immediately before S211 to 315 after removal of the two field-partition inventories. Concurrent peer changes also moved the graph from 65 to 63 unreachable modules, 18 to 15 orphaned tests, and 2094 to 2092 shipped modules while reachable modules remained 2028; those aggregate changes are not attributed to S211.
+- `S212` The exact unused-symbol count fell from 315 immediately before S212 to 314 after removal of the public coverage facade; the private helper removed with it was previously reachable only through that facade. The live graph remained at 63 unreachable modules, 15 orphaned tests, and 2028/2092 shipped modules reachable.
+- `S220` The broader release-config test remains red because a peer-owned config currently supplies an extra `packages["."].component` field; this step changed only stale explanatory text and did not absorb that unrelated configuration drift.
+- `S226` A broader `src/cadrumo/core/errors/tests` run passed 72 tests and failed only `test_production_exception_classes_do_not_introduce_unregistered_builtin_roots` on 19 unrelated peer-owned exception classes; none names contabilidad. The focused owning registry and Modelo 200 gates above are clean.
+- `S227` The exact audit exits 1 on the remaining backlog, as designed. This step reduced unreachable modules from 54 to 51 and orphaned test modules from 5 to 4 while leaving the 306 reachable-module unused-symbol findings unchanged. The accepted BIN continuity mechanism remains live in registry bindings and application calculation tests; the deleted package had no consumer outside its own synthetic test and two error-registry strings.
+- `S228` The exact audit exits 1 on the remaining backlog, as designed. This step reduced reachable-module unused-symbol findings from 306 to 305 while leaving 51 unreachable modules and four orphaned test modules unchanged. Exact code/dev search found no surviving `unapprove_draft` reference before or after deletion; the package facade is inert and had only advertised the unsupported transition in prose.
+- `S229` The exact audit exits 1 on the remaining backlog, as designed. This step reduced reachable-module unused-symbol findings from 305 to 304 while leaving 51 unreachable modules and four orphaned test modules unchanged. Three production names were removed, but only `list_invoice_rows` was an exact finding; the DTO and private projector were already cleared by other audit rules. The retained repository link query has a production caller and its two focused consistency tests pass.
+- `S243` The exact zero-target detector remains red on the remaining live population: 51 unreachable modules, 1 type-only module, 295 unused symbols, and 4 orphan tests. The configured parallel full-auth run was not attributable evidence because shared scratch cleanup and lock races produced 163 setup errors; the three focused owning suites passed serially (27 tests).
+- `S244` The exact zero-target detector remains red on the live backlog, but this coherent slice reduced unreachable modules from 51 to 48. The remaining snapshot is 48 unreachable modules, 1 type-only module, 295 unused symbols, and 4 orphan tests.
+- `S245` The exact zero-target detector remains red on the live backlog. This Step reduced unreachable modules from 48 to 47; the remaining snapshot is 47 unreachable modules, 1 type-only module, 295 unused symbols, and 4 orphan tests.
+- `S246` The exact zero-target detector remains red on the live backlog. This coherent withdrawal reduced unreachable modules from 47 to 34, orphaned tests from 4 to 0, and exact unused symbols from 295 to 292. Focused verification passed 229 tests. The wider external-constant file also exposed two peer-owned failures caused by an unparseable dirty `domain/contribuyente/assets/__init__.py`; the S246-specific tests pass when selected directly.
+- `S247` The exact zero-target detector remains red on the live backlog. This Step reduced exact unused symbols from 292 to 291 while retaining 34 unreachable modules, 1 type-only module, and 0 orphan tests. Focused crypto, SQL, and secure-envelope verification passed 214 tests.
+- `S248` The exact zero-target detector remains red on the live backlog. This Step reduced exact unused symbols from 291 to 290 while retaining 34 unreachable modules, 1 type-only module, and 0 orphan tests.
+- `S252` The combined preflight and portal suite reached 83 passing tests and one unrelated failure in `test_corpus_row_healthy_for_bundled_normatives`; the current bundled normative corpus probe returned unhealthy. The focused portal-health owner test passes, and this Step did not modify corpus data or its probe.
+- `S254` The broad prorrata run had 31 passes and unrelated existing failures: parallel workers shared locked KDF scratch paths, and peer changes now require registry snapshot references and official declaration-type headers in older fixtures. No failure imports or exercises the deleted projector; the modified modules pass lint and import, and exact reachability removed the reported symbol.
+- `S255` The full corpus-search suite had 43 passes and five unrelated Windows parallel scratch failures around shared pytest directories and SQLite files. The serial terminology owner suite passes all 11 tests, and exact reachability removed the lookup symbol.
+- `S256` The exact audit remains campaign-red at 32 unreachable modules and 288 unused symbols. Moving the two development-only executors correctly exposed three retained production proof protocols as dev-only consumers, so this boundary repair increased the symbol signal from 287 to 288; the protocols remain production contracts required by the development authority and are candidates for subsequent ownership analysis, not compatibility aliases.
+- `S257` The exact audit remains campaign-red at 32 unreachable modules and 287 unused symbols. Moving three dev-only protocols removed their production signals but exposed two request DTOs as the next ownership edge, producing a net reduction from 288 to 287; those live findings remain for the next owning-mechanism Step.
+- `S258` The relevant focused lane passed 41 tests; the namespace discovery test remains red on five unrelated namespaces absent from the peer-modified registry (`cadrumo.workflow`, `cadrumo.domain.attachments.blobs`, `cadrumo.google.oauth.client`, `cadrumo.outbound.aeat.auth.sessions`, and `cadrumo.domain.transactions.bucket`). This Step did not absorb or suppress that drift. Exact reachability improved from 32 to 31 unreachable modules with symbols unchanged at 287.
+- `S259` The exact audit remains campaign-red at 31 unreachable modules and 287 unused symbols. Both request DTO findings disappeared from production; the unchanged aggregate symbol count reflects newly exposed downstream residue elsewhere in the live tree rather than retained request aliases.
+- `S260` The production classifier had no product consumer, so its dedicated tests were not material. A proposed replacement AST-string fixture was rejected and the existing negative source-string test was deleted instead. The live line frontend and repository detector remain green at 27 focused tests. Exact unused symbols improved from 287 to 285; 31 unreachable modules remain.
+- `S261` The real flow and tax-domain behavior suites remain green at 148 tests. The first exact pass exposed the duplicate API's private lookup helper, which was removed before closure. The final exact audit has 31 unreachable modules, 284 unused symbols (down from 285), and zero orphaned tests.
+- `S262` The retained encrypted store and live review surface passed both configured lanes (6 unit and 7 integration tests). Exact unused symbols improved from 284 to 283; 31 unreachable modules and zero orphaned tests remain.
+- `S263` The valid focused command passed 87 unit tests. Its integration complement passed 6 and retained two unrelated live operator-envelope failures: untouched fields are stamped asserted and an arithmetic-closure discrepancy is absent. The initial command named a nonexistent neighboring test and collected nothing; it was replaced with the real provenance suites. Exact unused symbols improved from 283 to 281; 31 unreachable modules and zero orphaned tests remain.
+- `S264` All six justificante-focused tests now exercise the live enrollment owner and pass. The explicit integration command selected no tests because this file's 45 tests are unit-marked; it was recorded as no evidence, not a green gate. Exact unused symbols improved from 281 to 280; 31 unreachable modules and zero orphaned tests remain.
+- `S265` Five focused encrypted-manifest persistence, redaction, active-profile, and identity-substitution tests pass through the canonical repository. Exact unused symbols improved from 280 to 279; 31 unreachable modules and zero orphaned tests remain.
+- `S266` The canonical external constant and live calendar/warning behavior suite remain green at 85 tests. Exact unused symbols improved from 279 to 278; 31 unreachable modules and zero orphaned tests remain.
+- `S267` All 14 live provisioning and resolver tests pass. Exact unused symbols improved from 278 to 277; 31 unreachable modules and zero orphaned tests remain.
+- `S268` Twelve focused live diagnostics, quarantine, and remediation tests pass. Exact unused symbols improved from 277 to 275; 31 unreachable modules and zero orphaned tests remain.
+- `S269` All 71 focused consent/transcription tests passed; the namespace suite's sole failure names five unrelated peer-owned namespaces and not the withdrawn cache. All 8 real CLI consent-list tests passed. Locale audit retains one missing and twelve extra peer-owned leaves after removal of the cache and stale repair-list leaves. Exact shipped modules decreased from 2061 to 2059 and unused symbols from 275 to 274; 31 unreachable modules and zero orphaned tests remain.
+- `S270` The initial focused run passed 32 tests and exposed one aggregate-specific test whose title claimed session bootstrap behavior the live storage span deliberately refuses; that test was removed with the facade. The two retained owner-level history/storage tests then passed. Exact unused symbols improved from 274 to 273; 31 unreachable modules and zero orphaned tests remain.
+- `S271` All 10 live repair-policy, diagnostics, and quarantine tests passed. The runtime-attached selection passed its readiness test and retained an unrelated peer-owned failure because the borrador snapshot fixture omits the now-required registry_snapshot_ref; the deleted repair-decision path is not reached by that failure. Exact unused symbols improved from 273 to 272; 31 unreachable modules and zero orphaned tests remain.
+- `S272` The deleted production catalog had no runtime consumer: its sole caller was the deleted suite that compared catalog rows with a second command-path classification and asserted descriptive metadata. Live repair behavior remains owned by `active_bucket_repair_session` and the diagnostics/quarantine flows. The exact scan reports 31 unreachable modules, 274 unused symbols, and zero orphaned test modules; the unexpected movement from the prior 272-symbol observation is retained as live shared-worktree drift rather than hidden or baselined.
+- `S273` No product command constructed or consumed the deleted workspace; only its own tests and its synthetic audit-event helper referenced it. The live recipient encryption/decryption CLI and the remaining encrypted collaboration events are unchanged and passed their real storage roundtrips. Exact reachability improved from 274 to 268 unused symbols and from 2059 to 2058 shipped modules, with 31 unreachable modules and zero orphaned tests unchanged.
+- `S274` The deleted helper projected review data from a transient replayed draft and had only test callers. The live work-review path independently projects the same privacy-safe shape from the persisted `CalculationRevision`, which remains the sole owner. Meaningful replay assertions now test attachment, deterministic content identity, substitution refusal, and non-disclosure directly. Exact unused symbols improved from 268 to 267.
+- `S275` The removed DTO/parser had no product dispatcher caller and existed solely for a test that passed an arbitrary mapping to the helper. The actual versioned edit request/result models and their integration suite remain. Exact unused symbols improved from 267 to 266; modules and orphan tests are unchanged.
+- `S276` The removed production projection could only return an empty set or one hard-coded `UNMEASURED` calculate row whose reconsideration text described future registration. Its only callers were tests. The executable edit admission, parsing, preflight, and guarded mutation mechanisms remain and pass their real integration behavior. Exact unused symbols improved from 266 to 265.
+- `S277` The deleted list facade had only tests as callers. Tests now confirm persistence and variation through the canonical identity-bound read operation; redundant post-create enumeration assertions were removed. Registry-coordinate refusal remains covered by create and transition owners. Exact unused symbols improved from 265 to 264.
+- `S278` The removed facade only checked the Modelo code and chained `active_taxpayer_profile` into `m303_regimen_simplificado_scope_for_profile`; no production caller used it. The retained test now composes those live owners directly and still exercises encrypted profile loading plus all three IVA composition outcomes. Exact unused symbols improved from 264 to 263.
+- `S279` The live `ensure_recipient_encryption_keypair` owner already loads, validates, or mints the encrypted keypair, and consumers accept its `public_key_hex` directly. The removed strict-load and public-projection APIs had only tests. Their missing-before-mint error and locale were therefore nonexistent product behavior. The CLI failures occur earlier in a shared Modelo 111 package fixture that lacks the newly required concerted-school profile fact; three unaffected CLI cases pass and the application cryptographic roundtrip is green. Exact unused symbols improved from 263 to 261 after remeasurement exposed and removed the load-only payload parser.
+- `S280` The strict signing-key load had only tests as callers; the live ensure owner already loads, validates, or mints the encrypted keypair. Missing-before-mint was therefore not product behavior. Persistence, normalization, foreign-bucket refusal, concurrent mint convergence, signing, and verification remain covered through ensure. The public-key projection stays because live CLI commands consume it. Exact unused symbols improved from 261 to 260.
+- `S286` The focused persistence run still has three adapter-owned envelope-header validation failures: `written_at`, `payload`, and `encryption` are rejected as extra fields when loading rows written by the same suite. The removed operation-instant context does not participate in envelope serialization or validation; eight sibling persistence tests pass, and the same failures remain outside this Step's ownership.
+- `S287` All seven focused failures terminate in the existing workflow envelope-header validation defect: `written_at`, `payload`, and `encryption` are rejected as extra fields while loading rows saved by the same suite. Both deleted wrappers and the live unified resolver reached that identical persistence path; the migration introduced no distinct failure.
+- `S289` The focused run retains ten pre-existing M303 reds: eight observation fixtures omit the now-required filing disposition, and two synthetic CalculationRevision fixtures omit registry_snapshot_ref. Three conformance closure CLI cases also return no rendered report; their failures are outside this authorization-metastate removal.
+- `S290` The focused behavior slice passed 54 tests. Four failures are outside this deletion: a persistence guard prevents a deliberately divergent registry coordinate, a bucket-event assertion ignores profile creation, a parallel worker observed registry mutation during fingerprinting, and an M303 observation fixture lacks the now-required official declaration-type header. None imports or calls the deleted shortcut. Exact reachability moved from 249 to 248 unused symbols with 31 unreachable modules, zero orphan tests, and 2026 of 2057 shipped modules reachable.
+- `S294` The package slice passed 19 tests and failed four unrelated shared-runtime cases: three reclaim tests resolved cached targets outside their per-test overridden root, and one Windows tree test attempted to unlink the active product log. The two live area-inventory tests pass in isolation. Exact reachability moved from 245 to 244 unused symbols, with 31 unreachable modules and zero orphan tests.
+- `S295` The focused service suite passed 20 tests; one peer-owned failure observed the bundled registry changing during cache fingerprinting. Exact reachability moved from 244 to 242 unused symbols with 31 unreachable modules and zero orphan tests.
+- `S296` The concurrent exact snapshot reports 243 unused symbols, 31 unreachable modules, and zero orphan tests. The one-symbol increase from the preceding snapshot is outside this development-test-only deletion, which changes no shipped reachability edge.
+- `S297` The retained strict production-boundary suite passed all 37 tests. Exact reachability remained at 243 unused symbols, 31 unreachable modules, and zero orphan tests; deleting the dev-only census changes no shipped edge.
+- `S298` The exact detector retains the campaign's live red: 31 unreachable modules and 243 unused reachable symbols. Deleting this test-only census did not widen or suppress that production signal.
+- `S299` The exact detector remains red on the campaign's production findings; this test-only deletion does not classify, exempt, or suppress them.
+- `S300` The exact production detector remains the owning campaign signal; deleting this test-only census does not classify, exempt, or suppress its findings.
+- `S301` The exact production detector remains red on the campaign's live findings; deleting this test-only detector cluster does not classify, exempt, or suppress them.
+- `S302` The focused gate first exposed four live duplicate normalization implementations, then passed after all four delegated to `fold_diacritics`. The exact production detector remains red on the wider campaign findings.
+- `S303` The simplified zero-state gate exposed one live suppression in `_comparison_year_pair`; destructuring the already length-checked sorted list removed that suppression instead of enrolling or annotating it. The exact production detector remains red on the wider campaign findings.
+- `S304` The deleted gate's zero-state form reported twenty production functions solely for missing rationale markers, so adding comments would have expanded development metadata without improving typing. The companion cast-comment census independently remains red on 239 unmarked calls and is the next owning cleanup; the exact reachability detector remains red on the wider campaign.
+- `S305` The removed gate demanded marker comments on 239 cast calls while the configured type behavior remained outside its judgment. The exact production detector remains red on the wider campaign findings.
+- `S306` The removed gate judged only nearby comment prefixes, not whether a suppression was valid or accepted by the configured type checker. The exact production detector remains red on the wider campaign findings.
+- `S307` Canonical parser behavior remains covered by 35 focused tests. The removed AST gate inferred provenance through exclusions and adjudications rather than exercising those boundaries; the exact production detector remains red on the wider campaign findings.
+- `S308` The live gate exposed a duplicate awareness-only validator on a field already declared as `UtcInstant`; deleting the weaker validator left canonical UTC validation and 26 focused behavior tests green. The exact production detector remains red on the wider campaign findings.
+- `S309` Deferred translation remains proven by 15 focused error-envelope and language-selection tests. The deleted scanner classified exceptions by hard-coded names rather than behavior; the exact production detector remains red on the wider campaign findings.
+- `S310` Receipt and authority-session custody remain proven by 32 focused encryption, resume, revocation, and application-boundary tests. The deleted gate maintained module, qualifier, and symbol rosters rather than exercising custody; the exact production detector remains red on the wider campaign findings.
+- `S311` Canonical byte behavior remains covered by 16 focused hashing tests. The deleted ownership census inferred serializer semantics from callable spelling and maintained an explicit production exception; the exact production detector remains red on the wider campaign findings.
+- `S312` The retained live import-resolution check reaches a peer-owned syntax error in `src/cadrumo/application/operations/supervisor.py:358` (`IndentationError: unexpected unindent`). The import gate itself collected and began resolving the live source tree successfully; this Step does not absorb the concurrent production edit.
+- `S316` The owning `ci-full.yml` integration lanes remain wired and 38 focused CI workflow checks pass. Two peer-owned assertions in `dev/ci/tests/test_ci_workflow.py` still expect older marker expressions that omit the live `windows_only` and `tui_render` exclusions; this Step does not weaken those recipes to satisfy stale string checks.
+- `S317` Thirty-four focused modelo behavior tests pass. The remaining peer-owned failure is `test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes`, where the current M303 carry ingress now requires an official declaration-type header from its fixture; deleting the static token census does not touch that runtime path.
+- `S326` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 279 unused symbols. The separate rate-observation source census remains red on concurrent aggregation changes; the three owning ledger behavior suites pass 14 tests.
+- `S327` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 279 unused symbols.
+- `S328` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 279 unused symbols.
+- `S329` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 278 unused symbols.
+- `S330` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 278 unused symbols.
+- `S331` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 278 unused symbols.
+- `S332` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 278 unused symbols.
+- `S333` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 278 unused symbols.
+- `S334` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 278 unused symbols.
+- `S335` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 278 unused symbols.
+- `S336` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 278 unused symbols. Four installed-command integration cases remain in their serial lane and were not selected by the focused unit command.
+- `S337` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 278 unused symbols.
+- `S338` Exact remeasurement reports the campaign's remaining live signal: 36 unreachable modules and 278 unused symbols.
+- `S339` Concrete binding and grammar checks passed 39 tests. The registry suite's separate production-source namespace census remains red on five discovered namespaces; it is the next owning-mechanism issue. Exact remeasurement reports 36 unreachable modules and 278 unused symbols.
+- `S347` The pre-existing `test_handler_target_modules_do_not_import_the_cli_package_facade` source-policy check remains red on `cadrumo.entrypoints.cli._modelo_discovery_cli`; it is outside this validator-reachability change and was not allowlisted or absorbed.
+- `S352` The broad profile/config run reached 529 passes but remained red on peer-owned custody composition, storage refusal exception shape, lock propagation, cleared-path inventory, and a removed Google handler. Those failures do not touch this status deletion; the two campaign-owned import errors it exposed were removed with their metastate tests.
+- `S353` The broad dev harness run reached 66 passes but collection remains red because peer-owned `workbench_fixtures.py` imports the removed `OperationReplayStatus`; that unrelated fixture drift predates and does not import the deleted profile journey.
+- `S354` The combined application-owner run continued past all seven passing censal tests but remained red on peer-owned filed-history settlement and source-scanning assertions. Those failures neither import nor exercise the deleted TUI seam.
+- `S370` The broader `src/cadrumo/domain/filing/tests/test_secure_storage_roundtrip.py` module remains red in `test_calculation_revision_observations_survive_encrypted_storage` because its calculation-revision fixture has no persisted parent WorkUnit; this step did not alter that repository or fixture.
+- `S371` The broader `src/cadrumo/application/modelo/tests/test_modelo_work_review.py` suite remains red in its divergent-registry-coordinate case because the fixture now violates the calculation repository's parent-coordinate guard before review begins; this step did not alter that repository or fixture.
+- `S373` The broader `src/cadrumo/application/registry/tests/test_terminal_preconditions.py` suite remains red because its corpus-refusal test expects a structured manual part that is absent from the current bundled corpus; this step did not alter corpus material.
+- `S375` The combined composition/Google-operation test run timed out while the Google-operation test loaded the bundled registry under 99% host CPU and 86% memory pressure; the direct composition suite passed separately.
+- `S378` The focused entrypoint run passed 29 tests; `test_the_class_and_its_correction_can_be_stated_by_the_operator` remains red because the live invoice validator refuses its fixture before command success. The failure is outside the deduplicated parameter-forwarding path.

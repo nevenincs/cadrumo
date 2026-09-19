@@ -1,0 +1,331 @@
+---
+generated: true
+tags:
+  - '#index'
+  - '#ci-lane-deconflation'
+date: '2026-08-16'
+modified: '2026-09-15'
+body_schema: 'body-v2'
+body_hash: 'sha256:8fe8e0a68aed753b6b88ed74694be884e01515e978e2a20e79e227792f552d29'
+related:
+  - '[[2026-08-05-ci-lane-deconflation-adr]]'
+  - '[[2026-08-05-ci-lane-deconflation-exec-verification-evidence-adr]]'
+  - '[[2026-08-05-ci-lane-deconflation-ledger]]'
+  - '[[2026-08-05-ci-lane-deconflation-overview-calendar-payload-adr]]'
+  - '[[2026-08-05-ci-lane-deconflation-plan]]'
+  - '[[2026-08-05-ci-lane-deconflation-schema-size-instrument-adr]]'
+  - '[[2026-08-05-ci-lane-deconflation-step-check-attribution-audit]]'
+  - '[[2026-08-06-ci-lane-deconflation-close-honesty-review-audit]]'
+  - '[[2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit]]'
+  - '[[2026-08-07-ci-lane-deconflation-docs-lane-golden-staleness-audit]]'
+  - '[[2026-08-10-ci-lane-deconflation-integration-lane-live-service-dependency-adr]]'
+  - '[[2026-08-13-ci-lane-deconflation-deferred-carry-forward-audit]]'
+  - '[[2026-08-25-ci-lane-deconflation-clean-head-reconciliation-audit]]'
+  - '[[2026-08-30-ci-lane-deconflation-calculate-result-provenance-asymmetry-audit]]'
+  - '[[2026-08-30-ci-lane-deconflation-cli-imports-tui-adr-d11-breach-audit]]'
+  - '[[2026-08-30-ci-lane-deconflation-load-census-classification-backlog-audit]]'
+  - '[[2026-08-30-ci-lane-deconflation-s119-code-review-audit]]'
+  - '[[2026-08-30-ci-lane-deconflation-s61-code-review-audit]]'
+  - '[[2026-08-30-ci-lane-deconflation-s64-code-review-audit]]'
+  - '[[2026-08-30-ci-lane-deconflation-s65-code-review-audit]]'
+  - '[[2026-08-30-ci-lane-deconflation-s69-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s100-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s101-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s102-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s103-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s104-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s105-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s106-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s107-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s108-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s109-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s110-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s111-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s112-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s113-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s114-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s115-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s116-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s117-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s118-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s56-record-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s57-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s58-plan-code-drift-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s59-reconciliation-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s62-record-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s63-rollup-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s66-reconciliation-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s67-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s70-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s71-provenance-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s72-lifecycle-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s73-decision-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s74-design-correction-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s75-implementation-provenance-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s76-adr-lifecycle-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s77-retraction-lifecycle-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s78-correction-lifecycle-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s79-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s80-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s81-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s82-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s83-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s84-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s85-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s86-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s87-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s88-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s89-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s90-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s91-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s92-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s93-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s94-traceability-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s95-traceability-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s96-inventory-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s97-correction-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s98-completion-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p02-s99-inventory-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s146-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s147-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s164-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s168-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s172-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s176-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s179-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s182-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s183-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s185-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s188-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s190-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s192-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s195-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s196-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s198-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s200-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s202-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s204-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s206-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s208-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s210-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s216-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s218-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s220-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s222-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-p05-s223-execution-self-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s120-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s121-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s122-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s123-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s124-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s125-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s126-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s127-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s128-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s129-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s130-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s131-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s132-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s133-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s133-recovery-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s134-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s135-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s136-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s137-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s138-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s139-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s139-high-repair-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s139-second-repair-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s140-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s140-repair-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s141-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s142-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s142-repair-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s143-code-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s143-final-proof-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s143-positional-proof-final-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s143-repair-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s148-chain-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s149-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s166-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s178-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s180-record-repair-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s180-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s187-repair-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s187-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s212-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s214-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s225-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s58-implementation-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s60-record-review-audit]]'
+  - '[[2026-08-31-ci-lane-deconflation-s68-code-review-audit]]'
+---
+
+# `ci-lane-deconflation` feature index
+
+Auto-generated index of all documents tagged with `#ci-lane-deconflation`.
+
+## Documents
+
+### adr
+
+- `2026-08-05-ci-lane-deconflation-adr` - `ci-lane-deconflation` adr: `one consolidated plan, and verdict granularity follows determinism` | (**status:** `accepted`)
+- `2026-08-05-ci-lane-deconflation-exec-verification-evidence-adr` - `ci-lane-deconflation` adr: `quote the instrument, do not summarise it` | (**status:** `accepted`)
+- `2026-08-05-ci-lane-deconflation-overview-calendar-payload-adr` - `ci-lane-deconflation` adr: `the breach is a conjunction and the payload is over its real allowance` | (**status:** `accepted`)
+- `2026-08-05-ci-lane-deconflation-schema-size-instrument-adr` - `ci-lane-deconflation` adr: `the gate measures a real target and names the wrong one` | (**status:** `accepted`)
+- `2026-08-10-ci-lane-deconflation-integration-lane-live-service-dependency-adr` - `ci-lane-deconflation` adr: `the integration parallel lane's non-blocking flag and its live external-service dependency` | (**status:** `proposed`)
+
+### audit
+
+- `2026-08-05-ci-lane-deconflation-step-check-attribution-audit` - `ci-lane-deconflation` audit: `the reserialisation finding is disproved and its cause misattributed`
+- `2026-08-06-ci-lane-deconflation-close-honesty-review-audit` - `ci-lane-deconflation` audit: `what a fresh reader would find missing, vague, or unverified`
+- `2026-08-06-ci-lane-deconflation-integration-lane-external-dependency-audit` - `ci-lane-deconflation` audit: `integration parallel lane depends on a live ECB service`
+- `2026-08-07-ci-lane-deconflation-docs-lane-golden-staleness-audit` - `ci-lane-deconflation` audit: the docs lane is red on stale goldens, not on nondeterminism
+- `2026-08-13-ci-lane-deconflation-deferred-carry-forward-audit` - `ci-lane-deconflation` audit: `deferred carry-forward at 45 of 49`
+- `2026-08-25-ci-lane-deconflation-clean-head-reconciliation-audit` - `ci-lane-deconflation` audit: `Reconcile the tooling gate against clean HEAD`
+- `2026-08-30-ci-lane-deconflation-calculate-result-provenance-asymmetry-audit` - `ci-lane-deconflation` audit: `Calculate and wizard results omit source provenance`
+- `2026-08-30-ci-lane-deconflation-cli-imports-tui-adr-d11-breach-audit` - `ci-lane-deconflation` audit: `CLI imports TUI in breach of ADR D11`
+- `2026-08-30-ci-lane-deconflation-load-census-classification-backlog-audit` - `ci-lane-deconflation` audit: `Load census classification backlog`
+- `2026-08-30-ci-lane-deconflation-s119-code-review-audit` - `ci-lane-deconflation` audit: `P02.S119 code review`
+- `2026-08-30-ci-lane-deconflation-s61-code-review-audit` - `ci-lane-deconflation` audit: `P02.S61 code review`
+- `2026-08-30-ci-lane-deconflation-s64-code-review-audit` - `ci-lane-deconflation` audit: `P02.S64 code review`
+- `2026-08-30-ci-lane-deconflation-s65-code-review-audit` - `ci-lane-deconflation` audit: `S65 code review`
+- `2026-08-30-ci-lane-deconflation-s69-code-review-audit` - `ci-lane-deconflation` audit: `S69 closure code review`
+- `2026-08-31-ci-lane-deconflation-p02-s100-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s100 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s101-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s101 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s102-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s102 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s103-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s103 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s104-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s104 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s105-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s105 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s106-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s106 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s107-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s107 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s108-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s108 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s109-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s109 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s110-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s110 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s111-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s111 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s112-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s112 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s113-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s113 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s114-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s114 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s115-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s115 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s116-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s116 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s117-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s117 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s118-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s118 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s56-record-review-audit` - `ci-lane-deconflation` audit: `P02.S56 execution record review`
+- `2026-08-31-ci-lane-deconflation-p02-s57-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s57 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s58-plan-code-drift-audit` - `ci-lane-deconflation` audit: `P02.S58 plan-to-code drift`
+- `2026-08-31-ci-lane-deconflation-p02-s59-reconciliation-review-audit` - `ci-lane-deconflation` audit: P02 S59 reconciliation review
+- `2026-08-31-ci-lane-deconflation-p02-s62-record-review-audit` - `ci-lane-deconflation` audit: `p02 s62 record review`
+- `2026-08-31-ci-lane-deconflation-p02-s63-rollup-review-audit` - `ci-lane-deconflation` audit: `p02 s63 rollup review`
+- `2026-08-31-ci-lane-deconflation-p02-s66-reconciliation-review-audit` - `ci-lane-deconflation` audit: `p02 s66 reconciliation review`
+- `2026-08-31-ci-lane-deconflation-p02-s67-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s67 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s70-execution-self-review-audit` - `ci-lane-deconflation` audit: `P02.S70 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p02-s71-provenance-self-review-audit` - `ci-lane-deconflation` audit: `p02 s71 provenance self review`
+- `2026-08-31-ci-lane-deconflation-p02-s72-lifecycle-self-review-audit` - `ci-lane-deconflation` audit: `p02 s72 lifecycle self review`
+- `2026-08-31-ci-lane-deconflation-p02-s73-decision-self-review-audit` - `ci-lane-deconflation` audit: `p02 s73 decision self review`
+- `2026-08-31-ci-lane-deconflation-p02-s74-design-correction-self-review-audit` - `ci-lane-deconflation` audit: `P02 S74 design correction self review`
+- `2026-08-31-ci-lane-deconflation-p02-s75-implementation-provenance-self-review-audit` - `ci-lane-deconflation` audit: `P02 S75 implementation provenance self review`
+- `2026-08-31-ci-lane-deconflation-p02-s76-adr-lifecycle-self-review-audit` - `ci-lane-deconflation` audit: `P02 S76 ADR lifecycle self review`
+- `2026-08-31-ci-lane-deconflation-p02-s77-retraction-lifecycle-self-review-audit` - `ci-lane-deconflation` audit: `P02 S77 retraction lifecycle self review`
+- `2026-08-31-ci-lane-deconflation-p02-s78-correction-lifecycle-self-review-audit` - `ci-lane-deconflation` audit: `p02 s78 correction lifecycle self review`
+- `2026-08-31-ci-lane-deconflation-p02-s79-execution-self-review-audit` - `ci-lane-deconflation` audit: `P02.S79 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p02-s80-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s80 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s81-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s81 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s82-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s82 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s83-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s83 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s84-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s84 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s85-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s85 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s86-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s86 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s87-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s87 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s88-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s88 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s89-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s89 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s90-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s90 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s91-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s91 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s92-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s92 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s93-execution-self-review-audit` - `ci-lane-deconflation` audit: `p02 s93 execution self review`
+- `2026-08-31-ci-lane-deconflation-p02-s94-traceability-review-audit` - `ci-lane-deconflation` audit: `P02 S94 traceability review`
+- `2026-08-31-ci-lane-deconflation-p02-s95-traceability-review-audit` - `ci-lane-deconflation` audit: `P02 S95 traceability review`
+- `2026-08-31-ci-lane-deconflation-p02-s96-inventory-review-audit` - `ci-lane-deconflation` audit: `P02 S96 inventory review`
+- `2026-08-31-ci-lane-deconflation-p02-s97-correction-review-audit` - `ci-lane-deconflation` audit: `P02 S97 correction review`
+- `2026-08-31-ci-lane-deconflation-p02-s98-completion-review-audit` - `ci-lane-deconflation` audit: `P02 S98 completion review`
+- `2026-08-31-ci-lane-deconflation-p02-s99-inventory-review-audit` - `ci-lane-deconflation` audit: `P02 S99 inventory review`
+- `2026-08-31-ci-lane-deconflation-p05-s146-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05.S146 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p05-s147-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05.S147 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p05-s164-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05.S164 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p05-s168-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05.S168 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p05-s172-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05.S172 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p05-s176-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05.S176 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p05-s179-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05.S179 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p05-s182-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s182 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s183-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s183 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s185-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05 S185 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s188-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05 S188 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s190-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s190 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s192-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s192 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s195-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s195 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s196-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s196 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s198-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s198 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s200-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s200 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s202-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s202 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s204-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05.S204 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p05-s206-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05.S206 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p05-s208-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s208 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s210-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s210 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s216-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s216 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s218-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s218 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s220-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05.S220 execution self-review`
+- `2026-08-31-ci-lane-deconflation-p05-s222-execution-self-review-audit` - `ci-lane-deconflation` audit: `p05 s222 execution self review`
+- `2026-08-31-ci-lane-deconflation-p05-s223-execution-self-review-audit` - `ci-lane-deconflation` audit: `P05.S223 execution self-review`
+- `2026-08-31-ci-lane-deconflation-s120-code-review-audit` - `ci-lane-deconflation` audit: `P02 S120 code review`
+- `2026-08-31-ci-lane-deconflation-s121-code-review-audit` - `ci-lane-deconflation` audit: `S121 code review`
+- `2026-08-31-ci-lane-deconflation-s122-code-review-audit` - `ci-lane-deconflation` audit: `P05 S122 code review`
+- `2026-08-31-ci-lane-deconflation-s123-code-review-audit` - `ci-lane-deconflation` audit: `P05 S123 code review`
+- `2026-08-31-ci-lane-deconflation-s124-code-review-audit` - `ci-lane-deconflation` audit: `P05 S124 code review`
+- `2026-08-31-ci-lane-deconflation-s125-code-review-audit` - `ci-lane-deconflation` audit: `P05 S125 code review`
+- `2026-08-31-ci-lane-deconflation-s126-code-review-audit` - `ci-lane-deconflation` audit: `P05 S126 code review`
+- `2026-08-31-ci-lane-deconflation-s127-code-review-audit` - `ci-lane-deconflation` audit: `P05 S127 code review`
+- `2026-08-31-ci-lane-deconflation-s128-code-review-audit` - `ci-lane-deconflation` audit: `P05 S128 code review`
+- `2026-08-31-ci-lane-deconflation-s129-code-review-audit` - `ci-lane-deconflation` audit: `P05 S129 code review`
+- `2026-08-31-ci-lane-deconflation-s130-code-review-audit` - `ci-lane-deconflation` audit: `P05 S130 code review`
+- `2026-08-31-ci-lane-deconflation-s131-code-review-audit` - `ci-lane-deconflation` audit: `P05 S131 code review`
+- `2026-08-31-ci-lane-deconflation-s132-code-review-audit` - `ci-lane-deconflation` audit: `P05 S132 independent code review`
+- `2026-08-31-ci-lane-deconflation-s133-code-review-audit` - `ci-lane-deconflation` audit: `P05 S133 independent code review`
+- `2026-08-31-ci-lane-deconflation-s133-recovery-code-review-audit` - `ci-lane-deconflation` audit: `P05 S133 recovery independent code review`
+- `2026-08-31-ci-lane-deconflation-s134-code-review-audit` - `ci-lane-deconflation` audit: `P05 S134 independent code review`
+- `2026-08-31-ci-lane-deconflation-s135-code-review-audit` - `ci-lane-deconflation` audit: `P05 S135 independent code review`
+- `2026-08-31-ci-lane-deconflation-s136-code-review-audit` - `ci-lane-deconflation` audit: `P05 S136 independent code review`
+- `2026-08-31-ci-lane-deconflation-s137-code-review-audit` - `ci-lane-deconflation` audit: `P05 S137 independent code review`
+- `2026-08-31-ci-lane-deconflation-s138-code-review-audit` - `ci-lane-deconflation` audit: `P05 S138 independent code review`
+- `2026-08-31-ci-lane-deconflation-s139-code-review-audit` - `ci-lane-deconflation` audit: `P05 S139 independent code review`
+- `2026-08-31-ci-lane-deconflation-s139-high-repair-review-audit` - `ci-lane-deconflation` audit: `P05 S139 HIGH repair re-review`
+- `2026-08-31-ci-lane-deconflation-s139-second-repair-review-audit` - `ci-lane-deconflation` audit: `P05 S139 second repair re-review`
+- `2026-08-31-ci-lane-deconflation-s140-code-review-audit` - `ci-lane-deconflation` audit: `P05 S140 independent code review`
+- `2026-08-31-ci-lane-deconflation-s140-repair-review-audit` - `ci-lane-deconflation` audit: `P05 S140 HIGH repair re-review`
+- `2026-08-31-ci-lane-deconflation-s141-code-review-audit` - `ci-lane-deconflation` audit: `P05 S141 independent code review`
+- `2026-08-31-ci-lane-deconflation-s142-code-review-audit` - `ci-lane-deconflation` audit: `P05 S142 independent code review`
+- `2026-08-31-ci-lane-deconflation-s142-repair-review-audit` - `ci-lane-deconflation` audit: `P05 S142 HIGH repair re-review`
+- `2026-08-31-ci-lane-deconflation-s143-code-review-audit` - `ci-lane-deconflation` audit: `P05 S143 independent code review`
+- `2026-08-31-ci-lane-deconflation-s143-final-proof-review-audit` - `ci-lane-deconflation` audit: `Final review P05 S143 immutable peer proof`
+- `2026-08-31-ci-lane-deconflation-s143-positional-proof-final-review-audit` - `ci-lane-deconflation` audit: `Final approval P05 S143 positional proof`
+- `2026-08-31-ci-lane-deconflation-s143-repair-review-audit` - `ci-lane-deconflation` audit: `P05 S143 record repair re-review`
+- `2026-08-31-ci-lane-deconflation-s148-chain-review-audit` - `ci-lane-deconflation` audit: `Review P05 S148 recovery chain`
+- `2026-08-31-ci-lane-deconflation-s149-review-audit` - `ci-lane-deconflation` audit: `Review P05 S149 identity resolution split`
+- `2026-08-31-ci-lane-deconflation-s166-review-audit` - `ci-lane-deconflation` audit: `Review P05 S166 root help split`
+- `2026-08-31-ci-lane-deconflation-s178-review-audit` - `ci-lane-deconflation` audit: `Review P05 S178 profile bundle registry split`
+- `2026-08-31-ci-lane-deconflation-s180-record-repair-review-audit` - `ci-lane-deconflation` audit: `Approve P05 S180 record correction`
+- `2026-08-31-ci-lane-deconflation-s180-review-audit` - `ci-lane-deconflation` audit: `Review P05 S180 validation tail split`
+- `2026-08-31-ci-lane-deconflation-s187-repair-review-audit` - `ci-lane-deconflation` audit: `Review P05 S187 private-import repair`
+- `2026-08-31-ci-lane-deconflation-s187-review-audit` - `ci-lane-deconflation` audit: `Review P05 S187 invoice row materialization`
+- `2026-08-31-ci-lane-deconflation-s212-review-audit` - `ci-lane-deconflation` audit: `Review P05 S212 IVA classification predicates`
+- `2026-08-31-ci-lane-deconflation-s214-review-audit` - `ci-lane-deconflation` audit: `Review P05 S214 IVA component rows`
+- `2026-08-31-ci-lane-deconflation-s225-review-audit` - `ci-lane-deconflation` audit: `Review P05 S225 machine-secret channel tests`
+- `2026-08-31-ci-lane-deconflation-s58-implementation-review-audit` - `ci-lane-deconflation` audit: `P02.S58 implementation review`
+- `2026-08-31-ci-lane-deconflation-s60-record-review-audit` - `ci-lane-deconflation` audit: `P02.S60 execution record review`
+- `2026-08-31-ci-lane-deconflation-s68-code-review-audit` - `ci-lane-deconflation` audit: `P02.S68 code review`
+
+### exec
+
+- `2026-08-05-ci-lane-deconflation-ledger` - `ci-lane-deconflation` ledger
+
+### plan
+
+- `2026-08-05-ci-lane-deconflation-plan` - `ci-lane-deconflation` plan

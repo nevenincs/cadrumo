@@ -1,0 +1,1439 @@
+---
+tags:
+  - '#exec'
+  - '#ci-lane-deconflation'
+date: '2026-08-05'
+modified: '2026-09-15'
+body_schema: 'body-v2'
+body_hash: 'sha256:157bc38c4705dbcdc47aba14a042176b741e225320805172c0dd735c0c2bc4d3'
+related:
+  - "[[2026-08-05-ci-lane-deconflation-plan]]"
+---
+
+# `ci-lane-deconflation` ledger
+
+## Changes
+
+- `S02` `T` `.github/workflows/frontend.yml`
+- `S03` `T` `.github/workflows/ci-full.yml`
+- `S04` `T` `.github/workflows/ci-full.yml`
+- `S05` `T` `origin/main`
+- `S06` `T` `src/cadrumo/entrypoints/cli/tests`
+- `S07` `T` `src/cadrumo/entrypoints/mcp`
+- `S08` `T` `dev/audit`
+- `S08` `T` `dev/deploy`
+- `S08` `T` `dev/env`
+- `S08` `T` `dev/registry`
+- `S08` `T` `dev/docs`
+- `S09` `T` `.github/workflows/ci-full.yml`
+- `S11` `T` `src/cadrumo/domain/calculations/registry/tests`
+- `S12` `T` `src/cadrumo/adapters/inbound/declaracion/_parser.py`
+- `S13` `T` `src/cadrumo/_data/registry/aeat/modelos/100`
+- `S14` `T` `src/cadrumo/_data/registry/aeat/legal`
+- `S15` `T` `src/cadrumo/core/tests/test_toml_registry_parity.py`
+- `S16` `T` `dev/packaging/tests/test_verify_distribution_identity.py`
+- `S17` `T` `.vault/exec/2026-06-13-semantic-dedup-epic`
+- `S18` `T` `src/cadrumo/domain/calculations/registry/tests/test_snapshot_filing_period_coverage.py`
+- `S19` `T` `src/cadrumo/domain/calculations/registry`
+- `S20` `T` `src/cadrumo/tests/test_import_hygiene_gate.py`
+- `S21` `T` `src/cadrumo/domain/calculations/registry/_validate_relation_sources.py`
+- `S22` `T` `src/cadrumo/entrypoints/mcp`
+- `S23` `T` `src/cadrumo/entrypoints/mcp`
+- `S24` `T` `src/cadrumo/entrypoints/cli/tests/test_modelo_result_summary_labels.py`
+- `S25` `T` `src/cadrumo/entrypoints/cli/tests`
+- `S26` `T` `.vaultspec/templates`
+- `S27` `T` `src/cadrumo/entrypoints/mcp/tests`
+- `S28` `T` `the two integration serial budget tests and .github/workflows/ci-full.yml`
+- `S29` `T` `the pytest timeout failure-reporting hook and pyproject.toml`
+- `S30` `T` `src/cadrumo/application/operator_surface/tests/test_contract.py`
+- `S30` `T` `src/cadrumo/application/operator_surface/tests/test_contract_live.py`
+- `S31` `T` `justfile`
+- `S31` `T` `pyproject.toml`
+- `S32` `T` `dev/registry/tests`
+- `S33` `T` `src/cadrumo/tests/test_lane_reachability.py`
+- `S34` `T` `justfile`
+- `S34` `T` `.github/workflows/ci-full.yml`
+- `S35` `T` `src/cadrumo/tests/test_lane_reachability.py and the lane declarations it reads`
+- `S36` `T` `justfile and .github/workflows/docs.yml and dev/docs/tests`
+- `S37` `T` `src/cadrumo/application/operator_surface/_help.py`
+- `S37` `T` `src/cadrumo/locales/`
+- `S37` `T` `src/cadrumo/application/operator_surface/tests/test_contract.py`
+- `S38` `T` `dev/registry/_provenance_manifest.py`
+- `S38` `T` `dev/registry/tests/test_export_tree.py`
+- `S39` `T` `dev/registry/_provenance_manifest.py`
+- `S39` `T` `dev/registry/tests/test_export_tree.py`
+- `S40` `T` `pyproject.toml and .github/workflows/ci.yml and the four named gate modules`
+- `S42` `T` `pyproject.toml and justfile and dev/tests and dev/registry/tests`
+- `S43` `T` `.github/workflows/ci.yml`
+- `S43` `T` `justfile`
+- `S43` `T` `prek.toml`
+- `S44` `T` `pyproject.toml and .github/workflows/ci.yml and the four named gate modules and src/cadrumo/adapters/outbound/fx`
+- `S45` `T` `the plan and .github/workflows and justfile as the mapping's subject`
+- `S46` `T` `src/cadrumo/adapters/persistence/storage`
+- `S46` `T` `src/cadrumo/application/user_profile`
+- `S46` `T` `src/cadrumo/application/bucket_maintenance`
+- `S46` `T` `src/cadrumo/core`
+- `S46` `T` `src/cadrumo/domain/calculations/registry/_compiled_cache.py`
+- `S46` `T` `dev/registry/_generated_tree_publication.py`
+- `S46` `T` `dev/write_site_census.py`
+- `S47` `T` `.github/workflows/packaging-quick.yml and dev/packaging/tests/test_packaging_quick_workflow.py`
+- `S48` `T` `dev/ci/tests/test_ci_workflow.py and justfile`
+- `S49` `T` `.github/workflows/ci.yml and dev/ci/tests/test_ci_workflow.py`
+
+- `S41` `T` `src/cadrumo/entrypoints/cli/_common.py`
+- `S41` `T` `src/cadrumo/entrypoints/cli/_period_parsing.py`
+- `S41` `T` `src/cadrumo/entrypoints/cli/_date_parsing.py`
+- `S41` `T` `src/cadrumo/entrypoints/cli/_decimal_parsing.py`
+- `S41` `T` `src/cadrumo/entrypoints/cli/_operator_surface_reconciliation.py`
+- `S41` `T` `dev/quality/import_hygiene_test_debt.json`
+- `S50` `T` `src/cadrumo/locales/es/modelo/schema/347.yml`
+- `S50` `T` `src/cadrumo/locales/en/modelo/schema/347.yml`
+- `S50` `T` `src/cadrumo/locales/ca/modelo/schema/347.yml`
+- `S50` `T` `src/cadrumo/locales/hu/modelo/schema/347.yml`
+
+- `S53` `T` `src/cadrumo/tests/test_docstring_core_struct_links.py`
+- `S54` `M` `src/cadrumo/locales/en/cli.yml`
+- `S54` `M` `src/cadrumo/locales/es/cli.yml`
+- `S54` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S54` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S54` `M` `dev/locales/_fstring_registry.py`
+- `S54` `verify:` `python -m dev.locales scaffold --check` -> `pass`
+- `S56` `M` `dev/source_connectivity/discovery.py`
+- `S56` `A` `dev/source_connectivity/tests/test_discovery_resolves_the_real_tree.py`
+- `S56` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S56.md`
+- `S57` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S57.md`
+- `S57` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s57-execution-self-review-audit.md`
+- `S58` `M` `src/cadrumo/application/calculations/tests/test_grouping_dispatch_coverage.py`
+- `S58` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S58.md`
+- `S58` `verify:` `uv run --no-sync ruff check src/cadrumo/application/calculations/tests/test_grouping_dispatch_coverage.py`
+- `S58` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/calculations/tests/test_grouping_dispatch_coverage.py`
+- `S58` `verify:` `.\\.venv\\Scripts\\python.exe -m py_compile src/cadrumo/application/calculations/tests/test_grouping_dispatch_coverage.py`
+- `S58` `verify:` `uv run --no-sync pytest -o addopts='' -n 0 -q src/cadrumo/application/calculations/tests/test_grouping_dispatch_coverage.py`
+- `S58` `verify:` `uv run --no-sync pytest -o addopts='' -n 0 -q src/cadrumo/application/modelo/tests/test_binding_source_kind_mesh_parity.py`
+- `S59` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S59.md`
+- `S59` `verify:` `.venv\\Scripts\\python.exe -m pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_every_bundled_design_is_read_or_reported.py::test_no_bundled_design_is_unreadable_or_only_partly_read src/cadrumo/domain/calculations/registry/tests/test_every_bundled_design_is_read_or_reported.py::test_every_provenance_only_design_still_refuses_and_is_a_promotion_candidate src/cadrumo/domain/calculations/registry/tests/test_modelo_184_registry.py::test_modelo_184_raw_boe_design_eras_are_hash_pinned_and_explicitly_not_mapped`
+- `S60` `M` `src/cadrumo/domain/calculations/registry/record_design.py`
+- `S60` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S60.md`
+- `S61` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_165_historical_layout_authority.py`
+- `S61` `verify:` `uv run --no-sync pytest --noconftest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_narrow_mechanism_admissions.py src/cadrumo/domain/calculations/registry/tests/test_modelo_165_historical_layout_authority.py` -> `pass`
+- `S61` `verify:` `uv run --no-sync pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_narrow_mechanism_admissions.py src/cadrumo/domain/calculations/registry/tests/test_modelo_165_historical_layout_authority.py` -> `pass`
+- `S62` `M` `src/cadrumo/_data/registry/aeat/modelos/720/revisions/2013-y-siguientes/bindings/0001-bindings.toml`
+- `S62` `M` `src/cadrumo/application/modelo/calculation_route.py`
+- `S62` `M` `src/cadrumo/core/aggregation.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/bindings.py`
+- `S62` `A` `src/cadrumo/domain/calculations/registry/design_constant_bindings.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/m303_differentiated_deduction_projection.py`
+- `S62` `M` `src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py`
+- `S62` `A` `src/cadrumo/domain/calculations/registry/tests/test_narrow_mechanism_admissions.py`
+- `S62` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S62.md`
+- `S62` `verify:` `uv run --no-sync pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_narrow_mechanism_admissions.py src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py src/cadrumo/domain/calculations/registry/tests/test_modelo_720_registry.py src/cadrumo/domain/calculations/registry/tests/test_modelo_720_binding_derived_record_extent.py src/cadrumo/domain/calculations/registry/tests/test_modelo_720_binding_derived_records_are_complete.py src/cadrumo/application/modelo/tests/test_calculation_route.py` -> `pass`
+- `S62` `verify:` `uv run --no-sync ruff check src/cadrumo/core/aggregation.py src/cadrumo/application/modelo/calculation_route.py src/cadrumo/domain/calculations/registry/bindings.py src/cadrumo/domain/calculations/registry/design_constant_bindings.py src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py src/cadrumo/domain/calculations/registry/m303_differentiated_deduction_projection.py src/cadrumo/domain/calculations/registry/tests/test_narrow_mechanism_admissions.py src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py src/cadrumo/application/modelo/tests/test_calculation_route.py` -> `pass`
+- `S63` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S63.md`
+- `S63` `verify:` `uv run --no-sync pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_narrow_mechanism_admissions.py src/cadrumo/domain/calculations/registry/tests/test_every_bundled_design_is_read_or_reported.py src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py` -> `pass`
+- `S63` `verify:` `uv run --no-sync ruff check src/cadrumo/core/aggregation.py src/cadrumo/application/modelo/calculation_route.py src/cadrumo/domain/calculations/registry/bindings.py src/cadrumo/domain/calculations/registry/design_constant_bindings.py src/cadrumo/domain/calculations/registry/record_design.py src/cadrumo/domain/calculations/registry/record_design_schema.py src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py src/cadrumo/domain/calculations/registry/tests/test_narrow_mechanism_admissions.py src/cadrumo/domain/calculations/registry/tests/test_every_bundled_design_is_read_or_reported.py src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py` -> `pass`
+- `S64` `M` `dev/registry/pipeline/_export_tree.py`
+- `S64` `M` `dev/registry/tests/test_export_tree.py`
+- `S64` `M` `dev/registry/tests/test_generated_export_trees.py`
+- `S64` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/casillas/ctipo2.tipo-hoja__ctipo3.rendimiento-neto-minorado-agricola-eo.toml`
+- `S64` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/export/0002-record-m184-entidad.toml`
+- `S64` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/export/0004-record-m184-socio.toml`
+- `S64` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2023-2024/export/_generation.provenance.json`
+- `S64` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/casillas/ctipo2.tipo-hoja__ctipo3.rendimiento-neto-minorado-agricola-eo.toml`
+- `S64` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/export/0002-record-m184-entidad.toml`
+- `S64` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/export/0004-record-m184-socio.toml`
+- `S64` `M` `src/cadrumo/_data/registry/aeat/modelos/184/revisions/2025-y-siguientes/export/_generation.provenance.json`
+- `S64` `verify:` `uv run --no-sync pytest -n 0 -q dev/registry/tests/test_generated_export_trees.py -k m184` -> `pass`
+- `S64` `verify:` `uv run --no-sync ruff check dev/registry/pipeline/_export_tree.py dev/registry/tests/test_export_tree.py dev/registry/tests/test_generated_export_trees.py` -> `pass`
+- `S65` `T`
+- `S65` `verify:` `uv run --no-sync pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py::test_the_unjoined_design_sheet_inventory_is_exact src/cadrumo/domain/calculations/registry/tests/test_modelo_349_registry.py::test_committed_modelo_349_record_design_round_trips_declarante_operador_rectificacion` -> `pass`
+- `S66` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S66.md`
+- `S66` `verify:` `& .venv\Scripts\python.exe -m pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py src/cadrumo/domain/calculations/registry/tests/test_modelo_349_registry.py::test_committed_modelo_349_record_design_round_trips_declarante_operador_rectificacion` -> `pass`
+- `S67` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S67.md`
+- `S67` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s67-execution-self-review-audit.md`
+- `S68` `M` `src/cadrumo/domain/calculations/registry/tests/test_export_parse.py`
+- `S68` `M` `src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py`
+- `S68` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S68.md`
+- `S68` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S68` `verify:` `uv run --no-sync pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_export_parse.py::test_m296_primary_perceptor_record_discriminator_selects_only_blank_position_500 src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py` -> `pass`
+- `S68` `verify:` `uv run --no-sync ruff check dev/registry/pipeline/_semantic_map.py dev/registry/pipeline/_export_tree.py dev/registry/pipeline/_provenance_manifest.py dev/registry/mappings/modelo_296/2024/0001-records.toml dev/registry/tests/test_semantic_map_loader.py dev/registry/tests/test_export_tree.py src/cadrumo/domain/calculations/registry/tests/test_export_parse.py src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py` -> `pass`
+- `S69` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S69.md`
+- `S69` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S69` `verify:` `uv run --no-sync pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py` -> `pass`
+- `S70` `T`
+- `S70` `verify:` `read-only ratchet-equivalent corpus scan` -> `pass`
+- `S70` `verify:` `git -c diff.renames=false log --all -S continuidad_id -- src/cadrumo/_data/registry/aeat/modelos/200` -> `pass`
+- `S71` `M` `src/cadrumo/application/calculations/tests/test_modelo_390_303_reconciliation_continuity.py`
+- `S71` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S71.md`
+- `S72` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S72.md`
+- `S73` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S73.md`
+- `S74` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S74.md`
+- `S75` `M` `src/cadrumo/application/calculations/_m303_regimen_simplificado_annual_summary.py`
+- `S75` `M` `src/cadrumo/application/modelo/_calculation_actions.py`
+- `S75` `M` `src/cadrumo/application/modelo/_m303_regimen_simplificado_scope.py`
+- `S75` `M` `src/cadrumo/application/modelo/_verification_actions.py`
+- `S75` `M` `src/cadrumo/application/modelo/tests/test_calculation_route.py`
+- `S75` `M` `src/cadrumo/application/state_projection.py`
+- `S76` `M` `.vault/adr/2026-07-01-modelo-303-regimen-simplificado-adr.md`
+- `S77` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S77.md`
+- `S78` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S78.md`
+- `S78` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s78-correction-lifecycle-self-review-audit.md`
+- `S79` `M` `src/cadrumo/application/calculations/cross_period_clean_state.py`
+- `S79` `M` `src/cadrumo/application/calculations/tests/_cross_period_clean_state_support.py`
+- `S79` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S79.md`
+- `S79` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s79-execution-self-review-audit.md`
+- `S80` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S80.md`
+- `S80` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s80-execution-self-review-audit.md`
+- `S81` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S81.md`
+- `S81` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s81-execution-self-review-audit.md`
+- `S82` `M` `src/cadrumo/application/calculations/tests/_cross_period_clean_state_support.py`
+- `S82` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S82.md`
+- `S82` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s82-execution-self-review-audit.md`
+- `S83` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S83.md`
+- `S83` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s83-execution-self-review-audit.md`
+- `S84` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S84.md`
+- `S84` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s84-execution-self-review-audit.md`
+- `S85` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S85.md`
+- `S85` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s85-execution-self-review-audit.md`
+- `S86` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S86.md`
+- `S86` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s86-execution-self-review-audit.md`
+- `S87` `M` `src/cadrumo/application/calculations/tests/_cross_period_clean_state_support.py`
+- `S87` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S87.md`
+- `S87` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s87-execution-self-review-audit.md`
+- `S88` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S88.md`
+- `S88` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s88-execution-self-review-audit.md`
+- `S89` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S89.md`
+- `S89` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s89-execution-self-review-audit.md`
+- `S90` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S90.md`
+- `S90` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s90-execution-self-review-audit.md`
+- `S91` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S91.md`
+- `S91` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s91-execution-self-review-audit.md`
+- `S92` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S92.md`
+- `S92` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s92-execution-self-review-audit.md`
+- `S93` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S93.md`
+- `S93` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s93-execution-self-review-audit.md`
+- `S94` `M` `src/cadrumo/domain/calculations/registry/errors.py`
+- `S94` `M` `src/cadrumo/domain/calculations/registry/tests/test_temporal.py`
+- `S94` `M` `src/cadrumo/locales/en/errors.yml`
+- `S94` `M` `src/cadrumo/locales/es/errors.yml`
+- `S94` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S94` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S94` `M` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S94.md`
+- `S94` `verify:` `pytest -q -n0 test_temporal.py::{M390 fallback, localized renderer}` -> `5 passed in 36.58s`
+- `S94` `verify:` `py_compile errors.py test_temporal.py` -> `pass`
+- `S94` `verify:` `ruff check errors.py test_temporal.py` -> `pass`
+- `S94` `verify:` `python -m dev.locales audit` -> `ca.yml/en.yml/es.yml/hu.yml: ok`
+- `S94` `verify:` `git diff --check` -> `pass`
+- `S95` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S95.md`
+- `S95` `verify:` `pytest -q -n0 src/cadrumo/domain/calculations/registry/tests/test_m390_temporal_epochs.py src/cadrumo/domain/calculations/registry/tests/test_filing_schedule_selection.py src/cadrumo/application/modelo/tests/test_binding_readiness.py` -> `41 passed in 91.52s`
+- `S96` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S96.md`
+- `S96` `verify:` `pytest -q -n0 test_temporal_coverage.py::test_temporal_coverage_expands_open_selectors_through_the_supported_horizon test_audit_oracle_bindings.py::test_binding_to_test_environment_oracle_fails_under_production test_filing_capability_worklist.py::test_modelo_036_product_scope_terminal_is_exact_to_the_reviewed_revision` -> `3 passed in 43.93s`
+- `S96` `verify:` `pytest -q -n0 test_temporal_coverage.py test_audit_oracle_bindings.py test_filing_capability_worklist.py` -> `51 passed, 1 unrelated failed in 158.41s`
+- `S97` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S97.md`
+- `S97` `verify:` `pytest -q -n0 src/cadrumo/application/registry/tests/test_temporal_coverage.py::test_temporal_coverage_expands_open_selectors_through_the_supported_horizon` -> `1 passed in 55.58s`
+- `S98` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S98.md`
+- `S98` `verify:` `pytest -q -n0 src/cadrumo/application/registry/tests/test_temporal_coverage.py::test_temporal_coverage_expands_open_selectors_through_the_supported_horizon` -> `1 passed in 56.79s`
+- `S99` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S99.md`
+- `S99` `verify:` `3 passed in 43.93s`
+- `S99` `verify:` `1 passed in 56.79s`
+- `S100` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S100.md`
+- `S100` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s100-execution-self-review-audit.md`
+- `S101` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S101.md`
+- `S101` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s101-execution-self-review-audit.md`
+- `S102` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S102.md`
+- `S102` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s102-execution-self-review-audit.md`
+- `S103` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S103.md`
+- `S103` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s103-execution-self-review-audit.md`
+- `S104` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S104.md`
+- `S104` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s104-execution-self-review-audit.md`
+- `S105` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S105.md`
+- `S105` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s105-execution-self-review-audit.md`
+- `S106` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S106.md`
+- `S106` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s106-execution-self-review-audit.md`
+- `S107` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S107.md`
+- `S107` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s107-execution-self-review-audit.md`
+- `S108` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S108.md`
+- `S108` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s108-execution-self-review-audit.md`
+- `S109` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S109.md`
+- `S109` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s109-execution-self-review-audit.md`
+- `S110` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S110.md`
+- `S110` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s110-execution-self-review-audit.md`
+- `S111` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S111.md`
+- `S111` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s111-execution-self-review-audit.md`
+- `S112` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S112.md`
+- `S112` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s112-execution-self-review-audit.md`
+- `S113` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S113.md`
+- `S113` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s113-execution-self-review-audit.md`
+- `S114` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S114.md`
+- `S114` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s114-execution-self-review-audit.md`
+- `S115` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S115.md`
+- `S115` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s115-execution-self-review-audit.md`
+- `S116` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S116.md`
+- `S116` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s116-execution-self-review-audit.md`
+- `S117` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S117.md`
+- `S117` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s117-execution-self-review-audit.md`
+- `S118` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P02-S118.md`
+- `S118` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p02-s118-execution-self-review-audit.md`
+- `S119` `M` `src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py`
+- `S119` `verify:` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py` -> `pass`
+- `S119` `verify:` `uv run --no-sync pytest -n 0 -q src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py::test_the_scan_reaches_the_real_registry src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py::test_the_unjoined_design_sheet_inventory_is_exact src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py::test_every_inventory_entry_sits_on_a_multi_record_layout src/cadrumo/domain/calculations/registry/tests/test_export_layout_join_ratchet.py::test_no_inventory_entry_is_an_auxiliary_envelope_header` -> `pass`
+- `S120` `M` `dev/registry/analysis/load_census_classification.py`
+- `S120` `M` `dev/registry/tests/test_load_census_classification.py`
+- `S120` `verify:` `uv run --no-sync pytest -q dev/registry/tests/test_load_census_classification.py`
+- `S120` `verify:` `uv run --no-sync ruff check dev/registry/analysis/load_census_classification.py dev/registry/tests/test_load_census_classification.py`
+- `S121` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations.py`
+- `S121` `A` `src/cadrumo/adapters/outbound/aeat/sede/declarations_capture.py`
+- `S121` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py`
+- `S121` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/_declarations_support.py`
+- `S121` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part3.py`
+- `S121` `M` `src/cadrumo/application/live/filed_data_capture.py`
+- `S121` `verify:` `uv run --no-sync pytest -n0 -q src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part1.py::test_authoritative_declaration_selection_uses_latest_alta_row_for_duplicate_period src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_part3.py::test_capture_filed_declaration_empty_nif_carries_translated_message` -> `pass`
+- `S121` `verify:` `uv run --no-sync python -c <canonical consumer capture-import assertion>` -> `pass`
+- `S121` `verify:` `uv run --no-sync python -m dev.audit.size_budget` -> `fail`
+- `S122` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_apply.py`
+- `S122` `A` `src/cadrumo/adapters/outbound/google/_calc_sheets_apply_formatting.py`
+- `S122` `M` `src/cadrumo/adapters/outbound/google/tests/test_apply_adapter_helpers.py`
+- `S122` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_export_integration.py`
+- `S122` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_offline_online_conformance.py`
+- `S122` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_transport_facet_parity.py`
+- `S122` `M` `src/cadrumo/adapters/outbound/google/tests/test_grid_resize.py`
+- `S122` `M` `src/cadrumo/adapters/outbound/google/tests/test_package_module_allowlist.py`
+- `S122` `M` `src/cadrumo/tests/test_regulatory_cap_term_dominance.py`
+- `S122` `verify:` `uv run --no-sync pytest -n0 -q src/cadrumo/adapters/outbound/google/tests/test_apply_adapter_helpers.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_export_integration.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_transport_facet_parity.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_offline_online_conformance.py src/cadrumo/adapters/outbound/google/tests/test_grid_resize.py` -> `pass (35 passed, exit 0)`
+- `S122` `verify:` `uv run --no-sync pytest -n0 -q src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_typed_outcomes.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_export_preview.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_apply_no_empty_window.py` -> `pass (43 passed, exit 0)`
+- `S122` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/outbound/google/calc_sheets_apply.py src/cadrumo/adapters/outbound/google/_calc_sheets_apply_formatting.py src/cadrumo/adapters/outbound/google/tests/test_apply_adapter_helpers.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_export_integration.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_offline_online_conformance.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_transport_facet_parity.py src/cadrumo/adapters/outbound/google/tests/test_grid_resize.py src/cadrumo/adapters/outbound/google/tests/test_package_module_allowlist.py src/cadrumo/tests/test_regulatory_cap_term_dominance.py` -> `pass (exit 0)`
+- `S122` `verify:` `uv run --no-sync ruff format --check src/cadrumo/adapters/outbound/google/calc_sheets_apply.py src/cadrumo/adapters/outbound/google/_calc_sheets_apply_formatting.py src/cadrumo/adapters/outbound/google/tests/test_apply_adapter_helpers.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_export_integration.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_offline_online_conformance.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_transport_facet_parity.py src/cadrumo/adapters/outbound/google/tests/test_grid_resize.py src/cadrumo/adapters/outbound/google/tests/test_package_module_allowlist.py src/cadrumo/tests/test_regulatory_cap_term_dominance.py` -> `pass (exit 0)`
+- `S122` `verify:` `(Get-Content src/cadrumo/adapters/outbound/google/calc_sheets_apply.py | Measure-Object -Line).Lines` -> `pass (1028 <= 1250)`
+- `S122` `verify:` `uv run --no-sync pytest -n0 -q src/cadrumo/tests/test_regulatory_cap_term_dominance.py` -> `fail (2 unrelated relocation pairs, exit 1)`
+- `S122` `verify:` `uv run --no-sync python -m dev.audit.size_budget` -> `fail (92 unrelated P05 findings, exit 1)`
+- `S123` `M` `src/cadrumo/adapters/outbound/google/calc_sheets_pull.py`
+- `S123` `M` `src/cadrumo/application/calculations/row_set_assembly.py`
+- `S123` `A` `src/cadrumo/adapters/outbound/google/calc_sheets_pull_records.py`
+- `S123` `A` `src/cadrumo/adapters/outbound/google/calc_sheets_pull_coverage.py`
+- `S123` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_pull_typing.py`
+- `S123` `M` `src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_typed_outcomes.py`
+- `S123` `M` `src/cadrumo/adapters/outbound/google/tests/test_compute_from_pull.py`
+- `S123` `M` `src/cadrumo/adapters/outbound/google/tests/test_package_module_allowlist.py`
+- `S123` `M` `src/cadrumo/adapters/outbound/google/tests/test_pull_adapter_helpers.py`
+- `S123` `M` `src/cadrumo/adapters/outbound/google/tests/test_pull_result_roundtrip.py`
+- `S123` `M` `src/cadrumo/adapters/outbound/google/tests/test_verify_pull_coverage.py`
+- `S123` `M` `src/cadrumo/adapters/outbound/google/tests/test_worksheet_export_pull_roundtrip.py`
+- `S123` `M` `src/cadrumo/application/calculations/tests/test_detail_record_round_trip.py`
+- `S123` `M` `src/cadrumo/application/calculations/tests/test_row_set_assembly.py`
+- `S123` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_row_set_assembly.py`
+- `S123` `M` `src/cadrumo/application/storage/calc_sheets/tests/test_row_set_calculation_roundtrip.py`
+- `S123` `M` `src/cadrumo/entrypoints/cli/_modelo_spreadsheet_cli.py`
+- `S123` `M` `src/cadrumo/entrypoints/cli/tests/test_google_payloads.py`
+- `S123` `M` `src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_pull_observations.py`
+- `S123` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py`
+- `S123` `verify:` `uv run --no-sync pytest -n0 -q src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_pull_typing.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_typed_outcomes.py src/cadrumo/adapters/outbound/google/tests/test_compute_from_pull.py src/cadrumo/adapters/outbound/google/tests/test_pull_adapter_helpers.py src/cadrumo/adapters/outbound/google/tests/test_pull_result_roundtrip.py src/cadrumo/adapters/outbound/google/tests/test_verify_pull_coverage.py src/cadrumo/adapters/outbound/google/tests/test_worksheet_export_pull_roundtrip.py src/cadrumo/adapters/outbound/google/tests/test_package_module_allowlist.py` -> `pass (87 passed, exit 0)`
+- `S123` `verify:` `uv run --no-sync pytest -n0 --collect-only -q src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_pull_typing.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_typed_outcomes.py src/cadrumo/adapters/outbound/google/tests/test_compute_from_pull.py src/cadrumo/adapters/outbound/google/tests/test_pull_adapter_helpers.py src/cadrumo/adapters/outbound/google/tests/test_pull_result_roundtrip.py src/cadrumo/adapters/outbound/google/tests/test_verify_pull_coverage.py src/cadrumo/adapters/outbound/google/tests/test_worksheet_export_pull_roundtrip.py src/cadrumo/adapters/outbound/google/tests/test_package_module_allowlist.py` -> `pass (87 collected, exit 0)`
+- `S123` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/outbound/google/calc_sheets_pull.py src/cadrumo/adapters/outbound/google/calc_sheets_pull_records.py src/cadrumo/adapters/outbound/google/calc_sheets_pull_coverage.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_pull_typing.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_typed_outcomes.py src/cadrumo/adapters/outbound/google/tests/test_compute_from_pull.py src/cadrumo/adapters/outbound/google/tests/test_package_module_allowlist.py src/cadrumo/adapters/outbound/google/tests/test_pull_adapter_helpers.py src/cadrumo/adapters/outbound/google/tests/test_pull_result_roundtrip.py src/cadrumo/adapters/outbound/google/tests/test_verify_pull_coverage.py src/cadrumo/adapters/outbound/google/tests/test_worksheet_export_pull_roundtrip.py src/cadrumo/application/calculations/tests/test_detail_record_round_trip.py src/cadrumo/application/calculations/tests/test_row_set_assembly.py src/cadrumo/application/storage/calc_sheets/tests/test_row_set_assembly.py src/cadrumo/application/storage/calc_sheets/tests/test_row_set_calculation_roundtrip.py src/cadrumo/entrypoints/cli/_modelo_spreadsheet_cli.py src/cadrumo/entrypoints/cli/tests/test_google_payloads.py src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_pull_observations.py src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py` -> `pass (exit 0)`
+- `S123` `verify:` `uv run --no-sync ruff format --check src/cadrumo/adapters/outbound/google/calc_sheets_pull.py src/cadrumo/adapters/outbound/google/calc_sheets_pull_records.py src/cadrumo/adapters/outbound/google/calc_sheets_pull_coverage.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_pull_typing.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_typed_outcomes.py src/cadrumo/adapters/outbound/google/tests/test_compute_from_pull.py src/cadrumo/adapters/outbound/google/tests/test_package_module_allowlist.py src/cadrumo/adapters/outbound/google/tests/test_pull_adapter_helpers.py src/cadrumo/adapters/outbound/google/tests/test_pull_result_roundtrip.py src/cadrumo/adapters/outbound/google/tests/test_verify_pull_coverage.py src/cadrumo/adapters/outbound/google/tests/test_worksheet_export_pull_roundtrip.py src/cadrumo/application/calculations/tests/test_detail_record_round_trip.py src/cadrumo/application/calculations/tests/test_row_set_assembly.py src/cadrumo/application/storage/calc_sheets/tests/test_row_set_assembly.py src/cadrumo/application/storage/calc_sheets/tests/test_row_set_calculation_roundtrip.py src/cadrumo/entrypoints/cli/_modelo_spreadsheet_cli.py src/cadrumo/entrypoints/cli/tests/test_google_payloads.py src/cadrumo/entrypoints/cli/tests/test_modelo_spreadsheet_pull_observations.py src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py` -> `pass (exit 0)`
+- `S123` `verify:` `uv run --no-sync python -c "from cadrumo.tests import measure_module_lines; key='src/cadrumo/adapters/outbound/google/calc_sheets_pull.py'; actual=measure_module_lines()[key]; limit=1250; print(f'{key}: {actual}/{limit}'); assert actual <= limit"` -> `pass (1228 <= 1250, exit 0)`
+- `S123` `verify:` `uv run --no-sync pytest -n0 -q src/cadrumo/tests/test_qualified_docstring_references_resolve.py src/cadrumo/application/calculations/tests/test_row_set_assembly.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_pull_typing.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_typed_outcomes.py src/cadrumo/adapters/outbound/google/tests/test_compute_from_pull.py src/cadrumo/adapters/outbound/google/tests/test_pull_result_roundtrip.py` -> `fail (4 unrelated doc-reference resolver findings; 74 passed, exit 1)`
+- `S123` `verify:` `uv run --no-sync pytest -n0 -q src/cadrumo/application/calculations/tests/test_row_set_assembly.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_pull_typing.py src/cadrumo/adapters/outbound/google/tests/test_calc_sheets_typed_outcomes.py src/cadrumo/adapters/outbound/google/tests/test_compute_from_pull.py src/cadrumo/adapters/outbound/google/tests/test_pull_result_roundtrip.py` -> `pass (73 passed, exit 0)`
+- `S123` `verify:` `uv run --no-sync ruff check src/cadrumo/application/calculations/row_set_assembly.py src/cadrumo/adapters/outbound/google/calc_sheets_pull.py` -> `pass (exit 0)`
+- `S123` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/calculations/row_set_assembly.py src/cadrumo/adapters/outbound/google/calc_sheets_pull.py` -> `pass (exit 0)`
+- `S124` `M` `src/cadrumo/adapters/outbound/storage/_google_drive.py`
+- `S124` `A` `src/cadrumo/adapters/outbound/storage/_google_drive_metadata.py`
+- `S124` `M` `src/cadrumo/adapters/outbound/storage/tests/test_google_drive.py`
+- `S124` `M` `src/cadrumo/adapters/outbound/storage/tests/test_google_drive_failure_preconditions.py`
+- `S124` `M` `src/cadrumo/adapters/outbound/storage/tests/test_google_drive_metadata_contract.py`
+- `S124` `verify:` `uv run --no-sync pytest -n0 -q src/cadrumo/adapters/outbound/storage/tests/test_google_drive.py src/cadrumo/adapters/outbound/storage/tests/test_google_drive_metadata_contract.py src/cadrumo/adapters/outbound/storage/tests/test_google_drive_failure_preconditions.py src/cadrumo/adapters/outbound/storage/tests/test_validation_preconditions.py src/cadrumo/adapters/outbound/storage/tests/test_provider_conformance_parity.py` -> `pass (85 passed, exit 0)`
+- `S124` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/outbound/storage/_google_drive.py src/cadrumo/adapters/outbound/storage/_google_drive_metadata.py src/cadrumo/adapters/outbound/storage/tests/test_google_drive.py src/cadrumo/adapters/outbound/storage/tests/test_google_drive_metadata_contract.py src/cadrumo/adapters/outbound/storage/tests/test_google_drive_failure_preconditions.py` -> `pass (exit 0)`
+- `S124` `verify:` `uv run --no-sync ruff format --check src/cadrumo/adapters/outbound/storage/_google_drive.py src/cadrumo/adapters/outbound/storage/_google_drive_metadata.py src/cadrumo/adapters/outbound/storage/tests/test_google_drive.py src/cadrumo/adapters/outbound/storage/tests/test_google_drive_metadata_contract.py src/cadrumo/adapters/outbound/storage/tests/test_google_drive_failure_preconditions.py` -> `pass (exit 0)`
+- `S124` `verify:` `uv run --no-sync python -c "from cadrumo.tests._size_budget import measure_module_lines; subject='src/cadrumo/adapters/outbound/storage/_google_drive.py'; lines=measure_module_lines()[subject]; print(f'{subject}: {lines}/1250'); raise SystemExit(lines > 1250)"` -> `pass (1139/1250, exit 0)`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/__init__.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/_secure_object_namespaces.py`
+- `S125` `A` `src/cadrumo/adapters/persistence/storage/_namespace_registry.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/attachment.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/blob_store/_blob_store.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/runtime.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/runtime_repository.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/sql/_secure_object_row_codec.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_vacuity_invariants.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_key_grammar.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/tests/test_runtime.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/tests/test_schema_lineage.py`
+- `S125` `M` `src/cadrumo/adapters/persistence/storage/tests/test_staged_bucket_repository.py`
+- `S125` `M` `src/cadrumo/application/tests/test_storage_namespace_adoption.py`
+- `S125` `verify:` `uv run --no-sync pytest --collect-only -q src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry_taxonomy_consumer.py src/cadrumo/application/tests/test_storage_namespace_adoption.py src/cadrumo/adapters/persistence/storage/tests/test_attachment_store_roundtrip.py` -> `pass (71 collected, exit 0)`
+- `S125` `verify:` `uv run --no-sync pytest -n0 -q src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry_taxonomy_consumer.py src/cadrumo/application/tests/test_storage_namespace_adoption.py src/cadrumo/adapters/persistence/storage/tests/test_attachment_store_roundtrip.py` -> `pass (71 passed, exit 0)`
+- `S125` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/__init__.py src/cadrumo/adapters/persistence/storage/_secure_object_namespaces.py src/cadrumo/adapters/persistence/storage/_namespace_registry.py src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py src/cadrumo/adapters/persistence/storage/attachment.py src/cadrumo/adapters/persistence/storage/blob_store/_blob_store.py src/cadrumo/adapters/persistence/storage/runtime.py src/cadrumo/adapters/persistence/storage/runtime_repository.py src/cadrumo/adapters/persistence/storage/sql/_secure_object_row_codec.py src/cadrumo/adapters/persistence/storage/sql/secure_objects.py src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_vacuity_invariants.py src/cadrumo/adapters/persistence/storage/tests/test_namespace_key_grammar.py src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py src/cadrumo/adapters/persistence/storage/tests/test_runtime.py src/cadrumo/adapters/persistence/storage/tests/test_schema_lineage.py src/cadrumo/adapters/persistence/storage/tests/test_staged_bucket_repository.py src/cadrumo/application/tests/test_storage_namespace_adoption.py` -> `pass (exit 0)`
+- `S125` `verify:` `uv run --no-sync ruff format --check src/cadrumo/adapters/persistence/storage/__init__.py src/cadrumo/adapters/persistence/storage/_secure_object_namespaces.py src/cadrumo/adapters/persistence/storage/_namespace_registry.py src/cadrumo/adapters/persistence/storage/_storage_path_definitions.py src/cadrumo/adapters/persistence/storage/attachment.py src/cadrumo/adapters/persistence/storage/blob_store/_blob_store.py src/cadrumo/adapters/persistence/storage/runtime.py src/cadrumo/adapters/persistence/storage/runtime_repository.py src/cadrumo/adapters/persistence/storage/sql/_secure_object_row_codec.py src/cadrumo/adapters/persistence/storage/sql/secure_objects.py src/cadrumo/adapters/persistence/storage/tests/test_inner_envelope_vacuity_invariants.py src/cadrumo/adapters/persistence/storage/tests/test_namespace_key_grammar.py src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py src/cadrumo/adapters/persistence/storage/tests/test_runtime.py src/cadrumo/adapters/persistence/storage/tests/test_schema_lineage.py src/cadrumo/adapters/persistence/storage/tests/test_staged_bucket_repository.py src/cadrumo/application/tests/test_storage_namespace_adoption.py` -> `pass (exit 0)`
+- `S125` `verify:` `uv run --no-sync python -c "from cadrumo.tests._size_budget import measure_module_lines; measured=measure_module_lines(); subjects=('src/cadrumo/adapters/persistence/storage/_namespace_registry.py','src/cadrumo/adapters/persistence/storage/_secure_object_namespaces.py'); print(*(f'{subject}: {measured[subject]}/1250' for subject in subjects), sep='\n'); raise SystemExit(any(measured[subject] > 1250 for subject in subjects))"` -> `pass (src/cadrumo/adapters/persistence/storage/_namespace_registry.py: 174/1250; src/cadrumo/adapters/persistence/storage/_secure_object_namespaces.py: 1203/1250; exit 0)`
+- `S126` `M` `src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py`
+- `S126` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py` -> `All checks passed!` -> `0`
+- `S126` `verify:` `uv run --no-sync ruff format --check src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py` -> `1 file already formatted` -> `0`
+- `S126` `verify:` `uv run --no-sync pytest -o addopts='' -q src/cadrumo/application/user_profile/tests/test_custody_roundtrip.py src/cadrumo/application/user_profile/tests/test_custody_restore_atomicity.py` -> `7 passed in 10.46s` -> `0`
+- `S126` `verify:` `uv run --no-sync pytest -o addopts='' --collect-only -q src/cadrumo/application/user_profile/tests/test_custody_roundtrip.py src/cadrumo/application/user_profile/tests/test_custody_restore_atomicity.py` -> `7 tests collected in 0.84s` -> `0`
+- `S126` `verify:` `uv run --no-sync python -c "from cadrumo.tests._size_budget import measure_module_lines, measure_callable_lines; path='src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py'; modules=measure_module_lines(); callables=measure_callable_lines(); print(f'module: {modules[path]} <= 1250'); print(f'_natural_key_resolvers: {callables[path + \"::_natural_key_resolvers\"]} <= 180'); print(f'_live_snapshot_natural_key_resolvers: {callables[path + \"::_live_snapshot_natural_key_resolvers\"]} <= 180'); print(f'_modelo_natural_key_resolvers: {callables[path + \"::_modelo_natural_key_resolvers\"]} <= 180'); print(f'_sede_natural_key_resolvers: {callables[path + \"::_sede_natural_key_resolvers\"]} <= 180')"` -> `module: 545 <= 1250; _natural_key_resolvers: 95 <= 180; _live_snapshot_natural_key_resolvers: 64 <= 180; _modelo_natural_key_resolvers: 24 <= 180; _sede_natural_key_resolvers: 24 <= 180` -> `0`
+- `S127` `M` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py`
+- `S127` `A` `src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt_crypto.py`
+- `S127` `M` `src/cadrumo/adapters/persistence/storage/_profile_login_session.py`
+- `S127` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py`
+- `S127` `M` `src/cadrumo/adapters/persistence/storage/custody/tests/test_unwrapped_dek_is_wipeable.py`
+- `S127` `M` `src/cadrumo/adapters/persistence/storage/tests/test_profile_login_session_adapter.py`
+- `S127` `M` `src/cadrumo/tests/test_session_vocabulary_custody_split.py`
+- `S127` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S127` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S127.md`
+- `S127` `verify:` `git diff-tree --no-commit-id --name-only -r 1024192354` -> `src/cadrumo/adapters/persistence/storage/_profile_login_session.py`
+- `S127` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt_crypto.py src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py src/cadrumo/adapters/persistence/storage/custody/tests/test_unwrapped_dek_is_wipeable.py src/cadrumo/adapters/persistence/storage/tests/test_profile_login_session_adapter.py src/cadrumo/tests/test_session_vocabulary_custody_split.py` -> `pass` -> `All checks passed!`
+- `S127` `verify:` `uv run --no-sync ruff format --check src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt_crypto.py src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py src/cadrumo/adapters/persistence/storage/custody/tests/test_unwrapped_dek_is_wipeable.py src/cadrumo/adapters/persistence/storage/tests/test_profile_login_session_adapter.py src/cadrumo/tests/test_session_vocabulary_custody_split.py` -> `pass` -> `6 files already formatted`
+- `S127` `verify:` `uv run --no-sync pytest --collect-only -q -o "addopts=" src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py src/cadrumo/adapters/persistence/storage/custody/tests/test_unwrapped_dek_is_wipeable.py src/cadrumo/adapters/persistence/storage/tests/test_profile_login_session_adapter.py src/cadrumo/tests/test_session_vocabulary_custody_split.py` -> `pass` -> `51 tests collected in 0.39s`
+- `S127` `verify:` `pass` -> `42 passed in 11.76s`
+- `S127` `verify:` `uv run --no-sync pytest -q -o "addopts=" src/cadrumo/adapters/persistence/storage/custody/tests/test_acceleration_receipt_roundtrip.py src/cadrumo/adapters/persistence/storage/custody/tests/test_unwrapped_dek_is_wipeable.py src/cadrumo/adapters/persistence/storage/tests/test_profile_login_session_adapter.py src/cadrumo/tests/test_session_vocabulary_custody_split.py` -> `fail` -> `9 failed, 42 passed in 11.43s`
+- `S127` `verify:` `uv run --no-sync python -c "from cadrumo.tests._size_budget import MODULE_POLICY, measure_module_lines; p='src/cadrumo/adapters/persistence/storage/custody/acceleration_receipt.py'; actual=measure_module_lines()[p]; assert actual <= MODULE_POLICY.default_limit, (actual, MODULE_POLICY.default_limit); print(f'{p}: {actual} lines <= default {MODULE_POLICY.default_limit}')"` -> `pass`
+- `S128` `A` `src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py`
+- `S128` `M` `src/cadrumo/adapters/persistence/storage/custody/filesystem.py`
+- `S128` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule.py`
+- `S128` `M` `src/cadrumo/adapters/persistence/storage/custody/_capsule_data.py`
+- `S128` `M` `src/cadrumo/adapters/persistence/storage/custody/_inventory.py`
+- `S128` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule_discovery.py`
+- `S128` `M` `src/cadrumo/adapters/persistence/storage/custody/capsule_records.py`
+- `S128` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S128` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S128.md`
+- `S128` `verify:` `uv run --no-sync ruff check src/cadrumo/adapters/persistence/storage/custody/filesystem.py src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py src/cadrumo/adapters/persistence/storage/custody/capsule.py src/cadrumo/adapters/persistence/storage/custody/_capsule_data.py src/cadrumo/adapters/persistence/storage/custody/_inventory.py src/cadrumo/adapters/persistence/storage/custody/capsule_discovery.py src/cadrumo/adapters/persistence/storage/custody/capsule_records.py` -> `pass` -> `All checks passed!`
+- `S128` `verify:` `uv run --no-sync pytest --collect-only -q src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_ceilings_have_one_home.py src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule.py src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_deletion_protocol.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_witness_contract.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_write_outlasts_a_reader.py src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_data_path_validation.py` -> `pass` -> `63 tests collected in 0.20s`
+- `S128` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/storage/custody/tests/test_custody_ceilings_have_one_home.py src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule.py src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_deletion_protocol.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_witness_contract.py src/cadrumo/adapters/persistence/storage/custody/tests/test_local_record_write_outlasts_a_reader.py src/cadrumo/adapters/persistence/storage/custody/tests/test_capsule_data_path_validation.py` -> `pass` -> `63 passed in 15.55s`
+- `S128` `verify:` `uv run --no-sync pytest -q src/cadrumo/tests/test_relative_imports_resolve.py src/cadrumo/adapters/persistence/storage/custody/tests/test_nofollow_is_never_the_only_guard.py` -> `pass` -> `5 passed in 19.12s`
+- `S128` `verify:` `uv run --no-sync python -m dev.audit.size_budget` -> `fail` -> `size budget: scanned 5607 modules, 15529 production callables; FAIL - 87 finding(s)`
+- `S129` `M` `src/cadrumo/adapters/persistence/storage/sql/secure_objects.py`
+- `S129` `A` `src/cadrumo/adapters/persistence/storage/sql/_secure_object_writes.py`
+- `S129` `M` `src/cadrumo/adapters/persistence/storage/sql/__init__.py`
+- `S129` `M` `src/cadrumo/adapters/persistence/storage/sql/tests/_secure_objects_support.py`
+- `S129` `verify:` `uv run --no-sync pytest -q src/cadrumo/adapters/persistence/storage/sql/tests` -> `169 passed, 2 warnings in 7.15s; EXIT=0`
+- `S130` `M` `src/cadrumo/application/aggregation/__init__.py`
+- `S130` `M` `src/cadrumo/application/aggregation/_modelo_bindings.py`
+- `S130` `A` `src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py`
+- `S130` `A` `src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva_refusal.py`
+- `S130` `A` `src/cadrumo/application/aggregation/_modelo_bindings_renta_expenses.py`
+- `S130` `A` `src/cadrumo/application/aggregation/_modelo_bindings_retenciones.py`
+- `S130` `A` `src/cadrumo/application/aggregation/_modelo_bindings_support.py`
+- `S130` `M` `src/cadrumo/application/aggregation/_service.py`
+- `S130` `M` `src/cadrumo/application/modelo/_calculation_actions.py`
+- `S130` `M` `src/cadrumo/application/modelo/calculation_route.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_currency_conversion_pipeline_parity.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_invoice_and_bank_feeds_agree.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_invoice_category_counterparty_mismatch_is_reported.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_invoice_declared_category_survives.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_invoice_line_currency_refusal.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_invoice_screen_exempt_lines.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_invoice_screen_reports_storage_degradation.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_invoice_screen_routes_exempt_base.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_m390_invoice_reachability.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_per_modelo_service.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_recargo_rate_advisory.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_retenciones_aggregation_resolver.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_retenciones_empty_store_advisory_guard.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_supplier_side_reverse_charge_reaches_casilla_122.py`
+- `S130` `M` `src/cadrumo/application/aggregation/tests/test_terminal_preconditions.py`
+- `S130` `verify:` `uv run --no-sync pytest -n0 -q src/cadrumo/application/aggregation/tests/test_invoice_declared_category_survives.py src/cadrumo/application/aggregation/tests/test_retenciones_aggregation_resolver.py src/cadrumo/application/aggregation/tests/test_terminal_preconditions.py` -> `pass`
+- `S131` `M` `src/cadrumo/application/aggregation/_renta_income_ledger.py`
+- `S131` `A` `src/cadrumo/application/aggregation/_renta_income_evidence.py`
+- `S131` `M` `src/cadrumo/application/aggregation/tests/test_income_sales_invoice_evidence.py`
+- `S131` `M` `src/cadrumo/application/aggregation/tests/test_income_withheld_derivation.py`
+- `S131` `M` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S131.md`
+- `S131` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S131` `verify:` `uv run --no-sync ruff check src/cadrumo/application/aggregation/_renta_income_ledger.py src/cadrumo/application/aggregation/_renta_income_evidence.py src/cadrumo/application/aggregation/tests/test_income_sales_invoice_evidence.py src/cadrumo/application/aggregation/tests/test_income_withheld_derivation.py` -> `pass`
+- `S131` `verify:` `uv run --no-sync pytest -o addopts= -n0 -q src/cadrumo/application/aggregation/tests/test_income_sales_invoice_evidence.py src/cadrumo/application/aggregation/tests/test_income_withheld_derivation.py` -> `28 passed in 6.23s` -> `PYTEST_EXIT=0` -> `28` -> `0`
+- `S131` `verify:` `uv run --no-sync pytest -o addopts= -n0 -q src/cadrumo/application/aggregation/tests/test_inferred_retencion_rate_advisory.py src/cadrumo/application/aggregation/tests/test_renta_income_aggregation.py` -> `33 passed in 4.33s` -> `PYTEST_EXIT=0` -> `33` -> `0`
+- `S131` `verify:` `uv run --no-sync pytest -o addopts= -n0 -q src/cadrumo/application/aggregation/tests/test_m131_volumen_agrario.py::test_an_agricola_receipt_reaches_casilla_05 src/cadrumo/application/aggregation/tests/test_m131_volumen_agrario.py::test_every_code_in_the_registry_selector_contributes src/cadrumo/application/aggregation/tests/test_m131_volumen_agrario.py::test_a_non_agrarian_activity_stays_out_of_the_agrarian_box` -> `3 passed in 2.14s` -> `PYTEST_EXIT=0` -> `8` -> `3` -> `5` -> `0`
+- `S131` `verify:` `uv run --no-sync pytest -o addopts= -n0 -q src/cadrumo/application/aggregation/tests/test_m131_volumen_agrario.py::test_an_undeclared_activity_contributes_nothing src/cadrumo/application/aggregation/tests/test_m131_volumen_agrario.py::test_a_capital_subsidy_is_excluded_but_a_current_one_is_not src/cadrumo/application/aggregation/tests/test_m131_volumen_agrario.py::test_an_indemnity_is_excluded src/cadrumo/application/aggregation/tests/test_m131_volumen_agrario.py::test_an_undeclared_concept_is_included src/cadrumo/application/aggregation/tests/test_m131_volumen_agrario.py::test_a_mixed_catalogue_sums_only_the_qualifying_rows` -> `5 passed in 2.16s` -> `PYTEST_EXIT=0` -> `8` -> `5` -> `3` -> `0`
+- `S131` `verify:` `uv run --no-sync pytest -o addopts= -n0 -q src/cadrumo/application/aggregation/tests/test_renta_income_source_jurisdiction_m100.py::test_renta_income_observation_preserves_es_source_jurisdiction src/cadrumo/application/aggregation/tests/test_renta_income_source_jurisdiction_m100.py::test_renta_income_aggregation_mixes_es_and_foreign_source src/cadrumo/application/aggregation/tests/test_renta_income_source_jurisdiction_m100.py::test_m100_annual_income_sums_full_ejercicio_into_casilla_0171 src/cadrumo/application/aggregation/tests/test_renta_income_source_jurisdiction_m100.py::test_m100_annual_income_rejects_non_annual_period` -> `4 passed in 1.91s` -> `PYTEST_EXIT=0` -> `7` -> `4` -> `3` -> `0`
+- `S131` `verify:` `uv run --no-sync pytest -o addopts= -n0 -q src/cadrumo/application/aggregation/tests/test_renta_income_source_jurisdiction_m100.py::test_repository_backed_m100_aggregation_reports_out_of_period_catalogue_transactions src/cadrumo/application/aggregation/tests/test_renta_income_source_jurisdiction_m100.py::test_repository_backed_m100_aggregation_partition_matches_full_scan` -> `2 passed in 3.39s` -> `PYTEST_EXIT=0` -> `7` -> `2` -> `5` -> `0`
+- `S131` `verify:` `uv run --no-sync pytest -o addopts= -n0 -q src/cadrumo/application/aggregation/tests/test_renta_income_source_jurisdiction_m100.py::test_m100_revision_binds_0171_to_income_source_and_resolves` -> `1 passed in 31.81s` -> `PYTEST_EXIT=0` -> `7` -> `1` -> `6` -> `0`
+- `S131` `verify:` `uv run --no-sync pytest -o addopts= -n0 -q src/cadrumo/application/aggregation/tests/test_undeclared_activity_advisory.py` -> `10 passed in 30.97s` -> `PYTEST_EXIT=0` -> `10` -> `0`
+- `S131` `verify:` `uv run --no-sync python -c "from cadrumo.tests import measure_module_lines; modules = measure_module_lines(); assert modules['src/cadrumo/application/aggregation/_renta_income_ledger.py'] <= 1250; print('ledger lines=' + str(modules['src/cadrumo/application/aggregation/_renta_income_ledger.py']))"` -> `pass`
+- `S132` `A` `src/cadrumo/application/aggregation/source_resolution_operations.py`
+- `S132` `M` `src/cadrumo/application/aggregation/__init__.py`
+- `S132` `M` `src/cadrumo/application/aggregation/_modelo_bindings_renta_expenses.py`
+- `S132` `M` `src/cadrumo/application/aggregation/_modelo_bindings_retenciones.py`
+- `S132` `M` `src/cadrumo/application/aggregation/_oss_ioss.py`
+- `S132` `M` `src/cadrumo/application/aggregation/_withholding_source.py`
+- `S132` `M` `src/cadrumo/application/aggregation/tests/test_source_mesh.py`
+- `S132` `M` `src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py`
+- `S132` `M` `src/cadrumo/application/calculations/_iva_compensation_annual_partition.py`
+- `S132` `M` `src/cadrumo/application/calculations/_multi_year.py`
+- `S132` `M` `src/cadrumo/application/calculations/_prorrata_regularizacion.py`
+- `S132` `M` `src/cadrumo/application/calculations/_relation_prefill.py`
+- `S132` `M` `src/cadrumo/application/invoices/_source_resolver.py`
+- `S132` `M` `src/cadrumo/application/modelo/_calculation_resolution.py`
+- `S132` `M` `src/cadrumo/application/modelo/_calculation_source_staging.py`
+- `S132` `M` `src/cadrumo/application/modelo/borrador_binding.py`
+- `S132` `M` `src/cadrumo/application/modelo/tests/test_deferred_detalle_source_advisories.py`
+- `S132` `M` `src/cadrumo/application/modelo/tests/test_local_cross_period_carry.py`
+- `S132` `M` `src/cadrumo/application/modelo/tests/test_relation_fold_in_live.py`
+- `S132` `M` `src/cadrumo/application/modelo/tests/test_source_boundary_and_enrollment.py`
+- `S132` `M` `src/cadrumo/application/modelo/tests/test_unresolved_binding_diagnostics.py`
+- `S132` `M` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S132.md`
+- `S132` `verify:` `uv run --no-sync ruff check src/cadrumo/application/aggregation/source_resolution_operations.py` -> `pass` -> `RUFF_CHECK_EXIT=0`
+- `S132` `verify:` `uv run --no-sync pytest --collect-only -q -o addopts= src/cadrumo/application/aggregation/tests/test_source_mesh.py` -> `60 tests collected in 3.51s` -> `COLLECT_EXIT=0` -> `60` -> `0`
+- `S132` `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/application/aggregation/tests/test_source_mesh.py` -> `60 passed in 38.88s` -> `PYTEST_EXIT=0` -> `60` -> `0`
+- `S132` `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/application/aggregation/tests/test_source_mesh.py -k "source_resolution_merge or storage_degradation_resolution"` -> `14 passed, 46 deselected in 2.20s` -> `PYTEST_EXIT=0` -> `60` -> `14` -> `46`
+- `S132` `verify:` `uv run --no-sync pytest -q -n 0 src/cadrumo/application/aggregation/tests/test_source_mesh.py src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py` -> `1 failed, 80 passed in 59.35s` -> `PYTEST_EXIT=1` -> `81` -> `0`
+- `S132` `verify:` `uv run --no-sync python -c "from cadrumo.tests._size_budget import MODULE_POLICY, measure_module_lines; from cadrumo.application.aggregation.source_resolution_operations import merge_source_resolutions; path='src/cadrumo/application/aggregation/_source_mesh.py'; assert measure_module_lines()[path] <= MODULE_POLICY.default_limit; assert merge_source_resolutions.__module__ == 'cadrumo.application.aggregation.source_resolution_operations'; print(path)"` -> `src/cadrumo/application/aggregation/_source_mesh.py` -> `S132_LITERAL_SIZE_IMPORT_EXIT=0` -> `1233 <= 1250` -> `None`
+- `S133` `M` `src/cadrumo/application/aggregation/tests/test_iva_ledger.py`
+- `S133` `A` `src/cadrumo/application/aggregation/tests/test_iva_ledger_candidates.py`
+- `S134` `M` `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`
+- `S134` `A` `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_recargo.py`
+- `S135` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`
+- `S135` `A` `src/cadrumo/application/aggregation/tests/test_renta_ledger_prorrata_repository.py`
+- `S136` `M` `src/cadrumo/application/auth/operator.py`
+- `S136` `A` `src/cadrumo/application/auth/operator_result_projections.py`
+- `S137` `M` `src/cadrumo/application/auth/tests/test_certificate_sources_check.py`
+- `S137` `A` `src/cadrumo/application/auth/tests/test_certificate_sources_health.py`
+- `S138` `M` `src/cadrumo/application/calculations/_relation_prefill.py`
+- `S138` `A` `src/cadrumo/application/calculations/_relation_prefill_m202.py`
+- `S138` `M` `src/cadrumo/application/calculations/__init__.py`
+- `S139` `M` `src/cadrumo/application/calculations/cross_period_clean_state.py`
+- `S139` `A` `src/cadrumo/application/calculations/_cross_period_external_evidence.py`
+- `S139` `M` `src/cadrumo/application/calculations/__init__.py`
+- `S140` `M` `src/cadrumo/application/diagnostics.py`
+- `S140` `A` `src/cadrumo/application/diagnostic_models.py`
+- `S140` `M` `src/cadrumo/application/repair_integrity.py`
+- `S140` `M` `src/cadrumo/application/tests/test_diagnostics.py`
+- `S140` `M` `src/cadrumo/application/tests/test_diagnostics_dispatch.py`
+- `S140` `M` `src/cadrumo/entrypoints/cli/_config/_repair_cli.py`
+- `S140` `M` `src/cadrumo/tests/test_deferred_cross_layer_imports.py`
+- `S141` `M` `src/cadrumo/application/filing/_export_producer.py`
+- `S141` `A` `src/cadrumo/application/filing/_producer_ownership.py`
+- `S141` `M` `src/cadrumo/application/filing/tests/test_export_producer_resolution.py`
+- `S141` `M` `src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py`
+- `S142` `M` `src/cadrumo/application/filing/_export.py`
+- `S142` `A` `src/cadrumo/application/filing/_export_envelope.py`
+- `S142` `A` `src/cadrumo/application/filing/_export_verification.py`
+- `S142` `M` `src/cadrumo/application/filing/_export_proof.py`
+- `S142` `M` `src/cadrumo/application/filing/__init__.py`
+- `S142` `M` `src/cadrumo/application/filing/tests/test_export_post_write_verification.py`
+- `S142` `M` `src/cadrumo/application/filing/tests/test_export_value_policy.py`
+- `S142` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S142.md`
+- `S142` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S142` `verify:` `uv run --no-sync ruff check src/cadrumo/application/filing/_export.py src/cadrumo/application/filing/_export_envelope.py src/cadrumo/application/filing/_export_verification.py src/cadrumo/application/filing/_export_proof.py src/cadrumo/application/filing/__init__.py src/cadrumo/application/filing/tests/test_export_post_write_verification.py src/cadrumo/application/filing/tests/test_export_value_policy.py` -> `All checks passed!`
+- `S142` `verify:` `uv run --no-sync ruff format --check src/cadrumo/application/filing/_export.py src/cadrumo/application/filing/_export_envelope.py src/cadrumo/application/filing/_export_verification.py src/cadrumo/application/filing/_export_proof.py src/cadrumo/application/filing/__init__.py src/cadrumo/application/filing/tests/test_export_post_write_verification.py src/cadrumo/application/filing/tests/test_export_value_policy.py` -> `7 files already formatted`
+- `S142` `verify:` `uv run --no-sync pytest --collect-only -q src/cadrumo/application/filing/tests/test_export_post_write_verification.py src/cadrumo/application/filing/tests/test_export_value_policy.py src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py src/cadrumo/application/filing/tests/test_export_proof_contracts.py` -> `39 tests collected in 0.86s`
+- `S142` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/filing/tests/test_export_post_write_verification.py src/cadrumo/application/filing/tests/test_export_value_policy.py src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py src/cadrumo/application/filing/tests/test_export_proof_contracts.py` -> `3 failed, 36 passed in 45.09s`
+- `S142` `verify:` `uv run --no-sync python -c "import cadrumo.application.filing._export as e; import cadrumo.application.filing._export_envelope as n; import cadrumo.application.filing._export_verification as v; import cadrumo.application.filing._export_proof as p; assert e.FilingEnvelopeRenderRequest is n.FilingEnvelopeRenderRequest; assert e.DeclaracionExportResult is v.DeclaracionExportResult; assert p.DeclaracionExportResult is v.DeclaracionExportResult; print('canonical-direct-imports-ok')"` -> `canonical-direct-imports-ok`
+- `S142` `verify:` `(Get-Content src/cadrumo/application/filing/_export.py).Count; (Get-Content src/cadrumo/application/filing/_export_envelope.py).Count; (Get-Content src/cadrumo/application/filing/_export_verification.py).Count` -> `817` -> `310` -> `384`
+- `S143` `M` `src/cadrumo/application/filing/_producer_snapshot.py`
+- `S143` `A` `src/cadrumo/application/filing/_producer_snapshot_m200.py`
+- `S143` `A` `src/cadrumo/application/filing/_producer_snapshot_m390.py`
+- `S143` `M` `src/cadrumo/application/filing/_m200_projection.py`
+- `S143` `M` `src/cadrumo/application/filing/_export_producer.py`
+- `S146` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S146.md`
+- `S146` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s146-execution-self-review-audit.md`
+- `S146` `verify:` `uv run --no-sync pytest -q src/cadrumo/application/ledger/tests/test_classification_assembly.py` -> `38 passed in 14.24s`
+- `S147` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S147.md`
+- `S147` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s147-execution-self-review-audit.md`
+- `S148` `M` `src/cadrumo/application/ledger/evidence.py`
+- `S148` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S148` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S148.md`
+- `S149` `M` `src/cadrumo/application/ledger/identity_roles.py`
+- `S149` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S149` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S149.md`
+- `S164` `M` `src/cadrumo/application/operations/supervisor.py`
+- `S164` `A` `src/cadrumo/application/operations/supervisor_context.py`
+- `S164` `M` `src/cadrumo/application/operations/tests/test_executor_contract.py`
+- `S164` `M` `src/cadrumo/application/operations/tests/test_restart_reconciliation.py`
+- `S164` `M` `src/cadrumo/application/operations/tests/test_supervisor.py`
+- `S164` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S164.md`
+- `S164` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s164-execution-self-review-audit.md`
+- `S164` `verify:` `git show --check 359baf225823ae7c32aa7cab3c535e6b34c3f1c2` -> `pass`
+- `S166` `M` `src/cadrumo/application/operator_surface/help.py`
+- `S166` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S166` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S166.md`
+- `S168` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S168.md`
+- `S168` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s168-execution-self-review-audit.md`
+- `S172` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S172.md`
+- `S172` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s172-execution-self-review-audit.md`
+- `S176` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S176.md`
+- `S176` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s176-execution-self-review-audit.md`
+- `S178` `A` `src/cadrumo/core/errors/registry/_application_profile_bundle.py`
+- `S178` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S178` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S178` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S178.md`
+- `S179` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S179.md`
+- `S179` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s179-execution-self-review-audit.md`
+- `S179` `verify:` `uv run --no-sync pytest -q src/cadrumo/core/observability/tests/test_context_propagation.py` -> `10 passed in 6.82s`
+- `S179` `verify:` `10 tests collected in 0.12s`
+- `S180` `M` `src/cadrumo/domain/calculations/registry/_validate_revision_sections.py`
+- `S180` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S180.md`
+- `S182` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S182` `A` `src/cadrumo/domain/calculations/registry/diagnostic_classification.py`
+- `S182` `M` `dev/registry/filing_export_proof.py`
+- `S182` `M` `dev/registry/tests/test_filing_export_two_channel_proof.py`
+- `S183` `M` `src/cadrumo/application/calculations/_m303_regimen_simplificado_annual_summary.py`
+- `S183` `M` `src/cadrumo/application/modelo/_calculation_actions.py`
+- `S183` `M` `src/cadrumo/application/modelo/_calculation_modelo_adjustments.py`
+- `S183` `M` `src/cadrumo/application/modelo/_data_inventory.py`
+- `S183` `M` `src/cadrumo/application/modelo/_revision_replay_inputs.py`
+- `S183` `M` `src/cadrumo/application/modelo/tests/test_modelo_390_303_simplificado_fold_in_live.py`
+- `S183` `M` `src/cadrumo/application/modelo/work_review.py`
+- `S183` `M` `src/cadrumo/application/registry/source_connectivity.py`
+- `S183` `M` `src/cadrumo/domain/calculations/registry/_validate_record_sections.py`
+- `S183` `A` `src/cadrumo/domain/calculations/registry/binding_targets.py`
+- `S183` `M` `src/cadrumo/domain/calculations/registry/bindings.py`
+- `S183` `M` `src/cadrumo/domain/calculations/registry/formula_initial_values.py`
+- `S183` `M` `src/cadrumo/domain/calculations/registry/handoffs.py`
+- `S183` `A` `src/cadrumo/domain/calculations/registry/m303_regimen_simplificado_annual_summary_bindings.py`
+- `S183` `M` `src/cadrumo/domain/calculations/registry/rate_box_partition.py`
+- `S183` `M` `src/cadrumo/domain/calculations/registry/tests/test_casillas_by_binding.py`
+- `S183` `M` `src/cadrumo/domain/calculations/registry/tests/test_inventory_casilla_binding_linkage.py`
+- `S183` `M` `src/cadrumo/domain/calculations/registry/tests/test_m390_m303_regimen_simplificado_annual_summary_bindings.py`
+- `S183` `M` `src/cadrumo/domain/calculations/registry/tests/test_relation_handoff_inventory.py`
+- `S183` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S183.md`
+- `S185` `M` `src/cadrumo/domain/calculations/registry/_formula_runtime_m131.py`
+- `S185` `M` `src/cadrumo/domain/calculations/registry/formula_runtime.py`
+- `S185` `A` `src/cadrumo/domain/calculations/registry/formula_runtime_m100.py`
+- `S185` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_eo_agraria_indices_correctores.py`
+- `S185` `M` `src/cadrumo/tests/test_decimal_enrollment_inventory.py`
+- `S187` `M` `src/cadrumo/domain/calculations/registry/invoice_bindings.py`
+- `S187` `A` `src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py`
+- `S187` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_349_operador_totals_parity.py`
+- `S187` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S187` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S187.md`
+- `S188` `M` `dev/registry/analysis/load_census_classification.py`
+- `S188` `M` `src/cadrumo/application/aggregation/_iva_ledger.py`
+- `S188` `M` `src/cadrumo/application/aggregation/_iva_transaction.py`
+- `S188` `M` `src/cadrumo/application/aggregation/_m303_arrivals.py`
+- `S188` `M` `src/cadrumo/application/aggregation/_modelo_bindings.py`
+- `S188` `M` `src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva.py`
+- `S188` `M` `src/cadrumo/application/aggregation/_modelo_bindings_invoice_iva_refusal.py`
+- `S188` `M` `src/cadrumo/application/aggregation/_modelo_bindings_renta_expenses.py`
+- `S188` `M` `src/cadrumo/application/aggregation/_oss_ioss.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_cross_domain_invoice_scenario.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_intracom_export.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_intracom_identification_not_establishment.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_invoice_declared_category_survives.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_iva_cash_accounting.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_iva_ledger.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_m303_arrivals.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_m303_transitional_rate_rung_allocation.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_modelo_390_rate_box_ledger_reachability.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_non_arising_category_side_is_refused.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_oss_ioss.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_renta_gasto_aggregation.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_renta_income_actividad_contract.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_renta_income_source_jurisdiction_m100.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_structurally_unroutable_iva_base_categories.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_terminal_preconditions.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_unrouted_iva_quantity_screen.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_zero_cuota_category_carrying_a_rate_is_refused.py`
+- `S188` `M` `src/cadrumo/application/aggregation/tests/test_zero_rated_row_carrying_cuota_is_refused.py`
+- `S188` `M` `src/cadrumo/application/calculations/_prorrata_regularizacion.py`
+- `S188` `M` `src/cadrumo/application/calculations/tests/test_binding_prefill.py`
+- `S188` `M` `src/cadrumo/application/calculations/tests/test_modelo_322_grupo_individual_continuity.py`
+- `S188` `M` `src/cadrumo/application/calculations/tests/test_modelo_353_grupo_aggregation_continuity.py`
+- `S188` `M` `src/cadrumo/application/calculations/tests/test_modelo_390_303_reconciliation_continuity.py`
+- `S188` `M` `src/cadrumo/application/calculations/tests/test_prorrata_art104_tres_exclusion_oracle.py`
+- `S188` `M` `src/cadrumo/application/calculations/tests/test_prorrata_regularizacion.py`
+- `S188` `M` `src/cadrumo/application/modelo/tests/test_dormant_m369_oss_resolver_live.py`
+- `S188` `M` `src/cadrumo/application/registry/tests/test_namespace_is_not_a_registration_seam.py`
+- `S188` `M` `src/cadrumo/domain/bienes_inversion/tests/test_record.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/bindings.py`
+- `S188` `A` `src/cadrumo/domain/calculations/registry/ledger_binding_selector_support.py`
+- `S188` `D` `src/cadrumo/domain/calculations/registry/ledger_bindings.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/ledger_impatriado_bindings.py`
+- `S188` `A` `src/cadrumo/domain/calculations/registry/ledger_iva_bindings.py`
+- `S188` `A` `src/cadrumo/domain/calculations/registry/ledger_oss_bindings.py`
+- `S188` `A` `src/cadrumo/domain/calculations/registry/ledger_renta_gastos_estimacion_directa_bindings.py`
+- `S188` `A` `src/cadrumo/domain/calculations/registry/ledger_renta_gastos_pago_fraccionado_bindings.py`
+- `S188` `A` `src/cadrumo/domain/calculations/registry/ledger_renta_income_bindings.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/rate_box_partition.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/_ledger_iva_aggregation_support.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_binding_reachability_probe.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_iva_rate_value_selector.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_expense_chain_aeat_local_worked_example.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_income_chain_aeat_exempt_worked_example.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_income_chain_oracle_exempt.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_income_chain_oracle_rated.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_iva_aggregation_binding.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_iva_aggregation_binding_exports_recargo.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_iva_aggregation_binding_reverse_charge.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_oss_aggregation_binding.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_quantity_screen_partition.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_renta_gastos_estimacion_directa_binding.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_renta_gastos_pago_fraccionado_binding.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_ledger_renta_income_binding.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_m303_2024_regimen_general_manual_worked_example.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_m322_2024_grupo_entidades_manual_worked_example.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_m353_2024_grupo_entidades_manual_worked_example.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_m390_2024_annual_manual_worked_example.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_aic_box_10_base_projection.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_differentiated_deduction_endpoints.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_transitional_rate_percent.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_309_registry.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_322_registry.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_353_registry.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_369_registry.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_390_aic_isp_routing_split.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_390_base_imponible_bindings.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_390_rate_box_layer.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_390_rate_box_reachability.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_390_recargo_rate_box_layer.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_390_registry.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_390_volumen_operaciones.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_prorrata_porcentaje_rounding_grounding.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_prorrata_porcentaje_zero_volume_grounding.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_public_api_boundaries.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/tests/test_unrouted_renta_quantity_screen.py`
+- `S188` `M` `src/cadrumo/domain/calculations/registry/validate_cross_domain_snapshot.py`
+- `S188` `M` `src/cadrumo/domain/iva/invoice_classification.py`
+- `S188` `M` `src/cadrumo/domain/iva/tests/test_invoice_classification.py`
+- `S188` `M` `src/cadrumo/domain/renta/retenciones_routing_integrity.py`
+- `S188` `M` `src/cadrumo/domain/renta/tests/test_first_slice_routing.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/record_design.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/record_design_coverage.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py`
+- `S190` `A` `src/cadrumo/domain/calculations/registry/record_design_layout_markers.py`
+- `S190` `A` `src/cadrumo/domain/calculations/registry/record_design_pdf_orchestration.py`
+- `S190` `A` `src/cadrumo/domain/calculations/registry/record_design_pdf_repairs.py`
+- `S190` `A` `src/cadrumo/domain/calculations/registry/record_design_pdf_rows.py`
+- `S190` `A` `src/cadrumo/domain/calculations/registry/record_design_pdf_state.py`
+- `S190` `A` `src/cadrumo/domain/calculations/registry/record_design_pdf_visual.py`
+- `S190` `A` `src/cadrumo/domain/calculations/registry/record_design_sources.py`
+- `S190` `A` `src/cadrumo/domain/calculations/registry/record_design_workbook.py`
+- `S190` `A` `src/cadrumo/domain/calculations/registry/record_design_workbook_headers.py`
+- `S190` `M` `dev/registry/pipeline/_render_profile.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_diagram_design_band_recovery_baseline.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_every_bundled_design_is_read_or_reported.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_185_historical_annex.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_bare_coordinate_rejoin.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_bracketed_payload.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_coordinate_stutter_recovery.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_double_struck.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_glued_naturaleza_split.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_glued_ordinal.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_headless_tail.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_identity_recovery.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_naturaleza_tokens.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_page_record_extractor_choice.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_page_token.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_reversed_columns.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_row_marker.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_row_punctuation.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_stranded_casilla_tags.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_truncated_offset_repair.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design_wrapped_description.py`
+- `S190` `M` `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`
+- `S190` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S190.md`
+- `S190` `verify:` `uv run --no-sync pytest src/cadrumo/domain/calculations/registry/tests/test_record_design_identity_recovery.py src/cadrumo/domain/calculations/registry/tests/test_record_design_bracketed_payload.py -q` -> `pass`
+- `S190` `verify:` `ruff check` -> `ruff format --check` -> `git diff --check` -> `pass`
+- `S192` `M` `dev/registry/authoring_migrate_applicability_fragments.py`
+- `S192` `M` `src/cadrumo/application/overview/calendar.py`
+- `S192` `M` `src/cadrumo/application/overview/explain.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/_validate_dependency_sections.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/_validate_official_source_guidance_content.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/_validate_revision_context.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/_validate_revision_rules.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/applicability.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/authority.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/deadline_coordinate.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/handoffs.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/schedules.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/schema.py`
+- `S192` `A` `src/cadrumo/domain/calculations/registry/schema_deadlines.py`
+- `S192` `A` `src/cadrumo/domain/calculations/registry/schema_revision_members.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/_referential_integrity_support.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_applicability_fragment_family.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_classification_coherence.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_construct_closure_validator_call_sites.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_cross_dependency_contract.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_deadline_semantic_coordinate.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_deadline_window_authority_projection.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_deadline_window_ownership.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_deadline_window_qualifiers.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_deadline_window_uniqueness.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_180_registry.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_referential_integrity_part4.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_registry_schema_part2.py`
+- `S192` `M` `src/cadrumo/domain/calculations/registry/tests/test_schema.py`
+- `S192` `M` `src/cadrumo/domain/deadlines/engine.py`
+- `S192` `M` `src/cadrumo/domain/deadlines/plazo.py`
+- `S192` `M` `src/cadrumo/domain/deadlines/tests/test_plazo_resolution.py`
+- `S192` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S192.md`
+- `S192` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s192-execution-self-review-audit.md`
+- `S192` `verify:` `uv run --no-sync python -c "import cadrumo.domain.calculations.registry.schema as schema; assert not hasattr(schema, 'ApplicationLinkDefinition'); assert not hasattr(schema, 'DeadlineWindowDefinition'); from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkDefinition; from cadrumo.domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition; print('direct-boundary-ok')"` -> `direct-boundary-ok`
+- `S195` `D` `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification.py`
+- `S195` `A` `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification_catalogues.py`
+- `S195` `A` `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification_coverage.py`
+- `S195` `A` `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification_record_design.py`
+- `S195` `A` `src/cadrumo/domain/calculations/registry/tests/test_catalogue_verification_renta.py`
+- `S195` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S195.md`
+- `S195` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s195-execution-self-review-audit.md`
+- `S196` `M` `src/cadrumo/domain/calculations/registry/tests/test_detail_record_observations.py`
+- `S196` `A` `src/cadrumo/domain/calculations/registry/tests/test_withholding_observations.py`
+- `S196` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S196.md`
+- `S196` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s196-execution-self-review-audit.md`
+- `S196` `verify:` `git show --check f497b88a157441c4756352445f76b241bcbf5a62` -> `pass`
+- `S198` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles.py`
+- `S198` `A` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_registry_roles_objective_estimation.py`
+- `S198` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S198.md`
+- `S198` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s198-execution-self-review-audit.md`
+- `S198` `verify:` `git show --check 5f793e474e049f6b5d3135abaa49eec7093c6525` -> `pass`
+- `S200` `A` `src/cadrumo/domain/calculations/registry/tests/_modelo_303_registry_support.py`
+- `S200` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry.py`
+- `S200` `A` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry_autoconsumo.py`
+- `S200` `A` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry_bindings.py`
+- `S200` `A` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry_compensation.py`
+- `S200` `A` `src/cadrumo/domain/calculations/registry/tests/test_modelo_303_registry_schedules.py`
+- `S200` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S200.md`
+- `S200` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s200-execution-self-review-audit.md`
+- `S202` `M` `src/cadrumo/domain/calculations/registry/tests/test_record_design.py`
+- `S202` `A` `src/cadrumo/domain/calculations/registry/tests/test_record_design_layout.py`
+- `S202` `A` `src/cadrumo/domain/calculations/registry/tests/test_record_design_narrative.py`
+- `S202` `A` `src/cadrumo/domain/calculations/registry/tests/test_record_design_pdf.py`
+- `S202` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S202.md`
+- `S202` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s202-execution-self-review-audit.md`
+- `S202` `verify:` `git show --check 2bd1f782b5a6e4064386624ad0f8023500f62f12` -> `pass`
+- `S204` `D` `src/cadrumo/domain/calculations/registry/tests/test_revision_span_matches_published_designs.py`
+- `S204` `A` `src/cadrumo/domain/calculations/registry/tests/_revision_span_design_support.py`
+- `S204` `A` `src/cadrumo/domain/calculations/registry/tests/_revision_span_boundary_support.py`
+- `S204` `A` `src/cadrumo/domain/calculations/registry/tests/_revision_span_coverage_support.py`
+- `S204` `A` `src/cadrumo/domain/calculations/registry/tests/_revision_span_declaration_support.py`
+- `S204` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_span_design_parser.py`
+- `S204` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_span_boundaries.py`
+- `S204` `A` `src/cadrumo/domain/calculations/registry/tests/test_revision_span_coverage.py`
+- `S204` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S204.md`
+- `S204` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s204-execution-self-review-audit.md`
+- `S204` `verify:` `git show --check d5f63d9e5aa80f3ad42e0ff98abab9fa0b94e05b` -> `pass`
+- `S206` `M` `src/cadrumo/domain/calculations/registry/withholding_bindings.py`
+- `S206` `A` `src/cadrumo/domain/calculations/registry/_withholding_rows.py`
+- `S206` `M` `src/cadrumo/domain/calculations/registry/tests/test_withholding_observations.py`
+- `S206` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S206.md`
+- `S206` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s206-execution-self-review-audit.md`
+- `S206` `verify:` `git show --check bfb6d1fc2d34b6f4c71c05455d99fa6470a7b62f` -> `pass`
+- `S208` `M` `src/cadrumo/adapters/persistence/profile/tests/test_inventory_roundtrip.py`
+- `S208` `M` `src/cadrumo/application/aggregation/_inventory.py`
+- `S208` `M` `src/cadrumo/application/aggregation/tests/test_inventory_source.py`
+- `S208` `M` `src/cadrumo/application/inventory/_service.py`
+- `S208` `M` `src/cadrumo/domain/contribuyente/inventory/records.py`
+- `S208` `M` `src/cadrumo/domain/contribuyente/inventory/tests/test_acquisition_cost.py`
+- `S208` `M` `src/cadrumo/domain/contribuyente/inventory/tests/test_anexo_d_projection.py`
+- `S208` `A` `src/cadrumo/domain/contribuyente/inventory/valuation.py`
+- `S208` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S208.md`
+- `S208` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s208-execution-self-review-audit.md`
+- `S210` `M` `src/cadrumo/domain/invoices/models.py`
+- `S210` `A` `src/cadrumo/domain/invoices/normalization.py`
+- `S210` `M` `src/cadrumo/domain/invoices/tests/test_models.py`
+- `S210` `M` `src/cadrumo/domain/invoices/tests/test_counterparty_country_is_required.py`
+- `S210` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S210.md`
+- `S210` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s210-execution-self-review-audit.md`
+- `S212` `M` `src/cadrumo/domain/iva/classification.py`
+- `S212` `A` `src/cadrumo/domain/iva/_classification_rules.py`
+- `S212` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S212` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S212.md`
+- `S214` `M` `src/cadrumo/domain/iva/components.py`
+- `S214` `A` `src/cadrumo/domain/iva/_component_rows.py`
+- `S214` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S214` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S214.md`
+- `S216` `M` `src/cadrumo/domain/iva/establishment.py`
+- `S216` `A` `src/cadrumo/domain/iva/country_vocabulary.py`
+- `S216` `M` `src/cadrumo/domain/iva/tests/test_printed_country_name.py`
+- `S216` `M` `src/cadrumo/domain/iva/tests/test_stated_country_code.py`
+- `S216` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S216.md`
+- `S216` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s216-execution-self-review-audit.md`
+- `S218` `M` `src/cadrumo/domain/modelos/calculation_revision.py`
+- `S218` `A` `src/cadrumo/domain/modelos/calculation_revision_identity.py`
+- `S218` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S218.md`
+- `S218` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s218-execution-self-review-audit.md`
+- `S220` `R` `src/cadrumo/domain/modelos/tests/test_calculation_revision.py` -> `src/cadrumo/domain/modelos/tests/test_calculation_revision_evidence.py`
+- `S220` `A` `src/cadrumo/domain/modelos/tests/_calculation_revision_test_support.py`
+- `S220` `A` `src/cadrumo/domain/modelos/tests/test_calculation_revision_replay.py`
+- `S220` `A` `src/cadrumo/domain/modelos/tests/test_calculation_revision_observations.py`
+- `S220` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S220.md`
+- `S220` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s220-execution-self-review-audit.md`
+- `S220` `verify:` `git show --check 590fb81ff5c5fcd6b7f74491a932a6a7111ec16f` -> `pass`
+- `S222` `M` `src/cadrumo/domain/transactions/models.py`
+- `S222` `A` `src/cadrumo/domain/transactions/gross_validation.py`
+- `S222` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S222.md`
+- `S222` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s222-execution-self-review-audit.md`
+- `S223` `M` `src/cadrumo/entrypoints/cli/_config_payloads.py`
+- `S223` `A` `src/cadrumo/entrypoints/cli/_config_quarantine_payloads.py`
+- `S223` `M` `src/cadrumo/entrypoints/cli/_config/_repair_cli.py`
+- `S223` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S223.md`
+- `S223` `A` `.vault/audit/2026-08-31-ci-lane-deconflation-p05-s223-execution-self-review-audit.md`
+- `S223` `verify:` `git show --check a7cbd3efcd7ef5063699098108a3be2cb9615baa` -> `pass`
+- `S225` `M` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py`
+- `S225` `A` `src/cadrumo/entrypoints/cli/tests/_machine_secret_channels_support.py`
+- `S225` `A` `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess_refusals.py`
+- `S225` `M` `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md`
+- `S225` `A` `.vault/exec/2026-08-05-ci-lane-deconflation/2026-08-05-ci-lane-deconflation-P05-S225.md`
+- `S233` `M` `dev/quality/import_hygiene_scan.py`
+- `S233` `M` `dev/quality/import_hygiene_baseline.json`
+- `S233` `M` `dev/tests/test_import_hygiene_gate.py`
+- `S233` `verify:` `uv run --no-sync pytest dev/tests/test_import_hygiene_gate.py -n0` -> `pass`
+
+## Notes
+
+`S41` is RECORDED BUT NOT COMPLETE and its checkbox stays open. The row's own
+`_common` half landed -- 1714 to 1160 lines across four new modules, under the
+1250 ceiling with no pin, no `--accept-growth` and no carveout -- but the flip
+the row exists to perform did not, because its premise that `_common` was the
+sole remaining module-size offender is false at HEAD. These lines record the
+code that moved so the decomposition is not invisible; they do not claim the
+Step is done. `S51` through `S55` carry the populations that gate it.
+
+The `import_hygiene_test_debt.json` line is collateral of the decomposition
+rather than separate work: the debt entry for
+`test_period_boundary_authority.py` recorded its reach against `cli._common`,
+and repointing the import left that entry answering nothing while creating an
+undocumented reach at `cli._period_parsing`. Both halves were corrected in the
+same change, because a spare debt slot silently widens the ratchet.
+
+The lane was measured twice, 192F/98E then 184F/75E, and NEITHER run is a
+faithful reproduction of the CI step: `just docs` fails on 21 cli-sequence
+golden divergences, so the terminology gates that P01.S04 ordered above this
+step never received their artefact and 57 of the 75 errors are collection
+failures of unknown verdict rather than measured backlog. The true failure
+count is not knowable until `S55` lands.
+- `S54` The row specifies sixteen keys including `profile.schema.field.taxpayer_type.declaration_roles.label`. That key had already landed by the time this was measured; the drift at execution was fifteen keys, identical in all four catalogues, zero extras and zero moves. Sixty strings were authored with Spanish as source, `ca` and `hu` as real translations rather than copies, and no `_intentional_identical.json` entry.
+- `S54` The row's stated reason for deferral -- that inventing help prose for another lane's in-flight surface collides with its author -- was resolved by taking wording from each key's own call site and its nearest sibling in `es/cli.yml`, not by inventing it.
+- `S54` `dev/locales/_fstring_registry.py` is included because the whole `dev.locales` CLI was dead when this row was picked up: a function-local import still named the retired `cadrumo.core.errors._registry`, so the module imported cleanly while every verb died on call, and the parity gate was unmeasurable rather than red.
+- `S56` Historical reconstruction: `923e324342e583311f973da8ee70bbfd8eea0f7f` repoints `discover_row_assemblers` to `row_set_assembly.py`; `00de767e9adb968213aedc89918e2e2176e8e4cc` adds module-scope AST bindings and the real-tree detector test; `8e29b079bfba0d09d152de315f2f7c60017b4ef5` is a style-only follow-up. The commits contain no preserved command output. The plan row records an original `8 tests pass` assertion, but no historical pytest invocation or literal output is recoverable.
+- `S56` Contemporary reconstruction attempt: `uv run --no-sync pytest -o addopts='' -n 0 -q dev/source_connectivity/tests/test_discovery_resolves_the_real_tree.py` failed during collection before the S56 test module because unrelated current worktree file `src/cadrumo/domain/calculations/registry/record_design_coverage.py:860` has `IndentationError: unexpected indent` on `from .record_design import _VISUAL_CHART_TYPE_CODE` (reported as `1 error in 1.64s`). No runtime pass is claimed.
+- `S57` Historical reconciliation only: the plan records a 25-sheet fallback debt across nine modelos and 25 revisions, guarded by an exact shrinking ratchet, revision anti-vacuity floor, and multi-record-layout assertion. No fresh test receipt is reconstructed.
+- `S57` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S59` Implementation provenance is immutable commit `6586ebdc5f`; it contains no
+- `S59` captured historical pytest output, so this record makes no historical execution
+- `S59` claim.
+- `S59` The fresh focused run did not enter the S59 test bodies: all seven cases errored
+- `S59` in the shared runtime fixture with `ModuleNotFoundError: No module named
+- `S59` 'cadrumo.adapters.persistence.master_key'`, imported from
+- `S59` `src/cadrumo/adapters/persistence/storage/_profile_login_session.py`. The two
+- `S59` S59 target files have concurrent import-only worktree edits, which were not
+- `S59` modified here.
+- `S60` Historical provenance: `a29f27e098e901f01781b6df0a32183d2aa6ddc4` adds `_DASH_NATURALEZA_RE`, `_FILLER_DESCRIPTION_RE`, and the `_parse_pdf_row` guard that rejects dash-token rows unless their description names a filler. It changes no dedicated record-design parser test and preserves no pytest command or literal output. The plan row's historical outcome is therefore not restated as independently observed evidence.
+- `S60` Contemporary verification on clean current `record_design.py`: `\.venv\Scripts\python.exe -c "from cadrumo.domain.calculations.registry.record_design import _parse_pdf_row; assert _parse_pdf_row('1 - En el caso de que en el campo Clave Tipo de Identificacion se haya consignado una C', 455) is None; row = _parse_pdf_row('58 - BLANCOS', 58); assert row is not None and row.offset == 58 and row.type_code == 'Blancos'; print('narrative-prose=refused; single-position-filler=accepted')"` emitted `narrative-prose=refused; single-position-filler=accepted` (exit 0).
+- `S60` Contemporary corpus verification on the four currently bundled Modelo 181 PDFs (`01`, `02`, `03`, `04`) emitted one line per PDF with `2 0`, meaning two parsed sheets and zero skipped sheets (exit 0). This is fresh current-state evidence, not recovered historical output.
+- `S61` The normal focused pytest invocation was initially blocked by the shared worktree's unrelated half-landed declaracion relocation: `cadrumo.adapters.inbound.declaracion._detect` could not import `extract_pages_text` from `_parsers`. The normal rerun now passes (23 passed, 56.27s); the earlier `--noconftest` result is retained as historical troubleshooting evidence rather than the sole verification.
+- `S62` Historical reconstruction: immutable commit `ce7ed9c74ef76a656170e5c8060e4b68fa510779` is the content-based landing evidence. It changes the nine implementation paths above and its message names the design-constant binding source and narrow mechanism gate. No literal historical command output or pre-existing ci-lane P02.S62 execution record is available, so the contemporary verification above is distinct evidence rather than a reconstruction of historical output.
+- `S63` Historical roll-up: `004898c8fa1dee0aaabdcf099ee4255770a0339f` introduces the declared M165 range-start correction and the auxiliary-header cadence admission; `ce7ed9c74ef76a656170e5c8060e4b68fa510779` introduces the design-constant source kind and its binding-aware coverage join. Their historical command output is not preserved. The fresh verification above is contemporary whole-rollup evidence and is not a restatement of the dedicated M720 or later ratchet-reconciliation execution records.
+- `S64` The four f008 mapping literal declarations were verified predecessor work in `fd4b91e2f3f5ada31ebcd1a5a100d8e280a3972c`; this step neither authored nor restates them.
+- `S64` The exact export-ref reconciliation and rollback-journal cleanup were verified predecessor work in `1b937634c3869104679e2a6f18263819833ad794`; this step consumes their generated-publication behaviour without claiming those paths.
+- `S65` Reconciliation only: no source or registry declaration changed. Verified predecessor `ce7ed9c74ef` makes `_join_record` consult a discriminator only among tied literal winners; a unique literal winner returns before it, and silent/ambiguous discriminator evidence remains unjoined.
+- `S65` Current M349 declarations remain `offset=147,length=32,requires=blank/non_blank`, corroborated by the design round-trip. After S119's corrected scan, M296 is the sole unresolved ratchet entry; no M184/M296 runtime discriminator or S69 mechanism was authored here.
+- `S66` Fresh verification at current HEAD: `5 passed in 224.01s (0:03:44)`. Immutable implementation provenance is `ce7ed9c74ef76a656170e5c8060e4b68fa510779`; it contains no captured historical literal test output, so this fresh result is not presented as historical output.
+- `S67` Historical reconciliation only: S67 measured mechanism-only unjoined count holding at nine, then attributed nine-to-five to M193's two-revision 208+293 discriminator. Span silence returns None, preserving fail-closed semantics. No fresh receipt is reconstructed.
+- `S67` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S68` Verified predecessor `ef94186c89` landed the strict semantic-map transport, canonical M296 `blank @500` declaration, and its focused generator tests while this shared worktree advanced; it was inspected, retained, and not restaged or attributed to this execution record.
+- `S68` Verified predecessor `f2ac6af8f6` landed the canonical publisher's M296 generated record/provenance output carrying the same discriminator; it was inspected, retained, and not restaged or attributed to this execution record.
+- `S69` Current HEAD measures no unjoined design sheets: the declared ratchet inventory and the live full-registry scan are both empty. The prior five-entry `record_identity` proposal is therefore no longer needed; no ADR, schema, generated-output, mapping, or runtime change was made.
+- `S70` Attestation only: no source, baseline, or plan mutation was made.
+- `S70` The scanner reproduced the ratchet's `_stamping` and `_census` semantics over 14,015 fragments in 128 revision directories: 2,783 recorded baseline; 6,077 observed ungrounded groups; delta +3,294; no partial chains. The corrected observed/baseline pairs are 165 17/0, 200 3,173/0, 270 29/0, 308 2/0, 309 59/0, 341 12/0, 347 40/39, and 576 1/0.
+- `S70` Every divergent modelo has zero stamped casilla occurrences. Modelo 200 has 3,462 distinct IDs and 3,173 repeated, ungrounded groups; the immutable history search returned no `continuidad_id` change under its registry tree. Descriptor additions identify the revision-authoring provenance: `1c0300eb2c` (165, 270, 308, 309), `1d1b203114` (200), `5a3518a395` (341), `5a960549e3` (347), and `cfc47d7194` (576). The prior rebaseline precedent is test-only `0d28d12d`, but this attestation neither raises the baseline nor assigns a rebaseline owner.
+- `S70` No fresh pytest receipt is claimed. At measurement, the ratchet import was relocating from deleted `core/resources/_boundary.py` to untracked `core/resources/bundled_data.py`, and live pytest processes were using the same worktree; the exact split was deliberately not started.
+- `S71` Immutable historical provenance: `f9f3f77704` replaced the open `2010-y-siguientes` Modelo 390 revision with bounded 2022–2025 epochs; test coverage at that point still selected 2025/2026 and therefore requested uncovered 390/2026. `71cb4416c5` retargeted the reconciliation fixture to 2024/2025, moved its clock to 2026-01-20, and renamed the year-suffixed locals to `earlier`/`later`.
+- `S71` This Step records the fixture diagnosis and retarget only. The then-independent covered-2025 GENERAL-regime handoff failure belongs to S72's question and was later resolved under S73 by `94187f454c55ddd1df6265d7f66601c0df4fdfe2`, which makes the handoff antecedent declaration AND taxpayer applicability.
+- `S71` No historical pytest receipt was recovered from immutable commits or Vault records. No fresh pytest receipt is claimed: active shared suites were running. When the tree and test processes are quiescent, the serial candidate is `uv run --no-sync pytest -n0 -q src/cadrumo/application/calculations/tests/test_modelo_390_303_reconciliation_continuity.py src/cadrumo/application/calculations/tests/test_cross_period_clean_state_provenance.py`.
+- `S72` S72 deliberately deferred the ADR-grade tax-semantics decision. It made no source or ADR change and claims neither a historical nor a fresh pytest receipt.
+- `S72` Downstream lifecycle, not S72 implementation: S73 ruled that the annual-summary handoff is conditional on regimen-simplificado applicability; S74 selected Route B threading to preserve package boundaries; S75 implemented that resolution in `94187f454c55ddd1df6265d7f66601c0df4fdfe2`.
+- `S72` Live source has staged and unstaged peer work in the resolver and `_calculation_actions.py`, while shared pytest suites are active. A fresh route receipt was therefore not run and must not be inferred from S75's historical claim.
+- `S73` Decision provenance only: accepted `2026-07-01-modelo-303-regimen-simplificado-adr.md` was amended by `a232800b14d15bc65427d81dc12c261ad57cbef4`. The amendment rules that the annual-summary handoff is conditional on regimen-simplificado applicability, with GENERAL not claimed and SIMPLIFIED/MIXED evidence-required.
+- `S73` S73 made no source change and has no historical or fresh pytest receipt. S74 owns Route B threading; S75 owns production implementation in `94187f454c55ddd1df6265d7f66601c0df4fdfe2`. Its historical test claims are not S73 evidence.
+- `S73` Resolver and `_calculation_actions.py` carry shared staged and unstaged work while pytest suites are active, so no fresh test was run.
+- `S74` Design-correction provenance only: plan row source is `b6c0e78700d80b8706d626448c38e944b5ef05f3`; accepted ADR amendment provenance is `a232800b14d15bc65427d81dc12c261ad57cbef4`. S74 keeps S73's conditional-applicability ruling and corrects only the infeasible cross-package private-import shape.
+- `S74` The downstream implementation belongs to S75: `94187f454c55ddd1df6265d7f66601c0df4fdfe2` implements Route B by supplying applicability to the calculations resolver while retaining the derivation in `application/modelo`. This record cites that relation only; S74 made no source change.
+- `S74` S74 has no historical or fresh pytest receipt. The plan's S75 route-suite claim is not S74 evidence. Active shared WIP and live pytest processes precluded a fresh run.
+- `S74` The two pre-existing private test reaches remain out of scope: `application/aggregation/tests/test_invoice_accumulative_cross_modelo_periods.py` and `application/filing/tests/test_m303_export_applicability_internal.py`.
+- `S75` Source provenance is `94187f454c55ddd1df6265d7f66601c0df4fdfe2`. That commit co-lands storage and operations work, so this manifest identifies only the relevant S75 hunks and does not attribute its peer paths to this Step.
+- `S75` Route B is implemented by retaining `m303_regimen_simplificado_annual_summary_applies` in `application/modelo`, supplying its boolean to the calculations resolver, returning an empty resolution for a non-applicable taxpayer, and using the same derivation for the calculate, verification, and persisted-target boundaries. The declared-and-applicable guard leaves the one mesh-owned arrival-path refusal intact when the regime applies.
+- `S75` The plan's statement that the target unclean-priors refusal is reached and 27 calculation-route tests pass is historical plan prose. No literal command or stdout receipt is recoverable, so it is not represented as a verification receipt here.
+- `S75` S75 does not borrow S74's design-correction evidence. Current annual-summary resolver and calculation-actions files are `MM` in shared WIP; no fresh pytest run was attempted. The separately flagged cross-period clean-state failure remains outside this Step.
+- `S76` ADR-lifecycle provenance only: `a232800b14d15bc65427d81dc12c261ad57cbef4` appended the accepted 2026-08-28 amendment to the governing ADR and updated this plan row. The amendment keeps the decision single-homed: taxpayer applicability governs the annual-summary handoff, while the general filed-303-4T prerequisite remains a separate question.
+- `S76` S75 implementation in `94187f454c55ddd1df6265d7f66601c0df4fdfe2` is downstream relation only. This record does not borrow its historical plan test statement or claim a source action.
+- `S76` The plan's broad-suite block is historical context, not a current green or red receipt. No literal historic test or CLI transcript is recoverable. Current annual-summary and calculation-actions files are `MM` shared WIP, so no fresh current-code or pytest claim is made.
+- `S77` Lifecycle retraction only: S78 supersedes S77's filing-blocking production-defect inference. The real import wrote the CSV-register identity; the S77 fixture then overwrote it, so the red test did not establish a production defect.
+- `S77` S79 implements the separate fixture and absent-metadata production remedies; S87 later records a plan-level narrow verification statement. Relevant hunk provenance is `2688c6b4e02f5f1b189d6a32c8684c96eadd2b77` and VIGENTE hardening `127964d0b07f85bf2c25a6bc2378e5222000049a`. These are downstream relations only and their peer co-commit paths are excluded.
+- `S77` S77 made no source action and claims no production defect. There is no recoverable historic literal receipt and no fresh receipt. S87 plan prose is not borrowed as S77 evidence.
+- `S78` This is a correction and lifecycle attestation for the exact plan row at `.vault/plan/2026-08-05-ci-lane-deconflation-plan.md:106`; it made no source action. S78 retracts S77's filing-blocking production-defect inference: the fixture saved an observation over the real CSV-register import's key, replacing its source kind and the two identity values used by the checker. The red accepts case therefore did not establish a broken production import.
+- `S78` S79 owns the fixture and missing-metadata remedies. Commit `2688c6b4e02f5f1b189d6a32c8684c96eadd2b77` is downstream provenance only: its relevant hunk restores the CSV-register fixture identity and distinguishes wholly absent metadata from a divergence. S82 identified the superseded-record selection risk; S87 later records the VIGENTE hardening and a plan-level narrow verification assertion. None of those downstream actions or their verification is claimed as S78 work.
+- `S78` Current source remains consistent with the correction: the CSV-register comparison now lives in `src/cadrumo/application/calculations/_cross_period_external_evidence.py` and distinguishes absent metadata from divergent identity; the fixture preserves CSV-register identity and selects only VIGENTE records in `src/cadrumo/application/calculations/tests/_cross_period_clean_state_support.py`. This is read-only current-branch evidence, not a fresh test result. No historic literal terminal receipt was recovered; S87 plan prose is not borrowed. No fresh run was started because pytest PIDs 70372, 92348, and 114528 were active on the shared worktree.
+- `S79` Historical implementation landed in mixed peer commit `2688c6b4e02f5f1b189d6a32c8684c96eadd2b77`; this record attributes only the two S79 hunks above, not the commit's unrelated paths.
+- `S79` Current code has since moved the production branch to `src/cadrumo/application/calculations/_cross_period_external_evidence.py`; read-only inspection confirms the absent-versus-divergent split remains. No fresh pytest was run or claimed because pytest was active on the shared worktree and no historical terminal receipt is recoverable.
+- `S79` `9bc7c757c2d` is a downstream VIGENTE-only selection correction; S82 identifies that risk and S87 owns its later plan-level verification assertion. Neither is claimed as S79 work.
+- `S80` No literal historical process output is recoverable: Git and current vault records contain neither the discarded command nor a terminal pytest summary or failure list. The plan row is the surviving lifecycle account, not a test receipt. This record therefore reports no discarded output, re-run, import receipt, or clean remeasurement.
+- `S80` The two scope paths changed in mixed peer commit `2688c6b4e02f5f1b189d6a32c8684c96eadd2b77`; their interleaving with the broad run is why S80 invalidates that measurement rather than attributing failures to code. Later `9bc7c757c2d` VIGENTE-only fixture selection and its S82/S87 verification are downstream work, not S80 evidence. Current evidence extraction has since moved into `_cross_period_external_evidence.py`; no current-source result is claimed here.
+- `S80` No pytest command was run for this documentation-only reconciliation while another measurement remains active.
+- `S81` Audit-only, as the plan row required while a measurement held the tree. No pytest command was run, no sibling fixture was changed, and this record makes no present-tense claim that either sibling test passes.
+- `S81` Historical S81 evidence is the plan's static audit of the fixture-clobber pattern after S79. Immutable mixed commit `2688c6b4e02f5f1b189d6a32c8684c96eadd2b77` supplied S79's absent-versus-divergent branch; current `_cross_period_external_evidence.py` retains `MISSING_EXTERNAL_EVIDENCE_RECORD` for wholly absent register metadata and `MISMATCHED_EXTERNAL_EVIDENCE_RECORD` for divergence. Current inspection finds zero references to either blocker constant in the two sibling test modules.
+- `S81` The bounded conclusion is preserved, not extended: a clobbered CSV-register observation changes the blocker identity but still leaves a blocker, and neither sibling asserted the identity at audit time. The current gates fixture derives CSV evidence but directly seeds its CSV record before saving a hardcoded justificante observation, so the historical all-fixtures-real-import wording is not repeated as a current claim. No latent sibling fixture is fixed here.
+- `S81` S82's VIGENTE selection correction and S87's narrow sequential verification are later, separate work. This record does not borrow either as S81 evidence.
+- `S82` S82 owns the latent selection risk: a work unit can retain VIGENTE and SUPERSEDIDO filing records, while the checker resolves the current record. Immutable mixed commit `9bc7c757c2d8101889ac075a443ebd9203d062f1` narrows the fixture candidate to `record.status is ModeloRecordStatus.VIGENTE`; if none exists it leaves `filing_record_id` absent rather than inventing a divergent id.
+- `S82` S79's `2688c6b4e02f5f1b189d6a32c8684c96eadd2b77` fixture/metadata and absent-versus-divergent remedy is prior work, not this selection mitigation. S87 later ran the narrow provenance module twice with 13 passes after the VIGENTE change; that is downstream verification and is not used as an S82 receipt.
+- `S82` No literal S82 test command or terminal output is recoverable, and no test was run for this documentation-only reconciliation.
+- `S83` This reconciles the plan's 2026-08-28 read-only snapshot only. It performs no current remeasurement, baseline write, pin deletion, pin transfer, or source edit.
+- `S83` The twelve orphan module pins were historical underscore-path renames, not deletions. The recorded dispositions are three populations: `loader.py` was debt paid and a deletion candidate; seven successors below their old pins were candidates for an honest non-growth disposition; four successors exceeded the old pin and could not be silently accepted. `record_design.py` was the exceptional 4785-versus-1338 historical outlier.
+- `S83` Five orphan callable pins and seven orphan notes also require separate per-entry judgement. S84's decomposition investigation and S88's later correction of baseline mechanism/order are downstream; neither executes a disposition in this S83 record.
+- `S83` The baseline has later commits and `record_design.py` currently has peer worktree changes, so no present-tense size or baseline claim is made.
+- `S84` Historical read-only proposal only: four name-based groups (PDF, row repair, workbook/XLS, corrections) were measured, but the projected remainder still exceeded budget. No extraction, baseline write, or current measurement is claimed.
+- `S84` S85 corrected the grouping and added visual handling; S89 later refuted the mechanical five-way split after proving bidirectional dependencies. This record preserves the original proposal as superseded analysis, not a current implementation instruction.
+- `S84` `record_design.py` has peer worktree changes, so no present-tense size claim is made.
+- `S85` Historical read-only correction only: S85 expanded the under-measured row-repair group, surfaced visual/chart handling, and reduced the opaque residual in S84's name-based inventory. It performs no current source, baseline, or size action.
+- `S85` This correction did not validate an extraction boundary. S89 later established bidirectional dependencies and refuted the mechanical grouping; therefore neither S84 nor S85 is a current split instruction.
+- `S85` `record_design.py` has peer worktree changes, so no present-tense size claim is made.
+- `S86` Historical methodology only. The broad run was overtaken by tree motion and is an inventory, never a verdict; no failure list, terminal output, or current result is reconstructed here.
+- `S86` The rule is narrow, fast, sequential measurement at current HEAD immediately before acting. S80/S81 establish the invalid-run and source-hold context; S87 later applied the method and owns its 13-pass receipt, which is not borrowed here.
+- `S87` Plan-level receipt: `test_cross_period_clean_state_provenance.py` was reported 13 passed sequentially with `-n 0` at HEAD `cc41325511`, and again 13 passed after VIGENTE hardening. No literal terminal command/output is recoverable, so no command is reconstructed.
+- `S87` S87 owns VIGENTE filtering and its narrow verification. S79 owns the metadata/absent-versus-divergent remedy, S82 identified the superseded-selection risk, and S86 established the measurement method.
+- `S88` Historical correction only: S88 rejects hand-editing/transferring pin numbers and reverses the S83/S84 ordering. It identifies regeneration after genuine offender decomposition as the contract mechanism, but grants no permission to regenerate, rebaseline, delete pins, or alter source here.
+- `S88` S83 supplied the inventory, S84 proposed decomposition, and S89 later refuted its mechanical boundary. This record does not claim a current baseline state or implement any downstream decision.
+- `S89` Historical refutation only: the S89 graph invalidated the S84/S85 name-based five-way extraction proposal. It identified corrections as the sole clean leaf and required dependency-inversion design work for the remaining parser; this record makes no claim about a current source split.
+- `S89` The baseline consequence is historical accepted-rule framing only: a notes-section acceptance was the sanctioned alternative to an unjustified regenerated number. This record neither modifies nor authorizes regeneration, rebaselining, pin deletion, or any source or plan action.
+- `S90` Historical S90 finding only: reading the error, temporal raise sites, and error-registry mapping showed that the Modelo 390 exercise-2026 typed refusal lacked the available revision set even though the selector held it. No CLI invocation or rendered operator output was observed, so this record supplies no CLI or test receipt.
+- `S90` Lifecycle boundary: S91 later observed the corpus timing; S92 later established the sibling-selection precedent; S94 later implemented the accepted-set and consumer logging; S95 later supplied the narrow verification. None of those downstream results is claimed as S90 execution evidence.
+- `S90` This docs-only reconciliation changes no refusal behavior, locale, source, plan, or default index.
+- `S91` Historical corpus observation at the plan's 2026-08-28 snapshot: the newest bundled Modelo 390 diseño was `01-390-ejercicio-2025-actualizado-05-12-2025`, stamped 5 December 2025, and no exercise-2026 artefact was observed. No terminal transcript beyond the plan's historical corpus content was retained.
+- `S91` The expectation of a December 2026 artefact was an historical inference from that 2025 timing, not a current forecast or present-corpus assertion.
+- `S91` Lifecycle boundary: S90 owns the operator-facing accepted-set gap; S92 the sibling-error precedent; S94 the later implementation; S95 the later narrow verification. This docs-only record changes no corpus, registry, source, plan, or default index.
+- `S92` Historical reconciliation only: the exact P02.S92 plan row establishes the adjacent selector precedent (`AmbiguousRevisionSelectionError.candidate_ids`) and the formerly silent `NoRevisionForPeriodError` branch in `_binding_readiness.py`. It contains no retained terminal receipt, so this record makes no fresh test or CLI-output claim.
+- `S92` Lifecycle boundary: S90 identified the operator-facing accepted-set gap and S91 observed the corpus timing. S94 later added `available_revision_ids` at the selector's raise sites and logged the consumer exception; S95 later supplied focused verification. Current code remains consistent with those successors, but neither downstream implementation nor its receipt is S92 evidence.
+- `S92` This docs-only reconciliation changes no source, plan state, baseline, threshold, or default index.
+- `S93` Historical reconciliation only: the exact P02.S93 plan row retains one usable observation from its then-run inventory -- the registry test collection was green through 94 percent, with zero failures and errors in that completed prefix -- while invalidating the four tail failures that appeared at 95--98 percent after HEAD advanced from `cc41325511` to `f73ba28033`. No current broad run was started or reconstructed.
+- `S93` Method boundary: S86 establishes that a broad run on this shared worktree is an inventory to confirm, not a verdict; a specific result needs a narrow sequential re-run at the HEAD of that moment. S94 and S95 are downstream accepted-set implementation and focused verification, respectively; they do not validate or replace the S93 historical inventory.
+- `S93` This docs-only reconciliation changes no registry, source, plan state, baseline, threshold, or default index.
+- `S94` Immutable implementation provenance is `be1ad83404`; the earlier structural-regression hunk is immutable commit `565f31c494`; neither supplies recoverable historical literal pytest output. This successor remedies the localized-renderer omission identified in review: the canonical translated refusal now renders the structured `available_revision_ids` context in every shipped locale, with fresh focused evidence recorded above.
+- `S95` Immutable provenance for the original cadence gate is `6cb2af96c9`; immutable provenance for the property-based correction and accepted-set/readiness state is `be1ad83404`. Neither supplies recoverable historical literal pytest output. This record attests only the fresh literal receipt above; it does not claim that the historical run produced it.
+- `S96` Immutable plan provenance is `293434861686`; no historical literal test receipt is recoverable. Subsequent P97-P99 reconciliation is decisive for the original inventory: `be1ad83404` corrected the M341 open-selector subject, while P99 establishes that the M130 helper is a one-revision deliberate mutation and the M038 use is only an adjacent-model negative control. The broad failure is `test_every_registry_revision_can_produce_a_filing_artifact`, which asserts an empty filing-capability worklist despite 35 enumerated no-layout revisions; it is unrelated to positional selection and is recorded rather than hidden.
+- `S97` Immutable provenance for the original positional open-selector test is `915a66a5bc`; immutable provenance for the subject correction is `be1ad83404`. Neither supplies recoverable historical literal pytest output. S98 is the coupled completion: it corrected the remaining multi-revision composition assumption exposed after S97 selected the right open revision. This record attests only the fresh focused receipt above.
+- `S98` Immutable implementation provenance is `be1ad83404`. No historical literal receipt exists for the plan row's 39-pass claim; this record attests only the fresh receipt above. S97 corrected the selected open-revision subject; S98 completes that correction by composing the authority from that revision alone; S99 confirms M341 is a real confirmed positional-selection finding.
+- `S99` No historical literal receipt is recoverable. This record attests fresh supporting receipts only: M130 is a one-revision deliberate mutation, M038 is an adjacent-model negative control, and S97/S98 retain M341 as the confirmed positional-selection correction.
+- `S100` Historical reconciliation only: the exact P02.S100 plan row records a custody relocation's duplicate `ProfileCustodyEnvelope` definitions, which made a successful package import an invalid settlement proxy. Its selected filing-export gates errored through that shared custody substrate; their error count is historical diagnostic context, not a receipt about the gates' subjects. No current test or source result is claimed.
+- `S100` The four selected gates -- export post-write verification, unbuilt-layout refusal, and the two Modelo 303 exonerado-390 modules -- remain unmeasured, neither passing nor failing. The row's contemporary refinement was to wait for the old definition to disappear before trusting the relocation state; S101 and later Steps, including S102's later supersession of that proxy, are downstream and do not turn this historical non-measurement into S100 evidence.
+- `S100` This docs-only reconciliation changes no filing-export source, plan state, baseline, threshold, or default index.
+- `S101` Historical reconciliation only: the exact P02.S101 plan row records a green three-test grounding gate over 78 externally-grounded casilla ids. No fresh command was run and this record supplies no new test receipt.
+- `S101` The row's coverage conclusion remains non-defect evidence: seven of 58 modelos carried any externally-grounded casilla (100, 200, 202, 303, 322, 353, 390), while 51 did not. Declared grounding was backed by the bundled oracle; absence of a declaration is not a false grounding claim, and may reflect no available bundled oracle.
+- `S101` Lifecycle boundary: S100 is the preceding filing-export non-measurement; S103 and later work are downstream measurements and do not update or validate this historical coverage snapshot.
+- `S101` This docs-only reconciliation changes no registry, oracle, test, plan state, baseline, threshold, or default index.
+- `S102` Historical reconciliation only: the exact P02.S102 plan row supersedes S100's duplicate-definition grep proxy. One definition remained compatible with both a completed relocation and a mid-delete state; the historical retry reached `ModuleNotFoundError` at the custody module boundary rather than the filing-export subject. No fresh run or terminal receipt is reconstructed.
+- `S102` The methodological conclusion is limited and explicit: a narrow sequential measurement is the reliable check for its own subject; if it errors on an active relocation boundary, defer and retry later rather than infer a source defect. The selected filing-export gates consequently remained unmeasured, neither passing nor failing.
+- `S102` Lifecycle boundary: S100 is the antecedent invalid proxy. S113 later owns the first real filing-export measurement; it does not turn this historical non-measurement into S102 evidence.
+- `S102` This docs-only reconciliation changes no source, test, plan state, baseline, threshold, or default index.
+- `S103` Historical reconciliation only: the exact P02.S103 plan row independently corroborated the already-owned Modelo 390 recargo omission; it was not a new finding or a competing ownership claim. No fresh source, registry, or test receipt is reconstructed.
+- `S103` The row records the essential correction to its first measurement: formula expressions are trees. A flat top-level read falsely suggested every recargo tier was absent; recursive traversal instead found the three nested tiers and aligned the result with the peer's legal-tier analysis. The six-casilla count included transitional rate variants and did not contradict the peer's four legal tiers.
+- `S103` Lifecycle boundary: S104 and later work extend the historical measurement into separate Modelo 303 analysis. They are downstream and do not validate or replace S103's corroboration.
+- `S103` This docs-only reconciliation changes no registry data, formula, source, plan state, baseline, threshold, or default index.
+- `S104` Historical reconciliation only: the exact P02.S104 plan row compared the official ten-addend box-45 identity with a recursively measured registry dependency shape and identified a structural hazard, not a demonstrated miscalculation. No fresh source, registry, or test receipt is reconstructed.
+- `S104` The historical concern was that box 45 and the officially named box 37 were independently derived from related semantic bindings, so the official identity was not guaranteed by construction. The row correctly declined a unilateral model rewrite and routed the choice to a later ruling.
+- `S104` Lifecycle boundary: S105 later corrected the scope from one box to the wider parallel decomposition and chose parity assertion over enumerating boxes. That successor supersedes the remedy framing and is not S104 evidence.
+- `S104` This docs-only reconciliation changes no registry data, formula, source, plan state, baseline, threshold, or default index.
+- `S105` Historical reconciliation only: the exact P02.S105 plan row corrected S104's one-box framing. Eight of the official ten addends were measured as unreachable from box 45 while 43 and 44 reached it, establishing parallel official-box and semantic-casilla derivations rather than a single divergent pair. No fresh source, registry, or test receipt is reconstructed.
+- `S105` The historical recommendation was parity assertion, not rewriting the semantic decomposition to enumerate official box numbers: assert the official ten-addend identity so the two derivations remain locked together. This remained a structural recommendation, not evidence that a present filing value was wrong.
+- `S105` Lifecycle boundary: S104 is the antecedent narrow hazard; S106 later isolates five official addends with a live omission finding and supersedes this row's risk framing. No S106 result is claimed here.
+- `S105` This docs-only reconciliation changes no registry data, formula, source, plan state, baseline, threshold, or default index.
+- `S106` Historical reconciliation only: the exact P02.S106 plan row superseded S105's purely structural-risk framing by comparing transitive leaves against the official identity and identifying five official addends that did not reach box 45: 31, 35, 39, 41, and 42. No fresh registry, source, or test receipt is reconstructed.
+- `S106` The row correctly grounds the harm direction in the official `[27] - [45]` result: omitted deductible cuota makes 45 too small and the amount payable too large. It routed the remedy to the calculation-aggregation taxonomy amendment rather than a unilateral formula edit.
+- `S106` Lifecycle boundary: S105 is the predecessor correction; S107 later confirms the omission is live through manual, exported boxes. That confirmation is downstream and not S106 evidence.
+- `S106` This docs-only reconciliation changes no registry data, formula, source, plan state, baseline, threshold, or default index.
+- `S107` Historical reconciliation only: the plan row measured the five omitted boxes as manual and exported in the 2025 revision, while 43 and 44 share that kind and do reach box 45. This confirmed the omission was live rather than latent. No fresh receipt is reconstructed.
+- `S107` S106 is the antecedent omission finding; S108 and later work are downstream. No unilateral formula edit is claimed.
+- `S107` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S108` Historical decision/lifecycle reconciliation only: S108 created the governing M303 audit so the filed-return finding outlived this plan. It carries S106/S107 evidence without re-claiming it and recommends ADR-level ownership, not a unilateral operand patch. No fresh source or test receipt is claimed.
+- `S108` S109 and later census work is downstream and is not evidence for S108.
+- `S108` This docs-only reconciliation changes no plan, source, baseline, threshold, or default index.
+- `S109` Historical reconciliation only: the plan row's one printed-formula spelling matched modelos 303, 714, and 123. It recorded 123 as the correct control, 714 as manual-entry weakness rather than a wrong computed result, and 303 as the confirmed omission already owned through S108. No fresh source or test receipt is claimed.
+- `S109` The three-model set was a floor, not a corpus census: prose and alternate printed-formula shapes were outside the search. S110 and later filtering are downstream and not S109 evidence.
+- `S109` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S110` Historical reconciliation only: S110 widened the printed-identity extractor from three to 18 modelos and corrected target-order pairing after impossible self-reference exposed a parser bug. Its ten clean models and candidates in 303, 322, and 353 are an inventory, not a defect verdict; box-id reachability can over-report semantic aliases. No fresh receipt is claimed.
+- `S110` S109 is the predecessor limited search; S111 and later leaf-set filtering are downstream and own candidate adjudication.
+- `S110` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S111` Historical reconciliation only: S111 cleared Modelo 322 as manual box-level entry, not a computed wrong figure, and set three categories: implemented, manual at box level, and computed but short. Only the last is taxpayer-harmful; M303 box 45 was the lone confirmed member then. No fresh receipt is claimed.
+- `S111` S110 is the antecedent inventory; later candidate passes are downstream.
+- `S111` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S112` Historical reconciliation only: the exact row cleared Modelo 353 as the target-order parser artifact and classified Modelo 303 box 27 as a semantic-alias hazard, not an omission. The 18-model census then had one confirmed computed-but-short harmful case, Modelo 303 box 45. No fresh receipt is claimed.
+- `S112` S113 and later filing-export measurement are downstream and not S112 evidence.
+- `S112` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S113` Historical reconciliation only: after four blocked attempts, the filing-export selection reported 4 passed and 3 failed. One failure was diagnosed: its Modelo 111 no-layout subject had gained an export layout, so the DID NOT RAISE gate was stale. The remaining two failures were expressly untriaged. No fresh run is claimed.
+- `S113` This docs-only record changes no source, plan, baseline, threshold, or default index.
+- `S114` Historical reconciliation only: S114 corrected three layered stale assertions in the post-write tripwire -- positional record selection, payload offset relative to the wrong record, and localized prose matching -- and the plan records four tests passing. No fresh terminal receipt is reconstructed.
+- `S114` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S115` Historical reconciliation only: S115 found the earlier identity-authority refusal correctly pre-empted the withdrawn-layout refusal. It recorded that envelope exports remain blocked pending an AEAT-assigned program identifier and developer identity; neither may be guessed. No fresh receipt is claimed.
+- `S115` The proposed synthetic fixture identity was a later deliberate test-shaping task, not performed here.
+- `S115` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S116` Historical reconciliation only: the plan measured 19 of 93 authored export layouts as envelope-prefixed, spanning modelos 151, 202, 222, 232, 303, 322, and 353. This establishes exposure, not a defect: refusal pending AEAT-assigned product identity is intentional and external.
+- `S116` S117 later corrects prior-decision novelty; no fresh source or test receipt is claimed here.
+- `S116` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S117` Historical reconciliation only: S117 corrected S116's novelty claim. The accepted ADR already decides the typed identity, selected-layout envelope keying, and refusal until authority exists. S116's 19-of-93 authored-layout exposure remains distinct evidence, not ADR novelty.
+- `S117` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S118` Historical reconciliation only: S118 rebuilt the Modelo 111 view with layouts emptied, guarded that setup with a precondition, and replaced localized English refusal prose with message-key/context assertions. The plan records green; no fresh receipt is reconstructed.
+- `S118` This docs-only reconciliation changes no source, plan, baseline, threshold, or default index.
+- `S119` The four M184 entries were stale after the verified S64 literal-publication predecessors; this step changes only the ratchet inventory, not generated registry data or the runtime discriminator mechanism.
+- `S119` The focused authority scan proves M184 has no remaining unjoined sheet and retains only M296's 2024-y-siguientes perceptor sheet. Its optional candidate span remains S69's runtime-identity decision and was not changed.
+- `S120` `uv run --no-sync python -m dev.registry.analysis.load_census --trace --json` remains blocked before its warm trace by the peer-owned in-flight `src/cadrumo/domain/calculations/registry/schema_scalars.py:319` `NameError` for `SPANISH_PROVINCE_CODE_PATTERN`; no workaround was introduced in this step.
+- `S121` The S121 implementation landed in verified predecessor `5c43de30cf` with other in-flight work; this record attributes the S121 paths and subsequent scoped validation without duplicating or reverting that commit.
+- `S121` Existing browser-backed Sede register fixtures cannot honestly exercise `capture_previous_filing_observations` or `capture_relation_source_observations`: their router supplies navigation/search HTML only and returns 204 for non-navigation traffic, with no Cotejo popup/PDF or submitted-file download protocol. No fabricated router or production injection seam was added.
+- `S121` The canonical size gate reports 93 remaining over-budget subjects owned by still-open P05 rows; `declarations.py` is absent from that list and measures 1,058 lines. No baseline was changed.
+- `S122` Grounded against predecessor `6df9635e34`. The corrected source measurement is 1,028 nonblank lines against the default 1,250-line limit; the size-budget script separately measures 1,172 physical lines and also confirms compliance. The original target measured 1,647 physical lines. The canonical global size gate exits 1 with 92 remaining findings owned by still-open P05 rows; `calc_sheets_apply.py` is absent from that output. The cap-term inventory now enrolls the moved Google Sheets pair at its canonical sibling path; its two remaining failures are six unrelated source/legacy-path relocation pairs. No baseline was changed.
+- `S123` Predecessor exception: shared-worktree commit `0b578b3458c40279cd68ee765ccdc1b0b997a93a` captured the typed-record extraction and its direct consumer moves during the S123 validation run; its source-target diff is verified above. This step's remaining commit records the coverage extraction and traceability close. The target measured 1,369 source lines before the extraction and 1,228 under the canonical budget measurer after it. An earlier 13-module diagnostic run exited 1 with 133 passed and four unrelated existing failures: strict list-vs-tuple CLI references, missing expected pull observation, withholding `'0'` versus `0` identity drift, and an empty atribucion `clave`; the focused S123 evidence is green. No baseline was changed. Review repair: all eight stale Sphinx references now name `calc_sheets_pull_records`; no code behavior changed. The doc-reference resolver reports four unrelated repository-wide failures: stale user-profile/storage targets, a population threshold, and two resolver fixtures; none is one of the eight repaired targets. Repair predecessor exception: shared-worktree commit `cd2c75755fee6f0061a68d817deead3488c0ac1a` captured exactly the five `calc_sheets_pull.py` and three `row_set_assembly.py` canonical-reference substitutions during validation; its source-target diff is verified.
+- `S125` `uv run --no-sync python -m dev.audit.size_budget` remains red only for the 89 live subjects assigned to remaining P05 rows; neither S125 source is a finding.
+- `S127` `uv run --no-sync python -m dev.audit.size_budget` exits 1 for 88 remaining live size-budget findings; `acceleration_receipt.py` is absent from those findings and this step does not regenerate or raise the baseline.
+- `S127` The recorded all-marker collection clears the repository's default `unit and not external_tool and not os_keychain` filter only to prove that every explicit focused test was selected. The 42 non-`os_keychain` node IDs were then invoked explicitly, rather than selected by a marker expression, so their passing run has no deselection state. The nine selected `os_keychain` cases fail on this agent's real Windows credential store with `WinError 1312` (`KeyringUnavailableError`); project configuration assigns that capability to the interactive-desktop-only `just test-os-keychain` lane. The formatter proof is limited to immutable S127 commit paths because the present worktree copy of `_profile_login_session.py` belongs to a peer and would be reformatted; this evidence-only repair intentionally does not alter it.
+- `S128` The shared branch advanced to `d8a23b3202` immediately before S128â€™s isolated staging and had already captured the in-flight extractionâ€™s `_capsule_filesystem.py`, `filesystem.py`, `capsule.py`, and `_capsule_data.py` changes beside unrelated peer work. This record and `2ffa0754d4` own the remaining direct-consumer cleanup and closure; no already-landed source was duplicated or reverted.
+- `S128` `uv run --no-sync ruff format --check src/cadrumo/adapters/persistence/storage/custody/filesystem.py src/cadrumo/adapters/persistence/storage/custody/_capsule_filesystem.py src/cadrumo/adapters/persistence/storage/custody/capsule.py src/cadrumo/adapters/persistence/storage/custody/_capsule_data.py src/cadrumo/adapters/persistence/storage/custody/_inventory.py src/cadrumo/adapters/persistence/storage/custody/capsule_discovery.py src/cadrumo/adapters/persistence/storage/custody/capsule_records.py` exits 1: `capsule_records.py` would be reformatted at lines 250 and 306. Those untouched pre-existing blank-line findings remain outside S128; scoped ruff check above passes.
+- `S129` Ownership instrument: `uv run --no-sync python -c 'from cadrumo.adapters.persistence.storage import sql; from cadrumo.adapters.persistence.storage.sql import secure_objects; from cadrumo.adapters.persistence.storage.sql._secure_object_writes import SecureObjectWriteOperations; repository = sql.SecureObjectRepository; assert repository is secure_objects.SecureObjectRepository; assert repository.__module__ == "cadrumo.adapters.persistence.storage.sql.secure_objects"; assert repository.__mro__ == (repository, SecureObjectWriteOperations, object); assert repository.save.__module__ == "cadrumo.adapters.persistence.storage.sql._secure_object_writes"; assert repository.apply_batch.__module__ == "cadrumo.adapters.persistence.storage.sql._secure_object_writes"; assert repository.load.__module__ == "cadrumo.adapters.persistence.storage.sql.secure_objects"; print(f"public_owner={repository.__module__}.{repository.__qualname__}"); print("mro=" + " -> ".join(item.__name__ for item in repository.__mro__)); print(f"save_module={repository.save.__module__}"); print(f"apply_batch_module={repository.apply_batch.__module__}"); print(f"load_module={repository.load.__module__}")'` produced `public_owner=cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`; `mro=SecureObjectRepository -> SecureObjectWriteOperations -> object`; `save_module=cadrumo.adapters.persistence.storage.sql._secure_object_writes`; `apply_batch_module=cadrumo.adapters.persistence.storage.sql._secure_object_writes`; `load_module=cadrumo.adapters.persistence.storage.sql.secure_objects`; `EXIT=0`.
+- `S129` `uv run --no-sync python -m dev.audit.size_budget` exited 1 with 87 remaining whole-tree findings (64 module overages, 22 callable overages, and this target's stale `1617` pin at `1191` lines). `P05.S227` owns the final baseline-only regeneration; no baseline entry was changed here.
+- `S130` `dfdd054b32` captured the in-flight S130 source and consumer sweep before this executor could create its atomic close; this record and the residual policy-sibling/test-inventory diff complete the same approved S130 scope without reverting peer work.
+- `S130` `uv run --no-sync pytest -n0 -q src/cadrumo/application/aggregation/tests/test_invoice_declared_category_survives.py src/cadrumo/application/aggregation/tests/test_retenciones_aggregation_resolver.py src/cadrumo/application/aggregation/tests/test_terminal_preconditions.py` -> `20 passed in 38.99s`, exit `0`.
+- `S130` `uv run --no-sync pytest -n0 -q src/cadrumo/application/aggregation/tests/test_renta_ledger.py -k "renta_filing_aggregation_resolves_registry_bound_inputs or renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses"` -> `2 passed, 31 deselected in 4.53s`, exit `0`.
+- `S130` `uv run --no-sync python -m dev.audit.size_budget` -> exit `1`: `_modelo_bindings.py` is no longer over budget (measures `1102`); its old `2456` pin is stale and is intentionally deferred to P05.S227. The remaining `63` module and `22` callable overages are other approved P05 owners.
+- `S131` The eight raw-addopts executions cover 86 tests: full collections of 28, 33, 8, 7 and 10, with only the M131 (3 + 5) and M100 (4 + 2 + 1) files deliberately split into exhaustive explicit node groups for deterministic capture. No marker filter or runner deselection applied.
+- `S131` `uv run --no-sync python dev/audit/size_budget.py` -> exit 1 with 86 remaining findings owned by later P05 steps; `_renta_income_ledger.py` is absent from the verdict and no baseline was changed.
+- `S132` The source-mesh contraction is predecessor commit `06a7fbe31a`; this step adds its omitted canonical sibling and direct consumer migrations without changing the 1250-line policy or baseline.
+- `S132` The 81-node source-mesh command failed only at `test_iva_source_mesh_withholds_received_invoice_without_deduction_authority`: S130-owned IVA-refusal extraction raised `AggregationValidationError: errors.error.error_modelo_aggregation_binding` through `_modelo_bindings.py:225` and `_modelo_bindings_invoice_iva_refusal.py:168`. Its files and the unrelated core relocation hunk in `_source_mesh.py` are intentionally excluded from this S132 commit; the accepted 60/0 and 14/46 S132 evidence remains passing.
+- `S133` Evidence repair after the independent review's HIGH finding. `uv run --no-sync ruff check src/cadrumo/application/aggregation/tests/test_iva_ledger.py src/cadrumo/application/aggregation/tests/test_iva_ledger_candidates.py` printed `All checks passed!`; exit `0`.
+- `S133` `uv run --no-sync ruff format --check src/cadrumo/application/aggregation/tests/test_iva_ledger.py src/cadrumo/application/aggregation/tests/test_iva_ledger_candidates.py` printed `2 files already formatted`; exit `0`.
+- `S133` Marker-free collection used `uv run --no-sync pytest -n 0 --collect-only -q src/cadrumo/application/aggregation/tests/test_iva_ledger.py src/cadrumo/application/aggregation/tests/test_iva_ledger_candidates.py`; it printed `42 tests collected in 3.67s`; exit `0`. The command contains no `-m`, `-k`, `--ignore`, or other selector, so raw collection is `42` and deselected is `0`.
+- `S133` Sequential execution used `uv run --no-sync pytest -n 0 src/cadrumo/application/aggregation/tests/test_iva_ledger.py src/cadrumo/application/aggregation/tests/test_iva_ledger_candidates.py`; it printed `42 passed in 14.55s`; exit `0`.
+- `S133` Size proof used `uv run --no-sync python -c "from cadrumo.tests import MODULE_POLICY, measure_module_lines; measures = measure_module_lines(); targets = ('src/cadrumo/application/aggregation/tests/test_iva_ledger.py', 'src/cadrumo/application/aggregation/tests/test_iva_ledger_candidates.py'); print(f'default module ceiling: {MODULE_POLICY.default_limit}'); [print(f'{path}: {measures[path]} <= {MODULE_POLICY.default_limit}') for path in targets]"`; it printed `default module ceiling: 1250`, `src/cadrumo/application/aggregation/tests/test_iva_ledger.py: 1156 <= 1250`, and `src/cadrumo/application/aggregation/tests/test_iva_ledger_candidates.py: 313 <= 1250`; exit `0`. No size policy or baseline path was changed by S133.
+- `S133` Initial parallel execution used `uv run --no-sync pytest src/cadrumo/application/aggregation/tests/test_iva_ledger.py src/cadrumo/application/aggregation/tests/test_iva_ledger_candidates.py`; it exited `1` with two collection errors, both `ModuleNotFoundError: No module named 'cadrumo.core.export_layout_format'`, while a peer rename of that core module was in flight in the shared worktree. The sequential retry above completed cleanly, so this was shared-worktree timing residue, not an S133 failure.
+- `S133` At review time a separate current-worktree rerun encountered `ModuleNotFoundError: No module named 'cadrumo.core.iva_category_resolution'` before either S133 test could execute. No S133-owned path provides that module; the later marker-free collection and sequential run above no longer reproduce it, so it remains external shared-WIP residue rather than a source disposition change.
+- `S134` `uv run --no-sync ruff check src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_recargo.py` printed `All checks passed!`; exit `0`.
+- `S134` `uv run --no-sync ruff format --check src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_recargo.py` printed `2 files already formatted`; exit `0`.
+- `S134` Marker-free collection used `uv run --no-sync pytest -n 0 --collect-only -q src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_recargo.py`; it printed `21 tests collected in 2.22s`; exit `0`. The command contains no `-m`, `-k`, `--ignore`, or other selector, so raw collection is `21` and deselected is `0`.
+- `S134` Full sequential execution used `uv run --no-sync pytest -n 0 src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_recargo.py`; it exited `1` with `1 failed, 20 passed in 60.34s`. The unchanged `test_iva_source_mesh_withholds_received_invoice_without_deduction_authority` failed because `_modelo_bindings_invoice_iva_refusal.py` now raised `AggregationValidationError`; no S134-owned path was changed to conceal or repair that external source-mesh behaviour.
+- `S134` The extracted recargo sibling ran with `uv run --no-sync pytest -n 0 src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_recargo.py`; it printed `2 passed in 36.32s`; exit `0`.
+- `S134` Size proof used `uv run --no-sync python -c "from cadrumo.tests import MODULE_POLICY, measure_module_lines; measures = measure_module_lines(); targets = ('src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py', 'src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_recargo.py'); print(f'default module ceiling: {MODULE_POLICY.default_limit}'); [print(f'{path}: {measures[path]} <= {MODULE_POLICY.default_limit}') for path in targets]"`; it printed `default module ceiling: 1250`, `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py: 1145 <= 1250`, and `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_recargo.py: 189 <= 1250`; exit `0`. No size policy or baseline path was changed by S134.
+- `S135` `uv run --no-sync ruff check src/cadrumo/application/aggregation/tests/test_renta_ledger.py src/cadrumo/application/aggregation/tests/test_renta_ledger_prorrata_repository.py` printed `All checks passed!`; exit `0`.
+- `S135` `uv run --no-sync ruff format --check src/cadrumo/application/aggregation/tests/test_renta_ledger.py src/cadrumo/application/aggregation/tests/test_renta_ledger_prorrata_repository.py` printed `2 files already formatted`; exit `0`.
+- `S135` Marker-free collection used `uv run --no-sync pytest -n 0 --collect-only -q src/cadrumo/application/aggregation/tests/test_renta_ledger.py src/cadrumo/application/aggregation/tests/test_renta_ledger_prorrata_repository.py`; it printed `33 tests collected in 1.43s`; exit `0`. The command contains no `-m`, `-k`, `--ignore`, or other selector, so raw collection is `33` and deselected is `0`.
+- `S135` Initial sequential execution found the extracted module omitted the shared fixture's required `_BUCKET_ID` marker: `30 passed, 3 errors in 21.96s`, exit `1`, with `RuntimeError: secure_objects requires a non-empty module _BUCKET_ID`. S135 added `_BUCKET_ID = SECURE_OBJECTS_BUCKET_ID`; it is the fixture's real module contract, not a product shim.
+- `S135` Sequential retry used `uv run --no-sync pytest -n 0 src/cadrumo/application/aggregation/tests/test_renta_ledger.py src/cadrumo/application/aggregation/tests/test_renta_ledger_prorrata_repository.py`; it printed `33 passed in 24.83s`; exit `0`.
+- `S135` Size proof used `uv run --no-sync python -c "from cadrumo.tests import MODULE_POLICY, measure_module_lines; measures = measure_module_lines(); targets = ('src/cadrumo/application/aggregation/tests/test_renta_ledger.py', 'src/cadrumo/application/aggregation/tests/test_renta_ledger_prorrata_repository.py'); print(f'default module ceiling: {MODULE_POLICY.default_limit}'); [print(f'{path}: {measures[path]} <= {MODULE_POLICY.default_limit}') for path in targets]"`; it printed `default module ceiling: 1250`, `src/cadrumo/application/aggregation/tests/test_renta_ledger.py: 1216 <= 1250`, and `src/cadrumo/application/aggregation/tests/test_renta_ledger_prorrata_repository.py: 298 <= 1250`; exit `0`. No size policy or baseline path was changed by S135.
+- `S136` Verification evidence required by P05.S136:
+- `S136` ```text
+- `S136` uv run --no-sync ruff check src/cadrumo/application/auth/operator.py src/cadrumo/application/auth/operator_result_projections.py
+- `S136` All checks passed!
+- `S136` exit 0
+- `S136` uv run --no-sync ruff format --check src/cadrumo/application/auth/operator.py src/cadrumo/application/auth/operator_result_projections.py
+- `S136` 2 files already formatted
+- `S136` exit 0
+- `S136` uv run --no-sync pytest -n 0 --collect-only -q src/cadrumo/application/auth/tests/test_operator.py src/cadrumo/application/auth/tests/test_operator_probe_credential_resolution.py src/cadrumo/entrypoints/cli/tests/test_auth_configure_identity_projection.py
+- `S136` 46 tests collected in 3.90s
+- `S136` exit 0
+- `S136` deselected 0
+- `S136` uv run --no-sync pytest -n 0 src/cadrumo/application/auth/tests/test_operator.py src/cadrumo/application/auth/tests/test_operator_probe_credential_resolution.py src/cadrumo/entrypoints/cli/tests/test_auth_configure_identity_projection.py
+- `S136` ======================== 46 passed in 82.12s (0:01:22) ========================
+- `S136` exit 0
+- `S136` uv run --no-sync python -c "from cadrumo.tests import MODULE_POLICY, measure_module_lines; measures=measure_module_lines(); targets=('src/cadrumo/application/auth/operator.py','src/cadrumo/application/auth/operator_result_projections.py'); print('POLICY='+str(MODULE_POLICY.default_limit)); [print(path+'='+str(measures[path])) for path in targets]"
+- `S136` POLICY=1250
+- `S136` src/cadrumo/application/auth/operator.py=1062
+- `S136` src/cadrumo/application/auth/operator_result_projections.py=197
+- `S136` exit 0
+- `S136` ```
+- `S137` Verification evidence required by P05.S137:
+- `S137` ```text
+- `S137` vaultspec-rag search 'certificate source check auth tests size budget real behavior' --type code
+- `S137` Refusing to search against the running service.
+- `S137` This vaultspec-rag client is 0.4.2 but the running service is 0.4.10.
+- `S137` exit 1
+- `S137` uv run --no-sync ruff check src/cadrumo/application/auth/tests/test_certificate_sources_check.py src/cadrumo/application/auth/tests/test_certificate_sources_health.py
+- `S137` All checks passed!
+- `S137` exit 0
+- `S137` uv run --no-sync ruff format --check src/cadrumo/application/auth/tests/test_certificate_sources_check.py src/cadrumo/application/auth/tests/test_certificate_sources_health.py
+- `S137` 2 files already formatted
+- `S137` exit 0
+- `S137` uv run --no-sync pytest -n 0 --collect-only -q src/cadrumo/application/auth/tests/test_certificate_sources_check.py src/cadrumo/application/auth/tests/test_certificate_sources_health.py
+- `S137` 32 tests collected in 1.71s
+- `S137` exit 0
+- `S137` deselected 0
+- `S137` uv run --no-sync pytest -n 0 src/cadrumo/application/auth/tests/test_certificate_sources_check.py src/cadrumo/application/auth/tests/test_certificate_sources_health.py
+- `S137` ============================= 32 passed in 46.67s =============================
+- `S137` exit 0
+- `S137` uv run --no-sync python -c "from cadrumo.tests import MODULE_POLICY, measure_module_lines; measures=measure_module_lines(); targets=('src/cadrumo/application/auth/tests/test_certificate_sources_check.py','src/cadrumo/application/auth/tests/test_certificate_sources_health.py'); print('POLICY='+str(MODULE_POLICY.default_limit)); [print(path+'='+str(measures[path])) for path in targets]"
+- `S137` POLICY=1250
+- `S137` src/cadrumo/application/auth/tests/test_certificate_sources_check.py=1123
+- `S137` src/cadrumo/application/auth/tests/test_certificate_sources_health.py=223
+- `S137` exit 0
+- `S137` ```
+- `S138` Verification evidence required by P05.S138:
+- `S138` ```text
+- `S138` vaultspec-rag search 'relation prefill calculation tests dependency identity source mapping' --type code
+- `S138` Refusing to search against the running service.
+- `S138` This vaultspec-rag client is 0.4.2 but the running service is 0.4.10.
+- `S138` exit 1
+- `S138` uv run --no-sync ruff check src/cadrumo/application/calculations/_relation_prefill.py src/cadrumo/application/calculations/_relation_prefill_m202.py src/cadrumo/application/calculations/__init__.py
+- `S138` All checks passed!
+- `S138` exit 0
+- `S138` uv run --no-sync ruff format --check src/cadrumo/application/calculations/_relation_prefill.py src/cadrumo/application/calculations/_relation_prefill_m202.py src/cadrumo/application/calculations/__init__.py
+- `S138` 3 files already formatted
+- `S138` exit 0
+- `S138` uv run --no-sync pytest -n 0 --collect-only -q src/cadrumo/application/calculations/tests/test_relation_prefill_source_mesh.py
+- `S138` 13 tests collected in 1.84s
+- `S138` exit 0
+- `S138` deselected 0
+- `S138` uv run --no-sync pytest -n 0 src/cadrumo/application/calculations/tests/test_relation_prefill_source_mesh.py
+- `S138` ======================== 13 passed in 91.23s (0:01:31) ========================
+- `S138` exit 0
+- `S138` uv run --no-sync python -c "from cadrumo.tests import MODULE_POLICY, measure_module_lines; measures=measure_module_lines(); targets=('src/cadrumo/application/calculations/_relation_prefill.py','src/cadrumo/application/calculations/_relation_prefill_m202.py'); print('POLICY='+str(MODULE_POLICY.default_limit)); [print(path+'='+str(measures[path])) for path in targets]"
+- `S138` POLICY=1250
+- `S138` src/cadrumo/application/calculations/_relation_prefill.py=1237
+- `S138` src/cadrumo/application/calculations/_relation_prefill_m202.py=57
+- `S138` exit 0
+- `S138` ```
+- `S139` Verification evidence required by P05.S139:
+- `S139` ```text
+- `S139` vaultspec-rag search 'cross period clean state calculation dependency diagnostics' --type code
+- `S139` Refusing to search against the running service.
+- `S139` This vaultspec-rag client is 0.4.2 but the running service is 0.4.10.
+- `S139` exit 1
+- `S139` uv run --no-sync ruff check src/cadrumo/application/calculations/cross_period_clean_state.py src/cadrumo/application/calculations/_cross_period_external_evidence.py src/cadrumo/application/calculations/__init__.py
+- `S139` All checks passed!
+- `S139` exit 0
+- `S139` uv run --no-sync ruff format --check src/cadrumo/application/calculations/cross_period_clean_state.py src/cadrumo/application/calculations/_cross_period_external_evidence.py src/cadrumo/application/calculations/__init__.py
+- `S139` 3 files already formatted
+- `S139` exit 0
+- `S139` uv run --no-sync pytest -n 0 --collect-only -q src/cadrumo/application/calculations/tests/test_cross_period_external_evidence.py src/cadrumo/application/calculations/tests/test_cross_period_clean_state_provenance.py src/cadrumo/application/calculations/tests/test_unresolved_identity_is_not_a_mismatch.py
+- `S139` 31 tests collected in 3.93s
+- `S139` exit 0
+- `S139` deselected 0
+- `S139` uv run --no-sync pytest -n 0 src/cadrumo/application/calculations/tests/test_cross_period_external_evidence.py src/cadrumo/application/calculations/tests/test_cross_period_clean_state_provenance.py src/cadrumo/application/calculations/tests/test_unresolved_identity_is_not_a_mismatch.py
+- `S139` 11 failed, 20 passed in 227.54s (0:03:47)
+- `S139` ProfileCustodyRefusedError: KDF_SUPERVISION_UNAVAILABLE
+- `S139` EOFError: profile KDF worker closed its pipe
+- `S139` exit 1
+- `S139` uv run --no-sync python -c "from cadrumo.tests import MODULE_POLICY, measure_module_lines; measures=measure_module_lines(); targets=('src/cadrumo/application/calculations/cross_period_clean_state.py','src/cadrumo/application/calculations/_cross_period_external_evidence.py'); print('POLICY='+str(MODULE_POLICY.default_limit)); [print(path+'='+str(measures[path])) for path in targets]"
+- `S139` POLICY=1250
+- `S139` src/cadrumo/application/calculations/cross_period_clean_state.py=1128
+- `S139` src/cadrumo/application/calculations/_cross_period_external_evidence.py=130
+- `S139` exit 0
+- `S139` ```
+- `S139` The runner's 11 failures begin in profile-capsule creation before the extracted evidence code runs, via the shared custody KDF worker (`KDF_SUPERVISION_UNAVAILABLE`); no external owner was changed or retried.
+- `S140` ```text
+- `S140` uvx vaultspec-rag search 'application diagnostics diagnostic reporting observability only:prod' --type code
+- `S140` Refusing to search against the running service.
+- `S140` This vaultspec-rag client is 0.4.2 but the running service is 0.4.10.
+- `S140` exit 1
+- `S140` uv run --no-sync ruff check src/cadrumo/application/diagnostics.py src/cadrumo/application/diagnostic_models.py src/cadrumo/application/repair_integrity.py src/cadrumo/application/tests/test_diagnostics.py src/cadrumo/application/tests/test_diagnostics_dispatch.py src/cadrumo/entrypoints/cli/_config/_repair_cli.py src/cadrumo/tests/test_deferred_cross_layer_imports.py
+- `S140` All checks passed!
+- `S140` exit 0
+- `S140` uv run --no-sync ruff format --check src/cadrumo/application/diagnostics.py src/cadrumo/application/diagnostic_models.py src/cadrumo/application/repair_integrity.py src/cadrumo/application/tests/test_diagnostics.py src/cadrumo/application/tests/test_diagnostics_dispatch.py src/cadrumo/entrypoints/cli/_config/_repair_cli.py src/cadrumo/tests/test_deferred_cross_layer_imports.py
+- `S140` 7 files already formatted
+- `S140` exit 0
+- `S140` uv run --no-sync pytest -n 0 --collect-only -q src/cadrumo/application/tests/test_diagnostics.py src/cadrumo/application/tests/test_diagnostics_dispatch.py src/cadrumo/tests/test_deferred_cross_layer_imports.py src/cadrumo/entrypoints/cli/_config/tests/test_config_repair_profile_integrity_payloads.py
+- `S140` 74 tests collected in 2.32s
+- `S140` No marker selector or --deselect option was supplied; deselected 0.
+- `S140` exit 0
+- `S140` uv run --no-sync pytest -n 0 -q src/cadrumo/application/tests/test_diagnostics_dispatch.py
+- `S140` 16 errors in 3.74s
+- `S140` ImportError: cannot import name 'default_ecb_rate_provider' from 'cadrumo.adapters.outbound.fx'
+- `S140` The failure occurs in the shared conftest runtime-port fixture before diagnostics test execution, through application.invoices._creation. It is outside S140 ownership.
+- `S140` exit 1
+- `S140` uv run --no-sync python -c "from cadrumo.application.diagnostic_models import DiagnosticCheck; from cadrumo.application.diagnostics import build_cli_version_report, render_cli_version_text; check=DiagnosticCheck(name='probe', status='ok', summary='ok'); report=build_cli_version_report(with_registry=False); assert check.precondition_verdict is None; assert report.registry.available is False; assert 'cadrumo' in render_cli_version_text(report); print('DIAGNOSTIC_MODEL_AND_VERSION_PROBE=PASS')"
+- `S140` DIAGNOSTIC_MODEL_AND_VERSION_PROBE=PASS
+- `S140` exit 0
+- `S140` uv run --no-sync python -c "from cadrumo.tests import MODULE_POLICY, CALLABLE_POLICY, measure_module_lines, measure_callable_lines; m=measure_module_lines(); c=measure_callable_lines(); targets=('src/cadrumo/application/diagnostics.py','src/cadrumo/application/diagnostic_models.py'); print('MODULE_POLICY='+str(MODULE_POLICY.default_limit)); [print(path+'='+str(m[path])) for path in targets]; print('CALLABLE_POLICY='+str(CALLABLE_POLICY.default_limit)); [print(key+'='+str(c[key])) for key in sorted(c) if key.startswith('src/cadrumo/application/diagnostics.py::') and c[key] > 120]"
+- `S140` MODULE_POLICY=1250
+- `S140` src/cadrumo/application/diagnostics.py=1135
+- `S140` src/cadrumo/application/diagnostic_models.py=231
+- `S140` CALLABLE_POLICY=180
+- `S140` src/cadrumo/application/diagnostics.py::build_config_repair_report=155
+- `S140` exit 0
+- `S140` uv run --no-sync python -m dev.audit.size_budget
+- `S140` size budget: scanned 5640 modules, 15608 production callables.
+- `S140` size budget: FAIL - 78 finding(s).
+- `S140` S140's diagnostics.py subject is absent from the 53 module and 22 callable over-budget findings; the remaining findings belong to other plan rows or concurrent work.
+- `S140` exit 1
+- `S140` ```
+- `S141` ```text
+- `S141` uv run --no-sync ruff check src/cadrumo/application/filing/_export_producer.py src/cadrumo/application/filing/_producer_ownership.py src/cadrumo/application/filing/tests/test_export_producer_resolution.py src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py
+- `S141` All checks passed!
+- `S141` exit 0
+- `S141` uv run --no-sync ruff format --check src/cadrumo/application/filing/_export_producer.py src/cadrumo/application/filing/_producer_ownership.py src/cadrumo/application/filing/tests/test_export_producer_resolution.py src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py
+- `S141` 4 files already formatted
+- `S141` exit 0
+- `S141` uv run --no-sync python -m compileall -q src/cadrumo/application/filing/_export_producer.py src/cadrumo/application/filing/_producer_ownership.py
+- `S141` exit 0
+- `S141` uv run --no-sync pytest -n 0 -o addopts= --collect-only -q src/cadrumo/application/filing/tests/test_export_producer_resolution.py src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py src/cadrumo/application/filing/tests/test_producer_snapshot.py
+- `S141` 63 tests collected in 1.00s
+- `S141` No marker selector or --deselect option was supplied; deselected 0.
+- `S141` exit 0
+- `S141` uv run --no-sync pytest -n 0 -o addopts= -q src/cadrumo/application/filing/tests/test_export_producer_resolution.py
+- `S141` 3 passed in 1.46s
+- `S141` exit 0
+- `S141` uv run --no-sync pytest -n 0 -o addopts= -q src/cadrumo/application/filing/tests/test_export_semantic_vocabulary.py
+- `S141` 12 passed in 2.39s
+- `S141` exit 0
+- `S141` runtime ownership proof: OLD_ROUTE_EXPOSED=False OWNERS=573
+- `S141` exit 0
+- `S141` size proof: _export_producer.py=1145 lines; _producer_ownership.py=47 lines; filing_producer_ownership=15 lines; module limit=1250; callable limit=180.
+- `S141` exit 0
+- `S141` uv run --no-sync pytest -n 0 -o addopts= -q dev/audit/tests/test_codebase_size_budgets.py -k tracked_production_callables_stay_inside_their_declared_band
+- `S141` 1 failed, 15 deselected in 25.49s
+- `S141` The 21 reported over-budget callables are outside S141; neither `_export_producer.py` nor `_producer_ownership.py` is named.
+- `S141` exit 1
+- `S141` ```
+- `S142` The focused run's three failures are pre-existing registry authority-grade refusals while constructing modelo 200 filing snapshots: `RegistryValidationError: modelo 200 revision 2025-y-siguientes declares 'calculation' authority grade, which cannot satisfy the requested 'filing' snapshot authority.` They occur in `test_export_value_policy.py` before the moved verifier functions execute; the remaining 36 focused tests passed.
+- `S142` `_export.py` had a peer-owned import-order hunk before S142. It is preserved in the shared worktree and excluded from S142's isolated commit.
+- `S146` Source commit `e2b99199a2` has the exact two-path manifest: `M` `src/cadrumo/application/ledger/classification_assembly.py` 1426 -> 1228 raw physical lines and `A` private `src/cadrumo/application/ledger/_classification_assembly_rules.py` at 213 lines. The sibling owns the table-probe/mapping family; public APIs and imports remain canonical in `classification_assembly.py`, with one private consumer.
+- `S146` Root independently verified 33 aggregate AST definitions parity plus ruff, format, compile, and import-boundary checks. Legal rationale, comments, and docstrings moved intact rather than shortened.
+- `S146` A broader direct-ledger batch supplied no terminal summary and is not claimed as passing. Peer-owned `src/cadrumo/tests/test_iva_category_singularity.py` was modified, deliberately untouched, and is outside this receipt.
+- `S146` No source, plan, baseline, threshold, `--write-baseline`, `--accept-growth`, or default-index mutation occurred during this reconciliation.
+- `S147` This is a stale-plan reconciliation and makes no source change. `src/cadrumo/application/ledger/evidence_draft.py` is clean at 244 raw physical lines. `measure_module_lines()` reports `module-live=False`; its two measured callables have no live callable-limit keys from `build_limits(...CALLABLE_POLICY)`. No source provenance commit or refactor is claimed.
+- `S147` A combined focused collection for two ledger tests reported 14 collected in 0.63 seconds. The subsequent shared runner supplied no terminal summary, so this is collection evidence only: it is not a test pass and is not attributed to this Step.
+- `S147` No baseline, threshold, `--write-baseline`, `--accept-growth`, default-index, source, or plan mutation occurred.
+- `S148` `uv run --no-sync ruff check src/cadrumo/application/ledger/evidence.py` emitted `All checks passed!` (exit 0).
+- `S148` `uv run --no-sync ruff format --check src/cadrumo/application/ledger/evidence.py` emitted `1 file would be reformatted` for CRLF normalization at the S148 helper and call sites (exit 1).
+- `S148` `uv run --no-sync pytest --collect-only -q src/cadrumo/application/ledger/tests/test_evidence.py` and its target run both stopped during conftest import (exit 4): peer-owned `src/cadrumo/application/calculations/_bienes_inversion_regularizacion.py:52` has an attempted relative import beyond the top-level package.
+- `S148` The exact AST budget probe measured `src/cadrumo/application/ledger/evidence.py::add` at 179 lines against the default callable limit 180 (exit 0). The repository-wide callable ratchet reported 20 other live offenders, beginning with `evidence_draft.py::confirm_invoice_draft_from_evidence` at 199 lines; no threshold or baseline was changed.
+- `S148` Initial S148 commit `4b3d118585` accidentally captured the peer-owned clock-import hunk while staging the shared source file. A newer shared documentation commit `bf3aa52c688` made the authorized immediate amend unsafe. The compensating repair restores the committed import to `from ...core.time import now as _utc_now` while retaining the peer's `_clock` import in the worktree. The immutable aggregate proof command is `git diff 4b3d118585^..HEAD -- src/cadrumo/application/ledger/evidence.py`: it retains the helper/call extraction and contains no `core.time` import transition.
+- `S149` `uv run --no-sync ruff check src/cadrumo/application/ledger/identity_roles.py` emitted `All checks passed!` (exit 0); `ruff format --check` emitted `1 file already formatted` (exit 0).
+- `S149` A direct four-outcome probe of absent, checksum-unverified, positively evidenced, and ambiguous identities emitted `direct identity outcomes: absent/unverified/anchored/ambiguous` (exit 0).
+- `S149` The exact callable-size probe measured `src/cadrumo/application/ledger/identity_roles.py::resolve_counterparty_identity` at 159 lines against the default 180 (exit 0); no baseline or policy changed.
+- `S149` `uv run --no-sync pytest --collect-only -q src/cadrumo/application/ledger/tests/test_identity_roles.py` and its target run both stopped before collection (exit 4) at peer-owned `src/cadrumo/adapters/persistence/storage/_secure_object_namespaces.py:12`: `SensitivityClass` is absent from `cadrumo.core.classification`.
+- `S164` Source provenance is `359baf225823ae7c32aa7cab3c535e6b34c3f1c2`, whose exact five-path source manifest is the modified supervisor, added private context sibling, and the three modified direct test consumers above. `supervisor.py` shrank from 1361 to 1241 raw physical lines after the restored property documentation; `supervisor_context.py` is 136 lines. Both are below the 1250-line default ceiling. No plan, baseline, threshold, or default-index mutation is present.
+- `S164` The extracted `_SupervisorExecutorContext` remains private in the direct sibling. The three affected tests import it directly from `supervisor_context`; no compatibility facade or re-export was introduced.
+- `S164` Source static checks are qualified executor and root-review evidence, not newly reproduced command transcripts in this record. The focused three-test selector ran zero tests and produced a runner-level nothing-ran outcome. It is not a pass and supplies no execution receipt.
+- `S164` No baseline, threshold, `--write-baseline`, or `--accept-growth` action was taken.
+- `S166` `uv run --no-sync ruff check src/cadrumo/application/operator_surface/help.py` emitted `All checks passed!` (exit 0); `ruff format --check` emitted `1 file already formatted` (exit 0).
+- `S166` The direct root-help probe emitted `root help: 8 paragraphs, 5 sections, 22 entries` after asserting the first section's five commands and preserved ordering (exit 0).
+- `S166` The exact AST probe measured `_root_help` at 168 lines and `_root_start_resume_section` at 27 lines (exit 0); no size baseline or policy changed.
+- `S166` `uv run --no-sync pytest --collect-only -q src/cadrumo/entrypoints/cli/tests/test_root_payloads.py src/cadrumo/entrypoints/cli/tests/test_root_help_shape.py` collected 8 of 31 nodes with 23 project-marker deselections (exit 0). The focused payload run reported 7 passed and 1 failed (exit 1): unrelated `build_help_document("app")` localization is over the 80-character `HelpEntry.description` bound.
+- `S168` This is a stale-plan reconciliation and makes no source change. `src/cadrumo/application/repair_integrity.py` is clean at 991 raw physical lines; `measure_module_lines()` reports that it is not a live size-budget-limit subject. No source provenance commit or refactor is claimed.
+- `S168` Root ran `uv run --no-sync pytest -q src/cadrumo/application/tests/test_repair_integrity.py` with `13 passed in 6.83s`; collect-only found 13 tests in 0.19s. These are root-reported receipts retained as supplied evidence.
+- `S168` No baseline, threshold, `--write-baseline`, `--accept-growth`, default-index, source, or plan mutation occurred.
+- `S172` This is a stale-plan reconciliation with no source refactor or source provenance claim. The target is 348 raw physical lines and has no live module or callable size-budget subject.
+- `S172` The sole peer-owned target change is the import relocation `..evidence._profile_legal_hold` -> `..evidence.profile_legal_hold`; it was preserved and explicitly excluded. The related test surface may also be peer-modified, so no test was run and no test pass is claimed.
+- `S172` No source, plan, baseline, threshold, `--write-baseline`, `--accept-growth`, or default-index mutation occurred during this reconciliation.
+- `S176` Source commit `f0bb7bcfdf` has the exact two-path source manifest: `M` `src/cadrumo/core/filing_projection_ref.py` 1258 -> 1236 raw physical lines and `A` `src/cadrumo/core/filing_projection_ref_support.py` at 23 lines. The plan's private target was deleted when `47c5185f2e` promoted the authoritative public owner; this record reconciles that displacement and claims no compatibility facade.
+- `S176` Only `_STRING_WIRE_FIELDS` and `_validated_type_members` moved to the private support module. The public union, models, and API remain canonical in `filing_projection_ref.py`. Root rechecked 67 aggregate-definition AST parity and reported passing ruff, format, compile, and import-union smoke checks.
+- `S176` Peer-owned `src/cadrumo/core/tests/test_filing_projection_ref.py` is modified and was deliberately untouched and not run. No test pass is claimed.
+- `S176` No source, plan, baseline, threshold, `--write-baseline`, `--accept-growth`, or default-index mutation occurred during this reconciliation.
+- `S178` `uv run --no-sync ruff check` on both registry shards emitted `All checks passed!` (exit 0); `ruff format --check` emitted `2 files already formatted` (exit 0).
+- `S178` The module-size probe measured `_application_part2.py` at 1228 lines against the default 1250 (exit 0); no size baseline or policy changed.
+- `S178` Registry test collection found 23 nodes (exit 0). The focused run reached `23 passed` / `[100%]`, then its shared plugin teardown did not return an exit to the command wrapper; no source failure was emitted.
+- `S178` Directly importing registry internals outside the normal bootstrap raises the pre-existing `error_codes`/registry partial-initialization cycle, so mapping verification remains with the normal registry suite.
+- `S179` This is a current in-band stale-plan reconciliation, with no source edit. `src/cadrumo/core/observability/context.py` is clean at 375 raw physical lines. Its only live callable pin is `run_context`, measured at 195 against a live limit of 205; every other callable has no live limit. No source provenance commit or refactor is claimed.
+- `S179` No plan, baseline, threshold, `--write-baseline`, `--accept-growth`, default-index, or source mutation occurred.
+- `S180` Ruff check and format check on the validator emitted `All checks passed!` and `1 file already formatted` (exit 0).
+- `S180` The AST probe measured `_validate_revision_surface_sections` at 140 lines and its extracted tail helper at 73 lines (exit 0); no size baseline or policy changed.
+- `S180` Importing `validate_revision_definition` from the moved surface succeeded (exit 0).
+- `S180` Parent commit `606a4a707b` had already closed S180 through the vault CLI; this Step's source commit deliberately owns no plan mutation.
+- `S182` Source provenance is `4ced237398edb70bd54a0eef6550fda705dc0d70`. Its immutable physical/raw comparison is 1365 parent `authority.py` lines to 1142 committed `authority.py` lines, with a new 253-line `diagnostic_classification.py` sibling. The size-budget baseline and thresholds were not changed.
+- `S182` The supplied focused evidence reports passing compile, import, direct-ownership, Ruff, and two boundary tests. The integration receipt is intentionally not represented as green: `1 passed, 2 failed, 4 deselected in 293.23s`; both failures are shared unrelated `corpus_catalogue` `applies_across` failures.
+- `S182` The two `dev/registry` paths record the direct diagnostic-classification import repoints in `4ced237398edb70bd54a0eef6550fda705dc0d70`. Their shared working-tree hunk context also contains peer filing-relocation churn; that peer content is excluded from this attestation's source attribution and this artifact commit is isolated to the execution record and linked audit.
+- `S183` The public `bindings.py` surface was reduced below the unchanged 1,250-line module policy by moving cohesive binding-family logic to defining sibling modules. The independent source review observed a live 894-line primary; the prior executor observed 1,032 lines during the same shared-tree work. Both are below policy, and every extracted helper is at most 179 lines under the unchanged 180-line callable policy. No baseline or threshold change belongs to this Step.
+- `S183` The supplied focused receipt is executor-reported only: `48 passed in 51.93s`. Its literal command was not retained, so this record deliberately does not invent a `verify:` command.
+- `S183` Independently reviewed targeted Ruff/check, import, and compile probes were clean. The non-mutating full size audit stalled and yielded no result; this record makes no global size-audit pass claim.
+- `S183` `src/cadrumo/application/modelo/_calculation_actions.py` is included only for its P05.S183 binding-target projection hunk. The source commit uses an isolated index to exclude its peer `persistence_wiring` relocation hunk.
+- `S185` Source provenance is `adbdcc8875b9323b3ddc88a1984deea287380c6f`. Its immutable physical source comparison reduces `formula_runtime.py` from 1373 to 1035 lines and adds the 363-line Modelo 100 sibling, deletes the legacy in-module wrapper implementation, and makes the dispatcher directly import the canonical evaluator module. No source plan, size-budget baseline, or threshold changed.
+- `S185` Executor-reported focused receipts are: 8 EO tests in 28.96s; 18 Art. 85 plus arity tests in 45.16s; and 13 remediation-focused tests in 43.28s. The complete size audit exited 1 elsewhere but reported no `formula_runtime` offender; this is not a global green claim.
+- `S185` The combined 25/4 scanner result is non-green, unattributed, and excluded from acceptance. It is not represented as S185 verification evidence.
+- `S187` `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/invoice_bindings.py src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py src/cadrumo/domain/calculations/registry/tests/test_modelo_349_operador_totals_parity.py` emitted `All checks passed!` (exit 0); `uv run --no-sync ruff format --check src/cadrumo/domain/calculations/registry/invoice_bindings.py src/cadrumo/domain/calculations/registry/_invoice_row_materialization.py src/cadrumo/domain/calculations/registry/tests/test_modelo_349_operador_totals_parity.py` emitted `3 files already formatted` (exit 0); `git diff --check` exited 0.
+- `S187` `uv run --no-sync pytest -o addopts='' --collect-only -q -m unit src/cadrumo/domain/calculations/registry/tests/test_invoice_bindings.py src/cadrumo/domain/calculations/registry/tests/test_modelo_347_registry_bindings.py src/cadrumo/domain/calculations/registry/tests/test_modelo_349_registry_bindings.py src/cadrumo/domain/calculations/registry/tests/test_modelo_349_operador_totals_parity.py src/cadrumo/domain/calculations/registry/tests/test_modelo_347_contraparte_clave_bindings.py src/cadrumo/domain/calculations/registry/tests/test_contraparte_clave_row_grouping.py` collected 49 tests (exit 0); the matching focused run emitted `49 passed in 16.52s` (exit 0).
+- `S187` `uv run --no-sync python -c "from dev.audit.size_budget import measure_module_lines; actual=measure_module_lines(); key='src/cadrumo/domain/calculations/registry/invoice_bindings.py'; print(f'{key}: {actual[key]} lines; default module budget 1250; exit 0')"` emitted `src/cadrumo/domain/calculations/registry/invoice_bindings.py: 894 lines; default module budget 1250; exit 0`; no policy or baseline changed.
+- `S187` Before S187 plan mutation, `HEAD` was `caa2f71a28a38add5b9006cb4a2e08e729376b2e` and the shared default-index/worktree plan blob was `6f53b32289f080715f2ace1a5cfc60692c4872bb`; the isolated commit stages only the S187 row and generated body hash while preserving peer plan hunks byte-identically.
+- `S187` Repair: restored the canonical public `from .....core.resources import bundled_path` import in the direct parity test while retaining its direct materialisation import. `uv run --no-sync ruff check src/cadrumo/domain/calculations/registry/tests/test_modelo_349_operador_totals_parity.py` emitted `All checks passed!` (exit 0); `uv run --no-sync ruff format --check src/cadrumo/domain/calculations/registry/tests/test_modelo_349_operador_totals_parity.py` emitted `1 file already formatted` (exit 0); the focused unit run emitted `5 passed in 17.28s` (exit 0).
+- `S188` Source provenance is `f8dbe09b92e108bdec0fbc5ae0a0009cf9ae7bb2`. It deletes the 2148-line `ledger_bindings.py` subject and splits it into six siblings with physical counts 17, 820, 283, 264, 281, and 536; 61 definitions retain one-to-one ownership. The direct Python-import scan reports zero stale imports. No plan, size baseline, or threshold changed.
+- `S188` Supplied checks passed: compileall, I001/Ruff check, 108 tests in 94.10s, and 127 tests in 101.76s. The global size audit names none of the six new modules among 60 legacy overages; it is not a global green size claim.
+- `S188` The formatter finding at `dev/registry/analysis/load_census_classification.py:729` is non-S188 and excluded. No full-green format claim is made.
+- `S190` Source split provenance: `1cfa61f8705c57ce91c9f4a8eb882ad96e2a9169`.
+- `S190` The canonical surface remains `record_design.py`; it owns the public `extract_record_design*` contract and delegates implementation to cohesive private siblings. There is no facade or re-export compatibility layer.
+- `S190` Measured modules are all below the unchanged 1,250-line policy: primary 254; coverage 861; layout markers 36; PDF orchestration 297; PDF repairs 974; PDF rows 592; PDF state 1,043; PDF visual 430; sources 211; workbook 784; workbook headers 378. The largest measured production callable in the changed family is `derive_calculation_completeness_casillas` at 136 lines, below the unchanged 180-line limit. No baseline or threshold file is part of this Step.
+- `S190` The global `python -m dev.audit.size_budget` scan reported 64 pre-existing out-of-scope findings; none names a changed `record_design*` production module or callable. This record does not claim that global audit is green.
+- `S190` The earlier direct-consumer risk was resolved before receipt: `ABSENT_NATURALEZA_TYPE_CODE` has one semantic owner in `record_design_pdf_rows.py`; `dev/registry/pipeline/_render_profile.py` imports that owner, and its runtime import passed. The runtime sibling import graph is acyclic.
+- `S190` Resource relocation was co-located with private-import moves in eleven working-tree files. The S190 source commit uses an isolated temporary index that retains the resource changes outside this Step and stages only the explicitly reviewed import moves.
+- `S190` The focused 13-pass receipt above is the only pytest receipt claimed. A broader/core `test_record_design.py` attempt produced no final receipt and is deliberately not represented as passed.
+- `S192` Immutable source commit `945987e7cd8530f4484073b82ebc576d0d715478` has exactly the 32 source paths logged above. It changes no threshold or size baseline. Raw saved-blob physical counts are `schema.py` 1185, `schema_revision_members.py` 211, and `schema_deadlines.py` 161, each within the 1250 ceiling.
+- `S192` The executor reported `ruff check` plus format and `py_compile` clean, and reported its focused suite as `83 passed in 2.76s`; no literal terminal command was retained, so this is reported evidence rather than a reconstructed receipt. The direct-boundary assertion above was run by root post-commit and printed `direct-boundary-ok`.
+- `S192` The executor also reported 59 unrelated global audit findings with schema absent; this is a module-specific conclusion, not a global-green claim. Earlier 35 registry-schema and 9 deadline-resolver passes are not used as receipts here.
+- `S195` Historical implementation is immutable commit `aef15d15109b62177713bd78d3edede5f03b2b5c`: its exact manifest is one deletion plus the four additions above. Agent-supplied raw physical counts are old `1554`; new `124`, `545`, `435`, and `494` in manifest order. No threshold or baseline change is claimed.
+- `S195` Executor-reported, not independently replayed and without a retained terminal transcript: `uv run --no-sync python -m compileall -q src/cadrumo/domain/calculations/registry/tests` passed; `ruff check` and `ruff format --check` on the four new files passed; `pytest --collect-only -q` on those four files reported `30 collected in 1.34s`.
+- `S195` Root's independent AST review found `37` top-level definitions before and after, with missing, extra, and duplicate sets empty; `rg` found no direct imports from the deleted old module. No full pytest was run because four pytest PIDs were active. This record makes no global size result claim.
+- `S196` Source provenance is `f497b88a157441c4756352445f76b241bcbf5a62`, whose manifest is exactly the two source paths above. Raw physical blob counts are 403 lines for `test_detail_record_observations.py` and 912 for `test_withholding_observations.py`; neither crosses the 1250-line ceiling. Its two-path manifest contains no threshold or baseline file.
+- `S196` Independent AST comparison of the parent and both split blobs found 57 old top-level definitions, 20 retained plus 37 moved, with no missing, extra, or duplicate definitions; targeted import search found no imports from the old test module into the new sibling.
+- `S196` The executor reported a focused pytest selection of 53 passed in 7.92s and passing compile/Ruff format/check results, but the literal command transcripts were not retained. Those reports are therefore not represented as fresh independently reproduced receipts here.
+- `S196` A current non-mutating global size scan returned 58 findings and nonzero status, all elsewhere; neither S196 sibling appeared. This is not a global green result and no baseline, threshold, `--write-baseline`, or `--accept-growth` action was taken.
+- `S198` Source provenance is `5f793e474e049f6b5d3135abaa49eec7093c6525`, whose manifest is exactly the two source paths above. Raw physical blob counts are 1207 lines for `test_modelo_100_registry_roles.py` and 240 for `test_modelo_100_registry_roles_objective_estimation.py`; neither crosses the 1250-line ceiling. Its two-path manifest contains no threshold or baseline file.
+- `S198` Independent AST comparison of the parent and both split blobs found 34 old top-level definitions, 29 retained plus 5 moved, with no missing, extra, or duplicate definitions; targeted import search found no imports from the old test module into the new sibling.
+- `S198` The executor reported a focused pytest selection of 34 passed, but the literal command transcript was not retained. That report is therefore not represented as a fresh independently reproduced receipt here.
+- `S200` Source provenance is `6bb2987f60cadc409bbdfb57e665567543c5296f`; its exact six-path source manifest is recorded above. Root source review reported C/H/M/L 0.
+- `S200` The executor reported focused pytest 53 passed in 54.14s plus passing Ruff, formatting, and compile checks. Literal transcripts were not retained, so these are qualified executor reports rather than fresh receipts.
+- `S200` A global size audit reported 58 unrelated findings and was non-green; no global success, threshold, baseline, or acceptance-growth claim is made.
+- `S202` Source provenance is `2bd1f782b5a6e4064386624ad0f8023500f62f12`, whose manifest is exactly the four source paths above. Raw physical blob counts are 582 lines for `test_record_design.py`, 533 for `test_record_design_layout.py`, 425 for `test_record_design_narrative.py`, and 434 for `test_record_design_pdf.py`; none crosses the 1250-line ceiling. Its four-path manifest contains no threshold or baseline file.
+- `S202` Formal AST review found 53 top-level definitions and 51 test definitions preserved with no missing, extra, or duplicate definitions; targeted import search found no imports from the old test module into a new sibling.
+- `S202` The executor reported that the focused four-module pytest family passed 82 tests in 138.58 seconds with four known `openpyxl` conditional-format warnings, and reported passing Ruff check/format and `compileall`. Those are executor-reported receipts, not newly reproduced command transcripts in this record.
+- `S202` The executor also reported a non-mutating global size scan with 57 unrelated findings and nonzero status; no S202 sibling appeared. This is not a repository-wide green result, and no baseline, threshold, `--write-baseline`, or `--accept-growth` action was taken.
+- `S204` Source provenance is `d5f63d9e5aa80f3ad42e0ff98abab9fa0b94e05b`, whose exact eight-path source manifest is the deleted test module plus the seven added siblings above. Raw physical counts are 886, 607, 572, 52, 54, 1059, and 234 lines respectively in manifest order after the deleted path; each is below the 1250-line ceiling. The source manifest contains no plan, baseline, threshold, or default-index mutation.
+- `S204` Formal lossless review preserved 87 top-level definitions and 25 test definitions with no missing, extra, duplicate, or changed bodies; the raw replacement-character scan was zero and sibling test modules use direct private-support imports rather than facades or test-to-test re-exports.
+- `S204` The executor reported focused pytest as 21 passed, 3 failed, and 18 warnings in 684.78 seconds. The three non-green outcomes are domain/corpus gates: Modelo 308's 2011 overlapping revisions, Modelo 184's unmeasured 2024 design, and the absent retired-to-reserved positive corpus case. This is reported evidence only, does not claim a baseline reproduction, and is not a green receipt. The executor also reported passing Ruff check/format and `compileall`.
+- `S204` The executor reported a non-mutating global size scan with 56 unrelated non-green findings; no S204 sibling was over budget. No baseline, threshold, `--write-baseline`, or `--accept-growth` action was taken.
+- `S206` Source provenance is `bfb6d1fc2d34b6f4c71c05455d99fa6470a7b62f`, whose exact three-path source manifest is the modified canonical module, the added private row-builder sibling, and the modified direct private-helper test consumer above. Raw physical counts are 929 lines for `withholding_bindings.py` and 1010 for `_withholding_rows.py`; both are below the 1250-line ceiling. The source manifest contains no plan, baseline, threshold, or default-index mutation.
+- `S206` Formal review retained all 26 original top-level definitions or classes and all 34 test definitions with no missing or extra original definitions. The six intentional helper additions are `_finalise_190_identity_fields`, `_finalise_190_declaration_fields`, `_finalise_190_special_fields`, `_finalise_193_primary_fields`, `_finalise_193_instrument_fields`, and `_finalise_row_defaults`; only resolver-local-import and row-finaliser orchestration bodies changed. The raw replacement-character scan was zero. The canonical public module remains direct; the private test consumer imports the sibling directly rather than through a facade or re-export.
+- `S206` The executor reported 34 focused `test_withholding_observations.py` tests passed in 5.25 seconds after the split. A broader seven-module family had passed 86 tests in 61.97 seconds before callable extraction; its final rerun was blocked before collection by the external missing `cadrumo.tests._env_loader` harness import. These are qualified executor-reported receipts, not a claim of a newly reproduced broad green run. Ruff check, Ruff format check, `compileall`, and direct imports were reported passing.
+- `S206` The executor reported a non-mutating global size scan with 52 unrelated non-green findings: 30 modules over budget, 6 stale pins, and 16 callables over budget. No S206 module or callable appeared. No baseline, threshold, `--write-baseline`, or `--accept-growth` action was taken.
+- `S208` The plan's named `inventory/__init__.py` is already the later inert namespace relocation (16 physical lines and `__all__ = ()`), so it was not a live size subject. The live displaced authority was `inventory/records.py`, measured at 1,650 physical lines before this work.
+- `S208` Source commit `708f008d9f0bb884616a84bb19c76aa593863ff4` split that authority into canonical `records.py` (1,226 physical lines) and direct public `valuation.py` (461). The calculation/projection definitions have one canonical home in `valuation.py`; repository consumers were repointed directly, leaving no facade or re-export.
+- `S208` AST comparison of the original record module against the two resulting modules found no missing definitions, extra definitions, or duplicate definitions. The retained record path remains canonical for record types.
+- `S208` The executor reported focused pytest 147 passed in 54.06s and passing Ruff, formatting, compile, and diff checks. Literal command transcripts are not retained, so these are qualified executor reports, not fresh receipts.
+- `S208` The global size audit was non-green with 56 unrelated findings (33 modules over budget, 6 stale pins, and 17 callables over budget). Neither resulting inventory module appeared; no global-green, baseline, threshold, or acceptance-growth claim is made.
+- `S208` The initial execution record committed as `6ff141fec316a5331541be83587b53fd805d6685`; this correction supersedes its unqualified evidence wording.
+- `S210` Source commit `5849fee0a762f589aa5fc449dbe6ed604c9812df` reduced `models.py` from 1,411 to 1,109 raw physical lines and added direct sibling `normalization.py` at 340 lines.
+- `S210` The private normalization/validation pipeline now has its canonical home in `normalization.py`. `models.py` uses only a module alias, avoiding a facade or re-export; public `derive_invoice_id` remains canonical in `models.py`, with explicit dependency injection avoiding a cycle.
+- `S210` AST review reported all 24 definitions conserved. Independent source review reported C/H/M/L 0.
+- `S210` The executor reported focused invoices pytest 66 passed in 19.26s and clean Ruff, formatting, and diff checks. Literal command transcripts are not retained, so these are qualified executor reports, not fresh receipts.
+- `S212` `uv run --no-sync ruff check src/cadrumo/domain/iva/classification.py src/cadrumo/domain/iva/_classification_rules.py` emitted `All checks passed!` (exit 0); `uv run --no-sync ruff format --check src/cadrumo/domain/iva/classification.py src/cadrumo/domain/iva/_classification_rules.py` emitted `2 files already formatted` (exit 0).
+- `S212` `uv run --no-sync python -c "from cadrumo.domain.iva.classification import classify_iva; from cadrumo.domain.iva import classification; print(classify_iva.__module__); print(len(classification._CLASSIFICATION_RULES))"` emitted `cadrumo.domain.iva.classification` and `21` (exit 0).
+- `S212` `uv run --no-sync pytest --collect-only -q src/cadrumo/domain/iva/tests/test_classification.py src/cadrumo/domain/iva/tests/test_party_fact_split.py src/cadrumo/domain/iva/tests/test_intra_community_identification_axis.py src/cadrumo/domain/iva/tests/test_outbound_service_localisation.py src/cadrumo/domain/iva/tests/test_oss.py src/cadrumo/domain/iva/tests/test_place_of_supply_manual_oracle.py` collected 138 tests (exit 0); the matching focused run emitted `138 passed in 23.11s` (exit 0).
+- `S212` `uv run --no-sync pytest -q src/cadrumo/application/invoices/tests/test_party_fact_reporting_parity.py src/cadrumo/application/invoices/tests/test_m349_clave_follows_the_classifier.py src/cadrumo/application/ledger/tests/test_classification_assembly.py` emitted `41 passed in 14.50s` (exit 0).
+- `S212` `uv run --no-sync python -c "from dev.audit.size_budget import measure_module_lines; measured=measure_module_lines(); key='src/cadrumo/domain/iva/classification.py'; print(f'{key}: {measured[key]} lines; default module budget 1250; exit 0')"` emitted `src/cadrumo/domain/iva/classification.py: 1014 lines; default module budget 1250; exit 0`; no policy or baseline changed.
+- `S214` `uv run --no-sync ruff check src/cadrumo/domain/iva/components.py src/cadrumo/domain/iva/_component_rows.py` emitted `All checks passed!` (exit 0); `uv run --no-sync ruff format --check src/cadrumo/domain/iva/components.py src/cadrumo/domain/iva/_component_rows.py` emitted `2 files already formatted` (exit 0).
+- `S214` `uv run --no-sync python -c "from cadrumo.domain.iva.components import IVA_CATEGORY_COMPONENTS; print(f'component rows: {len(IVA_CATEGORY_COMPONENTS)}')"` emitted `component rows: 42` (exit 0).
+- `S214` `uv run --no-sync pytest --collect-only -q src/cadrumo/domain/iva/tests/test_component_expectations.py src/cadrumo/domain/iva/tests/test_intra_community_identification_axis.py` collected 102 tests (exit 0); the matching focused run emitted `102 passed in 5.63s` (exit 0).
+- `S214` `uv run --no-sync python -c "from dev.audit.size_budget import measure_module_lines; measured=measure_module_lines(); key='src/cadrumo/domain/iva/components.py'; print(f'{key}: {measured[key]} lines; default module budget 1250; exit 0')"` emitted `src/cadrumo/domain/iva/components.py: 550 lines; default module budget 1250; exit 0`; no policy or baseline changed.
+- `S214` Before S214 plan mutation, `HEAD` and worktree plan blobs were both `e300293d6bfea546a22487fcfd73b5d40e9ffa3b`; the shared default index was separately pinned at `dafa57578eb05350b52c0aac54923edec1427506`. The isolated commit uses a fresh HEAD index and stages only the S214 row and generated body hash, preserving the peer's default-index hunk.
+- `S216` Source commit `f8c4416febb4b17c2c6b97c7d61d0f31e661fd29` reduced `establishment.py` from 1,298 to 1,066 raw physical lines and added `country_vocabulary.py` at 254.
+- `S216` Private vocabulary indexes have one direct sibling home; public establishment resolvers remain canonical, with no facade or re-export. AST review reported 34 definitions conserved and independent source review reported C/H/M/L 0.
+- `S216` The executor reported clean Ruff, compile, and diff checks; literal transcripts are not retained, so these are qualified executor reports.
+- `S216` Focused pytest is blocked before collection at root `conftest` import by external missing `cadrumo.tests._env_loader`; no test body ran and no pass is claimed.
+- `S218` Source commit `3c458fb7d7f7af73766f8666a1e1ea18ba1e4269` reduced `calculation_revision.py` from 1,633 to 1,200 raw physical lines and added `calculation_revision_identity.py` at 468.
+- `S218` Private canonicalization and hashing mechanics have one direct sibling home; the 15 public exports remain canonical in `calculation_revision.py`, with no facade or re-export. AST review reported all 44 definitions conserved with no missing, extra, or duplicate definition.
+- `S218` The executor reported clean Ruff, format, compile, and import checks; literal transcripts are not retained, so these are qualified executor reports.
+- `S218` Focused pytest produced no terminal receipt because concurrent workers stalled it; no test pass is claimed.
+- `S220` Source provenance is `590fb81ff5c5fcd6b7f74491a932a6a7111ec16f`. Its exact five-path source manifest is the prior test module, renamed evidence sibling, added private support, added replay sibling, and added observations sibling above. Raw physical counts are 84 lines for support, 741 for evidence, 339 for replay, and 249 for observations; every new sibling is below the 1250-line ceiling. The source manifest contains no plan, baseline, threshold, or default-index mutation.
+- `S220` Formal lossless review retained all 37 top-level definitions or classes and all 34 test definitions with no missing, extra, or changed bodies. The raw replacement-character scan was zero. Canonical tests were moved directly into the siblings; shared support owns only their common constants, class, and helpers, with direct imports and no facade or re-export.
+- `S220` The executor reported a serial focused run of the three siblings as 47 passed and 1 failed in 80.13 seconds. The sole non-green result is an external production-rename census expectation: the test still expects `_amendment_actions.py` while the live source is `amendment_actions.py`. A rerun excluding precisely that external census test reported 47 passed and 1 deselected in 65.67 seconds. These are qualified executor-reported receipts, not a claim that the full focused family was newly green. Ruff check, Ruff format check, and `compileall` were reported passing.
+- `S220` The executor reported a non-mutating global size scan with 57 unrelated non-green findings: 28 modules over budget, 9 stale module pins, 17 callables over budget, and 3 stale callable pins. No S220 sibling appeared. No baseline, threshold, `--write-baseline`, or `--accept-growth` action was taken.
+- `S222` Source commit `43b4b6880402ce65bb1592975f13052620dc1c4c` reduced `models.py` from 1,284 to 1,245 raw physical lines and added `gross_validation.py` at 51.
+- `S222` The private gross-reconstitution diagnostic helper has one direct sibling home; `models.py` keeps its direct public API with no facade or re-export. AST review reported all 13 definitions conserved with no missing, extra, or duplicate definition, and reported the extracted helper AST-identical.
+- `S222` The executor reported clean Ruff, format, compile, import, and diff checks; the literal transcripts are not retained, so these are qualified executor reports. The executor also reported 33 focused gross-invariant tests passed in 5.68 seconds; that retained result is qualified executor evidence.
+- `S223` Source provenance is `a7cbd3efcd7ef5063699098108a3be2cb9615baa`, whose exact three-path manifest is the modified `_config_payloads.py`, added `_config_quarantine_payloads.py`, and modified direct consumer `_config/_repair_cli.py`. `_config_payloads.py` shrank from 1256 to 1242 raw physical lines and the sibling is 18 lines; both are at or below the 1250-line default ceiling. No plan, baseline, threshold, or default-index mutation is present.
+- `S223` The executor reported static source validation as passing. Those are executor-reported static receipts, retained as qualified evidence rather than newly reproduced terminal transcripts in this record.
+- `S223` The focused selector ran zero tests and produced a runner-level nothing-ran result. It is not a pass and supplies no test-execution receipt. A broad configuration-migration overlap affected the same configuration surface and is disclosed rather than absorbed; this three-path source manifest retains only the direct consumer adjustment required for the split.
+- `S223` No baseline, threshold, `--write-baseline`, or `--accept-growth` action was taken.
+- `S225` `uv run --no-sync ruff check src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py src/cadrumo/entrypoints/cli/tests/_machine_secret_channels_support.py src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess_refusals.py` emitted `All checks passed!` (exit 0); `uv run --no-sync ruff format --check src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py src/cadrumo/entrypoints/cli/tests/_machine_secret_channels_support.py src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess_refusals.py` emitted `3 files already formatted` (exit 0); `git diff --check` exited 0.
+- `S225` `uv run --no-sync pytest -o addopts='' --collect-only -q -m integration src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess_refusals.py` collected 70 tests (exit 0); `uv run --no-sync pytest -o addopts='' -n 0 -q -m integration src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess_refusals.py` emitted `70 passed in 487.26s` (exit 0).
+- `S225` `uv run --no-sync python -c "from dev.audit.size_budget import measure_module_lines; actual = measure_module_lines(); key = 'src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py'; print(f'{key}: {actual[key]} lines; default module budget 1250; exit 0')"` emitted `src/cadrumo/entrypoints/cli/tests/test_machine_secret_channels_subprocess.py: 654 lines; default module budget 1250; exit 0`; no policy or baseline changed.
+- `S225` Before S225 plan mutation, `HEAD` was `61b8021325565c76258a557c289d3a12deb10c0a`, the default index plan blob was `dafa57578eb05350b52c0aac54923edec1427506`, and the peer worktree plan blob was `79f023bf96828dd16a52d2e0e08c646a5c24a70b`; the isolated commit stages only the S225 row and generated body hash while preserving the peer plan hunks byte-identically.
+- `S233` The row's headline measurement is superseded by the one taken while building the
+- `S233` gate: 32 non-inert namespaces of 284, not 84 of 283. The retirement campaign
+- `S233` landed a great deal between the two readings.
+- `S233` The row's three-kind decomposition is superseded by four breach kinds, one per
+- `S233` verb the rule forbids: import binding (32), symbol export (30), own definition
+- `S233` (17), lazy resolution (3). Three kinds were tried and rejected on evidence.
+- `S233` `core` and `entrypoints.cli` each carry all four, so a precedence-ordered
+- `S233` classification files them under lazy resolution alone and hides that they also
+- `S233` define production code -- the exact collapse this row warned the single number
+- `S233` was causing.
+- `S233` The gate is a named-set ratchet keyed on `(package, breaches)`, with set
+- `S233` equality checked in both directions, so a namespace that stops re-exporting but
+- `S233` keeps its own definitions reads as partially paid rather than done. No count is
+- `S233` a pass condition. Nine planted-namespace fixtures and three inert controls prove
+- `S233` it bites. The baseline change was purely additive -- 279 insertions, zero
+- `S233` deletions -- so no pre-existing family was widened to accommodate it.
+- `S233` DEFERRED, NOT DELIVERED: the row also asked that the tension between this rule
+- `S233` and `test_facade_export_lazy_shapes`, which accommodates the PEP 562 facades the
+- `S233` architecture rule bans by name, be resolved by a ruling in one direction. That is
+- `S233` ADR-grade and is not settled here. The gate records the three lazy namespaces as
+- `S233` breaches, which states the rule's position without retiring the accommodating
+- `S233` test.
+- `S233` The gate's value was confirmed against unrelated work the same day.
+- `S233` `core.errors.registry` is one of the 32, and its non-inertness is what makes
+- `S233` `core.errors.error_codes` circular with it -- a cycle that module already
+- `S233` carries a deliberate deferred-binding window in order to survive.

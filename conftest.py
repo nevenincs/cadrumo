@@ -100,11 +100,16 @@ above is: a test run must not depend on a transitive import to find its
 authority. The two definitions cross-reference each other so a future edit to
 one is not made deaf to the other.
 
-``setdefault`` keeps a real ambient variable authoritative, so a run that points
-at another authority tree -- a release verification against staged bytes, say --
-is not overridden by the checkout's own.
+A real ambient value stays authoritative, so a run pointed at another authority
+tree -- a release verification against staged bytes, say -- is not overridden by
+the checkout's own. A BLANK one does not count as ambient: ``Settings`` carries
+``env_ignore_empty``, so an empty variable exported by a shell profile reads as
+unset there and would resolve the PACKAGED location, while ``dev._paths`` seeds
+the checkout's own for every other entry point. Testing the value rather than
+its mere presence is what keeps pytest and the dev tooling on one answer.
 """
-os.environ.setdefault("CADRUMO_AUTHORITY_ROOT", str(_PURE_STDLIB_AUTHORITY_ROOT))
+if not os.environ.get("CADRUMO_AUTHORITY_ROOT", "").strip():
+    os.environ["CADRUMO_AUTHORITY_ROOT"] = str(_PURE_STDLIB_AUTHORITY_ROOT)
 
 _collection_storage_root = import_module("cadrumo.tests.collection_storage_root")
 collection_storage_root = _collection_storage_root.collection_storage_root

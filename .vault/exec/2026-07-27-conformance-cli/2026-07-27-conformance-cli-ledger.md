@@ -1,0 +1,142 @@
+---
+tags:
+  - '#exec'
+  - '#conformance-cli'
+date: '2026-07-27'
+modified: '2026-08-26'
+body_schema: 'body-v2'
+body_hash: 'sha256:276737f36f5ccf858db2ed249dfee4c08fffacc07ec7307e2f6c4043675b4db5'
+related:
+  - "[[2026-07-27-conformance-cli-plan]]"
+---
+
+# `conformance-cli` ledger
+
+## Changes
+
+- `S01` `T` `src/cadrumo/core`
+- `S02` `T` `src/cadrumo/domain/calculations/registry/_schema.py`
+- `S03` `T` `src/cadrumo/domain/calculations/registry/_loader.py`
+- `S04` `T` `src/cadrumo/domain/calculations/registry/tests/test_governance_stamp.py`
+- `S05` `T` `src/cadrumo/domain/calculations/registry/_external_grounding.py`
+- `S06` `T` `src/cadrumo/domain/calculations/registry/tests/test_external_oracle_grounding_enrolled.py`
+- `S07` `T` `src/cadrumo/application/filing/_export.py`
+- `S08` `T` `src/cadrumo/application/filing/tests`
+- `S09` `T` `src/cadrumo/domain/calculations/registry/_classification_coherence.py`
+- `S10` `T` `src/cadrumo/application/registry/_conformance.py`
+- `S11` `T` `src/cadrumo/domain/calculations/registry/tests/test_classification_coherence.py`
+- `S12` `T` `src/cadrumo/application/registry/tests/test_conformance_profile.py`
+- `S13` `T` `dev/registry/conformance/manager.py`
+- `S14` `T` `dev/registry/conformance`
+- `S15` `T` `dev/registry/conformance/cli.py`
+- `S16` `T` `dev/registry/conformance/_stamp.py`
+- `S17` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S18` `T` `src/cadrumo/tests/test_dev_path_isolation.py`
+- `S19` `T` `dev/tests/test_registry_conformance_gate.py`
+- `S20` `T` `docs/api`
+- `S21` `T` `justfile`
+- `S22` `T` `src/cadrumo`
+- `S23` `T` `.vault/audit`
+- `S24` `T` `.vault/audit`
+- `S25` `T` `src/cadrumo/domain/calculations/registry/_external_grounding.py`
+- `S25` `T` `src/cadrumo/domain/calculations/registry/tests/test_external_oracle_payload_boundary.py`
+- `S25` `T` `src/cadrumo/domain/calculations/registry/tests/test_external_oracle_grounding_enrolled.py`
+- `S26` `T` `src/cadrumo/application/filing/tests`
+- `S27` `T` `src/cadrumo/tests/test_dev_path_isolation.py`
+- `S28` `T` `src/cadrumo/domain/calculations/registry/_external_grounding.py`
+- `S28` `T` `src/cadrumo/core/_external_oracle_corpus.py`
+- `S28` `T` `src/cadrumo/domain/calculations/registry/tests/test_external_oracle_payload_boundary.py`
+- `S29` `T` `dev/registry/conformance`
+- `S30` `T` `src/cadrumo/_data/corpus/manual_oracles`
+- `S31` `T` `src/cadrumo/_data/registry/aeat/modelos/303`
+- `S32` `T` `.vault/adr`
+- `S33` `T` `src/cadrumo/domain/calculations/registry/_schema.py`
+- `S34` `T` `src/cadrumo/domain/calculations/registry/_schema.py`
+- `S35` `T` `src/cadrumo/domain/calculations/registry/_compiled_cache.py`
+- `S36` `T` `src/cadrumo/domain/calculations/registry/_classification_coherence.py`
+- `S37` `T` `src/cadrumo/domain/calculations/registry/_loader.py`
+- `S37` `T` `src/cadrumo/domain/calculations/registry/_schema.py`
+- `S37` `T` `src/cadrumo/domain/calculations/registry/_schema_base.py`
+- `S37` `T` `src/cadrumo/domain/calculations/registry/__init__.py`
+- `S37` `T` `src/cadrumo/domain/calculations/registry/tests/test_revision_manifest_only_placement.py`
+- `S38` `T` `src/cadrumo/_data/registry/aeat/modelos/303`
+- `S39` `T` `dev/registry/conformance/_stamp.py`
+- `S40` `T` `src/cadrumo/domain/calculations/registry/__init__.py`
+- `S41` `T` `src/cadrumo/tests/test_dev_path_isolation.py`
+- `S42` `T` `dev/registry/conformance/manager.py`
+- `S43` `T` `src/cadrumo/domain/calculations/registry/_schema.py`
+- `S44` `T` `src/cadrumo/domain/calculations/registry/_classification_coherence.py`
+- `S45` `T` `src/cadrumo/domain/iva/_prorrata.py`
+- `S46` `T` `dev/registry/conformance/manager.py`
+- `S47` `T` `src/cadrumo/_data/registry/aeat/modelos/303/revisions/2009-y-siguientes`
+- `S48` `T` `src/cadrumo/domain/iva/_prorrata.py`
+- `S49` `T` `src/cadrumo/domain/calculations/registry/_schema.py`
+- `S50` `T` `src/cadrumo/application/filing/tests/test_registry_snapshot_freshness.py`
+- `S51` `T` `src/cadrumo/adapters/inbound/sanitizer/tests`
+- `S52` `T` `src/cadrumo/application/registry/tests/test_diff.py`
+- `S53` `T` `dev/registry/conformance/_stamp.py`
+- `S53` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S54` `T` `dev/registry/conformance/_stamp.py`
+- `S54` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S55` `T` `dev/registry/conformance/manager.py`
+- `S55` `T` `dev/registry/conformance/_stamp.py`
+- `S55` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S56` `T` `dev/import_hygiene_scan.py`
+- `S57` `T` `dev/registry/conformance/manager.py`
+- `S57` `T` `dev/registry/conformance/cli.py`
+- `S57` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S58` `T` `src/cadrumo/domain/iva/_prorrata.py`
+- `S59` `T` `src/cadrumo/_data/registry/aeat/modelos/303`
+- `S60` `T` `src/cadrumo/domain/calculations/registry/tests`
+- `S61` `T` `src/cadrumo/domain/calculations/registry/_schema.py`
+- `S62` `T` `dev/registry/conformance/manager.py`
+- `S62` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S63` `T` `dev/registry/conformance/_stamp.py`
+- `S63` `T` `dev/registry/conformance/cli.py`
+- `S63` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S64` `T` `dev/registry/conformance/_stamp.py`
+- `S64` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S65` `T` `dev/registry/conformance/cli.py`
+- `S65` `T` `dev/registry/conformance/_stamp.py`
+- `S65` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S66` `T` `src/cadrumo/domain/calculations/registry/_schema.py`
+- `S67` `T` `dev/registry/conformance/cli.py`
+- `S67` `T` `dev/registry/conformance/_stamp.py`
+- `S67` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S68` `T` `dev/docs/apidocs/manager.py`
+- `S68` `T` `dev/docs/apidocs/tests/test_manager.py`
+- `S68` `T` `dev/docs/tests/test_api_stubs.py`
+- `S68` `T` `dev/audit/complexity.py`
+- `S68` `T` `dev/audit/tests/test_complexity_baseline_capture.py`
+- `S69` `T` `dev/audit/checkout_drift.py`
+- `S69` `T` `dev/audit/checkout_drift_baseline.json`
+- `S69` `T` `dev/audit/tests/test_checkout_drift.py`
+- `S69` `T` `justfile`
+- `S69` `T` `pyproject.toml`
+- `S70` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S71` `T` `dev/tests/test_registry_conformance_gate.py`
+- `S72` `T` `src/cadrumo/_data/registry/aeat/modelos/303`
+- `S73` `T` `.vault/adr`
+- `S74` `T` `dev/registry/matrix/manager.py`
+- `S75` `T` `.vault/exec`
+- `S76` `T` `.vault`
+- `S77` `T` `dev/registry/conformance/manager.py`
+- `S77` `T` `dev/registry/conformance/cli.py`
+- `S77` `T` `dev/registry/conformance/conformance-baseline.json`
+- `S77` `T` `dev/tests/test_registry_conformance_cli.py`
+- `S78` `T` `REGISTRY-CONFORMANCE.md`
+- `S78` `T` `CONTRIBUTING.md`
+- `S79` `T` `dev/registry/matrix`
+- `S79` `T` `justfile`
+- `S79` `T` `dev/registry/conformance/__init__.py`
+- `S79` `T` `dev/registry/conformance/cli.py`
+- `S79` `T` `src/cadrumo/domain/calculations/registry/_support_matrix.py`
+- `S79` `T` `src/cadrumo/domain/calculations/registry/tests/test_support_matrix.py`
+- `S79` `T` `src/cadrumo/tests/test_dev_path_isolation.py`
+- `S80` `T` `src/cadrumo/core`
+- `S80` `T` `src/cadrumo/domain/calculations/registry`
+- `S80` `T` `src/cadrumo/application/filing`
+- `S80` `T` `src/cadrumo/application/modelo`
+- `S80` `T` `src/cadrumo/application/registry`
+- `S80` `T` `src/cadrumo/adapters/outbound/aeat`
+- `S80` `T` `docs/api`
