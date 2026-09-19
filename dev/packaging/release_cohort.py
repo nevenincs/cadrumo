@@ -35,6 +35,7 @@ _SOURCE_TREE = importlib.import_module("dev.source_tree")
 content_digest = _SOURCE_TREE.content_digest
 repository_files = _SOURCE_TREE.repository_files
 snapshot = _SOURCE_TREE.snapshot
+stage_published_authority = importlib.import_module("dev.packaging.authority_staging").stage_published_authority
 _BUILD_SCRATCH = importlib.import_module("dev.packaging.build_scratch_reclaim")
 RELEASE_STAGING_FAMILY = _BUILD_SCRATCH.RELEASE_STAGING_FAMILY
 matching_family = _BUILD_SCRATCH.matching_family
@@ -389,6 +390,11 @@ def build_release_cohort(
             raise SystemExit(
                 f"release source snapshot content drifted from its digest: expected {digest}, got {snapshot_digest}",
             )
+        # Staged after the drift check, and into the gitignored location the
+        # origin keeps it in, so the release identity digest stays a statement
+        # about enumerated source and is unaffected by generated payload the
+        # build nonetheless has to carry.
+        stage_published_authority(root, clean_root)
         staging = var / var_scratch_name(RELEASE_STAGING_FAMILY, f"{output.name}-{uuid.uuid4().hex}")
         env = os.environ.copy()
         env["PYTHONPATH"] = os.pathsep.join((str(clean_root / "src"), str(clean_root)))
