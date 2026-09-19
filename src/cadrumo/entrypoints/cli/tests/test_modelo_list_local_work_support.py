@@ -30,22 +30,22 @@ def _modelo_row(payload: dict[str, object], code: str) -> dict[str, object]:
     raise AssertionError(f"modelo {code!r} was not listed in payload: {payload!r}")
 
 
-def test_modelo_list_marks_m210_as_visible_but_not_local_work_supported() -> None:
+def test_modelo_list_marks_m210_as_visible_and_registry_work_supported() -> None:
     text_result = invoke_cached_cli(["--language", "en", "app", "modelo", "list", "--year", "2025"])
     assert text_result.exit_code == 0, text_result.output
     assert "local_work" in text_result.output
     assert "210\t" in text_result.output
-    assert "unsupported-local-work" in text_result.output
-    assert "G320" in text_result.output
+    m210_text_row = next(line for line in text_result.output.splitlines() if line.startswith("210\t"))
+    assert "\tsupported-model-level\t-" in m210_text_row
 
     json_result = invoke_cached_cli(["--format", "json", "app", "modelo", "list", "--year", "2025"])
     assert json_result.exit_code == 0, json_result.output
     payload = unwrap_schema_envelope(json_result.output)
 
     m210 = _modelo_row(payload, "210")
-    assert m210["local_work_supported"] is False
-    assert m210["local_work_status"] == "unsupported-local-work"
-    assert "G320" in str(m210["local_work_guidance"])
+    assert m210["local_work_supported"] is True
+    assert m210["local_work_status"] == "supported-model-level"
+    assert m210["local_work_guidance"] is None
 
     m303 = _modelo_row(payload, "303")
     assert m303["local_work_supported"] is True
