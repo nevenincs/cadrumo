@@ -61,8 +61,9 @@ finding. Publication-readiness findings, including unchecked export bytes,
 remain visible but do not block a proven source-only replacement. Without
 ``--apply`` nothing outside
 the work directory is written by the migration; the command-line report is
-persisted separately under the repository's ``.logs/audit-runs`` evidence
-hierarchy.
+written separately under the repository's ``.logs/audit-runs`` run-output
+tree, which is transient: the next reclamation removes it, so promote anything
+the decision rests on into durable evidence rather than citing a run directory.
 
 Two proofs, one per starting shape. A modelo that states every row in full is
 proven as above, against its own full copy. A modelo that already names
