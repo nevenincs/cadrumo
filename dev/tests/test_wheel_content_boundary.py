@@ -45,6 +45,11 @@ import pytest
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
+from dev.packaging.authority_staging import (
+    AUTHORING_AUTHORITY_DIRECTORY,
+    AUTHORITY_ROOT_ENV,
+    authoring_authority_root,
+)
 from dev.source_tree import repository_files, snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -79,7 +84,14 @@ _ALLOWED_SDIST_FILES = frozenset(
         "pyproject.toml",
     }
 )
-_ALLOWED_SDIST_PREFIXES = ("src/cadrumo/", "src/cadrumo_harness/")
+_ALLOWED_SDIST_PREFIXES = ("src/cadrumo/", "src/cadrumo_harness/", "packaging/authority/")
+
+# The publication lock sidecar is retained after every publish by design, and a
+# publication in flight stages under `authority-candidate-*`. Both live beside
+# the payload in every real authority directory and neither is distributable
+# content, so the archives must carry no member matching either shape.
+_AUTHORITY_LOCK_SUFFIX = ".lock"
+_AUTHORITY_CANDIDATE_PREFIX = "authority-candidate-"
 
 
 def _wheel_root(member: str) -> str:
@@ -136,13 +148,26 @@ def candidate_source(tmp_path_factory: pytest.TempPathFactory) -> Path:
         source_root: Path | None = None
     else:
         # After the accepted bytes are promoted, the ordinary archive gate may
-        # read the promoted pair directly.  Before promotion, C supplies an
-        # isolated candidate directory and this branch must never fall back to
-        # the retired JSON frame.
-        candidate = REPO_ROOT / "src" / "cadrumo" / "_data" / "registry" / "authority"
+        # read the promoted pair directly. Before promotion, the candidate
+        # directory is supplied in isolation through the environment above and
+        # this branch must never fall back to it: the two locations carry
+        # opposite guarantees, and an unpromoted candidate is exactly what the
+        # runtime must not resolve.
+        #
+        # The promoted pair is resolved through the same helper the build hook
+        # and the staging seam use, rather than a literal path. A literal would
+        # keep naming the pre-move location after the authority moves out of
+        # the package source tree, and the gate would then read an absent or
+        # empty directory — passing by proving nothing, or failing for a reason
+        # that has nothing to do with the boundary under test.
+        candidate = authoring_authority_root(REPO_ROOT)
         source_root = REPO_ROOT
-        if not candidate.is_dir():
-            raise AssertionError(f"{_AUTHORITY_CANDIDATE_ENV} must name the validated candidate directory")
+        if not (candidate / "authority.current.json").is_file():
+            raise AssertionError(
+                f"no published authority to build from at {candidate}. Publish the authority, point "
+                f"${AUTHORITY_ROOT_ENV} at the directory holding it, or set ${_AUTHORITY_CANDIDATE_ENV} "
+                "to an isolated validated candidate directory.",
+            )
     descriptor = candidate / "authority.current.json"
     if not descriptor.is_file():
         raise AssertionError(f"authority candidate has no descriptor: {descriptor}")
@@ -167,11 +192,15 @@ def candidate_source(tmp_path_factory: pytest.TempPathFactory) -> Path:
     parent = tmp_path_factory.mktemp("authority-candidate-source")
     source = parent / "repository"
     snapshot(REPO_ROOT, repository_files(REPO_ROOT), source)
-    destination = source / "src" / "cadrumo" / "_data" / "registry" / "authority"
+    # The candidate is staged at the gitignored authoring location, which is
+    # where the build hook reads a source-tree build's authority from. The
+    # snapshot cannot supply it: `repository_files` is the working tree minus
+    # the repository's ignore rules, and the published authority is gitignored
+    # generated output, so the enumeration omits it by design. Copying only the
+    # descriptor and its selected database also keeps the retained lock sidecar
+    # and any in-flight candidate directory out of the build root entirely.
+    destination = source / AUTHORING_AUTHORITY_DIRECTORY
     destination.mkdir(parents=True, exist_ok=True)
-    for stale_database in destination.glob("authority-*.sqlite3"):
-        if _DATABASE_NAME.fullmatch(stale_database.name):
-            stale_database.unlink()
     shutil.copy2(descriptor, destination / descriptor.name)
     shutil.copy2(database, destination / database.name)
     return source
@@ -269,6 +298,61 @@ def rebuilt_wheel_members(rebuilt_wheel_archive: Path) -> frozenset[str]:
         return frozenset(info.filename for info in archive.infolist())
 
 
+def _authority_members(members: frozenset[str], prefix: str) -> frozenset[str]:
+    """Return the archive's authority-directory file members."""
+
+    return frozenset(member for member in members if member.startswith(prefix) and not member.endswith("/"))
+
+
+def _unexpected_authority_members(members: frozenset[str], prefix: str, expected: frozenset[str]) -> dict[str, str]:
+    """Classify every authority member the archive carries beyond the selected pair.
+
+    Each offender is named with why it must not ship, because the three ways
+    this boundary regresses are distinct failures with distinct fixes: a lock
+    sidecar means the selection became directory-wide, a second database means
+    a deferred retirement was swept in and roughly doubled the artifact, and a
+    candidate member means a build ran against a publication in flight.
+    """
+
+    offenders: dict[str, str] = {}
+    for member in sorted(_authority_members(members, prefix) - expected):
+        name = member[len(prefix) :]
+        if name.endswith(_AUTHORITY_LOCK_SUFFIX):
+            offenders[member] = "publication lock sidecar is not distributable content"
+        elif name.startswith(_AUTHORITY_CANDIDATE_PREFIX):
+            offenders[member] = "in-flight publication candidate staging is not distributable content"
+        elif _DATABASE_NAME.fullmatch(name):
+            offenders[member] = "a database the descriptor does not select must not ship"
+        else:
+            offenders[member] = "unrecognized authority member"
+    return offenders
+
+
+def test_authority_selection_rejects_every_non_payload_member() -> None:
+    """The archive oracle detects each way the authority boundary regresses.
+
+    The selected pair alone passes; the retained lock sidecar, a superseded
+    database whose retirement was deferred, and an in-flight candidate file
+    are each caught and named.
+    """
+
+    prefix = _WHEEL_AUTHORITY_PREFIX
+    selected = f"{prefix}authority-{'a' * 64}.sqlite3"
+    expected = frozenset({_WHEEL_AUTHORITY_DESCRIPTOR, selected})
+
+    assert _unexpected_authority_members(expected, prefix, expected) == {}
+
+    superseded = f"{prefix}authority-{'b' * 64}.sqlite3"
+    lock = f"{_WHEEL_AUTHORITY_DESCRIPTOR}{_AUTHORITY_LOCK_SUFFIX}"
+    candidate = f"{prefix}{_AUTHORITY_CANDIDATE_PREFIX}9f2/authority.current.json"
+    offenders = _unexpected_authority_members(expected | {superseded, lock, candidate}, prefix, expected)
+
+    assert set(offenders) == {superseded, lock, candidate}
+    assert "does not select" in offenders[superseded]
+    assert "lock" in offenders[lock]
+    assert "candidate" in offenders[candidate]
+
+
 def _assert_authority_archive(
     members: frozenset[str],
     *,
@@ -290,10 +374,10 @@ def _assert_authority_archive(
     assert database_name == f"authority-{database_digest}.sqlite3"
     assert document["database_sha256"] == database_digest
     assert document["database_size"] == len(database)
-    assert {member for member in members if member.startswith(prefix) and not member.endswith("/")} == {
-        descriptor_name,
-        prefix + database_name,
-    }
+    expected = frozenset({descriptor_name, prefix + database_name})
+    offenders = _unexpected_authority_members(members, prefix, expected)
+    assert not offenders, f"the archive ships authority members beyond the selected pair: {offenders!r}"
+    assert _authority_members(members, prefix) == expected
     return database_name
 
 
@@ -346,6 +430,27 @@ def test_distribution_allowlist_rejects_policy_widening() -> None:
     assert _unexpected_wheel_members(frozenset({"cadrumo-rogue.dist-info/payload.txt"}))
     assert _unexpected_wheel_members(frozenset({"cadrumo-9.9.9.dist-info/METADATA"}))
     assert _unexpected_sdist_members(frozenset({"packaging/unexpected_product/pyproject.toml"}))
+
+
+def test_distributions_ship_no_lock_sidecar(
+    wheel_members: frozenset[str],
+    sdist_members: frozenset[str],
+) -> None:
+    """No lock sidecar reaches any archive, from the authority directory or anywhere else.
+
+    Asserted archive-wide rather than only under the authority prefix, because
+    this regressed once for a reason that had nothing to do with the authority:
+    a lock was kept out of the distributions solely by a repository ignore rule,
+    and editing that rule for an unrelated purpose silently admitted it. Ignore
+    rules keep bytes out of history; they are not a packaging boundary, and the
+    build config must state this one itself.
+    """
+
+    for archive_kind, members in (("wheel", wheel_members), ("sdist", sdist_members)):
+        offenders = sorted(member for member in members if member.endswith(".lock"))
+        assert not offenders, (
+            f"the {archive_kind} ships lock sidecar(s), which are publication machinery: {offenders!r}"
+        )
 
 
 def test_wheel_keeps_required_data_roots(wheel_members: frozenset[str]) -> None:

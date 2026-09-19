@@ -113,24 +113,6 @@
       "contract": "adapters-do-not-reach-composition",
       "created_on": "2026-09-15",
       "expires_on": "2027-03-15",
-      "fingerprint": "08d31b617b85d2bec15e873e4ea6ab0a2d50859e349847c8d514d2e4865f68f2",
-      "import_form": "static",
-      "imported_symbols": [
-        "build_justificante_registration_ports"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
-      "source_module": "cadrumo.adapters.persistence.profile.tests.test_justificante_capture_stamp",
-      "status": "active",
-      "target_module": "cadrumo.entrypoints.cli.app_live_justificante_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "adapters-do-not-reach-composition",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
       "fingerprint": "0942e5d372a5b7f23f8436c5817f2a00ce22e0d3dbf71339b95c183998f16584",
       "import_form": "static",
       "imported_symbols": [
@@ -284,8 +266,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test proves that registry-projected domain values inhabit the public core value types. Moving it outward would leave the core contract untested; production core remains inward-only.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-19T07:10:02Z"
+      },
       "source_module": "cadrumo.core.tests.test_irnr",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.domain.transactions.m210_income_classification"
     },
     {
@@ -1652,8 +1638,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test proves that registry-projected domain values inhabit the public core value types. Moving it outward would leave the core contract untested; production core remains inward-only.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-19T07:10:02Z"
+      },
       "source_module": "cadrumo.core.tests.test_irnr",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.domain.calculations.registry.authority"
     },
     {
@@ -1688,8 +1678,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test proves that registry-projected domain values inhabit the public core value types. Moving it outward would leave the core contract untested; production core remains inward-only.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-19T07:10:02Z"
+      },
       "source_module": "cadrumo.core.tests.test_irnr",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.domain.calculations.registry.irnr_tipo_renta"
     },
     {
@@ -1727,24 +1721,6 @@
       "source_module": "cadrumo.adapters.persistence.profile.tests._iva_wallet_engine_support",
       "status": "active",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "8dca06264e1139ed57f04770ae9744b9d00b26d57646aa198d7b58b88e3e6b13",
-      "import_form": "static",
-      "imported_symbols": [
-        "default_ecb_rate_provider"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.aggregation.tests.test_invoice_category_counterparty_mismatch_is_reported",
-      "status": "active",
-      "target_module": "cadrumo.adapters.outbound.fx.ecb_provider"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -1943,24 +1919,6 @@
       "source_module": "cadrumo.application.modelo.tests.test_work_rename_operation",
       "status": "active",
       "target_module": "cadrumo.entrypoints.adapter_composition"
-    },
-    {
-      "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "a3a60e94968db0167823bc8f4c0e898aef8420365ad05a5846640e2d74f6d5be",
-      "import_form": "static",
-      "imported_symbols": [
-        "default_ecb_rate_provider"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.invoices.tests.test_lifecycle",
-      "status": "active",
-      "target_module": "cadrumo.adapters.outbound.fx.ecb_provider"
     },
     {
       "capability": "cross-layer-integration-test",
@@ -3026,24 +2984,6 @@
     },
     {
       "capability": "cross-layer-integration-test",
-      "contract": "application-is-inward",
-      "created_on": "2026-09-15",
-      "expires_on": "2027-03-15",
-      "fingerprint": "f5344e62677df84cb9a13792f05204eef5cb08b82392f6e8199b6a2a515ac376",
-      "import_form": "static",
-      "imported_symbols": [
-        "default_ecb_rate_provider"
-      ],
-      "lexical_scope": "<module>",
-      "multiplicity": 1,
-      "owner": "Cadrumo architecture maintainers",
-      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production dependency direction remains unchanged.",
-      "source_module": "cadrumo.application.filing.tests.test_source_mesh_review_unit",
-      "status": "active",
-      "target_module": "cadrumo.adapters.outbound.fx.ecb_provider"
-    },
-    {
-      "capability": "cross-layer-integration-test",
       "contract": "adapters-do-not-reach-composition",
       "created_on": "2026-09-15",
       "expires_on": "2027-03-15",
@@ -3110,8 +3050,12 @@
       "multiplicity": 1,
       "owner": "Cadrumo architecture maintainers",
       "reason": "The test proves that registry-projected domain values inhabit the public core value types. Moving it outward would leave the core contract untested; production core remains inward-only.",
+      "retirement": {
+        "kind": "source_module_removed",
+        "verified_at": "2026-09-19T07:10:02Z"
+      },
       "source_module": "cadrumo.core.tests.test_irnr",
-      "status": "active",
+      "status": "retired",
       "target_module": "cadrumo.domain.calculations.registry.convenio"
     },
     {
@@ -3185,6 +3129,688 @@
       "source_module": "cadrumo.adapters.persistence.profile.tests.test_projection_compare",
       "status": "active",
       "target_module": "cadrumo.entrypoints.adapter_composition"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "adapters-do-not-reach-composition",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "bbdca0e5f42b86640f72ce0c0cf0d9d30ed1728f3d43ecfddb3edc4578a4aa9e",
+      "import_form": "local",
+      "imported_symbols": [],
+      "lexical_scope": "test_the_classify_path_reaches_the_local_text_reader",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "source_module": "cadrumo.adapters.outbound.llm.tests.test_local_text_reader_wiring",
+      "status": "active",
+      "target_module": "cadrumo.entrypoints.cli.ledger_llm_composition"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "adapters-do-not-reach-composition",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "7f24b3d1494f97a4ef22c3ecf672670194676d01a7f860abdb7f38a84e3cdd90",
+      "import_form": "static",
+      "imported_symbols": [
+        "evidence_text_layer_ports"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "source_module": "cadrumo.adapters.outbound.llm.tests.test_wired_reading_against_a_loopback_reader",
+      "status": "active",
+      "target_module": "cadrumo.entrypoints.ledger_evidence_extraction_composition"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "adapters-do-not-reach-composition",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "9602cdd97b8d87895093582d1bfa18352a32c3352dd4a72b4914e11be9bea58c",
+      "import_form": "static",
+      "imported_symbols": [
+        "build_amendment_action_ports"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The integration test verifies this inward component through real outer composition while retaining its owning package fixtures. Relocation would sever that fixture scope and obscure ownership; production code has no such outward dependency.",
+      "source_module": "cadrumo.adapters.persistence.profile.tests.test_amend_pending_chain",
+      "status": "active",
+      "target_module": "cadrumo.entrypoints.adapter_composition"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "c101898e608c94b7ad9212d18e8180dfbfd2317cf1a71c7a9ad6439e6368525e",
+      "import_form": "local",
+      "imported_symbols": [
+        "probe_document_shape"
+      ],
+      "lexical_scope": "_document_shape_probe",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.ledger.tests.test_batch_reader_roles",
+      "status": "active",
+      "target_module": "cadrumo.adapters.inbound.einvoice.shape"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "3038c6b1281090d0b5dab3c53c77d30796eaff772b9273e866f059f516ab6985",
+      "import_form": "static",
+      "imported_symbols": [
+        "source_pdf_reference_path"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.inbound.pdf.source_provenance"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "8856e950eca7133383191ca7a6ae1d5a6ea4a8cc5ee93d04a46800ab9496cccd",
+      "import_form": "static",
+      "imported_symbols": [
+        "BucketEventHistoryRepository"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.profile.buckets"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "034915e870f866983e09a02db327f4cf0d27386313b4cd3a474e0136474d39ef",
+      "import_form": "static",
+      "imported_symbols": [
+        "CalculationObservationRepository"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.profile.calculation_observations"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "6cb0beffb49c3643f36fbdd437a013d7a861cbead552eb018b579da910c9ece8",
+      "import_form": "static",
+      "imported_symbols": [
+        "JustificanteRepository"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.profile.justificante"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "b6b33251542aa00580869cb93c06242356d4cebbe73480f6860300c7794c6b78",
+      "import_form": "static",
+      "imported_symbols": [
+        "CalculationRevisionCatalogueRepository"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.profile.modelos_calculation"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "06e95ef8ffab0181d622cdfff5d88f1f4078121878123582153b9f5bbf0d5486",
+      "import_form": "static",
+      "imported_symbols": [
+        "ModeloRecordCatalogueRepository"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.profile.modelos_filing"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "38e576b0ed49f279b9bcc681021390b3f57fdd7cf1e350e78f89470b52e0c428",
+      "import_form": "static",
+      "imported_symbols": [
+        "WorkUnitCatalogueRepository"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.profile.modelos_work_units"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "0e26022db46ced9227c74d484bd5c14878579b3f80ccc24fe3f8f199349fc0c9",
+      "import_form": "static",
+      "imported_symbols": [
+        "seed_ready_profile"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.profile.tests.import_flow_support"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "c7e7df91e71b6a35af89df46d174e4ba57b432d6c0e91e80835a73c9df5dc99b",
+      "import_form": "static",
+      "imported_symbols": [
+        "isolated_runtime_profile"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.modelo.tests.test_filing_chain_reconciliation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.storage.tests.secure_sql"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "8cc593fb2789c6b9fa5f07212e83423fd29dc1130fe65d199dac95f509771528",
+      "import_form": "static",
+      "imported_symbols": [
+        "OperationJournalRepository"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.tests.test_local_reader_operation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.operations.journal"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "e161e6db3ef79cfe942c6d65970a2f0ebd172aac27badad811f8ce7dbd18097e",
+      "import_form": "static",
+      "imported_symbols": [
+        "OperationLeaseFilesystemRepository"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.tests.test_local_reader_operation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.operations.lease"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "c0d9d1e113d19582ce52d628325129b92fe32a0a5bf9c98ea7cf74caa2c001a1",
+      "import_form": "static",
+      "imported_symbols": [
+        "operation_secure_reference_repository"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.tests.test_local_reader_operation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.operations.secure_references"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "fd58aeee4195d4ae28b0d9d8d70565022f621def853fbcd62bbb94b5cf6b1843",
+      "import_form": "static",
+      "imported_symbols": [
+        "isolated_runtime_profile"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.tests.test_local_reader_operation",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.storage.tests.secure_sql"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "71f00fdc7b8ba71eda8488d69c4bec189d7607ff02e73620d0f559f7f5f0fc23",
+      "import_form": "static",
+      "imported_symbols": [
+        "InvoiceCatalogueRepository"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.tests.test_workbench_ledger_guard",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.profile.invoices"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "81d21228be3daad62f08d47076694cf897d139df29bfcc503bcf9b93c983ebdb",
+      "import_form": "static",
+      "imported_symbols": [
+        "TransactionCatalogueRepository"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.tests.test_workbench_ledger_guard",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.profile.transactions"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "dd8bb10e9ee44fe584fa8be08b23203ad005ade4e12e424f5ed49a4408977365",
+      "import_form": "static",
+      "imported_symbols": [
+        "isolated_runtime_profile"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.tests.test_workbench_ledger_guard",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.storage.tests.secure_sql"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "8c3962a934b2cf83798b757f2da72c6e16647b81d5ee93d8f09d0b8941d8bf92",
+      "import_form": "static",
+      "imported_symbols": [
+        "compose_ledger_action_ports"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.tests.test_workbench_ledger_guard",
+      "status": "active",
+      "target_module": "cadrumo.entrypoints.ledger_action_composition"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "e890111344c7038a6e59e9d7d9af2026a26e1fc42f7eea664f24b80ac6ee1d14",
+      "import_form": "static",
+      "imported_symbols": [
+        "register_cli_profile"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.profile.tests.profile_registration"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "cc4b42a9296ba27a5fe6d3d539270d5c91364ab5d3b8259945a6ff12b2b16710",
+      "import_form": "static",
+      "imported_symbols": [
+        "current_active_bucket_session"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.storage.master_key.active_session"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "82e88401ff2a9e672cf7020ac342d2a4aee2ba34a3997195ab7cfd81f78a54b0",
+      "import_form": "static",
+      "imported_symbols": [
+        "BucketSession"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.storage.master_key.bucket_session"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "8ac452f3dd6bd49667c0f06303ede02ff03f072065ed7ad7fb22265135bf0994",
+      "import_form": "static",
+      "imported_symbols": [
+        "build_profile_login_session_port"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.storage.profile_login_session"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "de45e093eaba519d16601914eb5237e98f0f5611afab6ffa01ba9635f2101f8c",
+      "import_form": "static",
+      "imported_symbols": [
+        "isolated_profile_storage_fixture"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "3a9e20f74482a3b3387c1681477ff7948641307839220c566c89094576c99763",
+      "import_form": "static",
+      "imported_symbols": [
+        "invoke_cached_cli"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.user_profile.tests.test_cli_commands_leave_no_unsealed_bucket_session",
+      "status": "active",
+      "target_module": "cadrumo.entrypoints.cli.tests.cli_runner"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "b04f75cdb758439dd20e76f74c8b523fb6b4c0e3e9c32edbbfc1deb44ccc9b8a",
+      "import_form": "static",
+      "imported_symbols": [
+        "profile_session_path"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.user_profile.tests.test_registration_leaves_the_profile_admitted",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.storage.custody.acceleration_receipt"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "1bf3800d0ef6f90af5968b5de43789eb0a6b0fab0cef29226936d6139e33d5fc",
+      "import_form": "static",
+      "imported_symbols": [
+        "profile_authority_contexts"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.user_profile.tests.test_registration_leaves_the_profile_admitted",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime"
+    },
+    {
+      "capability": "cross-layer-integration-test",
+      "contract": "application-is-inward",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "4a3cc7a204a725d91969c378f8f747d582b43867c1d0ce49bdb4f9bd602ead56",
+      "import_form": "static",
+      "imported_symbols": [
+        "isolated_profile_storage_root"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The test verifies collaboration across the named concrete lanes using the real implementation. Keeping it beside the subject preserves fixture ownership; production code in this package has no such outward dependency.",
+      "source_module": "cadrumo.application.user_profile.tests.test_registration_leaves_the_profile_admitted",
+      "status": "active",
+      "target_module": "cadrumo.adapters.persistence.storage.tests.secure_sql"
+    },
+    {
+      "capability": "shared-test-support-fixture",
+      "contract": "shared-tests-are-core-only",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "2068b43844075d8f132d52077635c644a998179199ba1fff559efd273da3bf1c",
+      "import_form": "static",
+      "imported_symbols": [
+        "PinnedAuthorityOperation"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "source_module": "cadrumo.tests.authority_lease_support",
+      "status": "active",
+      "target_module": "cadrumo.domain.calculations.registry.authority"
+    },
+    {
+      "capability": "shared-test-support-fixture",
+      "contract": "shared-tests-are-core-only",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "ad4241e8b529ce10bd9cc23444e269d6fd014ec20ee050592a46471dc1670efa",
+      "import_form": "static",
+      "imported_symbols": [
+        "bundled_indexed_authority"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "source_module": "cadrumo.tests.authority_lease_support",
+      "status": "active",
+      "target_module": "cadrumo.domain.calculations.registry.authority"
+    },
+    {
+      "capability": "shared-test-support-fixture",
+      "contract": "shared-tests-are-core-only",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "f0cf05020f26dd3578051040de5a1460767654fb2a558b46293ca1811d3ee95c",
+      "import_form": "static",
+      "imported_symbols": [
+        "validating_governed_facts"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "source_module": "cadrumo.tests.authority_lease_support",
+      "status": "active",
+      "target_module": "cadrumo.domain.calculations.registry.governed_fact_scope"
+    },
+    {
+      "capability": "shared-test-support-fixture",
+      "contract": "shared-tests-are-core-only",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "2ffb2604ece716776744dac2af3c9bb082f0722a845052c6a3a594da1fe93848",
+      "import_form": "static",
+      "imported_symbols": [
+        "ECB_EXR_ENDPOINT"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "source_module": "cadrumo.tests.recorded_ecb_rates",
+      "status": "active",
+      "target_module": "cadrumo.adapters.outbound.fx.ecb_provider"
+    },
+    {
+      "capability": "shared-test-support-fixture",
+      "contract": "shared-tests-are-core-only",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "3d169ebf407f83376eda5503ffacfd34ccb8b151da561e9fc7ae48e04fb2a86d",
+      "import_form": "static",
+      "imported_symbols": [
+        "EcbReferenceRateProvider"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "source_module": "cadrumo.tests.recorded_ecb_rates",
+      "status": "active",
+      "target_module": "cadrumo.adapters.outbound.fx.ecb_provider"
+    },
+    {
+      "capability": "shared-test-support-fixture",
+      "contract": "shared-tests-are-core-only",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "ef46103e902de9a8ee9aa59707239488b2d35700518f1de6952e9830dd86c145",
+      "import_form": "static",
+      "imported_symbols": [
+        "ExchangeRateProviderError"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "source_module": "cadrumo.tests.recorded_ecb_rates",
+      "status": "active",
+      "target_module": "cadrumo.domain.currency.errors"
+    },
+    {
+      "capability": "shared-test-support-fixture",
+      "contract": "shared-tests-are-core-only",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "036248449371cc9782c02d5e205333d22a7fd639f6fe5b71c01cda9f7bcec2a5",
+      "import_form": "static",
+      "imported_symbols": [
+        "PinnedAuthorityOperation"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "source_module": "cadrumo.tests.test_session_operation_scope_isolation",
+      "status": "active",
+      "target_module": "cadrumo.domain.calculations.registry.authority"
+    },
+    {
+      "capability": "shared-test-support-fixture",
+      "contract": "shared-tests-are-core-only",
+      "created_on": "2026-09-19",
+      "expires_on": "2027-03-19",
+      "fingerprint": "7dc544389cffdfb920fc309eac9e70f6006cf0ec5f299006681248f29376c2ba",
+      "import_form": "static",
+      "imported_symbols": [
+        "governed_facts_in_scope"
+      ],
+      "lexical_scope": "<module>",
+      "multiplicity": 1,
+      "owner": "Cadrumo architecture maintainers",
+      "reason": "The shared test-support surface, and the tests that prove its session scoping, are consumed by tests in several layers, so relocating them into one owning package would sever the others. The outward import supplies only the fixture value those consumers assert against; no shipped module imports cadrumo.tests.",
+      "source_module": "cadrumo.tests.test_session_operation_scope_isolation",
+      "status": "active",
+      "target_module": "cadrumo.domain.calculations.registry.governed_fact_scope"
     }
   ],
   "schema_version": 1
