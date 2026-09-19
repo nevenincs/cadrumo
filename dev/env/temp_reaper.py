@@ -472,11 +472,11 @@ def report_temporary_storage(
             )
     kept_runs = [verdict for verdict in run_verdicts if not verdict.reclaimable]
     if kept_runs and not verbose:
-        # One line for the retained population rather than one per directory.
-        # This tree holds a run per pytest invocation and reaches the high
-        # hundreds on a busy day; listing every retained run pushes the reaped
-        # ones -- the only lines an operator is being asked to sanction -- off
-        # the screen, which is the failure mode a report has instead of a bug.
+        # One line for the spared population rather than one per directory. Only
+        # an in-flight run is spared now, so this is normally a single line, but
+        # a fleet can hold several at once and the reaped lines are the ones an
+        # operator is being asked to sanction; they must not be pushed off the
+        # screen, which is the failure mode a report has instead of a bug.
         for reason in dict.fromkeys(verdict.reason for verdict in kept_runs):
             count = sum(1 for verdict in kept_runs if verdict.reason == reason)
             print(f"  SPARE {count:4d} run directories  {reason}", file=stream)

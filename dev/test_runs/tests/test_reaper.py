@@ -1,4 +1,4 @@
-"""Safety contract for repository-local test-run retention."""
+"""Safety contract for repository-local test-run reclamation."""
 
 from __future__ import annotations
 
@@ -22,22 +22,34 @@ def _run(root: Path, name: str, *, age: float, completed: bool, now: float) -> P
     return directory
 
 
-def test_completed_runs_are_retained_then_reclaimed_after_the_evidence_window(tmp_path: Path) -> None:
+def test_a_completed_run_is_reclaimable_at_any_age_because_nothing_reads_it_back(tmp_path: Path) -> None:
+    """No age threshold survives here: a finished run's directory is command output.
+
+    The seconds-old run is the load-bearing case. A retention window spares it,
+    and sparing it is what let 9.3 GB accumulate and what a dead-weight baseline
+    grew against by globbing a previous run's signal file. Age is not a property
+    this module is allowed to consult for a run that finished.
+    """
     now = 2_000_000_000.0
-    recent = _run(tmp_path, "stamp-pytest-101-aaaaaaaa", age=60, completed=True, now=now)
-    old = _run(
-        tmp_path,
-        "stamp-pytest-102-bbbbbbbb",
-        age=reaper.COMPLETED_RETENTION_SECONDS + 1,
-        completed=True,
-        now=now,
-    )
+    seconds_old = _run(tmp_path, "stamp-pytest-101-aaaaaaaa", age=60, completed=True, now=now)
+    days_old = _run(tmp_path, "stamp-pytest-102-bbbbbbbb", age=30 * 86_400, completed=True, now=now)
 
     verdicts = reaper.assess_run_directories(tmp_path, now=now)
-    assert {row.directory: row.reclaimable for row in verdicts} == {recent: False, old: True}
-    assert reaper.reclaim_run_directories(verdicts) == 1
-    assert recent.is_dir()
-    assert not old.exists()
+    assert {row.directory: row.reclaimable for row in verdicts} == {seconds_old: True, days_old: True}
+    assert reaper.reclaim_run_directories(verdicts) == 2
+    assert not seconds_old.exists()
+    assert not days_old.exists()
+
+
+def test_no_age_threshold_is_exposed_for_a_completed_run(tmp_path: Path) -> None:
+    """The absence of the constant is the contract, not an implementation detail.
+
+    A reinstated retention window would most naturally arrive as a module-level
+    seconds value, so this asserts the module exposes exactly one threshold and
+    that it is the liveness grace.
+    """
+    thresholds = {name for name in vars(reaper) if name.endswith("_SECONDS")}
+    assert thresholds == {"INTERRUPTED_GRACE_SECONDS"}
 
 
 def test_interrupted_run_requires_a_dead_owner_and_the_grace_period(

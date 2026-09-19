@@ -21,14 +21,15 @@ Run ``just clean`` for the report and ``just clean-apply`` to act on it.
 The worktree section, which is what the rest of this module implements, sorts
 ignored paths into three populations that are not interchangeable:
 
-**Regenerable output.** ``__pycache__``, the six tool caches, ``build/``,
-``dist/``, the generated documentation trees. Every byte of it is reproduced by
-a command that already exists, nothing reads it across a run boundary, and
-deleting it costs a rebuild. This is the only family this module removes.
+**Regenerable output.** ``__pycache__``, the tool caches, every ``cache`` and
+``.cache`` tree, ``build/``, ``dist/``, the generated documentation trees, and
+the ``.logs/`` scratch root. Every byte of it is reproduced by a command that
+already exists, nothing reads it across a run boundary, and deleting it costs a
+rebuild. This is the only family this module removes.
 
 **State an operator would lose.** ``.env`` and everything under ``env/``, the
 ``.venv``, ``secrets/``, ``cadrumo-storage/``, the ``.vault`` and ``.vaultspec``
-trees, ``.logs/``. Most of it is ignored by git for exactly
+trees. Most of it is ignored by git for exactly
 the reason it must survive a clean: it is local, it is not reproducible from
 the repository, and some of it is live key material and taxpayer financial
 data. This family is protected by name and is never walked, never sized and
@@ -114,7 +115,6 @@ PROTECTED_SEGMENTS: Final[frozenset[str]] = frozenset(
         "env",
         "secrets",
         "cadrumo-storage",
-        ".logs",
         ".claude",
         ".codex",
         ".agents",
@@ -141,6 +141,17 @@ not one byte of taxpayer data. The store the warning is about lives at
 ``secrets/`` and ``cadrumo-storage/``, which are still protected by segment
 wherever they appear, including underneath ``var``. Guarding a name instead of
 a fact is what this module's own docstring tells its reader not to do.
+
+``.logs`` is absent for the same reason, and its removal from this set is the
+second correction of that one mistake. It was protected as state an operator
+would lose, on the strength of holding "evidence". What it actually holds is
+captured command output, downloaded BOE payloads, draft vault bodies staged on
+their way into ``.vault/``, and a cache: output of runs, written by a run and
+read back by nothing. ``.logs`` is a scratch root, the boundary is one-way --
+code may write there and must not read from there -- and a tool that spares it
+asserts a durability the tree does not have. :data:`LOGS_TEST_RUNS` is the one
+child with a liveness question, and it is deferred to the section that can
+answer it rather than protected here.
 """
 
 VAR_SCRATCH_OWNER: Final = "var"
@@ -161,7 +172,30 @@ the application's own cache and logs rather than anything the release build
 minted. It stays with the worktree section, which is what owns caches.
 """
 
-MIXED_ROOTS: Final[frozenset[str]] = frozenset({VAR_SCRATCH_OWNER, VAR_APPLICATION_STORAGE})
+LOGS_SCRATCH_OWNER: Final = ".logs"
+"""The repository's scratch log root, removed by this section in full.
+
+Captured stdout and stderr, downloaded BOE payloads, draft vault bodies staged
+on their way into ``.vault/``, audit-run output and a cache. Every entry is
+something a run wrote; nothing in the product or the development tooling is
+entitled to read one back, so the whole root is regenerable by definition.
+"""
+
+LOGS_TEST_RUNS: Final = ".logs/test-runs"
+"""The one child of :data:`LOGS_SCRATCH_OWNER` with a liveness question.
+
+A pytest invocation writes its run directory while it runs, so removing this
+subtree on name alone would truncate output still being produced.
+:mod:`dev.env.temp_reaper` owns it, delegating to :mod:`dev.test_runs.reaper`,
+which resolves a run's owning PID against the OS; this module cannot. The
+question is liveness and only liveness -- a finished run's directory is reclaimed
+there at any age, with no retention window anywhere in the path.
+
+Deferred rather than protected: a deferral names the mechanism that will answer,
+where a protection asserts there is no question.
+"""
+
+MIXED_ROOTS: Final[frozenset[str]] = frozenset({VAR_SCRATCH_OWNER, VAR_APPLICATION_STORAGE, LOGS_SCRATCH_OWNER})
 """Ignored directories whose children are classified individually.
 
 Git collapses a wholly-ignored directory to one entry, which is normally the
@@ -170,7 +204,9 @@ several unrelated things: ``var`` carries the release cohort's working trees,
 an operator's long-lived probe trees, and a cache, and no single verdict is
 right for all three. The packaging sweep that owns ``var`` says the same thing
 in its own words -- it is a mixed directory, so the rule cannot be keyed on the
-parent.
+parent. ``.logs`` is here for the narrower version of the same reason: its
+children are uniformly reapable except :data:`LOGS_TEST_RUNS`, and splitting the
+root is what lets that one subtree reach the section that can judge it.
 
 Expansion is one level per entry and recurses only while the child is itself
 named here, so this stays a short, readable list rather than a general walk of
@@ -208,9 +244,12 @@ take a file out of protection.
 
 CACHE_DIRECTORY_NAMES: Final[frozenset[str]] = frozenset(
     {
+        "cache",
+        ".cache",
         "__pycache__",
         "__pypackages__",
         ".pytest_cache",
+        ".grimp_cache",
         ".import_linter_cache",
         ".ruff_cache",
         ".mypy_cache",
@@ -236,9 +275,21 @@ Every one is rebuilt by the tool that owns it on its next run, and none is read
 by anything else. Depth-independence is the point for ``__pycache__``, which
 appears beside every package in the tree.
 
-Bare ``cache`` and ``.cache`` are deliberately absent. Both are ignored by this
-repository and both are also perfectly ordinary names for a directory something
-durable lives in; a name that generic earns a FLAG line, not a removal.
+Bare ``cache`` and ``.cache`` are present, and their arrival reverses an earlier
+reading of this list. They were held out as too generic to act on -- both are
+also ordinary names for a directory something durable lives in -- so they earned
+a FLAG line instead of a removal. That caution cost 2.3 GB at the repository
+root and bought nothing: a directory named ``cache`` is a cache, in this tree
+and in every other, and no ``cache`` or ``.cache`` directory in this repository
+holds anything a command cannot rebuild. Generic is the wrong axis. What decides
+a removal is whether the name states a role, and these two state it as plainly
+as ``__pycache__`` does. ``.grimp_cache`` joins them by the same test, having sat
+unclaimed beside ``.import_linter_cache`` since the graph builder grew its own
+store.
+
+The protection ordering in :func:`classify` is what makes this affordable: a
+``cache`` inside ``secrets/`` or a vault tree is still spared, because
+protection is tested before reapability and neither test was loosened here.
 """
 
 GENERATED_PATHS: Final[frozenset[str]] = frozenset(
@@ -520,6 +571,10 @@ def classify(repo_root: Path, relative: str, *, promoted: frozenset[str] = froze
     stripped = relative.strip("/")
     if stripped.startswith(f"{VAR_SCRATCH_OWNER}/") and not stripped.startswith(VAR_APPLICATION_STORAGE):
         return Verdict.KEEP, "release-build scratch, judged by its owning section below"
+    if stripped == LOGS_TEST_RUNS or stripped.startswith(f"{LOGS_TEST_RUNS}/"):
+        return Verdict.KEEP, "run directories, judged on owner liveness by their section below"
+    if stripped == LOGS_SCRATCH_OWNER or stripped.startswith(f"{LOGS_SCRATCH_OWNER}/"):
+        return Verdict.REAP, f"'{LOGS_SCRATCH_OWNER}' is scratch output that no code may read back"
     reason = _reapable(relative)
     if reason is not None:
         return Verdict.REAP, reason
@@ -771,7 +826,7 @@ def _report(entries: list[Entry], *, applying: bool, verbose: bool, stream: Text
 
     print(
         f"\nProtected or owned elsewhere, never walked: {len(keep)} entries"
-        " (dotenv, vault trees, venv, secrets, logs, agent and editor state,"
+        " (dotenv, vault trees, venv, secrets, agent and editor state,"
         " plus var/ scratch reported by its own section below)",
         file=stream,
     )
