@@ -5,6 +5,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
 from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_runtime_profile
@@ -80,10 +81,10 @@ def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
 ) -> None:
     """In-scope missing authority preserves its terminal operator-decision verdict."""
     filing_year = 2024
-    period_token = "2T"
+    period_code = "2T"
     evidence_path = write_m303_filing_evidence(
         tmp_path / "m303-filing-evidence.json",
-        Period.from_year_and_code(filing_year, period_token),
+        Period.from_year_and_code(filing_year, period_code),
         operation=authority_operation,
     )
     with isolated_cli_runtime_profile(
@@ -104,9 +105,9 @@ def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
                 "--year",
                 str(filing_year),
                 "--period",
-                period_token,
+                period_code,
                 "--revision",
-                _m303_revision_id(filing_year=filing_year, period=period_token),
+                _m303_revision_id(filing_year=filing_year, period=period_code),
             ],
         )
         assert work_unit_result.exit_code == 0, work_unit_result.output
