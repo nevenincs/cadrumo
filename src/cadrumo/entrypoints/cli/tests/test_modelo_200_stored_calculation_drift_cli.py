@@ -21,7 +21,7 @@ def _invoke(arguments: list[str]):
     return invoke_cached_cli(["--format", "json", *arguments])
 
 
-def test_verify_after_profile_activity_start_change_refuses_without_traceback(
+def test_verify_after_profile_activity_start_change_reports_scoped_advisories_without_traceback(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     register_cli_profile(
@@ -50,7 +50,7 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
         [
             "app", "modelo", "work", "create",
             "--modelo", "200", "--year", "2026", "--period", "0A",
-            "--revision", "2024", "--name", "SA M200 2026", "--by", "s421",
+            "--revision", "2025-y-siguientes", "--name", "SA M200 2026", "--by", "s421",
         ],
     )  # fmt: skip
     assert work.exit_code == 0, work.output
@@ -59,7 +59,7 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
         [
             "app", "modelo", "work", "calculate",
             "--modelo", "200", "--year", "2026", "--period", "0A",
-            "--revision", "2024",
+            "--revision", "2025-y-siguientes",
             "--casilla", "00501=100000",
             "--casilla", "DP200013:00417=0",
             "--casilla", "DP200013:00418=0",
@@ -68,7 +68,6 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
             "--casilla", "DP200014:01033=0",
             "--casilla", "DP200014:01034=0",
             "--binding", "modelo-200-profile-legal-entity-form=sa",
-            "--binding", "modelo-200-profile-new-entity-flag=0",
             "--binding", "modelo-200-profile-incn-prior-12-months=500000",
             "--binding", "modelo-200-profile-tributacion-estado-porcentaje=100",
             "--binding", "modelo-200-bin-pendiente-ejercicios-anteriores=0",
@@ -97,17 +96,18 @@ def test_verify_after_profile_activity_start_change_refuses_without_traceback(
         [
             "app", "modelo", "work", "verify",
             "--modelo", "200", "--year", "2026", "--period", "0A",
-            "--revision", "2024", "--by", "s421",
+            "--revision", "2025-y-siguientes", "--by", "s421",
         ],
     )  # fmt: skip
 
-    assert verification.exit_code != 0, verification.output
+    assert verification.exit_code == 0, verification.output
     assert "Traceback" not in verification.output
     assert "Traceback" not in caplog.text
     response = json.loads(verification.output)
-    error = response["error"]
-    assert error["code"] == "REFUSED_MODELO_WORKFLOW_GATE"
-    assert error["category"] == "REFUSED"
-    assert error["context"] == {"abort_code": "DRAFT_HAS_ERRORS", "stage": "ABORTED"}
-    assert "modelo-200-pagos-fraccionados-anuales" in error["message"]
-    assert "recalculate" in error["message"]
+    report = response["result"]
+    assert report["registry_snapshot_ref"]["revision_id"] == "2025-y-siguientes"
+    assert report["completeness_status"] == "complete"
+    assert report["granted_verificado_completo"] is True
+    assert report["findings"]
+    assert all(finding["kind"] == "advisory" for finding in report["findings"])
+    assert any("2026-01-01" in finding["message"] for finding in report["findings"])
