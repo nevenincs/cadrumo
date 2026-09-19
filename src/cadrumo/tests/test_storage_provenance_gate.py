@@ -74,6 +74,7 @@ from __future__ import annotations
 
 import ast
 from functools import cache
+from pathlib import Path
 from typing import TYPE_CHECKING, Final, NamedTuple
 
 import pytest
@@ -85,7 +86,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("o
 
 if TYPE_CHECKING:
     from collections.abc import Sequence
-    from pathlib import Path
 
 
 _MODULE_SCOPE: Final[str] = "<module>"
@@ -320,6 +320,36 @@ def root_join_sites(module: str, tree: ast.AST) -> tuple[JoinSite, ...]:
     )
 
 
+_ROOT_FIELD_BYTES: Final = STORAGE_ROOT_SETTINGS_FIELD.encode("utf-8")
+
+
+def _may_join_onto_root(path: Path) -> bool:
+    """Whether ``path`` could possibly hold a join site, decided from its bytes alone.
+
+    Every site :func:`root_join_sites` can report is anchored on an
+    ``ast.Attribute`` whose attribute name is
+    :data:`STORAGE_ROOT_SETTINGS_FIELD` -- directly, or through a local name
+    that the SAME tree assigned from such an attribute, since binding is
+    resolved per tree and never across modules. The identifier therefore appears
+    verbatim in the source of any module that has a site, and a module whose
+    bytes do not contain it cannot produce one.
+
+    This is a pre-filter on cost, not on meaning: the corpus the non-vacuity
+    gate measures is still every packaged module, and any module that passes
+    this check is analysed exactly as before. It matters because
+    :func:`root_join_sites` makes four full traversals of a module's tree, and
+    it was making them for all 5,485 packaged modules to find 7 sites -- 33 s
+    of walking, essentially all of it over modules that never mention the root.
+
+    An unreadable file answers ``True`` rather than being skipped quietly; the
+    parse path below is what owns reporting it.
+    """
+    try:
+        return _ROOT_FIELD_BYTES in path.read_bytes()
+    except OSError:
+        return True
+
+
 @cache
 def _discovered_sites() -> tuple[JoinSite, ...]:
     """Walk every packaged module, production and test alike.
@@ -329,6 +359,8 @@ def _discovered_sites() -> tuple[JoinSite, ...]:
     """
     sites: list[JoinSite] = []
     for path in package_python_files():
+        if not _may_join_onto_root(path):
+            continue
         tree = _tree_for(path)
         if tree is not None:
             sites.extend(root_join_sites(aeat_relative(path), tree))
@@ -448,8 +480,7 @@ def _sites_in(source: str) -> tuple[JoinSite, ...]:
     return root_join_sites("synthetic.py", ast.parse(source))
 
 
-@pytest.mark.parametrize(
-    ("label", "source"),
+LOCATION_PRODUCING_SOURCES: Final[tuple[tuple[str, str], ...]] = tuple(
     [
         (
             "operator join onto a literal",
@@ -483,8 +514,17 @@ def _sites_in(source: str) -> tuple[JoinSite, ...]:
             "reached through a call result",
             'def make():\n    return load_settings().cadrumo_local_storage_root / "scratch"\n',
         ),
-    ],
+    ]
 )
+"""Every spelling of "build a path from the root" that the detector must fire on.
+
+Held as a constant rather than inlined into one parametrize, because two tests
+need the same corpus of shapes: the detector must fire on each, and the byte
+pre-filter in :func:`_may_join_onto_root` must admit each.
+"""
+
+
+@pytest.mark.parametrize(("label", "source"), LOCATION_PRODUCING_SOURCES)
 def test_the_detector_fires_on_each_location_producing_shape(label: str, source: str) -> None:
     """Every spelling of "build a path from the root" is caught.
 
@@ -616,3 +656,35 @@ def test_the_detector_attributes_a_site_to_its_innermost_function() -> None:
     )
     (site,) = _sites_in(source)
     assert site.function == "outer.inner"
+
+
+def test_the_byte_prefilter_admits_every_shape_the_detector_fires_on(tmp_path: Path) -> None:
+    """Teeth for the pre-filter: a module the detector would flag is never skipped.
+
+    :func:`_may_join_onto_root` decides from bytes whether a module is worth
+    parsing at all, so a firing shape it rejected would be a site that silently
+    stops being reported -- a gate going green by not looking, which is this
+    instrument's worst failure mode. Driven from the same corpus of shapes as
+    the detector's own discrimination tests, so a newly supported spelling
+    cannot be added to one without facing the other.
+    """
+    for label, source in LOCATION_PRODUCING_SOURCES:
+        assert _sites_in(source), f"sanity: the detector must fire on {label!r}"
+        module = tmp_path / "candidate.py"
+        module.write_text(source, encoding="utf-8")
+        assert _may_join_onto_root(module), (
+            f"the pre-filter rejected {label!r}, so a real module of that shape would be skipped "
+            "unparsed and its join site would never be reported"
+        )
+
+
+def test_the_byte_prefilter_rejects_a_module_that_cannot_hold_a_site(tmp_path: Path) -> None:
+    """The filter must actually filter, or it buys nothing.
+
+    Paired with the admission test above: together they state that the filter
+    separates the two populations rather than answering the same way for both.
+    """
+    module = tmp_path / "unrelated.py"
+    module.write_text('def make():\n    return settings.some_other_dir / "scratch"\n', encoding="utf-8")
+    assert not _may_join_onto_root(module)
+    assert not _sites_in(module.read_text(encoding="utf-8")), "sanity: this shape must not be a site"
