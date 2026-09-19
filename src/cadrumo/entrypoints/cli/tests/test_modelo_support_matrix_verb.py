@@ -39,7 +39,7 @@ def test_support_matrix_returns_one_row_per_registry_modelo_sorted_by_id() -> No
     assert [entry["modelo_id"] for entry in entries] == sorted(entry["modelo_id"] for entry in entries)
 
 
-def test_support_matrix_modelo_303_reports_calc_grade_and_fichero_boe_export() -> None:
+def test_support_matrix_modelo_303_reports_calc_grade_without_file_export() -> None:
     payload = unwrap_schema_envelope(
         invoke_cached_cli(["--format", "json", "app", "modelo", "support-matrix"]).output,
     )
@@ -48,7 +48,8 @@ def test_support_matrix_modelo_303_reports_calc_grade_and_fichero_boe_export() -
     m303 = entries_by_id["303"]
     assert m303["calc_grade"] is True
     assert m303["has_completeness_manifest"] is True
-    assert m303["has_fixed_width_export"] is True
+    assert m303["has_fixed_width_export"] is False
+    assert m303["has_xml_dictionary_export"] is False
 
 
 def test_support_matrix_modelo_100_carries_typed_renames_and_portal_refs() -> None:

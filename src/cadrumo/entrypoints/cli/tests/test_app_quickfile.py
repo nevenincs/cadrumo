@@ -404,10 +404,10 @@ def test_quickfile_runs_full_chain_to_exported_fichero(
     assert out.stat().st_size > 0, "the exported fichero is empty"
 
 
-def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_withdrawn_export(
+def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_identity_refusal(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """A fully taxable M303 reaches verify, then honestly refuses the withdrawn layout."""
+    """A fully taxable M303 reaches verify, then requires reviewed export identity."""
 
     _create_profile()
     bucket_id = _active_bucket_id()
@@ -441,7 +441,7 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_withd
 
     notice_text = json.dumps(_notices(result.output), sort_keys=True)
     assert "prorrata" not in notice_text.lower()
-    assert "no complete export_layouts definition" in notice_text
+    assert "product/software identity authority" in notice_text.lower()
     assert payload["export"] is None
     assert not out.exists()
 
