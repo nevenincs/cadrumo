@@ -13,7 +13,7 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.censo_modelos import (
     CENSO_MODELO_EVENT_KINDS,
-    _active_036_ownership_from_registry,
+    active_036_ownership_from_registry,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -68,7 +68,7 @@ def test_an_override_that_narrows_one_year_does_not_narrow_the_event_kinds() -> 
     selector = _latest_revision(authority).period_selector
     assert selector.periods_for_year(_OVERRIDE_YEAR) == ("alta",), "the fixture must discriminate"
 
-    ownership = _active_036_ownership_from_registry(authority)
+    ownership = active_036_ownership_from_registry(authority)
 
     assert ownership.modelo == _CENSO_MODELO
     assert selector.declared_periods == CENSO_MODELO_EVENT_KINDS
@@ -79,4 +79,4 @@ def test_an_override_declaring_a_foreign_event_kind_is_refused() -> None:
     authority = _authority_with_036_override((*CENSO_MODELO_EVENT_KINDS, "comunicacion"))
 
     with pytest.raises(RegistryValidationError, match="event periods must come from the registry"):
-        _active_036_ownership_from_registry(authority)
+        active_036_ownership_from_registry(authority)

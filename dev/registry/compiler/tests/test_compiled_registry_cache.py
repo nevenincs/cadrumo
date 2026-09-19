@@ -19,15 +19,15 @@ from cadrumo.core.frozen_mapping import FrozenMapping
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.tests.env_scope import scoped_env_var
 
-from ..compiler._compiled_cache import _COMPILED_CACHE_SCHEMA_VERSION, _FRAME_SEPARATOR, _payload_digest
-from ..compiler.compiled_cache import (
+from .._compiled_cache import _COMPILED_CACHE_SCHEMA_VERSION, _FRAME_SEPARATOR, _payload_digest
+from ..compiled_cache import (
     CompiledRegistryPayload,
     compiled_cache_path,
     load_compiled_registry_cache,
     store_compiled_registry_cache,
 )
-from ..compiler.loader import clear_registry_tree_cache, load_registry_tree
-from ..compiler.loader_fingerprints import clear_fingerprint_cache, collect_registry_tree_fingerprints
+from ..loader import clear_registry_tree_cache, load_registry_tree
+from ..loader_fingerprints import clear_fingerprint_cache, collect_registry_tree_fingerprints
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

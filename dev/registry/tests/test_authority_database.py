@@ -45,6 +45,7 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
 )
 from cadrumo.domain.modelos.perceptor_clave_scope import PERCEPTOR_CLAVE_SCOPE_FACT_ID
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
+from dev._paths import DEFAULT_AUTHORITY_ROOT, REPO_ROOT
 
 from ..compiler import authority_database as authority_database_compiler
 from ..compiler.authority_database import build_authority_database, require_acyclic_authority_dependencies
@@ -56,15 +57,21 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_retired_whole_authority_json_surfaces_do_not_exist() -> None:
-    """Keep SQLite as the only authority publication and admission implementation."""
-    repository_root = Path(__file__).resolve().parents[3]
+    """Keep SQLite as the only authority publication and admission implementation.
+
+    The retired whole-document surface is checked at both authority locations.
+    The published artifact now lives under the configured root, so checking only
+    the packaged path would let the retired document reappear where the
+    publisher actually writes and still pass.
+    """
     retired_paths = (
-        repository_root / "dev/registry/authority_json.py",
-        repository_root / "dev/registry/benchmark_authority.py",
-        repository_root / "src/cadrumo/_data/registry/authority/authority.json",
+        REPO_ROOT / "dev/registry/authority_json.py",
+        REPO_ROOT / "dev/registry/benchmark_authority.py",
+        REPO_ROOT / "src/cadrumo/_data/registry/authority/authority.json",
+        DEFAULT_AUTHORITY_ROOT / "authority.json",
     )
 
-    assert not tuple(path.relative_to(repository_root) for path in retired_paths if path.exists())
+    assert not tuple(str(path) for path in retired_paths if path.exists())
 
 
 def test_publication_proof_refuses_a_complete_dependency_cycle() -> None:

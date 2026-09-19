@@ -19,9 +19,9 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import (
     validating_governed_facts,
 )
 
-from ..analysis.m303_orden_anual import main
-from ..compiler._m303_orden_source import extract_m303_annual_orden_source
-from ..compiler.loader import load_registry_tree
+from ...analysis.m303_orden_anual import main
+from .._m303_orden_source import extract_m303_annual_orden_source
+from ..loader import load_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

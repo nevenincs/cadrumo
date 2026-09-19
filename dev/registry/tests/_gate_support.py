@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.snapshot import collect_snapshot_ref_i
 
 from ..compiler.export_fragment_grammar import EXPORT_SECTION_DIRECTORY_NAMES, revision_section_for_directory
 from ..compiler.loader import load_modelo_declarations, load_registry_tree
-from ..compiler.validator import _runtime_legal_reference_ids
+from ..compiler.validator import runtime_legal_reference_ids
 
 #: Catalogue directories a single-modelo scratch tree needs in order to
 #: compile. The modelo's own directory is copied separately; the rest of the
@@ -345,7 +345,7 @@ def _m130_declared_reference_ids(modelo: ModeloDefinition) -> tuple[set[str], se
 
 def _catalogue_carried_reference_ids(catalogues: RegistryCatalogues) -> tuple[frozenset[str], frozenset[str]]:
     """Return the legal and source ids the catalogues themselves cite, modelo aside."""
-    legal = set(_runtime_legal_reference_ids(catalogues.runtime))
+    legal = set(runtime_legal_reference_ids(catalogues.runtime))
     sources: set[str] = set()
     for fact in catalogues.facts.facts.values():
         for variant in fact.variants:
