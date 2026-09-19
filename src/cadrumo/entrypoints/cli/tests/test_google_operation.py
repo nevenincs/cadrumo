@@ -222,7 +222,7 @@ def test_google_export_owner_and_composition_keep_one_hexagonal_apply_plus_prove
 def test_cli_command_submits_supervised_export_and_resolves_public_result(tmp_path: Path, monkeypatch) -> None:
     """The changed command reaches the real journalled supervisor and public result resolver."""
     from ....application.export import google_operation
-    from ....application.operations import supervisor as supervisor_module
+    from ....application.operations import _supervisor_execution as supervisor_module
     from ... import operation_composition
     from .. import modelo_spreadsheet_cli as cli_module
 

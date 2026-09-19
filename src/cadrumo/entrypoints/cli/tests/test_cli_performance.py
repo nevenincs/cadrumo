@@ -33,7 +33,15 @@ def test_resolution_and_invocation_are_independent_fresh_processes(tmp_path: Pat
 def test_profiler_reports_real_import_model_and_filesystem_observations(tmp_path: Path) -> None:
     profile = profile_cli_path(("config", "profile", "list"), storage_root=tmp_path)
 
-    assert "cadrumo.entrypoints.cli" in profile.resolution.imported_modules
+    # The child runner itself lives below ``cadrumo.entrypoints.cli`` and
+    # therefore imports the package before the phase snapshot.  The measured
+    # resolution still has to load a CLI implementation module during the
+    # phase; assert that real boundary instead of expecting the already-loaded
+    # package marker in the delta.
+    assert any(
+        module.startswith("cadrumo.entrypoints.cli.")
+        for module in profile.resolution.imported_modules
+    )
     assert set(profile.resolution.import_families) == {"registry", "crypto", "custody", "keyring", "storage"}
     assert all(not Path(path).is_absolute() for path in profile.invocation.filesystem_created)
     assert profile.invocation.filesystem_operations

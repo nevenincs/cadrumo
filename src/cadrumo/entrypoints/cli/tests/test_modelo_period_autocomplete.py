@@ -58,51 +58,44 @@ class TestDeclaredPeriodTokensAutocomplete:
         assert len(result) > 0
         assert all(isinstance(t, str) for t in result)
 
-    def test_non_cadrumo_error_is_logged_at_debug(self, caplog: pytest.LogCaptureFixture) -> None:
+    def test_non_cadrumo_error_is_logged_at_debug(
+        self,
+        caplog: pytest.LogCaptureFixture,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
         """A non-CadrumoError from the resources layer is logged at DEBUG and swallowed.
 
-        This test exercises the ``except Exception`` arm by triggering a real
-        non-CadrumoError from the production path. We inject a deliberately broken
-        module-level state by temporarily replacing the ``resources`` import target
-        in the function's closure. Instead, we verify the logger wiring:
-        that ``_log`` is bound to the
-        ``cadrumo.entrypoints.cli._modelo`` logger name and DEBUG records are captured.
-
-        The structural test: the ``except Exception`` arm writes a DEBUG record
-        containing ``_declared_period_tokens`` context. We verify the arm exists
-        and is reachable by examining that an unknown-but-not-CadrumoError scenario
-        (simulated by verifying module logger name) is covered by the branch.
+        This test exercises the ``except Exception`` arm through the current
+        behavior-support module.  The registry query is replaced at its owning
+        import boundary with a deliberate runtime failure, so the production
+        function must swallow it and emit its diagnostic at DEBUG.
         """
         import logging
 
-        from .. import _modelo as _modelo_module
+        from .. import _modelo_behavior_support as _modelo_module
+        from .._modelo_behavior_support import _declared_period_tokens
 
-        # Verify the module logger is correctly named — this proves _log.debug(...)
-        # in the except Exception arm writes to the right logger.
+        # The logger belongs to the module that owns the helper, not the
+        # extracted command module that imports it.
         assert hasattr(_modelo_module, "_log")
         logger = _modelo_module._log
-        # The logger name must be rooted at the module path.
-        assert "cadrumo.entrypoints.cli._modelo" in logger.name
+        assert "cadrumo.entrypoints.cli._modelo_behavior_support" in logger.name
 
-        # Now trigger the non-CadrumoError arm directly: we subclass RuntimeError
-        # (not CadrumoError) and verify it is swallowed and logged. We do this by
-        # exercising the real function with a caplog capture at DEBUG level.
-        # Since "XXXXXX" raises an CadrumoError (RegistryValidationError), this
-        # path verifies the DEBUG capture wiring without replacing runtime
-        # dependencies.
-        with caplog.at_level(logging.DEBUG, logger="cadrumo.entrypoints.cli._modelo"):
-            # The unknown modelo exercises the CadrumoError arm — no DEBUG record.
-            from .._modelo_behavior_support import _declared_period_tokens
+        def _raise_unexpected(*_args: object, **_kwargs: object) -> tuple[str, ...]:
+            raise RuntimeError("synthetic registry defect")
 
-            _declared_period_tokens("XXXXXX")
+        monkeypatch.setattr(_modelo_module, "declared_modelo_period_tokens", _raise_unexpected)
+        with caplog.at_level(logging.DEBUG, logger=logger.name):
+            assert _declared_period_tokens("303", operation=object()) == ()
 
-        # CadrumoError arm must NOT produce a DEBUG record (it's silent).
         debug_records = [
-            r for r in caplog.records if r.levelno == logging.DEBUG and "_declared_period_tokens" in r.message
+            record
+            for record in caplog.records
+            if record.levelno == logging.DEBUG and "_declared_period_tokens" in record.message
         ]
-        assert len(debug_records) == 0, (
-            f"CadrumoError arm must not emit a DEBUG record; got: {[r.message for r in debug_records]}"
-        )
+        assert len(debug_records) == 1, [record.message for record in caplog.records]
+        assert debug_records[0].exc_info is not None
+        assert debug_records[0].exc_info[0] is RuntimeError
 
     def test_cadrumo_error_subtype_is_swallowed_not_propagated(self) -> None:
         """Any CadrumoError subclass raised by the authority is caught and swallowed.

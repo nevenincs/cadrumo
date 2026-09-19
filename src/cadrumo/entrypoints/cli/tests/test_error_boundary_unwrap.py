@@ -191,14 +191,18 @@ def test_boundary_still_reports_genuine_bug_as_unexpected(
     wrapped = command_error_boundary(_callback)
 
     with (
-        caplog.at_level(logging.ERROR, logger="cadrumo.entrypoints.cli.errors"),
+        caplog.at_level(logging.DEBUG, logger="cadrumo.entrypoints.cli.errors"),
         pytest.raises(typer.Exit),
     ):
         wrapped()
 
-    assert any("unexpected exception" in record.message for record in caplog.records), [
+    crashes = [record for record in caplog.records if "unexpected exception" in record.message]
+    assert crashes, [
         record.message for record in caplog.records
     ]
+    assert crashes[0].levelno == logging.DEBUG
+    assert crashes[0].exc_info is not None
+    assert crashes[0].exc_info[0] is RuntimeError
 
 
 def test_cli_unexpected_boundary_error_is_cadrumo_error() -> None:
