@@ -745,8 +745,9 @@ def test_usage_ratio_help_points_to_configured_ratio_commands(tmp_path: Path) ->
         assert "category-id" in flat, result.output
         assert "configured ratios" in flat, result.output
         assert "eligible categories" in flat, result.output
+        normalised = flat.casefold()
         assert any(
-            phrase in flat
+            phrase.casefold() in normalised
             for phrase in ("Not arbitrary prose", "No es texto libre", "No és text lliure", "Nem tetszőleges szöveg")
         ), result.output
 
