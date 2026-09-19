@@ -5,7 +5,9 @@ from __future__ import annotations
 import ast
 import inspect
 import json
+import re
 import textwrap
+from urllib.parse import urlsplit
 
 import pytest
 from pydantic import ValidationError
@@ -169,13 +171,14 @@ def test_error_envelope_rejects_retired_suggestion_field() -> None:
 
 def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
     jwt = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
+    callback = "https://example.test/private/path?token=secret"
     error = LockAcquisitionError(
         context={
             "api_token": "top-secret",
             "cookie": "session-cookie",
             "cert_password": "hunter2",
             "profile_tax_id": "X1234567L",
-            "callback": "https://example.test/private/path?token=secret",
+            "callback": callback,
             "session_detail": f"bearer {jwt}",
         },
     )
@@ -194,8 +197,12 @@ def test_secret_scrubbing_redacts_sensitive_fields_in_json_and_text() -> None:
     assert "X1234567L" not in rendered_json
     assert "X1234567L" not in rendered_text
     assert "sha256:2a000539" in rendered_json
-    assert "https://example.test/private/path?token=secret" not in rendered_json
-    assert f'"{_REDACTED_URL_ORIGIN}"' in rendered_json
+    assert callback not in rendered_json
+    # Exact comparison, not a substring: the host must survive whole and alone,
+    # so a look-alike such as ``https://example.test.attacker.invalid`` fails.
+    surviving_callback = re.search(r'"callback":\s*"([^"]*)"', rendered_json)
+    assert surviving_callback is not None
+    assert surviving_callback[1] == f"{urlsplit(callback).scheme}://{urlsplit(callback).netloc}"
     assert "private/path" not in rendered_json
     assert jwt not in rendered_json
     assert "token:sha256:0a2c77ea" in rendered_json

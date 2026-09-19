@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import pytest
 from pydantic import BaseModel, ConfigDict
@@ -21,10 +23,9 @@ _PROFILE_ID = "986c0dc9-56dc-422b-9d8f-698661b9eb1e"  # was '123e4567-e89b-12d3-
 _NIF = "12345678Z"
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 _URL = "https://example.test/private/path?token=secret"
-# What central redaction leaves of a URL: the origin, with the path and the
-# query dropped. Asserting the origin under its own key (rather than as a bare
-# substring of the whole rendering) is what proves the path and query went.
-_REDACTED_URL_ORIGIN = "https://example.test"
+#: The host-only spelling redaction leaves behind; compared exactly so a
+#: look-alike host cannot satisfy the assertion.
+_URL_HOST_ONLY = f"{urlsplit(_URL).scheme}://{urlsplit(_URL).netloc}"
 _OBJECT_KEY = "wallet:2026-secret"
 _OTHER_OBJECT_KEY = "wallet:2026-other"
 
@@ -55,7 +56,9 @@ def test_render_command_output_renders_text_lines() -> None:
     assert _OBJECT_KEY not in rendered.text
     assert CLI_PROFILE_ID_PLACEHOLDER in rendered.text
     assert f"object_key={CLI_OBJECT_KEY_PLACEHOLDER}" in rendered.text
-    assert f"url={_REDACTED_URL_ORIGIN}" in rendered.text
+    surviving_url = re.search(r"\burl=(\S+)", rendered.text)
+    assert surviving_url is not None
+    assert surviving_url[1] == _URL_HOST_ONLY
     assert "private/path" not in rendered.text
     assert "sha256:1c9f9632" in rendered.text
     assert "token:sha256:0a2c77ea" in rendered.text

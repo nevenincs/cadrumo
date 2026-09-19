@@ -3,9 +3,11 @@
 from __future__ import annotations
 
 import asyncio
+import re
 import sqlite3
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import pytest
 from playwright._impl._errors import Error as PlaywrightError
@@ -715,7 +717,12 @@ def test_acquisition_manifest_redacts_sensitive_surface_failure_context(tmp_path
     assert "phone_state" in rendered
     assert "app_did_not_prompt" in rendered
     assert "sha256:" in rendered
-    assert f'"{_REDACTED_URL_ORIGIN}"' in rendered
+    # Exact comparison, not a substring: the landing URL must survive as host
+    # only, so a look-alike such as ``https://example.test.attacker.invalid``
+    # cannot satisfy the assertion.
+    surviving_landing = re.search(r'"landing_url":\s*"([^"]*)"', rendered)
+    assert surviving_landing is not None
+    assert surviving_landing[1] == f"{urlsplit(sensitive_url).scheme}://{urlsplit(sensitive_url).netloc}"
 
 
 def test_acquisition_payloads_require_explicit_auth_outcome() -> None:

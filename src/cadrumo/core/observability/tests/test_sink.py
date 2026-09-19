@@ -25,6 +25,7 @@ import shutil
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import pytest
 
@@ -83,9 +84,13 @@ class TestJsonlStoreRoundTrip:
                 assert restored.step_id == original.step_id
                 assert restored.kind == original.kind
                 # Path-stripped URL ("https://example.test/0") survives as
-                # "https://example.test" — the host stays intact.
+                # "https://example.test" — the host stays intact. Compared
+                # exactly rather than by prefix, so a host the redactor merely
+                # extended would fail instead of passing.
                 assert restored.payload.navigation is not None
-                assert restored.payload.navigation.url == _REDACTED_URL_ORIGIN
+                assert original.payload.navigation is not None
+                origin = urlsplit(original.payload.navigation.url)
+                assert restored.payload.navigation.url == f"{origin.scheme}://{origin.netloc}"
 
     def test_load_rejects_corrupted_line(
         self,
