@@ -45,6 +45,17 @@ default:
 # where `sh` already forwards the status, so no recipe needs a platform pair.
 propagate := if os_family() == "windows" { "; exit $LASTEXITCODE" } else { "" }
 
+# Complete new-worktree provisioning. The first command owns the locked Python
+# sync and default Vaultspec enrollment. RAG then provisions its managed models,
+# Qdrant binary, and MCP integration. Authority publication runs last so the
+# installed application consumes a generation compiled from the final tree.
+[doc('Fully initialize a new worktree: Python, Vaultspec, RAG, and runtime authority.')]
+[group('setup')]
+init:
+    uv run --isolated --no-project --python 3.13.11 -- python -m dev.init all{{propagate}}
+    uv run --no-sync vaultspec-rag install --upgrade --yes{{propagate}}
+    uv run --no-sync python -m dev.registry.pipeline publish-authority{{propagate}}
+
 # Canonical checkout setup. This is the minimal convergence facade: it creates
 # the pinned Python environment, installs repository tooling, and materializes
 # local environment configuration. Workstation tools and browser binaries are

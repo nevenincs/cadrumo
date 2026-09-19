@@ -1,14 +1,19 @@
-# `just setup` — worktree initialization
+# Worktree initialization
 
-`just setup` makes the current worktree usable from a bare checkout. It is the
-single command any tool — a person, a git hook, an agent, the worktree
-provisioner — calls after creating a worktree. It takes no arguments, asks no
-questions, and is always safe to run again.
+`just init` completely provisions a new worktree. It runs the minimal checkout
+setup, installs the default Vaultspec resources, provisions Vaultspec RAG and
+its managed external dependencies, then compiles and publishes the runtime
+authority under `.authority/`.
+
+`just setup` remains the minimal convergence command for callers that need only
+the locked Python environment, repository tooling, and local configuration.
+Both commands take no arguments, are non-interactive, and are safe to run again.
 
 The recipes:
 
 | Recipe                        | What it does                                                  |
 | ----------------------------- | ------------------------------------------------------------- |
+| `just init`                   | Complete new-worktree provisioning, including RAG and authority. |
 | `just setup`                  | Everything, in dependency order.                              |
 | `just setup-python`           | The Python environment and its locked dependencies.           |
 | `just setup-repository-tools` | Framework enrollment and pinned repository tooling; no Git hooks. |

@@ -11,9 +11,9 @@ related:
   - '[[2026-09-02-gate-integrity-adjudication-commit-time-mechanical-gates-adr]]'
   - '[[2026-09-14-gate-integrity-adjudication-pre-commit-hook-reconsideration-research]]'
   - '[[2026-09-14-gate-integrity-adjudication-pre-commit-hook-runtime-reference]]'
-modified: '2026-09-14'
+modified: '2026-09-19'
 body_schema: body-v2
-body_hash: 'sha256:ba8da94e1087171007d951feb145cb7e02f2de2810eec442d308446cbbff6fac'
+body_hash: 'sha256:4e901c7d476f00dd5fd6c6b798953ae99f4abc1e1890d5049b01a536d1feff70'
 ---
 
 <!-- RETIRED: P07 -->
@@ -157,6 +157,7 @@ Integrate the four lane-owned subject aggregates into explicit connected local a
 - [ ] `W05.P14.S77` - Integrate the four independently edited justfile sections and resolve cross-section dependencies; `justfile`.
 - [ ] `W05.P14.S75` - Compose the four lane-owned subject aggregates into the connected local gate with explicit exclusions; `justfile`.
 - [ ] `W05.P14.S76` - Expose hosted per-push parity only after workflow membership is proven equal; `justfile`.
+- [x] `W05.P14.S79` - Expose one complete init facade for Python, Vaultspec, RAG, and runtime-authority provisioning; `justfile, dev/init`.
 
 ### Phase `W05.P08` - migrate automated callers
 
