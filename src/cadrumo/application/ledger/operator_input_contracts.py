@@ -33,8 +33,12 @@ IVA_AMOUNT_INPUT: Final = OperatorInputContract("iva_amount", ("--iva-amount",),
 IVA_CATEGORY_INPUT: Final = OperatorInputContract(
     "iva_category", ("--iva-category",), "cadrumo.domain.iva.schema", "IvaCategory"
 )
+#: Text at the transport boundary, like every other registry-token input here.
+#: ``IvaDeductionFactKind`` admits only an already projected token, so declaring
+#: it as the transport type refused every operator-supplied value before the
+#: command model could project it through fact 0085.
 DEDUCTION_FACT_KIND_INPUT: Final = OperatorInputContract(
-    "deduction_fact_kind", ("--deduction-kind",), "cadrumo.core.iva_deduction_fact", "IvaDeductionFactKind"
+    "deduction_fact_kind", ("--deduction-kind",), "builtins", "str"
 )
 COUNTERPARTY_IDENTIFICATION_STATE_INPUT: Final = OperatorInputContract(
     "counterparty_identification_state",
