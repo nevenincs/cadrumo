@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-09-17'
+modified: '2026-09-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:67c33b3564e3cd2be816bbcc0aadc6c502a06431a70266638bde5ba40fab0b3c'
+body_hash: 'sha256:a939f127cd50b03ad7cb8e631a3217c8e6f3d102b5a891be1cffa8918606f8a4'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
@@ -170,6 +170,12 @@ related:
 - `S135` `M` `docs/how-to/publish-runtime-authority.md`
 - `S135` `M` `docs/reference/registry-legal-api.md`
 - `S135` `verify:` `documentation updated from implemented descriptor and component contracts` -> `pass`
+- `S138` `M` `packaging/authority/hatch_build.py`
+- `S138` `M` `pyproject.toml`
+- `S138` `A` `dev/packaging/tests/test_authority_build_hook.py`
+- `S138` `verify:` `ruff, ty, compileall, diff check` -> `pass`
+- `S138` `A` `.vault/audit/2026-09-19-registry-authority-artifact-boundary-fresh-worktree-bootstrap-audit.md`
+- `S138` `verify:` `phase-close integrated review` -> `pass`
 
 ## Notes
 

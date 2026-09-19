@@ -229,9 +229,26 @@ all = [
 ]
 
 [build-system]
-# Floored at the release whose BuildHookInterface takes both type parameters,
-# which the authority build hook subscripts; an older backend cannot load it.
-requires = ["hatchling>=1.32.3,<2"]
+# The build hook compiles a missing source-tree authority before packaging it.
+# Keep this closure aligned with the canonical compiler's direct import and
+# official-source extraction requirements; normal runtime dependencies remain
+# declared separately under project.dependencies.
+requires = [
+  "hatchling>=1.32.3,<2",
+  "beautifulsoup4[lxml]>=4.12,<5",
+  "defusedxml>=0.7.1,<1",
+  "openpyxl>=3.1.5,<4",
+  "pdfplumber>=0.11.9,<1",
+  "pydantic>=2.12.5,<3",
+  "pydantic-settings>=2.9.1,<3",
+  "pypdfium2>=5.7.1,<6",
+  "python-dotenv>=1.2.2,<2",
+  "python-i18n>=0.3.9,<1",
+  "PyYAML>=6.0.3,<7",
+  "rtoml>=0.13.0,<1",
+  "tzdata>=2026.2 ; sys_platform == 'win32'",
+  "xlrd>=2.0.1,<3",
+]
 build-backend = "hatchling.build"
 
 # Deny-by-default. Without an explicit target, hatchling packs every

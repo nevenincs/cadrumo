@@ -48,6 +48,7 @@ import hashlib
 import json
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Any, TypeGuard, override
 
@@ -84,12 +85,14 @@ def _is_string_mapping(value: object) -> TypeGuard[dict[str, str]]:
 
 
 def _authority_root(build_root: Path) -> Path | None:
-    """Return the directory holding the published pair, or ``None`` when absent.
+    """Return the published pair directory, compiling a fresh source tree if needed.
 
     A source-tree build reads the gitignored ``.authority/`` beside the project,
     or the directory ``CADRUMO_AUTHORITY_ROOT`` names. A build from an extracted
     sdist finds the pair already embedded at the published path and must read it
-    from there, because the sdist carries no ``.authority/``.
+    from there, because the sdist carries no ``.authority/``. When a real source
+    tree has no publication yet, the canonical compiler publishes one to its
+    repo-root ``.authority/`` before packaging continues.
     """
     override = os.environ.get(_AUTHORITY_ROOT_ENV)
     if override:
@@ -101,7 +104,32 @@ def _authority_root(build_root: Path) -> Path | None:
     embedded = build_root / _SDIST_DESTINATION
     if embedded.is_dir():
         return embedded
+    compiler = build_root / "dev" / "registry" / "compiler" / "authority.py"
+    authored_registry = build_root / "src" / "cadrumo" / "_data" / "registry" / "aeat"
+    if compiler.is_file() and authored_registry.is_dir():
+        _publish_source_tree_authority(build_root, source_tree)
+        return source_tree if source_tree.is_dir() else None
     return None
+
+
+def _publish_source_tree_authority(build_root: Path, destination: Path) -> None:
+    """Compile the canonical authority when a fresh source tree has no publication."""
+    import_paths = (str(build_root), str(build_root / "src"))
+    original_path = sys.path.copy()
+    try:
+        sys.path[:0] = import_paths
+        from dev.registry.compiler.authority import AuthoritySourceSet
+        from dev.registry.pipeline.authority_publication import publish_sqlite_authority_candidate
+
+        sources = AuthoritySourceSet.bundled()
+        publish_sqlite_authority_candidate(
+            registry_root=sources.registry_root,
+            source_root=sources.source_evidence_root,
+            profile_schema_path=sources.profile_schema_path,
+            destination=destination,
+        )
+    finally:
+        sys.path[:] = original_path
 
 
 def _selected_pair(root: Path) -> tuple[Path, Path]:
