@@ -828,7 +828,7 @@ def test_profile_lifecycle_storage_spans_are_application_owned() -> None:
     # or added is covered without anyone remembering to extend a list.
     scanned = [
         path
-        for package in ("entrypoints/cli/_config", "application/wizard")
+        for package in ("entrypoints/cli/config", "application/wizard")
         for path in sorted((REPO_ROOT / "src" / "cadrumo" / package).rglob("*.py"))
         if "tests" not in path.relative_to(REPO_ROOT).parts
     ]

@@ -194,7 +194,7 @@ def _emit_profile_record_status(
                 )
             ),
         }
-        repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
+        repair_payload = RepairProfileResult.model_validate(payload)
         emit_envelope(
             ctx,
             command="config.repair.profile",
@@ -238,7 +238,7 @@ def _emit_profile_record_status(
         "profile_record_present": True,
         "setup_state": record.setup_state,
     }
-    repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
+    repair_payload = RepairProfileResult.model_validate(payload)
     emit_envelope(
         ctx,
         command="config.repair.profile",
@@ -281,7 +281,7 @@ def _emit_profile_record_unreadable_repair(
             )
         ),
     }
-    repair_payload = RepairProfileResult.model_validate(redact_structured_for_cli_output(payload))
+    repair_payload = RepairProfileResult.model_validate(payload)
     emit_envelope(
         ctx,
         command="config.repair.profile",
