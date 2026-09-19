@@ -23,7 +23,7 @@ from ._cli_surface_support import (
 )
 from ._strict_cli_fixture_support import cli_surface_isolated_backend
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 __all__ = ["cli_surface_isolated_backend"]
 
