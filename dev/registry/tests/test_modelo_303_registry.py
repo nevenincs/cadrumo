@@ -7,7 +7,8 @@ from datetime import date, timedelta
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
@@ -47,6 +48,16 @@ def test_modelo_303_metadata_matches_orden_eha_3786_2008() -> None:
     assert catalogues.sources["boe-modelo-303-2008-form"].evidence_tier == "layout_authority"
 
 
+def _scheduled_periods(revision: ModeloRevision) -> tuple[str, ...]:
+    """Return the periods the revision's own filing schedules declare, in order."""
+    ordered: list[str] = []
+    for schedule in revision.filing_schedules:
+        for period in schedule.periods:
+            if period not in ordered:
+                ordered.append(period)
+    return tuple(ordered)
+
+
 def test_modelo_303_revision_period_selectors_cover_the_supported_span() -> None:
     """Each revision claims exactly the filing year(s) it is named for.
 
@@ -63,7 +74,9 @@ def test_modelo_303_revision_period_selectors_cover_the_supported_span() -> None
     assert rev_old.valid_to == date(2022, 12, 31)
     assert rev_old.period_selector.year_from == 2022
     assert rev_old.period_selector.year_to == 2022
-    assert rev_old.period_selector.periods == ("1T", "2T", "3T", "4T")
+    # The edition admits both cadences: its quarterly and monthly filing
+    # schedules together are exactly what the selector claims.
+    assert rev_old.period_selector.periods == _scheduled_periods(rev_old)
 
     # The span is carried per revision rather than assumed to run January to
     # December. The 2024 pair is a MID-YEAR split -- AEAT re-laid the form from
@@ -180,7 +193,8 @@ def test_modelo_303_snapshot_builds_for_each_quarter() -> None:
 
     # And the retirement is asserted, not merely worked around: the floor
     # refuses rather than silently resolving a 2021 filing under 2022's norms.
-    with pytest.raises(NoRevisionForPeriodError):
+    # The refusal names the floor, because that is what turned 2021 away.
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         build_snapshot(
             modelo,
             catalogues,
@@ -207,7 +221,10 @@ def test_modelo_303_explicit_record_design_revisions_have_one_exact_source() -> 
         )
         assert len(revision.workbook_parity_refs) == 1
         parity = revision.workbook_parity_refs[0]
-        assert parity.id == f"modelo-303-dr-{record_design_source.removeprefix('aeat-dr-303-')}"
+        # The parity id is authored per revision (the 2024 split names its two
+        # halves early/late), so what it proves is asserted through the design
+        # it names rather than through the shape of its id.
+        assert parity.id.startswith("modelo-303-dr")
         assert parity.workbook_source == record_design_source
         assert parity.source_refs == (record_design_source,)
 
@@ -402,7 +419,16 @@ def test_modelo_303_historical_deadline_census_is_exact_and_canonically_owned() 
             for window in revision.deadline_windows
             if window.filing_year == filing_year
         }
-        assert set(actual_by_period) == set(expected_by_period)
+        # Coverage is the year's own declared periods -- both cadences -- while the
+        # table below carries the dates that are grounded one by one.
+        selector_periods = {
+            period
+            for revision in modelo.revisions.values()
+            if revision.period_selector.includes_year(filing_year)
+            for period in revision.period_selector.periods
+        }
+        assert set(actual_by_period) == selector_periods
+        assert set(expected_by_period) <= selector_periods
         for period, dates in expected_by_period.items():
             owner = select_revision(modelo, filing_year=filing_year, period=period)
             window = actual_by_period[period]

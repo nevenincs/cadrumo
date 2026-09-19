@@ -314,6 +314,17 @@ class IdenticalTranslation(NamedTuple):
 # property of the wording, not of the key that happens to store it. Never widened by modelo,
 # prefix or count: each entry is a translation a reviewer checked and found correct as written.
 _LEGITIMATE_IDENTICAL_TRANSLATIONS: dict[tuple[str, str], IdenticalTranslation] = {
+    ("ca", "Indicador de cooperativa protegida [00017]."): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        (
+            "“Indicador de cooperativa protegida” is spelled identically in Catalan; the box "
+            "reference is kept as in the Spanish."
+        ),
+    ),
+    ("ca", "Indicador de gran empresa [00023]."): IdenticalTranslation(
+        IdenticalTranslationClass.SHARED_WORD,
+        ("“Indicador de gran empresa” is spelled identically in Catalan; the box reference is kept as in the Spanish."),
+    ),
     ("ca", "1. Divisa"): IdenticalTranslation(
         IdenticalTranslationClass.SHARED_WORD,
         (
@@ -412,6 +423,12 @@ _LEGITIMATE_IDENTICAL_TRANSLATIONS: dict[tuple[str, str], IdenticalTranslation] 
         IdenticalTranslationClass.SHARED_WORD, "“Matrícula” is spelled identically in Catalan and Spanish."
     ),
     ("ca", "NIF"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM, "NIF is a universal AEAT acronym, unchanged across languages."
+    ),
+    ("en", "NIF"): IdenticalTranslation(
+        IdenticalTranslationClass.ACRONYM, "NIF is a universal AEAT acronym, unchanged across languages."
+    ),
+    ("hu", "NIF"): IdenticalTranslation(
         IdenticalTranslationClass.ACRONYM, "NIF is a universal AEAT acronym, unchanged across languages."
     ),
     ("ca", "NIF DEL PAGADOR ANTERIOR"): IdenticalTranslation(
@@ -616,12 +633,13 @@ def test_no_translated_lineage_leaves_a_row_in_spanish() -> None:
 
 
 def _untranslated_texts(catalogue: ModeloCasillaCatalogue, locale_code: str) -> set[str]:
-    """Return every Spanish label a row renders untranslated in ``locale_code``."""
+    """Return every Spanish label and help text a row renders untranslated in ``locale_code``."""
     lookup = catalogue.lookup_for(catalogue.values)
     return {
         spanish
-        for index, occurrence in enumerate(catalogue.occurrences)
-        if (source := modelo_localization_source(occurrence.chain("label"), locale=locale_code, lookup=lookup))
+        for occurrence in catalogue.occurrences
+        for field_name in ("label", "help")
+        if (source := modelo_localization_source(occurrence.chain(field_name), locale=locale_code, lookup=lookup))
         is not None
         and source[1] != locale_code
         and (spanish := catalogue.values[source[1]][source[0]]) is not None

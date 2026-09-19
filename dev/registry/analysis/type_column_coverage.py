@@ -9,7 +9,11 @@ green run says nothing about it.
 
 That gap widens as editions stop being generated. An edition authored as stated
 rows rather than rendered from a design ships no generation manifest, and a gate
-keyed on manifest presence reads it as absent when it is unexamined.
+keyed on manifest presence reads it as absent when it is unexamined. It widened
+a second way for editions that store their families against a baseline: they
+ship no directory of their own either, and a partition keyed on the listing
+reported twelve of them as read by nobody while the hand-authored screen could
+resolve and compare every one.
 
 This module closes the gap by partitioning every COMPILED revision. Eligibility
 comes from what the edition declares about itself -- whether its compiled record
@@ -34,23 +38,21 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.revision_contracts import DeclaredPredecessor
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
 from ..compiler.authority import compiled_bundled_authority
+from ..compiler.export_fragment_grammar import (
+    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
+    GENERATED_EXPORT_DIRECTORY_NAME,
+)
 
 __all__ = [
-    "GENERATION_MANIFEST_NAME",
     "RevisionTypeColumnCoverage",
     "TypeColumnCoverage",
     "classify_revision",
     "type_column_coverage",
 ]
 
-GENERATION_MANIFEST_NAME: Final[str] = "_generation.provenance.json"
-"""The generated tree's manifest, which the generated-tree gate reads derivations from."""
-
-_GENERATED_TREE: Final[str] = "export"
 _HAND_AUTHORED_TREE: Final[str] = "export_layouts"
 
 
@@ -62,7 +64,7 @@ class TypeColumnCoverage(StrEnum):
     HAND_AUTHORED_LAYOUTS = "hand_authored_layouts"
     """An ``export_layouts`` tree is joined to the pinned design by the hand-authored gate."""
     NO_EXPORT_SURFACE = "no_export_surface"
-    """The compiled revision declares no export layout, so there is no type column to compare."""
+    """The compiled revision resolves no record field, so there is no type column to compare."""
     UNCHECKED = "unchecked"
     """The revision declares an export surface and no instrument reads it, or its artefacts disagree."""
 
@@ -98,17 +100,30 @@ def classify_revision(revision: ModeloRevision, revision_root: Path) -> tuple[Ty
     Returns:
         The coverage state, and a reason for every state other than a clean single instrument.
     """
-    declares_export = bool(revision.export_layouts)
-    has_manifest = (revision_root / _GENERATED_TREE / GENERATION_MANIFEST_NAME).is_file()
-    has_layouts = (revision_root / _HAND_AUTHORED_TREE).is_dir()
+    # Eligibility is a record FIELD, not a layout. A type column types wire
+    # slots, so a layout carrying none -- Modelo 100's five editions declare an
+    # ``xml_dictionary`` layout with no records at all -- has nothing either
+    # instrument could compare and no gap to report. Asking only whether a
+    # layout is declared listed those editions as unread work, when the
+    # comparison is undefined for them rather than unimplemented.
+    declares_export = any(record.fields for layout in revision.export_layouts for record in layout.records)
+    has_manifest = (revision_root / GENERATED_EXPORT_DIRECTORY_NAME / EXPORT_FRAGMENT_PROVENANCE_FILENAME).is_file()
+    # The hand-authored screen reads an authored tree where one exists and the
+    # resolved layout where none does, so a revision resolving record fields is
+    # in its input either way. Keyed on the directory this read "no instrument
+    # reads it" for every edition that stores its layout against a baseline.
+    has_authored_tree = (revision_root / _HAND_AUTHORED_TREE).is_dir()
     if not declares_export:
-        if has_manifest or has_layouts:
+        if has_manifest:
             return (
                 TypeColumnCoverage.UNCHECKED,
-                "an export artefact sits beside a revision whose compiled record declares no export layout",
+                "an export artefact sits beside a revision whose compiled record resolves no record field",
             )
+        # An authored tree beside a revision that resolves no record field is
+        # not an unread artefact: the screen opens it and finds no wire slot to
+        # compare, so there is nothing either instrument could have read.
         return TypeColumnCoverage.NO_EXPORT_SURFACE, None
-    if has_manifest and has_layouts:
+    if has_manifest and has_authored_tree:
         return (
             TypeColumnCoverage.UNCHECKED,
             "ships both a generation manifest and an export_layouts tree; the hand-authored gate skips a "
@@ -116,18 +131,7 @@ def classify_revision(revision: ModeloRevision, revision_root: Path) -> tuple[Ty
         )
     if has_manifest:
         return TypeColumnCoverage.GENERATED_MANIFEST, None
-    if has_layouts:
-        return TypeColumnCoverage.HAND_AUTHORED_LAYOUTS, None
-    delta = (
-        f"; it is delta-authored relative to {revision.predecessor.revision_id!r}"
-        if isinstance(revision.predecessor, DeclaredPredecessor)
-        else ""
-    )
-    return (
-        TypeColumnCoverage.UNCHECKED,
-        f"declares {len(revision.export_layouts)} export layout(s) and ships no generation manifest and no "
-        f"export_layouts tree, so no type-column instrument reads it{delta}",
-    )
+    return TypeColumnCoverage.HAND_AUTHORED_LAYOUTS, None
 
 
 def type_column_coverage(

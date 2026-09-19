@@ -23,6 +23,38 @@ THIS GATE IS EXPECTED TO LAND RED. Per the standing project directive, a red
 signal over a genuine unregistered-file population is the correct report --
 scoping this gate to only the currently-registered set would make it pass
 vacuously and remove the exact visibility it exists to provide.
+
+WHICH CATALOGUE COUNTS AS "REGISTERED" is the whole question, and this module
+previously read the wrong one. ``registry_tree`` is the PUBLISHED view, and it
+carries only the source references that published modelos cite -- the sibling
+``authored_catalogues`` docstring states exactly that, and exists for checks
+about the committed tree's own integrity. But "does a sources entry exist for
+this file" is an authoring-tree fact, and the published projection cannot
+answer it: a source that is authored, hash-pinned and correct, but not cited by
+any published modelo, is simply absent there.
+
+Read against the published view this gate reported 91 of 219 files
+unregistered. Read against the authored tree it reports 2. The difference was
+not corpus debt; every one of those files has a committed sources entry
+(``aeat-dr-200-2010`` in ``legal/is.toml`` names
+``modelo_200/files/02-200-ejercicio-2010-472-kb-pdf.pdf``, which the published
+reading called unregistered). A worklist that is overwhelmingly false positives
+buries the real entries inside it, which is the same loss of visibility this
+gate exists to prevent, arriving through a measurement error instead of a
+narrowing.
+
+The corpus enumeration below is UNCHANGED and still independent. What changed
+is only which catalogue it is compared against, and it changed towards the one
+that can answer the question.
+
+ONE POPULATION IS OUT OF SCOPE, and it is out of scope because a registration
+would be false rather than because the gap is acceptable. A ``SourceReference``
+states a retrieval -- the URL, the date, the digest -- and those come off the
+capture record the ingest harness wrote. A payload that has no capture row has
+none of them, so authoring an entry for it would assert an acquisition nobody
+recorded. The corpus sync module already declares exactly that population and
+checks it for equality, so it cannot grow quietly, and this gate reads that
+declaration rather than keeping a second list of its own.
 """
 
 from __future__ import annotations
@@ -33,8 +65,9 @@ import pytest
 
 from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.core.resources.bundled_data import bundled_path
+from dev.corpus.sync_aeat_record_design_corpus import _UNATTESTED_CORPUS_FILES
 
-from .catalogue_verification_support import _catalogues
+from .catalogue_verification_support import authored_catalogues
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -56,7 +89,7 @@ def _bundled_design_files() -> tuple[Path, ...]:
 
 
 def _registered_corpus_paths() -> frozenset[str]:
-    return frozenset(source.corpus_path for source in _catalogues().sources.values())
+    return frozenset(source.corpus_path for source in authored_catalogues().sources.values())
 
 
 def test_the_corpus_enumeration_reaches_designs_across_many_modelos() -> None:
@@ -65,6 +98,38 @@ def test_the_corpus_enumeration_reaches_designs_across_many_modelos() -> None:
     assert files, "no bundled design file was enumerated at all; the corpus path or suffix set has moved"
     modelos = {path.relative_to(bundled_path(*_DESIGN_ROOT_PARTS)).parts[0] for path in files}
     assert len(modelos) > 10, f"only {len(modelos)} modelo director(ies) reached; the walk has narrowed"
+
+
+def _unattested_corpus_paths() -> frozenset[str]:
+    """Corpus files the ingest census already declares as named by no manifest.
+
+    A ``SourceReference`` states where a file came from and when it was
+    retrieved, and those fields come off the capture record the ingest harness
+    wrote. A payload with no capture row has none of them, so registering it
+    would mean asserting a retrieval nobody recorded -- which is worse than the
+    gap, because it looks like evidence.
+
+    That population is not invented here. The corpus sync module declares it as
+    a census it checks for EQUALITY, so a newly unattested file fails there and
+    so does dropping one from the census without attesting it. Reading that
+    declaration keeps one home for the fact instead of a second allowlist that
+    could drift away from it.
+    """
+    prefix = "/".join(_DESIGN_ROOT_PARTS)
+    return frozenset(f"{prefix}/{relative}" for relative in _UNATTESTED_CORPUS_FILES)
+
+
+def test_the_unattested_census_still_names_only_bundled_design_files() -> None:
+    """The exemption cannot outlive what it exempts.
+
+    A census entry naming a file that is gone, or one outside this gate's own
+    enumeration, would silently widen the exemption while reading as though it
+    covered the same single case.
+    """
+    enumerated = {path.relative_to(bundled_path()).as_posix() for path in _bundled_design_files()}
+
+    stale = sorted(_unattested_corpus_paths() - enumerated)
+    assert not stale, f"the unattested corpus census names files this gate does not enumerate: {stale}"
 
 
 def test_every_bundled_record_design_file_is_registered_by_a_source() -> None:
@@ -79,10 +144,12 @@ def test_every_bundled_record_design_file_is_registered_by_a_source() -> None:
     """
     root = bundled_path(*_DESIGN_ROOT_PARTS)
     registered = _registered_corpus_paths()
+    unattested = _unattested_corpus_paths()
     unregistered = [
         path.relative_to(bundled_path()).as_posix()
         for path in _bundled_design_files()
         if path.relative_to(bundled_path()).as_posix() not in registered
+        and path.relative_to(bundled_path()).as_posix() not in unattested
     ]
     assert not unregistered, (
         f"{len(unregistered)} of {len(_bundled_design_files())} bundled record-design files under "

@@ -4,14 +4,24 @@ modelo:
       casilla:
         continuidad:
           capitalizacion-seguros-resumen-base-negativa:
+            help: Sum of the withholding and payment-on-account bases shown in the
+              records of recipients with a negative base.
             label: Negative base for withholdings and payments on account
           capitalizacion-seguros-resumen-base-positiva:
+            help: Sum of the withholding and payment-on-account bases shown in the
+              records of recipients with a positive base.
             label: Base for withholdings and payments on account
           capitalizacion-seguros-resumen-perceptores-base-negativa:
+            help: Number of recipients (records) whose base for withholdings and payments
+              on account is negative.
             label: Total number of recipients with a negative base
           capitalizacion-seguros-resumen-perceptores-base-positiva:
+            help: Number of recipients (records) whose base for withholdings and payments
+              on account is positive.
             label: Total number of recipients with a positive base
           capitalizacion-seguros-resumen-retenciones:
+            help: Sum of the withholdings and payments on account applied to the declared
+              income.
             label: Withholdings and payments on account
       field:
         official_name: Modelo 188. Withholdings and payments on account. Income from
@@ -29,20 +39,6 @@ modelo:
           field:
             label: Modelo 188, tax year 2022
         2023-y-siguientes:
-          casilla:
-            '01':
-              help: Number of recipients (records) whose withholding base is positive.
-            '02':
-              help: Sum of the withholding bases reported in recipient records with
-                a positive base.
-            '03':
-              help: Sum of the withholdings and payments on account applied to the
-                declared income.
-            '04':
-              help: Number of recipients (records) whose withholding base is negative.
-            '05':
-              help: Sum of the withholding bases reported in recipient records with
-                a negative base.
           construct:
             modelo-188-calculation-construct:
               field:

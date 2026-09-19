@@ -76,7 +76,7 @@ wizard:
       title: Capacitats de serveis
     certificate:
       path:
-        prompt: Introduiu el camí del certificat digital (.p12, .pfx)
+        prompt: Introduïu el camí del certificat digital (.p12, .pfx)
     codes:
       disability-grade:
         choices:
@@ -270,9 +270,9 @@ wizard:
     filing-export:
       charge-iban:
         help: IBAN que l AEAT pot carregar quan una declaració del Model 303 escull
-          la domiciliacio. Es diferent del compte de devolucio.
-        prompt: IBAN per a la domiciliacio de l AEAT
-      title: Compte de carrec del Model 303
+          la domiciliació. Es diferent del compte de devolució.
+        prompt: IBAN per a la domiciliació de l AEAT
+      title: Compte de càrrec del Model 303
     flags:
       activity:
         help: Activitat econòmica en text normal, o epígraf IAE si el coneixes
@@ -283,11 +283,11 @@ wizard:
         help: Codi postal del domicili fiscal
       art109-activity-income-withholding-ge-70pct:
         help: Cobertura Art. 109 - almenys 70% dels ingressos d'activitats professionals,
-          agricoles, ramaderes o forestals subjectes a retenció o ingrés a compte
+          agrícoles, ramaderes o forestals subjectes a retenció o ingrés a compte
       bienes-extranjero-above-threshold:
         help: Béns a l'estranger superen el llindar legal
       charge-iban:
-        help: IBAN que l AEAT pot carregar per a una domiciliacio elegida del Model
+        help: IBAN que l AEAT pot carregar per a una domiciliació elegida del Model
           303.
       cloud-evidence-upload:
         help: Permetre pujar evidència sensible a proveïdors LLM al núvol (desactivat

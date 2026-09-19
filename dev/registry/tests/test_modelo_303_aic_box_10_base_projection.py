@@ -24,7 +24,6 @@ tree) and confirms the position assertion catches the reintroduced defect.
 
 from __future__ import annotations
 
-import shutil
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
@@ -43,7 +42,7 @@ from cadrumo.domain.iva.flow import IvaFlowDirection
 from cadrumo.domain.iva.schema import IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 from ..compiler.loader import load_registry_tree
-from ._gate_support import fragment_declaring
+from ._gate_support import mutate_declaration, scratch_registry_tree
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
@@ -155,51 +154,15 @@ def test_zero_rate_aic_row_reaches_box_10_base_and_every_aic_binding_admits_it()
 
 def test_mutation_removing_zero_from_aic_base_selector_reds_the_zero_rate_gate(tmp_path: Path) -> None:
     """Removing zero on a scratch registry makes the real base assertion fail."""
-    bundled_root = _bundled_registry_root()
-    scratch_root = tmp_path / "registry-mutant" / "aeat"
-    (scratch_root / "modelos").mkdir(parents=True)
-    shutil.copytree(bundled_root / "modelos" / "303", scratch_root / "modelos" / "303")
-    for catalogue_dir in (
-        "apoderamientos",
-        "categories",
-        "iva",
-        "legal",
-        "topics",
-    ):
-        source = bundled_root / catalogue_dir
-        if source.is_dir():
-            shutil.copytree(source, scratch_root / catalogue_dir)
-        elif source.exists():
-            shutil.copy2(source, scratch_root / catalogue_dir)
-
-    bindings_path = fragment_declaring(
-        scratch_root / "modelos" / "303" / "revisions" / _REVISION_ID / "bindings",
-        f'id = "{_BINDING_BASE}"',
+    scratch_root = scratch_registry_tree(tmp_path, "303")
+    mutate_declaration(
+        scratch_root / "modelos" / "303",
+        revision_id=_REVISION_ID,
+        section="bindings",
+        member=f'id = "{_BINDING_BASE}"',
+        find='rate_kinds = ["zero", "general", "reduced", "super_reduced"]',
+        replace='rate_kinds = ["general", "reduced", "super_reduced"]',
     )
-    original = bindings_path.read_text(encoding="utf-8")
-    mutated = original.replace(
-        "\n".join(
-            (
-                'categories = ["intra_community_acquisition_reverse_charge", '
-                '"intra_community_service_acquisition_reverse_charge"]',
-                'rate_kinds = ["zero", "general", "reduced", "super_reduced"]',
-                'flow_direction = "inversion_sujeto_pasivo"',
-                'fact = "base_amount_sum"',
-            )
-        ),
-        "\n".join(
-            (
-                'categories = ["intra_community_acquisition_reverse_charge", '
-                '"intra_community_service_acquisition_reverse_charge"]',
-                'rate_kinds = ["general", "reduced", "super_reduced"]',
-                'flow_direction = "inversion_sujeto_pasivo"',
-                'fact = "base_amount_sum"',
-            )
-        ),
-        1,
-    )
-    assert mutated != original, "the mutation target string was not found -- test is stale"
-    bindings_path.write_text(mutated, encoding="utf-8")
 
     aic_row = IvaLedgerObservation(
         ledger_id="aic-goods-zero-mutant",
@@ -228,40 +191,16 @@ def test_mutation_reverting_box_10_to_manual_reds_the_gate(tmp_path: Path) -> No
     the registry tree (never the tracked file) and confirm the position test
     above would have caught it.
     """
-    bundled_root = _bundled_registry_root()
-    scratch_root = tmp_path / "registry-mutant" / "aeat"
-    (scratch_root / "modelos").mkdir(parents=True)
-    shutil.copytree(bundled_root / "modelos" / "303", scratch_root / "modelos" / "303")
-    for catalogue_dir in (
-        "apoderamientos",
-        "categories",
-        "iva",
-        "legal",
-        "topics",
-    ):
-        source = bundled_root / catalogue_dir
-        if source.is_dir():
-            shutil.copytree(source, scratch_root / catalogue_dir)
-        elif source.exists():
-            shutil.copy2(source, scratch_root / catalogue_dir)
-
-    casillas_path = (
-        scratch_root
-        / "modelos"
-        / "303"
-        / "revisions"
-        / _REVISION_ID
-        / "casillas"
-        / "civa.repercutido.general__c21.toml"
+    scratch_root = scratch_registry_tree(tmp_path, "303")
+    # Box 10's derivation is delta-authored as a casilla override, so the
+    # revert drops the formula from that override rather than from a row.
+    mutate_declaration(
+        scratch_root / "modelos" / "303",
+        revision_id=_REVISION_ID,
+        section="casillas",
+        find=f'formula = "{_FORMULA_BOX_10}", input_kind = "computed"',
+        replace='input_kind = "manual"',
     )
-    original = casillas_path.read_text(encoding="utf-8")
-    mutated = original.replace(
-        'input_kind = "computed"\nformula = "modelo-303-dr303-10-projection"',
-        'input_kind = "manual"',
-        1,
-    )
-    assert mutated != original, "the mutation target string was not found -- test is stale"
-    casillas_path.write_text(mutated, encoding="utf-8")
 
     mutated_revision = _m303_revision(scratch_root)
     mutated_box_10 = {c.id: c for c in mutated_revision.casillas}["10"]

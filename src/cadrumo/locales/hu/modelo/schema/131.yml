@@ -36,11 +36,10 @@ modelo:
           irpf-pf-modulos-indice-inicio-actividad:
             label: 'Korrekciós index új tevékenységek indítására (b.4 pont, 2025-01-01
               után kizárólagos helyiségben indított tevékenység). Az üzemeltető által
-              megadott index (0,80/0,90; 0,60/0,70 legalább 33%-os fogyatékosság esetén,
-              HAC/1425/2025 rendelet II. melléklet, 2.3.b.4 utasítás); a motor nem
-              modellezi az indítás évét vagy a fogyatékosságot. Összeegyeztethetetlen
-              a szezonális indexszel (b.2): ha mindkettőt megadják, a szezonális index
-              érvényesül.'
+              megadott index (0,80/0,90; 0,60/0,70 ≥33%-os fogyatékosság esetén, HAC/1425/2025
+              rendelet II. melléklet, 2.3.b.4 utasítás); a motor nem modellezi az
+              indítás évét vagy a fogyatékosságot. Összeegyeztethetetlen a szezonális
+              indexszel (b.2): ha mindkettőt megadják, a szezonális index érvényesül.'
           irpf-pf-modulos-indice-pequena-dimension:
             label: Korrekciós index kisvállalkozások számára (b.1 pont - egy településen,
               egyetlen helyiségben, alkalmazott nélkül vagy legfeljebb 2 alkalmazottal).
@@ -96,7 +95,7 @@ modelo:
           pago-fraccionado-previo-agrario:
             label: Előzetes mezőgazdasági előlegfizetés
           pago-fraccionado-previo-datos-base:
-            label: Előzetes előlegfizetés alapadatok szerint (datos-base)
+            label: Előzetes előlegfizetés alapadatok szerint
           pago-fraccionado-previo-sin-datos-base:
             label: Előzetes előlegfizetés alapadatok nélkül
           prestamo-vivienda-habitual:
@@ -104,7 +103,7 @@ modelo:
           resultado-anteriores-autoliquidaciones:
             label: Korábbi önadózásokból befizetendő eredmény
           retenciones-ingresos-a-cuenta:
-            label: Forrásadó és előlegfizetés
+            label: Forrásadó és részletfizetés
       field:
         official_name: Modelo 131. IRPF. Objektív megállapítás alá tartozó vállalkozók
           és szakemberek. Részletfizetés.
@@ -114,7 +113,7 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es modelo: negyedéves előlegfizetés az objektív becslés
+                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
                   rendszerében (2019-2023 közötti adóévek)'
           field:
             label: 2019-2023. adóévek
@@ -166,7 +165,7 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es modelo: negyedéves előlegfizetés az objektív becslés
+                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
                   rendszerében (2024. adóév)'
           field:
             label: Adóév 2024
@@ -178,7 +177,7 @@ modelo:
               label: '1. modul (Alkalmazott személyzet): egységek száma az előző adóévben
                 (2024), a foglalkoztatási kedvezmény csökkentéséhez'
             modulos-indice-inicio-actividad:
-              label: 'Korrekciós index új tevékenységek indítására (b.4 pont, 2023-01-01
+              label: 'Korrekciós index új tevékenységek indítására (b.4 pont, 2024-01-01
                 után kizárólagos helyiségben indított tevékenység). Az üzemeltető
                 által megadott index (0,80/0,90; 0,60/0,70 ≥33%-os fogyatékosság esetén,
                 HAC/1347/2024 rendelet II. melléklet, 2.3.b.4 utasítás); a motor nem
@@ -223,7 +222,7 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es modelo: negyedéves előlegfizetés az objektív becslés
+                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
                   rendszerében (2025. adóév)'
           field:
             label: Adóév 2025
@@ -246,7 +245,7 @@ modelo:
           construct:
             modelo-131-objective-estimation-instalment:
               field:
-                title: '131-es modelo: negyedéves előlegfizetés az objektív becslés
+                title: '131-es nyomtatvány: negyedéves előlegfizetés az objektív becslés
                   rendszerében (2026. adóév)'
           field:
             label: Adóév 2026

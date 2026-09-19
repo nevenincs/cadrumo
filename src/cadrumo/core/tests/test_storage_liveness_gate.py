@@ -346,7 +346,17 @@ def test_every_dormant_member_states_a_reason_and_really_is_dormant() -> None:
         if location.dormant_reason is None:
             continue
         assert location.dormant_reason.strip(), f"{location.category.value} declares an empty dormant reason"
-        for module, tree in _production_trees():
+        names = {location.category.name} | ({location.settings_field} if location.settings_field else set())
+        for module, tree, source in _production_trees():
+            # A module that never spells either name cannot reference the
+            # member, and the two walks below would both come back empty. The
+            # loop is one pass over every production module PER dormant member,
+            # so this substring test replaces the great majority of those walks
+            # without changing which modules can contribute evidence: both
+            # `declares_field` and `consumption_evidence` key on these very
+            # names appearing in the tree.
+            if not any(name in source for name in names):
+                continue
             if location.settings_field is not None and declares_field(tree, location.settings_field):
                 continue
             if consumption_evidence(
@@ -369,15 +379,19 @@ _TAXONOMY_DECLARATION_MODULES = frozenset(
 
 
 @cache
-def _production_trees() -> tuple[tuple[str, ast.AST], ...]:
-    """Every production module, parsed once.
+def _production_trees() -> tuple[tuple[str, ast.AST, str], ...]:
+    """Every production module as ``(relative path, parsed tree, source text)``, read once.
+
+    The source text rides along because the dormancy sweep is quadratic -- every
+    production module, once per dormant member -- and a substring test on the
+    text retires most of those iterations before either tree walk starts.
 
     Test modules are excluded deliberately: a fixture that sets a field proves
     only that the field can be set, not that anything reads it back. Three of
     the four dormant members are set by test fixtures and consumed by nothing,
     which is precisely the shape a test-inclusive sweep would have missed.
     """
-    trees: list[tuple[str, ast.AST]] = []
+    trees: list[tuple[str, ast.AST, str]] = []
     for path in scan_directory(SRC_CADRUMO, pattern="*.py", recursive=True):
         relative = path.relative_to(SRC_CADRUMO).as_posix()
         # Both declaration modules are excluded: a member's own declaration
@@ -386,8 +400,9 @@ def _production_trees() -> tuple[tuple[str, ast.AST], ...]:
         # split out of the taxonomy module and inherited that requirement.
         if "/tests/" in f"/{relative}" or relative.startswith("tests/") or relative in _TAXONOMY_DECLARATION_MODULES:
             continue
+        source = path.read_text(encoding="utf-8")
         try:
-            trees.append((relative, ast.parse(path.read_text(encoding="utf-8"))))
+            trees.append((relative, ast.parse(source), source))
         except SyntaxError:  # pragma: no cover - a syntactically broken module fails elsewhere
             continue
     return tuple(trees)

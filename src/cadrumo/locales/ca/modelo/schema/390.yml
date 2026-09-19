@@ -115,19 +115,19 @@ modelo:
             label: IVA meritat - Suma de quotes d'activitats no agrícoles, ramaderes
               i forestals
           iva-anual-regimen-simplificado-entrega-activos-fijos-cuota-devengada:
-            label: IVA meritat en lliuraments de activos fixos
+            label: IVA meritat en lliuraments de actius fixos
           iva-anual-regimen-simplificado-inversion-sujeto-pasivo-cuota-devengada:
             label: IVA meritat per inversió del subjecte passiu
           iva-anual-regimen-simplificado-iva-soportado-activos-fijos:
-            label: Deduccions - IVA suportat en adquisició de activos fixos
+            label: Deduccions - IVA suportat en adquisició de actius fixos.
           iva-anual-regimen-simplificado-regularizacion-bienes-inversion:
-            label: Deduccions - Regularització de béns de inversió
+            label: Deduccions - Regularització de béns de inversió.
           iva-anual-regimen-simplificado-resultado:
-            label: Resultat règim simplificado
+            label: Resultat règim simplificat
           iva-anual-regimen-simplificado-suma-deducciones:
             label: Deduccions - Suma de deduccions
           iva-anual-regularizacion-bienes-inversion:
-            label: Regularització de béns d'inversió
+            label: Regularització de béns d'inversió (LIVA arts. 107-110)
           iva-anual-regularizacion-prorrata-definitiva:
             label: Regularització de prorrata per percentatge definitiu - quota
           iva-anual-repercutido-recargo-tipo-0-26-base:
@@ -210,7 +210,8 @@ modelo:
           iva-compensacion-cuotas-ejercicio-anterior:
             label: Compensació de quotes de l'exercici anterior
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+            label: Quota d'IVA autorepercutit en adquisicions intracomunitàries (LIVA
+              art. 84.Uno.2)
           iva-cuota-recargo-equivalencia-general:
             label: Recàrrec d'equivalència al tipus general (5,2%) - quota
           iva-cuota-recargo-equivalencia-reducido:
@@ -220,15 +221,15 @@ modelo:
           iva-cuota-recargo-equivalencia-tipo-0-26:
             label: Recàrrec d'equivalència al 0,26% - quota
           iva-cuota-recargo-equivalencia-tipo-0-5:
-            label: Recàrrec d'equivalència al 0,5% - quota
+            label: Recàrrec d'equivalència al tipus 0,5% - quota
           iva-cuota-recargo-equivalencia-tipo-0-62:
             label: Recàrrec d'equivalència al 0,62% - quota
           iva-cuota-recargo-equivalencia-tipo-1:
             label: Recàrrec d'equivalència al 1% - quota
           iva-cuota-recargo-equivalencia-tipo-1-4:
-            label: Recàrrec d'equivalència al 1,4% - quota
+            label: Recàrrec d'equivalència al tipus 1,4% - quota
           iva-cuota-recargo-equivalencia-tipo-5-2:
-            label: Recàrrec d'equivalència al 5,2% - quota
+            label: Recàrrec d'equivalència al tipus 5,2% - quota
           iva-cuota-repercutida-general:
             label: Quota IVA repercutit al tipus general (21%)
           iva-cuota-repercutida-reducido:
@@ -251,6 +252,7 @@ modelo:
             label: Quota d'IVA repercutit al tipus 7,5%
           iva-cuota-soportada-importaciones:
             label: Quota d'IVA suportat deduïble en importacions de béns corrents
+              (LIVA art. 17 + art. 92; casella oficial 33)
           iva-cuota-soportada-interiores:
             label: Quota IVA suportat en operacions interiors corrents
           iva-deducible-aic-corrientes-tipo-10-base:
@@ -649,7 +651,8 @@ modelo:
             label: Base imposable de l'IVA autorepercutit en operacions interiors
               amb inversió del subjecte passiu
           iva-isp-interior-cuota:
-            label: IVA autorepercutit meritat en operacions interiors
+            label: IVA autorepercutit meritat en operacions interiors (LIVA art. 84.Uno.2;
+              casella oficial 13)
           iva-liquidaciones-total-a-ingresar:
             label: Total resultats a ingressar de les autoliquidacions d'IVA de l'exercici
           iva-liquidaciones-total-devoluciones-elementos-transporte:
@@ -1203,9 +1206,11 @@ modelo:
               help: Base imposable de l'IVA autorepercutit en operacions interiors
                 amb inversió del subjecte passiu
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: IVA autorepercutit meritat en operacions interiors
+              help: Quota d'IVA autorepercutida en operacions interiors amb inversió
+                del subjecte passiu (LIVA art. 84.Uno.2; casella oficial 13).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
-              help: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+              help: Quota d'IVA autorepercutida en adquisicions intracomunitàries
+                (LIVA art. 84.Uno.2).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Compensació de quotes de l'exercici anterior
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -1593,23 +1598,21 @@ modelo:
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
               help: 'Consulteu la informació de la casella: IVA meritat en lliuraments
-                de activos fixos.'
+                de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
               help: 'Consulteu la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'Consulteu la informació de la casella: Deduccions - IVA suportat
-                en adquisició de activos fixos.'
+              help: Deduccions - IVA suportat en adquisició de actius fixos.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'Consulteu la informació de la casella: Deduccions - Regularització
-                de béns de inversió.'
+              help: Deduccions - Regularització de béns de inversió.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Consulteu la informació de la casella: Resultat règim simplificado.'
+              help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Regularització de béns d'inversió
+              help: Regularització per béns d'inversió (LIVA arts. 107-110).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: Regularització de quotes de l'art. 80.Cinc.5a LIVA
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
@@ -1710,11 +1713,11 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj2c5pma:
               help: Recàrrec d'equivalència al tipus 0,5% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: Recàrrec d'equivalència al 0,5% - quota
+              help: Recàrrec d'equivalència al tipus 0,5% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: Recàrrec d'equivalència al tipus 1,4% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: Recàrrec d'equivalència al 1,4% - quota
+              help: Recàrrec d'equivalència al tipus 1,4% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ec9gn6p8:
               help: Recàrrec d'equivalència al tipus 1,75% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ecdqmut31:
@@ -1722,7 +1725,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj2c5pma:
               help: Recàrrec d'equivalència al tipus 5,2% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: Recàrrec d'equivalència al 5,2% - quota
+              help: Recàrrec d'equivalència al tipus 5,2% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: Quota d'IVA repercutit al tipus reduït (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
@@ -1915,6 +1918,7 @@ modelo:
               help: Sector diferenciat 3 - Suma de deduccions [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
               help: Quota d'IVA suportat deduïble en importacions de béns corrents
+                (LIVA art. 17 + art. 92; casella oficial 33).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Quota IVA suportat en operacions interiors corrents
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
@@ -2082,9 +2086,11 @@ modelo:
               help: Base imposable de l'IVA autorepercutit en operacions interiors
                 amb inversió del subjecte passiu
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: IVA autorepercutit meritat en operacions interiors
+              help: Quota d'IVA autorepercutida en operacions interiors amb inversió
+                del subjecte passiu (LIVA art. 84.Uno.2; casella oficial 13).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
-              help: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+              help: Quota d'IVA autorepercutida en adquisicions intracomunitàries
+                (LIVA art. 84.Uno.2).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Compensació de quotes de l'exercici anterior
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -2472,23 +2478,21 @@ modelo:
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
               help: 'Consulteu la informació de la casella: IVA meritat en lliuraments
-                de activos fixos.'
+                de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
               help: 'Consulteu la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'Consulteu la informació de la casella: Deduccions - IVA suportat
-                en adquisició de activos fixos.'
+              help: Deduccions - IVA suportat en adquisició de actius fixos.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'Consulteu la informació de la casella: Deduccions - Regularització
-                de béns de inversió.'
+              help: Deduccions - Regularització de béns de inversió.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Consulteu la informació de la casella: Resultat règim simplificado.'
+              help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Regularització de béns d'inversió
+              help: Regularització per béns d'inversió (LIVA arts. 107-110).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: Regularització de quotes de l'art. 80.Cinc.5a LIVA
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
@@ -2589,11 +2593,11 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj2c5pma:
               help: Recàrrec d'equivalència al tipus 0,5% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: Recàrrec d'equivalència al 0,5% - quota
+              help: Recàrrec d'equivalència al tipus 0,5% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: Recàrrec d'equivalència al tipus 1,4% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: Recàrrec d'equivalència al 1,4% - quota
+              help: Recàrrec d'equivalència al tipus 1,4% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ec9gn6p8:
               help: Recàrrec d'equivalència al tipus 1,75% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ecdqmut31:
@@ -2601,7 +2605,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj2c5pma:
               help: Recàrrec d'equivalència al tipus 5,2% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: Recàrrec d'equivalència al 5,2% - quota
+              help: Recàrrec d'equivalència al tipus 5,2% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: Quota d'IVA repercutit al tipus reduït (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
@@ -2790,6 +2794,7 @@ modelo:
               help: Sector diferenciat 3 - Suma de deduccions [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
               help: Quota d'IVA suportat deduïble en importacions de béns corrents
+                (LIVA art. 17 + art. 92; casella oficial 33).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Quota IVA suportat en operacions interiors corrents
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:
@@ -2981,9 +2986,11 @@ modelo:
               help: Base imposable de l'IVA autorepercutit en operacions interiors
                 amb inversió del subjecte passiu
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst35e9kmushecdqmut31:
-              help: IVA autorepercutit meritat en operacions interiors
+              help: Quota d'IVA autorepercutida en operacions interiors amb inversió
+                del subjecte passiu (LIVA art. 84.Uno.2; casella oficial 13).
             x-d5r62bj1dpqm2r1ec5qn8rriclo6asj3elq6ip3f5pkmst3ic5hmurbldpkn8obid5gg:
-              help: Quota d'IVA autorepercutit en adquisicions intracomunitàries
+              help: Quota d'IVA autorepercutida en adquisicions intracomunitàries
+                (LIVA art. 84.Uno.2).
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qorldtq62spdcll6asj3d5hmirpdc5n78pbid5nn4:
               help: Compensació de quotes de l'exercici anterior
             x-d5r62bj1dpqm2r1ecdnmqs35dppm2or9dtn2qpr5dpin4ob4c4mmaqj5e9hmior9dsmmsrpd74rg:
@@ -3371,23 +3378,21 @@ modelo:
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pimst3icljm2bb1cdq6itjfecmmcqbadtpg:
               help: 'Consulteu la informació de la casella: IVA meritat en lliuraments
-                de activos fixos.'
+                de actius fixos.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pkmstj5e9pmirre5lpnaqj5ehniqs31edkncro:
               help: 'Consulteu la informació de la casella: IVA meritat per inversió
                 del subjecte passiu.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pknco9dednn0rriehgm8rpdc5hn8qbmdtpiqpj9d9nn6:
-              help: 'Consulteu la informació de la casella: Deduccions - IVA suportat
-                en adquisició de activos fixos.'
+              help: Deduccions - IVA suportat en adquisició de actius fixos.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6aprldhgn4qbqc5hmirre5lh6ipbeclpiqqbeepin4sr9dtn0:
-              help: 'Consulteu la informació de la casella: Deduccions - Regularització
-                de béns de inversió.'
+              help: Deduccions - Regularització de béns de inversió.
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5pp6asrldhq62p3f:
-              help: 'Consulteu la informació de la casella: Resultat règim simplificado.'
+              help: 'Consulteu la informació de la casella: Resultat règim simplificat.'
             x-d5r62bj1dpqm2r1ee9imeqbdcln2qsr9dlo6oqb6d5hm2p3f5ppnarb15li6ap3lcdhmirreclpg:
               help: Informació fiscal sobre informació fiscal de la casella 82 del
                 Modelo 390.
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdc9kmarj5ecmmirjmclp76qbfdo:
-              help: Regularització de béns d'inversió
+              help: Regularització per béns d'inversió (LIVA arts. 107-110).
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhdcdqmut31ecmm2sjk5ks30bb3d5n66rpd6k:
               help: Regularització de quotes de l'art. 80.Cinc.5a LIVA
             x-d5r62bj1dpqm2r1ee9imetbcc5p6iuj1cdkmurhde1p6usjic5q62bb4clj6irj9ehknco8:
@@ -3488,11 +3493,11 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj2c5pma:
               help: Recàrrec d'equivalència al tipus 0,5% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd60mjabj3elnn8o8:
-              help: Recàrrec d'equivalència al 0,5% - quota
+              help: Recàrrec d'equivalència al tipus 0,5% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj2c5pma:
               help: Recàrrec d'equivalència al tipus 1,4% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mj8bj3elnn8o8:
-              help: Recàrrec d'equivalència al 1,4% - quota
+              help: Recàrrec d'equivalència al tipus 1,4% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ec9gn6p8:
               help: Recàrrec d'equivalència al tipus 1,75% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd64mjed9ecdqmut31:
@@ -3500,7 +3505,7 @@ modelo:
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj2c5pma:
               help: Recàrrec d'equivalència al tipus 5,2% - base imposable
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb3c5p6erpeehkn0rpd6kmj4bj3elnn8o8:
-              help: Recàrrec d'equivalència al 5,2% - quota
+              help: Recàrrec d'equivalència al tipus 5,2% - quota
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f:
               help: Quota d'IVA repercutit al tipus reduït (10%)
             x-d5r62bj1dpqm2r1ee9in0pbicdqn8qb4dsn74pb4elhmip3f5ph62sr5:
@@ -3689,6 +3694,7 @@ modelo:
               help: Sector diferenciat 3 - Suma de deduccions [189]
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5mn0rriehgm6qbfdpin6:
               help: Quota d'IVA suportat deduïble en importacions de béns corrents
+                (LIVA art. 17 + art. 92; casella oficial 33).
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj:
               help: Quota IVA suportat en operacions interiors corrents
             x-d5r62bj1dpqm2r1eednn0rriehgm8rped5n78pbid5nn4pbj5ph62sr5:

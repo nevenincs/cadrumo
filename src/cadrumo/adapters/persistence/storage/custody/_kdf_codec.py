@@ -7,6 +7,7 @@ import ctypes
 import os
 import queue
 import struct
+import sys
 from contextlib import suppress
 from typing import Final, cast
 
@@ -106,25 +107,36 @@ def close_fd(fd: int | None) -> None:
 
 
 def windows_available_memory_bytes() -> int:
-    class _MemoryStatus(ctypes.Structure):
-        _fields_ = [
-            ("dwLength", ctypes.c_ulong),
-            ("dwMemoryLoad", ctypes.c_ulong),
-            ("ullTotalPhys", ctypes.c_ulonglong),
-            ("ullAvailPhys", ctypes.c_ulonglong),
-            ("ullTotalPageFile", ctypes.c_ulonglong),
-            ("ullAvailPageFile", ctypes.c_ulonglong),
-            ("ullTotalVirtual", ctypes.c_ulonglong),
-            ("ullAvailVirtual", ctypes.c_ulonglong),
-            ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
-        ]
+    """Return available physical bytes from ``GlobalMemoryStatusEx``.
 
-    status = _MemoryStatus()
-    status.dwLength = ctypes.sizeof(status)
-    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    if not kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
-        raise OSError(ctypes.get_last_error(), "GlobalMemoryStatusEx failed")
-    return int(status.ullAvailPhys)
+    The ``sys.platform == "win32"`` block, rather than a guard at the call
+    site or an early return, is what establishes the platform for the Windows
+    API below: it is the only guard shape every checker this project runs
+    narrows on, so those references resolve when the tree is analysed for a
+    platform that does not ship them.
+    """
+    if sys.platform == "win32":
+
+        class _MemoryStatus(ctypes.Structure):
+            _fields_ = [
+                ("dwLength", ctypes.c_ulong),
+                ("dwMemoryLoad", ctypes.c_ulong),
+                ("ullTotalPhys", ctypes.c_ulonglong),
+                ("ullAvailPhys", ctypes.c_ulonglong),
+                ("ullTotalPageFile", ctypes.c_ulonglong),
+                ("ullAvailPageFile", ctypes.c_ulonglong),
+                ("ullTotalVirtual", ctypes.c_ulonglong),
+                ("ullAvailVirtual", ctypes.c_ulonglong),
+                ("ullAvailExtendedVirtual", ctypes.c_ulonglong),
+            ]
+
+        status = _MemoryStatus()
+        status.dwLength = ctypes.sizeof(status)
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        if not kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+            raise OSError(ctypes.get_last_error(), "GlobalMemoryStatusEx failed")
+        return int(status.ullAvailPhys)
+    raise OSError("GlobalMemoryStatusEx is not available on this platform")
 
 
 __all__ = [

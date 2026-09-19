@@ -296,19 +296,26 @@ def test_record_design_pdf_corpus_is_discovered_and_parseable() -> None:
     assert sum(len(sheet.fields) for sheets in parsed.values() for sheet in sheets) > len(field_row_pdfs)
 
 
-def test_every_provenance_only_design_still_refuses_to_parse() -> None:
+def test_every_provenance_only_design_still_earns_its_stamp() -> None:
     """The declaration's teeth: a provenance stamp must stay earned.
 
     ``design_authority = "provenance_only"`` takes a design out of the
     parseability sweeps, so on its own it is an exemption anyone could hand out.
-    This is the cross-check against physical evidence that keeps it honest: every
-    stamped design must ACTUALLY still refuse to parse. The day one parses
-    cleanly, this gate reds and forces the promotion reconsideration the modelo
-    184 regression already asks for -- "reconsider promotion only when strict
-    parsing produces complete records starting at position 1".
+    This is the cross-check that keeps it honest, and the stamp is earned two
+    ways, because the field covers two situations the docstring names and only
+    one of them is about parsing.
+
+    A raw BOE orden carrying a design as an annex cannot be read as a layout map:
+    it refuses outright, yields no sheet, or -- as modelo 184's 2015 orden does
+    today -- hands back sheets while recording that whole position ranges went
+    unread, which the reader states rather than passing off as a whole record. A
+    partial read is not a clean parse, and treating a bare "did not raise" as one
+    reds this gate the moment the reader gets better at recovering damage.
 
     Mis-stamping a genuinely authoritative design would otherwise drop it from
-    parse coverage in silence, which is the one way this field can do harm.
+    parse coverage in silence, which is the one way this field can do harm: a
+    stamped design that reads as a complete record still reds here, which is the
+    promotion criterion its sibling gate states in the same words.
     """
     _, catalogues = _committed_registry_tree()
     stamped = sorted(
@@ -319,17 +326,19 @@ def test_every_provenance_only_design_still_refuses_to_parse() -> None:
 
     assert stamped, "no design is stamped provenance_only; this gate would pass vacuously"
 
-    parsed_anyway = []
+    unearned = []
     for source_id, path in stamped:
         try:
-            extract_record_design(path)
+            extraction = extract_record_design(path)
         except RegistryValidationError:
             continue
-        parsed_anyway.append(source_id)
+        if not extraction.sheets or extraction.skipped:
+            continue
+        unearned.append(source_id)
 
-    assert not parsed_anyway, (
-        "these designs are stamped provenance_only but parse cleanly, so the stamp is no longer "
-        f"earned -- promote them or correct the stamp: {parsed_anyway}"
+    assert not unearned, (
+        "these designs are stamped provenance_only but read as complete records, so the stamp "
+        f"is no longer earned -- promote them or correct the stamp: {unearned}"
     )
 
 

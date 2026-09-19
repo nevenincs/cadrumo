@@ -74,11 +74,15 @@ def _cross_modelo_source(revision: ModeloRevision, owning_modelo: str) -> set[st
 
     Reads BOTH declaration sites, because the registry expresses the same
     relationship two ways and either alone undercounts. Querying only the
-    relation site returns four pairs where five exist: the grupo pair
+    annual-summary site returns five pairs where six exist: the grupo pair
     (M353 against M322) is declared as a ``previous_filing`` binding carrying a
-    cross-modelo ``source_modelo``, never as a relation. A gate built on the
-    relation list alone would pass over that pair permanently -- which is the
-    same blind spot that let the M390 divergence ship.
+    cross-modelo ``source_modelo``, never as an annual summary. A gate built on
+    the annual-summary site alone would pass over that pair permanently -- which
+    is the same blind spot that let the M390 divergence ship.
+
+    Both sites are bindings: an annual summary is a ``relation_prefill`` binding
+    whose selector declares ``relation_kind = "annual_summary"`` alongside the
+    counterpart ``source_modelo``.
 
     Narrowed to the two RECONCILIATION shapes by their declared semantics, not
     by an id list. A cross-modelo dependency is not automatically a
@@ -89,17 +93,15 @@ def _cross_modelo_source(revision: ModeloRevision, owning_modelo: str) -> set[st
     makes category parity meaningful for them.
     """
     counterparts: set[str] = set()
-    for relation in getattr(revision, "relations", ()):
-        if str(getattr(relation, "kind", "")) != "annual_summary":
-            continue
-        source = getattr(relation, "source_modelo", None)
-        if source is not None and str(source) != owning_modelo:
-            counterparts.add(str(source))
     for binding in revision.bindings:
-        if binding.source != BindingSourceKind.PREVIOUS_FILING:
-            continue
         selector = selector_as_dict(binding)
-        if str(selector.get("grouping") or "") != "per_grupo_member":
+        if binding.source == BindingSourceKind.RELATION_PREFILL:
+            if str(selector.get("relation_kind") or "") != "annual_summary":
+                continue
+        elif binding.source == BindingSourceKind.PREVIOUS_FILING:
+            if str(selector.get("grouping") or "") != "per_grupo_member":
+                continue
+        else:
             continue
         source = selector.get("source_modelo")
         if source is not None and str(source) != owning_modelo:

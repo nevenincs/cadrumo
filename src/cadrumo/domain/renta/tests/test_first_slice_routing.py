@@ -20,7 +20,7 @@ import pytest
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.modelo import Modelo
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.errors import NoRevisionForPeriodError
+from ...calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ...calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     renta_first_slice_binding_target_casillas,
 )
@@ -220,5 +220,5 @@ def test_modelo_100_snapshots_build_cleanly_across_every_revision(operation: Pin
         assert snapshot.revision.id == str(year)
 
     for year in (year for year in authored_years if year < floor):
-        with pytest.raises(NoRevisionForPeriodError):
+        with pytest.raises(FilingYearOutsideSupportEnvelopeError):
             operation.snapshot(Modelo("100"), filing_year=year, period="0A")

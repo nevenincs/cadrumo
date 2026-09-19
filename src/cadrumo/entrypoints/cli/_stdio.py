@@ -79,29 +79,32 @@ def _set_windows_console_utf8() -> None:
     calls are best-effort: they succeed silently in a real console and
     are no-ops (return 0, which we ignore) in redirected / piped output
     where code-page switching has no effect.
-    """
-    if sys.platform != "win32":
-        return
-    try:
-        import ctypes
 
-        # The ``sys.platform != "win32"`` guard above narrows the platform, so
-        # ``ctypes.windll`` resolves without a suppression.
-        k32 = ctypes.windll.kernel32
-        k32.SetConsoleOutputCP(65001)
-        k32.SetConsoleCP(65001)
-    except Exception as exc:
-        # Best-effort: non-fatal when ctypes or windll is unavailable
-        # (redirected / piped output where code-page switching is a
-        # no-op). Surface the cause at debug level so diagnostic
-        # captures see why the console code page was not switched —
-        # silent ``pass`` would hide a real misconfiguration on
-        # genuine Windows consoles where this is expected to work.
-        _LOGGER.debug(
-            "windows console UTF-8 switch skipped: %s: %s",
-            type(exc).__name__,
-            exc,
-        )
+    The ``sys.platform == "win32"`` block, rather than an early return off
+    Windows, is what establishes the platform for the ``ctypes`` Windows API
+    below: it is the only guard shape every checker this project runs narrows
+    on, so those references resolve when the tree is analysed for a platform
+    that does not ship them.
+    """
+    if sys.platform == "win32":
+        try:
+            import ctypes
+
+            k32 = ctypes.windll.kernel32
+            k32.SetConsoleOutputCP(65001)
+            k32.SetConsoleCP(65001)
+        except Exception as exc:
+            # Best-effort: non-fatal when ctypes or windll is unavailable
+            # (redirected / piped output where code-page switching is a
+            # no-op). Surface the cause at debug level so diagnostic
+            # captures see why the console code page was not switched —
+            # silent ``pass`` would hide a real misconfiguration on
+            # genuine Windows consoles where this is expected to work.
+            _LOGGER.debug(
+                "windows console UTF-8 switch skipped: %s: %s",
+                type(exc).__name__,
+                exc,
+            )
 
 
 # ``cadrumo.core.logging`` cannot be imported at this layer without

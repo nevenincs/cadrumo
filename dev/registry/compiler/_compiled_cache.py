@@ -34,6 +34,8 @@ and rebuildable: on any mismatch, delete and recompute -- never migrated.
 
 from __future__ import annotations
 
+import datetime
+import decimal
 import enum
 import hashlib
 import hmac
@@ -45,12 +47,12 @@ import struct
 import sys
 import time
 import typing
-from collections.abc import Iterable, Iterator
+from collections.abc import Iterable, Iterator, Mapping
 from functools import cache
 from pathlib import Path
 from typing import Final, NamedTuple, TypeGuard, override
 
-from pydantic import BaseModel, TypeAdapter
+from pydantic import BaseModel
 
 import cadrumo
 from cadrumo.core.directory_scan import iter_directory, scan_directory
@@ -70,9 +72,16 @@ CompiledRegistryPayload = tuple[tuple[ModeloDefinition, ...], RegistryCatalogues
 FingerprintTuples = tuple[tuple[str, int, int, str], ...]
 """``(path, size, mtime_ns, content_digest)`` tuples, exactly as the loader collects them for the cache key.
 
-The digest is empty for directory entries and bundled-tree files (read-only
-package data); mutable-tree TOML files carry a content hash so a same-size,
-same-mtime rewrite still re-keys the cache.
+EVERY TOML row carries a content hash, so a same-size, same-mtime rewrite still
+re-keys the cache. That includes the package-bundled tree: an authoring tree
+inside a checkout is mutable even when reached through ``bundled_path``, which
+is why :func:`~.loader_cache.toml_file_fingerprint` digests unconditionally.
+Measured against the bundled tree: 1,739 TOML rows, none without a digest.
+
+The digest is empty only for directory entries, which exist to notice a change
+in a directory's membership. Every TOML the compiler reads contributes its own
+row, so membership of the compiler's actual inputs is carried by the row SET
+independently of those entries.
 """
 
 _COMPILED_CACHE_SCHEMA_VERSION = b"compiled-registry-v2"
@@ -389,11 +398,41 @@ def _registry_disk_cache_key(
     content hash of the loader/compiler/schema source (so a code change that
     alters compiled semantics invalidates the cache even without a manual version
     bump), (3) the registry root path, and (4) the per-TOML tree fingerprints
-    (path, size, mtime_ns, content_digest). ``loader_code_fingerprint_override``
+    reduced to ``(path, size, content_digest)``. ``loader_code_fingerprint_override``
     is injected for test isolation; production resolves
     :func:`loader_code_fingerprint`, which is why that resolution happens HERE
     rather than in the signature -- a default argument would be evaluated at
     import time and reinstate the cost this indirection removes.
+
+    ``mtime_ns`` is DROPPED from every row, matching what the validation verdict
+    already keys on: a compiled payload is a statement about CONTENT, and the
+    same declarations compile the same way whenever they were last written. Kept
+    in the key, an mtime-only touch -- a branch switch, a checkout, a rewrite of
+    identical bytes -- was a full miss costing a ~30 s compile per process, and
+    stored a second copy of a payload the directory already held. Observed
+    directly: two of the eight retained pickles were byte-identical under
+    different keys, so mtime churn was evicting genuinely distinct entries out
+    of a ceiling-bound store.
+
+    Dropping it is safe for the two things mtime was carrying here. A TOML whose
+    bytes changed is caught by its content digest -- every TOML row has one,
+    bundled tree included, as :data:`FingerprintTuples` records -- and that
+    digest exists precisely because ``(size, mtime_ns)`` cannot separate two
+    same-length writes inside the filesystem's mtime resolution. A TOML added or
+    removed changes the SET of rows, and every registry TOML contributes one, so
+    membership is keyed without consulting the digest-less directory rows'
+    timestamps.
+
+    What this does narrow, stated plainly: a directory row now contributes only
+    its path and size, so a change to a directory's contents that adds or removes
+    a NON-TOML file may no longer re-key. Such a file has no row of its own and
+    was never content-checked either way, and the compiler's inputs are the TOML
+    declarations plus the separately receipted source evidence, so nothing it
+    reads loses coverage. A non-TOML file that ever does become a compiler input
+    needs its own fingerprint row, not a parent directory's timestamp.
+
+    The cheap directory-walk freshness check in the fingerprint cache is a
+    separate mechanism and still reads directory mtimes.
     """
     override = loader_code_fingerprint_override
     resolved = _loader_code_fingerprint() if override is None else override
@@ -401,9 +440,10 @@ def _registry_disk_cache_key(
     hasher.update(_REGISTRY_TREE_CACHE_SCHEMA_VERSION.encode("utf-8"))
     hasher.update(resolved.encode("utf-8"))
     hasher.update(root.encode("utf-8"))
-    for item in fingerprints:
-        for part in item:
-            hasher.update(str(part).encode("utf-8"))
+    for path, size, _modified_ns, digest in fingerprints:
+        # Delimited, unlike the undelimited concatenation this replaced: without
+        # a separator, two different rows can serialise to the same bytes.
+        hasher.update(f"{path}\0{size}\0{digest}\0".encode())
     return hasher.hexdigest()
 
 
@@ -531,8 +571,39 @@ def _is_compiled_registry_payload(payload: object) -> TypeGuard[CompiledRegistry
     return _has_current_pydantic_shape((*modelos_raw, catalogues_raw))
 
 
-_OBJECT_LIST_ADAPTER: TypeAdapter[list[object]] = TypeAdapter(list[object])
-_OBJECT_DICT_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(dict[object, object])
+_INERT_LEAF_TYPES: Final[frozenset[type]] = frozenset(
+    {
+        bool,
+        bytes,
+        datetime.date,
+        datetime.datetime,
+        datetime.time,
+        decimal.Decimal,
+        float,
+        int,
+        str,
+        type(None),
+    },
+)
+"""Value types that hold no nested model, so the shape walk can retire them unopened.
+
+Every member is a type the walk already descended into nothing, which is what
+makes the exemption free of reach: none is a model, a mapping, or a
+tuple/list/set/frozenset. Matched by exact type rather than ``isinstance``, so a
+subclass -- which may well be a container -- keeps the walk's normal dispatch.
+Both properties are pinned by ``test_compiled_payload_shape_walk``.
+"""
+
+
+@cache
+def _current_field_names(model_type: type[BaseModel]) -> frozenset[str]:
+    """Return one model class's current field names, derived once per class.
+
+    ``model_fields`` is a mapping on the class, so the set it yields is the same
+    for every instance; rebuilding it per instance was work proportional to the
+    payload rather than to the schema.
+    """
+    return frozenset(model_type.model_fields)
 
 
 def _has_current_pydantic_shape(values: Iterable[object]) -> bool:
@@ -544,25 +615,44 @@ def _has_current_pydantic_shape(values: Iterable[object]) -> bool:
     ``AttributeError``.  Walk the already-decoded first-party graph and refuse any
     model whose stored state omits a current field.  Refusal deletes and recompiles
     the derived cache; it never hydrates or migrates the stale object.
+
+    The walk only ENUMERATES the graph; it decides nothing from a container's own
+    type. Containers are therefore iterated directly rather than passed through a
+    ``TypeAdapter`` for ``dict[object, object]`` / ``list[object]``: those
+    annotations accept every value, so the adapters validated nothing while
+    copying each container and running a pydantic-core pass over it.
+
+    Most of the graph is leaf scalars -- every mapping key, every field holding a
+    string, number, date or decimal -- and each one was paying an ``id()``, a set
+    insertion and three ``isinstance`` probes only to match none of them and be
+    dropped. :data:`_INERT_LEAF_TYPES` retires exactly those, so the bail-out
+    changes cost and not reach. Measured on the bundled payload, the walk costs
+    roughly 1.6 s against roughly 2.3 s without it.
     """
     pending = list(values)
     seen: set[int] = set()
     while pending:
         value = pending.pop()
+        if value.__class__ in _INERT_LEAF_TYPES:
+            continue
         identity = id(value)
         if identity in seen:
             continue
         seen.add(identity)
         if isinstance(value, BaseModel):
-            if not set(type(value).model_fields).issubset(value.__dict__):
+            if not _current_field_names(type(value)).issubset(value.__dict__):
                 return False
             pending.extend(value.__dict__.values())
-        elif isinstance(value, dict):
-            typed_dict = _OBJECT_DICT_ADAPTER.validate_python(value)
-            pending.extend(typed_dict.keys())
-            pending.extend(typed_dict.values())
+        elif isinstance(value, Mapping):
+            # Any mapping, not only ``dict``: a registry model holds its
+            # revisions in an immutable mapping, and a walk that recognised
+            # ``dict`` alone stopped there and never reached the rows nested
+            # below it, which is exactly where a stale object hides.
+            opaque_mapping = typing.cast("Mapping[object, object]", value)
+            pending.extend(opaque_mapping.keys())
+            pending.extend(opaque_mapping.values())
         elif isinstance(value, (tuple, list, set, frozenset)):
-            pending.extend(_OBJECT_LIST_ADAPTER.validate_python(value))
+            pending.extend(typing.cast("Iterable[object]", value))
     return True
 
 

@@ -35,11 +35,11 @@ from cadrumo.domain.calculations.registry.static_inspection import (
 )
 
 from ...author_family_identities import derive_projection_endpoint_id
+from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ...compiler.loader import load_modelo_directory
 from .. import _export_tree
 from .._export_tree import ExportTreeTransportProfile, render_complete_export_tree
 from ..export_fragment_provenance import (
-    EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     ExportFragmentTarget,
     _write_canonical_manifest_atomically,
     emit_export_fragment_provenance_manifest,

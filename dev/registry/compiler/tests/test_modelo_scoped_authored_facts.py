@@ -104,7 +104,9 @@ def test_lorca_applicability_across_declared_support_and_projection_boundaries()
                 assert reduction.calculation_periods == ("trimestral", "anual")
                 assert (reduction.source_ref,) == authored[0].source_refs
             else:
-                # The support envelope admits the request. Projection of an
-                # explicitly exercise-scoped provision cannot renew that law.
-                with pytest.raises(RegistryValidationError, match="exercise does not match its query date"):
+                # The support envelope admits the request, but an explicitly
+                # exercise-scoped provision is not renewed for a year it never
+                # covered: the resolver refuses the coordinate outright rather
+                # than projecting a neighbouring exercise onto it.
+                with pytest.raises(RegistryValidationError, match="has no variant for the exact query context"):
                     resolve_lorca_reduction(effective_date=coordinate, authority=authority)

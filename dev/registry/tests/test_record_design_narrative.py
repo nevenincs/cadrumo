@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from dev.registry.compiler.record_design_schema import (
     RecordDesignSinglePositionCorrection,
 )
@@ -196,14 +197,17 @@ def test_a_single_position_without_a_naturaleza_is_not_evidence_of_extent(tmp_pa
         ),
     )
 
-    extraction = extract_record_design(pdf_path)
+    # The hole at position 5 SURVIVES, and the document is refused for it. That
+    # is the assertion: had the lone number been admitted the hole would have
+    # closed and this design would read clean on an invented one-byte field.
+    # The refusal is total rather than a skipped sheet because this fixture
+    # carries one body and it is the one routed to unread, so the document
+    # yields no record at all -- and the refusal still has to name the hole.
+    with pytest.raises(RegistryValidationError) as refusal:
+        extract_record_design(pdf_path)
 
-    # The hole at position 5 SURVIVES, and the record is refused for it. That is
-    # the assertion: had the lone number been admitted the hole would have closed
-    # and this design would read clean on an invented one-byte field.
-    assert not extraction.sheets
-    assert [skipped.name for skipped in extraction.skipped] == ["Tipo 1 - Registro De Declarante"]
-    assert "5 were not read at all" in (extraction.skipped[0].reason or "")
+    assert "Tipo 1 - Registro De Declarante" in str(refusal.value)
+    assert "5 were not read at all" in str(refusal.value)
 
 
 def test_modelo_296_perceptor_record_reads_whole_after_the_gap_fill() -> None:

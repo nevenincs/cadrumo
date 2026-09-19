@@ -21,7 +21,7 @@ from enum import StrEnum
 from types import MappingProxyType
 from typing import Final
 
-from ....core.type_guards import is_object_mapping
+from ....core.type_guards import is_object_list_or_tuple, is_object_mapping
 
 __all__ = (
     "CANONICAL_FAMILY_SPECS",
@@ -32,11 +32,21 @@ __all__ = (
     "INHERITED_FAMILY_SPECS",
     "KEYED_FAMILY_SPECS",
     "RESTATABLE_FAMILIES",
+    "ROW_SOURCE_ADDITIONS_FIELD",
+    "ROW_SOURCE_FIELD",
     "FamilyInheritanceMode",
     "KeyedFamilySpec",
+    "bound_family_source_refs",
     "family_identity_value",
+    "family_source_default_fields",
     "family_spec",
+    "inline_family_source_default",
 )
+
+#: The member field carrying a row's own source grounding.
+ROW_SOURCE_FIELD: Final[str] = "source_refs"
+#: The member field extending, rather than replacing, its family's edition default.
+ROW_SOURCE_ADDITIONS_FIELD: Final[str] = "additional_source_refs"
 
 
 class FamilyInheritanceMode(StrEnum):
@@ -312,3 +322,70 @@ HELD_BACK_FAMILY_REASONS: Final[Mapping[str, str]] = MappingProxyType(
 def family_spec(section: str) -> KeyedFamilySpec | None:
     """Return the canonical policy for ``section``, if it is known."""
     return _BY_SECTION.get(section)
+
+
+def family_source_default_fields(*, include_casillas: bool = False) -> tuple[tuple[str, str], ...]:
+    """Return each family paired with the manifest field carrying its ``source_refs`` default.
+
+    The pairing lives on :data:`CANONICAL_FAMILY_SPECS` so a family can never be
+    defaulted from another family's grounding, and so enrolling one is adding
+    its ``source_default_key`` rather than extending a second table that has to
+    be kept in step.  Casillas are excluded by default because their default is
+    applied by the casilla rule, which also fills ``legal_refs`` from the
+    edition's approving ordenes and defaults a row's ``constraints`` table.
+    """
+    return tuple(
+        (spec.section, spec.source_default_key)
+        for spec in CANONICAL_FAMILY_SPECS
+        if spec.source_default_key is not None and (include_casillas or spec.section != CASILLAS_FAMILY)
+    )
+
+
+def bound_family_source_refs(
+    default: object,
+    additions: object,
+) -> tuple[object, ...]:
+    """Return the edition default followed by a member's additions, each reference once.
+
+    The default comes first and duplicates are dropped, so a member extending
+    its edition's grounding reads as that grounding plus what it adds.  Values
+    are carried through uncoerced: a malformed default or addition reaches
+    typed construction and is refused there with the field's own error rather
+    than being silently repaired here.
+    """
+    ordered_default = tuple(default) if is_object_list_or_tuple(default) else ()
+    ordered_additions = tuple(additions) if is_object_list_or_tuple(additions) else ()
+    return tuple(dict.fromkeys((*ordered_default, *ordered_additions)))
+
+
+def inline_family_source_default(
+    member: Mapping[str, object],
+    edition: Mapping[str, object],
+    default_key: str | None,
+) -> Mapping[str, object]:
+    """Return ``member`` with its family's edition-level ``source_refs`` default bound onto it.
+
+    One rule, shared by every consumer that has to reason about what a member's
+    grounding EFFECTIVELY is: the compiler, which pins an inherited member to
+    the default effective where it was stated; the delta signal, which must not
+    report a field difference that is only the two editions' defaults; and the
+    migration chain proof, whose equivalence claim is about meaning rather than
+    physical representation.  A second implementation of it would let those
+    three disagree about what a registry says.
+
+    A member stating its own ``source_refs`` replaces the default whole and is
+    returned unchanged, as is one whose family has no default key or whose
+    edition declares no usable default.  Otherwise the member takes the default,
+    extended by any ``additional_source_refs`` it states, and the additions key
+    is consumed.  ``member`` itself is returned when nothing is bound, so a
+    caller can test identity to learn whether the edition changed anything.
+    """
+    if default_key is None or ROW_SOURCE_FIELD in member:
+        return member
+    default = edition.get(default_key)
+    if not is_object_list_or_tuple(default) or not default:
+        return member
+    bound = dict(member)
+    additions = bound.pop(ROW_SOURCE_ADDITIONS_FIELD, ())
+    bound[ROW_SOURCE_FIELD] = bound_family_source_refs(default, additions)
+    return bound

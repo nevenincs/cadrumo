@@ -12,7 +12,7 @@ from pydantic import ValidationError
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.errors import NoRevisionForPeriodError
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.engine import DeadlineEngine
@@ -130,7 +130,7 @@ def test_calendar_refuses_a_window_for_annual_work_below_the_supported_floor() -
     assert supported_years is not None
     work_unit = _annual_work_unit_without_authored_window(modelo="100", filing_year=supported_years.floor - 1)
 
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         _registry_window_for_work_unit(work_unit)
 
 

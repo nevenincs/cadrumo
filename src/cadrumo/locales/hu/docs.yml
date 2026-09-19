@@ -21,8 +21,8 @@ docs:
       ledger_renta_gastos_pago_fraccionado_aggregation: a pago fraccionado költségeiből
       ledger_renta_income_aggregation: a nyilvántartott bevételeiből
       ledger_transaction: a nyilvántartott tételeiből
-      m303_regimen_simplificado_annual_summary: a 303-as modelo egyszerűsített rendszerének
-        éves összesítéséből
+      m303_regimen_simplificado_annual_summary: a 303-es nyomtatvány egyszerűsített
+        rendszerének éves összesítéséből
       m347_third_party_operation: az Ön harmadik felekkel folytatott ügyleteiből
       manual_input: az Ön által megadott értékből
       payable_invoice: a befogadott számláiból
@@ -32,10 +32,10 @@ docs:
       purchase_invoice_evidence: a beszerzési számlák bizonylataiból
       refund_operation: a visszatérítési ügyleteiből
       related_party_operation: a kapcsolt ügyleteiből
-      relation_prefill: egy kapcsolódó modelo eredményéből
+      relation_prefill: egy kapcsolódó nyomtatvány eredményéből
       retenciones_aggregation: a nyilvántartott retenciones tételekből
       withholding: a levont forrásadókból
-      withholding296: a 296-os modelo kedvezményezettenkénti levonásaiból
+      withholding296: a 296-os nyomtatvány kedvezményezettenkénti levonásaiból
     cadence:
       ad_hoc: Az esemény bekövetkezésekor benyújtandó
       annual: Évente benyújtandó
@@ -45,29 +45,29 @@ docs:
     chrome:
       alternative_join: ', vagy'
       binding: Adatkötés
-      casilla_count: '{casillas} casilla {sections} szakaszban'
-      casilla_id: Casilla-azonosító
-      casilla_index: Az összes casilla
+      casilla_count: '{casillas} rovat {sections} szakaszban'
+      casilla_id: Rovat-azonosító
+      casilla_index: Az összes rovat
       casilla_index_hint: Válasszon egy casillát az odaugráshoz.
       derived_from: 'ebből:'
       established_by: Jogszabályi alapja
       formula: Képlet
       general_section: Általános
-      index_intro: Modellónként egy oldal. Minden casilla megadja, hogyan töltődik
+      index_intro: Nyomtatványonként egy oldal. Minden rovat megadja, hogyan töltődik
         ki (Ön adja meg, más rovatokból számítjuk, vagy a nyilvántartásaiból töltjük
         ki), hol szerepel a hivatalos nyomtatványon, és melyik jogszabály állapítja
         meg.
-      index_title: Casilla-referencia
+      index_title: Rovat-referencia
       legal_basis: Jogalap
       list_and: és
       not_on_official_form: Nem szerepel a hivatalos nyomtatványon
-      page_heading: '{modelo}. modelo: {title}'
+      page_heading: '{modelo}. nyomtatvány: {title}'
       record_design_number: Rekordterv szerinti szám
       registry_identifiers: Nyilvántartási azonosítók
       registry_section: Nyilvántartási szakasz
       required: Kötelező
       revisions: Változatok
-      sections_nav: A modelo szakaszai
+      sections_nav: A nyomtatvány szakaszai
       segmento: '{segmento} szegmens'
       semantic_role: Szemantikai szerep
       sources: Források

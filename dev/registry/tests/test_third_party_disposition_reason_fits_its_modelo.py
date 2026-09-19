@@ -42,9 +42,9 @@ _THIRD_PARTY_CLAIM = "third-party data"
 #: official name that settles it. A financial entity or declarant files these
 #: about its clients, partícipes or counterparties, never about itself.
 _REPORTS_OTHERS: dict[str, str] = {
-    "189": "Declaracion informativa anual acerca de valores, seguros y rentas",
-    "280": "Declaracion informativa anual de Planes de Ahorro a Largo Plazo",
-    "345": "Declaracion informativa anual de planes y fondos de pensiones, participes, aportaciones y contribuciones",
+    "189": "Declaración informativa anual acerca de valores, seguros y rentas",
+    "280": "Declaración informativa anual de Planes de Ahorro a Largo Plazo",
+    "345": ("Declaración informativa anual de planes y fondos de pensiones, partícipes, aportaciones y contribuciones"),
     "347": "Operaciones con terceras personas (informativa anual)",
 }
 

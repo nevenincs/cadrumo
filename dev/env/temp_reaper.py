@@ -28,6 +28,17 @@ default and reclaimed only under an explicit ``--apply``, because automating a
 deletion decided by inference is a different risk from automating one decided
 by observation.
 
+**Run directories carry their owner too**, in the PID embedded in the
+directory name, so the same observed-liveness rule applies and a finished run's
+output is reclaimed at any age -- there is no retention window. EVERY family
+under ``.logs`` is swept, discovered rather than named: ``test-runs``,
+``audit-runs``, ``lane-runs`` and whatever the next one is called all allocate
+through the same function and all carry the same pid. They are swept across BOTH
+bases that can hold them: the checkout, where repository tooling
+writes, and the OS temp directory, where a pytest controller writes because
+``conftest.py`` roots its run outside the checkout. Sweeping only the checkout
+left the busier of the two unbounded, which is this module's own opening story.
+
 This module is a library. Its operator surface is ``just clean`` (report) and
 ``just clean-apply`` (act), which drive :func:`report_temporary_storage` as one
 section of the wider reclamation report.
@@ -49,7 +60,7 @@ from cadrumo.tests.collection_storage_root import (
     pytest_numbered_dir_root,
     reap_abandoned_numbered_dirs,
 )
-from dev._paths import REPO_ROOT
+from dev.test_runs.paths import run_log_families, run_log_roots
 from dev.test_runs.reaper import assess_run_directories, reclaim_run_directories
 
 CLAUDE_TEMP_STEM = "claude"
@@ -461,9 +472,17 @@ def report_temporary_storage(
             file=stream,
         )
 
-    run_root = REPO_ROOT / ".logs" / "test-runs"
-    run_verdicts = assess_run_directories(run_root)
-    print(f"\nRepository test runs under {run_root}", file=stream)
+    # Both bases, because a pytest controller roots its run under the OS temp
+    # directory rather than the checkout (see conftest.py) and the repository base
+    # alone left that one growing without bound. EVERY family, because `.logs` has
+    # no privileged child: `audit-runs` and `lane-runs` carry an owner's pid in the
+    # same marker `test-runs` does, and assessing only the family this section was
+    # first written for left the others to be judged by name alone, with no owner
+    # check, while a run was still writing into them.
+    run_roots = tuple(root for family in run_log_families() for root in run_log_roots(family))
+    run_verdicts = tuple(verdict for run_root in run_roots for verdict in assess_run_directories(run_root))
+    named_roots = ", ".join(str(root) for root in run_roots) or "no run root exists yet"
+    print(f"\nRun directories under {named_roots}", file=stream)
     for verdict in run_verdicts:
         if verdict.reclaimable or verbose:
             print(
@@ -472,11 +491,11 @@ def report_temporary_storage(
             )
     kept_runs = [verdict for verdict in run_verdicts if not verdict.reclaimable]
     if kept_runs and not verbose:
-        # One line for the retained population rather than one per directory.
-        # This tree holds a run per pytest invocation and reaches the high
-        # hundreds on a busy day; listing every retained run pushes the reaped
-        # ones -- the only lines an operator is being asked to sanction -- off
-        # the screen, which is the failure mode a report has instead of a bug.
+        # One line for the spared population rather than one per directory. Only
+        # an in-flight run is spared now, so this is normally a single line, but
+        # a fleet can hold several at once and the reaped lines are the ones an
+        # operator is being asked to sanction; they must not be pushed off the
+        # screen, which is the failure mode a report has instead of a bug.
         for reason in dict.fromkeys(verdict.reason for verdict in kept_runs):
             count = sum(1 for verdict in kept_runs if verdict.reason == reason)
             print(f"  SPARE {count:4d} run directories  {reason}", file=stream)

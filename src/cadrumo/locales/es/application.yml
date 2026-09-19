@@ -474,7 +474,7 @@ application:
           de ejecución es ambiguo (ids de casilla.id duplicados o referencias de fórmula
           colgantes).'
         blank_modelo_selection: La selección de modelos solicitada no puede contener
-          identificadores vacios.
+          identificadores vacíos.
         filing_year_period_mismatch: 'Error interno: el ejercicio de declaración {filing_year}
           no coincide con el periodo indicado {period}.'
         modelo_not_in_registry: El modelo %{modelo} no está presente en el registro
@@ -899,10 +899,10 @@ application:
       calculate_sal_inputs_incomplete: Los datos de la reserva especial SAL/SLL deben
         indicarse juntos.
       calculate_semantic_role_ambiguous: La revisión del modelo contiene más de una
-        casilla con el rol semantico %{semantic_role}; el atajo no puede elegir un
+        casilla con el rol semántico %{semantic_role}; el atajo no puede elegir un
         casilla.id canónico de forma segura.
       calculate_semantic_role_missing: La revisión del modelo no contiene ninguna
-        casilla con el rol semantico %{semantic_role}.
+        casilla con el rol semántico %{semantic_role}.
       calculate_text_casilla_numeric_value: El valor de --casilla para %{key} (%{label})
         corresponde a un selector de declarante de data_type=%{data_type} no numérico
         que identifica al contribuyente que obtiene los rendimientos, no un importe.
@@ -934,7 +934,7 @@ application:
         hallazgo(s).
       deductible_iva_evidence_missing: 'Las lineas del libro con IVA deducible requieren
         una factura de compra vinculada. Vincula la factura a la linea y vuelve a
-        ejecutar work verify: la verificacion no se completa mientras una linea deducible
+        ejecutar work verify: la verificación no se completa mientras una linea deducible
         carezca de factura, por lo que el borrador sigue abierto y recoge la evidencia.'
       export_cross_bucket_refused: La revisión indicada pertenece a un bucket distinto
         del bucket del perfil activo. Cambia de perfil antes de exportar.
@@ -1290,7 +1290,7 @@ application:
         decimal_value_type_invalid: 'El dato de perfil para el binding de canal decimal
           %{binding_id} tiene un tipo no soportado: %{value_type}.'
         enum_boolean_invalid: El dato de perfil para el binding enum %{binding_id}
-          resolvio a booleano; los booleanos no son claves válidas de despacho enum.
+          resolvió a booleano; los booleanos no son claves válidas de despacho enum.
   overview:
     errors:
       horizon_days_not_positive: horizon_days debe ser positivo; se recibió %{horizon_days}

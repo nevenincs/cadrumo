@@ -462,10 +462,10 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
 def test_work_unit_creation_refuses_unresolvable_registry_snapshot_before_verify(repos: Repos) -> None:
     """An unsupported coordinate cannot create state for a later verify path."""
 
-    from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+    from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 
     wu_repo, _, _, _, _ = repos
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         seed_work_unit(
             wu_repo,
             modelo=VERIFY_MODELO,

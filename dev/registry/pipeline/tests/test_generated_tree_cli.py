@@ -14,6 +14,7 @@ from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 
 from ...compiler.authority import compiled_bundled_authority
+from ...compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from .._export_tree import render_complete_export_tree
 from .._tree_publication import (
     GeneratedExportTreePublicationContext,
@@ -35,8 +36,8 @@ from ..cli import (
     require_republication_eligibility,
     reviewed_bootstrap_target,
 )
-from ..export_fragment_provenance import EXPORT_FRAGMENT_PROVENANCE_FILENAME, ExportFragmentTarget
-from ..generated_tree_dispositions import record_drift_dispositions
+from ..export_fragment_provenance import ExportFragmentTarget
+from ..generated_tree_dispositions import GeneratedTreeRecordDriftDisposition, record_drift_dispositions
 from ..render_check import (
     GeneratedExportBootstrapTransport,
     RenderComparison,
@@ -529,9 +530,22 @@ def test_republish_admits_record_drift_a_disposition_explains() -> None:
     ledger's own gate fails once its cause is gone.
     """
     digest = "a" * 64
-    # Only a row whose remedy is `republish` admits republication; a row with any
-    # other remedy must be refused, so the subject is selected by its remedy.
-    explained = next(item for item in record_drift_dispositions() if item.remedy == "republish")
+    # The row is STATED, not looked up. A disposition retires the moment its
+    # cause is repaired, so a proof that asked the live ledger for "some row
+    # whose remedy is republish" held only while a correction was outstanding
+    # and broke the day the last one landed - which is the ledger working.
+    # What must not change is the admission rule, and that is what this states.
+    explained = GeneratedTreeRecordDriftDisposition(
+        kind="record_drift",
+        modelo="390",
+        revision="2024",
+        source_ref="aeat-dr-390-2024",
+        source_sha256="b" * 64,
+        remedy="republish",
+        differing_records=1,
+        reason="The generator reads the official type column and the shipped tree predates it.",
+        reconsideration_condition="Retire once the shipped tree is regenerated from the current inputs.",
+    )
     state = GeneratedExportTreeTargetStateReceipt(manifest_sha256=digest, output_files=())
 
     require_republication_eligibility(
@@ -554,4 +568,5 @@ def test_republish_admits_record_drift_a_disposition_explains() -> None:
             only_rendered=(),
             serialization_only=(),
         ),
+        dispositions=(explained,),
     )

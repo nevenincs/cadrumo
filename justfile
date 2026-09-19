@@ -154,15 +154,26 @@ doctor-browser:
 # is structural rather than a judgement call.
 #
 # AT RISK, and the reason this is not a routine command. `clean-apply` deletes
-# irreversibly -- no trash, no undo -- and it REACHES OUTSIDE THIS WORKTREE:
+# irreversibly -- no trash, no undo. Inside the worktree it now claims two
+# surfaces it used to spare: `.logs/` in full apart from `test-runs/`, and every
+# directory named `cache` or `.cache` at any depth outside a protected tree.
+# Both are scratch -- a run writes them and nothing reads back across a run
+# boundary -- but `.logs/` holds captured output and downloaded payloads that
+# are not re-fetched automatically, so promote anything you still want into
+# `.vault/` before running this. It also REACHES OUTSIDE THIS WORKTREE:
 #   * the OS temp directory, including the scratchpads of OTHER Claude Code
 #     sessions on this machine. Those carry no owner on disk, so abandonment is
 #     INFERRED from 72h of silence on two activity signals, not observed. A
 #     colleague or agent whose session has been idle over a long weekend is
 #     indistinguishable from an abandoned one, and this command will take it.
-#   * `.logs/test-runs/`, which is failure evidence from earlier runs. Runs
-#     still inside the retention window are kept; interrupted ones whose owner
-#     is gone are not.
+#   * test run directories, under BOTH the checkout and the OS temp directory
+#     (a pytest controller roots its run outside the checkout). A completed run's
+#     directory is reclaimed at ANY age -- it is that invocation's output,
+#     nothing reads it back, and there is no retention window. Only a run that
+#     may still be writing is spared: its PID must resolve to a live process AND
+#     it must have been silent for under 24 hours, because an id gets recycled
+#     and would otherwise spare dead output forever. Read a failing run's log
+#     before the next clean.
 #   * `var/`, where the sweep removes only names matching a REGISTERED scratch
 #     family. A name carrying its owner is removed when that process is
 #     OBSERVED gone; a name carrying no readable owner is removed on 24h of
@@ -742,12 +753,12 @@ registry-modelo-checklist:
 registry-governance-stamp REGISTRY_ROOT MODELO REVISION ENGINEERED_BY="" CLEAR_ENGINEERED_BY="false" REVIEW_STATUS="" REVIEWED_BY="" REVIEWED_AT="":
     @uv run --no-sync python -m dev.registry.conformance stamp {{MODELO}} {{REVISION}} --registry-root {{quote(REGISTRY_ROOT)}}{{ if ENGINEERED_BY == "" { "" } else { " --engineered-by " + quote(ENGINEERED_BY) } }}{{ if CLEAR_ENGINEERED_BY == "true" { " --clear-engineered-by" } else { "" } }}{{ if REVIEW_STATUS == "" { "" } else { " --review-status " + quote(REVIEW_STATUS) } }}{{ if REVIEWED_BY == "" { "" } else { " --reviewed-by " + quote(REVIEWED_BY) } }}{{ if REVIEWED_AT == "" { "" } else { " --reviewed-at " + quote(REVIEWED_AT) } }}
 
-[doc('Apply one named modelo edition migration after its round-trip proof; scratch stays under WORK_DIR and evidence under .logs.')]
+[doc('Apply one named modelo edition migration after its round-trip proof; scratch stays under WORK_DIR and the run report under .logs, which the next clean reclaims.')]
 [group('maintenance')]
 registry-edition-migrate REGISTRY_ROOT MODELO WORK_DIR:
     @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}} --apply
 
-[doc('Stage one modelo edition migration under WORK_DIR and persist its report under .logs; never apply it to the registry.')]
+[doc('Stage one modelo edition migration under WORK_DIR and write its run report under .logs, which the next clean reclaims; never apply it to the registry.')]
 [group('report')]
 report-registry-edition-migration REGISTRY_ROOT MODELO WORK_DIR:
     @uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root {{quote(REGISTRY_ROOT)}} --modelo {{MODELO}} --work-dir {{quote(WORK_DIR)}}
@@ -1122,7 +1133,7 @@ test-resident-service:
 [doc('Run the opt-in registry live-read tests serially outside portable aggregates.')]
 [group('test')]
 test-registry-live:
-    @uv run --no-sync pytest -v -n0 -m aeat_live src/cadrumo
+    @uv run --no-sync pytest -v -n0 -m aeat_live src/cadrumo dev/corpus/tests
 
 # Run the produce, verify, and export end-to-end smoke tests.
 [group('test')]
@@ -1293,10 +1304,12 @@ docs-locales-set-batch MANIFEST:
 docs-locales-set-batch-dry-run MANIFEST:
     uv run --no-sync python -m dev.docs.i18n set-batch {{quote(MANIFEST)}} --dry-run
 
-# Regenerate the committed terminology coverage report through its generator.
-[doc('Generate the committed terminology coverage report through its owning generator.')]
-[group('docs')]
-docs-generate-terminology-coverage:
+# Measure terminology coverage. The report is run output, not committed state:
+# it lands in a fresh `.logs/audit-runs/` directory the next clean reclaims, and
+# the command prints the path it wrote.
+[doc('Measure terminology coverage and write the report under .logs, which the next clean reclaims.')]
+[group('report')]
+report-terminology-coverage:
     uv run --no-sync python -m dev.docs.terminology.coverage report
 
 # Build changed narrative and API reference documents into disposable local output.

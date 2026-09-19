@@ -406,7 +406,7 @@ _CARRY_FORWARD_PENDING_OUTLIERS = {
             _MADRID_CUIDADO_ASCENDIENTES_ROLE,
         ),
         "1118": (
-            "Por el pago de intereses de préstamos a estudios de Grado, Master y Doctorado",
+            "Por el pago de intereses de préstamos a estudios de Grado, Máster y Doctorado",
             _MADRID_DEDUCTION_SECTION,
             _MADRID_INTERESES_PRESTAMOS_ESTUDIOS_ROLE,
         ),
@@ -418,7 +418,7 @@ _CARRY_FORWARD_PENDING_OUTLIERS = {
             _MADRID_CUIDADO_ASCENDIENTES_ROLE,
         ),
         "1118": (
-            "Por el pago de intereses de préstamos a estudios de Grado, Master y Doctorado",
+            "Por el pago de intereses de préstamos a estudios de Grado, Máster y Doctorado",
             _MADRID_DEDUCTION_SECTION,
             _MADRID_INTERESES_PRESTAMOS_ESTUDIOS_ROLE,
         ),
@@ -438,7 +438,7 @@ _CARRY_FORWARD_PENDING_OUTLIERS = {
             _MADRID_CUIDADO_ASCENDIENTES_ROLE,
         ),
         "1118": (
-            "Por el pago de intereses de préstamos a estudios de Grado, Master y Doctorado",
+            "Por el pago de intereses de préstamos a estudios de Grado, Máster y Doctorado",
             _MADRID_DEDUCTION_SECTION,
             _MADRID_INTERESES_PRESTAMOS_ESTUDIOS_ROLE,
         ),

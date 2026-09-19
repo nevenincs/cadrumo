@@ -91,11 +91,11 @@ modelo:
             x-dhkn2bj15li6ap3lcdkn4:
               label: Liquidació. A deduir
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6a:
-              label: Liquidació. Base imposable
+              label: Liquidació. base imposable
             x-dhkn2bj2c5pmabb9dlo6urj9c9m6abbicli7aor9chgg:
               label: Liquidació. Base imposable reduïda
             x-dhkn2bj3elnn8o8:
-              label: Liquidació. Quota
+              label: Liquidació. quota
             x-dhkn2bj3elnn8o9dc4mmirj7e9in6obi:
               label: Liquidació. Quota a ingressar
             x-dhkn2bj4cli7aor3d5nmsbbcd5n6aobc:

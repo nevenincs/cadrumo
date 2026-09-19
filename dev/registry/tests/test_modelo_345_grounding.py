@@ -15,8 +15,13 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 
 from ..compiler.corpus_catalogue import verify_source_catalogue
 from ..compiler.legal_grounding import verify_legal_catalogue
+from ._gate_support import (
+    assert_deadline_window_for_filing_year,
+    assert_edition_opens_at_filing_year,
+    assert_sole_current_edition,
+)
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("governed_fact_scope")]
 
 _M345_LEGAL_REFS = {
     "orden-hfp-823-2022:art-1",
@@ -50,13 +55,17 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     modelo = authority.modelo("345")
     revision = modelo.revisions["2025"]
 
-    assert set(modelo.revisions) == {"2025"}
+    assert_sole_current_edition(modelo, "2025")
     assert modelo.calculation_class == "informative"
     assert set(modelo.legal_refs) == _M345_LEGAL_REFS
-    assert set(modelo.source_refs) == _M345_SOURCE_REFS
+    # The MODELO additionally cites the 2022 Diseno de Registro, which the 2022
+    # edition is authored from; the 2025 edition below cites only its own 2025
+    # design. Asserted as the edition's set plus that one design, so a second
+    # unexplained source would still be caught.
+    assert set(modelo.source_refs) == _M345_SOURCE_REFS | {"boe-dr-345-2022"}
 
     assert revision.valid_from == date(2025, 1, 1)
-    assert revision.period_selector.years == (2025,)
+    assert_edition_opens_at_filing_year(revision, 2025)
     assert set(revision.period_selector.periods) == {"0A"}
     assert set(revision.orden_aplicabilidad) == {
         "orden-hfp-823-2022:art-1",
@@ -71,7 +80,7 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     assert {casilla.input_kind for casilla in revision.casillas} == {"manual"}
     assert not revision.formulas
     assert revision.completeness_manifest is None
-    assert {window.id for window in revision.deadline_windows} == {"modelo-345-2025-0a"}
+    assert_deadline_window_for_filing_year(revision, 2025, "modelo-345-2025-0a")
     # The window stores the NOMINAL statutory close from orden-hfp-823-2022 art. 4
     # ("entre el 1 y el 31 de enero"), not AEAT's published operational date. The
     # 31st falls on a Saturday in 2026, and the shift that derives 2 February is
@@ -79,13 +88,17 @@ def test_modelo_345_current_registry_uses_2025_sources_without_fake_calculation(
     # date also passes a bare "operator sees 2 February" check while reporting
     # shifted=False / business_day -- a false statement that discards the
     # statutory date.
-    assert {window.closes_on for window in revision.deadline_windows} == {date(2026, 1, 31)}
-    (window,) = revision.deadline_windows
+    window = next(item for item in revision.deadline_windows if item.filing_year == 2025)
+    assert window.closes_on == date(2026, 1, 31)
+    # The deadline layer refuses in its own words and chains the fact-resolution
+    # cause. Both halves are asserted: the refusal a caller sees, and the reason
+    # underneath it, so a refusal raised for some other reason still reds.
     with (
-        pytest.raises(DeadlineValidationError, match="no variant for the exact query context"),
+        pytest.raises(DeadlineValidationError, match="holiday calendar publication for 2026") as refusal,
         bundled_indexed_authority().operation() as operation,
     ):
         shift_deadline(window.closes_on, modelo="345", ccaa_code=None, operation=operation)
+    assert "no variant for the exact query context" in str(refusal.value.__cause__)
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {"aeat-dr-345-2025"}
     # "export" joined the surfaces when the modelo's export layout was authored;
     # the link set is a consequence of that, not a drift.

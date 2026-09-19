@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import stat
+import sys
 from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from contextvars import ContextVar
@@ -141,23 +142,31 @@ def windows_create_file_api() -> tuple[Any, Any, Any, Any]:
     Built once per process and shared. The binding is pure configuration, and
     every consumer that configures a further function on the returned library
     sets the same signature, so sharing cannot change a call's conversion.
-    """
-    import ctypes
-    from ctypes import wintypes
 
-    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    create_file = kernel32.CreateFileW
-    create_file.argtypes = [
-        ctypes.c_wchar_p,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        ctypes.c_void_p,
-        wintypes.DWORD,
-        wintypes.DWORD,
-        wintypes.HANDLE,
-    ]
-    create_file.restype = wintypes.HANDLE
-    return ctypes, wintypes, kernel32, create_file
+    The ``sys.platform == "win32"`` block, rather than a guard at the call
+    site or an early return, is what establishes the platform for the Windows
+    API below: it is the only guard shape every checker this project runs
+    narrows on, so those references resolve when the tree is analysed for a
+    platform that does not ship them.
+    """
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        create_file = kernel32.CreateFileW
+        create_file.argtypes = [
+            ctypes.c_wchar_p,
+            wintypes.DWORD,
+            wintypes.DWORD,
+            ctypes.c_void_p,
+            wintypes.DWORD,
+            wintypes.DWORD,
+            wintypes.HANDLE,
+        ]
+        create_file.restype = wintypes.HANDLE
+        return ctypes, wintypes, kernel32, create_file
+    raise ProfileCustodyRecordError("the CreateFileW bindings are not available on this platform")
 
 
 @dataclass(slots=True)

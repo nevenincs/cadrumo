@@ -887,7 +887,7 @@ errors:
     modelo_project_invalid_decimal_override: Una sobrescriptura de projecció no és
       un import decimal vàlid.
     modelo_revision_pick: No s'ha pogut seleccionar la revisió de càlcul indicada.
-    modelo_work_capture_not_current: La seleccio de treball ja no es actual. Torneu
+    modelo_work_capture_not_current: La selecció de treball ja no es actual. Torneu
       a llegir l'objectiu de treball i proveu-ho de nou.
     modelo_work_discard_approval_stale: La unitat de treball ha canviat després d'aprovar-se
       el descart; reviseu-la i aproveu-la de nou.
@@ -1095,8 +1095,8 @@ errors:
     refused_modelo_applicability_filter: S'ha trobat un nom de filtre d'aplicabilitat
       desconegut al registre. Es tracta d'un error d'autoria del registre; actualitzeu
       la taula de despacho de filtres.
-    refused_modelo_charge_account_missing: S ha triat una domiciliacio pero no hi
-      ha cap compte de carrec registrat.
+    refused_modelo_charge_account_missing: S ha triat una domiciliació pero no hi
+      ha cap compte de càrrec registrat.
     refused_modelo_ledger_evidence_recapture: No es pot tornar a agrupar l'evidència
       d'aquesta declaració perquè els assentaments comptables que la sustenten han
       canviat des que es va segellar. Torna a calcular la declaració; la recaptura
@@ -1104,9 +1104,9 @@ errors:
     refused_modelo_m303_rectificativa_motive: Les rectificatives del model 303 requereixen
       exactament un motiu canònic en un disseny de registre aplicable i revisat; el
       motiu està prohibit en els altres casos.
-    refused_modelo_payment_election_capability: El metode de pagament escollit encara
-      no esta disponible.
-    refused_modelo_payment_election_incompatible: L opcio de pagament escollida requereix
+    refused_modelo_payment_election_capability: El mètode de pagament escollit encara
+      no està disponible.
+    refused_modelo_payment_election_incompatible: L opció de pagament escollida requereix
       un resultat positiu.
     refused_modelo_refund_account_missing: S'ha sol·licitat una devolució però no
       hi ha cap compte de devolució configurat; l'AEAT no pot pagar una devolució
@@ -1237,6 +1237,9 @@ errors:
     ambiguous_revision_selection_year_only: 'Més d''una revisió del registre coincideix
       amb el model %{modelo_id}: %{candidate_ids}. Indiqueu el període de declaració,
       o una data de referència, per seleccionar-ne una.'
+    filing_year_outside_support_envelope: 'L''exercici %{filing_year} i el període
+      %{period} del model %{modelo_id} queden fora dels exercicis admesos (mínim %{floor},
+      horitzó %{horizon}); revisions que cobreixen aquesta coordenada: %{covering_revision_ids}.'
     modelo_not_registered: El model no està registrat al registre.
     no_revision_for_period: 'Cap revisió del registre cobreix el model %{modelo_id}
       de l''exercici %{filing_year} i període %{period}; revisions disponibles: %{available_revision_ids}.'

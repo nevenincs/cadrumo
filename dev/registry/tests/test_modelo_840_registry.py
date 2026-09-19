@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
@@ -54,7 +54,7 @@ def test_committed_modelo_840_resolves_revision_by_filing_year() -> None:
     # The one 2003-onward edition serves every year the registry supports; a
     # year below the registry-wide floor is refused rather than resolved.
     floor = catalogues.supported_filing_years.floor
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=floor - 1, period="0A")
     for filing_year in (floor, 2024, 2026):
         # Modelo 840 is the IAE censal declaration: informative, filed on AEAT's

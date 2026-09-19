@@ -52,7 +52,7 @@ modelo:
           p01-contribuyente-57-codigo-de-municipio:
             label: Taxpayer. 57 - Municipality code.
           p01-devengo-periodo:
-            label: Accrual - period
+            label: Accrual - Period
           p01-representante-57-codigo-de-municipio:
             label: Representative. 57 - Municipality code.
           p01-representante-apellidos:
@@ -346,7 +346,7 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmmusj3cln78obackmn0obiehkm6qbgc5hmirre:
               label: Taxpayer additional current-dwelling data. Participation percentage
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1cgmncqb5dpi62bb1cdq7aobc5lpmit3lc5hmirre:
-              label: Taxpayer additional current-dwelling data. Situation
+              label: Taxpayer additional current-dwelling data. Location
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mm2rjaclp6ub9n60mn8pbcclj6urjf5lj6iqjf:
               label: Taxpayer foreign address. 70 - Landline telephone
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmasjf5kr38bbgdth6oob3d5nmsbb3d5qm8ob4:
@@ -408,7 +408,7 @@ modelo:
             x-e0o32bjiclo74pbjcln78obeehiiqdhg5lq6ar35cpnmsrpddlnncqbc:
               label: Representative. 60 - Mobile telephone.
             x-e0o32bjiclo74pbjcln78obeehiiqrj9co:
-              label: Representative. Tax identification number
+              label: Representative. NIF
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
               label: Additional employment-income data. Tax paid abroad [9]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
@@ -462,13 +462,13 @@ modelo:
             x-e0o34bjgc5jm2p3fe8mmcbba5ko38:
               label: Payer. Natural/legal person
             x-e0o34bjgc5jm2p3fe8mmsqb65ko32:
-              label: Payer. Tax identification number
+              label: Payer. NIF
             x-e0o34bjgc5jm2p3fe8mmsqb65ko34:
-              label: Payer. Tax identification number
+              label: Payer. NIF
             x-e0o34bjgc5jm2p3fe8mmsqb65ko36:
-              label: Payer. Tax identification number
+              label: Payer. NIF
             x-e0o34bjgc5jm2p3fe8mmsqb65ko38:
-              label: Payer. Tax identification number
+              label: Payer. NIF
             x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
               label: Gross income / imputed real-estate income [6]
             x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
@@ -554,13 +554,13 @@ modelo:
             x-e0o36bjgc5jm2p3fe8mmcbba5ko38:
               label: Payer. Natural/legal person
             x-e0o36bjgc5jm2p3fe8mmsqb65ko32:
-              label: Payer. Tax identification number
+              label: Payer. NIF
             x-e0o36bjgc5jm2p3fe8mmsqb65ko34:
-              label: Payer. Tax identification number
+              label: Payer. NIF
             x-e0o36bjgc5jm2p3fe8mmsqb65ko36:
-              label: Payer. Tax identification number
+              label: Payer. NIF
             x-e0o36bjgc5jm2p3fe8mmsqb65ko38:
-              label: Payer. Tax identification number
+              label: Payer. NIF
             x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
               label: Gross income / imputed real-estate income [6]
             x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
@@ -890,9 +890,9 @@ modelo:
             x-e0o3cbj1chonaqbid5imst355lj2qqhd60p0:
               label: Acquirer. Natural/legal person
             x-e0o3cbj1chonaqbid5imst355ln6iphd60og:
-              label: Acquirer. Tax identification number
+              label: Acquirer. NIF
             x-e0o3cbj1chonaqbid5imst355ln6iphd60p0:
-              label: Acquirer. Tax identification number
+              label: Acquirer. NIF
             x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0c8:
               label: Participation share
             x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0cg:
@@ -1230,15 +1230,15 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqorfdpi6ior9dtn2qorfdpq74qb2elsmarjkckmn0sj9dphmis31dgmj0dg:
               label: Taxpayer. Status. Principal taxpayer [06]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn0rricdimst31d8mj2d8:
-              label: Taxpayer additional current-dwelling details. Participation percentage
+              label: Taxpayer additional current-dwelling data. Participation percentage
                 [15]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn4pb6clp6arj3d4mj2do:
-              label: Taxpayer additional current-dwelling details. Cadastral reference
+              label: Taxpayer additional current-dwelling data. Cadastral reference
                 [17]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn6qbkelgm6qbfdomj2dg:
-              label: Taxpayer additional current-dwelling details. Location [16]
+              label: Taxpayer additional current-dwelling data. Location [16]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb1chkm6qbfdpgmopbj5lr6itj9cln68o9dc5hn8tb1dgmn8qbkelm62sj9cgmj2d0:
-              label: Taxpayer additional current-dwelling details. Ownership [14]
+              label: Taxpayer additional current-dwelling data. Ownership [14]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb3dtmn0r35dlimst31e9kmuspdchimobb4dtmmior9dhkmub9j6o:
               label: Taxpayer. Additional address details [36]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp31ehnn6bb4clm2qorfdpq74qb2elsmarjkckmn0sj9dphmis31dgmm2s35dhm6ip3fecmj2cg:
@@ -1293,11 +1293,11 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6io9d68r0:
               label: Taxpayer. Street type [26]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6irj3elm62or9dtn2qorfdpsnapr55ko3g:
-              label: Taxpayer. Relationship type. Spouse [08]
+              label: Taxpayer. Type of relationship. Spouse [08]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6irj3elm62or9dtn2qq39d9niqo9d64o0:
-              label: Taxpayer. Relationship type. Child [10]
+              label: Taxpayer. Type of relationship. Child [10]
             x-e0o32bj3dtn78sj9c9qnipbeehiiqt39e1niqp355lr6irj3elm62or9dtn2qs3idtjmarj9ehnn4bbjd5n2qtj9dphnar3f5ko3i:
-              label: Taxpayer. Relationship type. Parent without marital ties [09]
+              label: Taxpayer. Type of relationship. Parent without marital ties [09]
             x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb15kp2qchk:
               label: Supplementary return 2 [24]
             x-e0o32bj4clhmoobic5hmirre5lhmurbgdhimqpbeehgn4qb15kp36:
@@ -1345,24 +1345,24 @@ modelo:
             x-e0o32bjiclo74pbjcln78obeehiiqt39e1niqp355lr6io9d68r0:
               label: Representative. Street type [26]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
-              label: Additional employment-income details. Tax paid abroad [09]
+              label: Additional employment-income data. Tax paid abroad [09]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0co:
-              label: Additional employment-income details. Tax paid abroad [09]
+              label: Additional employment-income data. Tax paid abroad [09]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0d0:
-              label: Additional employment-income details. Tax paid abroad [09]
+              label: Additional employment-income data. Tax paid abroad [09]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6aor8dsmj0e8:
-              label: Additional employment-income details. Tax paid abroad [09]
+              label: Additional employment-income data. Tax paid abroad [09]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0cg:
-              label: Additional employment-income details. Gross return obtained and
+              label: Additional employment-income data. Gross return obtained and
                 taxed abroad [08]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0co:
-              label: Additional employment-income details. Gross return obtained and
+              label: Additional employment-income data. Gross return obtained and
                 taxed abroad [08]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
-              label: Additional employment-income details. Gross return obtained and
+              label: Additional employment-income data. Gross return obtained and
                 taxed abroad [08]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
-              label: Additional employment-income details. Gross return obtained and
+              label: Additional employment-income data. Gross return obtained and
                 taxed abroad [08]
             x-e0o34bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d0:
               label: Payments on account [04]
@@ -1445,24 +1445,24 @@ modelo:
             x-e0o34bjmc5m6usj1cdkmurhd60piqc1k:
               label: Valuation [03]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0cg:
-              label: Additional employment-income details. Tax paid abroad [09]
+              label: Additional employment-income data. Tax paid abroad [09]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0co:
-              label: Additional employment-income details. Tax paid abroad [09]
+              label: Additional employment-income data. Tax paid abroad [09]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6ab9g74mj0d0:
-              label: Additional employment-income details. Tax paid abroad [09]
+              label: Additional employment-income data. Tax paid abroad [09]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmmirbgelin6t3f5lpm2t39edj6aor8dsmj0e8:
-              label: Additional employment-income details. Tax paid abroad [09]
+              label: Additional employment-income data. Tax paid abroad [09]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0cg:
-              label: Additional employment-income details. Gross return obtained and
+              label: Additional employment-income data. Gross return obtained and
                 taxed abroad [08]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0co:
-              label: Additional employment-income details. Gross return obtained and
+              label: Additional employment-income data. Gross return obtained and
                 taxed abroad [08]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6ab9g70mj0d0:
-              label: Additional employment-income details. Gross return obtained and
+              label: Additional employment-income data. Gross return obtained and
                 taxed abroad [08]
             x-e0o36bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbechkmqqb5dpq6ubbke9gm4obadsmn4pbechkmqqb5dpq6ubb9dpq6apridsmj0e0:
-              label: Additional employment-income details. Gross return obtained and
+              label: Additional employment-income data. Gross return obtained and
                 taxed abroad [08]
             x-e0o36bj9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d0:
               label: Payments on account [04]

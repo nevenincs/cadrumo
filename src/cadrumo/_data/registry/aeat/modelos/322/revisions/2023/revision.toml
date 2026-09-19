@@ -2,7 +2,7 @@
 casilla_storage_baseline = "2008-2022"
 binding_source_refs = ["aeat-dr-322-2023", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
 formula_source_refs = ["aeat-dr-322-2023", "aeat-modelo-322-procedure", "boe-modelo-322-2007-form"]
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["orden-eha-3434-2007:art-1"], source_refs = ["aeat-dr-322-2023"] } }
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", cause = "predecessor_row_without_lineage", legal_refs = ["orden-eha-3434-2007:art-1"], source_refs = ["aeat-dr-322-2023"] } }
 casilla_source_refs = ["aeat-dr-322-2023"]
 live_cross_reference_source_refs = ["aeat-modelo-322-procedure"]
 application_link_source_refs = ["aeat-modelo-322-procedure"]

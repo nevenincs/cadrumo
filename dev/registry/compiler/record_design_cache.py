@@ -11,6 +11,7 @@ the checkout's own ``.cache`` holds it, outside the application's storage root.
 
 from __future__ import annotations
 
+import json
 import logging
 import os
 from functools import cache
@@ -22,6 +23,7 @@ from pydantic import ValidationError
 
 from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.hashing import content_hash_hex, sha256_hex
+from cadrumo.core.type_guards import is_str_keyed_dict
 from dev.cache_root import dev_cache_dir
 from dev.registry.compiler import record_design_schema
 from dev.registry.compiler.record_design_schema import RecordDesignExtraction
@@ -30,6 +32,7 @@ from . import record_design_sources
 
 RECORD_DESIGN_CACHE_DIR_ENV: Final = "CADRUMO_RECORD_DESIGN_CACHE_DIR"
 _CACHE_SCHEMA: Final = "record-design-extraction-cache/v1"
+_REFUSAL_SCHEMA: Final = "record-design-extraction-refusal/v1"
 _EXTRACTOR_MODULE_GLOB: Final = "record_design*.py"
 _EXTRACTOR_PACKAGES: Final = ("openpyxl", "pdfplumber", "pypdfium2", "xlrd")
 _LOGGER = logging.getLogger(__name__)
@@ -106,6 +109,10 @@ def _cache_path(key: str) -> Path:
     return record_design_cache_dir() / f"record_design_{key}.json"
 
 
+def _refusal_path(key: str) -> Path:
+    return record_design_cache_dir() / f"record_design_refusal_{key}.json"
+
+
 def load_cached_record_design(key: str) -> RecordDesignExtraction | None:
     """Return the persisted extraction for ``key``, or ``None`` to re-extract."""
     path = _cache_path(key)
@@ -134,10 +141,50 @@ def store_cached_record_design(key: str, extraction: RecordDesignExtraction) -> 
         _LOGGER.warning("Could not write record-design cache entry at %s", path, exc_info=True)
 
 
+def load_cached_record_design_refusal(key: str) -> str | None:
+    """Return the persisted refusal message for ``key``, or ``None`` to re-extract.
+
+    A refusal is recorded because the key already folds everything that decides
+    it: the source bytes, both hand-authored sidecars and the extractor code
+    fingerprint. Nothing else can change the outcome, so re-parsing a source
+    that cannot be read only re-pays the parse -- measured at 19s per process
+    across the six bundled designs that refuse. This is NOT the posture the
+    validation verdict cache takes towards a failed validation, and the
+    difference is the key: a validation defect lives in a tree the key does not
+    fold, so it must be re-detected, while an extractor refusal cannot outlive
+    a change to any input its own key already carries.
+    """
+    path = _refusal_path(key)
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return None
+    if not is_str_keyed_dict(payload) or payload.get("schema") != _REFUSAL_SCHEMA:
+        return None
+    message = payload.get("message")
+    return message if isinstance(message, str) else None
+
+
+def store_cached_record_design_refusal(key: str, message: str) -> None:
+    """Persist one extractor refusal under ``key``; a failed write costs the next process a parse."""
+    path = _refusal_path(key)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        atomic_write_best_effort_text(
+            path,
+            json.dumps({"schema": _REFUSAL_SCHEMA, "message": message}),
+            encoding="utf-8",
+        )
+    except Exception:
+        _LOGGER.warning("Could not write record-design refusal cache entry at %s", path, exc_info=True)
+
+
 __all__ = [
     "RECORD_DESIGN_CACHE_DIR_ENV",
     "load_cached_record_design",
+    "load_cached_record_design_refusal",
     "record_design_cache_dir",
     "record_design_cache_key",
     "store_cached_record_design",
+    "store_cached_record_design_refusal",
 ]

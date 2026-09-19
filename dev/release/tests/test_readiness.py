@@ -385,7 +385,7 @@ def test_packaging_smoke_evidence_end_to_end_through_the_real_smoke_writer(tmp_p
 def _write_probe_gh(bin_dir: Path, *, issues_json: str, exit_code: int = 0) -> Path:
     """Write a real executable `gh` script that emits fixed real process output."""
     bin_dir.mkdir(parents=True, exist_ok=True)
-    if sys.platform.startswith("win"):
+    if sys.platform == "win32":
         script = bin_dir / "gh.bat"
         script.write_text(f"@echo off\r\necho {issues_json}\r\nexit /b {exit_code}\r\n", encoding="utf-8", newline="")
     else:

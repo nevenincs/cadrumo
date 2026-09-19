@@ -10,7 +10,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -241,25 +241,50 @@ class RegistryScenarioRunReport(RegistryScenarioModel):
         return self
 
 
+def _scenario_snapshot(scenario: RegistryCalculationScenario, authority: Any) -> Any:
+    """Resolve one scenario's snapshot through the authority it names."""
+    # The published operation exposes ``modelo_directory``; the compiler's
+    # authority answers the same question through ``modelo``. Either way an
+    # unknown modelo is named here rather than surfacing as a bare LookupError
+    # from inside the snapshot build.
+    known = getattr(authority, "modelo_directory", None) or authority.modelo
+    try:
+        known(scenario.modelo)
+    except LookupError as exc:
+        raise RegistryValidationError(f"unknown modelo for registry scenario: {scenario.modelo!r}") from exc
+    return authority.snapshot(
+        scenario.modelo,
+        filing_year=scenario.filing_year,
+        period=scenario.period,
+        revision_id=scenario.revision,
+    )
+
+
 def run_registry_calculation_scenario(
     scenario: RegistryCalculationScenario,
+    *,
+    authority: Any | None = None,
 ) -> RegistryScenarioRunReport:
     """Execute ``scenario`` against the registry calculator and compare outputs.
+
+    Args:
+        scenario: The scenario to run.
+        authority: The authority to resolve the snapshot through. Defaults to
+            the published generation, which is what a scenario about the
+            product's supported span wants. A scenario whose subject is an
+            OLDER ejercicio passes the compiler's authored authority instead:
+            the published span begins at the supported floor and refuses a
+            coordinate below it, so a worked example the manual printed for
+            such a year cannot resolve through it at all.
 
     Returns:
         A :class:`RegistryScenarioRunReport` with per-casilla comparison results.
     """
-    with bundled_indexed_authority().operation() as authority:
-        try:
-            authority.modelo_directory(scenario.modelo)
-        except LookupError as exc:
-            raise RegistryValidationError(f"unknown modelo for registry scenario: {scenario.modelo!r}") from exc
-        snapshot = authority.snapshot(
-            scenario.modelo,
-            filing_year=scenario.filing_year,
-            period=scenario.period,
-            revision_id=scenario.revision,
-        )
+    if authority is not None:
+        snapshot = _scenario_snapshot(scenario, authority)
+    else:
+        with bundled_indexed_authority().operation() as published:
+            snapshot = _scenario_snapshot(scenario, published)
     _reject_undeclared_hand_typed_bound_inputs(scenario, snapshot.revision)
     # A profile-source binding a formula references but the scenario does not
     # supply defaults to a neutral zero, mirroring the live calculate path where

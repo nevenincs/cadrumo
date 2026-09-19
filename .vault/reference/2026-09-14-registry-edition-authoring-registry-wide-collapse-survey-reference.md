@@ -3,9 +3,9 @@ tags:
   - '#reference'
   - '#registry-edition-authoring'
 date: '2026-09-14'
-modified: '2026-09-14'
+modified: '2026-09-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:8b83789852baeee01480534e43748a84e8d81824b3da35ee963539da7d1dfceb'
+body_hash: 'sha256:077b8ba71e3cdc7b453550102c4f19ca1894532ae75b9a0d686f7db536406c30'
 related: []
 ---
 # `registry-edition-authoring` reference: `registry-wide collapse survey`
@@ -101,6 +101,6 @@ Generalize the proven all-family converter and orchestration across actual model
 
 ### Reproducible evidence
 
-Scratch runner: `C:/Users/hello/AppData/Local/Temp/registry_collapse_survey.py`. Complete per-modelo assessments and summary: `C:/Users/hello/AppData/Local/Temp/registry-collapse-survey-20260914T203616/`. The runner exited 0. The supplemental raw root comparison is `registry_root_overlap_probe.py` in the same temporary parent, with results in `root-overlap.json` under the survey directory. Its final corrected run handles immutable mapping/tuple containers; an initial diagnostic incorrectly treated only dict/list containers as declarations and was superseded.
+Scratch runner: `<local-temp-root>/AppData/Local/Temp/registry_collapse_survey.py`. Complete per-modelo assessments and summary: `<local-temp-root>/AppData/Local/Temp/registry-collapse-survey-20260914T203616/`. The runner exited 0. The supplemental raw root comparison is `registry_root_overlap_probe.py` in the same temporary parent, with results in `root-overlap.json` under the survey directory. Its final corrected run handles immutable mapping/tuple containers; an initial diagnostic incorrectly treated only dict/list containers as declarations and was superseded.
 
-Staged command: `uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root src/cadrumo/_data/registry/aeat --modelo 200 --work-dir C:/Users/hello/AppData/Local/Temp/m200-collapse-survey-dry-run-20260914T2039`. It exited 1 with complete=false. The report is `.logs/audit-runs/2026-09-14/20260914T203928.099357Z-report-registry-edition-migration-43424-0c779863/report.md`; its staged/reference trees remain in the named temporary work directory. No exact storage-savings estimate is claimed beyond this actual staged run.
+Staged command: `uv run --no-sync python -m dev.registry.edition_delta_migration --registry-root src/cadrumo/_data/registry/aeat --modelo 200 --work-dir <local-temp-root>/AppData/Local/Temp/m200-collapse-survey-dry-run-20260914T2039`. It exited 1 with complete=false. The report is `.logs/audit-runs/2026-09-14/20260914T203928.099357Z-report-registry-edition-migration-43424-0c779863/report.md`; its staged/reference trees remain in the named temporary work directory. No exact storage-savings estimate is claimed beyond this actual staged run.

@@ -27,7 +27,14 @@ def _schema_provider(period: Period) -> RegistrySchemaAccessor:
 
 
 def test_snapshot_resolution_uses_only_the_authority_private_cache() -> None:
-    """Repeated filing resolution reuses the authority entry while isolating callers."""
+    """Repeated filing resolution serves the pinned entry without growing the cache.
+
+    Each call builds its own schema provider, so a second resolution that added
+    an entry would mean the cache is keyed on the caller rather than on the
+    filing coordinate. The resolved snapshot is the exact pinned object: it is a
+    frozen registry model, so handing every caller the same instance is the
+    cheap reuse the pinning exists for, not shared mutable state.
+    """
     authority = compiled_bundled_authority()
 
     first = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD, schema_provider=_schema_provider(_PERIOD))
@@ -35,7 +42,7 @@ def test_snapshot_resolution_uses_only_the_authority_private_cache() -> None:
     warm = _load_registry_snapshot(modelo=_MODELO, period=_PERIOD, schema_provider=_schema_provider(_PERIOD))
 
     assert warm == first
-    assert warm is not first
+    assert warm is first
     assert len(authority._snapshots) == cache_size
 
 

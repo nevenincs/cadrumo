@@ -311,16 +311,28 @@ def test_the_scan_matches_cross_project_shape_patterns(tmp_path: Path) -> None:
     assert any("role.tf" in hit for hit in hits)
 
 
+def _shipped_surface_floor() -> int:
+    """Return the file count the shipped surface cannot fall below.
+
+    Derived from the live tree rather than frozen: the product package alone is
+    shipped surface, so a scan that reaches fewer files than it holds has
+    collapsed. A frozen count would instead drift as the scaffolding grows
+    beside the product.
+    """
+    return len(repository_files(REPO_ROOT, under=("src",)))
+
+
 def test_no_operator_identifying_tokens_in_the_repository(
     repository_corpus: tuple[tuple[_ScannedFile, ...], list[str]],
 ) -> None:
     """No file in the tree may carry a leaked host / login / path / network token."""
     corpus, unread = repository_corpus
     shipped_corpus = tuple(scanned for scanned in corpus if not scanned.relative.startswith(_SCAFFOLDING_PREFIXES))
-    assert len(corpus) > 20000 and len(shipped_corpus) > 20000, (
-        f"the scan reached {len(corpus)} files and {len(shipped_corpus)} shipped-surface files; the "
-        "corpus collapsed, so an empty offender list would mean nothing was searched rather than "
-        "nothing is wrong"
+    shipped_floor = _shipped_surface_floor()
+    assert len(corpus) > len(shipped_corpus) and len(shipped_corpus) >= shipped_floor, (
+        f"the scan reached {len(corpus)} files and {len(shipped_corpus)} shipped-surface files against a "
+        f"live floor of {shipped_floor}; the corpus collapsed, so an empty offender list would mean "
+        "nothing was searched rather than nothing is wrong"
     )
 
     offenders: list[str] = []
@@ -366,7 +378,7 @@ def test_no_cross_project_identifier_in_the_repository(
     tidiness one.
     """
     corpus, unread = repository_corpus
-    assert len(corpus) > 20000, (
+    assert len(corpus) > _shipped_surface_floor(), (
         f"the scan reached {len(corpus)} files; the corpus collapsed, so an empty offender "
         "list would mean nothing was searched rather than nothing is wrong"
     )

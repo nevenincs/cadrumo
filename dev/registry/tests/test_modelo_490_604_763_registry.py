@@ -35,7 +35,7 @@ import pytest
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.tax_domain import TaxDomain
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, NoRevisionForPeriodError
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
@@ -187,7 +187,7 @@ def test_modelo_763_selects_each_evidenced_design_era_with_its_deadline(
 
     support = catalogues.require_supported_filing_years()
     if not support.admits_filing_year(filing_year):
-        with pytest.raises(NoRevisionForPeriodError):
+        with pytest.raises(FilingYearOutsideSupportEnvelopeError):
             select_revision(modelo, filing_year=filing_year, period=period, support=support)
         return
     snapshot = build_snapshot(

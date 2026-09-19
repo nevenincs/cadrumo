@@ -14,8 +14,9 @@ aggregation:
   irnr_income_ledger:
     diagnostics:
       foreign_source_out_of_scope: A(z) %{source_jurisdiction} source_jurisdiction
-        kívül esik a kiválasztott Modelo 210 változat által meghatározott forrás-hatókörön;
-        a TRLIRNR 13. cikke csak spanyolországi forrású jövedelmet enged.
+        kívül esik a kiválasztott 210-es nyomtatvány változat által meghatározott
+        forrás-hatókörön; a TRLIRNR 13. cikke csak spanyolországi forrású jövedelmet
+        enged.
       incomplete_m210_classification: A spanyol forrású bejövő tranzakcióhoz nincs
         kifejezett M210-es jövedelem-besorolás; az IRNR-projekció soha nem következtet
         hivatalos tipo-renta kódra az irpf_category mezőből.
@@ -26,15 +27,15 @@ aggregation:
         tipo-renta kódja nincs deklarálva a kiválasztott %{period} felülvizsgálathoz
         és benyújtási időszakhoz.
     errors:
-      income_type_codes_missing: A kiválasztott Modelo 210 revízió egyetlen, erre
-        a bevallási időszakra érvényes jövedelemtípus-kódot sem deklarál.
-      income_type_namespace_missing: A kiválasztott Modelo 210 revízió nem pontosan
-        egy kulcsolt jövedelemtípus-kód névteret deklarál.
-      registry_revision_mismatch: A beadott Modelo 210 revízió nem egyezik azzal a
-        revízióval, amelyet a rögzített jogosultság választ ki ehhez a modelóhoz,
+      income_type_codes_missing: A kiválasztott 210-es nyomtatvány revízió egyetlen,
+        erre a bevallási időszakra érvényes jövedelemtípus-kódot sem deklarál.
+      income_type_namespace_missing: A kiválasztott 210-es nyomtatvány revízió nem
+        pontosan egy kulcsolt jövedelemtípus-kód névteret deklarál.
+      registry_revision_mismatch: A beadott 210-es nyomtatvány revízió nem egyezik
+        azzal a revízióval, amelyet a rögzített jogosultság választ ki ehhez a nyomtatványhoz,
         adóévhez és időszakhoz.
-      source_scope_missing: A kiválasztott Modelo 210 változat nem határoz meg egyetlen
-        forrás-joghatósági hatókört ehhez a bruttó jövedelem mezőhöz.
+      source_scope_missing: A kiválasztott 210-es nyomtatvány változat nem határoz
+        meg egyetlen forrás-joghatósági hatókört ehhez a bruttó jövedelem mezőhöz.
   iva_ledger:
     errors:
       bucket_mismatch: A tranzakciós tár vödre nem egyezik a kért aggregálási vödörrel.
@@ -90,7 +91,7 @@ aggregation:
       prorrata_transition_missing_register_evidence: A bejelentett különleges arányosítási
         átmenethez nem tartozik alátámasztó nyilvántartási bizonyíték.
       prorrata_transition_not_applicable_for_period: A különleges arányosítási átmenet
-        bizonyítéka csak az év utolsó 303-as modelo időszakában alkalmazható.
+        bizonyítéka csak az év utolsó 303-es nyomtatvány időszakában alkalmazható.
       recipient_fact_disagrees_with_ledger_evidence: A pénzforgalmi elszámolású ügyletek
         címzettjére vonatkozó adat nem egyezik a szállítói rendszerű főkönyvi bizonyítékkal.
       supplier_regime_aggregation_period_mismatch: Az áfa-összesítés időszaka nem
@@ -109,7 +110,8 @@ aggregation:
   oss_ioss:
     errors:
       exterior_country_code_undeclared: A fogyasztás szerinti tagállamnak nincs bejelentett
-        369-es modelo országkódja, ezért szolgáltatásai nem vallhatók be ezen a modelón.
+        369-es nyomtatvány országkódja, ezért szolgáltatásai nem vallhatók be ezen
+        a nyomtatványon.
       exterior_rate_kind_unsupported: Az egyablakos rendszer külső sémája csak a fogyasztás
         szerinti tagállam általános vagy kedvezményes adómértékével nyújtott szolgáltatásokat
         fogadja el. A megadott megfigyelés más adómérték-típust jelöl, amely ebben
@@ -135,8 +137,8 @@ aggregation:
       period_mismatch: Az időszak nem egyezik a várt Renta főkönyvi időszakkal.
       quarterly_period_required: Az M130 bevétel-összesítéshez negyedéves időszak
         szükséges (például --year 2024 --period 1T).
-      unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
-        (pl. 2024-0A).
+      unsupported_period: A 100-as nyomtatvány bevétel-összesítéshez éves időszak
+        szükséges (pl. 2024-0A).
   retenciones:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
@@ -396,11 +398,11 @@ categories:
         (alapértelmezett arány 30%), részlegesen üzleti célú lakás esetén (Ley 35/2006
         art. 30.2.5.b szabály 4.ª).
     suministros_local_afecto:
-      label: Uzleti helyiseg kozuzemi koltsegei
-      notes: 'Teljes egeszeben levonhato koltseg: a tevekenyseg vegzesenek helyet
-        ado ingatlan uzleti eszkoznek minosul (Ley 35/2006 art. 29.1.a), ezert kozuzemi
-        koltsegei levonhatok (art. 28.1). A 30 szazalekos szabaly (art. 30.2.5.b)
-        nem alkalmazando, mert az csak a reszben uzleti celra hasznalt lakohelyre
+      label: Üzleti helyiség közüzemi költségei
+      notes: 'Teljes egészében levonható költség: a tevékenység végzésének helyet
+        ado ingatlan üzleti eszköznek minősül (Ley 35/2006 art. 29.1.a), ezert közüzemi
+        költségei levonhatok (art. 28.1). A 30 százalékos szabály (art. 30.2.5.b)
+        nem alkalmazandó, mert az csak a részben üzleti célra használt lakóhelyre
         vonatkozik.'
     telefonia_fija:
       label: Vezetékes telefon-költség
@@ -604,8 +606,8 @@ live:
   errors:
     expediente_not_found: Az AEAT nyilatkozat-nyilvántartás nem adta vissza a kért
       expedientét.
-    iva_history_modelo_303_only: Az IVA-kompenzáció előzmények letöltése csak Modelo
-      303 megfigyeléseket fogad el.
+    iva_history_modelo_303_only: Az IVA-kompenzáció előzmények letöltése csak a 303-es
+      nyomtatvány megfigyeléseket fogadja el.
     target_period_year_mismatch: A célidőszak éve nem egyezik.
     year_range_invalid: A kezdő évnek kisebbnek vagy egyenlőnek kell lennie a záró
       évvel.
@@ -623,11 +625,11 @@ live:
         {offered_only} bejárt pár az AEAT felkínált választéklistájából származik,
         amelynek ehhez a NIF-hez való tartozása nem igazolt. Ez a futás semmit nem
         mér.'
-      expected_but_not_found: 'A bevallott profil {count} modelo/év párra vár benyújtást,
-        amelyekre az AEAT nyilvántartása egyet sem adott vissza: {pairs}. Ellenőrizze,
-        benyújtották-e ezeket.'
-      recapture_divergence: 'A(z) {modelo} modelo {period} {ejercicio} ismételt lekérése
-        {count} korábban megfigyelt casilla-értéket változtatott meg: {casillas}.
+      expected_but_not_found: 'A bevallott profil {count} nyomtatvány/év párra vár
+        benyújtást, amelyekre az AEAT nyilvántartása egyet sem adott vissza: {pairs}.
+        Ellenőrizze, benyújtották-e ezeket.'
+      recapture_divergence: 'A(z) {modelo} nyomtatvány {period} {ejercicio} ismételt
+        lekérése {count} korábban megfigyelt rovat-értéket változtatott meg: {casillas}.
         Az AEAT helyesbített bevallást tarthat nyilván.'
 llm:
   evidence:
@@ -673,7 +675,7 @@ mcp:
   harness:
     off_host_consent: 'Adatvédelmi tájékoztató - olvasd el a folytatás előtt. Ezt
       a konzolt egy AI-asszisztens működteti az általad választott LLM-szolgáltatón.
-      A szavaid és az asszisztens által használt számadatok (összegek, casilla-értékek,
+      A szavaid és az asszisztens által használt számadatok (összegek, rovat-értékek,
       kötelezettségek) elküldésre kerülnek ehhez a szolgáltatóhoz a konzol működtetéséhez.
       A FORRÁSDOKUMENTUMAID - számlák, bankkivonatok és bármilyen bizonyítékbájt -
       SOHA nem hagyják el a gépedet: titkosított helyi tárolóban maradnak, és soha
@@ -699,10 +701,10 @@ operation:
   modal:
     action:
       apply: Alkalmaz
-      cancel: Megszakit
+      cancel: Megszakít
       close: Bezár
       detach: Leválaszt
-      reject: Elutasit
+      reject: Elutasít
     detail:
       action_refused: Elutasított művelet
       cleanup_deadline: Lezárási határidő
@@ -1016,7 +1018,7 @@ tui:
       pull_filed_all: Összes benyújtott bevallás lekérése
       review_census: Nyilvántartás áttekintése
     address:
-      declaration: 'Modelo: %{modelo} · %{filing_year} · %{period}'
+      declaration: 'Nyomtatvány: %{modelo} · %{filing_year} · %{period}'
     aeat_observation_state:
       accepted: Elfogadva
       not_observed: Nem figyelték meg
@@ -1336,7 +1338,7 @@ tui:
       presentado_supersedido: Felváltott benyújtott számítás
       verificado_completo: Ellenőrzés kész
     revisions:
-      explanation: A számítási változatok mentett számítások, nem a Modelo-nyilvántartás
+      explanation: A számítási változatok mentett számítások, nem a nyomtatvány-nyilvántartás
         változatai.
       title: Számítási változatok
     unavailable:
@@ -1363,7 +1365,7 @@ tui:
       context_across_records: Minden nyilvántartásra
       reason: A helyi áttekintés javaslata
     action_context: '%{label} - %{reason} · %{context}'
-    address: Modelo %{modelo} · %{filing_year} · %{period}
+    address: Nyomtatvány %{modelo} · %{filing_year} · %{period}
     aeat_evidence: 'AEAT-bizonyíték: %{state}'
     aeat_state:
       accepted: az AEAT elfogadta
@@ -1924,14 +1926,14 @@ tui:
       unavailable: A keresés nem érhető el ebben a munkamenetben
       unknown: A keresést nem sikerült előkészíteni.
     result:
-      address: Modelo %{modelo} · %{filing_year}. év · %{period} időszak
+      address: Nyomtatvány %{modelo} · %{filing_year}. év · %{period} időszak
       label:
         declaration: Bevallás
         filing: Benyújtás
         history: Benyújtási előzmények
         ledger_entry: Főkönyvi tétel
         ledger_evidence: Főkönyvi bizonyíték
-        modelo: Modelo
+        modelo: Nyomtatvány
         notification: Értesítés
         reconciliation: Egyeztetés
         revision: Számítási felülvizsgálat
@@ -1941,7 +1943,7 @@ tui:
         history: Benyújtási előzmények
         ledger_entry: Helyi főkönyvi rekordok
         ledger_evidence: Főkönyvi bizonyíték
-        modelo: Modelo-katalógus
+        modelo: Nyomtatvány-katalógus
         notification: AEAT-értesítések
         reconciliation: Egyeztetési eltérések
         revision: Számítási előzmények

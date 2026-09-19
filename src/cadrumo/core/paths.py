@@ -146,24 +146,26 @@ def windows_long_paths_enabled() -> bool | None:
         the registry cannot be read at all (a probe is best-effort; it
         never raises).
     """
-    if sys.platform != "win32":
-        return None
-    try:
+    if sys.platform == "win32":
+        # The positive block, rather than an early return off Windows, is what
+        # establishes the platform for `winreg`: it is the only guard shape
+        # every checker this project runs narrows on, so the module resolves
+        # when the tree is analysed for a platform that does not ship it.
         import winreg
-    except ImportError:  # pragma: no cover - winreg is stdlib on win32
-        return None
-    try:
-        with winreg.OpenKey(
-            winreg.HKEY_LOCAL_MACHINE,
-            r"SYSTEM\CurrentControlSet\Control\FileSystem",
-        ) as key:
-            value, _kind = winreg.QueryValueEx(key, "LongPathsEnabled")
-    except OSError:
-        # Key or value absent, or unreadable under the current privilege
-        # level: report the conservative pre-opt-in default rather than
-        # raising out of a best-effort probe.
-        return False
-    return bool(value)
+
+        try:
+            with winreg.OpenKey(
+                winreg.HKEY_LOCAL_MACHINE,
+                r"SYSTEM\CurrentControlSet\Control\FileSystem",
+            ) as key:
+                value, _kind = winreg.QueryValueEx(key, "LongPathsEnabled")
+        except OSError:
+            # Key or value absent, or unreadable under the current privilege
+            # level: report the conservative pre-opt-in default rather than
+            # raising out of a best-effort probe.
+            return False
+        return bool(value)
+    return None
 
 
 def windows_storage_root_long_path_margin(root: Path, *, object_path_suffix_length: int) -> int:

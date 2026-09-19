@@ -13,8 +13,7 @@ modelo:
             label: Payment or refund document. Credit/Offset. Credit from the conversion
               of deferred tax assets (art. 130 LIS)
           documento-ingreso-devolucion-apellidos-razon-social:
-            label: Payment or refund document. Identification. Surnames or company
-              name
+            label: Payment or refund document. Identification. Surnames or legal name
           documento-ingreso-devolucion-banco-extranjero:
             label: 'Payment or refund document. Refund. Rest of the world: name of
               the bank'
@@ -52,7 +51,7 @@ modelo:
           documento-ingreso-devolucion-modalidad-devolucion:
             label: Payment or refund document. Refund. Refund method
           documento-ingreso-devolucion-modalidad-ingreso:
-            label: Payment or refund document. Payment. Payment method
+            label: Payment or refund document. Payment. Payment type
           documento-ingreso-devolucion-nif:
             label: Payment or refund document. Identification. Tax identification
               number
@@ -66,7 +65,7 @@ modelo:
             label: Payment or refund document. Refund. SWIFT-BIC code (rest of the
               world / non-SEPA only)
           documento-ingreso-devolucion-tipo-ejercicio:
-            label: Payment or refund document. Accrual. Type of tax year
+            label: Payment or refund document. Accrual. Type of financial year
           extracooperativo-base-tramo-dos:
             label: Bracket 2 - Taxable base 2 (extra-cooperative results) | Note 3
           extracooperativo-base-tramo-uno:
@@ -402,63 +401,66 @@ modelo:
               (p. 7C)
           t22009000-00186:
             label: Other deductions. Net tax liability. R&D&i deductions excluded
-              from the limit of art. 39.2 LIS
+              from the limit of art. 39.2 LIS (page 14 quinquies)
           t22009000-00399:
             label: Other deductions. Net tax liability. Specific deductions for entities
               subject to chartered rules
           t22009000-00436:
             label: Self-assessment result. Payment of R&D&i deductions for insufficient
-              tax liability (election art. 39.2 LIS), total. Chartered provincial
-              councils and Navarre
+              tax liability (election art. 39.2 LIS) (page 14 quinquies), total. Chartered
+              provincial councils and Navarre
           t22009000-00562:
             label: Gross tax liability
           t22009000-00563:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Relief for income from the sale of tangible goods produced
-              in the Canary Islands (art. 26 Law 19/1994)
+              in the Canary Islands (art. 26 Law 19/1994) (page 11)
           t22009000-00565:
             label: Other deductions. Net tax liability. Deduction for donations to
-              non-profit entities (Law 49/2002)
+              non-profit entities (Law 49/2002) (page 14 quater)
           t22009000-00566:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
-              tax liability. Reliefs for cooperative societies (Law 20/1990)
+              tax liability. Reliefs for cooperative societies (Law 20/1990) (page
+              11)
           t22009000-00567:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Relief for income obtained in Ceuta and Melilla (art.
-              33 LIS)
+              33 LIS) (page 11)
           t22009000-00568:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
-              tax liability. Reliefs for the provision of services (art. 34 LIS)
+              tax liability. Reliefs for the provision of services (art. 34 LIS) (page
+              11)
           t22009000-00569:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
-              tax liability. Other reliefs
+              tax liability. Other reliefs (page 11)
           t22009000-00570:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Internal double taxation from prior periods applied in
-              the year (art. 30 RDLeg 4/2004)
+              the year (art. 30 RDLeg 4/2004) (page 12)
           t22009000-00571:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Internal double taxation generated and applied in the
-              period (transitional provision 23.1 LIS)
+              period (transitional provision 23.1 LIS) (page 12)
           t22009000-00572:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. International double taxation from prior periods applied
-              in the period (arts. 31 and 32 RDLeg 4/2004)
+              in the period (arts. 31 and 32 RDLeg 4/2004) (page 12)
           t22009000-00575:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
-              tax liability. International tax transparency (art. 100.10 LIS)
+              tax liability. International tax transparency (art. 100.10 LIS) (page
+              10)
           t22009000-00576:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Reliefs for entities engaged in residential letting (Chapter
-              III, Title VII LIS)
+              III, Title VII LIS) (page 11)
           t22009000-00577:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Inter-company internal double taxation at 5/10 per cent
-              (cooperatives)
+              (cooperatives) (page 10)
           t22009000-00581:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Reliefs for shipping companies in the Canary Islands
-              (art. 76 Law 19/1994)
+              (art. 76 Law 19/1994) (page 11)
           t22009000-00582:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability
@@ -467,35 +469,35 @@ modelo:
               and other deductions
           t22009000-00584:
             label: Other deductions. Net tax liability. Deductions under transitional
-              provision 24.1 LIS
+              provision 24.1 LIS (page 13)
           t22009000-00585:
             label: Other deductions. Net tax liability. Deduction under transitional
-              provision 24.7 LIS, art. 42 RDLeg 4/2004
+              provision 24.7 LIS, art. 42 RDLeg 4/2004 (page 13)
           t22009000-00588:
             label: Other deductions. Net tax liability. Deductions to encourage certain
               activities (Chapter IV Title VI, transitional provision 24.3 LIS and
-              art. 27.3 first, Law 49/2002)
+              art. 27.3 first, Law 49/2002) (page 14, 14 bis)
           t22009000-00590:
             label: Other deductions. Net tax liability. Canary Islands investment
-              deductions
+              deductions (page 13 bis)
           t22009000-00592:
             label: Other deductions. Net tax liability. Net tax liability
           t22009000-00595:
-            label: Tax for the year, payable or refundable. Withholdings and payments
+            label: Tax due for the year, payable or refundable. Withholdings and payments
               on account, and payments on account for collective investment holdings
           t22009000-00596:
-            label: Tax for the year, payable or refundable. Withholdings and payments
+            label: Tax due for the year, payable or refundable. Withholdings and payments
               on account attributed by economic interest groupings and temporary business
               consortia
           t22009000-00597:
-            label: Tax for the year, payable or refundable. Withholdings on prizes
+            label: Tax due for the year, payable or refundable. Withholdings on prizes
               from certain lotteries and betting
           t22009000-00599:
-            label: Tax for the year, payable or refundable. Tax for the period, payable
-              or refundable. State
+            label: Tax due for the year, payable or refundable. Tax for the period,
+              payable or refundable. State
           t22009000-00600:
-            label: Tax for the year, payable or refundable. Tax for the period, payable
-              or refundable. Chartered provincial councils and Navarre
+            label: Tax due for the year, payable or refundable. Tax for the period,
+              payable or refundable. Chartered provincial councils and Navarre
           t22009000-00601:
             label: Instalment payments. Differential tax liability. First instalment
               payment. State
@@ -533,7 +535,8 @@ modelo:
           t22009000-01375:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Relief for income from the sale of tangible goods produced
-              in the Balearic Islands (70th additional provision, Law 31/2022)
+              in the Balearic Islands (70th additional provision, Law 31/2022) (page
+              11)
           t22009000-01629:
             label: Other deductions. Net tax liability. Minimum net tax liability
               (art. 30 bis LIS)
@@ -546,23 +549,23 @@ modelo:
               productions in the Canary Islands (art. 39.3 LIS and 14th additional
               provision, Law 19/1994), Chartered provincial councils and Navarre
           t22009000-01737:
-            label: Self-assessment result. Payment of deductions for foreign film
-              productions in the Canary Islands (art. 39.3 LIS and 14th additional
-              provision, Law 19/1994), total. Chartered provincial councils and Navarre
+            label: Self-assessment result. Credit of deductions for foreign film productions
+              in the Canary Islands (art. 39.3 LIS and 14th additional provision,
+              Law 19/1994), total. Chartered provincial councils and Navarre
           t22009000-01965:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. Internal double taxation from prior periods applied in
-              the period (transitional provision 23.1 LIS)
+              the period (transitional provision 23.1 LIS) (page 12)
           t22009000-02188:
             label: Tax for the period, payable or refundable. Total withholdings and
               payments on account
           t22009000-02353:
             label: Other deductions. Net tax liability. Deduction for foreign film
               productions in the Canary Islands (art. 36.2 LIS and 14th additional
-              provision, Law 14/1994)
+              provision, Law 14/1994) (page 13 ter)
           t22009000-02354:
             label: Other deductions. Net tax liability. Deductions for investments
-              and expenses made by port authorities (art. 38 bis LIS)
+              and expenses made by port authorities (art. 38 bis LIS) (page 14 ter)
           t22009000-02538:
             label: Settlement. Self-assessment result. State
           t22009000-02539:
@@ -571,40 +574,41 @@ modelo:
           t22009000-03251:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. International double taxation from prior periods applied
-              in the period (arts. 31 and 32 LIS)
+              in the period (arts. 31 and 32 LIS) (page 12)
           t22009000-03261:
             label: Reliefs and double-taxation deductions. Adjusted positive gross
               tax liability. International double taxation generated and applied in
-              the period (arts. 31 and 32 LIS)
+              the period (arts. 31 and 32 LIS) (page 12)
           t22009000-03344:
             label: Other deductions. Net tax liability. Deduction for reversal of
-              temporary measures, transitional provision 37.1 LIS
+              temporary measures, transitional provision 37.1 LIS (page 14 sexies)
           t22009000-03356:
             label: Other deductions. Net tax liability. Deduction for reversal of
-              temporary measures, transitional provision 37.2 LIS
+              temporary measures, transitional provision 37.2 LIS (page 14 sexies)
           t22009000-03358:
             label: Gross tax liability. Adjustment of the levelling reserve (art.
               105.6 LIS)
           t22009000-03359:
             label: Other deductions. Net tax liability. Deduction for foreign film
-              productions (art. 36.2 LIS)
+              productions (art. 36.2 LIS) (page 14 ter)
           t22009000-03360:
             label: Self-assessment result. Payment of deductions for foreign film
-              productions (art. 39.3 LIS), total. Chartered provincial councils and
-              Navarre
+              productions (art. 39.3 LIS) (page 14 ter), total. Chartered provincial
+              councils and Navarre
           t22009000-03393:
             label: Self-assessment result. Payment of R&D&i deductions for insufficient
-              tax liability (election art. 39.2 LIS), Chartered provincial councils
-              and Navarre
+              tax liability (election art. 39.2 LIS) (page 14 quinquies), Chartered
+              provincial councils and Navarre
           t22009000-03398:
             label: Self-assessment result. Payment of deductions for foreign film
-              productions (art. 39.3 LIS), Chartered provincial councils and Navarre
+              productions (art. 39.3 LIS) (page 14 ter), Chartered provincial councils
+              and Navarre
           t22009000-03399:
             label: Self-assessment result. Payment of R&D&i deductions for insufficient
-              tax liability (election art. 39.2 LIS), State
+              tax liability (election art. 39.2 LIS) (page 14 quinquies), State
           t22009000-03400:
             label: Self-assessment result. Payment of deductions for foreign film
-              productions (art. 39.3 LIS), State
+              productions (art. 39.3 LIS) (page 14 ter), State
           t22016000-00052:
             label: Allocation between chartered tax administrations. Total. Araba
           t22016000-00053:
@@ -968,56 +972,53 @@ modelo:
             label: 'Allocation between chartered tax administrations. Supplementary:
               refund granted or offset. Navarre'
           t22016001-02176:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payment. Araba'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: credit. Araba'
           t22016001-02177:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payment. Gipuzkoa'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: credit. Gipuzkoa'
           t22016001-02178:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payment. Bizkaia'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: credit. Bizkaia'
           t22016001-02179:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payment. Navarre'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: credit. Navarre'
           t22016001-02180:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: offset. Araba'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: offset. Araba'
           t22016001-02181:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: offset. Gipuzkoa'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: offset. Gipuzkoa'
           t22016001-02182:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: offset. Bizkaia'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: offset. Bizkaia'
           t22016001-02183:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: offset. Navarre'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: offset. Navarre'
           t22016001-02184:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payable. Araba'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: payable. Araba'
           t22016001-02185:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payable. Gipuzkoa'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: payable. Gipuzkoa'
           t22016001-02186:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payable. Bizkaia'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: payable. Bizkaia'
           t22016001-02187:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payable. Navarre'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: payable. Navarre'
           t22016001-02804:
             label: 'Allocation between chartered tax administrations. Supplementary:
               refund granted or offset. Total of the chartered territories'
           t22016001-02807:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payment. Total of the chartered
-              territories'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: credit. Total of the chartered territories'
           t22016001-02810:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: offset. Total of the chartered
-              territories'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: offset. Total of the chartered territories'
           t22016001-02813:
-            label: 'Allocation between chartered tax administrations. Result of deferred
-              tax asset conversion after adjustment: payable. Total of the chartered
-              territories'
+            label: 'Allocation between chartered tax administrations. DTA conversion
+              result after regularisation: payable. Total of the chartered territories'
           t22016001-03325:
             label: 'Allocation between chartered tax administrations. Supplementary:
               refund granted or offset. Araba'
@@ -1086,7 +1087,7 @@ modelo:
       construct:
         modelo-220-declaration-construct:
           field:
-            title: Modelo 220 annual return of the tax group under the fiscal consolidation
+            title: Modelo 220 annual return of the tax group under the tax consolidation
               regime
       field:
         official_name: Modelo 220. Corporate Income Tax. Tax consolidation regime.
@@ -1165,7 +1166,7 @@ modelo:
                 and other receivables. Current tax assets
             x-agp34c1g6d0j0c1q60o32d9p:
               label: Consolidated balance sheet. Assets (page 3A sheet 00). Trade
-                and other receivables. Other receivables
+                and other receivables. Other debtors
             x-agp34c1g6d0j0c1q60o32dhg:
               label: Consolidated balance sheet. Assets (page 3A sheet 00). Short-term
                 investments in group and associated companies
@@ -1455,7 +1456,7 @@ modelo:
                 and receivables. Called-up capital
             x-agp34c1g6d0j0chq60o32cpi:
               label: Consolidated balance sheet. Assets (page 3A sheet 02). Loans
-                and receivables. Other receivables
+                and receivables. Other credits
             x-agp34c1g6d0j0chq60o32cpj:
               label: Consolidated balance sheet. Assets (page 3A sheet 02). Loans
                 and receivables. Receivables from public administrations
@@ -1570,8 +1571,8 @@ modelo:
               label: Consolidated balance sheet. Equity and liabilities. Other equity
                 instruments
             x-agp34c1g6d130c1q60o34c1i:
-              label: Consolidated balance sheet. Equity and liabilities. Valuation
-                adjustments
+              label: Consolidated balance sheet. Equity and liabilities. Adjustments
+                for changes in value
             x-agp34c1g6d130c1q60o34c1p:
               label: Consolidated balance sheet. Equity and liabilities. Grants, donations
                 and bequests received
@@ -2282,10 +2283,10 @@ modelo:
                 operations (cont.). Financial income
             x-agp34c1g6h130c1q60o34e9o:
               label: Consolidated profit and loss account (page 4B sheet 00). Continuing
-                operations (cont.). Financial income. From holdings in equity instruments
+                operations (cont.). Financial income. From equity instrument holdings
             x-agp34c1g6h130c1q60o36c1h:
               label: Consolidated profit and loss account (page 4B sheet 00). Continuing
-                operations (cont.). Financial income. From negotiable securities and
+                operations (cont.). Financial income. From marketable securities and
                 other financial instruments
             x-agp34c1g6h130c1q60o36c1l:
               label: Consolidated profit and loss account (page 4B sheet 00). Continuing
@@ -2344,7 +2345,7 @@ modelo:
             x-agp34c1g6h130c1q60o36c9p:
               label: Consolidated profit and loss account (page 4B sheet 00). Continuing
                 operations (cont.). Impairment and result on disposal of financial
-                instruments. Results on disposals and other
+                instruments. Results from disposals and others
             x-agp34c1g6h130c1q60o36chg:
               label: Consolidated profit and loss account (page 4B sheet 00). Continuing
                 operations (cont.). Results on disposals and other. Gains, group,
@@ -6662,8 +6663,8 @@ modelo:
               label: Reinvestment deductions. Total. Deduction applied in the tax
                 year
             x-agp34c1h6l0j0c1q60o3gd1h:
-              label: Reinvestment deductions. Result of the self-assessment. Total.
-                Deduction outstanding at the start of the tax year
+              label: Reinvestment deductions. Self-assessment result. Total. Deduction
+                outstanding at the start of the tax year
             x-agp34c1h6l0j0c1q60o3gd1j:
               label: Reinvestment deductions. Total. Deduction still outstanding
             x-agp34c1h6l0j0c1qegp34c1h6lgj0c1e64r2qchk:
@@ -6821,7 +6822,7 @@ modelo:
             x-cdnmst31cdq6ubj5dlgmir0:
               label: Contact person for incidents. E-mail address
             x-cdnmst31cdq6ubjedtmm4sj5:
-              label: Contact person for incidents. Name
+              label: Contact person for incidents. Given name
             x-cdnmst31cdq6ubjkclm6apjfdpniqpj9d9ng:
               label: Contact person for incidents. Landline telephone
             x-cdnmst31cdq6ubjkclm6apjfdpniqrbfepkmo:
@@ -6829,7 +6830,7 @@ modelo:
             x-cln78qb4c5i2qp3fdlkmsobeehiisobgclm6oqb4dtpiqsj1f9nmsbbjdthmiobc:
               label: Parent entity. Surnames or legal name
             x-cln78qb4c5i2qp3fdlkmsobeehiisrjfdlh74p8:
-              label: Parent entity. Name
+              label: Parent entity. Given name
             x-cln78qb4c5i2qp3fdlkmsobeehiisrjldlin4rpdd5i6arjkd5j6ior1cdkmurg:
               label: Parent entity. Identification number
             x-cln78qb4c5i2qp3fdlkmsobeehiiss31d5piqt35e9p6it3fe9kmubb6dtp62r0:
@@ -6889,7 +6890,7 @@ modelo:
             x-d5i6arjkd5j6ior1cdkmurhedpkmc:
               label: Representative or parent entity. Tax identification number (NIF)
             x-d5i6arjkd5j6ior1cdkmurhedpnmqojick:
-              label: Representative or parent entity. Name
+              label: Representative or parent entity. Given name
             x-d5i6arjkd5j6ior1cdkmurhedpqmqpbidsmmesjle1ng:
               label: Representative or parent entity. Tax group number
             x-d5i6arjkd5j6ior1cdkmurhee1in4qbfchng:

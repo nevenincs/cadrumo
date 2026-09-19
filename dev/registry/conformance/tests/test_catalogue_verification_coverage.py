@@ -477,9 +477,24 @@ source_refs = ["test-source-parity"]
     return compile_validated_authority(registry_root, tmp_path)
 
 
-def test_model_law_matrix_reports_a_non_vacuous_gap_from_a_synthetic_reviewed_corpus(tmp_path: Path) -> None:
+@pytest.fixture(scope="module")
+def synthetic_reviewed_coverage(tmp_path_factory: pytest.TempPathFactory) -> ValidatedRegistryAuthority:
+    """Build the synthetic reviewed corpus once and share the compiled authority.
+
+    Building it copies the bundled legal, corpus and catalogue families and then
+    compiles the result; a synthetic root is deliberately outside both the
+    compiled-tree disk cache and the verdict cache, so every consumer that built
+    its own paid that compile in full. Each consumer only reads the authority,
+    and the authority is immutable, so one build serves them both.
+    """
+    return _synthetic_reviewed_coverage_authority(tmp_path_factory.mktemp("synthetic-reviewed-coverage"))
+
+
+def test_model_law_matrix_reports_a_non_vacuous_gap_from_a_synthetic_reviewed_corpus(
+    synthetic_reviewed_coverage: ValidatedRegistryAuthority,
+) -> None:
     """A validator-backed reviewed corpus produces each derived missing-layout cell."""
-    authority = _synthetic_reviewed_coverage_authority(tmp_path)
+    authority = synthetic_reviewed_coverage
     modelo = authority.modelo("999")
     revision = modelo.revisions["2025-2026"]
     inspection = authority.inspect_revision("999", filing_year=2025, period="0A")
@@ -511,9 +526,11 @@ def test_model_law_matrix_reports_a_non_vacuous_gap_from_a_synthetic_reviewed_co
     assert audit.required_gate_failures
 
 
-def test_coverage_filing_review_proof_delegates_to_snapshot_owned_check(tmp_path: Path) -> None:
+def test_coverage_filing_review_proof_delegates_to_snapshot_owned_check(
+    synthetic_reviewed_coverage: ValidatedRegistryAuthority,
+) -> None:
     """Coverage classification obtains review status from the snapshot boundary."""
-    authority = _synthetic_reviewed_coverage_authority(tmp_path)
+    authority = synthetic_reviewed_coverage
     modelo = authority.modelo("999")
     revision = modelo.revisions["2025-2026"]
     inspection = authority.inspect_revision(modelo.id, filing_year=2025, period="0A")

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
-from typing import get_args
 
 import pytest
 
@@ -18,7 +17,7 @@ from cadrumo.domain.calculations.registry.relations import (
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
-from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkDefinition
+from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -126,7 +125,9 @@ def test_modelo_180_extraction_profile_legal_refs_match_target_casillas(
         assert set(profile.legal_refs) == expected_refs
 
 
-@pytest.mark.parametrize(("filing_year", "period"), [(2021, "0A"), (2025, "0A")])
+# One year on each side of the 2023 orden boundary, both inside the supported
+# filing-year envelope; 2021 sits below its floor and no longer resolves.
+@pytest.mark.parametrize(("filing_year", "period"), [(2022, "0A"), (2025, "0A")])
 def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summary(
     filing_year: int,
     period: str,
@@ -170,7 +171,7 @@ def test_modelo_180_validated_snapshot_gates_workflow_surfaces_for_annual_summar
         "portal",
         "workflow",
     }
-    declarable = set(get_args(ApplicationLinkDefinition.model_fields["surface"].annotation))
+    declarable = {member.value for member in ApplicationLinkSurface}
     assert expected_surfaces <= declarable, (
         f"expectation names surfaces the schema cannot declare: {sorted(expected_surfaces - declarable)}"
     )

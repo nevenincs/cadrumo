@@ -7,6 +7,11 @@ import pytest
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from dev.registry.compiler.producer_inventory import producer_inventory
 
+from ...maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
+)
 from ..profile import RegistryConformanceProfile
 from ._conformance_profile_fixtures import degraded_profile, validated_profile
 
@@ -24,8 +29,23 @@ def test_validated_rows_keep_construct_floor_and_casilla_provenance_as_separate_
         for revision in modelo.revisions.values()
     }
 
+    horizon = coverage_assessment_horizon(registry_authority.catalogues)
+    floor = coverage_assessment_floor(registry_authority.catalogues)
+    measured = 0
     for row in validated_profile.rows:
         revision = revisions[(row.modelo, row.revision)]
+        # A revision with no coordinate inside the supported envelope has no
+        # filing year to measure an evidence floor at, and the profile says so
+        # by leaving the axis unset. Demanding coverage for every row asked
+        # modelo 308's 2009-2011-junio to carry a measurement of a span the
+        # product does not claim.
+        if not revision_selection_coordinates(revision, assessment_horizon=horizon, assessment_floor=floor):
+            assert row.model_law_coverage is None, (
+                f"{row.modelo}/{row.revision} lies wholly below the supported floor, so an evidence "
+                "floor measured there would be measuring a coordinate no filing can reach"
+            )
+            continue
+        measured += 1
         assert row.model_law_coverage is not None, "revision evidence floor was not measured"
         assert row.construct_evidence is not None, "construct evidence was not projected"
         assert row.construct_evidence.ledger.modelo == row.modelo
@@ -88,6 +108,8 @@ def test_validated_rows_keep_construct_floor_and_casilla_provenance_as_separate_
             for trace in row.casilla_provenance
         )
         assert actual_traces == expected_traces
+
+    assert measured, "no row carried a supported coordinate, so every assertion above ran on the skip branch"
 
 
 def test_degraded_rows_keep_schema_traces_but_mark_construct_evidence_unmeasured(

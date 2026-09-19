@@ -152,7 +152,7 @@ from ..maintenance_support import (
 from .coverage import REQUIRED_COVERAGE_TIERS as _REQUIRED_COVERAGE_TIERS
 from .coverage import ConstructEvidenceLedger as _ConstructEvidenceLedger
 from .coverage import ConstructEvidenceRow as _ConstructEvidenceRow
-from .coverage import CoverageAuthorityScope as _CoverageAuthorityScope
+from .coverage import CoverageAuthorityScope, ledger_is_filing_eligible
 from .coverage import EvidenceTierCoverageGate as _EvidenceTierCoverageGate
 from .coverage import ModelLawCoverageLedger as _ModelLawCoverageLedger
 from .coverage import RegistryConstructEvidenceAudit as _RegistryConstructEvidenceAudit
@@ -185,7 +185,6 @@ from .registry_classification_coherence import (
 
 __all__ = [
     "AnnualCasillaPopulationComparison",
-    "CoverageAuthorityScope",
     "DictionaryLayoutCasillaComparison",
     "LatestRevisionSupportProbe",
     "RegistryConformanceProfile",
@@ -213,8 +212,13 @@ type _MeasurementStatus = Literal["measured", "unsupported", "unmeasured"]
 # The coverage audit can inspect every revision without giving every revision
 # filing authority.  Keep that distinction on the application projection so a
 # renderer cannot infer filing-grade scope merely because a ledger is present.
-type CoverageAuthorityScope = _CoverageAuthorityScope
-type RevisionCoverageAuthorityScope = _CoverageAuthorityScope | Literal["mixed"]
+#: A revision-level scope is the same closed vocabulary as a ledger's. It was
+#: briefly widened to ``CoverageAuthorityScope | Literal["mixed"]``, which
+#: restated a member the enum already declares -- and that redundancy was load
+#: bearing: the fold below wrote the bare string, the widened type accepted it,
+#: and the eligibility predicate then had to compare with ``==`` instead of
+#: ``is``. One alias, one vocabulary, one comparison.
+type RevisionCoverageAuthorityScope = CoverageAuthorityScope
 
 _XML_DICTIONARY_PARSER_ATTRIBUTES = ("field_id", "path", "data_type", "casilla_id")
 _UNMEASURED_DICTIONARY_ATTRIBUTES = ("label", "data_type", "number", "segmento")
@@ -284,7 +288,7 @@ class AnnualCasillaPopulationComparison(ConformanceModel):
     layout_comparisons: tuple[DictionaryLayoutCasillaComparison, ...]
     printed_form_source_refs: tuple[str, ...] = ()
     xsd_source_refs: tuple[str, ...] = ()
-    authority_scope: CoverageAuthorityScope = _CoverageAuthorityScope.FILING
+    authority_scope: CoverageAuthorityScope = CoverageAuthorityScope.FILING
 
     @property
     def missing_casilla_ids(self) -> tuple[str, ...]:
@@ -361,7 +365,7 @@ def compare_annual_casilla_population(
             filing_year=snapshot.filing_year,
             period=snapshot.period,
             sources=snapshot.sources,
-            authority_scope=_CoverageAuthorityScope.FILING,
+            authority_scope=CoverageAuthorityScope.FILING,
         ),
         source_root=source_root,
     )
@@ -392,7 +396,7 @@ def compare_annual_casilla_population_for_revision(
             filing_year=filing_year,
             period=period,
             sources=sources,
-            authority_scope=_CoverageAuthorityScope.INSPECTION_ONLY,
+            authority_scope=CoverageAuthorityScope.INSPECTION_ONLY,
         ),
         source_root=source_root,
     )
@@ -672,13 +676,13 @@ class RevisionModelLawCoverage(ConformanceModel):
     satisfied_tiers: tuple[_EvidenceTierField, ...]
     gap_tiers: tuple[_EvidenceTierField, ...]
     required_tier_gaps: tuple[_RequiredCoverageTier, ...]
-    authority_scope: RevisionCoverageAuthorityScope = _CoverageAuthorityScope.FILING
+    authority_scope: RevisionCoverageAuthorityScope = CoverageAuthorityScope.FILING
     coordinates: tuple[tuple[int, str], ...] = Field(min_length=1)
 
     @property
     def filing_eligible(self) -> bool:
         """Whether this coverage ledger may contribute filing-grade gaps."""
-        return self.authority_scope == _CoverageAuthorityScope.FILING
+        return ledger_is_filing_eligible(self.authority_scope)
 
     @property
     def has_required_gap(self) -> bool:
@@ -1374,7 +1378,9 @@ def _model_law_coverage(ledgers: tuple[_ModelLawCoverageLedger, ...]) -> Revisio
         )
     )
     scopes: set[RevisionCoverageAuthorityScope] = {ledger.authority_scope for ledger in ledgers}
-    authority_scope: RevisionCoverageAuthorityScope = next(iter(scopes)) if len(scopes) == 1 else "mixed"
+    authority_scope: RevisionCoverageAuthorityScope = (
+        next(iter(scopes)) if len(scopes) == 1 else CoverageAuthorityScope.MIXED
+    )
     return RevisionModelLawCoverage(
         satisfied_tiers=satisfied,
         gap_tiers=gaps,

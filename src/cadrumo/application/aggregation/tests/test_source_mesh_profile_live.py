@@ -24,7 +24,7 @@ from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.config import Settings
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.errors import NoRevisionForPeriodError
+from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
@@ -220,7 +220,7 @@ def test_profile_source_snapshot_below_the_supported_floor_is_refused() -> None:
     """A modelo 100 year below the published floor has no filing revision to project from."""
     supported_years = published_supported_filing_years()
     assert supported_years is not None
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         published_snapshot(
             "100", filing_year=supported_years.floor - 1, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY
         )

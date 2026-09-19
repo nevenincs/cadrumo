@@ -36,7 +36,7 @@ modelo:
       construct:
         modelo-341-autoliquidacion:
           field:
-            title: Modelo 341 önadózási bevallás - IVA
+            title: '341-es nyomtatvány: önadózási bevallás - IVA'
       field:
         official_name: Modelo 341. Kompenzációk visszatérítésére vonatkozó kérelem
           a mezőgazdasági, állattenyésztési és halászati különleges szabályozás keretében.

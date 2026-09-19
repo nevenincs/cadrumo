@@ -4,7 +4,7 @@ modelo:
       construct:
         modelo-128-calculation-construct:
           field:
-            title: '128-as modelo: az önadózás számítása'
+            title: '128-as nyomtatvány: az önadózás számítása'
       field:
         official_name: Modelo 128. Adóelőleg-levonások és -befizetések. Tőkésítési
           műveletekből, valamint élet- vagy rokkantsági biztosítási szerződésekből
@@ -19,7 +19,7 @@ modelo:
             '02':
               label: Visszatartások és előlegfizetések alapja
             '03':
-              label: Visszatartások és előlegfizetések
+              label: Forrásadó és részletfizetés
             '04':
               label: Kedvezményezettek száma (kiegészítő blokk)
             '05':

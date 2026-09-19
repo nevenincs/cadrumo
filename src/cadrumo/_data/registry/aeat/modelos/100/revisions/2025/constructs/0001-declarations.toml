@@ -120,6 +120,8 @@ dependency_classifications = [
 [[revisions."2025".constructs]]
 id = "renta-work-income"
 legal_refs = [
+    "ley-19-1994:art-75",
+    "ley-35-2006:art-7",
     "ley-35-2006:art-7-h",
     "ley-35-2006:art-17",
     "ley-35-2006:art-18",
@@ -138,6 +140,8 @@ source_refs = [
     "aeat-dr-100-2025-dictionary",
     "aeat-modelo-190-instructions-2025",
     "boe-modelo-190-2025-form",
+    "boe-ley-19-1994-art-75-statutory-facts",
+    "boe-lirpf-statutory-facts",
     "lirpf-cuota-chain-authority",
 ]
 casilla_ids = [
@@ -176,6 +180,7 @@ formulas = [
     "renta-trabajo-rendimiento-neto",
     "renta-trabajo-rendimiento-neto-reducido",
     "renta-trabajo-otros-gastos",
+    "renta-maritime-exempt-income-0525",
 ]
 bindings = ["renta-modelo-111-retenciones-periodicas", "renta-modelo-190-retenciones-anuales"]
 dependency_classifications = ["renta-dep-111", "renta-dep-190"]

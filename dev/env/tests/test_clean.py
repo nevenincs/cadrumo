@@ -14,6 +14,7 @@ A rule that spared everything would pass one half and fail the other.
 
 from __future__ import annotations
 
+import os
 import shutil
 from pathlib import Path
 
@@ -21,7 +22,7 @@ import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
 from dev.packaging.command_execution import run_command
-from dev.test_runs.reaper import COMPLETED_RETENTION_SECONDS
+from dev.test_runs.reaper import PID_TRUST_CEILING_SECONDS
 
 from ..clean import (
     FAMILIES,
@@ -46,6 +47,8 @@ IGNORE_RULES = """\
 __pycache__/
 *.pyc
 .ruff_cache/
+.cache/
+cache/
 build/
 .env
 env/*
@@ -108,7 +111,6 @@ def test_a_cache_is_removed_while_every_protected_family_beside_it_survives(repo
         "local storage": _write(repository / "var" / "storage" / "buckets" / "ledger.db", "encrypted"),
         "vault": _write(repository / ".vault" / "adr" / "decision.md", "# decision\n"),
         "vaultspec": _write(repository / ".vaultspec" / "rules" / "rule.md", "# rule\n"),
-        "logs": _write(repository / ".logs" / "test-runs" / "run.log", "evidence"),
     }
 
     entries = assess(repository)
@@ -153,6 +155,73 @@ def test_the_mixed_var_root_is_split_rather_than_judged_whole(repository: Path) 
     assert probe_tree.exists(), "a release-cohort tree was removed by a rule keyed on its parent"
     assert key_material.exists(), "key material under var/ was removed"
     assert bucket.exists(), "an encrypted bucket under var/ was removed"
+
+
+def test_the_logs_scratch_root_is_reaped_and_only_a_live_owner_defers_it(
+    repository: Path,
+) -> None:
+    """`.logs/` is scratch with no excepted child; only a live owner defers a family.
+
+    Everything there is output of a run -- captured stdout, downloaded payloads,
+    draft vault bodies, a cache -- so a verdict of KEEP asserts a durability the
+    tree does not have. `test-runs` used to be spared by NAME, and that was
+    wrong in both directions at once: finished test runs survived this section
+    forever, while a live `audit-runs` directory was reaped mid-write because it
+    was not the name being recognised. The question is liveness, it is asked of
+    the owning pid, and it is asked of every family alike.
+    """
+    captured = _write(repository / ".logs" / "authority-provenance.err", "captured stderr")
+    logs_cache = _write(repository / ".logs" / "cache" / "payload.bin", "derived")
+    finished = _write(
+        repository
+        / ".logs"
+        / "test-runs"
+        / "2026-09-08"
+        / f"20260908T000000.0Z-pytest-{os.getpid()}-abcd1234"
+        / "run.json",
+        "{}",
+    )
+    live = _write(
+        repository
+        / ".logs"
+        / "audit-runs"
+        / "2026-09-08"
+        / f"20260908T000000.0Z-audit-{os.getpid()}-beef5678"
+        / "run.log",
+        "still being written",
+    )
+
+    entries = assess(repository)
+    reclaim(repository, entries)
+
+    assert _verdict_for(entries, ".logs/audit-runs")[0] is Verdict.KEEP
+    assert live.exists(), "a run whose owner is alive was removed mid-write"
+    assert _verdict_for(entries, ".logs/test-runs")[0] is Verdict.REAP
+    for name, path in (
+        ("captured output", captured),
+        ("cache", logs_cache),
+        ("a finished run", finished),
+    ):
+        assert not path.exists(), f"{name} under .logs/ survived, so something there is still excepted"
+
+
+def test_a_directory_named_cache_is_reaped_wherever_it_is_not_protected(repository: Path) -> None:
+    """`cache` and `.cache` state their role, and holding out for a generic name cost 2.3 GB.
+
+    The pair matters because the reversal must not reach through a protection:
+    the root-level tree goes, and the identically named one inside `secrets/`
+    stays, which is the ordering in :func:`classify` rather than the name rule.
+    """
+    root_cache = _write(repository / ".cache" / "registry-validation-verdicts" / "verdict.json", "{}")
+    nested_cache = _write(repository / "scratch" / "run" / "cache" / "compiled.pkl", "derived")
+    protected_cache = _write(repository / "secrets" / "cache" / "unwrapped.key", "key-material")
+
+    entries = assess(repository)
+    reclaim(repository, entries)
+
+    assert not root_cache.exists(), "a root-level .cache tree survived"
+    assert not nested_cache.exists(), "a nested cache directory survived"
+    assert protected_cache.exists(), "the cache rule reached inside a protected tree"
 
 
 def test_untracked_work_that_is_not_ignored_is_counted_and_never_touched(repository: Path) -> None:
@@ -351,8 +420,12 @@ def test_the_justfile_severity_notice_still_matches_the_code_it_describes() -> N
     assert f"{int(IDLE_CEILING_SECONDS / 3600)}h of silence" in notice, (
         "the documented session idle ceiling no longer matches IDLE_CEILING_SECONDS"
     )
-    assert f"{int(COMPLETED_RETENTION_SECONDS / 86400)}" in justfile or "retention window" in notice, (
-        "the documented test-run retention no longer matches COMPLETED_RETENTION_SECONDS"
+    assert "no retention window" in notice, (
+        "the notice must state that a completed run directory is reclaimed at any age; a reader who"
+        " believes a retention window exists will leave a failing run's log unread until it is gone"
+    )
+    assert f"{int(PID_TRUST_CEILING_SECONDS / 3600)} hours" in notice, (
+        "the documented ceiling on trusting a run's PID no longer matches PID_TRUST_CEILING_SECONDS"
     )
     for family in FAMILIES:
         assert family in notice, f"the --only selector {family} is undocumented in the severity notice"

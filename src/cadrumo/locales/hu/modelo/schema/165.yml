@@ -3,8 +3,22 @@ modelo:
     '165':
       casilla:
         continuidad:
+          declaracion-complementaria-sustitutiva:
+            label: Kiegészítő vagy helyettesítő bevallás
+          declarante-razon-social:
+            label: A bejelentő neve vagy cégneve
+          fecha-adquisicion:
+            label: A részvények vagy üzletrészek megszerzésének dátuma
+          fecha-constitucion:
+            label: Az alapítás dátuma
           filing-year:
             label: Az adóbevallás vonatkozási éve
+          importe-fondos-propios:
+            label: A saját tőke összege
+          importe-suscripcion:
+            label: A jegyzés vagy szerzés összege
+          importe-total-suscripciones:
+            label: A jegyzések vagy szerzések teljes összege
           m165-declaracion-complementaria-sustitutiva:
             label: Kiegészítő vagy helyettesítő bevallás
           m165-declarante-razon-social:
@@ -35,12 +49,28 @@ modelo:
             label: A tag vagy résztulajdonos adószáma
           m165-socio-nombre:
             label: A tag vagy résztulajdonos családi és utóneve
+          numero-identificativo-anterior:
+            label: A korábbi bevallás azonosító száma
+          numero-identificativo-declaracion:
+            label: A bevallás azonosító száma
+          numero-total-declarados:
+            label: A bejelentett tagok száma összesen
+          persona-relacion:
+            label: Kapcsolattartó személy
+          porcentaje-participacion:
+            label: A részesedés százaléka
+          representante-legal-nif:
+            label: A törvényes képviselő adószáma
+          socio-nif:
+            label: A tag vagy résztulajdonos adószáma
+          socio-nombre:
+            label: A tag vagy résztulajdonos családi és utóneve
           tipo-declaracion:
             label: Bevallás típusa (eredeti / helyettesítő / kiegészítő)
       construct:
         modelo-165-informative:
           field:
-            title: Modelo 165 bevallás tájékoztató
+            title: '165-ös nyomtatvány: tájékoztató jellegű adatszolgáltatás'
       field:
         official_name: Modelo 165. Az újonnan vagy nemrég alapított szervezetek tagjai
           vagy résztvevői részére kiadott egyedi igazolások adatszolgáltatási bevallása.
@@ -49,46 +79,16 @@ modelo:
       revision:
         2013-2015:
           field:
-            label: 165-ös modelo (HAP/2455/2013 rendelet), 2013. adóévtől
+            label: 165-es modelo, 2013-2015. adóévek
         2016-2022:
           field:
-            label: 165-ös modelo (HAP/2455/2013 rendelet), 2013. adóévtől
+            label: 165-es modelo, 2016-2022. adóévek
         2023-2025:
           field:
-            label: 165-ös modelo (HAP/2455/2013 rendelet), 2013. adóévtől
+            label: 165-es modelo, 2023-2025. adóévek
         2026-y-siguientes:
           casilla:
-            declaracion-complementaria-sustitutiva:
-              label: Kiegészítő vagy helyettesítő bevallás
-            declarante-razon-social:
-              label: A bejelentő neve vagy cégneve
             empresa-emergente:
               label: Induló vállalkozás
-            fecha-adquisicion:
-              label: A részvények vagy üzletrészek megszerzésének dátuma
-            fecha-constitucion:
-              label: Az alapítás dátuma
-            importe-fondos-propios:
-              label: A saját tőke összege
-            importe-suscripcion:
-              label: A jegyzés vagy szerzés összege
-            importe-total-suscripciones:
-              label: A jegyzések vagy szerzések teljes összege
-            numero-identificativo-anterior:
-              label: A korábbi bevallás azonosító száma
-            numero-identificativo-declaracion:
-              label: A bevallás azonosító száma
-            numero-total-declarados:
-              label: A bejelentett tagok száma összesen
-            persona-relacion:
-              label: Kapcsolattartó személy
-            porcentaje-participacion:
-              label: A részesedés százaléka
-            representante-legal-nif:
-              label: A törvényes képviselő adószáma
-            socio-nif:
-              label: A tag vagy résztulajdonos adószáma
-            socio-nombre:
-              label: A tag vagy résztulajdonos családi és utóneve
           field:
-            label: 165-ös modelo (HAP/2455/2013 rendelet), 2013. adóévtől
+            label: 165-es modelo, 2026. adóévtől

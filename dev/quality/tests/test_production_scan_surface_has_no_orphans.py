@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import ast
 import re
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -61,7 +62,13 @@ def _absolute_target(node: ast.ImportFrom, here: str, is_package: bool) -> str |
     return ".".join(anchor + tail)
 
 
+@cache
 def _scanned_sources() -> dict[Path, str]:
+    """Read the scanned tree once per process.
+
+    Cached because every assertion in this module needs the same text, and
+    re-reading it per test doubled the gate's file I/O for nothing.
+    """
     sources: dict[Path, str] = {}
     for root in (SRC_CADRUMO, REPO_ROOT / "dev"):
         if not root.exists():
@@ -74,6 +81,44 @@ def _scanned_sources() -> dict[Path, str]:
             except OSError:
                 continue
     return sources
+
+
+_WORD = re.compile(r"\w+")
+
+
+@cache
+def _tokens_by_source() -> dict[Path, frozenset[str]]:
+    r"""Return each scanned source's set of whole words.
+
+    ``\bstem\b`` matches a module stem exactly when that stem appears as a
+    complete run of word characters, because the stem is a Python identifier and
+    is therefore all word characters itself -- those boundaries assert nothing
+    more than "the neighbours are not word characters". Membership in this set
+    asks the same question, once per source instead of once per source PER
+    unimported module.
+    """
+    return {path: frozenset(_WORD.findall(text)) for path, text in _scanned_sources().items()}
+
+
+@cache
+def _sources_naming() -> dict[str, int]:
+    """Return, per word, how many scanned sources contain it."""
+    counts: dict[str, int] = {}
+    for words in _tokens_by_source().values():
+        for word in words:
+            counts[word] = counts.get(word, 0) + 1
+    return counts
+
+
+def _named_outside(word: str, path: Path) -> bool:
+    """Whether ``word`` appears in some scanned source other than ``path``.
+
+    The question both reachability arms ask. Answered from the index rather than
+    by sweeping every source per candidate, which is what made this gate
+    quadratic.
+    """
+    own = 1 if word in _tokens_by_source().get(path, frozenset()) else 0
+    return _sources_naming().get(word, 0) - own > 0
 
 
 def _statically_imported(sources: dict[Path, str]) -> set[str]:
@@ -98,7 +143,10 @@ def _statically_imported(sources: dict[Path, str]) -> set[str]:
 def test_every_production_module_is_imported_or_named_somewhere() -> None:
     sources = _scanned_sources()
     imported = _statically_imported(sources)
-
+    # `_named_outside` replaces a fresh regex swept across every source for each
+    # unimported module. That inner sweep was O(modules x bytes) and dominated
+    # this gate at 91 s; the index answers the same question, as its own note
+    # explains.
     orphans: list[str] = []
     for path in production_python_files():
         if path.name == "__init__.py":
@@ -106,8 +154,7 @@ def test_every_production_module_is_imported_or_named_somewhere() -> None:
         dotted, _ = _module_name(path, SRC_CADRUMO.parent)
         if dotted in imported:
             continue
-        pattern = re.compile(rf"\b{re.escape(path.stem)}\b")
-        if any(pattern.search(text) for other, text in sources.items() if other != path):
+        if _named_outside(path.stem, path):
             continue
         orphans.append(path.relative_to(REPO_ROOT).as_posix())
 
@@ -120,22 +167,14 @@ def test_every_production_module_is_imported_or_named_somewhere() -> None:
 
 def test_the_detector_would_catch_a_scratch_file_in_the_package_root() -> None:
     """A zero-orphan result must mean the tree is clean, not that nothing is checked."""
-    sources = _scanned_sources()
     invented = "_untracked_scratch_probe_sentinel_4711"
-    pattern = re.compile(rf"\b{re.escape(invented)}\b")
 
-    here = Path(__file__).resolve()
-    elsewhere = {path: text for path, text in sources.items() if path.resolve() != here}
-    assert not any(pattern.search(text) for text in elsewhere.values()), (
-        "the sentinel name was expected to appear nowhere but this file"
-    )
+    here = next((path for path in _scanned_sources() if path.resolve() == Path(__file__).resolve()), None)
+    assert here is not None, "this module must itself sit inside the scanned tree, or the sentinel proves nothing"
+    assert not _named_outside(invented, here), "the sentinel name was expected to appear nowhere but this file"
 
     # A real module, by contrast, must be reachable by the same rule.
-    reachable = 0
-    for path in production_python_files()[:200]:
-        if path.name == "__init__.py":
-            continue
-        stem = re.compile(rf"\b{re.escape(path.stem)}\b")
-        if any(stem.search(text) for other, text in sources.items() if other != path):
-            reachable += 1
+    reachable = sum(
+        1 for path in production_python_files()[:200] if path.name != "__init__.py" and _named_outside(path.stem, path)
+    )
     assert reachable, "the name-reference arm matched nothing at all, so it proves nothing"

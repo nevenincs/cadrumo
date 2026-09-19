@@ -26,7 +26,7 @@ bytes = 103935
 retrieved_at = 2026-08-19
 published_at = 1999-11-19
 applies_from = 1999-11-20
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22309"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-1999-22309"
 review_status = "pending_review"
 
 [sources."aeat-dr-194-2019"]
@@ -126,7 +126,7 @@ bytes = 85297
 retrieved_at = 2026-08-19
 published_at = 1999-11-20
 applies_from = 1999-11-21
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1999-22372"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-1999-22372"
 review_status = "pending_review"
 
 [sources."aeat-dr-188-2023"]
@@ -165,7 +165,7 @@ bytes = 65076
 retrieved_at = 2026-08-19
 published_at = 2014-09-10
 applies_from = 2014-09-11
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-9225"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-9225"
 review_status = "pending_review"
 
 [sources."aeat-dr-187-2022"]

@@ -27,7 +27,8 @@ import shutil
 import signal
 import subprocess
 import sys
-from collections.abc import Mapping, Sequence
+from collections.abc import Coroutine, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
 from enum import StrEnum
 from typing import TYPE_CHECKING
 
@@ -329,6 +330,32 @@ async def _run_captured_async(
     )
 
 
+def _completed_off_any_loop[T](coroutine: Coroutine[object, object, T]) -> T:
+    """Run one coroutine to completion whether or not a loop is already running.
+
+    ``asyncio.run`` refuses outright inside a running loop, so a synchronous
+    helper built on it is only callable from synchronous callers -- and that is
+    not a property a caller can see. The MCP server reaches these helpers both
+    ways: the shipped entrypoint calls them before it starts serving, while a
+    warm in-process runtime resolves the same command surface from inside the
+    serving loop, and the second path died on ``asyncio.run() cannot be called
+    from a running event loop``. The refusal is real and correct -- re-entering
+    a live loop would deadlock it -- so the fix is to stop asking it to.
+
+    A private loop on a worker thread satisfies both callers with one
+    implementation: the calling thread blocks on the result exactly as it did
+    before, and any loop it is running stays untouched. The thread is created
+    per call and joined by the executor's own exit, so nothing outlives the
+    result.
+    """
+    try:
+        asyncio.get_running_loop()
+    except RuntimeError:
+        return asyncio.run(coroutine)
+    with ThreadPoolExecutor(max_workers=1, thread_name_prefix="cadrumo-mcp-blocking") as worker:
+        return worker.submit(asyncio.run, coroutine).result()
+
+
 def run_captured(
     argv: Sequence[str],
     *,
@@ -339,7 +366,7 @@ def run_captured(
     env: Mapping[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     """Run a bounded no-shell child and return decoded stdout and stderr."""
-    return asyncio.run(
+    return _completed_off_any_loop(
         _run_captured_async(
             argv,
             timeout_s=timeout_s,
@@ -369,7 +396,7 @@ def run_supervised(
     Returns:
         The :class:`SupervisedResult`.
     """
-    return asyncio.run(
+    return _completed_off_any_loop(
         _run_supervised_async(
             argv,
             timeout_s=timeout_s,

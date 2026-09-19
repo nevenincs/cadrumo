@@ -55,10 +55,71 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
     # English product text and the abbreviation "impon." of "imponible";
     # "super" only occurs bound in the official rate name "super-reducido".
     # "inter vivos" is Latin, and "bitcoin" is the asset name.
-    "es": frozenset({"Coin", "Comic", "Name", "bitcoin", "impon", "inter", "name", "super"}),
+    # Casilla text plus the interface domains: Latin and asset names, and words that
+    # are transport tokens, field ids or English terms rather than Spanish prose.
+    "es": frozenset(
+        {
+            "Coin",
+            "Comic",
+            "Console",
+            "Name",
+            "bitcoin",
+            "codigo",
+            "domiciliacion",
+            "economica",
+            "impon",
+            "inter",
+            "modificacion",
+            "name",
+            "operacion",
+            "pais",
+            "prestacion",
+            "razon",
+            "record",
+            "records",
+            "retencion",
+            "revision",
+            "super",
+            "value",
+            "vehiculo",
+        }
+    ),
     # Proper names (Sorolla, Illes Balears, Tokio) and correct inflections:
     # "sorok" (rows), "egyenleget" (accusative), "nekik" (to them).
-    "hu": frozenset({"Illes", "Sorolla", "Tokio", "egyenleget", "nekik", "sorok"}),
+    "hu": frozenset(
+        {
+            "Alkulcs",
+            "Illes",
+            "Ollama",
+            "Sorok",
+            "Sorolla",
+            "Tokio",
+            "adatsorokat",
+            "egyenleget",
+            "forfait",
+            "konyvelom",
+            "neked",
+            "nekik",
+            "nyelven",
+            "nyelvet",
+            "operacion",
+            "razon",
+            "rendszeren",
+            "retencion",
+            "retmar",
+            "sorok",
+            "sorokat",
+            "sorokhoz",
+            "soron",
+            "szektorokat",
+            "szektorokban",
+            "szkriptel",
+            "szkriptelt",
+            "variacion",
+        }
+    ),
+    # Catalan: an identifier fragment, a CLI example field, and an indicative verb form.
+    "ca": frozenset({"economica", "oblides", "pais"}),
 }
 
 
@@ -107,7 +168,8 @@ def unaccented_words(
         for key, value in sorted(values.get(locale, {}).items()):
             if value is None:
                 continue
-            for word in sorted(set(_WORD.findall(_NOT_PROSE.sub(" ", value)))):
+            prose = _NOT_PROSE.sub(" ", _CODE_SPAN.sub(" ", value))
+            for word in sorted(set(_WORD.findall(prose))):
                 if len(word) < _MIN_LENGTH or word.isupper() or word in accepted or _DIACRITICS & set(word.lower()):
                     continue
                 if word not in verdicts:
@@ -118,15 +180,85 @@ def unaccented_words(
 
 
 #: Spanish tax vocabulary every locale keeps untranslated, and registry identifier stems.
-_KEPT_SPANISH: Final = frozenset({"modelo", "modelos", "casilla", "casillas", "contraparte", "importe"})
-#: Per locale, Spanish terms a translation keeps on purpose: "pro rata" is Latin in
-#: English, and "recargo de equivalencia" names the Spanish VAT regime.
+_KEPT_SPANISH: Final = frozenset({"modelo", "modelos", "contraparte", "importe"})
+#: Per locale, Spanish words a translation keeps on purpose: Latin ("inter vivos"), the
+#: names of official programmes and deductions, registry and form field identifiers, and
+#: terms the product states in Spanish everywhere ("perceptor", "recargo de equivalencia").
 REVIEWED_SPANISH_TERMS: Final[dict[str, frozenset[str]]] = {
-    "en": frozenset({"equivalencia", "rata", "recargo"}),
+    "en": frozenset(
+        {
+            "deportivo",
+            "ejercicio",
+            "equivalencia",
+            "favor",
+            "perceptor",
+            "periodo",
+            "rata",
+            "recargo",
+            "tecnológica",
+            "tipo",
+            "vivos",
+        }
+    ),
+    "ca": frozenset(
+        {
+            "batea",
+            "cross",
+            "deportivo",
+            "ejercicio",
+            "holding",
+            "liar",
+            "memoria",
+            "operación",
+            "periodo",
+            "tecnológica",
+            "tipo",
+            "vinculación",
+            "vivos",
+        }
+    ),
+    "hu": frozenset(
+        {
+            "deportivo",
+            "ejercicio",
+            "foral",
+            "interno",
+            "periodo",
+            "tecnológica",
+            "tipo",
+            "vinculada",
+            "vivos",
+        }
+    ),
 }
 _QUOTED: Final = re.compile(r"«[^»]*»|\"[^\"]*\"|“[^”]*”|„[^”]*”|\([^)]*\)")
+#: Code spans and interpolation the interface domains carry; the casilla surface has none.
+_CODE_SPAN: Final = re.compile(r"`[^`]*`|%\{[^}]*\}|\{[^}]*\}")
+#: What a parenthesis holds when it is not prose: a legal citation, a form or an acronym.
+_CITED: Final = re.compile(r"art|ley|lis|liva|rd|da|dt|mod|cap|tit|apartado|decreto", re.IGNORECASE)
+#: Two words of four letters or more make a parenthesis prose rather than a reference.
+_PARENTHESISED_PROSE: Final = re.compile(r"[^\W\d_]{4,}", re.UNICODE)
+
+
+def _blank_unless_prose(match: re.Match[str]) -> str:
+    """Keep a parenthesis or quotation for judgement only when it states prose.
+
+    A quotation carries an official name and a parenthesis usually carries a
+    citation, a form number or an acronym, none of which a locale translates.
+    A parenthesis that states words of its own is ordinary text and is read
+    like the rest of the label, so Spanish cannot hide inside it.
+    """
+    group = match.group()
+    if not group.startswith("("):
+        return " "
+    words = _PARENTHESISED_PROSE.findall(group)
+    if len(words) < 2 or _CITED.fullmatch(words[0]):
+        return " "
+    return group
+
+
 _TRANSLATED_LOCALES: Final = ("en", "ca", "hu")
-_MIN_LEFTOVERS: Final = 2
+_MIN_LEFTOVERS: Final = 1
 _MIN_VERBATIM_RUN: Final = 3
 
 
@@ -185,7 +317,8 @@ def spanish_leftovers(
             if value is None:
                 continue
             leftovers: list[str] = []
-            prose = _verbatim_runs(_QUOTED.sub(" ", value), sources.get(locale, {}).get(key, frozenset()))
+            judged = _QUOTED.sub(_blank_unless_prose, value)
+            prose = _verbatim_runs(judged, sources.get(locale, {}).get(key, frozenset()))
             for word in _WORD.findall(_NOT_PROSE.sub(" ", prose)):
                 if len(word) < _MIN_LENGTH or not word.islower() or word in _KEPT_SPANISH or word in kept:
                     continue

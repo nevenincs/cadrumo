@@ -27,6 +27,7 @@ from types import FunctionType
 from typing import TYPE_CHECKING, TypedDict, override
 
 from cadrumo.core.toml import TomlDecodeError, load_toml
+from dev.registry.compiler.export_fragment_grammar import revision_section_for_directory
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -537,7 +538,7 @@ def audit(root: Path) -> dict[str, object]:
                 record["metadata"] = dict(_revision_table(revision_data, revision_dir.name))
 
             for family_dir in sorted(path for path in revision_dir.iterdir() if path.is_dir()):
-                family = "export_layouts" if family_dir.name == "export" else family_dir.name
+                family = revision_section_for_directory(family_dir.name)
                 for fragment in sorted(family_dir.glob("*.toml")):
                     family_file_counts[family] += 1
                     data, error = _load_toml(fragment)

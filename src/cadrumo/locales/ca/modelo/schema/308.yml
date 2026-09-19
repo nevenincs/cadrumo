@@ -21,16 +21,13 @@ modelo:
       revision:
         2009-2011-junio:
           field:
-            label: Model 308, exercicis 2009 i següents (Ordre EHA/3786/2008, ad hoc
-              segons el tipus d'operador)
+            label: Model 308, exercicis 2009 a 2011, fins al juny de 2011
         2011-julio-2015:
           field:
-            label: Model 308, exercicis 2009 i següents (Ordre EHA/3786/2008, ad hoc
-              segons el tipus d'operador)
+            label: Model 308, exercicis 2011 a 2015, des del juliol de 2011
         2016-2018:
           field:
-            label: Model 308, exercicis 2009 i següents (Ordre EHA/3786/2008, ad hoc
-              segons el tipus d'operador)
+            label: Model 308, exercicis 2016 a 2018
         2019-y-siguientes:
           casilla:
             x-chim6r1echincrrcelhmirre5lh6ioo:
@@ -170,5 +167,4 @@ modelo:
               help: Casella 109 del model 308, exercici 2009.
               label: Tipus de tributació segons el subjecte passiu
           field:
-            label: Model 308, exercicis 2009 i següents (Ordre EHA/3786/2008, ad hoc
-              segons el tipus d'operador)
+            label: Model 308, exercicis 2019 i següents

@@ -3,30 +3,11 @@ tags:
   - '#reference'
   - '#filing-chain-reconciliation'
 date: '2026-09-17'
-modified: '2026-09-17'
+modified: '2026-09-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d942f8514d4882b6631a268a8b92285bfed3d2fcb34013b681047fc19b4fdeb'
+body_hash: 'sha256:723e1acd06c9a2cde5db6a9f99079a02c1d6f2d59b9fff960caf18f212d9ddb7'
 related: []
 ---
-
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #reference) and one feature tag.
-     Replace filing-chain-reconciliation with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `filing-chain-reconciliation` reference: `Filing chain, amendment and AEAT reconciliation code map`
 

@@ -926,63 +926,6 @@ class _DeadWeightSignalProcessor:
     def consume(self, line: str) -> None:
         self.lines.append(line)
 
-    @staticmethod
-    def _previous_summary(run_dir: Path) -> tuple[str | None, dict[str, object] | None]:
-        family_root = run_dir.parents[1]
-        candidates = sorted(
-            family_root.glob("*/*-audit-dead-weight-*/artifacts/dead-weight-signal.json"),
-            key=lambda path: path.parents[1].name,
-            reverse=True,
-        )
-        for candidate in candidates:
-            if candidate.parents[1] == run_dir:
-                continue
-            try:
-                payload = json.loads(candidate.read_text(encoding=_UTF_8))
-            except (OSError, json.JSONDecodeError):
-                continue
-            if not _is_json_object(payload):
-                continue
-            summary = payload.get("summary")
-            if not _is_json_object(summary):
-                continue
-            return str(payload.get("run_id", candidate.parents[1].name)), summary
-        return None, None
-
-    @staticmethod
-    def _comparison(
-        summary: dict[str, object],
-        baseline_run_id: str | None,
-        baseline: dict[str, object] | None,
-    ) -> dict[str, object]:
-        comparison: dict[str, object] = {"baseline_run_id": baseline_run_id}
-        for dimension in ("duplication", "dead_code"):
-            current_values = summary.get(dimension, {})
-            baseline_values = baseline.get(dimension, {}) if baseline is not None else {}
-            if not isinstance(current_values, dict) or not isinstance(baseline_values, dict):
-                comparison[dimension] = {
-                    "findings_total_delta": None,
-                    "rate_delta": None,
-                }
-                continue
-            current_findings = current_values.get("findings_total")
-            previous_findings = baseline_values.get("findings_total")
-            current_rate = current_values.get("rate")
-            previous_rate = baseline_values.get("rate")
-            comparison[dimension] = {
-                "findings_total_delta": (
-                    int(current_findings) - int(previous_findings)
-                    if current_findings is not None and previous_findings is not None
-                    else None
-                ),
-                "rate_delta": (
-                    round(float(current_rate) - float(previous_rate), 8)
-                    if current_rate is not None and previous_rate is not None
-                    else None
-                ),
-            }
-        return comparison
-
     def envelope(
         self,
         *,
@@ -1042,8 +985,6 @@ class _DeadWeightSignalProcessor:
                 }
             else:
                 summary = raw_summary
-        baseline_run_id, baseline = self._previous_summary(run_dir)
-        comparison = self._comparison(summary, baseline_run_id, baseline)
         signal_artifact = {
             "schema_version": 1,
             "run_id": run_dir.name,
@@ -1073,7 +1014,6 @@ class _DeadWeightSignalProcessor:
             },
             "schema_version": 1,
             "summary": summary,
-            "comparison": comparison,
         }
 
 

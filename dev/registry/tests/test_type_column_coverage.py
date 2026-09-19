@@ -1,10 +1,16 @@
 """Every compiled revision is read by a type-column instrument, declares no export, or is named unchecked.
 
-The generated-tree gate reads derivation records out of generation manifests and
-the hand-authored gate reads ``export_layouts`` trees. A revision offering
-neither artefact is in neither gate's input, so both read clean without having
-looked at it. The partition asked here comes from the compiled registry, not
-from a directory glob, so such a revision surfaces by name instead of vanishing.
+The generated-tree gate reads derivation records out of generation manifests; the
+hand-authored gate reads an authored ``export_layouts`` tree where one exists and
+the layout the revision resolves where none does. A revision in neither input is
+read by nobody, so both gates report clean without having looked at it. The
+partition asked here comes from the compiled registry, not from a directory glob,
+so such a revision surfaces by name instead of vanishing.
+
+Eligibility is a record FIELD rather than a declared layout, because a type
+column types wire slots: a revision whose layout carries no record -- Modelo
+100's ``xml_dictionary`` editions -- has nothing either instrument could compare,
+which is different from having something nobody compared.
 """
 
 from __future__ import annotations
@@ -18,11 +24,11 @@ from cadrumo.core.resources.bundled_data import bundled_path
 
 from ..analysis.hand_authored_type_column import hand_authored_revisions
 from ..analysis.type_column_coverage import (
-    GENERATION_MANIFEST_NAME,
     TypeColumnCoverage,
     type_column_coverage,
 )
 from ..compiler.authority import compiled_bundled_authority
+from ..compiler.export_fragment_grammar import EXPORT_FRAGMENT_PROVENANCE_FILENAME
 from ..compiler.loader import load_modelo_directory
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -56,7 +62,9 @@ def test_the_partition_agrees_with_what_each_gate_actually_reads(shipped) -> Non
     """Coverage is only true if each gate's real input is exactly the revisions credited to it."""
     authority, rows = shipped
     by_state = {state: {row.subject for row in rows if row.coverage is state} for state in TypeColumnCoverage}
-    manifests = bundled_path("registry", "aeat", "modelos").glob(f"*/revisions/*/export/{GENERATION_MANIFEST_NAME}")
+    manifests = bundled_path("registry", "aeat", "modelos").glob(
+        f"*/revisions/*/export/{EXPORT_FRAGMENT_PROVENANCE_FILENAME}"
+    )
     generated_gate_input = {f"{path.parts[-5]}/{path.parts[-3]}" for path in manifests}
     hand_gate_input = {f"{modelo}/{revision}" for modelo, revision, _root in hand_authored_revisions(authority)}
 
@@ -76,36 +84,47 @@ def _coverage(modelos_root: Path) -> dict[str, tuple[TypeColumnCoverage, str | N
     return {row.revision: (row.coverage, row.reason) for row in rows}
 
 
-def test_a_revision_without_its_generation_manifest_is_named_unchecked(tmp_path: Path) -> None:
-    """Removing the manifest flips the revision from read to UNCHECKED, never to absent."""
+def test_a_revision_without_its_generation_manifest_moves_to_the_other_instrument(tmp_path: Path) -> None:
+    """Removing the manifest moves the revision between instruments, never out of the partition.
+
+    Losing the manifest takes the revision out of the generated gate's input,
+    and the hand-authored screen picks it up from the layout it resolves. What
+    must never happen is the revision quietly leaving the partition, which is
+    the state where both gates read clean without having looked at it.
+    """
     modelos_root = _copied_modelo(tmp_path)
     assert _coverage(modelos_root)[_DELTA] == (TypeColumnCoverage.GENERATED_MANIFEST, None)
 
-    (modelos_root / _MODELO / "revisions" / _DELTA / "export" / GENERATION_MANIFEST_NAME).unlink()
+    (modelos_root / _MODELO / "revisions" / _DELTA / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).unlink()
     coverage = _coverage(modelos_root)
 
-    state, reason = coverage[_DELTA]
-    assert state is TypeColumnCoverage.UNCHECKED
-    assert reason is not None
-    assert "no generation manifest" in reason
+    assert _DELTA in coverage
+    assert coverage[_DELTA] == (TypeColumnCoverage.HAND_AUTHORED_LAYOUTS, None)
     assert coverage[_BASE] == (TypeColumnCoverage.GENERATED_MANIFEST, None)
 
 
-def test_a_migrated_manifest_less_edition_is_named_unchecked_as_a_delta(tmp_path: Path) -> None:
-    """A stated edition naming its predecessor, with no manifest, reads as unchecked and says it is a delta."""
+def test_a_manifest_less_delta_edition_is_read_from_the_layout_it_resolves(tmp_path: Path) -> None:
+    """A delta edition with no manifest is read, not reported as unread.
+
+    This is the case the partition used to get wrong. A delta states no layout
+    of its own, so keying on the directory listing left it credited to neither
+    instrument while the hand-authored screen could resolve and compare it
+    perfectly well.
+    """
     modelos_root = _copied_modelo(tmp_path)
     revision_dir = modelos_root / _MODELO / "revisions" / _DELTA
     manifest = revision_dir / "revision.toml"
-    header = f'[revisions."{_DELTA}"]\n'
-    text = manifest.read_bytes().decode("utf-8")
-    manifest.write_bytes(text.replace(header, f'{header}predecessor = "{_BASE}"\n', 1).encode("utf-8"))
-    (revision_dir / "export" / GENERATION_MANIFEST_NAME).unlink()
+    # The edition states its own predecessor, so the delta this test needs is
+    # the authored one. Asserting it rather than injecting a second declaration
+    # keeps the test honest if the edition is ever re-rooted: injecting made a
+    # duplicate TOML key the moment the edition gained a predecessor of its own.
+    assert f'predecessor = "{_BASE}"' in manifest.read_text(encoding="utf-8")
+    (revision_dir / "export" / EXPORT_FRAGMENT_PROVENANCE_FILENAME).unlink()
 
     state, reason = _coverage(modelos_root)[_DELTA]
 
-    assert state is TypeColumnCoverage.UNCHECKED
-    assert reason is not None
-    assert f"delta-authored relative to {_BASE!r}" in reason
+    assert state is TypeColumnCoverage.HAND_AUTHORED_LAYOUTS
+    assert reason is None
 
 
 def test_an_authored_tree_beside_a_manifest_is_unchecked_not_credited_to_either_gate(tmp_path: Path) -> None:

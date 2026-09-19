@@ -1,6 +1,6 @@
 [revisions."2019-y-siguientes"]
 casilla_storage_baseline = "2016-2018"
-predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2019"] } }
+predecessor = { none = { reason = "Stated in full: this edition cannot be materialised exactly from the edition before it (predecessor row without lineage).", cause = "predecessor_row_without_lineage", legal_refs = ["ley-37-1992:art-21"], source_refs = ["aeat-dr-308-2019"] } }
 casilla_source_refs = ["aeat-dr-308-2019"]
 live_cross_reference_source_refs = ["aeat-modelo-308-procedure"]
 application_link_source_refs = ["aeat-modelo-308-procedure"]

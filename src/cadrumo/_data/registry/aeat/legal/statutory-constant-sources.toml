@@ -57,7 +57,7 @@ kind = "instructions"
 corpus_path = "corpus/normatives/html/ley-35-2006.html"
 sha256 = "b55ba6f2ee97c045290277acd5be1e6493e95b8e5ba7cb7e5e776ff5a572d9f0"
 bytes = 1921157
-retrieved_at = 2026-09-09
+retrieved_at = 2026-05-06
 published_at = 2006-11-29
 applies_from = 2007-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764"
@@ -481,7 +481,7 @@ kind = "instructions"
 corpus_path = "corpus/aeat_official/instructions/modelo_036/files/capitulo-04-actividades-economicas-locales-actividad.html"
 sha256 = "a1c9cb40b1dbe78150421d5dd4575e1e12b0bae91c919bcabb60b5b8f012be39"
 bytes = 13893
-retrieved_at = 2026-09-10
+retrieved_at = 2026-08-07
 applies_from = 2026-03-26
 source_url = "https://sede.agenciatributaria.gob.es/Sede/ayuda/manuales-videos-folletos/manuales-practicos/guia-practica-cumplimentacion-modelo-censal-036/capitulo-04-actividades-economicas-locales/cumplimentacion-declaracion-actividades-economicas-locales/actividad.html"
 review_status = "agent_reviewed"
@@ -506,7 +506,7 @@ kind = "instructions"
 corpus_path = "corpus/normatives/html/ley-19-1994-art-75.html"
 sha256 = "344657dee928cc9c7728dcd3ceab364b60252db3bf13dd2d5ee8aa8e77155dbe"
 bytes = 2188
-retrieved_at = 2026-09-09
+retrieved_at = 2026-06-10
 published_at = 1994-07-07
 applies_from = 1994-07-08
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1994-15794#a75"

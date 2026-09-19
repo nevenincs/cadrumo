@@ -5,7 +5,7 @@ modelo:
         continuidad:
           donante-nif:
             label: Az adományozó adóazonosító száma (magánszemély, jogi személy vagy
-              referencia nonprofit kedvezményezett szervezet)
+              az érintett nonprofit kedvezményezett szervezet)
           donante-nombre:
             label: Az adományozó neve (családi és utónév, vagy cégnév)
           donativo-recurrente:
@@ -24,7 +24,7 @@ modelo:
       construct:
         modelo-182-informative:
           field:
-            title: '182-es modelo: a kapott adományokról, ajándékokról és hozzájárulásokról
+            title: '182-es nyomtatvány: a kapott adományokról, ajándékokról és hozzájárulásokról
               szóló adatszolgáltatás'
       field:
         official_name: Modelo 182. A magánszemélyek jövedelemadója, a külföldi illetőségűek

@@ -11,10 +11,24 @@ from __future__ import annotations
 
 import asyncio
 import subprocess
+import sys
 from collections.abc import Callable, Mapping, Sequence
 from os import PathLike
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
+
+# The ``STARTUPINFO`` type on the platform that has one.
+#
+# ``subprocess.STARTUPINFO`` exists only in the Windows stubs, so naming it
+# directly in an annotation is unresolved wherever the tree is analysed for
+# another platform -- and an annotation is not a runtime branch, so no guard at
+# a call site can narrow it. The module-level ``sys.platform == "win32"`` block
+# is the one shape every checker this project runs narrows on, which makes this
+# alias the real type on Windows and an unconstrained one everywhere else.
+if sys.platform == "win32":
+    type WindowsStartupInfo = subprocess.STARTUPINFO
+else:
+    type WindowsStartupInfo = Any
 
 
 class _ProcessOptions(TypedDict, total=False):
@@ -22,7 +36,7 @@ class _ProcessOptions(TypedDict, total=False):
 
     pass_fds: tuple[int, ...]
     close_fds: bool
-    startupinfo: subprocess.STARTUPINFO
+    startupinfo: WindowsStartupInfo
 
 
 def run_audited_process(
@@ -39,7 +53,7 @@ def run_audited_process(
     check: bool = False,
     pass_fds: Sequence[int] = (),
     close_fds: bool | None = None,
-    startupinfo: subprocess.STARTUPINFO | None = None,
+    startupinfo: WindowsStartupInfo | None = None,
     after_spawn: Callable[[asyncio.subprocess.Process], object] | None = None,
 ) -> subprocess.CompletedProcess[str | bytes]:
     """Run an explicit argv through the audited async process boundary.
@@ -86,7 +100,7 @@ async def _run_audited_process(
     check: bool,
     pass_fds: Sequence[int],
     close_fds: bool | None,
-    startupinfo: subprocess.STARTUPINFO | None,
+    startupinfo: WindowsStartupInfo | None,
     after_spawn: Callable[[asyncio.subprocess.Process], object] | None,
 ) -> subprocess.CompletedProcess[str | bytes]:
     """Implement :func:`run_audited_process` without shell or dispatch."""

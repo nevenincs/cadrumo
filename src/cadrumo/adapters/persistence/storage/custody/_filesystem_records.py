@@ -105,7 +105,7 @@ def _posix_compare_and_replace_same_or_predecessor_local_record(
     maximum_bytes: int,
 ) -> None:
     """Perform the idempotent receipt transition below one pinned POSIX parent."""
-    if not sys.platform.startswith("linux"):
+    if not sys.platform == "linux":
         raise ProfileCustodyRecordError(
             "atomic local custody record idempotent compare-and-replace is unavailable on this POSIX host"
         )
@@ -334,7 +334,7 @@ def _posix_compare_and_replace_local_record(
     maximum_bytes: int,
 ) -> None:
     """CAS through Linux ``renameat2(EXCHANGE)`` below one pinned directory."""
-    if not sys.platform.startswith("linux"):
+    if not sys.platform == "linux":
         raise ProfileCustodyRecordError(
             "atomic local custody record compare-and-replace is unavailable on this POSIX host"
         )
@@ -374,7 +374,7 @@ def _posix_compare_and_replace_local_record(
 
 def _posix_compare_and_clear_local_record(path: Path, *, expected: bytes, maximum_bytes: int) -> None:
     """Move only the exact expected leaf aside, then delete that verified inode."""
-    if not sys.platform.startswith("linux"):
+    if not sys.platform == "linux":
         raise ProfileCustodyRecordError(
             "atomic local custody record compare-and-clear is unavailable on this POSIX host"
         )

@@ -17,7 +17,7 @@ import pytest
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.binding_temporal import SameFilingYearPeriods
-from cadrumo.domain.calculations.registry.errors import NoRevisionForPeriodError
+from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from cadrumo.domain.calculations.registry.formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (
     RegistryFoldRequirement,
@@ -103,7 +103,7 @@ def test_historical_pagos_fraccionados_relation_contract_and_fold(
     assert support is not None
     if not support.admits_filing_year(year):
         _assert_relation_contract(registry_authority.modelo("100").revisions[str(year)])
-        with pytest.raises(NoRevisionForPeriodError):
+        with pytest.raises(FilingYearOutsideSupportEnvelopeError):
             registry_authority.snapshot("100", filing_year=year, period="0A")
         return
 

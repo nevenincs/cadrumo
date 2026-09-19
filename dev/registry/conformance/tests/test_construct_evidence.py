@@ -12,6 +12,11 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
 from ...compiler.authority import compiled_bundled_authority
+from ...maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
+)
 from ..coverage import (
     ConstructEvidenceLedger,
     ConstructEvidenceRow,
@@ -30,8 +35,18 @@ def test_construct_evidence_audit_enumerates_every_declared_construct_and_select
     audit = audit_registry_construct_evidence(authority)
 
     ledgers_by_coordinate = {(ledger.modelo, ledger.revision): ledger for ledger in audit.ledgers}
+    # A revision lying wholly below the supported floor carries no coordinate a
+    # filing could reach, so it holds no construct evidence to audit. The
+    # envelope is read here rather than the audit's own output: expecting every
+    # declared revision demanded ledgers for modelo 341's 2005-2015 and its
+    # kind, and expecting whatever the audit returned would assert nothing.
+    horizon = coverage_assessment_horizon(authority.catalogues)
+    floor = coverage_assessment_floor(authority.catalogues)
     expected_ledger_coordinates = {
-        (modelo.id, revision.id) for modelo in modelos for revision in modelo.revisions.values()
+        (modelo.id, revision.id)
+        for modelo in modelos
+        for revision in modelo.revisions.values()
+        if revision_selection_coordinates(revision, assessment_horizon=horizon, assessment_floor=floor)
     }
     assert set(ledgers_by_coordinate) == expected_ledger_coordinates
     assert len(audit.ledgers) == len(expected_ledger_coordinates)
@@ -44,6 +59,8 @@ def test_construct_evidence_audit_enumerates_every_declared_construct_and_select
 
     for modelo in modelos:
         for revision in modelo.revisions.values():
+            if (modelo.id, revision.id) not in expected_ledger_coordinates:
+                continue
             ledger = ledgers_by_coordinate[(modelo.id, revision.id)]
             by_coordinate = {(row.kind, row.construct_id): row for row in ledger.rows}
             expected_coordinates = {

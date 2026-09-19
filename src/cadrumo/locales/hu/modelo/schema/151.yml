@@ -52,7 +52,7 @@ modelo:
           p01-contribuyente-57-codigo-de-municipio:
             label: Adózó. 57 - Településkód.
           p01-devengo-periodo:
-            label: Esedékesség - időszak
+            label: Esedékesség - Időszak
           p01-representante-57-codigo-de-municipio:
             label: Képviselő. 57 - Településkód.
           p01-representante-apellidos:
@@ -330,7 +330,7 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
               label: Adózó. 54 - Kiegészítő címadatok.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
-              label: Adózó. 55 - Település
+              label: Adózó. 55 - Helység
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd9m5lhmup39ctniqs3fedq62r0:
               label: Adózó. 56 - Irányítószám.
             x-e0o32bj3dtn78sj9c9qnipbeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
@@ -355,7 +355,7 @@ modelo:
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmasjf5kr38bbgdth6oob3d5nmsbb3d5qm8ob4:
               label: Adózó külföldi címe. 64 - Település/város
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmau3ke9gmsqj5e9niqdhi5li6urb9cdkmoqbf:
-              label: Adózó külföldi címe. 62 - Cím
+              label: Adózó külföldi címe. 62 - Lakcím
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmqs3cclmmarjkc5p6irrj5li6urb9cdkmoqbf:
               label: Adózó külföldi címe. 63 - Kiegészítő címadatok
             x-e0o32bj3dtn78sj9c9qnipbeehiiqp3fdlkm6qbcd4mmsqj5e9niqdph5lq6ar35cpnmsrpddlnncqbc:
@@ -401,7 +401,7 @@ modelo:
             x-e0o32bjiclo74pbjcln78obeehiiqd9k5li62t3fecmmarb5dpq62sj9dtpiqp355li6urb9cdkmoqbf:
               label: Képviselő. 54 - Kiegészítő címadatok.
             x-e0o32bjiclo74pbjcln78obeehiiqd9l5lm6uor1dhkm8ob45lo6uojcc5hmirre:
-              label: Képviselő. 55 - Település
+              label: Képviselő. 55 - Helység
             x-e0o32bjiclo74pbjcln78obeehiiqd9m5lhmup39ctniqs3fedq62r0:
               label: Képviselő. 56 - Irányítószám.
             x-e0o32bjiclo74pbjcln78obeehiiqd9o5lhmup39ctniqp355lo74rrmd5n66qb1:
@@ -411,7 +411,7 @@ modelo:
             x-e0o32bjiclo74pbjcln78obeehiiqdhg5lq6ar35cpnmsrpddlnncqbc:
               label: Képviselő. 60 - Mobiltelefon.
             x-e0o32bjiclo74pbjcln78obeehiiqrj9co:
-              label: Képviselő. Adóazonosító szám
+              label: Képviselő. NIF
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko32:
               label: Munkajövedelem kiegészítő adatai. Külföldön megfizetett adó [9]
             x-e0o34bj4c5q6uspdc5i6ior9dtn62r35ecmn4pbecgmmaor8dsmmarhdclm2qpboehp62rjaclp6ub9p5ko34:
@@ -465,13 +465,13 @@ modelo:
             x-e0o34bjgc5jm2p3fe8mmcbba5ko38:
               label: Kifizető. Természetes/jogi személy
             x-e0o34bjgc5jm2p3fe8mmsqb65ko32:
-              label: Kifizető. Adóazonosító szám
+              label: Kifizető. NIF
             x-e0o34bjgc5jm2p3fe8mmsqb65ko34:
-              label: Kifizető. Adóazonosító szám
+              label: Kifizető. NIF
             x-e0o34bjgc5jm2p3fe8mmsqb65ko36:
-              label: Kifizető. Adóazonosító szám
+              label: Kifizető. NIF
             x-e0o34bjgc5jm2p3fe8mmsqb65ko38:
-              label: Kifizető. Adóazonosító szám
+              label: Kifizető. NIF
             x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
               label: Bruttó jövedelem / vélelmezett ingatlanjövedelem [6]
             x-e0o34bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
@@ -557,13 +557,13 @@ modelo:
             x-e0o36bjgc5jm2p3fe8mmcbba5ko38:
               label: Kifizető. Természetes/jogi személy
             x-e0o36bjgc5jm2p3fe8mmsqb65ko32:
-              label: Kifizető. Adóazonosító szám
+              label: Kifizető. NIF
             x-e0o36bjgc5jm2p3fe8mmsqb65ko34:
-              label: Kifizető. Adóazonosító szám
+              label: Kifizető. NIF
             x-e0o36bjgc5jm2p3fe8mmsqb65ko36:
-              label: Kifizető. Adóazonosító szám
+              label: Kifizető. NIF
             x-e0o36bjgc5jm2p3fe8mmsqb65ko38:
-              label: Kifizető. Adóazonosító szám
+              label: Kifizető. NIF
             x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko32:
               label: Bruttó jövedelem / vélelmezett ingatlanjövedelem [6]
             x-e0o36bjicln68qbdd5imst3f5lkmst35ctp6ubbickmmirjddth6ir39c5p6io9dd5mn0tbkc5i62b9m5ko34:
@@ -894,9 +894,9 @@ modelo:
             x-e0o3cbj1chonaqbid5imst355lj2qqhd60p0:
               label: Vevő. Természetes/jogi személy
             x-e0o3cbj1chonaqbid5imst355ln6iphd60og:
-              label: Vevő. Adóazonosító szám
+              label: Vevő. NIF
             x-e0o3cbj1chonaqbid5imst355ln6iphd60p0:
-              label: Vevő. Adóazonosító szám
+              label: Vevő. NIF
             x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0c8:
               label: Részesedési hányad
             x-e0o3cbj3elnn8o9dchiiqs31e9q6ior9e1gm6qbfdomj0cg:
@@ -1178,28 +1178,28 @@ modelo:
             x-chkm8bj9dpjn4pbjdsmm8rrdd5hmir39c5hmirre5li6atjfdhqm6qbfdommioj1do:
               label: Befizetés / Csoportos beszedés / Visszatérítés. IBAN
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hispr1dpgmsor9c4mn0obke9kmqrred5gmo:
-              help: A 151-es modelo kollektív befektetési jegyek átruházásáról szóló
-                mellékletének adata.
+              help: A 151-es nyomtatvány kollektív befektetési jegyek átruházásáról
+                szóló mellékletének adata.
               label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
                 jegyeinek átruházása. Tőkenyereség
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hisrj9commarjkd5i62p0:
-              help: A 151-es modelo kollektív befektetési jegyek átruházásáról szóló
-                mellékletének adata.
+              help: A 151-es nyomtatvány kollektív befektetési jegyek átruházásáról
+                szóló mellékletének adata.
               label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
                 jegyeinek átruházása. A befektetési társaság vagy alap NIF száma
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hissj5ehimsor9dtn0:
-              help: A 151-es modelo 03. rovata, 2025. adóév.
+              help: A 151-es nyomtatvány 03. rovata, 2025. adóév.
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist39e1niqsj5dpq62:
-              help: A 151-es modelo 01. rovata, 2025. adóév.
-              label: A modelo- és oldalazonosító kezdete
+              help: A 151-es nyomtatvány 01. rovata, 2025. adóév.
+              label: A nyomtatvány- és oldalazonosító kezdete
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobb7c5n62rj3d5gn6:
-              help: A 151-es modelo kollektív befektetési jegyek átruházásáról szóló
-                mellékletének adata.
+              help: A 151-es nyomtatvány kollektív befektetési jegyek átruházásáról
+                szóló mellékletének adata.
               label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
                 jegyeinek átruházása. Tőkenyereségek összesen
             x-d5mn0obke9km2p3f5pgmspbodsmn8sj1dppmqqbjd5nmsbb9d5hist3fehgmobbiclq6arj3d5nmspbj:
-              help: A 151-es modelo kollektív befektetési jegyek átruházásáról szóló
-                mellékletének adata.
+              help: A 151-es nyomtatvány kollektív befektetési jegyek átruházásáról
+                szóló mellékletének adata.
               label: Melléklet. Kollektív befektetési vállalkozás részvényeinek vagy
                 jegyeinek átruházása. Levonások vagy előlegfizetések összesen
             x-d5mn0obke9km2p3f5ph62sr55lm6isbld5i62ojcckmmepbeclp62r0:
@@ -1896,7 +1896,7 @@ modelo:
             x-e0o3cbjiclpn8rpde9imsp39dlkmarjkdsmmspbkdsmn0rrjd5q6itjf5ko3a:
               label: 'MARADÉK. Nettó hozam: pozitív [05]'
             x-e0o3cbjiclpn8rpde9imst35dphmirre5lniqqbectp6asrf5lgiqorlcln78o9d60r0:
-              label: MARADÉK. Levonás vagy előlegfizetés [06]
+              label: MARADÉK. Forrásadó vagy adóelőleg [06]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h:
               label: Jövedelem típusa [01]
             x-e0o3cbjkd5o6ubb4ckmn4pbeehgiqc1h5ko34:
@@ -1982,17 +1982,17 @@ modelo:
             x-e0o3ebjkdtq62r1de9in8pbecdkmurj5ecmmubb9dpjn4pbjdtpiqo9dcdqmarjkc4mj0d8:
               label: Összes levonás vagy előlegfizetés [05]
             x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6oog:
-              label: Beszerző. Vezetéknév és utónév vagy cégnév [61]
+              label: Vevő. Vezetéknév és utónév vagy cégnév [61]
             x-e0o3gbj1chonaqbid5imst355lgn0pbcdhkm8rrj5lsiqrjfdlh74p9ddsmn4obqdtn2qsrfcdkm2r1d6ooiqc1i:
-              label: Beszerző. Vezetéknév és utónév vagy cégnév [61]
+              label: Vevő. Vezetéknév és utónév vagy cégnév [61]
             x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo0:
               label: Beszerző. Természetes/Jogi személy [60]
             x-e0o3gbj1chonaqbid5imst355lj2qqhd6oo2qc1i:
               label: Beszerző. Természetes/Jogi személy [60]
             x-e0o3gbj1chonaqbid5imst355ln6iphd6ksg:
-              label: Beszerző. NIF [59]
+              label: Vevő. NIF [59]
             x-e0o3gbj1chonaqbid5imst355ln6iphd6ksiqc1i:
-              label: Beszerző. NIF [59]
+              label: Vevő. NIF [59]
             x-e0o3gbj2dhnn2tb55kpj2:
               label: Épületblokk [31]
             x-e0o3gbj2dhnn2tb55kpj2b9g68:
@@ -2074,9 +2074,9 @@ modelo:
             x-e0o3gbjeelmmasjf5li6abbge9nn8rr3dtm6ub9m6kmj0cg:
               label: Jegyzőkönyvi szám [65]
             x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6g:
-              label: A 211-es modelo igazolószáma [54]
+              label: A 211-es nyomtatvány igazolószáma [54]
             x-e0o3gbjeelmmasjf5ll7asrkd5j6ior1dpq6abb4clm2qrbfchimorpd68oj2b9l6gmj0cg:
-              label: A 211-es modelo igazolószáma [54]
+              label: A 211-es nyomtatvány igazolószáma [54]
             x-e0o3gbjgdhgmst315kpj8:
               label: Emelet [34]
             x-e0o3gbjgdhgmst315kpj8b9g68:

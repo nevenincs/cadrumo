@@ -42,11 +42,11 @@ reconsideration_condition = 'The supported-filing-years floor is lowered to admi
 
 [[dispositions]]
 kind = 'record_drift'
-modelo = '296'
-revision = '2024-y-siguientes'
-source_ref = 'aeat-dr-296-2024'
-source_sha256 = 'abec12e56073f8325b159c45a6b25de713bd53f8315c26c0f5243024f00d0378'
+modelo = '200'
+revision = '2025-y-siguientes'
+source_ref = 'aeat-dr-200-2025'
+source_sha256 = '92392cdb46d8e7c7f6e4e6477306570e15edfd64d5ea3e6d631e5cf847dd5509'
 remedy = 'republish'
 differing_records = 1
-reason = '''The pinned official PDF parser anchor at source row 177 states one leading sign byte at position 145, blank for non-negative values and N for negative values, followed by a 12+2 digit unsigned monetary magnitude at positions 146-159. The accepted reviewed signed-composite profile now verifies that complete source grammar and emits casilla 02 through the existing money codec with blank_or_n signing. The published declarante record predates that reviewed profile and renders the same field as ordinary alphanumeric text; a fresh validated candidate changes exactly that one record, so the generated inputs are correct and the published record is stale.'''
-reconsideration_condition = 'The published tree is republished from this reviewed profile, or the pinned official source or signed-composite profile policy changes and requires a fresh source-agreement adjudication.'
+reason = '''One record differs, and the difference is a casilla reference resolving to the wrong page's instance of the same official box. Casilla 00588 is printed on three Modelo 200 pages, so the revision declares DP200011:00588, DP200014B:00588 and DP200018B:00588. The shipped 0050-record-m200-page-018b.toml names DP200014B:00588 for a field on page 018B; a fresh render from the current semantic map names DP200018B:00588, which is the instance that page carries. Every other one of the 140 files reproduces byte for byte, and the only other difference is the generation manifest, which pins the earlier semantic map. The inputs are the side that is right here, which is why the remedy is republication rather than an input repair.'''
+reconsideration_condition = 'The tree is republished from the current semantic map, which retires this row; the gate then fails if it is left behind.'

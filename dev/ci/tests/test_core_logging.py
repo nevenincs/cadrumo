@@ -81,17 +81,42 @@ def _force_configure_logging() -> None:
         _logging_mod._configured = original_configured or True
 
 
-def test_default_logging_routes_warnings_to_file_not_stderr(capsys: pytest.CaptureFixture[str]) -> None:
-    """Warnings should be persisted for diagnostics without polluting CLI stderr."""
+def test_default_logging_routes_warnings_to_file_not_stderr(tmp_path: Path, capsys: pytest.CaptureFixture[str]) -> None:
+    """Warnings should be persisted for diagnostics without polluting CLI stderr.
+
+    The log directory is this test's own. Read against the real one, the
+    assertion was a race rather than a contract: that file is shared by every
+    xdist worker and by any other process on the host writing through the same
+    configuration, so between the write and the 64KB tail read it can take on
+    enough unrelated lines, or roll over, to carry the marker out of view. It
+    failed only inside the full dev batch, where the traffic is there. Isolating
+    the directory keeps the claim -- a warning reaches the file, not stderr --
+    and removes the co-tenants.
+
+    The configure-once latch is reset around the override and the healthy
+    configuration rebuilt afterwards, exactly as the uncreatable-directory case
+    below does: leaving handlers bound to a torn-down temporary directory is
+    how a passing test silences its successors.
+    """
 
     marker = "warning-route-marker-7f6a3c"
-    logger = get_logger("aeat-test_logging.default_route")
+    log_dir = tmp_path / "logs"
+    original_configured = _logging_mod._configured
+    try:
+        _logging_mod._configured = False
+        with override_settings(cadrumo_log_dir=log_dir):
+            configure_logging()
+            logger = get_logger("aeat-test_logging.default_route")
 
-    logger.warning(marker)
+            logger.warning(marker)
 
-    captured = capsys.readouterr()
-    assert marker not in captured.err
-    assert marker in _read_log_tail(default_log_file_path())
+            captured = capsys.readouterr()
+            assert marker not in captured.err
+            assert marker in _read_log_tail(default_log_file_path())
+    finally:
+        _logging_mod._configured = False
+        configure_logging()
+        _logging_mod._configured = original_configured or True
 
 
 def _read_log_tail(path: Path, *, max_bytes: int = 64 * 1024) -> str:

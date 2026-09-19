@@ -71,9 +71,33 @@ modelo:
             label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [163]
           '164':
             label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount [164]
+          '166':
+            help: Field declared on modelo 322, the group-of-entities individual monthly
+              self-assessment.
+          '167':
+            help: Field declared on modelo 322, the group-of-entities individual monthly
+              self-assessment.
+          '168':
+            help: Data declared in modelo 322, the individual monthly self-assessment
+              for the group of entities.
+          '169':
+            help: Data declared in modelo 322, the individual monthly self-assessment
+              for the group of entities.
           '17':
             label: Settlement. VAT ACCRUED. Remaining transactions under the general
               regime. Tax amount [17]
+          '170':
+            help: Data declared in modelo 322, the individual monthly self-assessment
+              for the group of entities.
+          '171':
+            help: Data declared in modelo 322, the individual monthly self-assessment
+              for the group of entities.
+          '172':
+            help: Data declared in modelo 322, the individual monthly self-assessment
+              for the group of entities.
+          '173':
+            help: Data declared in modelo 322, the individual monthly self-assessment
+              for the group of entities.
           '18':
             label: Settlement. VAT ACCRUED. Remaining transactions under the general
               regime [18]
@@ -172,7 +196,8 @@ modelo:
           filing-year:
             label: Filing year to which the return relates
           iva-cuota-autorepercutida-intracomunitaria:
-            label: Reverse-charge VAT amount on intra-Community acquisitions
+            label: Reverse-charge VAT amount on intra-Community acquisitions (LIVA
+              art. 84.Uno.2)
           iva-cuota-deducible-total:
             label: Total deductible VAT amount
           iva-cuota-devengada-total:
@@ -188,9 +213,31 @@ modelo:
             label: Deductible input VAT on domestic current transactions
           iva-resultado-regimen-general:
             label: General regime result
+          m322-actividad-otras-1-codigo:
+            help: Completed only in the last period of the return.
+          m322-actividad-otras-1-epigrafe-iae:
+            help: Completed only in the last period of the return.
+          m322-actividad-otras-2-codigo:
+            help: Completed only in the last period of the return.
+          m322-actividad-otras-2-epigrafe-iae:
+            help: Completed only in the last period of the return.
+          m322-actividad-otras-3-codigo:
+            help: Completed only in the last period of the return.
+          m322-actividad-otras-3-epigrafe-iae:
+            help: Completed only in the last period of the return.
+          m322-actividad-otras-4-codigo:
+            help: Completed only in the last period of the return.
+          m322-actividad-otras-4-epigrafe-iae:
+            help: Completed only in the last period of the return.
+          m322-actividad-otras-5-codigo:
+            help: Completed only in the last period of the return.
+          m322-actividad-otras-5-epigrafe-iae:
+            help: Completed only in the last period of the return.
           m322-actividad-principal-codigo:
+            help: Completed only in the last period of the return.
             label: Activity code - Main
           m322-actividad-principal-epigrafe-iae:
+            help: Completed only in the last period of the return.
             label: IAE heading - Main
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-compensaciones-en-regimen-especial-de-la:
             label: Activities with differentiated deduction regimes. Deductible VAT.
@@ -217,9 +264,9 @@ modelo:
           : label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 1. Adjustment of deductions. Deductible tax amount [715]
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-1-suma-de-deducciones-cuota-deducible:
-            label: 'Activities under differentiated deduction regimes. Deductible
-              IVA: Group 1. Total deductions (701 + 703 + 705 + 707 + 709 + 711 +
-              713 + 715 + 716). Deductible cuota [717]'
+            label: 'Activities with differentiated deduction regimes. Deductible IVA:
+              Group 1. Total deductions (701 + 703 + 705 + 707 + 709 + 711 + 713 +
+              715 + 716). Deductible amount [717]'
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-compensaciones-en-regimen-especial-de-la:
             label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 2. Compensation under the special agriculture, livestock and fisheries
@@ -245,15 +292,45 @@ modelo:
           : label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 2. Adjustment of deductions. Deductible tax amount [733]
           m322-actividades-con-regimenes-de-deduccion-diferenciados-iva-deducible-grupo-2-suma-de-deducciones-cuota-deducible:
-            label: 'Activities under differentiated deduction regimes. Deductible
-              IVA: Group 2. Total deductions (719 + 721 + 723 + 725 + 727 + 729 +
-              731 + 733 + 734). Deductible cuota [735]'
+            label: 'Activities with differentiated deduction regimes. Deductible IVA:
+              Group 2. Total deductions (719 + 721 + 723 + 725 + 727 + 729 + 731 +
+              733 + 734). Deductible amount [735]'
           m322-actividades-deduccion-diferenciadas-grupo-1-regularizacion-bienes-inversion-cuota:
             label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 1. Capital-goods regularisation. Deductible tax amount [716]
           m322-actividades-deduccion-diferenciadas-grupo-2-regularizacion-bienes-inversion-cuota:
             label: Activities with differentiated deduction regimes. Deductible VAT.
               Group 2. Capital-goods regularisation. Deductible tax amount [734]
+          m322-identificacion-aplicacion-prorrata-especial-opcion-revocacion:
+            help: Field declared on modelo 322, the group-of-entities individual monthly
+              self-assessment.
+          m322-identificacion-destinatario-criterio-caja:
+            help: Field declared on modelo 322, the group-of-entities individual monthly
+              self-assessment.
+          m322-identificacion-exonerado-declaracion-resumen-anual-modelo-390:
+            help: Data declared in modelo 322, the individual monthly self-assessment
+              for the group of entities.
+          m322-identificacion-grupo-rol:
+            help: Field declared on modelo 322, the group-of-entities individual monthly
+              self-assessment.
+          m322-identificacion-nif-entidad-dominante:
+            help: Data declared in modelo 322, the individual monthly self-assessment
+              for the group of entities.
+          m322-identificacion-numero-grupo:
+            help: Field declared on modelo 322, the group-of-entities individual monthly
+              self-assessment.
+          m322-identificacion-redeme-inscrito:
+            help: Field declared on modelo 322, the group-of-entities individual monthly
+              self-assessment.
+          m322-identificacion-regimen-163-sexies-cinco:
+            help: Field declared on modelo 322, the group-of-entities individual monthly
+              self-assessment.
+          m322-identificacion-tributacion-exclusivamente-foral:
+            help: Field declared on modelo 322, the group-of-entities individual monthly
+              self-assessment.
+          m322-identificacion-volumen-anual-no-cero:
+            help: Field declared on modelo 322, the group-of-entities individual monthly
+              self-assessment.
           m322-informacion-adicional-criterio-caja-base-imponible:
             help: Field declared on modelo 322, the group-of-entities individual monthly
               self-assessment.
@@ -299,7 +376,7 @@ modelo:
             label: Settlement (continued). Amounts to offset from periods before joining
               the group [66]
           m322-liquidacion-continuacion-diferencia-total-cuota-devengada-menos-total-a-deducir:
-            label: Liquidación (continued). Difference ([38] - [62]) . [63]
+            label: Settlement (continued). Difference ([38] - [62]) . [63]
           m322-liquidacion-continuacion-resultado-regularizacion-anual-administraciones-forales:
             label: Settlement (continued). Only for taxable persons taxed jointly
               by the State Administration and the Foral Treasuries. Result of the
@@ -371,8 +448,8 @@ modelo:
             label: Settlement. Deductible VAT. Capital-goods regularisation. Tax amount
               [60]
           m322-liquidacion-iva-deducible-regularizacion-por-aplicacion-del-porcentaje-definitivo-de-prorrata-cuota:
-            label: Settlement. Deductible VAT. Regularisation for the definitive prorrata
-              percentage. Tax amount [61]
+            label: Settlement. Deductible VAT. Regularisation for the definitive pro
+              rata percentage. Tax amount [61]
           m322-liquidacion-iva-deducible-total-a-deducir:
             label: Total deductible ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
               [62]
@@ -405,11 +482,11 @@ modelo:
           m322-liquidacion-iva-devengado-operaciones-intragrupo-tipo:
             label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [02]
           m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias:
-            label: Liquidación. IVA DEVENGADO. Other transactions under the reverse
-              charge (except intra-Community acquisitions) [23]
+            label: Settlement. VAT ACCRUED. Other transactions under the reverse charge
+              (except intra-Community acquisitions) [23]
           ? m322-liquidacion-iva-devengado-otras-operaciones-con-inversion-del-sujeto-pasivo-excepto-adquisiciones-intracomunitarias-cuota
-          : label: Liquidación. IVA DEVENGADO. Other transactions under the reverse
-              charge (except intra-Community acquisitions). Cuota [24]
+          : label: Settlement. VAT ACCRUED. Other transactions under the reverse charge
+              (except intra-Community acquisitions). Tax amount [24]
           m322-liquidacion-iva-devengado-recargo-de-equivalencia-base-imponible:
             label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base [27]
           m322-liquidacion-iva-devengado-recargo-de-equivalencia-cuota:
@@ -419,6 +496,9 @@ modelo:
           m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general:
             label: Settlement. VAT ACCRUED. Remaining transactions under the general
               regime [12]
+          m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-base-imponible:
+            help: Field declared on modelo 322, the group-of-entities individual monthly
+              self-assessment.
           m322-liquidacion-iva-devengado-resto-de-operaciones-en-regimen-general-cuota:
             label: Settlement. VAT ACCRUED. Remaining transactions under the general
               regime. Tax amount [14]
@@ -650,7 +730,7 @@ modelo:
               help: Box 37 of modelo 322, tax year 2008.
             '38':
               help: Box 38 of modelo 322, tax year 2008.
-              label: Total accrued cuota ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
+              label: Total accrued amount ([161]+[03]+[164]+[06]+[09]+[152]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[32]+[35]+[37]).
                 [38]
             '39':
               help: Box 39 of modelo 322, tax year 2008.
@@ -762,7 +842,7 @@ modelo:
               help: Box 67 of modelo 322, tax year 2008.
             '68':
               help: Box 68 of modelo 322, tax year 2008.
-              label: Liquidación (continued). Result ([65] - [66] + [67]) [68]
+              label: Settlement (continued). Result ([65] - [66] + [67]) [68]
             '70':
               help: Box 70 of modelo 322, tax year 2008.
               label: Result of the self-assessment ([68] - [69]) [70]
@@ -882,88 +962,54 @@ modelo:
             '99':
               help: Box 99 of modelo 322, tax year 2008.
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              help: Completed only in the last period of the return.
               label: Activity code - Other 1
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: Completed only in the last period of the return.
               label: IAE heading - Other 1
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              help: Completed only in the last period of the return.
               label: Activity code - Other 2
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: Completed only in the last period of the return.
               label: IAE heading - Other 2
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              help: Completed only in the last period of the return.
               label: Activity code - Other 3
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: Completed only in the last period of the return.
               label: IAE heading - Other 3
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              help: Completed only in the last period of the return.
               label: Activity code - Other 4
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: Completed only in the last period of the return.
               label: IAE heading - Other 4
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              help: Completed only in the last period of the return.
               label: Activity code - Other 5
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: Completed only in the last period of the return.
               label: IAE heading - Other 5
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              help: Completed only in the last period of the return.
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              help: Completed only in the last period of the return.
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Identification. Are you a recipient of transactions under the
                 cash-accounting special regime?
             x-chim6r1ecll6asj3d5hmiro:
               help: Box ejercicio of modelo 322, tax year 2008.
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Identification. NIF of the dominant entity
             x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Identification. Are you exempt from the annual IVA summary return,
                 modelo 390?
             x-chim6r1ectp7as3f5ln7arb5e9ng:
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Identification. Group number
             x-chim6r1ectp7as3f5lp6ur0:
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Identification. Dominant / dependent
             x-chim6r1ee1in4qbfchng:
               help: Box periodo of modelo 322, tax year 2008.
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: 'Identification. Application of the special pro rata (art. 103.Dos.1º
                 LIVA): election or revocation of the election'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Identification. Are you registered in the monthly refund register
                 (art. 30 RIVA)?
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: 'Identification. Applicable special regime: art. 163 sexies.Cinco
                 LIVA'
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
-              label: Taxable person taxed exclusively by a foral tax administration,
+              label: Taxable person taxed exclusively by a regional (foral) tax administration,
                 with import IVA assessed by Customs still to be paid
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Identification. Is there a volume of transactions (art. 121 LIVA)?
             x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
               help: Box iva.autorepercutido.intracomunitaria of modelo 322, tax year
@@ -981,7 +1027,7 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Box iva.soportado.interiores of modelo 322, tax year 2008.
           field:
-            label: Modelo 322, tax years 2008 to 2025
+            label: Modelo 322, tax year 2022
         '2023':
           casilla:
             '150':
@@ -1015,7 +1061,7 @@ modelo:
             '164':
               help: Box 164 of modelo 322, tax year 2008.
           field:
-            label: Modelo 322, tax years 2008 to 2025
+            label: Modelo 322, tax year 2023
         2024-2025:
           casilla:
             '01':
@@ -1099,45 +1145,27 @@ modelo:
             '164':
               help: Box 164 of modelo 322, tax year 2024.
             '165':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Settlement. Output IVA. Other transactions under the general
                 regime. Taxable base
             '166':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Settlement. Output IVA. Other transactions under the general
                 regime. Rate %
             '167':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Settlement. Output IVA. Other transactions under the general
                 regime. Tax amount
             '168':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Settlement. Output IVA. Equivalence surcharge. Taxable base
             '169':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Settlement. Output IVA. Equivalence surcharge. Rate %
             '17':
               help: Box 17 of modelo 322, tax year 2024.
             '170':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Settlement. Output IVA. Equivalence surcharge. Tax amount
             '171':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Settlement. Output IVA. Intra-group transactions. Taxable base
             '172':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Settlement. Output IVA. Intra-group transactions. Rate %
             '173':
-              help: Field declared on modelo 322, the group-of-entities individual
-                monthly self-assessment.
               label: Settlement. Output IVA. Intra-group transactions. Tax amount
             '18':
               help: Box 18 of modelo 322, tax year 2024.
@@ -1427,670 +1455,90 @@ modelo:
             x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
               help: Box iva.soportado.interiores of modelo 322, tax year 2024.
           field:
-            label: Modelo 322, tax years 2008 to 2025
+            label: Modelo 322, tax years 2024 to 2025
         2026-y-siguientes:
           casilla:
-            '01':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Tax base [01].'
-            '02':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Rate % [02].'
-            '03':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Amount [03].'
-            '04':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Tax base [04].'
-            '05':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Rate % [05].'
-            '06':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Amount [06].'
-            '07':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Tax base [07].'
-            08:
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Rate % [08].'
-            09:
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Amount [09].'
-            '10':
-              help: 'Tax information about tax information in casilla 10 of Modelo
-                322 References: [10].'
-            '107':
-              help: 'Tax information about tax information in casilla 107 of Modelo
-                322 References: [107].'
-            '11':
-              help: 'Tax information about tax information in casilla 11 of Modelo
-                322 References: [11].'
             '112':
               label: Settlement (continued). Payment on account for supplies of petrol,
                 diesel and biofuels after the end of the non-customs warehousing regime
                 [112]
-            '12':
-              help: 'Tax information about tax information in casilla 12 of Modelo
-                322 References: [12].'
-            '120':
-              help: 'Tax information about tax information in casilla 120 of Modelo
-                322 References: [120].'
-            '122':
-              help: 'Review the casilla information: Transactions subject to tax with
-                reverse charge [122].'
-            '123':
-              help: 'Tax information about tax information in casilla 123 of Modelo
-                322 References: [123].'
-            '124':
-              help: 'Tax information about tax information in casilla 124 of Modelo
-                322 References: [124].'
-            '125':
-              help: 'Review the casilla information: Transactions subject to tax with
-                reverse charge [125].'
-            '126':
-              help: 'Tax information about tax information in casilla 126 of Modelo
-                322 References: [126].'
-            '127':
-              help: 'Tax information about tax information in casilla 127 of Modelo
-                322 References: [127].'
-            '128':
-              help: 'Tax information about tax information in casilla 128 of Modelo
-                322 References: [128].'
-            '13':
-              help: 'Tax information about tax information in casilla 13 of Modelo
-                322 References: [13].'
-            '14':
-              help: 'Tax information about tax information in casilla 14 of Modelo
-                322 References: [14].'
-            '15':
-              help: 'Tax information about tax information in casilla 15 of Modelo
-                322 References: [15].'
-            '150':
-              help: 'Tax information about tax information in casilla 150 of Modelo
-                322 References: [150].'
-            '151':
-              help: 'Tax information about tax information in casilla 151 of Modelo
-                322 References: [151].'
-            '152':
-              help: 'Tax information about tax information in casilla 152 of Modelo
-                322 References: [152].'
-            '153':
-              help: 'Tax information about tax information in casilla 153 of Modelo
-                322 References: [153].'
-            '154':
-              help: 'Tax information about tax information in casilla 154 of Modelo
-                322 References: [154].'
-            '155':
-              help: 'Tax information about tax information in casilla 155 of Modelo
-                322 References: [155].'
-            '156':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Tax base [156].'
-            '157':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Rate % [157].'
-            '158':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Amount [158].'
-            '159':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Tax base [159].'
-            '16':
-              help: 'Tax information about tax information in casilla 16 of Modelo
-                322 References: [16].'
-            '160':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Rate % [160].'
-            '161':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Amount [161].'
-            '162':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Tax base [162].'
-            '163':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Rate % [163].'
-            '164':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Amount [164].'
             '165':
-              help: 'Tax information about tax information in casilla 165 of Modelo
-                322 References: [165].'
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Taxable base [165]
             '166':
-              help: 'Tax information about tax information in casilla 166 of Modelo
-                322 References: [166].'
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Rate % [166]
             '167':
-              help: 'Tax information about tax information in casilla 167 of Modelo
-                322 References: [167].'
               label: Settlement. VAT ACCRUED. Remaining transactions under the general
                 regime. Tax amount [167]
             '168':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Tax base [168].'
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Taxable base
                 [168]
             '169':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Rate % [169].'
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Rate % [169]
-            '17':
-              help: 'Tax information about tax information in casilla 17 of Modelo
-                322 References: [17].'
             '170':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Amount [170].'
               label: Settlement. VAT ACCRUED. Equivalence surcharge. Tax amount [170]
             '171':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Tax base [171].'
               label: Settlement. VAT ACCRUED. Intra-group transactions. Taxable base
                 [171]
             '172':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Rate % [172].'
               label: Settlement. VAT ACCRUED. Intra-group transactions. Rate % [172]
             '173':
-              help: 'Review the casilla information: Assessment. Output VAT. Transactions
-                intragrupo. Amount [173].'
               label: Settlement. VAT ACCRUED. Intra-group transactions. Tax amount
                 [173]
-            '18':
-              help: 'Tax information about tax information in casilla 18 of Modelo
-                322 References: [18].'
-            '19':
-              help: 'Tax information about tax information in casilla 19 of Modelo
-                322 References: [19].'
-            '20':
-              help: 'Tax information about tax information in casilla 20 of Modelo
-                322 References: [20].'
-            '21':
-              help: 'Tax information about tax information in casilla 21 of Modelo
-                322 References: [21].'
-            '22':
-              help: 'Tax information about tax information in casilla 22 of Modelo
-                322 References: [22].'
-            '23':
-              help: 'Tax information about tax information in casilla 23 of Modelo
-                322 References: [23].'
-            '24':
-              help: 'Tax information about tax information in casilla 24 of Modelo
-                322 References: [24].'
-            '25':
-              help: 'Tax information about tax information in casilla 25 of Modelo
-                322 References: [25].'
-            '26':
-              help: 'Tax information about tax information in casilla 26 of Modelo
-                322 References: [26].'
-            '27':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Tax base [27].'
-            '28':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Rate % [28].'
-            '29':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Amount [29].'
-            '30':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Tax base [30].'
-            '31':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Rate % [31].'
-            '32':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Amount [32].'
-            '33':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Tax base [33].'
-            '34':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Rate % [34].'
-            '35':
-              help: 'Review the casilla information: Assessment. Output VAT. Equivalence
-                surcharge. Amount [35].'
-            '36':
-              help: 'Review the casilla information: Assessment. Output VAT. Modificación
-                bases and amounts of the equivalence surcharge. Tax base [36].'
-            '37':
-              help: 'Review the casilla information: Assessment. Output VAT. Modificación
-                bases and amounts of the equivalence surcharge. Amount [37].'
             '38':
-              help: 'Review the casilla information: Total amount accrued ([161]+[173]+[03]+[164]+[06]+[09]+[152]+[167]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[170]+[32]+[35]+[37]).
-                [38].'
               label: Total amount accrued ([161]+[173]+[03]+[164]+[06]+[09]+[152]+[167]+[11]+[14]+[155]+[17]+[20]+[22]+[24]+[26]+[158]+[29]+[170]+[32]+[35]+[37]).
                 [38]
-            '39':
-              help: 'Tax information about tax information in casilla 39 of Modelo
-                322 References: [39].'
-            '40':
-              help: 'Tax information about tax information in casilla 40 of Modelo
-                322 References: [40].'
-            '41':
-              help: 'Tax information about tax information in casilla 41 of Modelo
-                322 References: [41].'
-            '42':
-              help: 'Tax information about tax information in casilla 42 of Modelo
-                322 References: [42].'
-            '43':
-              help: 'Tax information about tax information in casilla 43 of Modelo
-                322 References: [43].'
-            '44':
-              help: 'Tax information about tax information in casilla 44 of Modelo
-                322 References: [44].'
-            '45':
-              help: 'Tax information about tax information in casilla 45 of Modelo
-                322 References: [45].'
-            '46':
-              help: 'Tax information about tax information in casilla 46 of Modelo
-                322 References: [46].'
-            '47':
-              help: 'Tax information about tax information in casilla 47 of Modelo
-                322 References: [47].'
-            '48':
-              help: 'Tax information about tax information in casilla 48 of Modelo
-                322 References: [48].'
-            '49':
-              help: 'Tax information about tax information in casilla 49 of Modelo
-                322 References: [49].'
-            '50':
-              help: 'Tax information about tax information in casilla 50 of Modelo
-                322 References: [50].'
-            '500':
-              help: 'Review the casilla information: Prorratas - 1 - Code CNAE [500].'
-            '501':
-              help: 'Tax information about tax information in casilla 501 of Modelo
-                322 References: [501].'
-            '502':
-              help: 'Tax information about tax information in casilla 502 of Modelo
-                322 References: [502].'
-            '503':
-              help: 'Tax information about tax information in casilla 503 of Modelo
-                322 References: [503].'
-            '504':
-              help: 'Tax information about tax information in casilla 504 of Modelo
-                322 References: [504].'
-            '505':
-              help: 'Review the casilla information: Prorratas - 2 - Code CNAE [505].'
-            '506':
-              help: 'Tax information about tax information in casilla 506 of Modelo
-                322 References: [506].'
-            '507':
-              help: 'Tax information about tax information in casilla 507 of Modelo
-                322 References: [507].'
-            '508':
-              help: 'Tax information about tax information in casilla 508 of Modelo
-                322 References: [508].'
-            '509':
-              help: 'Tax information about tax information in casilla 509 of Modelo
-                322 References: [509].'
-            '51':
-              help: 'Tax information about tax information in casilla 51 of Modelo
-                322 References: [51].'
-            '510':
-              help: 'Review the casilla information: Prorratas - 3 - Code CNAE [510].'
-            '511':
-              help: 'Tax information about tax information in casilla 511 of Modelo
-                322 References: [511].'
-            '512':
-              help: 'Tax information about tax information in casilla 512 of Modelo
-                322 References: [512].'
-            '513':
-              help: 'Tax information about tax information in casilla 513 of Modelo
-                322 References: [513].'
-            '514':
-              help: 'Tax information about tax information in casilla 514 of Modelo
-                322 References: [514].'
-            '515':
-              help: 'Review the casilla information: Prorratas - 4 - Code CNAE[515].'
-            '516':
-              help: 'Tax information about tax information in casilla 516 of Modelo
-                322 References: [516].'
-            '517':
-              help: 'Tax information about tax information in casilla 517 of Modelo
-                322 References: [517].'
-            '518':
-              help: 'Tax information about tax information in casilla 518 of Modelo
-                322 References: [518].'
-            '519':
-              help: 'Tax information about tax information in casilla 519 of Modelo
-                322 References: [519].'
-            '52':
-              help: 'Tax information about tax information in casilla 52 of Modelo
-                322 References: [52].'
-            '520':
-              help: 'Review the casilla information: Prorratas - 5 - Code CNAE [520].'
-            '521':
-              help: 'Tax information about tax information in casilla 521 of Modelo
-                322 References: [521].'
-            '522':
-              help: 'Tax information about tax information in casilla 522 of Modelo
-                322 References: [522].'
-            '523':
-              help: 'Tax information about tax information in casilla 523 of Modelo
-                322 References: [523].'
-            '524':
-              help: 'Tax information about tax information in casilla 524 of Modelo
-                322 References: [524].'
-            '53':
-              help: 'Tax information about tax information in casilla 53 of Modelo
-                322 References: [53].'
-            '54':
-              help: 'Tax information about tax information in casilla 54 of Modelo
-                322 References: [54].'
-            '55':
-              help: 'Tax information about tax information in casilla 55 of Modelo
-                322 References: [55].'
-            '56':
-              help: 'Tax information about tax information in casilla 56 of Modelo
-                322 References: [56].'
-            '57':
-              help: 'Tax information about tax information in casilla 57 of Modelo
-                322 References: [57].'
-            '58':
-              help: 'Tax information about tax information in casilla 58 of Modelo
-                322 References: [58].'
-            '59':
-              help: 'Review the casilla information: Assessment. IVA Deductible.Offset
-                regime especial A.G. and P. Amount [59].'
-            '60':
-              help: 'Tax information about tax information in casilla 60 of Modelo
-                322 References: [60].'
-            '61':
-              help: 'Tax information about tax information in casilla 61 of Modelo
-                322 References: [61].'
-            '62':
-              help: 'Review the casilla information: Total a deduct ([40]+[42]+[44]+[46]+[48]+[50]+[52]+[54]+[56]+[58]+[59]+[60]+[61])
-                [62].'
-            '63':
-              help: 'Review the casilla information: Assessment (continuación). Diferencia
-                ([38] - [62]) . [63].'
-            '64':
-              help: 'Tax information about tax information in casilla 64 of Modelo
-                322 References: [64].'
-            '65':
-              help: 'Tax information about tax information in casilla 65 of Modelo
-                322 References: [65].'
-            '66':
-              help: 'Tax information about tax information in casilla 66 of Modelo
-                322 References: [66].'
-            '67':
-              help: 'Tax information about tax information in casilla 67 of Modelo
-                322 References: [67].'
             '68':
-              help: 'Review the casilla information: Assessment (continuación). Result
-                ([65] + [77] - [66] + [67]) [68].'
               label: Assessment (continuación). Result ([65] + [77] - [66] + [67])
                 [68]
             '70':
-              help: 'Review the casilla information: Result of the self-assessment
-                ([68] - [69] - [112]) [70].'
               label: Result of the self-assessment ([68] - [69] - [112]) [70]
-            '700':
-              help: 'Tax information about tax information in casilla 700 of Modelo
-                322 References: [700].'
-            '701':
-              help: 'Tax information about tax information in casilla 701 of Modelo
-                322 References: [701].'
-            '702':
-              help: 'Tax information about tax information in casilla 702 of Modelo
-                322 References: [702].'
-            '703':
-              help: 'Tax information about tax information in casilla 703 of Modelo
-                322 References: [703].'
-            '704':
-              help: 'Tax information about tax information in casilla 704 of Modelo
-                322 References: [704].'
-            '705':
-              help: 'Tax information about tax information in casilla 705 of Modelo
-                322 References: [705].'
-            '706':
-              help: 'Tax information about tax information in casilla 706 of Modelo
-                322 References: [706].'
-            '707':
-              help: 'Tax information about tax information in casilla 707 of Modelo
-                322 References: [707].'
-            '708':
-              help: 'Tax information about tax information in casilla 708 of Modelo
-                322 References: [708].'
-            '709':
-              help: 'Tax information about tax information in casilla 709 of Modelo
-                322 References: [709].'
-            '71':
-              help: 'Tax information about tax information in casilla 71 of Modelo
-                322 References: [71].'
-            '710':
-              help: 'Tax information about tax information in casilla 710 of Modelo
-                322 References: [710].'
-            '711':
-              help: 'Tax information about tax information in casilla 711 of Modelo
-                322 References: [711].'
-            '712':
-              help: 'Tax information about tax information in casilla 712 of Modelo
-                322 References: [712].'
-            '713':
-              help: 'Tax information about tax information in casilla 713 of Modelo
-                322 References: [713].'
-            '714':
-              help: 'Tax information about tax information in casilla 714 of Modelo
-                322 References: [714].'
-            '715':
-              help: 'Tax information about tax information in casilla 715 of Modelo
-                322 References: [715].'
-            '716':
-              help: 'Tax information about tax information in casilla 716 of Modelo
-                322 References: [716].'
-            '717':
-              help: 'Tax information about tax information in casilla 717 of Modelo
-                322 References: [717].'
-            '718':
-              help: 'Tax information about tax information in casilla 718 of Modelo
-                322 References: [718].'
-            '719':
-              help: 'Tax information about tax information in casilla 719 of Modelo
-                322 References: [719].'
-            '72':
-              help: 'Review the casilla information: Additional information. Exports
-                and similar transactions. [72].'
-            '720':
-              help: 'Tax information about tax information in casilla 720 of Modelo
-                322 References: [720].'
-            '721':
-              help: 'Tax information about tax information in casilla 721 of Modelo
-                322 References: [721].'
-            '722':
-              help: 'Tax information about tax information in casilla 722 of Modelo
-                322 References: [722].'
-            '723':
-              help: 'Tax information about tax information in casilla 723 of Modelo
-                322 References: [723].'
-            '724':
-              help: 'Tax information about tax information in casilla 724 of Modelo
-                322 References: [724].'
-            '725':
-              help: 'Tax information about tax information in casilla 725 of Modelo
-                322 References: [725].'
-            '726':
-              help: 'Tax information about tax information in casilla 726 of Modelo
-                322 References: [726].'
-            '727':
-              help: 'Tax information about tax information in casilla 727 of Modelo
-                322 References: [727].'
-            '728':
-              help: 'Tax information about tax information in casilla 728 of Modelo
-                322 References: [728].'
-            '729':
-              help: 'Tax information about tax information in casilla 729 of Modelo
-                322 References: [729].'
-            '730':
-              help: 'Tax information about tax information in casilla 730 of Modelo
-                322 References: [730].'
-            '731':
-              help: 'Tax information about tax information in casilla 731 of Modelo
-                322 References: [731].'
-            '732':
-              help: 'Tax information about tax information in casilla 732 of Modelo
-                322 References: [732].'
-            '733':
-              help: 'Tax information about tax information in casilla 733 of Modelo
-                322 References: [733].'
-            '734':
-              help: 'Tax information about tax information in casilla 734 of Modelo
-                322 References: [734].'
-            '735':
-              help: 'Tax information about tax information in casilla 735 of Modelo
-                322 References: [735].'
-            '76':
-              help: 'Review the casilla information: Adjustment amounts art. 80.Cinco.5ª
-                LIVA [76].'
             '77':
-              help: 'Tax information about tax information in casilla 77 of Modelo
-                322 References: [77].'
               label: Settlement (continued). Import VAT assessed by Customs pending
                 payment [77]
-            '79':
-              help: 'Tax information about tax information in casilla 79 of Modelo
-                322 References: [79].'
-            '80':
-              help: 'Tax information about tax information in casilla 80 of Modelo
-                322 References: [80].'
-            '83':
-              help: 'Tax information about tax information in casilla 83 of Modelo
-                322 References: [83].'
-            '84':
-              help: 'Tax information about tax information in casilla 84 of Modelo
-                322 References: [84].'
-            '86':
-              help: 'Tax information about tax information in casilla 86 of Modelo
-                322 References: [86].'
-            '88':
-              help: 'Tax information about tax information in casilla 88 of Modelo
-                322 References: [88].'
-            '89':
-              help: 'Tax information about tax information in casilla 89 of Modelo
-                322 References: [89].'
-            '90':
-              help: 'Tax information about tax information in casilla 90 of Modelo
-                322 References: [90].'
-            '91':
-              help: 'Tax information about tax information in casilla 91 of Modelo
-                322 References: [91].'
-            '92':
-              help: 'Tax information about tax information in casilla 92 of Modelo
-                322 References: [92].'
-            '93':
-              help: 'Tax information about tax information in casilla 93 of Modelo
-                322 References: [93].'
-            '94':
-              help: 'Tax information about tax information in casilla 94 of Modelo
-                322 References: [94].'
-            '95':
-              help: 'Tax information about tax information in casilla 95 of Modelo
-                322 References: [95].'
-            '96':
-              help: 'Tax information about tax information in casilla 96 of Modelo
-                322 References: [96].'
-            '97':
-              help: 'Tax information about tax information in casilla 97 of Modelo
-                322 References: [97].'
-            '98':
-              help: 'Tax information about tax information in casilla 98 of Modelo
-                322 References: [98].'
-            '99':
-              help: 'Tax information about tax information in casilla 99 of Modelo
-                322 References: [99].'
             x-c5hn8qbmd5i62p1edtq74obj5koisorfchkmero:
-              help: Tax information for casilla of Modelo 322.
               label: Activity code - Other 1st
             x-c5hn8qbmd5i62p1edtq74obj5koispbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in casilla of Modelo 322.
               label: IAE heading - Other 1st
             x-c5hn8qbmd5i62p1edtq74obj5kp2sorfchkmero:
-              help: Tax information for casilla of Modelo 322.
               label: Activity code - Other 2nd
             x-c5hn8qbmd5i62p1edtq74obj5kp2spbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in casilla of Modelo 322.
               label: IAE heading - Other 2nd
             x-c5hn8qbmd5i62p1edtq74obj5kpisorfchkmero:
-              help: Tax information for casilla of Modelo 322.
               label: Activity code - Other 3rd
             x-c5hn8qbmd5i62p1edtq74obj5kpispbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in casilla of Modelo 322.
               label: IAE heading - Other 3rd
             x-c5hn8qbmd5i62p1edtq74obj5kq2sorfchkmero:
-              help: Tax information for casilla of Modelo 322.
               label: Activity code - Other 4th
             x-c5hn8qbmd5i62p1edtq74obj5kq2spbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in casilla of Modelo 322.
               label: IAE heading - Other 4th
             x-c5hn8qbmd5i62p1edtq74obj5kqisorfchkmero:
-              help: Tax information for casilla of Modelo 322.
               label: Activity code - Other 5th
             x-c5hn8qbmd5i62p1edtq74obj5kqispbgd5jn4ob6ckmmiob5:
-              help: Tax information about tax information in casilla of Modelo 322.
               label: IAE heading - Other 5th
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1ecdnm8qb7ds:
-              help: Tax information for casilla of Modelo 322.
-            x-c5hn8qbmd5i62p1ee1p6irj3d5o62r1eclo6ipric5j6abb9c5ig:
-              help: Tax information for casilla of Modelo 322.
             x-chim6r1echim8tb3cdkmurhde1gmerpdcdqmarjkc4mmeobjdtm6irj1ec:
               label: Entitled to deduct the advance payment on supplies of petrol,
                 diesel and biofuels
             x-chim6r1echin6t39dpgn8obid5niqorid5q6asj9dsmm6obac4:
-              help: Tax information about tax information in casilla of Modelo 322.
               label: Recipient of cash-basis scheme transactions
-            x-chim6r1ecll6asj3d5hmiro:
-              help: Tax information for casilla of Modelo 322.
             x-chim6r1ecln78qb4c5i2qp3fdlkmsobeehiiqrj9co:
-              help: 'Review the casilla information: NIF of the entity parent.'
               label: Tax ID of the dominant entity
             x-chim6r1ecls6urj5e9gm8rpddlnm8pbcdsmj6e9g:
-              help: 'Review the casilla information: Exonerado of the return-resumen
-                annual, modelo 390.'
               label: Exempt from the annual summary return, form 390
             x-chim6r1ectp7as3f5ln7arb5e9ng:
-              help: Tax information for casilla of Modelo 322.
               label: Group number
             x-chim6r1ectp7as3f5lp6ur0:
-              help: Tax information about tax information in casilla of Modelo 322.
               label: Dominant or dependent entity
-            x-chim6r1ee1in4qbfchng:
-              help: Tax information for casilla of Modelo 322.
             x-chim6r1ee1p6usjic5q62bb5edo6aor9c5m0:
-              help: Tax information about tax information in casilla of Modelo 322.
               label: 'Special pro rata: election or revocation'
             x-chim6r1ee9im8pbdckmmirjjcdp6it3f:
-              help: Tax information for casilla of Modelo 322.
               label: Registered in the monthly refund register
             x-chim6r1ee9imeqbdcln2qc9m6cmn6pbod5in6bb3d5n66ro:
-              help: Tax information about tax information in casilla of Modelo 322.
               label: Electing the regime under LIVA article 163 sexies.Five
             x-chim6r1eehp6iojlehgm6qbfdommau33dhqn6qbmc5mmarjkckmmcrric5m0:
-              help: Tax information for casilla of Modelo 322.
-              label: Taxed exclusively under a foral administration
+              label: Taxed exclusively under a regional (foral) administration
             x-chim6r1eepnmotbdcln2qobeelgmobbedsmm6pbids:
-              help: Tax information about tax information in casilla of Modelo 322.
               label: Annual turnover other than zero
-            x-d5r62bj1elq6usj5e1in4orlehkm8rped5n78sj1cdnmqtbed5q62sj9c4:
-              help: Tax information about tax information in casilla of Modelo 322.
-            x-d5r62bj3elnn8o9dchim8tb3d5h6op9dehnn8obc:
-              help: Tax information about tax information in casilla of Modelo 322.
-            x-d5r62bj3elnn8o9dchincpbectgm8o9dehnn8obc:
-              help: Tax information about tax information in casilla of Modelo 322.
-            x-d5r62bjiclo6asj3elq6ip3f5pp6ap3lcdkm8ro:
-              help: 'Review the casilla information: Amount Output VAT al rate reduced
-                (10%).'
-            x-d5r62bjiclo6asj3elq6ip3f5ppnas35e8mn4pb4elhmip3f:
-              help: 'Review the casilla information: Amount Output VAT al rate super-reduced
-                (4%).'
-            x-d5r62bjiclpnar3kc5i6ubbicljmirb5dommepbeclp62r0:
-              help: 'Review the casilla information: Result of the regime general
-                (amount accrued - amount deductible).'
-            x-d5r62bjjdto6usjkc5i6ubj9dpq6asj9dtp6aso:
-              help: Tax information about tax information in casilla of Modelo 322.
           field:
             label: Modelo 322, tax years 2026 onwards

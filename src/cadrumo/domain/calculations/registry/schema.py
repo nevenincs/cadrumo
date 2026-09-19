@@ -144,6 +144,7 @@ __all__ = [
 
 from ....core.filing_year import FilingYear
 from .casilla_structural_succession import CasillaStructuralSuccession, structural_succession_failures
+from .cleared_families import ClearedFamilyDeclaration
 from .convenio import ConvenioAuthority
 from .facts.schema import GovernedFactCatalogue
 from .identifier_evolutions import IdentifierEvolution
@@ -631,8 +632,9 @@ class ModeloRevision(RegistryRevisionDeclaration):
     one of them differs. Each is independent: declaring one says nothing about
     the others, and an edition declaring none is exactly as it was before these
     keys existed. The pairing of family to field is declared once, in
-    :data:`~.reference_sections.FAMILY_SOURCE_DEFAULT_FIELDS`, which is what the
-    loader fills from, so no family can be defaulted from another's grounding.
+    :data:`~.keyed_families.CANONICAL_FAMILY_SPECS`, whose ``source_default_key``
+    is what the loader fills from, so no family can be defaulted from another's
+    grounding.
 
     Whether a useful family source default can be derived is an optimization
     result calculated from the member declarations. It is not revision data.
@@ -712,7 +714,9 @@ class ModeloRevision(RegistryRevisionDeclaration):
         exclude_if=lambda value: value is None,
         description="Immediate revision whose effective keyed families supply storage defaults.",
     )
-    cleared_families: Annotated[tuple[str, ...], MANIFEST_ONLY] = Field(default=(), exclude_if=lambda value: not value)
+    cleared_families: Annotated[tuple[ClearedFamilyDeclaration, ...], MANIFEST_ONLY] = Field(
+        default=(), exclude_if=lambda value: not value
+    )
     scoped_families: Annotated[tuple[str, ...], MANIFEST_ONLY] = Field(default=(), exclude_if=lambda value: not value)
     family_overrides: Annotated[tuple[FamilyFieldOverride, ...], MANIFEST_ONLY] = Field(
         default=(), exclude_if=lambda value: not value
@@ -899,8 +903,9 @@ class ModeloRevision(RegistryRevisionDeclaration):
 
         keyed = {spec.section for spec in KEYED_FAMILY_SPECS}
         scoped = {spec.section for spec in KEYED_FAMILY_SPECS if spec.scoped}
+        cleared = [item.family for item in self.cleared_families]
         named = [
-            *self.cleared_families,
+            *cleared,
             *self.scoped_families,
             *(item.family for item in self.family_overrides),
             *(item.family for item in self.family_removals),
@@ -913,8 +918,11 @@ class ModeloRevision(RegistryRevisionDeclaration):
             raise RegistryValidationError(
                 "family storage delta requires family_storage_baseline or a named predecessor"
             )
-        if len(set(self.cleared_families)) != len(self.cleared_families):
-            raise RegistryValidationError("cleared families must be unique")
+        if len(set(cleared)) != len(cleared):
+            raise RegistryValidationError(
+                "cleared families must be unique; one family carries one authored clearance, so two entries "
+                "leave the merge with two reasons for one decision and no rule for picking between them"
+            )
         if len(set(self.scoped_families)) != len(self.scoped_families):
             raise RegistryValidationError("scoped families must be unique")
         invalid_scopes = sorted(set(self.scoped_families) - scoped)

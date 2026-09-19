@@ -3,42 +3,17 @@ tags:
   - '#exec'
   - '#filing-chain-reconciliation'
 date: '2026-09-17'
-modified: '2026-09-17'
+modified: '2026-09-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:589d7deb12c35dba9a07fcf3a808523bc808a9f1798920bb38ac13ebd706abb5'
+body_hash: 'sha256:d38328cefef76750cc2120c8bc77b861c6b6bb61a9eefb2412baf71d54dc77d8'
 related:
   - "[[2026-09-17-filing-chain-reconciliation-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `filing-chain-reconciliation` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S01` `M` `src/cadrumo/domain/modelos/filing_record.py`
 - `S01` `A` `src/cadrumo/domain/modelos/tests/test_filing_chain_record.py`
 - `S01` `verify:` `ruff+ty on feature files` -> `pass`
@@ -86,4 +61,3 @@ related:
 
 - `S01` No stored-row upgrader: filing catalogue and observation namespaces bumped to schema version 2, so older rows refuse explicitly (no released compatibility floor).
 - `S04` tipo_solicitud to declaration-kind mapping reads the words complementaria/sustitutiva/rectificativa; the vocabulary is unverified against an AEAT list and unknown values stay undeclared.
-

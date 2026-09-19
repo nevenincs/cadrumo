@@ -14,37 +14,20 @@ See Also:
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from .reference_checker import IdReferenceChecker
-
-#: Families whose members lift ``source_refs`` to an edition-level default on
-#: the revision manifest, paired with that manifest field. Declared as pairs so a
-#: section can never be defaulted from another family's grounding: a modelo's
-#: bindings cite its record design, its formulas the approving orden's
-#: instructions, and the two are different documents. Every keyed family that
-#: grounds its members in one document of its own carries its own pair here, so
-#: enrolling a family is adding its tuple and its manifest field, never a second
-#: defaulting path.
-FAMILY_SOURCE_DEFAULT_FIELDS: Final[tuple[tuple[str, str], ...]] = (
-    ("bindings", "binding_source_refs"),
-    ("formulas", "formula_source_refs"),
-    ("application_links", "application_link_source_refs"),
-    ("applicability", "applicability_source_refs"),
-    ("filing_schedules", "filing_schedule_source_refs"),
-    ("live_cross_references", "live_cross_reference_source_refs"),
-    ("extraction_profiles", "extraction_profile_source_refs"),
-    ("dependency_classifications", "dependency_classification_source_refs"),
-    ("constructs", "construct_source_refs"),
-    ("parameters", "parameter_source_refs"),
-)
-
 
 if TYPE_CHECKING:
     from .schema import ModeloRevision
 
 
-_CONSTRUCT_MEMBER_AXES: tuple[tuple[str, str], ...] = (
+#: Each ``ConstructDefinition`` member-reference field paired with the
+#: :class:`~.reference_checker.IdReferenceChecker` id set its values must resolve
+#: against. Public because the pairing is policy with a coverage gate of its own:
+#: a member axis missing here is walked by nothing, so its references are never
+#: checked and the gap is silent.
+CONSTRUCT_MEMBER_ID_AXES: tuple[tuple[str, str], ...] = (
     ("casilla_ids", "casilla_ids"),
     ("formulas", "formula_ids"),
     ("parameters", "parameter_ids"),
@@ -71,7 +54,7 @@ def check_construct_refs(checker: IdReferenceChecker, revision: ModeloRevision) 
     """
     for construct in revision.constructs:
         ctp = f"construct {construct.id}"
-        for attr, id_set_name in _CONSTRUCT_MEMBER_AXES:
+        for attr, id_set_name in CONSTRUCT_MEMBER_ID_AXES:
             checker.chk_tuple(f"{ctp}.{attr}", getattr(construct, attr), getattr(checker, id_set_name))
         checker.chk_legal_source_refs(ctp, construct.legal_refs, construct.source_refs)
 

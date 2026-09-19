@@ -26,7 +26,7 @@
 ##
 
 [[parser]]
-module = "src/cadrumo/domain/calculations/registry/record_design_pdf_repairs.py"
+module = "dev/registry/compiler/record_design_pdf_repairs.py"
 corpus = "AEAT diseños de registro (PDF)"
 reason = """\
 The PDF half of the record-design authority, which was decomposed out of \
@@ -37,7 +37,7 @@ measures. This is the canonical reader for that damage; a second one would \
 fork the layout authority."""
 
 [[parser]]
-module = "src/cadrumo/domain/calculations/registry/record_design_workbook.py"
+module = "dev/registry/compiler/record_design_workbook.py"
 corpus = "AEAT diseños de registro (XLSX)"
 reason = """\
 The workbook half of the same decomposition. Reads the footnote markers a \
@@ -65,22 +65,22 @@ corpus = "AEAT diseños de registro"
 reason = "Parses the fixed-width export field grammar the record designs declare."
 
 [[parser]]
-module = "src/cadrumo/domain/calculations/registry/_validate_export_layout_coverage.py"
+module = "dev/registry/compiler/validate_export_layout_coverage.py"
 corpus = "AEAT diseños de registro"
 reason = "Validates that a declared export layout covers every position its diseño states."
 
 [[parser]]
-module = "src/cadrumo/domain/calculations/registry/_validate_layout_authority_content.py"
+module = "dev/registry/compiler/validate_layout_authority_content.py"
 corpus = "AEAT diseños de registro"
 reason = "Checks a layout authority's cited content against the design text it claims to mirror."
 
 [[parser]]
-module = "src/cadrumo/domain/calculations/registry/_validate_semantic_role_required.py"
+module = "dev/registry/compiler/_validate_semantic_role_required.py"
 corpus = "registry casilla declarations"
 reason = "Matches semantic-role identifiers; reads registry-authored ids rather than official prose, and is enrolled because the detector matches its casilla vocabulary."
 
 [[parser]]
-module = "src/cadrumo/domain/calculations/registry/legal.py"
+module = "dev/registry/compiler/legal_grounding.py"
 corpus = "BOE consolidated legal text"
 reason = "Resolves legal-reference ids and their corpus anchors against bundled BOE text."
 
@@ -115,12 +115,12 @@ corpus = "BOE consolidated legal text"
 reason = "Audit tool screening bundled legal excerpts for vintage drift; reads BOE text to compare, writes nothing."
 
 [[parser]]
-module = "dev/docs/terminology/_resolution.py"
+module = "dev/docs/terminology/resolution.py"
 corpus = "Terminology Handbook fragments"
 reason = "Resolves glossary term references in authored documentation; enrolled because the detector matches its domain vocabulary, not because it reads official prose."
 
 [[parser]]
-module = "dev/docs/terminology/_sweep.py"
+module = "dev/docs/terminology/sweep_runner.py"
 corpus = "Terminology Handbook fragments"
 reason = "Sweeps documentation for enrolled terms; same disposition as its resolution sibling."
 
@@ -128,3 +128,38 @@ reason = "Sweeps documentation for enrolled terms; same disposition as its resol
 module = "dev/registry/analysis/footnote_pointer_notes.py"
 corpus = "AEAT record-design transcriptions"
 reason = "Resolves a Contenido footnote pointer to the note text the design states beneath the table, so a reviewer authoring a representation rule can read what the pointer defers to. Enrolment authorises reading that prose and no value: the screen reports the note and derives nothing, and any scale or sign a note establishes still lands in the authoring tree with its provision. The design is located from the source reference's own corpus path rather than by globbing its directory, because one modelo bundles fifteen designs and a note resolved against the wrong year is worse evidence than none."
+
+[[parser]]
+module = "dev/locales/_casilla_keys.py"
+corpus = "AEAT casilla label and help text, as the registry stores it"
+reason = """Reads the edition-keyed chains a casilla's own AEAT label and help resolve through, so an inherited row shows the text its edition states. It reads key spellings over that prose; it establishes no value."""
+
+[[parser]]
+module = "dev/locales/modelo_casilla_catalogue.py"
+corpus = "AEAT casilla label and help text, as the registry stores it"
+reason = """Recognises the stock phrasings AEAT repeats across casilla help so a delta edition's inherited text is matched rather than restated per edition. Recognition only: the text it matches stays the registry's."""
+
+[[parser]]
+module = "dev/registry/analysis/casilla_lineage_seed.py"
+corpus = "AEAT diseños de registro (printed box numbers)"
+reason = """Reads the printed box number a design prints beside a casilla -- plain integers and the lettered, bis and dotted shapes -- to dispose of each successor row in a lineage. It proposes lineage seeds for review, never a filing value."""
+
+[[parser]]
+module = "dev/registry/analysis/unresolvable_note_pointers.py"
+corpus = "AEAT diseños de registro (Contenido cells and their notes)"
+reason = """Reads the ``Nota N`` pointer a Contenido cell carries when the rest of a field's meaning sits in a numbered note, and reports the pointers no note answers. A report, not a derivation."""
+
+[[parser]]
+module = "dev/registry/edition_delta_migration.py"
+corpus = "Authored registry edition TOML (casilla sections)"
+reason = """Reads the authored casilla section headers of an edition it is converting from a full copy to a delta. The prose vocabulary is the registry's own authoring spelling, and the conversion preserves declarations rather than deriving them."""
+
+[[parser]]
+module = "dev/registry/pipeline/render_profile.py"
+corpus = "AEAT diseños de registro (Contenido cells and cell references)"
+reason = """Reads the exact official Contenido cell a reviewed render profile may name, and the composite definitions that cell spells out. A profile is a reviewed input: this reads what it points at and infers nothing."""
+
+[[parser]]
+module = "dev/registry/analysis/record_design_enrollment.py"
+corpus = "AEAT diseños de registro (ingest capture titles and authored sources rows)"
+reason = """Reads the AEAT listing title a capture record stored beside an unregistered design, and the ``[sources."..."]`` headers already authored in the tree, to propose the source rows those designs are owed. The title's ejercicio names an identifier only; the candidate leaves applies_from/applies_to and record_design_epoch undeclared because a listing title states no legal window. It prints a candidate and installs nothing."""

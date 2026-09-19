@@ -39,7 +39,7 @@ modelo:
           m345-empleador-nombre:
             label: A munkáltató vezetékneve és utóneve, vagy cégneve
           m345-entidad-aseguradora-nif:
-            label: NIF - szervezet aseguradora
+            label: NIF - biztosító szervezet
           m345-fondo-pensiones-nif:
             label: A nyugdíjpénztár adószáma
           m345-fondo-pensiones-numero-registro:
@@ -63,7 +63,7 @@ modelo:
           m345-pias-fecha-primera-prima:
             label: Az első díj befizetésének dátuma
           m345-pias-importe-acumulado:
-            label: Összeg acumulado PIAS
+            label: PIAS felhalmozott összege
           m345-plan-pensiones-denominacion:
             label: A nyugdíjprogram megnevezése
           m345-rendimientos-trabajo-no-superiores-60000:

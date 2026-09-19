@@ -140,12 +140,12 @@ _HTML_CORPUS: Final[Path] = _NORMATIVES / "html"
 _XML_CORPUS: Final[Path] = _NORMATIVES / "xml"
 _ACT_URL: Final[str] = "https://www.boe.es/buscar/act.php"
 _DOC_URL: Final[str] = "https://www.boe.es/buscar/doc.php"
-_ARTICLE_URL: Final[str] = (
+CONSOLIDATED_TEXT_API_URL: Final[str] = (
     "https://www.boe.es/datosabiertos/api/legislacion-consolidada/id/{document_id}/texto/bloque/{block}"
 )
 
 #: The API refuses with an in-envelope 400 unless a mime type is negotiated.
-_ARTICLE_HEADERS: Final[dict[str, str]] = {"Accept": "application/xml"}
+CONSOLIDATED_TEXT_API_HEADERS: Final[dict[str, str]] = {"Accept": "application/xml"}
 _ENVELOPE_CODE = re.compile(r"<code>(?P<code>\d+)</code>")
 _ENVELOPE_MESSAGE = re.compile(r"<status>.*?<text>(?P<message>.*?)</text>", re.DOTALL)
 _BLOCK_ID = re.compile(r"<bloque\b[^>]*\bid=\"(?P<block>[^\"]+)\"", re.IGNORECASE)
@@ -648,11 +648,11 @@ def fetch_article(
     http = client or httpx.Client(
         follow_redirects=True,
         timeout=90,
-        headers={"User-Agent": "cadrumo-corpus-hydration/1.0", **_ARTICLE_HEADERS},
+        headers={"User-Agent": "cadrumo-corpus-hydration/1.0", **CONSOLIDATED_TEXT_API_HEADERS},
     )
     try:
-        article_url = _ARTICLE_URL.format(document_id=document_id, block=block)
-        response = http.get(article_url, headers=_ARTICLE_HEADERS)
+        article_url = CONSOLIDATED_TEXT_API_URL.format(document_id=document_id, block=block)
+        response = http.get(article_url, headers=CONSOLIDATED_TEXT_API_HEADERS)
         response.raise_for_status()
         assert_served_by_the_requested_endpoint(final_url=str(response.url), requested_url=article_url)
         data = response.content
@@ -696,11 +696,11 @@ def fetch_article_redaction(
     http = client or httpx.Client(
         follow_redirects=True,
         timeout=90,
-        headers={"User-Agent": "cadrumo-corpus-hydration/1.0", **_ARTICLE_HEADERS},
+        headers={"User-Agent": "cadrumo-corpus-hydration/1.0", **CONSOLIDATED_TEXT_API_HEADERS},
     )
     try:
-        article_url = _ARTICLE_URL.format(document_id=document_id, block=block)
-        response = http.get(article_url, headers=_ARTICLE_HEADERS)
+        article_url = CONSOLIDATED_TEXT_API_URL.format(document_id=document_id, block=block)
+        response = http.get(article_url, headers=CONSOLIDATED_TEXT_API_HEADERS)
         response.raise_for_status()
         assert_served_by_the_requested_endpoint(final_url=str(response.url), requested_url=article_url)
         data = response.content

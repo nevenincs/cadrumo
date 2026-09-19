@@ -43,6 +43,7 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_modelo,
     minimal_revision,
 )
+from cadrumo.domain.modelos.perceptor_clave_scope import PERCEPTOR_CLAVE_SCOPE_FACT_ID
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
 
 from ..compiler import authority_database as authority_database_compiler
@@ -206,8 +207,48 @@ def _artifact() -> AuthorityArtifact:
             ),
         }
     )
+    # The M190 perceptor clave scope is resolved by a cross-domain snapshot
+    # check, which runs for every modelo; the miniature revision declares no
+    # perceptor rows, so this states the smallest well-formed scope rather than
+    # leaving the declaration absent.
+    clave_scope = GovernedFact.model_validate(
+        {
+            "fact_id": PERCEPTOR_CLAVE_SCOPE_FACT_ID,
+            "family": "mapping",
+            "provider_id": "artifact-fixture",
+            "variants": (
+                {
+                    "variant_id": f"{PERCEPTOR_CLAVE_SCOPE_FACT_ID}:fixture",
+                    "date_axis": "filing_period",
+                    "valid_from": date(2024, 1, 1),
+                    "legal_refs": ("ley-35-2006:art-1",),
+                    "review_status": "agent_reviewed",
+                    "ownership": "authored",
+                    "payload": {
+                        "kind": "mapping",
+                        "entries": (
+                            {"key": "modelo", "value": "190"},
+                            {"key": "row_clave_binding", "value": "fixture-perceptor-clave"},
+                            {"key": "row_subclave_binding", "value": "fixture-perceptor-subclave"},
+                            # At least one scoped casilla, because a scope that
+                            # names none is refused as an empty declaration.
+                            {"key": "casilla:perc.ano-nacimiento", "value": "A"},
+                        ),
+                    },
+                },
+            ),
+        }
+    )
     catalogues = catalogues.model_copy(
-        update={"facts": GovernedFactCatalogue(facts={**catalogues.facts.facts, route.fact_id: route})}
+        update={
+            "facts": GovernedFactCatalogue(
+                facts={
+                    **catalogues.facts.facts,
+                    route.fact_id: route,
+                    clave_scope.fact_id: clave_scope,
+                }
+            )
+        }
     )
     return AuthorityArtifact(
         modelos=(minimal_modelo(minimal_revision()),),

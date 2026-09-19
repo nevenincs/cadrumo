@@ -87,14 +87,10 @@ _SETTINGS_PREAMBLE = dedent(
     token = config_module.settings_override.set(settings)
     from contextlib import ExitStack
 
-    from cadrumo.adapters.persistence.storage.profile_custody import build_profile_custody_port
-    from cadrumo.adapters.persistence.storage.profile_login_session import build_profile_login_session_port
-    from cadrumo.application.user_profile.custody_ports import bind_profile_custody_port
-    from cadrumo.application.user_profile.login_session_port import bind_profile_login_session_port
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 
     composition = ExitStack()
-    composition.enter_context(bind_profile_custody_port(build_profile_custody_port()))
-    composition.enter_context(bind_profile_login_session_port(build_profile_login_session_port()))
+    composition.enter_context(composed_profile_persistence_ports())
 
     from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
     from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports

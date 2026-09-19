@@ -22,7 +22,7 @@ import pytest
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
 from ...calculations.registry.authority import PinnedAuthorityOperation
-from ...calculations.registry.errors import NoRevisionForPeriodError, RegistrySnapshotError
+from ...calculations.registry.errors import FilingYearOutsideSupportEnvelopeError, RegistrySnapshotError
 from ...calculations.registry.tests.published_authority import published_supported_filing_years
 from ..plazo import resolve_filing_closes_on, resolve_filing_window
 from ..recargo import (
@@ -184,7 +184,7 @@ def test_resolve_filing_closes_on_annual_period_below_the_supported_floor_is_ref
     supported_years = published_supported_filing_years()
     assert supported_years is not None
     filing_year = supported_years.floor - 1
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         resolve_filing_closes_on("100", filing_year, Period.from_year_and_code(filing_year, "0A"))
 
 

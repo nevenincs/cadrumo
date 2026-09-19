@@ -306,7 +306,6 @@ def _persisted_corpus_text(cache_key: str) -> str | None:
         return None
 
 
-
 def _extract_pdf_text_impl(path: str, *, open_document: PdfDocumentOpener | None = None) -> str:
     """Return page text from an enrolled manual PDF authority.
 

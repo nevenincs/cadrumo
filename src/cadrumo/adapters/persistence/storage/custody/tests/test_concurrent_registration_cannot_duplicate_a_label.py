@@ -52,15 +52,31 @@ _CREDENTIAL_INPUT = "concurrent-registration-operator-secret"
 
 
 def _register_in_sibling(tmp_path_text: str, barrier: Barrier, results: Queue[tuple[str, str]]) -> None:
-    """Register the shared label from a separate process, reporting the outcome."""
-    _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
+    """Register the shared label from a separate process, reporting the outcome.
+
+    A spawned child inherits no context, so it is a host in its own right and
+    owes this door both obligations: the composed persistence ports, and a
+    leased authority generation. The lease is what scopes governed facts --
+    registration validates the new record against the taxpayer entity-type
+    vocabulary -- and ``profile_authority_contexts`` only returns the leased
+    operation's contexts when that lease is already open, so it is entered
+    first.
+    """
     from pathlib import Path as _Path
 
-    from cadrumo.adapters.persistence.storage.tests.profile_persistence import composed_profile_persistence_ports
+    from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
+        composed_profile_persistence_ports,
+    )
     from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
     from cadrumo.application.user_profile.registration import register_profile_with_credentials
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
-    with isolated_profile_storage_root(tmp_path=_Path(tmp_path_text)), composed_profile_persistence_ports():
+    with (
+        isolated_profile_storage_root(tmp_path=_Path(tmp_path_text)),
+        bundled_indexed_authority().operation(),
+        composed_profile_persistence_ports(),
+    ):
+        _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
         barrier.wait()
         try:
             outcome = register_profile_with_credentials(

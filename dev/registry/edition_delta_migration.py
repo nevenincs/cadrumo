@@ -61,8 +61,9 @@ finding. Publication-readiness findings, including unchecked export bytes,
 remain visible but do not block a proven source-only replacement. Without
 ``--apply`` nothing outside
 the work directory is written by the migration; the command-line report is
-persisted separately under the repository's ``.logs/audit-runs`` evidence
-hierarchy.
+written separately under the repository's ``.logs/audit-runs`` run-output
+tree, which is transient: the next reclamation removes it, so promote anything
+the decision rests on into durable evidence rather than citing a run directory.
 
 Two proofs, one per starting shape. A modelo that states every row in full is
 proven as above, against its own full copy. A modelo that already names
@@ -141,6 +142,7 @@ import tomlkit
 from pydantic import ValidationError
 
 from cadrumo.core.toml import parse_toml
+from cadrumo.domain.calculations.registry.cleared_families import cleared_family_names
 from cadrumo.domain.calculations.registry.errors import RegistryError, RegistryLoadError
 from cadrumo.domain.calculations.registry.keyed_families import (
     CANONICAL_FAMILY_SPECS,
@@ -149,6 +151,8 @@ from cadrumo.domain.calculations.registry.keyed_families import (
     HELD_BACK_FAMILY_REASONS,
     FamilyInheritanceMode,
     family_identity_value,
+    family_source_default_fields,
+    inline_family_source_default,
 )
 from cadrumo.domain.calculations.registry.lineage_attestation import LineageAttestation
 from cadrumo.domain.calculations.registry.revision_order import ordered_revisions, revisions_coexist
@@ -703,8 +707,23 @@ def _prune_redundant_override_leaves(modelo_dir: Path) -> int:
     return removed
 
 
-def _technical_root(raw: Mapping[str, object]) -> bool:
-    """Whether a no-predecessor declaration records a converter limitation."""
+def technical_root(raw: Mapping[str, object]) -> bool:
+    """Whether a no-predecessor declaration records a converter limitation.
+
+    Only the structured ``cause`` answers this. A root naming one of this
+    converter's own causes is temporary and eligible for another attempt; a
+    legal or topology root such as ``official_structure_differs`` stays a root,
+    and a root stating no cause at all is not classified -- it is left alone
+    rather than guessed at.
+
+    The ``reason`` prose is deliberately not consulted. Matching cause tokens
+    and the words "migration" and "lineage" inside free text made an author's
+    wording decide whether an edition would be re-converted: a root whose prose
+    happened to explain the lineage it could not chain read as a converter
+    limitation, and one that said the same thing in other words did not. The
+    declaration's own typed field is the claim; the sentence beside it is not a
+    second, weaker spelling of it.
+    """
     declaration = raw.get("predecessor")
     if not isinstance(declaration, Mapping):
         return False
@@ -712,13 +731,7 @@ def _technical_root(raw: Mapping[str, object]) -> bool:
     if not isinstance(none, Mapping):
         return False
     cause = none.get("cause")
-    if isinstance(cause, str):
-        # A structured cause is authoritative.  Only causes emitted by this
-        # converter are temporary and eligible for another attempt; legal or
-        # topology roots such as ``official_structure_differs`` remain roots.
-        return cause in {item.value for item in BlockedCause}
-    reason = str(none.get("reason", "")).lower()
-    return any(cause.value in reason for cause in BlockedCause) or "migration" in reason or "lineage" in reason
+    return isinstance(cause, str) and cause in {item.value for item in BlockedCause}
 
 
 def _members(
@@ -854,7 +867,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                 else None
             )
             explicit_root = isinstance(declared_predecessor, Mapping)
-            candidate_id = baseline_id or (previous if not explicit_root or _technical_root(raw) else None)
+            candidate_id = baseline_id or (previous if not explicit_root or technical_root(raw) else None)
             storage_support_missing = previous is not None and baseline_id is None and spec.inherited
             authored = _members(raw, spec.section, singleton=spec.singleton)
             row = Counter[str]()
@@ -897,8 +910,7 @@ def assess_migration_state(modelo_dir: Path) -> MigrationAssessment:
                     row["structural_overhead"] += len(
                         _leaf_values({key: value for key, value in operation.items() if key != "fields"})
                     )
-            cleared = raw.get("cleared_families", ())
-            if isinstance(cleared, list | tuple) and spec.section in cleared:
+            if spec.section in cleared_family_names(raw.get("cleared_families", ())):
                 row["removals"] += 1
                 row["structural_overhead"] += 1
             if spec.inheritance is FamilyInheritanceMode.PER_EDITION:
@@ -2110,7 +2122,7 @@ def _choose_predecessor(
     declared = source.manifest.get("predecessor")
     if isinstance(declared, str):
         return declared, PredecessorBasis.DECLARED, []
-    if isinstance(declared, dict) and not (reconsider_technical_roots and _technical_root(source.manifest)):
+    if isinstance(declared, dict) and not (reconsider_technical_roots and technical_root(source.manifest)):
         return None, PredecessorBasis.DECLARED_ROOT, []
     if position == 0:
         return None, PredecessorBasis.FIRST, []
@@ -2926,25 +2938,16 @@ def _chain_materialisation(source: _EditionSource) -> bytes:
 def _family_defaults_inlined(table: Mapping[str, object]) -> dict[str, object]:
     """Inline keyed-family source defaults for representation-blind chain proof."""
     result = dict(table)
-    for spec in CANONICAL_FAMILY_SPECS:
-        default_key = spec.source_default_key
-        if spec.section == CASILLAS_FAMILY or default_key is None:
+    for section, default_key in family_source_default_fields():
+        raw_members = table.get(section)
+        if not isinstance(raw_members, list | tuple):
             continue
-        default = table.get(default_key)
-        raw_members = table.get(spec.section)
-        if not isinstance(default, list | tuple) or not default or not isinstance(raw_members, list | tuple):
-            continue
-        members: list[object] = []
-        for raw_member in raw_members:
-            if not isinstance(raw_member, Mapping) or _ROW_SOURCE in raw_member:
-                members.append(raw_member)
-                continue
-            member = dict(raw_member)
-            raw_additions = member.pop(_ROW_SOURCE_ADDITIONS, ())
-            additions = raw_additions if isinstance(raw_additions, list | tuple) else ()
-            member[_ROW_SOURCE] = list(dict.fromkeys((*default, *additions)))
-            members.append(member)
-        result[spec.section] = members
+        result[section] = [
+            inline_family_source_default(raw_member, table, default_key)
+            if isinstance(raw_member, Mapping)
+            else raw_member
+            for raw_member in raw_members
+        ]
     return result
 
 

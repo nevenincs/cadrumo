@@ -13,6 +13,7 @@ import pytest
 
 from cadrumo.core.directory_scan import scan_directory
 from dev._paths import REPO_ROOT
+from dev.test_runs.logging import collect_only_listing
 
 from ..shard import shard_of
 
@@ -69,7 +70,12 @@ def _collect_ids(sample_dir: Path, shard_args: list[str]) -> set[str]:
         )
         raise AssertionError(message) from expiry
     assert result.returncode in (0, 5), result.stdout + result.stderr
-    return {line.strip() for line in result.stdout.splitlines() if "::" in line and not line.startswith("=")}
+    # A collect-only run writes its node ids to the run log and prints the file
+    # it wrote them to, so reading stdout alone returns an empty collection and
+    # the partition below is asserted over nothing.
+    listing, _summary = collect_only_listing(result.stdout)
+    text = result.stdout if listing is None or not listing.is_file() else listing.read_text("utf-8", errors="replace")
+    return {line.strip() for line in text.splitlines() if "::" in line and not line.startswith("=")}
 
 
 def _run_nested_collection(sample_dir: Path, shard_args: list[str]) -> subprocess.CompletedProcess[str]:

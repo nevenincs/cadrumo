@@ -36,6 +36,7 @@ from typing import Final
 import pytest
 
 from dev._paths import REPO_ROOT
+from dev.test_runs.logging import collect_only_listing
 
 from ..command_execution import run_command
 from ._justfile_recipes import packaging_pytest_recipes
@@ -64,6 +65,10 @@ _NO_WORKERS: Final = "-n0"
 _NODE_ID: Final = re.compile(r"^(?P<node_id>\S+\.py::\S.*)$")
 _COLLECTED: Final = re.compile(r"(?:^|\s)(?P<count>\d+)(?:/\d+)? tests? collected")
 _NO_TESTS_COLLECTED: Final = re.compile(r"(?:^|\s)no tests collected")
+_COLLECT_ONLY_SUMMARY: Final = re.compile(r"collected (?P<count>\d+) test")
+
+#: Reporting flags that change the listing shape without changing selection.
+_VERBOSITY_FLAGS: Final = frozenset({"-v", "-vv", "-vvv", "--verbose", "-q", "-qq", "--quiet"})
 
 #: Collection exit statuses that are answers rather than faults. ``5`` is
 #: pytest's "no tests collected", which is the CORRECT outcome for every
@@ -100,7 +105,16 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
                 "-p",
                 "no:cacheprovider",
                 "--collect-only",
-                *arguments,
+                # Exactly one ``-q``, with the caller's verbosity flags removed.
+                # This reads what a selection SELECTS, and verbosity says
+                # nothing about that, but it decides the shape of the listing:
+                # without ``-q`` pytest prints ``<Function ...>`` lines the
+                # node-id reader cannot match, ``-qq`` drops the listing
+                # altogether, and a recipe's own ``-v`` cancels the ``-q`` back
+                # out. Each way the two readers disagree and every selection
+                # reads as empty.
+                "-q",
+                *(argument for argument in arguments if argument not in _VERBOSITY_FLAGS),
                 _NO_WORKERS,
             ],
             cwd=_REPO_ROOT,
@@ -119,7 +133,15 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
     )
     node_ids: set[str] = set()
     reported: int | None = None
-    for line in completed.stdout.splitlines():
+    # The run-log wrapper takes the listing off stdout and leaves a summary
+    # naming the file it wrote it to. Both readers follow it there: reading
+    # stdout alone found no node ids and no summary, so every selection looked
+    # empty and the gates below could not distinguish that from a real one.
+    listed, _summary = collect_only_listing(completed.stdout)
+    lines = list(completed.stdout.splitlines())
+    if listed is not None and listed.is_file():
+        lines.extend(listed.read_text(encoding="utf-8", errors="replace").splitlines())
+    for line in lines:
         match = _NODE_ID.match(line.rstrip())
         if match is not None:
             node_ids.add(match.group("node_id"))
@@ -127,7 +149,7 @@ def _collect(label: str, arguments: tuple[str, ...]) -> frozenset[str]:
         if _NO_TESTS_COLLECTED.search(line):
             reported = 0
             continue
-        summary = _COLLECTED.search(line)
+        summary = _COLLECTED.search(line) or _COLLECT_ONLY_SUMMARY.search(line)
         if summary is not None:
             reported = int(summary.group("count"))
 

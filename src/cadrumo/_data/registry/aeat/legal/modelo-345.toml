@@ -269,7 +269,7 @@ record_design_epoch = "2025"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_345/files/01-345-ejercicio-2025.pdf"
 sha256 = "fb0faaf68f8b0de29316bdc65eaeb3ba0dcb8a441eea4d5415d0cb4517c287fd"
 bytes = 331991
-retrieved_at = 2026-07-01
+retrieved_at = 2026-07-21
 published_at = 2025-12-12
 applies_from = 2025-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_100_199/DR_Modelo_345_2025.pdf"
@@ -283,7 +283,7 @@ corpus_path = "corpus/normatives/html/orden-hfp-823-2022.html"
 sha256 = "f879a2cf8d81cafa3070447fb3b088a10414269564f2515548c32707fce418fc"
 bytes = 140036
 retrieved_at = 2026-07-01
-published_at = 2022-08-30
+published_at = 2022-08-29
 # THE WINDOW IS THE EJERCICIO, NOT THE PRESENTATION. This read 2023-01-01, the
 # January in which the ejercicio-2022 declaracion is presented. A source window
 # is overlap-checked against a revision's own period span, so declaring the
@@ -295,7 +295,7 @@ published_at = 2022-08-30
 # that ejercicio. Left open-ended because the 2023, 2024 and 2025 revisions
 # still cite it as their base order.
 applies_from = 2022-01-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-14168"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2022-14168"
 review_status = "pending_review"
 
 [sources."boe-modelo-345-2023-amendment-hfp-528"]
@@ -356,7 +356,7 @@ corpus_path = "corpus/normatives/html/orden-hac-1430-2025.html"
 sha256 = "18d600aed76f64c48b4bc86b25ef624c7c6b3a5fe347763c94977851fa5359bf"
 bytes = 110714
 retrieved_at = 2026-07-01
-published_at = 2025-12-16
+published_at = 2025-12-12
 applies_from = 2025-12-17
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389"
 review_status = "pending_review"
@@ -368,7 +368,10 @@ review_status = "pending_review"
 evidence_tier = "layout_authority"
 authority = "boe"
 kind = "record_design"
-record_design_epoch = "2022"
+# Raw BOE orden, catalogued as provenance rather than a machine-readable map:
+# the bundled PDF is the whole orden, and its ANEXO does not read as a diseno
+# from position 1. Same standing as the raw modelo 184 ordenes.
+design_authority = "provenance_only"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_345/files/05-345-orden-hfp-823-2022-boe-a-2022-14168.pdf"
 sha256 = "75975d86406df229cd5eaebc7ba26dc06359f753faf4553d50ee9e7743a61825"
 bytes = 495960

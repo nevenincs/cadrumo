@@ -50,7 +50,7 @@ import pytest
 
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..authority import PinnedAuthorityOperation
-from ..errors import NoRevisionForPeriodError
+from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema import RegistrySnapshot
 from .published_authority import published_authored_revision, published_supported_filing_years
@@ -252,7 +252,7 @@ def test_pre_floor_casilla_0527_is_authored_manual_and_filing_selection_refuses(
     supported_years = published_supported_filing_years()
     assert supported_years is not None
     assert year < supported_years.floor
-    with pytest.raises(NoRevisionForPeriodError):
+    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
         _snapshot(registry_authority, year)
 
 

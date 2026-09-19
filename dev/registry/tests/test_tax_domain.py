@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import pytest
 
+from cadrumo.core.errors.hierarchy import CoreValidationError
 from cadrumo.core.tax_domain import TaxDomain
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
@@ -39,7 +40,7 @@ def test_well_formed_unpublished_tax_domain_is_accepted_by_syntax_constructor() 
 
 def test_malformed_tax_domain_is_rejected_at_syntax_construction() -> None:
     """Stable lexical constraints remain enforced without consulting authority."""
-    with pytest.raises(ValueError):
+    with pytest.raises(CoreValidationError):
         TaxDomain("not-a-domain")
 
 

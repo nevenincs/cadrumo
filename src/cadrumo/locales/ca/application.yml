@@ -931,9 +931,9 @@ application:
       cross_period_clean_state_incomplete: La prova d'estat net entre períodes està
         incompleta per al model {modelo} {filing_year} {period}; queden {finding_count}
         troballa(es).
-      deductible_iva_evidence_missing: 'Les linies del llibre amb IVA deduible requereixen
-        una factura de compra vinculada. Vincula la factura a la linia i torna a executar
-        work verify: la verificacio no es completa mentre una linia deduible no tingui
+      deductible_iva_evidence_missing: 'Les línies del llibre amb IVA deduïble requereixen
+        una factura de compra vinculada. Vincula la factura a la línia i torna a executar
+        work verify: la verificació no es completa mentre una línia deduïble no tingui
         factura, de manera que l''esborrany continua obert i recull l''evidencia.'
       export_cross_bucket_refused: La revisió indicada pertany a un bucket diferent
         del bucket del perfil actiu. Canvia de perfil abans d'exportar.
@@ -1144,7 +1144,7 @@ application:
         l'estat %{work_unit_state} i no es pot importar.
       work_unit_filing_year_period_mismatch: L'exercici %{filing_year} no coincideix
         amb l'exercici %{period_year} del període %{period}.
-      work_unit_mutation_refused: La unitat de treball esta descartada, i tornar a
+      work_unit_mutation_refused: La unitat de treball està descartada, i tornar a
         crear el mateix objectiu de declaració es rebutja en lloc de retornar una
         unitat nova.
       work_unit_not_found: No s'ha trobat cap unitat de treball de model amb id=%{work_unit_id}.

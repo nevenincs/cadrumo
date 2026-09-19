@@ -3,8 +3,9 @@ predecessor = "2015"
 casilla_source_refs = ["boe-dr-184-2016-2018"]
 reviewed_against = "2015"
 authority_grade = "applicability"
-# This epoch has its own BOE design.  Strict parsing detects its first field at
-# position 81, so neither the 2015 form spec nor the 2023-2024 map is reused.
+# This epoch's only design is the anexo of a multi-modelo amending orden, which
+# republishes just the blocks it changes.  Neither the 2015 form spec nor the
+# 2023-2024 map is reused, and no complete map is reconstructable by parsing.
 valid_from = 2016-01-01
 valid_to = 2018-12-31
 period_selector = { year_from = 2016, year_to = 2018, periods = ["0A"] }
@@ -12,8 +13,8 @@ orden_aplicabilidad = ["orden-hap-2250-2015:art-1"]
 legal_refs = ["orden-hap-2250-2015:art-1", "orden-hap-2250-2015:art-4", "ley-58-2003:art-93"]
 source_refs = ["boe-dr-184-2016-2018", "boe-modelo-184-2015-form", "aeat-modelo-184-procedure"]
 review_status = "agent_reviewed"
-reviewed_by = "agent: applicability-only historical epoch. The raw BOE-A-2016-12114 record-design PDF is source-pinned, but the canonical strict parser starts its first field at position 81 rather than position 1. No casillas, bindings, export layout, or continuity claim is declared. Reconsider only after a strict parse yields complete record sheets from position 1 and the resulting geometry is independently compared with this exercise range."
-reviewed_at = 2026-08-26
+reviewed_by = "agent: applicability-only historical epoch. BOE-A-2016-12114 is not a modelo 184 diseno de registro: it is Orden HFP/1923/2016, a multi-modelo amending orden covering modelos 181, 182, 184, 187 and 198, so its anexo republishes only the blocks that orden changed. Strict parsing reads the record from position 81 and reports positions 1-80 and 82 of the declared 494 as never printed in this document. That is a property of the source, not a parser gap, so the criterion previously recorded here -- a complete strict parse from position 1 -- is unreachable and must not be waited on. AEAT's own diseno index for modelo 184 publishes consolidated workbooks only for the 2023-2024 and 2025 epochs and links the raw ordenes for every earlier one, so no AEAT workbook for this epoch is pending publication. No casillas, bindings, export layout, or continuity claim is declared. Promotion requires reconstructing this epoch's layout as a delta over the 2015 baseline from the blocks this orden republishes, independently compared against BOE-A-2016-12114."
+reviewed_at = 2026-09-19
 family_storage_baseline = "2015"
 scoped_families = ["workbook_parity_refs"]
 

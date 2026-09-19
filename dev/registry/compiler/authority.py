@@ -25,6 +25,7 @@ from dev.registry.compiler.compilation_catalogues import compiling_catalogues
 
 from . import fact_providers
 from .authority_state import (
+    AuthoringRootPair,
     authoring_root_pair,
     cached_compilation,
     canonical_authoring_root_pair,
@@ -46,7 +47,6 @@ from .fact_providers import (
 )
 from .identity import RegistryIdentity, resolve_registry_identity
 from .loader import load_registry_tree, load_shared_catalogues
-from .loader_cache import is_bundled_registry_root
 from .loader_fingerprints import collect_registry_tree_fingerprints
 from .profile_schema import (
     CapturedProfileSchema,
@@ -291,6 +291,61 @@ def compile_validated_authority(
     tree on every call, which is what made a cache HIT cost as much as a miss
     for the corpus-wide gates that call this in a loop.
     """
+    receipt = compilation_receipt(
+        registry_root,
+        source_root,
+        identity=identity,
+        profile_schema_path=profile_schema_path,
+        captured_profile_schema=captured_profile_schema,
+        verify_evidence_bytes=verify_evidence_bytes,
+    )
+    pair = receipt.pair
+    authority = cached_compilation(
+        pair,
+        registry_identity_digest=receipt.identity.digest,
+        source_receipt=receipt.source_receipt,
+        compiler_identity_digest=receipt.compiler_identity_digest,
+        build=lambda: _compile_validated_authority_uncached(
+            pair.registry_root,
+            pair.source_root,
+            identity=receipt.identity,
+            profile_schema_path=receipt.profile_schema_path,
+            captured_profile_schema=receipt.captured_profile_schema,
+            verdicts=receipt.verdicts,
+        ),
+    )
+    register_authoring_authority(authority, source_root=pair.source_root)
+    return authority
+
+
+@dataclass(frozen=True, slots=True)
+class CompilationReceipt:
+    """Everything that decides one compile's outcome, derived once from its roots.
+
+    Held as a value so a gate that re-enters the validator over an already
+    compiled corpus can consult the SAME verdict scope the compile used, rather
+    than deriving a second one that would key differently and record nothing.
+    """
+
+    pair: AuthoringRootPair
+    identity: RegistryIdentity
+    profile_schema_path: Path
+    captured_profile_schema: CapturedProfileSchema
+    source_receipt: str
+    compiler_identity_digest: str
+    verdicts: ValidationVerdictScope | None
+
+
+def compilation_receipt(
+    registry_root: Path,
+    source_root: Path,
+    *,
+    identity: RegistryIdentity | None = None,
+    profile_schema_path: Path | None = None,
+    captured_profile_schema: CapturedProfileSchema | None = None,
+    verify_evidence_bytes: bool = False,
+) -> CompilationReceipt:
+    """Derive the identity, receipt and verdict scope one compile of these roots rests on."""
     pair = authoring_root_pair(registry_root, source_root)
     if identity is None:
         identity = resolve_registry_identity(
@@ -311,33 +366,44 @@ def compile_validated_authority(
         }
     )
     compiler_identity_digest = authority_compiler_identity()
+    # Every root gets a verdict scope, bundled or staged. The keys are content
+    # keys -- relative path, size and content digest per declaration -- so a
+    # staged candidate reuses the per-modelo verdicts of the identical bytes it
+    # was copied from and only its OWN edited modelo validates again. Gated to
+    # the bundled root before, each candidate re-validated the whole corpus.
     verdicts = (
         validation_verdict_scope(
             registry_root=pair.registry_root,
-            registry_identity_digest=identity.digest,
             fingerprints=identity.fingerprints,
             source_receipt=source_receipt,
             compiler_identity_digest=compiler_identity_digest,
         )
-        if is_bundled_registry_root(pair.registry_root)
+        if identity.fingerprints
         else None
     )
-    authority = cached_compilation(
-        pair,
-        registry_identity_digest=identity.digest,
+    return CompilationReceipt(
+        pair=pair,
+        identity=identity,
+        profile_schema_path=profile_path,
+        captured_profile_schema=captured,
         source_receipt=source_receipt,
         compiler_identity_digest=compiler_identity_digest,
-        build=lambda: _compile_validated_authority_uncached(
-            pair.registry_root,
-            pair.source_root,
-            identity=identity,
-            profile_schema_path=profile_path,
-            captured_profile_schema=captured,
-            verdicts=verdicts,
-        ),
+        verdicts=verdicts,
     )
-    register_authoring_authority(authority, source_root=pair.source_root)
-    return authority
+
+
+def bundled_validation_verdicts() -> ValidationVerdictScope | None:
+    """The verdict scope :func:`compiled_bundled_authority` compiles the bundled sources under.
+
+    A gate that re-enters the validator over the bundled corpus passes this, so
+    a modelo whose content is unchanged takes its recorded per-modelo verdict
+    instead of validating again. Without it such a gate re-proved the whole
+    corpus from scratch in every process -- measured at 19.4s for one -- because
+    the authority's own validation had been served from the disk verdict and so
+    left the validator's in-process memo empty.
+    """
+    registry_root, source_root = canonical_authoring_root_pair(bundled_path("registry", "aeat"), bundled_path())
+    return compilation_receipt(registry_root, source_root).verdicts
 
 
 def compile_registry_tree(

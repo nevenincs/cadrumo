@@ -61,39 +61,43 @@ def _pid_is_alive_windows(pid: int) -> bool:
     ``OpenProcess`` + ``GetExitCodeProcess`` instead: a process whose exit
     code is not ``STILL_ACTIVE`` (259) is dead even if its PID is still
     allocated.
+
+    The ``sys.platform == "win32"`` block, rather than an early raise off
+    Windows, is what establishes the platform for the ``ctypes`` Windows API
+    below: it is the only guard shape every checker this project runs narrows
+    on, so those references resolve when the tree is analysed for a platform
+    that does not ship them.
     """
-    if sys.platform != "win32":  # pragma: no cover - dispatch never routes here
-        # Narrowed on sys.platform rather than os.name: the ctypes Windows API
-        # below does not exist in the POSIX stubs, so a checker running on Linux
-        # reports every reference unresolved unless the platform is established.
-        raise InternalInvariantError("the Windows liveness probe is not available on this platform")
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
 
-    import ctypes
-    from ctypes import wintypes
-
-    process_query_limited_information = 0x1000
-    still_active = 259
-    error_invalid_parameter = 87
-    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
-    handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
-    if not handle:
-        last_error = ctypes.get_last_error()
-        missing = last_error == error_invalid_parameter
-        if not missing:
-            _log.debug(
-                "pid liveness probe unavailable for pid=%s (last_error=%s); treating as alive",
-                pid,
-                last_error,
-            )
-        return not missing
-    try:
-        code = wintypes.DWORD()
-        ok = kernel32.GetExitCodeProcess(handle, ctypes.byref(code))
-        if not ok:
-            return True
-        return code.value == still_active
-    finally:
-        kernel32.CloseHandle(handle)
+        process_query_limited_information = 0x1000
+        still_active = 259
+        error_invalid_parameter = 87
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        handle = kernel32.OpenProcess(process_query_limited_information, False, pid)
+        if not handle:
+            last_error = ctypes.get_last_error()
+            missing = last_error == error_invalid_parameter
+            if not missing:
+                _log.debug(
+                    "pid liveness probe unavailable for pid=%s (last_error=%s); treating as alive",
+                    pid,
+                    last_error,
+                )
+            return not missing
+        try:
+            code = wintypes.DWORD()
+            ok = kernel32.GetExitCodeProcess(handle, ctypes.byref(code))
+            if not ok:
+                return True
+            return code.value == still_active
+        finally:
+            kernel32.CloseHandle(handle)
+    raise InternalInvariantError(  # pragma: no cover - dispatch never routes here
+        "the Windows liveness probe is not available on this platform"
+    )
 
 
 __all__ = ["pid_is_alive"]

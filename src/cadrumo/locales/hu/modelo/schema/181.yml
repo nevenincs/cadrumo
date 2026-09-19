@@ -4,7 +4,7 @@ modelo:
       construct:
         modelo-181-informative:
           field:
-            title: Modelo 181 bevallás tájékoztató
+            title: '181-es nyomtatvány: tájékoztató jellegű adatszolgáltatás'
       field:
         official_name: Modelo 181. Hitelek és kölcsönök, valamint ingatlanokhoz kapcsolódó
           pénzügyi ügyletek adatszolgáltatási bevallása.

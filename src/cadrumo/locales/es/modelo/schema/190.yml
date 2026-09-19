@@ -368,7 +368,7 @@ modelo:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
           field:
-            label: Modelo 190 ejercicio 2024 y siguientes
+            label: Modelo 190, ejercicio 2024
         2025-y-siguientes:
           casilla:
             x-e1in4opec5n6ubbec5hmirb9cln78ro:
@@ -526,4 +526,4 @@ modelo:
               help: Dato del perceptor declarado en el registro de tipo 2 del modelo
                 190.
           field:
-            label: Modelo 190 ejercicio 2024 y siguientes
+            label: Modelo 190, ejercicios 2025 y siguientes

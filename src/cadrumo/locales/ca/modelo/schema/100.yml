@@ -114,8 +114,8 @@ modelo:
             label: '"Centenario Federación Aragonesa de Fútbol": Aplicat en aquesta
               declaració'
           irpf-aeip-cincuenta-aniversario-de-la-universidad-nacional-de-educacion-a-distancia-uned-aplicado:
-            label: '"Cincuenta aniversari de l''Universidad Nacional de Educació a
-              Distancia (UNED)": Aplicat en aquesta declaració'
+            label: '"Cincuenta aniversario de la Universidad Nacional de Educación
+              a Distancia (UNED)": Aplicat en aquesta declaració'
           irpf-aeip-congreso-de-la-union-internacional-de-arquitectos-aplicado:
             label: '«Congrés de la Unió Internacional d''Arquitectes»: Aplicat en
               aquesta declaració'
@@ -286,7 +286,7 @@ modelo:
             label: 'Import de la deducció: Donatius a entitats regulades en la Llei
               49/2002 de 23 de desembre'
           irpf-anexo-a-deducciones-donativo-importe-dedppol:
-            help: Indiqueu l’import de la deducció per quotes d’afiliació i aportacions
+            help: Indiqueu l'import de la deducció per quotes d'afiliació i aportacions
               a partits polítics, federacions, coalicions o agrupacions electorals.
             label: 'Import de la deducció: Quotes d''afiliació i aportacions a partits
               polítics, federacions, coalicions o agrupacions electorals'
@@ -326,15 +326,16 @@ modelo:
           irpf-anexo-a-prestamo-id:
             label: 'Número d''identificació del préstec hipotecari:'
           irpf-anexo-a-prestamo-porcentaje-vivienda:
-            label: 'Percentatge de l’import total del préstec hipotecari que s’ha
-              destinat efectivament a l’adquisició de l’habitatge habitual:'
+            label: 'Percentatge de l''import total del préstec hipotecari que s''ha
+              destinat efectivament a l''adquisició de l''habitatge habitual:'
           irpf-anexo-a-residente-ue-cuota-conjunta-hipotetica:
             label: Quota líquida total si tots els membres de l'unitat familiar haguessin
               tributat conjuntament (*)
           irpf-anexo-a-residente-ue-cuota-familiar-irpf:
             label: Quotes líquides estatal i autonòmica dels membres de la unitat
               familiar contribuents per l'IRPF, segons les caselles ([0545], [0546],
-              [0547], [0548], [0549], [0550], [0551], [0552], [0553])
+              [0547], [0548], [0549], [0550], [0551], [0552], [0553], [0554], [0555],
+              [0556], [0557], [0558], [0559], [0560], [0561], [0562], [0563], [0564])
           irpf-anexo-a-residente-ue-deduccion-importe:
             label: Deducció que correspon al contribuent (**)
           irpf-anexo-a-residente-ue-diferencia:
@@ -347,12 +348,12 @@ modelo:
             label: Import de la deducció per l'adquisició de vehicles elèctrics \"endollables\"
               i de pila de combustible
           irpf-anexo-a-vivienda-fecha-adquisicion-fechavh:
-            label: Si l’adquisició de l’habitatge s’ha produït després del 31-12-2012,
-              per estar en construcció, indiqueu la data d’adquisició (data de l’escriptura
-              d’adquisició o d’obra nova)
+            label: Si l'adquisició de l'habitatge s'ha produït després del 31-12-2012,
+              per estar en construcció, indiqueu la data d'adquisició (data de l'escriptura
+              d'adquisició o d'obra nova)
           irpf-anexo-a-vivienda-fecha-adquisicion-vivfa:
-            label: Data d’adquisició de l’habitatge pel qual es practica la deducció
-              (llevat que s’empleni la casella [0690])
+            label: Data d'adquisició de l'habitatge pel qual es practica la deducció
+              (llevat que s'empleni la casella [0690])
           irpf-anexo-b-adoption-deduction-amount:
             label: 'Deducció per adopció: Import de la deducció'
           irpf-anexo-b-adoption-pending-claim:
@@ -696,7 +697,7 @@ modelo:
           irpf-anexo-c-gan-per-cuartas-aplicado:
             label: Import de l'ajut pública aplicada en l'exercici
           irpf-anexo-c-gan-per-cuartas-importe-total:
-            label: Import total de l'ajut pública percibida
+            label: Import total de l'ajut pública percebuda
           irpf-anexo-c-gan-per-cuartas-pendiente:
             label: Import pendent d'imputació
           irpf-anexo-c-gan-per-cuartas-tipo-ayuda:
@@ -915,7 +916,7 @@ modelo:
           irpf-cuota-liquida-autonomica:
             label: 'Quota líquida autonòmica: Part autonòmica'
           irpf-cuota-liquida-autonomica-ccaa:
-            label: Quota líquida autonòmica incrementada (traslladeu l’import de la
+            label: Quota líquida autonòmica incrementada (traslladeu l'import de la
               casella [0586])
           irpf-cuota-liquida-estatal:
             label: 'Quota líquida estatal: Part estatal'
@@ -1221,7 +1222,7 @@ modelo:
             label: 'Per rendiments derivats de la venda de béns corporals produïts
               a les Illes Balears (D.A. setantena Llei 31/2022): Part estatal'
           irpf-deduccion-c-valenciana-abonos-culturales:
-            label: Per quantitats destinades a abonos culturals
+            label: Per quantitats destinades a abonaments culturals
           irpf-deduccion-c-valenciana-acciones-participaciones:
             label: Per inversió en adquisició d'accions o participacions socials en
               entitats noves o de recent creació
@@ -1235,8 +1236,8 @@ modelo:
           irpf-deduccion-c-valenciana-arrendamiento-municipio-distinto:
             label: Per arrendament d'un habitatge per activitats en un municipi diferent
           irpf-deduccion-c-valenciana-ascendientes-mayores-75:
-            label: Per ascendents majors de 75 anys o majors de 65 anys que sean persones
-              amb discapacitat
+            label: Per ascendents majors de 75 anys o majors de 65 anys que siguin
+              persones amb discapacitat
           irpf-deduccion-c-valenciana-autoconsumo-generado:
             label: Import generat en 2023
           irpf-deduccion-c-valenciana-autoconsumo-generado-pendiente-1:
@@ -1294,7 +1295,7 @@ modelo:
             label: Per l'increment dels costos de la finançament aliena en l'inversió
               de l'habitatge habitual
           irpf-deduccion-c-valenciana-gastos-salud:
-            label: Per quantitats satisfetes en determinats despeses de salud
+            label: Per quantitats satisfetes en determinats despeses de salut
           irpf-deduccion-c-valenciana-material-escolar:
             label: Per adquisició de material escolar
           irpf-deduccion-c-valenciana-nacimiento-adopcion-multiple:
@@ -1340,9 +1341,9 @@ modelo:
             label: Per contribuents amb discapacitat i majors de 65 anys
           irpf-deduccion-canarias-donaciones-culturales-deportivas:
             label: Per donacions i aportacions per a finalitats culturals, esportius,
-              investigació o docencia
+              investigació o docència
           irpf-deduccion-canarias-donaciones-entidades-sin-animo:
-            label: Per donacions a entitats sense ánimo de lucro
+            label: Per donacions a entitats sense ànim de lucro
           irpf-deduccion-canarias-donaciones-patrimonio-historico:
             label: Per donacions per a la rehabilitació o conservació del patrimoni
               històric de Canàries
@@ -1407,7 +1408,7 @@ modelo:
             label: Per acolliment familiar de menors
           irpf-deduccion-cantabria-ayuda-domestica:
             help: Introduïu l'import per ajuda domèstica.
-            label: Per ajut doméstica
+            label: Per ajut domèstica
           irpf-deduccion-cantabria-ayuda-domestica-ccc:
             help: Introduïu el codi de compte de cotització.
             label: Codi compte cotització
@@ -1415,7 +1416,8 @@ modelo:
             label: Per cura de familiars
           irpf-deduccion-cantabria-donativos-fundaciones:
             label: Per donatius a fundacions o al Fons Cantàbria Coopera o a Associacions
-              que persigan entre els seus finalitats el suport a persones amb discapacitat
+              que persegueixin entre els seus finalitats el suport a persones amb
+              discapacitat
           irpf-deduccion-cantabria-enfermedad:
             label: Per despeses de malaltia
           irpf-deduccion-cantabria-familia-monoparental:
@@ -1556,7 +1558,7 @@ modelo:
             label: Per donacions a determinades entitats en benefici del medi ambient,
               la conservació del patrimoni natural i de custòdia del territori
           irpf-deduccion-catalunya-intereses-prestamos-estudios:
-            label: Pel pagament d'interessos de préstecs per als estudis de máster
+            label: Pel pagament d'interessos de préstecs per als estudis de màster
               i de doctorat
           irpf-deduccion-catalunya-obligacion-presentar-declaracion:
             help: Introduïu la deducció vinculada a l'obligació de presentar la declaració
@@ -1568,7 +1570,7 @@ modelo:
           irpf-deduccion-catalunya-rehabilitacion-vivienda:
             label: Per rehabilitació de l'habitatge habitual
           irpf-deduccion-catalunya-viudedad-anio:
-            label: Any de viudedad
+            label: Any de viduïtat
           irpf-deduccion-contribuciones-empresariales-prevision-social-aplicado:
             label: 'Per contribucions empresarials a sistemes de previsió social (D.A.
               tercera Reial Decret-llei13/2022): Aplicat en aquesta declaració'
@@ -1658,7 +1660,7 @@ modelo:
             label: Per residir habitualment en municipis i entitats locals menors
               d'Extremadura amb població inferior a 3.000 habitants
           irpf-deduccion-extremadura-trabajo-dependiente:
-            label: Per treball dependiente
+            label: Per treball dependent
           irpf-deduccion-extremadura-viudos:
             label: Per a contribuents vidus
           irpf-deduccion-extremadura-vivienda-jovenes:
@@ -1691,13 +1693,13 @@ modelo:
               de Galícia
           irpf-deduccion-galicia-discapacidad-mayores-65:
             label: Per contribuents amb discapacitat d'edat igual o superior a 65
-              anys que precisen ajut de terceras persones
+              anys que precisen ajut de terceres persones
           irpf-deduccion-galicia-donaciones-idi:
             label: Per donacions amb finalitat en investigació i desenvolupament científic
               i innovació tecnològica
           irpf-deduccion-galicia-eficiencia-energetica:
             label: Per obres de millora d'eficiència energètica en edificis d'habitatges
-              o en habitatges unifamiliares
+              o en habitatges unifamiliars
           irpf-deduccion-galicia-familia-numerosa:
             label: Per família nombrosa
           irpf-deduccion-galicia-familias-2-hijos:
@@ -1716,7 +1718,7 @@ modelo:
             label: Per adquisició i rehabilitació d'habitatges en els projectes de
               pobles model
           irpf-deduccion-instalacion-recarga-fecha-fin:
-            label: Data en la que finaliza l'instal·lació
+            label: Data en la que finalitza l'instal·lació
           irpf-deduccion-inversion-empresarial-entidad-nif-nifafp1:
             help: Introduïu el NIF de l'entitat 1.
             label: NIF de l'entitat 1
@@ -1830,7 +1832,7 @@ modelo:
             help: Introduïu l'import de la deducció.
             label: import de la deducció
           irpf-deduccion-madrid-donativos-fundaciones-deportivos:
-            label: Per donatius a fundacions i clubes esportius
+            label: Per donatius a fundacions i clubs esportius
           irpf-deduccion-madrid-dos-mas-descendientes-ingresos-reducidos:
             label: Per a famílies amb dos o més descendents i ingressos reduïts
           irpf-deduccion-madrid-empleada-hogar-ccc:
@@ -1925,7 +1927,7 @@ modelo:
           irpf-deduccion-murcia-material-escolar:
             label: Per despeses de material escolar i llibres de text
           irpf-deduccion-murcia-mujeres-trabajadoras:
-            label: Per a mujeres treballadores
+            label: Per a dones treballadores
           irpf-deduccion-murcia-recursos-energeticos-renovables-generado:
             help: Introduïu l'import generat el 2024.
             label: Import generat el 2024
@@ -1936,7 +1938,7 @@ modelo:
             help: Introduïu la deducció per inversió en habitatge habitual per joves
               d'edat igual o inferior a 40 anys, inclòs el règim transitori.
             label: Per inversió en habitatge habitual per joves d'edat igual o inferior
-              a 40 anys (incluido el règim transitori)
+              a 40 anys (inclòs el règim transitori)
           irpf-deduccion-murcia-vivienda-nueva-habitual:
             label: Per adquisició de nou habitatge habitual o ampliació de l'habitatge
               habitual actual per famílies nombroses
@@ -1986,7 +1988,7 @@ modelo:
           irpf-deduccion-vehiculo-gastos-tributos:
             label: Import de les despeses i tributs inherents a l'adquisició del vehicle
           irpf-deduccion-vehiculo-precio-sin-iva:
-            label: Preu de venda del vehicle adquirido sense IVA o IGIC
+            label: Preu de venda del vehicle adquirit sense IVA o IGIC
           irpf-deduccion-vehiculo-tipo:
             label: Tipus (**)
           irpf-deduccion-vehiculo-valor-adquisicion:
@@ -2008,8 +2010,8 @@ modelo:
           irpf-descendiente-num-contribuyentes-derecho:
             label: Indiqui el número de persones amb dret al mínim per descendents
           irpf-discrepancia-criterio-administrativo:
-            help: Indiqueu l’import per discrepància de criteri administratiu només
-              quan sigui aplicable el supòsit d’autoliquidació rectificativa de la
+            help: Indiqueu l'import per discrepància de criteri administratiu només
+              quan sigui aplicable el supòsit d'autoliquidació rectificativa de la
               font.
           irpf-dt9-valor-transmision-acumulado:
             help: Consigneu el valor total acumulat de transmissió sobre el qual s'ha
@@ -2018,7 +2020,7 @@ modelo:
               DT 9.ª en l'exercici 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2022
               i 2023
           irpf-ed-actividad-iae-code:
-            label: Grup o epígraf I.A.I. (de l'activitat principal en cas de realitzar
+            label: Grup o epígraf I.A.E. (de l'activitat principal en cas de realitzar
               diverses activitats del mateix tipus)
           irpf-ed-actividad-tipo-clave:
             label: 'Tipus d''activitat/es realitzada/s: clau indicativa'
@@ -2126,7 +2128,7 @@ modelo:
           irpf-eo-agr-indice-forestal:
             label: 8. Índex corrector en determinades activitats forestals
           irpf-eo-agr-indice-medios-ajenos:
-            label: 1. Per utilització de mitjans de producció ajenos en activitats
+            label: 1. Per utilització de mitjans de producció aliens en activitats
               agrícoles
           irpf-eo-agr-indice-pequena-empresa:
             label: 7. Per ser empresa el qual rdto. net minorat no supera 9.447,91
@@ -2692,7 +2694,7 @@ modelo:
             label: Valor de transmissió destinat a constituir una renda vitalícia
           irpf-ganancia-premios-aprovechamiento-forestal:
             label: Guanys patrimonials obtingudes pels veïns en 2020 com conseqüència
-              d'aprofitaments forestals en boscos públicos
+              d'aprofitaments forestals en boscos públics
           irpf-ganancia-premios-ayuda-alquiler:
             label: Ajuts públics al lloguer
           irpf-ganancia-premios-bono-cultural-joven:
@@ -3096,6 +3098,8 @@ modelo:
             label: 'Interessos de demora corresponents a les deduccions anteriors:
               Part autonòmica'
           irpf-intereses-demora-perdida-deducciones-autonomicas:
+            help: Indiqueu els interessos de demora autonòmics corresponents a les
+              deduccions anteriors en aquest bloc de regularització.
             label: 'Interessos de demora corresponents a les deduccions anteriors:
               Part autonòmica'
           irpf-intereses-demora-perdida-transitoria-estatal:
@@ -3111,7 +3115,7 @@ modelo:
               Part estatal'
           irpf-inversion-inmovilizado-afecto-deduccion-total:
             label: 'Deducció per inversió en elements nous de l''immobilitzat material
-              o inversions immobiliàries afectas a activitats econòmiques: Import
+              o inversions immobiliàries afectes a activitats econòmiques: Import
               de la deducció (**)'
           irpf-minimo-ascendientes-autonomico:
             label: 'Part autonòmica: Mínim per ascendents. Import'
@@ -3465,15 +3469,15 @@ modelo:
           irpf-reestructuracion-empresarial-feac-contribuyente-titular:
             label: Contribuent titular de l'element patrimonial transmès
           irpf-regularizacion-autoliquidaciones-anteriores-ingresar:
-            help: Indiqueu el resultat a ingressar derivat de la tramitació d’autoliquidacions
-              anteriors o liquidacions administratives corresponents a l’exercici
+            help: Indiqueu el resultat a ingressar derivat de la tramitació d'autoliquidacions
+              anteriors o liquidacions administratives corresponents a l'exercici
               2024.
           irpf-regularizacion-complementaria-resultado:
             label: Resultat de la declaració complementària
           irpf-regularizacion-devolucion-autoliquidaciones-anteriores:
-            help: Indiqueu la devolució acordada per l’Agència Tributària després
+            help: Indiqueu la devolució acordada per l'Agència Tributària després
               de tramitar autoliquidacions anteriors o liquidacions administratives
-              corresponents a l’exercici 2024.
+              corresponents a l'exercici 2024.
           irpf-regularizacion-devoluciones-solicitadas-ejercicio:
             label: Devolucions sol·licitades a l'Agència Tributària com a conseqüència
               de la tramitació d'autoliquidacions anteriors corresponents a l'exercici
@@ -3485,7 +3489,7 @@ modelo:
             label: Número de justificant de l'autoliquidació la rectificació de la
               qual se sol·licita
           irpf-regularizacion-rectificacion-resultado:
-            help: Indiqueu el resultat de l’apartat de regularització rectificativa.
+            help: Indiqueu el resultat de l'apartat de regularització rectificativa.
             label: Resultat
           irpf-rendimiento-act-eco-atribuido-rdto-neto:
             label: Rendiment net d'activitat econòmica atribuït per entitats en règim
@@ -3540,7 +3544,7 @@ modelo:
               [0623], [0624], [0636], [0637], [0248], [0249], [0660], [0661], [0662],
               [0663], [0664], [0666] i [0669].
           irpf-resultado-rectificacion-devolucion:
-            help: Indiqueu l’import que, si escau, podria resultar a retornar com
+            help: Indiqueu l'import que, si escau, podria resultar a retornar com
               a conseqüència de la rectificació.
             label: Import que, en el seu cas, pogués resultar a retornar com conseqüència
               de la rectificació
@@ -3603,7 +3607,7 @@ modelo:
           irpf-vehiculo-electrico-referencia-catastral:
             label: Referència cadastral (immoble 1)
           irpf-vehiculo-electrico-vendedor-nif:
-            label: NIF/NIE de la persona/entitat vendedora
+            label: NIF/NIE de la persona/entitat venedora
           irpf-vivienda-habitual-obras-proveedor-nif-nifcant3:
             label: NIF de la persona o entitat que realitza les obres
           irpf-vivienda-habitual-obras-proveedor-nif-nifval26b:
@@ -3674,12 +3678,12 @@ modelo:
                 Imports imputats al contribuent
             '0010':
               label: Aportacions al patrimoni protegit de persones amb discapacitat
-                titularitat del contribuent - import computable
+                titularitat del contribuent - Import computable
             '0011':
-              label: Reduccions segons l'article 18 i disposicions transitòries de
-                la Llei de l'impost
+              label: Reduccions (article 18, apartats 2 i 3, i disposicions transitòries
+                11a, 12a i 25a de la Llei de l'impost)
             '0012':
-              label: Total ingressos íntegros computables
+              label: Total ingressos íntegres computables
             '0013':
               label: Cotitzacions a la Seguretat Social i contribucions obligatòries
                 similars
@@ -3688,6 +3692,7 @@ modelo:
                 és obligatòria i amb un màxim de 500 euros anuals)
             '0016':
               label: Despeses de defensa jurídica derivades de litigis amb l'ocupador
+                (màxim 300 euros anuals)
             '0017':
               label: Rendiment net previ
             0018:
@@ -3735,7 +3740,7 @@ modelo:
             '0036':
               label: Total ingressos íntegres
             '0037':
-              label: despeses de administració i depósito de valors negociables, exclusivament
+              label: despeses de administració i dipòsit de valors negociables, exclusivament
             0038:
               label: Rendiment net
             0039:
@@ -3876,8 +3881,8 @@ modelo:
             0194:
               label: Subministraments (llum, aigua, gas, telefonia i internet)
             '0205':
-              label: IVA suportat (per ejermplo, recargo de equivalencia i/o compensació
-                de agricultura, ganadería i pesca)
+              label: IVA suportat (per exemple, recàrrec d'equivalència i/o compensació
+                d'agricultura, ramaderia i pesca)
             0208:
               label: Dotacions de l'exercici per amortització d'immobilitzat material
             '0214':
@@ -3905,7 +3910,7 @@ modelo:
                 de forma notòriament irregular (article 32.1 i D.T. 25a de la Llei
                 de l'impost)
             '0226':
-              label: Rendiment net reducido ( [0224] - [0225] )
+              label: Rendiment net reduït ( [0224] - [0225] )
             '0227':
               label: Dotacions de l'exercici per amortització de l'immobilitzat immaterial
             '0231':
@@ -3954,16 +3959,16 @@ modelo:
               label: Subvencions per a l'adquisició d'habitatges de protecció oficial
                 o de preu taxat. Import imputable a 2020
             '0300':
-              label: Altres subvencions o ajudes destinades a l'adquisició o rehabilitació
+              label: Altres subvencions o ajuts destinats a l'adquisició o rehabilitació
                 de l'habitatge habitual o a la reparació de defectes estructurals
                 en aquest. Import imputable a 2020
             '0301':
-              label: Demás guanys patrimonials derivades de ajuts públicas. Import
+              label: Demás guanys patrimonials derivades de ajuts públics. Import
                 imputable a 2020
             '0303':
               label: Renda bàsica d'emancipació
             '0306':
-              label: Suma de altres guanys que no derivan de la transmissió de elements
+              label: Suma de altres guanys que no deriven de la transmissió de elements
                 patrimonials (suma de les caselles [0299] + [0300] + [0301] + [0302]
                 + [0303] + [0304])
             0309:
@@ -4043,7 +4048,7 @@ modelo:
               label: 'CONYUGE: Nº de operacions'
             '0417':
               label: Si les entitatés no residents no han aplicat un règim fiscal
-                similar a éste, marqueu la casella
+                similar a aquest, marqueu la casella
             '0420':
               label: Si la diferència ( [0418] - [0419] ) és positiva
             '0422':
@@ -4062,7 +4067,7 @@ modelo:
             '0433':
               label: Saldo net negatiu dels guanys i pèrdues patrimonials de 2020
                 integrats a la base imposable general, amb un límit del 25 % de l'import
-                de la casella ([0432])
+                de les caselles ([0432], [0421])
             '0434':
               label: Resta de saldos nets negatius dels guanys i pèrdues patrimonials
                 de 2016 a 2019 no derivats de transmissions, pendents de compensació
@@ -4112,7 +4117,7 @@ modelo:
             '0446':
               label: Saldos nets negatius dels guanys i pèrdues patrimonials imputables
                 a 2020, integrats a la base imposable de l'estalvi, amb el límit del
-                25 % de ([0429])
+                25 % de ([0429], [0425])
             '0447':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2019, pendents de compensació a 1 de gener de 2020, a integrar
@@ -4162,15 +4167,16 @@ modelo:
             '0456':
               label: 'Fill/Filla 1 (*): NIF/NIE'
             '0457':
-              label: Si no teniu NIF o NIE, marqueu amb una "X" aquesta casilla
+              label: Si no teniu NIF o NIE, marqueu amb una "X" aquesta casella
             0458:
               label: 'Fill/Filla 2 (*): NIF/NIE'
             0459:
-              label: Si no teniu NIF o NIE, marqueu amb una "X" aquesta casilla
+              label: Si no teniu NIF o NIE, marqueu amb una "X" aquesta casella
             '0460':
               label: Base imposable de l'estalvi calculada segons les caselles ([0424],
                 [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447],
-                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455],
+                [0448])
             '0461':
               label: 'Reducció per a unitats familiars que opten per la tributació
                 conjunta.: Import'
@@ -4190,7 +4196,7 @@ modelo:
                 de dependència
             '0467':
               label: Imports amb dret a reducció ( [0463] + [0464] + [0465] + [0466]
-                ) (Límit máximo article 52 de la Llei del Impost)
+                ) (Límit màxim article 52 de la Llei de l'Impost)
             0468:
               label: Total amb dret a reducció (inclou els excessos pendents de reduir
                 procedents dels exercicis 2015 a 2019)
@@ -4245,7 +4251,8 @@ modelo:
                 [0521], [0510])
             '0523':
               label: Import del mínim personal i familiar integrat a la base liquidable
-                general per calcular el gravamen autonòmic, segons les caselles ([0505])
+                general per calcular el gravamen autonòmic, segons les caselles ([0505],
+                [0520], [0523])
             '0524':
               label: Import del mínim personal i familiar integrat a la base liquidable
                 general per calcular el gravamen autonòmic, segons les caselles ([0520],
@@ -4255,7 +4262,7 @@ modelo:
             '0526':
               label: Corresponents a la base liquidable de l'estalvi
             '0527':
-              label: Import de les anualitats per aliments en favor dels hijos satisfetes
+              label: Import de les anualitats per aliments en favor dels fills satisfetes
                 per decisió judicial
             '0545':
               label: 'Quota íntegra estatal: Part estatal'
@@ -4269,20 +4276,20 @@ modelo:
                 imports d''aquestes mateixes caselles de l''annex A.1): Part autonòmica'
             0549:
               label: 'Deducció per inversió en empreses de nova o recent creació:
-                (traslladeu els imports d''aquestes mateixes casillas de l''annex
+                (traslladeu els imports d''aquestes mateixes caselles de l''annex
                 A.1): Part estatal'
             '0550':
               label: 'Per inversions o despeses d''interès cultural (traslladeu els
-                imports d''aquestes mateixes casillas de l''annex A.2): Part estatal'
+                imports d''aquestes mateixes caselles de l''annex A.2): Part estatal'
             '0551':
               label: 'Per inversions o despeses d''interès cultural (traslladeu els
-                imports d''aquestes mateixes casillas de l''annex A.2): Part autonòmica'
+                imports d''aquestes mateixes caselles de l''annex A.2): Part autonòmica'
             '0552':
               label: 'Per donatius i altres aportacions (traslladeu els imports d''aquestes
-                mateixes casillas de l''annex A.2): Part estatal'
+                mateixes caselles de l''annex A.2): Part estatal'
             '0553':
               label: 'Per donatius i altres aportacions (traslladeu els imports d''aquestes
-                mateixes casillas de l''annex A.2): Part autonòmica'
+                mateixes caselles de l''annex A.2): Part autonòmica'
             '0554':
               label: 'Per incentius i estímuls a la inversió empresarial (traslladéu
                 els imports d''aquestes mateixes caselles de l''annex A.4): part estatal'
@@ -4340,9 +4347,6 @@ modelo:
               label: 'Si la regularització està motivada per haver-se produït les
                 circumstàncies previstes en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de
                 la Llei de l''Impost, marqui amb una ''X'' aquesta casella: Part estatal'
-            0581:
-              help: 'Interessos de demora corresponents a les deduccions anteriors:
-                Part autonòmica'
             0585:
               label: 'Quota líquida estatal incrementada: Part estatal'
             0586:
@@ -4442,17 +4446,17 @@ modelo:
             '0665':
               label: NIF del descendent la deducció del qual es regularitza
             '0666':
-              label: Import del cobrament anticipat a regularitzar en cas d’ascendents
+              label: Import del cobrament anticipat a regularitzar en cas d'ascendents
                 sense dret al mínim per ascendents
             '0670':
               label: Resultat de la declaració ( [0610] - [0611] + [0612] - [[0613]
                 - [0623] + [0624] - [0636] + [0637] - [0248] + [0249] - [0660] + [0661]
                 - [0662] + [0663] + [0664] + [0666] )
             '0676':
-              label: Resultats a ingresar de les anteriors autoliquidacions o liquidacions
+              label: Resultats a ingressar de les anteriors autoliquidacions o liquidacions
                 administratives corresponents al exercici 2020
             '0677':
-              label: Devolucions acordadas per l'Agència Tributària com conseqüència
+              label: Devolucions acordades per l'Agència Tributària com conseqüència
                 de la tramitació de anteriors autoliquidacions corresponents al exercici
                 2020
             0685:
@@ -4547,7 +4551,7 @@ modelo:
               label: 'Reserva per a Inversions a Canàries 2020: Inversions previstes
                 a les lletres C i D (2n a 6è) de l''art. 27.4'
             0749:
-              label: 'Reserva per a Inversions en Canàries 2020: Pendiente de materialitzar
+              label: 'Reserva per a Inversions en Canàries 2020: Pendent de materialitzar
                 (**)'
             '0750':
               label: 'Inversions anticipades de futures dotacions a la RIC, efectuades
@@ -4558,14 +4562,14 @@ modelo:
                 el 2020: Inversions previstes a les lletres C i D (2n a 6è) de l''art.
                 27.4'
             '0754':
-              label: 'Activitats de investigació i desenvolupament e innovació tecnológica
+              label: 'Activitats de investigació i desenvolupament e innovació tecnològica
                 (art. 35º de la LIS): Aplicat en aquesta declaració'
             '0755':
               label: 'Per inversions en produccions cinematogràfiques, sèries audiovisuals
                 i espectacles en viu d''arts escèniques i musicals (art. 36 de la
                 LIS) (*): aplicat en aquesta declaració'
             '0756':
-              label: 'Creació d’ocupació per a treballadors amb discapacitat (art.
+              label: 'Creació d''ocupació per a treballadors amb discapacitat (art.
                 38 de la LIS): aplicat en aquesta declaració'
             '0757':
               label: '"175 Aniversario de la construcción del Gran Teatre del Liceu":
@@ -4575,7 +4579,7 @@ modelo:
                 (només si existeix un pla especial d''inversió aprovat per l''Administració
                 que permeti invertir en aquest exercici): Aplicat en aquesta declaració'
             0759:
-              label: 'Deducció per inversions en territorios de África Occidental
+              label: 'Deducció per inversions en territoris de l''Àfrica Occidental
                 (art.º 27.1.a) bis de la Llei 19/1994): Aplicat en aquesta declaració'
             '0760':
               label: '"VIII Centenario de l''Universidad de Salamanca": Aplicat en
@@ -4679,10 +4683,10 @@ modelo:
                 tenir més d'un pagador
             0826:
               label: Per obres de millora d'eficiència energètica en edificis d'habitatges
-                o en habitatges unifamiliares
+                o en habitatges unifamiliars
             0827:
               label: Per obres de millora d'eficiència energètica en edificis d'habitatges
-                o en habitatges unifamiliares
+                o en habitatges unifamiliars
             0829:
               label: 'Reserva per a Inversions a Canàries 2016: Inversions previstes
                 a les lletres C i D (2n a 6è) de l''art. 27.4'
@@ -4707,18 +4711,18 @@ modelo:
                 en 2020 que s''inverteixen en elements nous efectes: percentatge de
                 deducció'
             0835:
-              label: 'Import dels rendiments nets de activitats econòmiques obtinguts
-                en 2020 que s''inverteixen en elements nous efectes: import de la
+              label: 'Import dels rendiments nets d''activitats econòmiques obtinguts
+                el 2020 que s''inverteixen en elements nous afectes: import de la
                 deducció (**)'
             0839:
-              label: 'Activitats de investigació i desenvolupament e innovació tecnológica
+              label: 'Activitats de investigació i desenvolupament e innovació tecnològica
                 (art.º 35 de la LIS): Aplicat en aquesta declaració'
             0840:
               label: 'Per inversions en produccions cinematogràfiques, sèries audiovisuals
                 i espectacles en viu d''arts escèniques i musicals (art. 36 de la
                 LIS) (*): aplicat en aquesta declaració'
             0843:
-              label: 'Deducció per despeses de propaganda i publicidad (art.º 27.1.b)
+              label: 'Deducció per despeses de propaganda i publicitat (art.º 27.1.b)
                 bis de la Llei 19/1994): Aplicat en aquesta declaració'
             0844:
               label: 'Exercici 2020. Inversions en l''adquisició d''actius fixos:
@@ -4726,7 +4730,11 @@ modelo:
             0845:
               label: Import total de les deduccions per incentius i estímuls a la
                 inversió empresarial aplicades en aquesta declaració, segons les caselles
-                ([0752], [0759], [0843], [0760], [0761], [0766])
+                ([0752], [0759], [0843], [0760], [0761], [0766], [0767], [0776], [0779],
+                [0788], [0791], [0793], [0795], [0798], [0800], [0801], [0804], [0809],
+                [0762], [0810], [0816], [0763], [0764], [0817], [0765], [0818], [0820],
+                [0768], [0821], [0823], [0769], [0770], [0825], [0829], [0836], [0837],
+                [0841], [0844])
             0849:
               label: Per les quantitats donades al Servicio Andaluz de Salud per a
                 la lluita contra l'avenç de la COVID-19
@@ -4746,9 +4754,9 @@ modelo:
               label: Per a treballadors per despeses de defensa jurídica de la relació
                 laboral
             0872:
-              label: Per inversió en accions de entitatés que cotizan en el segmento
-                de empreses en expansió del Mercat Alternativo Bursátil (es trasllada
-                este import a la casella [1142] del annex B.7)
+              label: Per inversió en accions d'entitats que cotitzen en el segment
+                d'empreses en expansió del Mercat Alternatiu Borsari (es trasllada
+                aquest import a la casella [1142] de l'annex B.7)
             0873:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
@@ -4771,8 +4779,8 @@ modelo:
               label: Per inversió en habitatge habitual que tingui la consideració
                 de protegida
             0887:
-              label: Per l'arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.6)
+              label: Per l'arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.6)
             0888:
               label: Per donació de finques rústiques a favor del Principat d'Astúries
             0898:
@@ -4786,16 +4794,15 @@ modelo:
               label: Per declarants amb discapacitat física, psíquica o sensorial
                 o amb descendents amb aquesta condició
             0907:
-              label: Per arrendament de habitatge habitual a favor de determinats
-                col·lectius (es trasllada este import a la casella [1130] del annex
-                B.6)
+              label: Per arrendament d'habitatge habitual a favor de determinats col·lectius
+                (es trasllada aquest import a la casella [1130] de l'annex B.6)
             0909:
               label: Per arrendament de béns immobles en el territori de les Illes
                 Balears destinats a habitatge
             0911:
               label: NIF/NIE de l'arrendador 1
             0919:
-              label: Per despeses de estudios
+              label: Per despeses de estudis
             0921:
               label: Per donacions en metàl·lic a descendents o adoptats menors de
                 35 anys per a l'adquisició o rehabilitació del seu primer habitatge
@@ -4803,21 +4810,21 @@ modelo:
             0924:
               label: Per despeses de llar d'infants
             0928:
-              label: Per lloguer de habitatge habitual (es trasllada este import a
-                la casella [1130] del annex B.6)
+              label: Per lloguer d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.6)
             0930:
-              label: Si no teniu referència cadastral, marqueu aquesta casilla
+              label: Si no teniu referència cadastral, marqueu aquesta casella
             0932:
-              label: Si no teniu referència cadastral, marqueu aquesta casilla
+              label: Si no teniu referència cadastral, marqueu aquesta casella
             0936:
               label: Per despeses d'estudis en educació infantil, primària, ensenyament
                 secundari obligatori, batxillerat i formació professional de grau
                 mitjà
             0939:
-              label: Per obres de rehabilitació energética i reforma de la habitatge
+              label: Per obres de rehabilitació energètica i reforma de la habitatge
                 habitual
             0940:
-              label: Per despesa de enfermedad
+              label: Per despesa de malaltia
             0942:
               label: Per arrendament d'habitatge habitual vinculat a determinades
                 operacions de dació en pagament (trasllade l'import de la casella
@@ -4827,8 +4834,8 @@ modelo:
                 de l'arrendador) (trasllade l'import de la casella [1186] de l'annex
                 B.8)
             0946:
-              label: Per arrendament de habitatge habitual per jóvenes, majors i amb
-                discapacitat (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a joves, majors i amb
+                discapacitat (es trasllada aquest import a la casella [1130] de l'annex
                 B.6)
             0948:
               label: 'Per obres de millora: imports generats el 2017 i/o el 2018 pendents
@@ -4846,16 +4853,17 @@ modelo:
               label: Per despeses en l'adquisició de llibres de text i en l'ensenyament
                 d'idiomes
             0968:
-              label: Per arrendament de habitatge habitual per a contribuents menors
-                de 36 anys (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a contribuents menors
+                de 36 anys (es trasllada aquest import a la casella [1130] de l'annex
                 B.6)
             0970:
               label: Per a contribuents afectats per discapacitat
             0971:
               label: Per adquisició d'habitatges per joves en nuclis rurals
             0975:
-              label: Per lloguer de habitatge habitual per a contribuents menors de
-                36 anys (es trasllada este import a la casella [1130] del annex B.6)
+              label: Per lloguer d'habitatge habitual per a contribuents menors de
+                36 anys (es trasllada aquest import a la casella [1130] de l'annex
+                B.6)
             0976:
               label: Per inversió en instal·lacions mediambientals i d'adaptació a
                 persones amb discapacitat a l'habitatge habitual
@@ -4877,7 +4885,7 @@ modelo:
               label: Per parts múltiples o adopcions simultànies produïts en l'any
                 2018 i/o 2019
             0991:
-              label: Per paternidad
+              label: Per paternitat
             0995:
               label: Import total aplicat sobre la suma de les caselles [0985] a [0988]
                 + [0990] a [0992] + [0994]
@@ -4888,10 +4896,10 @@ modelo:
             0999:
               label: Import generat en 2020 pendent d'aplicació
             '1000':
-              label: Per naixement o adopció d'un hijo
+              label: Per naixement o adopció d'un fill
             '1003':
-              label: Per lloguer de la habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.6)
+              label: Per lloguer de l'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.6)
             '1005':
               label: Per als contribuents que queden viudos
             '1008':
@@ -4904,8 +4912,8 @@ modelo:
                 en societats mercantils (aquest import es trasllada a la casella [1136]
                 de l'annex B.7)
             '1019':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.6)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.6)
             '1026':
               label: Per lloguer dhabitatge habitual per contribuents dedat igual
                 o inferior a 35 anys (es trasllada aquest import a la casella [1130]
@@ -4919,7 +4927,7 @@ modelo:
                 en entitats noves o de creació recent i el seu finançament (trasllade
                 l'import de la casella [1148] de l'annex B.7)
             '1030':
-              label: Per inversió en accions de entitatés que cotizan en el segmento
+              label: Per inversió en accions de entitatés que cotitzen en el segmento
                 de empreses en expansió del Mercat Alternativo Bolsista (traslladeu
                 l'import de la casella [1142] del annex B.7)
             '1035':
@@ -4936,20 +4944,20 @@ modelo:
             '1039':
               label: Per naixement o adopció de fills
             '1043':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.6)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.6)
             '1046':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.7)
             '1048':
-              label: Per inversions realitzades en entitatés cotizadas en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.7)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.7)
             '1049':
               label: Per donatius a fundacions
             '1050':
-              label: Per cura de hijos menors de 3 anys
+              label: Per cura de fills menors de 3 anys
             '1052':
               label: Per inversió en habitatge habitual per joves d'edat igual o inferior
                 a 35 anys (inclòs el règim transitori)
@@ -4963,9 +4971,9 @@ modelo:
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.7)
             '1058':
-              label: Per inversions realitzades en entitatés cotizadas en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.7)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.7)
             '1069':
               label: Import de la deducció
             '1070':
@@ -4979,7 +4987,7 @@ modelo:
               label: Per adquisició de vehicles elèctrics nous
             '1078':
               label: Import satisfet en 2019 pendent d'aplicació (per a inversions
-                en cualquier tipus de habitatge o edifici on es estigui situat)
+                en qualsevol tipus d'habitatge o edifici on estigui situat)
             '1082':
               label: Altres deduccions
             '1083':
@@ -5015,8 +5023,8 @@ modelo:
                 o per a aprofitament de fonts d'energia renovable a l'habitatge o
                 edifici on se situï
             '1115':
-              label: Import satisfet en 2017 i/o 2018 pendent d'aplicació (sólo per
-                a inversions en la habitatge habitual o edifici on es estigui situat)
+              label: Import satisfet en 2017 i/o 2018 pendent d'aplicació (només per
+                a inversions en l'habitatge habitual o edifici on estigui situat)
             '1116':
               label: Import que s'aplica en l'exercici
             '1117':
@@ -5037,7 +5045,7 @@ modelo:
             '1128':
               label: Import total satisfet
             '1135':
-              label: Import total de les quantitatés invertidas amb dret a deducció
+              label: Import total de les quantitatés invertides amb dret a deducció
                 (suma de les caselles [1132] + [1134])
             '1136':
               label: Import total de la deducció per inversions en empreses de nova
@@ -5046,10 +5054,10 @@ modelo:
               label: Import total de les quantitatés amb dret a deducció (suma de
                 les caselles [1138] + [1140] )
             '1147':
-              label: Import total de les quantitatés invertidas amb dret a deducció
+              label: Import total de les quantitatés invertides amb dret a deducció
                 (suma de les caselles [1144] + [1146])
             '1153':
-              label: Import total de les quantitatés invertidas amb dret a deducció
+              label: Import total de les quantitatés invertides amb dret a deducció
                 (suma de les caselles [1150] + [1152])
             '1155':
               label: NIF/NIE de l'arrendador
@@ -5070,7 +5078,7 @@ modelo:
                 en virtut de l'Ordre 5/2020, de 8 de juny, per a l'adquisició o electrificació
                 de bicicletes urbanes i vehicles elèctrics de mobilitat personal
             '1178':
-              label: Import total de les quantitatés invertidas amb dret a deducció
+              label: Import total de les quantitatés invertides amb dret a deducció
                 (suma de les caselles [1150] + [1152])
             '1202':
               label: Primes satisfetes
@@ -5204,7 +5212,7 @@ modelo:
             '1283':
               label: Saldo negatiu dels rendiments del capital mobiliari imputables
                 a 2020, integrable a la base imposable de l'estalvi i pendent de compensació
-                en els quatre exercicis següents, segons les caselles ([0430])
+                en els quatre exercicis següents, segons les caselles ([0430], [0436])
             '1284':
               label: Contribuent amb dret a reducció
             '1285':
@@ -5439,7 +5447,7 @@ modelo:
             '1463':
               label: Nombre d'unitats
             '1475':
-              label: Reducció de carácter general (20% o 35% del import de la casella
+              label: Reducció de caràcter general (20% o 35% del import de la casella
                 [1474], si aquesta és major que 0)
             '1476':
               label: Reducció per a activitats econòmiques desenvolupades al terme
@@ -5451,48 +5459,48 @@ modelo:
                 de forma notòriament irregular (Article 32.1 i D.T. 25a de la Llei
                 de l'impost)
             '1488':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1491':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1494':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1497':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1500':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1503':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1506':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1509':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1512':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1515':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1518':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1521':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1524':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1527':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1530':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1531':
               label: Índex
             '1532':
               label: Rendiment base producte
             '1533':
-              label: Ingressos íntegros
+              label: Ingressos íntegres
             '1538':
               label: Amortització de l'immobilitzat material i intangible
             '1539':
               label: Rendiment net minorat
             '1549':
-              label: Reducció de carácter general (20 per 100 del import de la casella
-                [1548], si ésta és > 0)
+              label: Reducció de caràcter general (20 per 100 de l'import de la casella
+                [1548], si aquesta és > 0)
             '1550':
               label: Diferència ([1548 - [1549])
             '1551':
@@ -5562,8 +5570,7 @@ modelo:
               label: Guany no exempt ( [1640] - [1641] - [1642] - [1643] - [1644]
                 )
             '1646':
-              label: Part de la ganancia patrimonial susceptible de reducció (D.T.
-                9.ª)
+              label: Part del guany patrimonial susceptible de reducció (D.T. 9.ª)
             '1648':
               label: Reducció aplicable (D.T. 9.ª de la Llei del Impost)
             '1650':
@@ -5573,14 +5580,14 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2020 retencions, pagaments fraccionats and withholding
-                  cross-modelo inputs
+                title: Modelo 100 2020 retencions, pagaments fraccionats i retencions
+                  d'altres models relacionats
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2020 estimació directa aggregators
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2020 estimació objetiva aggregators
+                title: Modelo 100 2020 estimació objectiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2020 base imposable / base liquidable / quota aggregators
@@ -5613,7 +5620,7 @@ modelo:
               label: Nombre de dies en què l'immoble ha estat el seu habitatge habitual
                 en 2021
             '0103':
-              label: Import pendent de deducir dels exercicis 2017, 2018, 2019 i 2020
+              label: Import pendent de deduir dels exercicis 2017, 2018, 2019 i 2020
                 (Empleneu l'annex C.1)
             '0105':
               label: Interessos dels capitals invertits en l'adquisició o millora
@@ -5660,7 +5667,7 @@ modelo:
                 operacions de dació en pagament (trasllade l'import de la casella
                 [1170] de l'annex B.9)
             '0213':
-              label: Per arrendament de habitatge habitual per famílies numerosas
+              label: Per arrendament de habitatge habitual per famílies nombroses
                 (traslladeu l'import de la casella [1130] del annex B.8)
             0228:
               label: Per arrendament d'habitatge habitual per famílies monoparentals
@@ -5691,13 +5698,13 @@ modelo:
                 Import imputable a 2021 (empleneu l'Annex C.1) (*)
             0299:
               label: Subvencions per a l'adquisició d'habitatges de protecció oficial
-                o de preu taxat. Import imputable a 2021 (empleneu l'annex C.1) (*)
+                o de preu taxat. Import imputable a 2021 (empleneu l'Annex C.1) (*)
             '0300':
               label: Altres subvencions o ajuts destinats a l'adquisició o rehabilitació
                 de l'habitatge habitual o a la reparació de defectes estructurals
                 en aquest. Import imputable a 2021 (empleneu l'Annex C.1) (*)
             '0301':
-              label: Demás guanys patrimonials derivades de ajuts públicas. (*)
+              label: Demás guanys patrimonials derivades de ajuts públics. (*)
             '0302':
               label: Guanys patrimonials obtinguts pels veïns el 2021 com a conseqüència
                 d'aprofitaments forestals en forests públiques
@@ -5705,7 +5712,7 @@ modelo:
               label: 'Altres guanys i/o pèrdues patrimonials imputables a 2021: Import
                 guanys'
             '0306':
-              label: Suma de altres guanys que no derivan de la transmissió de elements
+              label: Suma de altres guanys que no deriven de la transmissió de elements
                 patrimonials (suma de les caselles [0299] a [0304] + [0266] + [0279])
             0309:
               label: Valor total acumulat de transmissió sobre el que s'ha aplicat
@@ -5754,7 +5761,7 @@ modelo:
             '0433':
               label: Saldo net negatiu dels guanys i pèrdues patrimonials de 2021
                 integrats a la base imposable general, amb un límit del 25 % de l'import
-                de la casella ([0432])
+                de les caselles ([0432], [0421])
             '0434':
               label: Resta de saldos nets negatius dels guanys i pèrdues patrimonials
                 de 2017 a 2020 no derivats de transmissions, pendents de compensació
@@ -5805,7 +5812,7 @@ modelo:
             '0446':
               label: Saldos nets negatius dels guanys i pèrdues patrimonials imputables
                 a 2021, integrats a la base imposable de l'estalvi, amb el límit del
-                25 % de ([0429])
+                25 % de ([0429], [0425])
             '0447':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2020, pendents de compensació a 1 de gener de 2021, a integrar
@@ -5855,7 +5862,8 @@ modelo:
             '0460':
               label: Base imposable de l'estalvi calculada segons les caselles ([0424],
                 [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447],
-                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455],
+                [0448])
             '0463':
               label: Aportacions indiviudales (Empleneu l'annex C.2)
             '0464':
@@ -5867,7 +5875,7 @@ modelo:
               label: Contribucions a assegurances col·lectius de dependència
             '0467':
               label: Imports amb dret a reducció ( [0463] + [0426] + [0464] + [0465]
-                + [0427] + [0466] ) (Límit máximo article 52 de la Llei del Impost)
+                + [0427] + [0466] ) (Límit màxim article 52 de la Llei de l'Impost)
             0468:
               label: Excessos pendents de reduir procedents dels exercicis 2016 a
                 2020
@@ -5882,14 +5890,14 @@ modelo:
             '0474':
               label: Aportacions realitzades en 2021 per la pròpia persona amb discapacitat
             '0475':
-              label: Aportacions realitzades en 2021 per parientes o tutores a favor
+              label: Aportacions realitzades en 2021 per parents o tutores a favor
                 de la persona amb discapacitat
             0479:
               label: Excessos pendents de reduir procedents dels exercicis 2017 a
                 2020 (vegeu l'annex C.4)
             0480:
-              label: Aportacions realitzades en 2021 al patrimoni protegido de la
-                persona amb discapacitat
+              label: Aportacions realitzades en 2021 al patrimoni protegit de la persona
+                amb discapacitat
             0485:
               label: Import de la pensió o anualitat satisfeta el 2021 per decisió
                 judicial
@@ -5912,11 +5920,12 @@ modelo:
                 [0521], [0510])
             '0523':
               label: Import del mínim personal i familiar integrat a la base liquidable
-                general per calcular el gravamen autonòmic, segons les caselles ([0505])
+                general per calcular el gravamen autonòmic, segons les caselles ([0505],
+                [0520], [0523])
             '0524':
               label: Import del mínim personal i familiar integrat a la base liquidable
                 general per calcular el gravamen autonòmic, segons les caselles ([0520],
-                [0523])
+                [0523], [0510])
             '0552':
               label: 'Per donatius i altres aportacions (traslladeu els imports d''aquestes
                 mateixes caselles de l''annex A.1): Part estatal'
@@ -5941,7 +5950,7 @@ modelo:
                 A.3): Part autonòmica'
             '0567':
               label: 'Per obres de millora de l''eficiència energètica d''habitatges
-                (traslladeu l''import d''aquestes mateixes casillas de l''annex A.2):
+                (traslladeu l''import d''aquestes mateixes caselles de l''annex A.2):
                 Part estatal'
             '0572':
               label: 'Import de les deduccions a les quals s''ha perdut el dret en
@@ -5984,14 +5993,14 @@ modelo:
               label: Import de l'abonament anticipat de la deducció corresponent a
                 2021 (*)
             '0676':
-              label: Resultats a ingresar de les anteriors autoliquidacions o liquidacions
+              label: Resultats a ingressar de les anteriors autoliquidacions o liquidacions
                 administratives corresponents al exercici 2021
             '0677':
-              label: Devolucions acordadas per l'Agència Tributària com conseqüència
+              label: Devolucions acordades per l'Agència Tributària com conseqüència
                 de la tramitació de anteriors autoliquidacions corresponents al exercici
                 2021
             0681:
-              label: Resultats a ingresar de anteriors autoliquidacions o liquidacions
+              label: Resultats a ingressar de anteriors autoliquidacions o liquidacions
                 administratives corresponents al exercici 2021
             0682:
               label: Devolucions sol·licitades a l'Agència Tributària com conseqüència
@@ -6112,8 +6121,8 @@ modelo:
                 en 2020 que s''inverteixen en elements nous efectes: percentatge de
                 deducció'
             0832:
-              label: 'Import dels rendiments nets de activitats econòmiques obtinguts
-                en 2020 que s''inverteixen en elements nous efectes: import de la
+              label: 'Import dels rendiments nets d''activitats econòmiques obtinguts
+                el 2020 que s''inverteixen en elements nous afectes: import de la
                 deducció (**)'
             0833:
               label: 'Import dels rendiments nets de activitats econòmiques obtinguts
@@ -6139,7 +6148,10 @@ modelo:
             0845:
               label: Import total de les deduccions per incentius i estímuls a la
                 inversió empresarial aplicades en aquesta declaració, segons les caselles
-                ([0752], [0759], [0764], [0767], [0776], [0780])
+                ([0752], [0759], [0764], [0767], [0776], [0780], [0783], [0784], [0788],
+                [0791], [0793], [0795], [0798], [0800], [0801], [0804], [0808], [0809],
+                [0810], [0815], [0817], [1686], [1721], [0836], [0837], [0841], [0843],
+                [0844], [1727], [1729])
             0846:
               label: Per desarrelament per l'erupció volcànica a l'illa de la Palma
             0847:
@@ -6151,9 +6163,9 @@ modelo:
               label: Per quantitats invertides en el lloguer d'habitatge habitual
                 (es trasllada aquest import a la casella [1130] de l'annex B.8)
             0872:
-              label: Per inversió en accions de entitatés que cotizan en el segmento
-                de empreses en expansió del Mercat Alternativo Bursátil (es trasllada
-                este import a la casella [1142] del annex B.8)
+              label: Per inversió en accions d'entitats que cotitzen en el segment
+                d'empreses en expansió del Mercat Alternatiu Borsari (es trasllada
+                aquest import a la casella [1142] de l'annex B.8)
             0873:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
@@ -6168,25 +6180,24 @@ modelo:
             0886:
               label: Import de la deducció
             0887:
-              label: Per l'arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per l'arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0903:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             0907:
-              label: Per arrendament de habitatge habitual a favor de determinats
-                col·lectius (es trasllada este import a la casella [1130] del annex
-                B.8)
+              label: Per arrendament d'habitatge habitual a favor de determinats col·lectius
+                (es trasllada aquest import a la casella [1130] de l'annex B.8)
             0928:
-              label: Per lloguer de habitatge habitual (es trasllada este import a
-                la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0930:
               label: Si no té referència cadastral, marqui amb una 'X' aquesta casella
             0932:
               label: Si no té referència cadastral, marqui amb una 'X' aquesta casella
             0939:
-              label: Per obres de rehabilitació energética de la habitatge habitual
+              label: Per obres de rehabilitació energètica de la habitatge habitual
             0942:
               label: Per arrendament d'habitatge habitual vinculat a determinades
                 operacions de dació en pagament (trasllade l'import de la casella
@@ -6196,8 +6207,8 @@ modelo:
                 impagaments de rendes de arrendaments de habitatge (deducció del arrendador)
                 (traslladeu l'import de la casella [1203] del annex B.9)
             0946:
-              label: Per arrendament de habitatge habitual per jóvenes, majors i amb
-                discapacitat (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a joves, majors i amb
+                discapacitat (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0948:
               label: 'Per obres de millora: imports generats el 2019 i/o el 2020 pendents
@@ -6210,12 +6221,13 @@ modelo:
               label: Per obres de millora generada el 2021 a deduir en els 2 anys
                 següents
             0968:
-              label: Per arrendament de habitatge habitual per a contribuents menors
-                de 36 anys (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a contribuents menors
+                de 36 anys (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0975:
-              label: Per lloguer de habitatge habitual per a contribuents menors de
-                36 anys (es trasllada este import a la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual per a contribuents menors de
+                36 anys (es trasllada aquest import a la casella [1130] de l'annex
+                B.8)
             0979:
               label: Per al foment d'emprenedoria (trasllade l'import de la casella
                 [1136] de l'annex B.8)
@@ -6240,15 +6252,15 @@ modelo:
             0999:
               label: Import generat el 2021 pendent d'aplicació
             '1003':
-              label: Per lloguer de la habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per lloguer de l'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1008':
               label: Per inversió per un àngel inversor per l'adquisició d'accions
                 o participacions socials d'entitats noves o de creació recent (es
                 trasllada aquest import a la casella [1136] de l'annex B.8)
             '1019':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1026':
               label: Per lloguer dhabitatge habitual per contribuents dedat igual
                 o inferior a 35 anys (es trasllada aquest import a la casella [1130]
@@ -6262,34 +6274,34 @@ modelo:
                 en entitats noves o de creació recent i el seu finançament (trasllade
                 l'import de la casella [1148] de l'annex B.8)
             '1030':
-              label: Per inversió en accions de entitatés que cotizan en el segmento
+              label: Per inversió en accions de entitatés que cotitzen en el segmento
                 de empreses en expansió del Mercat Alternativo Bolsista (traslladeu
                 l'import de la casella [1142] del annex B.8)
             '1035':
-              label: Per inversió en empreses que desenvolupin activitats agrarias
+              label: Per inversió en empreses que desenvolupin activitats agràries
                 (traslladeu l'import de la casella [1154] del annex B.8)
             '1043':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1046':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1048':
-              label: Per inversions realitzades en entitatés cotizadas en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1057':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1058':
-              label: Per inversions realitzades en entitatés cotizadas en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1078':
               label: Import satisfet en 2019 i/o 2020 pendent d'aplicació (per a inversions
-                en cualquier tipus de habitatge o edifici on es estigui situat)
+                en qualsevol tipus d'habitatge o edifici on estigui situat)
             '1095':
               label: Per quantitats invertides en el lloguer d'habitatge habitual
                 (es trasllada aquest import a la casella [1130] de l'annex B.8)
@@ -6309,7 +6321,7 @@ modelo:
               label: Per arrendament en habitatge habitual per a contribuents menors
                 de 36 anys (traslladeu l'import de la casella [1130] del annex B.8
             '1178':
-              label: Import total de les quantitatés invertidas amb dret a deducció
+              label: Import total de les quantitatés invertides amb dret a deducció
                 (suma de les caselles [1175] + [1177])
             '1182':
               label: Import generat en 2021
@@ -6451,7 +6463,7 @@ modelo:
             '1283':
               label: Saldo negatiu dels rendiments del capital mobiliari imputables
                 a 2021, integrable a la base imposable de l'estalvi i pendent de compensació
-                en els quatre exercicis següents, segons les caselles ([0430])
+                en els quatre exercicis següents, segons les caselles ([0430], [0436])
             '1285':
               label: 'Exercici 2016: pendent d''aplicació al principi del període'
             '1286':
@@ -6728,10 +6740,10 @@ modelo:
                 Aplicat en aquesta declaració'
             '1722':
               label: Contribuent (productor) que aplica deduccions de art. 36.1 i
-                3 de la LIS i art. 39.7 de la LIS amb finançament realitzada per otro
+                3 de la LIS i art. 39.7 de la LIS amb finançament realitzada per altre
                 contribuent, marqueu una "X"
             '1723':
-              label: Contribuent que financia produccions cinematogràfiques i altres
+              label: Contribuent que finança produccions cinematogràfiques i altres
                 amb dret a la deducció de l'art. 36.1 i 3 de la LIS i l'art. 39.7
                 de la LIS, marqueu una "X"
             '1729':
@@ -6739,10 +6751,10 @@ modelo:
                 escèniques i musicals (art. 36.3 LIS): Aplicat en aquesta declaració'
             '1730':
               label: Contribuent (productor) que aplica deduccions de art. 36.1 i
-                3 de la LIS i art. 39.7 de la LIS amb finançament realitzada per otro
+                3 de la LIS i art. 39.7 de la LIS amb finançament realitzada per altre
                 contribuent, marqueu una "X"
             '1731':
-              label: Contribuent que financia produccions cinematogràfiques i altres
+              label: Contribuent que finança produccions cinematogràfiques i altres
                 amb dret a la deducció de l'art. 36.1 i 3 de la LIS i l'art. 39.7
                 de la LIS, marqueu una "X"
             '1741':
@@ -6815,14 +6827,14 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2021 retencions, pagaments fraccionats and withholding
-                  cross-modelo inputs
+                title: Modelo 100 2021 retencions, pagaments fraccionats i retencions
+                  d'altres models relacionats
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2021 estimació directa aggregators
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2021 estimació objetiva aggregators
+                title: Modelo 100 2021 estimació objectiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2021 base imposable / base liquidable / quota aggregators
@@ -6868,7 +6880,7 @@ modelo:
               label: Nombre de dies en què l'immoble ha estat el seu habitatge habitual
                 en 2022
             '0103':
-              label: Import pendent de deducir dels exercicis 2018, 2019, 2020 i 2021
+              label: Import pendent de deduir dels exercicis 2018, 2019, 2020 i 2021
                 (Empleneu l'annex C.1)
             '0105':
               label: Interessos dels capitals invertits en l'adquisició o millora
@@ -6935,7 +6947,7 @@ modelo:
               label: Import computable ([0283] + [0284] - [0285])
             0299:
               label: Subvencions per a l'adquisició d'habitatges de protecció oficial
-                o de preu taxat. Import imputable a 2022 (empleneu l'annex C.1) (*)
+                o de preu taxat. Import imputable a 2022 (empleneu l'Annex C.1) (*)
             '0300':
               label: Altres subvencions o ajuts destinats a l'adquisició o rehabilitació
                 de l'habitatge habitual o a la reparació de defectes estructurals
@@ -7009,7 +7021,7 @@ modelo:
             '0433':
               label: Saldo net negatiu dels guanys i pèrdues patrimonials de 2022
                 integrats a la base imposable general, amb un límit del 25 % de l'import
-                de la casella ([0432])
+                de les caselles ([0432], [0421])
             '0434':
               label: Resta de saldos nets negatius dels guanys i pèrdues patrimonials
                 de 2018 a 2021 no derivats de transmissions, pendents de compensació
@@ -7063,7 +7075,7 @@ modelo:
             '0446':
               label: Saldos nets negatius dels guanys i pèrdues patrimonials imputables
                 a 2022, integrats a la base imposable de l'estalvi, amb el límit del
-                25 % de ([0429])
+                25 % de ([0429], [0425])
             '0447':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2021, pendents de compensació a 1 de gener de 2022, a integrar
@@ -7113,7 +7125,8 @@ modelo:
             '0460':
               label: Base imposable de l'estalvi calculada segons les caselles ([0424],
                 [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447],
-                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455],
+                [0448])
             '0461':
               label: Reducció per a unitats familiars que optin per la tributació
                 conjunta. Import
@@ -7146,14 +7159,14 @@ modelo:
             '0474':
               label: Aportacions realitzades en 2022 per la pròpia persona amb discapacitat
             '0475':
-              label: Aportacions realitzades en 2022 per parientes o tutores a favor
+              label: Aportacions realitzades en 2022 per parents o tutores a favor
                 de la persona amb discapacitat
             0479:
               label: Excessos pendents de reduir procedents dels exercicis 2018 a
                 2021 (vegeu l'annex C.3)
             0480:
-              label: Aportacions realitzades en 2022 al patrimoni protegido de la
-                persona amb discapacitat
+              label: Aportacions realitzades en 2022 al patrimoni protegit de la persona
+                amb discapacitat
             0485:
               label: Import de la pensió o anualitat satisfeta el 2022 per decisió
                 judicial
@@ -7174,7 +7187,7 @@ modelo:
                 al 2021 (empleneu l''annex C.4)'
             '0544':
               label: 'Per rendes obtingudes a l''illa de la Palma (imports d''aquestes
-                casillas de l''annex A.6): Part estatal'
+                caselles de l''annex A.6): Part estatal'
             '0552':
               label: 'Per donatius i altres aportacions (traslladeu els imports d''aquestes
                 mateixes caselles de l''annex A.1): Part estatal'
@@ -7228,12 +7241,9 @@ modelo:
               label: 'Si la regularització està motivada per haver-se produït les
                 circumstàncies previstes en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de
                 la Llei de l''Impost, marqui amb una ''X'' aquesta casella: Part autonòmica'
-            0581:
-              help: 'Indiqueu o reviseu «Interessos de demora corresponents a les
-                deduccions anteriors: Part autonòmica» per completar aquesta autoliquidació.'
             0584:
               label: 'Per rendes obtingudes a l''illa de la Palma (imports d''aquestes
-                casillas de l''annex A.6): Part autonòmica'
+                caselles de l''annex A.6): Part autonòmica'
             0585:
               label: 'Quota líquida estatal incrementada ([0585] = [0570] + [0568]
                 + [0582] + [0572] + [0573] + [0574] + [0576]): Part estatal'
@@ -7264,16 +7274,16 @@ modelo:
             '0670':
               label: Resultat de la declaració segons les caselles ([0610], [0611],
                 [0612], [0613], [1912], [1913], [1915], [1916], [0623], [0624], [0636],
-                [0637], [0248], [0249], [0660], [0661], [0662], [0663])
+                [0637], [0248], [0249], [0660], [0661], [0662], [0663], [0664], [0666])
             '0676':
-              label: Resultats a ingresar de les anteriors autoliquidacions o liquidacions
+              label: Resultats a ingressar de les anteriors autoliquidacions o liquidacions
                 administratives corresponents al exercici 2022
             '0677':
-              label: Devolucions acordadas per l'Agència Tributària com conseqüència
+              label: Devolucions acordades per l'Agència Tributària com conseqüència
                 de la tramitació de anteriors autoliquidacions corresponents al exercici
                 2022
             0681:
-              label: Resultats a ingresar de anteriors autoliquidacions o liquidacions
+              label: Resultats a ingressar de anteriors autoliquidacions o liquidacions
                 administratives corresponents al exercici 2022
             0682:
               label: Devolucions sol·licitades a l'Agència Tributària com conseqüència
@@ -7330,7 +7340,7 @@ modelo:
               label: 'Reserva per a Inversions a Canàries 2022: Inversions previstes
                 a les lletres C i D (2n a 6è) de l''art. 27.4'
             0749:
-              label: 'Reserva per a Inversions en Canàries 2022 : Pendiente de materialitzar'
+              label: 'Reserva per a Inversions en Canàries 2022: Pendent de materialitzar'
             '0750':
               label: 'Inversions anticipades de futures dotacions a la RIC, efectuades
                 el 2022: Inversions previstes a les lletres A, B, B bis i D (1r) de
@@ -7356,8 +7366,7 @@ modelo:
             0789:
               label: 'Reserva per a Inversions en Canàries 2019 (2): Any de la dotació'
             0790:
-              label: 'Reserva per a Inversions en Canàries 2019 (2): Pendiente de
-                materialitzar'
+              label: 'Reserva per a Inversions en Canàries 2019 (2): Pendent de materialitzar'
             0792:
               label: 'Reserva per a Inversions en Canàries 2020 (2): Any de la dotació'
             0794:
@@ -7424,14 +7433,17 @@ modelo:
             0845:
               label: Import total de les deduccions per incentius i estímuls a la
                 inversió empresarial aplicades en aquesta declaració, segons les caselles
-                ([0752], [0768], [0776], [0780], [0788], [0791])
+                ([0752], [0768], [0776], [0780], [0788], [0791], [0793], [0796], [0798],
+                [0809], [0815], [0817], [0843], [1686], [1691], [1693], [1695], [1697],
+                [1708], [1710], [1721], [0706], [0707], [0773], [0779], [1623], [1627],
+                [1630], [0836], [0837], [0841], [0844], [1727], [1729])
             0853:
               label: Per quantitats invertides en el lloguer d'habitatge habitual
                 (es trasllada aquest import a la casella [1130] de l'annex B.8)
             0872:
-              label: Per inversió en accions de entitatés que cotizan en el segmento
-                de empreses en expansió del Mercat Alternativo Bursátil (es trasllada
-                este import a la casella [1142] del annex B.8)
+              label: Per inversió en accions d'entitats que cotitzen en el segment
+                d'empreses en expansió del Mercat Alternatiu Borsari (es trasllada
+                aquest import a la casella [1142] de l'annex B.8)
             0873:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
@@ -7446,21 +7458,20 @@ modelo:
             0886:
               label: Import de la deducció
             0887:
-              label: Per l'arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per l'arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0903:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             0907:
-              label: Per arrendament de habitatge habitual a favor de determinats
-                col·lectius (es trasllada este import a la casella [1130] del annex
-                B.8)
+              label: Per arrendament d'habitatge habitual a favor de determinats col·lectius
+                (es trasllada aquest import a la casella [1130] de l'annex B.8)
             0928:
-              label: Per lloguer de habitatge habitual (es trasllada este import a
-                la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0939:
-              label: Per obres de rehabilitació energética de la habitatge habitual
+              label: Per obres de rehabilitació energètica de la habitatge habitual
             0942:
               label: Per arrendament d'habitatge habitual vinculat a determinades
                 operacions de dació en pagament (trasllade l'import de la casella
@@ -7470,8 +7481,8 @@ modelo:
                 impagaments de rendes de arrendaments de habitatge (deducció del arrendador)
                 (traslladeu l'import de la casella [1203] del annex B.9)
             0946:
-              label: Per arrendament de habitatge habitual per jóvenes, majors i amb
-                discapacitat (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a joves, majors i amb
+                discapacitat (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0948:
               label: 'Per obres de millora: imports generats el 2020 i/o el 2021 pendents
@@ -7484,12 +7495,13 @@ modelo:
               label: Per obres de millora generada el 2022 a deduir en els 2 anys
                 següents
             0968:
-              label: Per arrendament de habitatge habitual per a contribuents menors
-                de 36 anys (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a contribuents menors
+                de 36 anys (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0975:
-              label: Per lloguer de habitatge habitual per a contribuents menors de
-                36 anys (es trasllada este import a la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual per a contribuents menors de
+                36 anys (es trasllada aquest import a la casella [1130] de l'annex
+                B.8)
             0979:
               label: Per al foment d'emprenedoria (import de la casella [1136] de
                 l'annex B.8)
@@ -7517,15 +7529,15 @@ modelo:
             0999:
               label: Import generat el 2022 pendent d'aplicació
             '1003':
-              label: Per lloguer de la habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per lloguer de l'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1008':
               label: Per inversió per un àngel inversor per l'adquisició d'accions
                 o participacions socials d'entitats noves o de creació recent (es
                 trasllada aquest import a la casella [1136] de l'annex B.8)
             '1019':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1026':
               label: Per lloguer dhabitatge habitual per contribuents dedat igual
                 o inferior a 35 anys (es trasllada aquest import a la casella [1130]
@@ -7539,46 +7551,46 @@ modelo:
                 en entitats noves o de creació recent i el seu finançament (trasllade
                 l'import de la casella [1148] de l'annex B.8)
             '1030':
-              label: Per inversió en accions de entitatés que cotizan en el segmento
+              label: Per inversió en accions de entitatés que cotitzen en el segmento
                 de empreses en expansió del Mercat Alternativo Bolsista (traslladeu
                 l'import de la casella [1142] del annex B.8)
             '1035':
-              label: Per inversió en empreses que desenvolupin activitats agrarias
+              label: Per inversió en empreses que desenvolupin activitats agràries
                 (traslladeu l'import de la casella [1154] del annex B.8)
             '1043':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1046':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1048':
-              label: Per inversions realitzades en entitatés cotizadas en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1057':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1058':
-              label: Per inversions realitzades en entitatés cotizadas en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1078':
               label: Import satisfet en 2019 i/o 2020 pendent d'aplicació (per a inversions
-                en cualquier tipus de habitatge o edifici on es estigui situat)
+                en qualsevol tipus d'habitatge o edifici on estigui situat)
             '1095':
-              label: Per arrendament de la habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament de l'habitatge habitual (es trasllada aquest
+                import a la casella [1130] de l'annex B.8)
             '1110':
               label: Import de la deducció
             '1114':
               label: Per inversions en instal·lacions d'autoconsum d'energia elèctrica
                 o d'aprofitament de fonts d'energia renovable a l'habitatge o edifici
-                on se situen, segons la casella ([1114])
+                on se situen, segons la casella ([1114]) de l'annex B.9
             '1115':
-              label: Import satisfet en 2018 pendent d'aplicació (sólo per a inversions
-                en la habitatge habitual o edifici on es estigui situat)
+              label: Import satisfet en 2018 pendent d'aplicació (només per a inversions
+                en l'habitatge habitual o edifici on estigui situat)
             '1116':
               label: Import satisfet en 2018 que s'aplica en l'exercici
             '1117':
@@ -7593,7 +7605,7 @@ modelo:
               label: Per arrendament en habitatge habitual per a contribuents menors
                 de 36 anys (traslladeu l'import de la casella [1130] del annex B.8
             '1178':
-              label: Import total de les quantitatés invertidas amb dret a deducció
+              label: Import total de les quantitatés invertides amb dret a deducció
                 (suma de les caselles [1175] + [1177])
             '1182':
               label: Import generat en 2022(import de la casella [1136] del annex
@@ -7731,7 +7743,7 @@ modelo:
             '1283':
               label: Saldo negatiu dels rendiments del capital mobiliari imputables
                 a 2022, integrable a la base imposable de l'estalvi i pendent de compensació
-                en els quatre exercicis següents, segons les caselles ([0430])
+                en els quatre exercicis següents, segons les caselles ([0430], [0436])
             '1285':
               label: 'Exercici 2017: pendent d''aplicació al principi del període'
             '1286':
@@ -7981,9 +7993,9 @@ modelo:
                 fruits no cítrics i altres productes agrícoles no compresos expressament
                 en altres números: Ingressos íntegres'
             '1524':
-              label: 'Plantes textiles: Ingressos íntegres'
+              label: 'Plantes tèxtils: Ingressos íntegres'
             '1527':
-              label: 'Activitats accesorias realitzades per agricultors, ramaders
+              label: 'Activitats accessòries realitzades per agricultors, ramaders
                 o titulars d''activitats forestals: Ingressos íntegres'
             '1530':
               label: 'Altres treballs i serveis accessoris realitzats per agricultors,
@@ -7995,7 +8007,7 @@ modelo:
             '1550':
               label: Diferència ([1548 - [1549] - [0160])
             '1556':
-              label: Per adquisició o rehabilitació de habitatge habitual en concejos
+              label: Per adquisició o rehabilitació d'habitatge habitual en municipis
                 en risc de despoblament
             '1595':
               label: Guanys patrimonials reduïdes no exemptes imputables a 2022
@@ -8083,8 +8095,7 @@ modelo:
             '1836':
               label: Guany no exempt ( [1826] - [1830] - [1834] - [1835] )
             '1837':
-              label: Part de la ganancia patrimonial susceptible de reducció (D.T.
-                9.ª)
+              label: Part del guany patrimonial susceptible de reducció (D.T. 9.ª)
             '1839':
               label: Reducció aplicable (D.T. 9.ª de la Llei del Impost)
             '1841':
@@ -8133,14 +8144,14 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2022 retencions, pagaments fraccionats and withholding
-                  cross-modelo inputs
+                title: Modelo 100 2022 retencions, pagaments fraccionats i retencions
+                  d'altres models relacionats
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2022 estimació directa aggregators
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2022 estimació objetiva aggregators
+                title: Modelo 100 2022 estimació objectiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2022 base imposable / base liquidable / quota aggregators
@@ -8184,14 +8195,15 @@ modelo:
                 de vida percebuts el 2023, el rendiment dels quals aplica la D.T.4a
             '0057':
               label: Reducció per rendiments acollits al règim fiscal de la XXXVII
-                Copa Amèrica Barcelona
+                Copa Amèrica Barcelona (Disposició final trenta-sisena de la Llei
+                31/2022 de PGE-2023)
             '0070':
               label: Habitatge habitual el 2023
             '0076':
               label: Nombre de dies en què l'immoble ha estat el seu habitatge habitual
                 en 2023
             '0103':
-              label: Import pendent de deducir dels exercicis 2019, 2020, 2021 i 2022
+              label: Import pendent de deduir dels exercicis 2019, 2020, 2021 i 2022
                 (Empleneu l'annex C.1)
             '0105':
               label: Interessos dels capitals invertits en l'adquisició o millora
@@ -8269,7 +8281,7 @@ modelo:
               label: Import computable ([0283] + [0284] - [0285])
             0299:
               label: Subvencions per a l'adquisició d'habitatges de protecció oficial
-                o de preu taxat. Import imputable a 2023 (empleneu l'annex C.1) (*)
+                o de preu taxat. Import imputable a 2023 (empleneu l'Annex C.1) (*)
             '0300':
               label: Altres subvencions o ajuts destinats a l'adquisició o rehabilitació
                 de l'habitatge habitual o a la reparació de defectes estructurals
@@ -8356,7 +8368,7 @@ modelo:
             '0433':
               label: Saldo net negatiu dels guanys i pèrdues patrimonials de 2023
                 integrats a la base imposable general, amb un límit del 25 % de l'import
-                de la casella ([0432])
+                de les caselles ([0432], [0421])
             '0434':
               label: Resta de saldos nets negatius dels guanys i pèrdues patrimonials
                 de 2019 a 2022 no derivats de transmissions, pendents de compensació
@@ -8407,7 +8419,7 @@ modelo:
             '0446':
               label: Saldos nets negatius dels guanys i pèrdues patrimonials imputables
                 a 2023, integrats a la base imposable de l'estalvi, amb el límit del
-                25 % de ([0429])
+                25 % de ([0429], [0425])
             '0447':
               label: Resta de saldos nets negatius de rendiments de capital mobiliari
                 de 2022, pendents de compensació a 1 de gener de 2023, a integrar
@@ -8457,7 +8469,8 @@ modelo:
             '0460':
               label: Base imposable de l'estalvi calculada segons les caselles ([0424],
                 [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447],
-                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455],
+                [0448])
             '0461':
               label: Reducció per a unitats familiars que optin per la tributació
                 conjunta. Import
@@ -8474,14 +8487,14 @@ modelo:
             '0474':
               label: Aportacions realitzades en 2023 per la pròpia persona amb discapacitat
             '0475':
-              label: Aportacions realitzades en 2023 per parientes o tutores a favor
+              label: Aportacions realitzades en 2023 per parents o tutores a favor
                 de la persona amb discapacitat
             0479:
               label: Excessos pendents de reduir procedents dels exercicis 2019 a
                 2022 (empleneu l'annex C.4)
             0480:
-              label: Aportacions realitzades en 2023 al patrimoni protegido de la
-                persona amb discapacitat
+              label: Aportacions realitzades en 2023 al patrimoni protegit de la persona
+                amb discapacitat
             0485:
               label: Import de la pensió o anualitat satisfeta el 2023 per decisió
                 judicial
@@ -8549,9 +8562,6 @@ modelo:
               label: 'Si la regularització està motivada per haver-se produït les
                 circumstàncies previstes en la D.A. 45ª.2.a) o en la D.A. 45ª.3 de
                 la Llei de l''Impost, marqui amb una ''X'' aquesta casella: Part autonòmica'
-            0581:
-              help: 'Indiqueu o reviseu «Interessos de demora corresponents a les
-                deduccions anteriors: Part autonòmica» per completar aquesta autoliquidació.'
             0584:
               label: 'Per residència habitual i efectiva a l''illa de La Palma (imports
                 d''aquestes caselles de l''annex A.7): Part autonòmica'
@@ -8586,14 +8596,14 @@ modelo:
                 - [0623] + [0624] - [0636] + [0637] - [0248] + [0249] - [0660] + [0661]
                 - [0662] + [0663] + [0664] + [0666])
             '0676':
-              label: Resultats a ingresar de les anteriors autoliquidacions o liquidacions
+              label: Resultats a ingressar de les anteriors autoliquidacions o liquidacions
                 administratives corresponents al exercici 2023
             '0677':
-              label: Devolucions acordadas per l'Agència Tributària com conseqüència
+              label: Devolucions acordades per l'Agència Tributària com conseqüència
                 de la tramitació de anteriors autoliquidacions corresponents al exercici
                 2023
             0681:
-              label: Resultats a ingresar de anteriors autoliquidacions o liquidacions
+              label: Resultats a ingressar de anteriors autoliquidacions o liquidacions
                 administratives corresponents al exercici 2023
             0682:
               label: Devolucions sol·licitades a l'Agència Tributària com conseqüència
@@ -8679,7 +8689,7 @@ modelo:
               label: 'Reserva per a inversions a Canàries 2022: any de la dotació'
             0800:
               label: 'Import de deduccions per inversió en habitatge habitual que
-                tenga la consideració de protegida (amb dret a aplicació en exercicis
+                tingui la consideració de protegida (amb dret a aplicació en exercicis
                 següents): Import generat en 2021 pendent d''aplicació'
             0802:
               label: 'Reserva per a Inversions en Canàries 2023: Any de la dotació'
@@ -8687,7 +8697,7 @@ modelo:
               label: Per naixement o adopció de segons i successius fills en municipis
                 amb risc de despoblament
             0808:
-              label: 'Per inversió en habitatge habitual que tenga la consideració
+              label: 'Per inversió en habitatge habitual que tingui la consideració
                 de protegida: Import generat en 2023'
             0809:
               label: 'Import de deduccions per inversió en habitatge habitual que
@@ -8748,14 +8758,18 @@ modelo:
             0845:
               label: Import total de les deduccions per incentius i estímuls a la
                 inversió empresarial aplicades en aquesta declaració, segons les caselles
-                ([0706], [0707], [0752], [0762], [0764], [0768])
+                ([0706], [0707], [0752], [0762], [0764], [0768], [0773], [0779], [0788],
+                [0791], [0793], [0796], [0797], [0815], [0817], [0836], [0844], [1623],
+                [1627], [1629], [1630], [1686], [1691], [1693], [1694], [1698], [1703],
+                [1705], [1708], [1710], [1717], [1720], [1722], [1723], [1727], [1731],
+                [1944], [1958])
             0853:
               label: Per quantitats invertides en el lloguer d'habitatge habitual
                 (es trasllada aquest import a la casella [1130] de l'annex B.8)
             0872:
-              label: Per inversió en accions de entitatés que cotizan en el segmento
-                de empreses en expansió del Mercat Alternativo Bursátil (es trasllada
-                este import a la casella [1142] del annex B.8)
+              label: Per inversió en accions d'entitats que cotitzen en el segment
+                d'empreses en expansió del Mercat Alternatiu Borsari (es trasllada
+                aquest import a la casella [1142] de l'annex B.8)
             0873:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
@@ -8768,8 +8782,8 @@ modelo:
               label: Per inversió en entitats de l'economia social (trasllade l'import
                 de la casella [1179] de l'annex B.8
             0887:
-              label: Per l'arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per l'arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0903:
               label: Per inversió en l'adquisició d'accions o participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
@@ -8778,10 +8792,10 @@ modelo:
               label: Per arrendament de habitatge habitual (import de la casella [1130]
                 del annex B.8)
             0928:
-              label: Per lloguer de habitatge habitual (es trasllada este import a
-                la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             0939:
-              label: Per obres de rehabilitació energética de la habitatge habitual
+              label: Per obres de rehabilitació energètica de la habitatge habitual
             0942:
               label: Per arrendament d'habitatge habitual vinculat a determinades
                 operacions de dació en pagament (trasllade l'import de la casella
@@ -8791,8 +8805,8 @@ modelo:
                 impagaments de rendes de arrendaments de habitatge (deducció del arrendador)
                 (traslladeu l'import de la casella [1203] del annex B.9)
             0946:
-              label: Per arrendament de habitatge habitual per jóvenes, majors i amb
-                discapacitat (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a joves, majors i amb
+                discapacitat (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0948:
               label: 'Per obres de millora: imports generats el 2021 i/o el 2022 pendents
@@ -8805,12 +8819,13 @@ modelo:
               label: Per obres de millora generada el 2023 a deduir en els 2 anys
                 següents
             0968:
-              label: Per arrendament de habitatge habitual per a contribuents menors
-                de 36 anys (es trasllada este import a la casella [1130] del annex
+              label: Per arrendament d'habitatge habitual per a contribuents menors
+                de 36 anys (es trasllada aquest import a la casella [1130] de l'annex
                 B.8)
             0975:
-              label: Per lloguer de habitatge habitual per a contribuents menors de
-                36 anys (es trasllada este import a la casella [1130] del annex B.8)
+              label: Per lloguer d'habitatge habitual per a contribuents menors de
+                36 anys (es trasllada aquest import a la casella [1130] de l'annex
+                B.8)
             0979:
               label: Per al foment d'emprenedoria (import de la casella [1136] de
                 l'annex B.8)
@@ -8831,8 +8846,8 @@ modelo:
             0999:
               label: Import generat el 2022 pendent d'aplicació
             '1003':
-              label: Per lloguer de la habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per lloguer de l'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1005':
               label: Per a contribuents que queden viudos en els exercicis 2021, 2022
                 i 2023
@@ -8841,8 +8856,8 @@ modelo:
                 o participacions socials d'entitats noves o de creació recent (es
                 trasllada aquest import a la casella [1136] de l'annex B.8)
             '1019':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1026':
               label: Per lloguer dhabitatge habitual per contribuents dedat igual
                 o inferior a 35 anys (es trasllada aquest import a la casella [1130]
@@ -8856,23 +8871,23 @@ modelo:
                 en entitats noves o de creació recent i el seu finançament (trasllade
                 l'import de la casella [1148] de l'annex B.8)
             '1030':
-              label: Per inversió en accions de entitatés que cotizan en el segmento
+              label: Per inversió en accions de entitatés que cotitzen en el segmento
                 de empreses en expansió del Mercat Alternativo Bolsista (traslladeu
                 l'import de la casella [1142] del annex B.8)
             '1035':
-              label: Per inversió en empreses que desenvolupin activitats agrarias
+              label: Per inversió en empreses que desenvolupin activitats agràries
                 (traslladeu l'import de la casella [1154] del annex B.8)
             '1043':
-              label: Per arrendament de habitatge habitual (es trasllada este import
-                a la casella [1130] del annex B.8)
+              label: Per arrendament d'habitatge habitual (es trasllada aquest import
+                a la casella [1130] de l'annex B.8)
             '1046':
               label: Per inversió en l'adquisició d'accions i participacions socials
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1048':
-              label: Per inversions realitzades en entitatés cotizadas en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1050':
               label: Per cura de fills menors de 3 anys, grans dependents i persones
                 amb discapacitat
@@ -8881,9 +8896,9 @@ modelo:
                 de noves entitats o de creació recent (es trasllada aquest import
                 a la casella [1136] de l'annex B.8)
             '1058':
-              label: Per inversions realitzades en entitatés cotizadas en el Mercat
-                Alternativo Bursátil (es trasllada este import a la casella [1142]
-                del annex B.8)
+              label: Per inversions realitzades en entitats cotitzades en el Mercat
+                Alternatiu Borsari (es trasllada aquest import a la casella [1142]
+                de l'annex B.8)
             '1078':
               label: Import satisfet en 2019 i/o 2020 pendent d'aplicació
             '1095':
@@ -8904,7 +8919,7 @@ modelo:
             '1168':
               label: Per a fomentar l'exercici físic i la pràctica esportiva
             '1178':
-              label: Import total de les quantitatés invertidas amb dret a deducció
+              label: Import total de les quantitatés invertides amb dret a deducció
                 (suma de les caselles [1175] + [1177])
             '1182':
               label: Import generat en 2023 pendent d'aplicació (import de la casella
@@ -9034,7 +9049,7 @@ modelo:
             '1283':
               label: Saldo negatiu dels rendiments del capital mobiliari imputables
                 a 2023, integrable a la base imposable de l'estalvi i pendent de compensació
-                en els quatre exercicis següents, segons les caselles ([0430])
+                en els quatre exercicis següents, segons les caselles ([0430], [0436])
             '1285':
               label: 'Exercici 2018: pendent d''aplicació al principi del període'
             '1286':
@@ -9281,9 +9296,9 @@ modelo:
                 fruits no cítrics i altres productes agrícoles no compresos expressament
                 en altres números: Ingressos íntegres'
             '1524':
-              label: 'Plantes textiles: Ingressos íntegres'
+              label: 'Plantes tèxtils: Ingressos íntegres'
             '1527':
-              label: 'Activitats accesorias realitzades per agricultors, ramaders
+              label: 'Activitats accessòries realitzades per agricultors, ramaders
                 o titulars d''activitats forestals: Ingressos íntegres'
             '1530':
               label: 'Altres treballs i serveis accessoris realitzats per agricultors,
@@ -9295,7 +9310,7 @@ modelo:
             '1550':
               label: Diferència ([1548 - [1549] - [0160])
             '1556':
-              label: Per adquisició o rehabilitació de habitatge habitual en concejos
+              label: Per adquisició o rehabilitació d'habitatge habitual en municipis
                 en risc de despoblament
             '1595':
               label: Guanys patrimonials reduïdes no exemptes imputables a 2023
@@ -9386,7 +9401,7 @@ modelo:
             '1856':
               label: 'Exercici 2022: Pendent d''aplicació en exercicis futurs'
             '1857':
-              label: Quantitatés satisfetes en l'exercici 2023 pendents de deducir
+              label: Quantitatés satisfetes en l'exercici 2023 pendents de deduir
                 en els 4 exercicis següents
             '1937':
               label: 'Reserva per a Inversions en les Illes Balears 2023: Import de
@@ -9418,7 +9433,7 @@ modelo:
               label: '"125 aniversari del Athletic Club 1898-2023": Aplicat en aquesta
                 declaració'
             '1960':
-              label: Per quantitatés satisfetes en despeses associats a la práctica
+              label: Per quantitatés satisfetes en despeses associats a la pràctica
                 del deporte i activitats saludables
             '1961':
               label: Import generat el 2022 pendent d'aplicació
@@ -9437,14 +9452,14 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2023 retencions, pagaments fraccionats and withholding
-                  cross-modelo inputs
+                title: Modelo 100 2023 retencions, pagaments fraccionats i retencions
+                  d'altres models relacionats
             renta-mini-model-actividades-economicas-directa:
               field:
                 title: Modelo 100 2023 estimació directa aggregators
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2023 estimació objetiva aggregators
+                title: Modelo 100 2023 estimació objectiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2023 base imposable / base liquidable / quota aggregators
@@ -9470,36 +9485,263 @@ modelo:
             '0001':
               help: Selector del contribuent que obté els rendiments econòmics de
                 l'activitat.
+            '0002':
+              help: 'Casella 0002: utilitzeu-la quan s''opti per imputar les bestretes
+                de rendiments per cessió de drets d''autor a mesura que es meritin
+                els drets.'
             '0003':
+              help: 'Casella 0003: import íntegre de les retribucions dineràries,
+                incloses les pensions compensatòries i les anualitats per aliments
+                no exemptes.'
               label: Retribucions dineràries, incloses pensions compensatòries i anualitats
                 per aliments no exemptes - import íntegre
+            '0004':
+              help: 'Casella 0004: valoració del rendiment del treball en espècie.'
+            '0005':
+              help: 'Casella 0005: ingressos a compte corresponents al rendiment del
+                treball en espècie.'
+            '0006':
+              help: 'Casella 0006: ingressos a compte repercutits al contribuent.'
+            0008:
+              help: 'Casella 0008: contribucions empresarials a plans de pensions,
+                plans de previsió social empresarial i mutualitats de previsió social,
+                excepte assegurances col·lectives de dependència, imputades al contribuent.'
             0009:
+              help: 'Casella 0009: contribucions empresarials a assegurances col·lectives
+                de dependència imputades al contribuent, incloses les quantitats derivades
+                d''una decisió del treballador.'
               label: Contribucions empresarials a assegurances col·lectives de dependència
+            '0010':
+              help: 'Casella 0010: import computable de les aportacions al patrimoni
+                protegit de persones amb discapacitat del qual n''és titular el contribuent.'
+            '0011':
+              help: 'Casella 0011: reduccions segons l''article 18.2 i 18.3, i les
+                disposicions transitòries 11ª, 12ª i 25ª de la Llei de l''impost.'
             '0012':
               label: Total ingressos íntegres computables ([0003] + [0007] + [0008]
                 + [0024] + [0009] + [0010] - [0011])
+            '0013':
+              help: 'Casella 0013: cotitzacions a la Seguretat Social, mutualitats
+                generals obligatòries de funcionaris, detraccions per drets passius
+                i cotitzacions a col·legis d''orfes o entitats similars.'
+            '0014':
+              help: 'Casella 0014: quotes satisfetes a sindicats.'
+            '0015':
+              help: 'Casella 0015: quotes satisfetes a col·legis professionals quan
+                la col·legiació és obligatòria, amb el límit anual aplicable.'
+            '0016':
+              help: 'Casella 0016: despeses de defensa jurídica derivades directament
+                de litigis amb l''ocupador, amb el límit anual aplicable.'
             '0017':
               label: Rendiment net previ ([0012] - [0013] - [0014] - [0015] - [0016])
+            0019:
+              help: 'Casella 0019: altres despeses deduïbles dels rendiments del treball.'
+            '0020':
+              help: 'Casella 0020: increment per a contribuents desocupats que accepten
+                un lloc de treball que exigeix traslladar la residència a un municipi
+                nou.'
+            '0021':
+              help: 'Casella 0021: increment per a treballadors actius que són persones
+                amb discapacitat.'
+            '0022':
+              help: 'Casella 0022: rendiment net del treball.'
+            '0023':
+              help: 'Casella 0023: quantia aplicable amb caràcter general per a la
+                reducció dels rendiments del treball.'
+            '0024':
+              help: 'Casella 0024: aportacions de l''empresa a plans de pensions,
+                plans de previsió social empresarial i mutualitats de previsió social,
+                excepte assegurances col·lectives de dependència, derivades d''una
+                decisió del treballador.'
             '0025':
               label: Rendiment net reduït ([0022] - [0057] - [0023])
+            '0026':
+              help: 'Casella 0026: contribuent que obté els rendiments del treball.'
+            '0027':
+              help: 'Casella 0027: interessos de comptes, dipòsits i actius financers
+                en general.'
+            0028:
+              help: 'Casella 0028: interessos d''actius financers amb dret a la bonificació
+                prevista a la disposició transitòria 6ª de la Llei de l''impost sobre
+                societats.'
+            0029:
+              help: 'Casella 0029: dividends i altres rendiments per la participació
+                en fons propis d''entitats.'
+            '0030':
+              help: 'Casella 0030: rendiments procedents de la transmissió o amortització
+                de Lletres del Tresor.'
+            '0032':
+              help: 'Casella 0032: rendiments procedents de contractes d''assegurança
+                de vida o invalidesa i d''operacions de capitalització.'
+            '0033':
+              help: 'Casella 0033: rendiments procedents de rendes que tenen per causa
+                la imposició de capitals i altres rendiments del capital mobiliari
+                a integrar a la base imposable de l''estalvi.'
+            '0034':
+              help: 'Casella 0034: rendiments de capital mobiliari derivats de valors
+                de deute subordinat o de participacions preferents.'
+            '0035':
+              help: 'Casella 0035: rendiments procedents d''assegurances de vida,
+                dipòsits i contractes financers que instrumentin plans d''estalvi
+                a llarg termini.'
+            '0036':
+              help: 'Casella 0036: total d''ingressos íntegres de l''apartat de rendiments
+                del capital mobiliari de l''estalvi.'
             '0037':
+              help: 'Casella 0037: despeses fiscalment deduïbles d''administració
+                i dipòsit de valors negociables, exclusivament.'
               label: 'Despeses fiscalment deduïbles: exclusivament administració i
                 dipòsit de valors negociables'
+            0038:
+              help: 'Casella 0038: rendiment net de l''apartat de rendiments del capital
+                mobiliari de l''estalvi.'
+            0039:
+              help: 'Casella 0039: reducció aplicable als rendiments derivats de determinats
+                contractes d''assegurança segons la disposició transitòria 4ª de la
+                Llei de l''impost.'
+            '0040':
+              help: 'Casella 0040: rendiment net reduït després d''aplicar la reducció
+                corresponent.'
+            '0041':
+              help: 'Casella 0041: suma dels rendiments reduïts del capital mobiliari
+                que s''han d''integrar a la base imposable de l''estalvi.'
+            '0042':
+              help: 'Casella 0042: contribuent a qui correspon el rendiment del capital
+                mobiliari.'
             '0043':
+              help: 'Casella 0043: import total acumulat del capital diferit percebut
+                el 2015, 2016, 2017, 2018, 2019, 2020, 2021, 2023 i 2024 el rendiment
+                del qual es va reduir d''acord amb la disposició transitòria 4ª.'
               label: Import total acumulat del capital diferit percebut en 2015, 2016,
                 2017, 2018, 2019, 2020, 2021, 2023 i 2024 al rendiment del qual es
                 va aplicar la DT 4a
             '0044':
+              help: 'Casella 0044: import total dels capitals diferits corresponents
+                a assegurances de vida percebuts el 2024 el rendiment dels quals es
+                redueix d''acord amb la disposició transitòria 4ª.'
               label: Import total dels capitals diferits corresponents a assegurances
                 de vida percebuts en 2024 al rendiment dels quals s'aplica la DT4a
+            '0045':
+              help: 'Casella 0045: contribuent que obté els rendiments del capital
+                mobiliari.'
+            '0046':
+              help: 'Casella 0046: rendiments procedents de l''arrendament de béns
+                mobles, negocis o mines, o de subarrendaments.'
+            '0047':
+              help: 'Casella 0047: rendiments procedents de la prestació d''assistència
+                tècnica, excepte quan es realitza dins d''una activitat econòmica.'
+            0048:
+              help: 'Casella 0048: rendiments procedents de la propietat intel·lectual
+                quan el contribuent no és l''autor.'
+            0049:
+              help: 'Casella 0049: utilitzeu-la quan s''opti per imputar les bestretes
+                de rendiments per cessió de drets d''autor a mesura que es meritin
+                els drets.'
+            '0050':
+              help: 'Casella 0050: rendiments procedents de la propietat industrial
+                que no estigui afecta a una activitat econòmica.'
+            '0051':
+              help: 'Casella 0051: altres rendiments del capital mobiliari que s''han
+                d''integrar a la base imposable general.'
+            '0052':
+              help: 'Casella 0052: total d''ingressos íntegres de l''apartat de rendiments
+                del capital mobiliari de la base general.'
+            '0053':
+              help: 'Casella 0053: despeses fiscalment deduïbles de l''apartat de
+                rendiments del capital mobiliari de la base general.'
+            '0054':
+              help: 'Casella 0054: rendiment net de l''apartat de rendiments del capital
+                mobiliari de la base general.'
             '0055':
+              help: 'Casella 0055: reduccions per rendiments generats en més de dos
+                anys o obtinguts de manera notòriament irregular segons l''article
+                26.2 i la disposició transitòria 25ª de la Llei de l''impost.'
               label: Reduccions per rendiments generats en més de dos anys o obtinguts
-                de manera notòriament irregular
+                de manera notòriament irregular (article 26.2 i DT 25a de la Llei
+                de l'impost)
+            '0056':
+              help: 'Casella 0056: rendiment net reduït de l''apartat de rendiments
+                del capital mobiliari de la base general.'
+            '0057':
+              help: 'Casella 0057: reducció per rendiments acollits al règim fiscal
+                de l''esdeveniment XXXVII Copa Amèrica Barcelona.'
+            '0062':
+              help: 'Casella 0062: contribuent titular del bé immoble o del dret.'
+            '0063':
+              help: 'Casella 0063: percentatge de propietat que correspon al contribuent.'
+            '0064':
+              help: 'Casella 0064: percentatge d''usdefruit que correspon al contribuent.'
+            '0065':
+              help: 'Casella 0065: clau de situació del bé immoble.'
+            '0066':
+              help: 'Casella 0066: referència cadastral del bé immoble.'
+            '0067':
+              help: 'Casella 0067: indica que el bé immoble és urbà.'
+            0068:
+              help: 'Casella 0068: indica que el bé immoble és rústic.'
+            0069:
+              help: 'Casella 0069: adreça del bé immoble.'
             '0070':
+              help: 'Casella 0070: indica que l''immoble ha estat l''habitatge habitual
+                del contribuent el 2024.'
               label: Habitatge habitual el 2024
+            '0071':
+              help: 'Casella 0071: habitatge on, en els casos de separació o divorci,
+                resideixen els fills i/o l''excònjuge.'
+            '0072':
+              help: 'Casella 0072: indica que el bé immoble està afecte a activitats
+                econòmiques.'
+            '0073':
+              help: 'Casella 0073: indica que l''immoble està a disposició dels seus
+                titulars.'
+            '0074':
+              help: 'Casella 0074: indica que l''immoble està arrendat com a immoble
+                accessori.'
+            '0075':
+              help: 'Casella 0075: indica que l''immoble està arrendat.'
             '0076':
+              help: 'Casella 0076: nombre de dies en què l''immoble ha estat l''habitatge
+                habitual del contribuent el 2024.'
               label: Nombre de dies en què l'immoble ha estat l'habitatge habitual
                 el 2024
+            '0077':
+              help: 'Casella 0077: número d''identificació fiscal de l''excònjuge.'
+            0079:
+              help: 'Casella 0079: nombre de dies en què l''habitatge ha tingut aquest
+                ús.'
+            0080:
+              help: 'Casella 0080: nombre de dies en què el bé immoble ha estat afecte
+                a activitats econòmiques.'
+            0081:
+              help: 'Casella 0081: contribuent que realitza l''activitat econòmica
+                per a un immoble afecte a activitats econòmiques.'
+            0082:
+              help: 'Casella 0082: indica que el bé immoble és objecte d''arrendament
+                de negoci.'
+            0083:
+              help: 'Casella 0083: valor cadastral del bé immoble.'
+            0084:
+              help: 'Casella 0084: indica si el valor cadastral ha estat revisat,
+                modificat o determinat mitjançant un procediment de valoració col·lectiva
+                de caràcter general amb efectes en l''exercici o en exercicis anteriors.'
+            0085:
+              help: 'Casella 0085: nombre de dies en què l''immoble ha estat a disposició
+                del contribuent.'
+            0086:
+              help: 'Casella 0086: marqueu amb una X en el supòsit excepcional que,
+                en els mateixos dies, una part de l''immoble estigués a disposició
+                del contribuent i una altra part es destinés a altres usos.'
+            0087:
+              help: 'Casella 0087: indiqueu el percentatge (%) de l''immoble a disposició
+                del contribuent.'
+            0088:
+              help: 'Casella 0088: nombre de dies corresponents a l''ús immobiliari
+                indicat.'
+            0089:
+              help: 'Casella 0089: renda immobiliària imputada del bé immoble.'
+            0090:
+              help: 'Casella 0090: referència cadastral de l''immoble principal al
+                qual està vinculat.'
             0091:
               help: Indiqueu el NIF del primer arrendatari de l'immoble arrendat.
             0092:
@@ -10034,9 +10276,9 @@ modelo:
               help: Consigneu els ajuts públics als titulars de béns integrants del
                 Patrimoni Històric Espanyol destinats a la conservació o rehabilitació,
                 amb l'import imputable a 2024, i empleneu l'annex C.1 quan correspongui.
-              label: Ajuts públics als titulars de béns integrants del Patrimoni Històric
-                Espanyol destinats a la seva conservació o rehabilitació. Import imputable
-                a 2024 (empleneu l'annex C.1)(*)
+              label: Ajudes públiques als titulars de béns integrants del Patrimoni
+                Històric Espanyol destinades a la seva conservació o rehabilitació.
+                Import imputable a 2024 (empleneu l'annex C.1)(*)
             '0267':
               help: Identifiqueu el contribuent que ha d'efectuar la imputació.
             0268:
@@ -10136,7 +10378,7 @@ modelo:
                 oficial o de preu taxat, amb l'import imputable a 2024, i empleneu
                 l'annex C.1 quan correspongui.
               label: Subvencions per a l'adquisició d'habitatges de protecció oficial
-                o de preu taxat. Import imputable a 2024 (empleneu l'annex C.1) (*)
+                o de preu taxat. Import imputable a 2024 (empleneu l'Annex C.1) (*)
             '0300':
               help: Consigneu altres subvencions o ajuts per adquirir o rehabilitar
                 l'habitatge habitual o reparar-ne defectes estructurals, per l'import
@@ -10574,6 +10816,8 @@ modelo:
               help: Aquest camp calcula el saldo net dels rendiments a integrar en
                 la base imposable general i de les imputacions de renda.
             '0433':
+              help: Consigneu o reviseu la informació fiscal a la casella per completar
+                aquesta autoliquidació.
               label: Saldo net negatiu dels guanys i pèrdues patrimonials de 2024
                 a integrar en la base imposable general, amb el límit del 25 per 100
                 de l'import de la casella [0432] (*) (traslladeu l'import de la casella
@@ -10590,6 +10834,8 @@ modelo:
             '0435':
               help: Aquest camp calcula la base imposable general.
             '0436':
+              help: Consigneu o reviseu la informació fiscal a la casella per completar
+                aquesta autoliquidació.
               label: Saldos nets negatius de rendiments de capital mobiliari imputables
                 a 2024, a integrar en la base de l'estalvi, amb el límit del 25 per
                 100 de [0424](*) (traslladeu l'import de la casella [0430] si escau).
@@ -10660,6 +10906,8 @@ modelo:
                 [0424] (*) (saldo pendent no compensat a la casella [0451]) (Empleneu
                 l'annex C.3)
             '0446':
+              help: Consigneu o reviseu la informació fiscal a la casella per completar
+                aquesta autoliquidació.
               label: Saldos nets negatius de guanys i pèrdues patrimonials imputables
                 a 2024, a integrar en la base imposable de l'estalvi, amb el límit
                 del 25 per 100 de [0429](*)(traslladeu l'import de la casella [0425]
@@ -10759,7 +11007,8 @@ modelo:
                 a partir de les caselles referenciades i els ajustos de saldos pendents.
               label: Base imposable de l'estalvi calculada segons les caselles ([0424],
                 [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447],
-                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455],
+                [0448])
             '0462':
               help: Identifiqueu el contribuent que realitza, o a qui s'imputen, les
                 aportacions i contribucions a sistemes de previsió social.
@@ -10957,6 +11206,12 @@ modelo:
             '0520':
               help: Aquest camp calculat determina l'import total incrementat o disminuït
                 del mínim personal i familiar utilitzat per calcular el gravamen autonòmic.
+            '0521':
+              help: Consigneu o reviseu la informació fiscal a la casella per completar
+                aquesta autoliquidació.
+            '0523':
+              help: Consigneu o reviseu la informació fiscal a la casella per completar
+                aquesta autoliquidació.
             '0525':
               help: Indiqueu els imports de rendes exemptes corresponents a la base
                 liquidable general.
@@ -11149,9 +11404,6 @@ modelo:
                 el dret el 2024.
               label: 'Import de les deduccions autonòmiques de les quals s''ha perdut
                 el dret el 2024: Part autonòmica'
-            0581:
-              help: Indiqueu els interessos de demora autonòmics corresponents a les
-                deduccions anteriors en aquest bloc de regularització.
             0582:
               help: Indiqueu la part estatal dels interessos de demora corresponents
                 a la regularització anterior.
@@ -11238,7 +11490,7 @@ modelo:
               help: Aquest camp calculat recull el total de pagaments a compte com
                 les caselles [0592] + [0593] + [0594] + [0596] fins a [0606].
             '0610':
-              help: Aquest camp calculat recull la quota diferencial després d’aplicar
+              help: Aquest camp calculat recull la quota diferencial després d'aplicar
                 pagaments a compte i deduccions.
             '0611':
               help: Indiqueu l'import de la deducció aplicable en aquest bloc de deducció.
@@ -11255,7 +11507,7 @@ modelo:
             '0615':
               help: Indiqueu el nom del descendent associat amb aquest bloc de deducció.
             '0616':
-              help: Indiqueu la data d’inici del període de discapacitat del descendent
+              help: Indiqueu la data d'inici del període de discapacitat del descendent
                 rellevant per a aquesta deducció.
             '0617':
               help: Indiqueu la data de fi del període de discapacitat del descendent
@@ -11274,24 +11526,24 @@ modelo:
             '0622':
               help: Indiqueu el NIF del beneficiari que rep el dret cedit a la deducció.
             '0623':
-              help: Indiqueu l’import de la deducció per aquest bloc de deducció per
+              help: Indiqueu l'import de la deducció per aquest bloc de deducció per
                 discapacitat del descendent.
             '0624':
-              help: Indiqueu l’import de l’abonament anticipat de la deducció corresponent
+              help: Indiqueu l'import de l'abonament anticipat de la deducció corresponent
                 a 2024 per aquest bloc.
               label: Import de l'abonament anticipat de la deducció corresponent a
                 2024 (*)
             '0625':
-              help: Indiqueu el NIF de l’ascendent associat amb aquest bloc de deducció
+              help: Indiqueu el NIF de l'ascendent associat amb aquest bloc de deducció
                 per discapacitat.
             '0626':
-              help: Indiqueu el nom de l’ascendent associat amb aquest bloc de deducció
+              help: Indiqueu el nom de l'ascendent associat amb aquest bloc de deducció
                 per discapacitat.
             '0627':
-              help: Indiqueu la data d’inici del període de discapacitat de l’ascendent
+              help: Indiqueu la data d'inici del període de discapacitat de l'ascendent
                 rellevant per a aquesta deducció.
             0628:
-              help: Indiqueu la data de fi del període de discapacitat de l’ascendent
+              help: Indiqueu la data de fi del període de discapacitat de l'ascendent
                 rellevant per a aquesta deducció, si escau.
             0629:
               help: Indiqueu el nombre de persones que donen dret al mínim per ascendents
@@ -11300,12 +11552,12 @@ modelo:
               help: Indiqueu si un altre contribuent us ha cedit el dret a aquesta
                 deducció i faciliteu el NIF del cedent quan correspongui.
             '0631':
-              help: Indiqueu el NIF d’un contribuent que ha cedit el dret a la deducció.
+              help: Indiqueu el NIF d'un contribuent que ha cedit el dret a la deducció.
             '0632':
-              help: Indiqueu el NIF d’un altre contribuent que ha cedit el dret a
+              help: Indiqueu el NIF d'un altre contribuent que ha cedit el dret a
                 la deducció, si escau.
             '0633':
-              help: Indiqueu el NIF d’un altre contribuent que ha cedit el dret a
+              help: Indiqueu el NIF d'un altre contribuent que ha cedit el dret a
                 la deducció, si escau.
             '0634':
               help: Indiqueu si cediu el dret a aquesta deducció i faciliteu el NIF
@@ -11313,40 +11565,40 @@ modelo:
             '0635':
               help: Indiqueu el NIF del beneficiari que rep el dret cedit a la deducció.
             '0636':
-              help: Indiqueu l’import de la deducció per aquest bloc de deducció per
-                discapacitat de l’ascendent.
+              help: Indiqueu l'import de la deducció per aquest bloc de deducció per
+                discapacitat de l'ascendent.
             '0637':
-              help: Indiqueu l’import de l’abonament anticipat de la deducció corresponent
-                a 2024 per aquest bloc de discapacitat de l’ascendent.
+              help: Indiqueu l'import de l'abonament anticipat de la deducció corresponent
+                a 2024 per aquest bloc de discapacitat de l'ascendent.
               label: Import de l'abonament anticipat de la deducció corresponent a
                 2024 (*)
             0638:
               help: Indiqueu el NIF del primer arrendador per a la informació del
-                contracte de lloguer de l’annex B.
+                contracte de lloguer de l'annex B.
             0639:
               help: Marqueu aquesta casella amb una X quan la casella [0638] contingui
-                un identificador fiscal d’un altre país.
+                un identificador fiscal d'un altre país.
             '0640':
-              help: Indiqueu les quantitats satisfetes a l’arrendador 1 segons el
+              help: Indiqueu les quantitats satisfetes a l'arrendador 1 segons el
                 contracte de lloguer.
             '0641':
               help: Indiqueu el NIF del segon arrendador per a la informació del contracte
-                de lloguer de l’annex B.
+                de lloguer de l'annex B.
             '0642':
               help: Marqueu aquesta casella amb una X quan la casella [0641] contingui
-                un identificador fiscal d’un altre país.
+                un identificador fiscal d'un altre país.
             '0643':
-              help: Indiqueu les quantitats satisfetes a l’arrendador 2 segons el
+              help: Indiqueu les quantitats satisfetes a l'arrendador 2 segons el
                 contracte de lloguer.
             '0644':
-              help: Indiqueu l’import total satisfet segons el contracte de lloguer.
+              help: Indiqueu l'import total satisfet segons el contracte de lloguer.
             '0645':
               help: Indiqueu les quantitats satisfetes que donen dret a deducció.
             '0646':
-              help: Indiqueu l’import de la deducció autonòmica per arrendament de
-                l’habitatge habitual.
+              help: Indiqueu l'import de la deducció autonòmica per arrendament de
+                l'habitatge habitual.
             '0647':
-              help: Indiqueu el número d’identificació del títol de família nombrosa
+              help: Indiqueu el número d'identificació del títol de família nombrosa
                 utilitzat per a aquesta deducció.
             0648:
               help: Marqueu aquesta casella quan el títol de família nombrosa sigui
@@ -11355,23 +11607,23 @@ modelo:
               help: Marqueu aquesta casella quan el títol de família nombrosa sigui
                 de categoria especial.
             '0650':
-              help: Indiqueu la data d’inici del títol de família nombrosa.
+              help: Indiqueu la data d'inici del títol de família nombrosa.
             '0651':
               help: Indiqueu la data de caducitat del títol de família nombrosa.
             '0652':
-              help: Indiqueu el nombre d’ascendents que formen part de la mateixa
+              help: Indiqueu el nombre d'ascendents que formen part de la mateixa
                 família nombrosa en aquest bloc de deducció.
             '0653':
               help: Indiqueu si un altre contribuent us ha cedit el dret a aquesta
                 deducció per família nombrosa i faciliteu el NIF del cedent quan correspongui.
             '0654':
-              help: Indiqueu el NIF d’un contribuent que ha cedit el dret a la deducció
+              help: Indiqueu el NIF d'un contribuent que ha cedit el dret a la deducció
                 per família nombrosa.
             '0655':
-              help: Indiqueu el NIF d’un altre contribuent que ha cedit el dret a
+              help: Indiqueu el NIF d'un altre contribuent que ha cedit el dret a
                 la deducció per família nombrosa, si escau.
             '0656':
-              help: Indiqueu el NIF d’un altre contribuent que ha cedit el dret a
+              help: Indiqueu el NIF d'un altre contribuent que ha cedit el dret a
                 la deducció per família nombrosa, si escau.
             '0657':
               help: Indiqueu si cediu el dret a la deducció per família nombrosa i
@@ -11384,33 +11636,33 @@ modelo:
                 superin el mínim exigit per a la categoria general o especial de família
                 nombrosa.
             '0660':
-              help: Indiqueu l’import de la deducció per aquest bloc de deducció per
+              help: Indiqueu l'import de la deducció per aquest bloc de deducció per
                 família nombrosa.
             '0661':
-              help: Indiqueu l’import de l’abonament anticipat de la deducció corresponent
+              help: Indiqueu l'import de l'abonament anticipat de la deducció corresponent
                 a 2024 per aquest bloc de família nombrosa.
               label: Import de l'abonament anticipat de la deducció corresponent a
                 2024 (*)
             '0662':
-              help: Indiqueu l’import de la deducció per aquest bloc de deducció monoparental.
+              help: Indiqueu l'import de la deducció per aquest bloc de deducció monoparental.
             '0663':
-              help: Indiqueu l’import de l’abonament anticipat de la deducció corresponent
+              help: Indiqueu l'import de l'abonament anticipat de la deducció corresponent
                 a 2024 per aquest bloc monoparental.
               label: Import de l'abonament anticipat de la deducció corresponent a
                 2024 (*)
             '0664':
-              help: Indiqueu l’import del cobrament anticipat que cal regularitzar
+              help: Indiqueu l'import del cobrament anticipat que cal regularitzar
                 quan els descendents no donen dret al mínim per descendents.
             '0665':
               help: Indiqueu el NIF del descendent la deducció del qual es regularitza.
             '0666':
-              help: Indiqueu l’import del cobrament anticipat que cal regularitzar
+              help: Indiqueu l'import del cobrament anticipat que cal regularitzar
                 quan els ascendents no donen dret al mínim per ascendents.
             '0667':
-              help: Indiqueu el NIF de l’ascendent la deducció del qual es regularitza.
+              help: Indiqueu el NIF de l'ascendent la deducció del qual es regularitza.
             0669:
-              label: Discrepància de criteri administratiu (aquesta casella s’ha d’emplenar
-                exclusivament per als supòsits d’autoliquidació rectificativa, per
+              label: Discrepància de criteri administratiu (aquesta casella s'ha d'emplenar
+                exclusivament per als supòsits d'autoliquidació rectificativa, per
                 discrepància de criteri administratiu, que no d...)
             '0670':
               label: Resultat de la declaració ([0610] - [0611] + [0612] - [0613]
@@ -11423,134 +11675,134 @@ modelo:
               help: Aquest camp calculat recull el 50 per 100 de les deduccions per
                 doble imposició de les caselles [0588], [0589] i [0590].
             '0675':
-              help: Aquest camp calculat recull l’import de l’IRPF que correspon a
+              help: Aquest camp calculat recull l'import de l'IRPF que correspon a
                 la comunitat autònoma de residència del contribuent com [0671] - [0672].
             '0676':
-              label: Resultat a ingressar com a conseqüència de la tramitació d’autoliquidacions
-                anteriors o liquidacions administratives corresponents a l’exercici
+              label: Resultat a ingressar com a conseqüència de la tramitació d'autoliquidacions
+                anteriors o liquidacions administratives corresponents a l'exercici
                 2024
             '0677':
-              label: Devolució acordada per l’Agència Tributària com a conseqüència
-                de la tramitació d’autoliquidacions anteriors o liquidacions administratives
-                corresponents a l’exercici 2024
+              label: Devolució acordada per l'Agència Tributària com a conseqüència
+                de la tramitació d'autoliquidacions anteriors o liquidacions administratives
+                corresponents a l'exercici 2024
             0683:
-              help: Indiqueu la data d’inici de les obres per al detall de la deducció
-                per habitatge habitual de l’annex A.
+              help: Indiqueu la data d'inici de les obres per al detall de la deducció
+                per habitatge habitual de l'annex A.
             0684:
               help: Indiqueu la data de finalització de les obres per al detall de
-                la deducció per habitatge habitual de l’annex A.
+                la deducció per habitatge habitual de l'annex A.
             0689:
-              help: Utilitzeu aquest camp de deducció autonòmica d’Astúries per als
-                contribuents que traslladin el domicili fiscal al Principat d’Astúries
+              help: Utilitzeu aquest camp de deducció autonòmica d'Astúries per als
+                contribuents que traslladin el domicili fiscal al Principat d'Astúries
                 per motius laborals.
             0690:
-              help: Indiqueu la data d’adquisició de l’habitatge quan l’adquisició
-                s’hagi produït després del 31-12-2012 perquè l’habitatge estava en
-                construcció, usant la data de l’escriptura d’adquisició o d’obra nova.
+              help: Indiqueu la data d'adquisició de l'habitatge quan l'adquisició
+                s'hagi produït després del 31-12-2012 perquè l'habitatge estava en
+                construcció, usant la data de l'escriptura d'adquisició o d'obra nova.
             0691:
-              help: Indiqueu la data d’inici de les obres per a aquest detall de la
-                deducció per habitatge habitual de l’annex A.
+              help: Indiqueu la data d'inici de les obres per a aquest detall de la
+                deducció per habitatge habitual de l'annex A.
             0692:
               help: Indiqueu la data de finalització de les obres per a aquest detall
-                de la deducció per habitatge habitual de l’annex A.
+                de la deducció per habitatge habitual de l'annex A.
             0693:
-              help: Indiqueu l’import del resultat a ingressar de la casella [0670]
+              help: Indiqueu l'import del resultat a ingressar de la casella [0670]
                 la suspensió del qual se sol·licita.
             0694:
-              help: Indiqueu l’import del resultat a retornar de la casella [0670]
+              help: Indiqueu l'import del resultat a retornar de la casella [0670]
                 al cobrament efectiu del qual es renuncia.
             0695:
               help: Aquest camp calculat recull la resta a ingressar del resultat
                 de la declaració com la diferència positiva o igual a zero [0670]
                 - [0693].
             0698:
-              help: Indiqueu la part estatal de l’import de la deducció per habitatge
-                habitual a l’annex A.
+              help: Indiqueu la part estatal de l'import de la deducció per habitatge
+                habitual a l'annex A.
             0699:
-              help: Indiqueu la part autonòmica de l’import de la deducció per habitatge
-                habitual a l’annex A.
+              help: Indiqueu la part autonòmica de l'import de la deducció per habitatge
+                habitual a l'annex A.
             '0702':
-              help: Indiqueu la part estatal de l’import de la deducció per habitatge
-                habitual a l’annex A.
+              help: Indiqueu la part estatal de l'import de la deducció per habitatge
+                habitual a l'annex A.
             '0703':
-              help: Indiqueu la part autonòmica de l’import de la deducció per habitatge
-                habitual a l’annex A.
+              help: Indiqueu la part autonòmica de l'import de la deducció per habitatge
+                habitual a l'annex A.
             '0704':
-              help: Indiqueu la part estatal d’aquest import de deducció per habitatge
-                habitual a l’annex A.
+              help: Indiqueu la part estatal d'aquest import de deducció per habitatge
+                habitual a l'annex A.
             '0705':
-              help: Indiqueu la part autonòmica d’aquest import de deducció per habitatge
-                habitual a l’annex A.
+              help: Indiqueu la part autonòmica d'aquest import de deducció per habitatge
+                habitual a l'annex A.
             '0706':
-              help: Indiqueu l’import aplicat en aquesta declaració per a l’esdeveniment
+              help: Indiqueu l'import aplicat en aquesta declaració per a l'esdeveniment
                 de deducció per inversió empresarial "Andalucía Valderrama Masters
                 2022/2024".
             '0707':
-              help: Indiqueu l’import aplicat en aquesta declaració per a l’esdeveniment
+              help: Indiqueu l'import aplicat en aquesta declaració per a l'esdeveniment
                 de deducció per inversió empresarial "Bicentenari de la Policia Nacional".
             0708:
-              help: Indiqueu la data d’adquisició de l’habitatge pel qual es practica
-                la deducció, llevat que s’empleni la casella [0690].
+              help: Indiqueu la data d'adquisició de l'habitatge pel qual es practica
+                la deducció, llevat que s'empleni la casella [0690].
             0709:
-              help: Indiqueu el número d’identificació del préstec hipotecari vinculat
+              help: Indiqueu el número d'identificació del préstec hipotecari vinculat
                 a la deducció per habitatge habitual.
             '0710':
-              help: Indiqueu el percentatge de l’import total del préstec hipotecari
-                que s’ha destinat efectivament a l’adquisició de l’habitatge habitual.
+              help: Indiqueu el percentatge de l'import total del préstec hipotecari
+                que s'ha destinat efectivament a l'adquisició de l'habitatge habitual.
             '0711':
               help: Indiqueu el NIF de la primera entitat nova o de creació recent
-                per a la deducció de l’annex A.
+                per a la deducció de l'annex A.
             '0712':
-              help: Indiqueu l’import de la inversió amb dret a deducció per a aquesta
+              help: Indiqueu l'import de la inversió amb dret a deducció per a aquesta
                 entitat nova o de creació recent.
             '0713':
               help: Indiqueu el NIF de la segona entitat nova o de creació recent
-                per a la deducció de l’annex A.
+                per a la deducció de l'annex A.
             '0714':
-              help: Indiqueu l’import de la inversió amb dret a deducció per a aquesta
+              help: Indiqueu l'import de la inversió amb dret a deducció per a aquesta
                 segona entitat nova o de creació recent.
             '0715':
               help: Indiqueu el NIF del primer arrendador per a la deducció de lloguer
-                de l’annex A.
+                de l'annex A.
             '0716':
               help: Marqueu aquesta casella quan el NIF consignat a la casella [0715]
-                sigui d’un altre país.
+                sigui d'un altre país.
             '0717':
               help: Indiqueu el NIF del segon arrendador per a la deducció de lloguer
-                de l’annex A.
+                de l'annex A.
             0718:
               help: Marqueu aquesta casella quan el NIF consignat a la casella [0717]
-                sigui d’un altre país.
+                sigui d'un altre país.
             0719:
               help: Indiqueu les quantitats totals satisfetes al primer arrendador
-                per a la deducció de lloguer de l’annex A.
+                per a la deducció de lloguer de l'annex A.
             '0720':
               help: Indiqueu les quantitats totals satisfetes al segon arrendador
-                per a la deducció de lloguer de l’annex A.
+                per a la deducció de lloguer de l'annex A.
             '0721':
-              help: Indiqueu l’import de la deducció en l’apartat de deduccions de
+              help: Indiqueu l'import de la deducció en l'apartat de deduccions de
                 la quota general.
             '0722':
-              help: Indiqueu l’import de la deducció per aportacions a activitats
+              help: Indiqueu l'import de la deducció per aportacions a activitats
                 prioritàries de mecenatge, sotmesa al límit del 15% de la base liquidable.
             '0723':
-              help: Indiqueu l’import de la deducció per donatius a entitats regulades
+              help: Indiqueu l'import de la deducció per donatius a entitats regulades
                 per la Llei 49/2002, de 23 de desembre.
             '0724':
-              help: Indiqueu l’import de la deducció per donatius a fundacions i associacions
-                d’utilitat pública no compreses en la Llei 49/2002, de 23 de desembre.
+              help: Indiqueu l'import de la deducció per donatius a fundacions i associacions
+                d'utilitat pública no compreses en la Llei 49/2002, de 23 de desembre.
             '0726':
-              help: Indiqueu l’import de la deducció del 15 per 100 per inversions
-                d’interès cultural.
+              help: Indiqueu l'import de la deducció del 15 per 100 per inversions
+                d'interès cultural.
             '0727':
-              help: Indiqueu l’import total de la deducció per rendes obtingudes a
+              help: Indiqueu l'import total de la deducció per rendes obtingudes a
                 Ceuta o a Melilla.
             0728:
               help: Indiqueu la quota o quotes líquides estatal i autonòmica dels
-                membres de la unitat familiar contribuents per IRPF, d’acord amb la
-                fórmula indicada a l’etiqueta font.
+                membres de la unitat familiar contribuents per IRPF, d'acord amb la
+                fórmula indicada a l'etiqueta font.
             0729:
-              help: Indiqueu les quotes de l’Impost sobre la Renda de no Residents
+              help: Indiqueu les quotes de l'Impost sobre la Renda de no Residents
                 per rendes obtingudes a Espanya el 2024 per la resta de membres de
                 la unitat familiar inclosos en el supòsit font de residents a la UE.
               label: Quotes de l'Impost sobre la Renda de no Residents corresponents
@@ -11562,141 +11814,141 @@ modelo:
                 membres de la unitat familiar haguessin tributat conjuntament.
             '0731':
               help: Aquest camp calculat recull la diferència [0728] + [0729] - [0730];
-                quan la diferència sigui negativa, l’import de la deducció és zero.
+                quan la diferència sigui negativa, l'import de la deducció és zero.
             '0732':
-              help: Indiqueu l’import de la deducció que correspon al contribuent
+              help: Indiqueu l'import de la deducció que correspon al contribuent
                 per la deducció de la unitat familiar resident a la UE.
             '0733':
-              help: Indiqueu l’import de les dotacions a la Reserva per a inversions
+              help: Indiqueu l'import de les dotacions a la Reserva per a inversions
                 a les Canàries corresponent a 2020.
               label: 'Reserva per a inversions a les Canàries 2020: import de les
                 dotacions'
             '0734':
-              help: Indiqueu l’any de la dotació per a l’entrada de 2020 de la Reserva
+              help: Indiqueu l'any de la dotació per a l'entrada de 2020 de la Reserva
                 per a inversions a les Canàries.
               label: 'Reserva per a inversions a les Canàries 2020: any de la dotació'
             '0735':
-              help: Indiqueu l’import de les dotacions a la Reserva per a inversions
+              help: Indiqueu l'import de les dotacions a la Reserva per a inversions
                 a les Canàries corresponent a 2021.
               label: 'Reserva per a inversions a les Canàries 2021: import de les
                 dotacions'
             '0736':
               help: Indiqueu les inversions de 2021 de la Reserva per a inversions
-                a les Canàries previstes a les lletres A, B, B bis i D (1r) de l’article
+                a les Canàries previstes a les lletres A, B, B bis i D (1r) de l'article
                 27.4.
               label: 'Reserva per a inversions a les Canàries 2021: inversions previstes
-                a les lletres A, B, B bis i D (1r) de l’art. 27.4'
+                a les lletres A, B, B bis i D (1r) de l''art. 27.4'
             '0737':
               help: Indiqueu les inversions de 2021 de la Reserva per a inversions
-                a les Canàries previstes a les lletres C i D (2n a 6è) de l’article
+                a les Canàries previstes a les lletres C i D (2n a 6è) de l'article
                 27.4.
               label: 'Reserva per a inversions a les Canàries 2021: inversions previstes
-                a les lletres C i D (2n a 6è) de l’art. 27.4'
+                a les lletres C i D (2n a 6è) de l''art. 27.4'
             0738:
-              help: Indiqueu l’import de les dotacions a la Reserva per a inversions
+              help: Indiqueu l'import de les dotacions a la Reserva per a inversions
                 a les Canàries corresponent a 2022.
               label: 'Reserva per a inversions a les Canàries 2022: import de les
                 dotacions'
             0739:
               help: Indiqueu les inversions de 2022 de la Reserva per a inversions
-                a les Canàries previstes a les lletres A, B, B bis i D (1r) de l’article
+                a les Canàries previstes a les lletres A, B, B bis i D (1r) de l'article
                 27.4.
               label: 'Reserva per a inversions a les Canàries 2022: inversions previstes
-                a les lletres A, B, B bis i D (1r) de l’art. 27.4'
+                a les lletres A, B, B bis i D (1r) de l''art. 27.4'
             '0740':
               help: Indiqueu les inversions de 2022 de la Reserva per a inversions
-                a les Canàries previstes a les lletres C i D (2n a 6è) de l’article
+                a les Canàries previstes a les lletres C i D (2n a 6è) de l'article
                 27.4.
               label: 'Reserva per a inversions a les Canàries 2022: inversions previstes
-                a les lletres C i D (2n a 6è) de l’art. 27.4'
+                a les lletres C i D (2n a 6è) de l''art. 27.4'
             '0741':
-              help: Indiqueu l’import de la Reserva per a inversions a les Canàries
+              help: Indiqueu l'import de la Reserva per a inversions a les Canàries
                 de 2022 encara pendent de materialitzar.
               label: 'Reserva per a inversions a les Canàries 2022: pendent de materialitzar'
             '0742':
-              help: Indiqueu l’import de les dotacions a la Reserva per a inversions
+              help: Indiqueu l'import de les dotacions a la Reserva per a inversions
                 a les Canàries corresponent a 2023.
               label: 'Reserva per a inversions a les Canàries 2023: import de les
                 dotacions'
             '0743':
               help: Indiqueu les inversions de 2023 de la Reserva per a inversions
-                a les Canàries previstes a les lletres A, B, B bis i D (1r) de l’article
+                a les Canàries previstes a les lletres A, B, B bis i D (1r) de l'article
                 27.4.
               label: 'Reserva per a inversions a les Canàries 2023: inversions previstes
-                a les lletres A, B, B bis i D (1r) de l’art. 27.4'
+                a les lletres A, B, B bis i D (1r) de l''art. 27.4'
             '0744':
               help: Indiqueu les inversions de 2023 de la Reserva per a inversions
-                a les Canàries previstes a les lletres C i D (2n a 6è) de l’article
+                a les Canàries previstes a les lletres C i D (2n a 6è) de l'article
                 27.4.
               label: 'Reserva per a inversions a les Canàries 2023: inversions previstes
-                a les lletres C i D (2n a 6è) de l’art. 27.4'
+                a les lletres C i D (2n a 6è) de l''art. 27.4'
             '0745':
-              help: Indiqueu l’import de la Reserva per a inversions a les Canàries
+              help: Indiqueu l'import de la Reserva per a inversions a les Canàries
                 de 2023 encara pendent de materialitzar.
               label: 'Reserva per a inversions a les Canàries 2023: pendent de materialitzar'
             '0746':
-              help: Indiqueu l’import de les dotacions a la Reserva per a inversions
+              help: Indiqueu l'import de les dotacions a la Reserva per a inversions
                 a les Canàries corresponent a 2024.
               label: 'Reserva per a inversions a les Canàries 2024: import de les
                 dotacions'
             '0747':
               help: Indiqueu les inversions de 2024 de la Reserva per a inversions
-                a les Canàries previstes a les lletres A, B, B bis i D (1r) de l’article
+                a les Canàries previstes a les lletres A, B, B bis i D (1r) de l'article
                 27.4.
               label: 'Reserva per a inversions a les Canàries 2024: inversions previstes
-                a les lletres A, B, B bis i D (1r) de l’art. 27.4'
+                a les lletres A, B, B bis i D (1r) de l''art. 27.4'
             0748:
               help: Indiqueu les inversions de 2024 de la Reserva per a inversions
-                a les Canàries previstes a les lletres C i D (2n a 6è) de l’article
+                a les Canàries previstes a les lletres C i D (2n a 6è) de l'article
                 27.4.
               label: 'Reserva per a inversions a les Canàries 2024: inversions previstes
-                a les lletres C i D (2n a 6è) de l’art. 27.4'
+                a les lletres C i D (2n a 6è) de l''art. 27.4'
             0749:
-              help: Indiqueu l’import de la Reserva per a inversions a les Canàries
+              help: Indiqueu l'import de la Reserva per a inversions a les Canàries
                 de 2024 encara pendent de materialitzar.
               label: 'Reserva per a inversions a les Canàries 2024: pendent de materialitzar'
             '0750':
               help: Indiqueu les inversions anticipades de futures dotacions a la
                 RIC efectuades el 2024 segons les lletres A, B, B bis i D (1r) de
-                l’article 27.4.
+                l'article 27.4.
               label: 'Inversions anticipades de futures dotacions a la RIC efectuades
                 el 2024: inversions previstes a les lletres A, B, B bis i D (1r) de
-                l’art. 27.4'
+                l''art. 27.4'
             '0751':
               help: Indiqueu les inversions anticipades de futures dotacions a la
-                RIC efectuades el 2024 segons les lletres C i D (2n a 6è) de l’article
+                RIC efectuades el 2024 segons les lletres C i D (2n a 6è) de l'article
                 27.4.
               label: 'Inversions anticipades de futures dotacions a la RIC efectuades
-                el 2024: inversions previstes a les lletres C i D (2n a 6è) de l’art.
+                el 2024: inversions previstes a les lletres C i D (2n a 6è) de l''art.
                 27.4'
             '0752':
-              help: Indiqueu l’import aplicat en aquesta declaració per deduccions
-                acollides al règim general de la Llei de l’impost sobre societats.
+              help: Indiqueu l'import aplicat en aquesta declaració per deduccions
+                acollides al règim general de la Llei de l'impost sobre societats.
             '0753':
-              help: Indiqueu l’import aplicat en aquesta declaració en règims especials
-                de suport a esdeveniments d’excepcional interès públic.
+              help: Indiqueu l'import aplicat en aquesta declaració en règims especials
+                de suport a esdeveniments d'excepcional interès públic.
             '0754':
-              help: Indiqueu l’import aplicat en aquesta declaració per activitats
-                de recerca i desenvolupament segons l’article 35.1 de la LIS.
+              help: Indiqueu l'import aplicat en aquesta declaració per activitats
+                de recerca i desenvolupament segons l'article 35.1 de la LIS.
             '0755':
-              help: Indiqueu l’import de la deducció per al productor aplicat en aquesta
+              help: Indiqueu l'import de la deducció per al productor aplicat en aquesta
                 declaració per inversions en produccions cinematogràfiques i sèries
-                audiovisuals espanyoles segons l’article 36.1 de la LIS.
+                audiovisuals espanyoles segons l'article 36.1 de la LIS.
             '0756':
-              help: Indiqueu l’import aplicat en aquesta declaració per creació d’ocupació
-                per a treballadors amb discapacitat segons l’article 38 de la LIS.
+              help: Indiqueu l'import aplicat en aquesta declaració per creació d'ocupació
+                per a treballadors amb discapacitat segons l'article 38 de la LIS.
             0758:
-              help: Indiqueu l’import aplicat en aquesta declaració per inversió en
+              help: Indiqueu l'import aplicat en aquesta declaració per inversió en
                 beneficis només quan sigui aplicable la condició font del pla especial
-                d’inversió.
+                d'inversió.
               label: 'Per inversió en beneficis (art. 37 del TRLIS, DT 24a LIS) (només
-                si existeix un pla especial d’inversió aprovat per l’Administració
+                si existeix un pla especial d''inversió aprovat per l''Administració
                 que permeti invertir en aquest exercici): aplicat en aquesta declaració'
             0759:
-              help: Indiqueu l’import aplicat en aquesta declaració per inversions
-                en territoris de l’Àfrica Occidental segons l’article 27.1.a) bis
+              help: Indiqueu l'import aplicat en aquesta declaració per inversions
+                en territoris de l'Àfrica Occidental segons l'article 27.1.a) bis
                 de la Llei 19/1994.
-              label: 'Deducció per inversions en territoris de l’Àfrica Occidental
+              label: 'Deducció per inversions en territoris de l''Àfrica Occidental
                 (art. 27.1.a) bis de la Llei 19/1994): aplicat en aquesta declaració'
             '0761':
               help: Indiqueu l'import aplicat en aquesta declaració per la deducció
@@ -13257,6 +13509,8 @@ modelo:
                 a l'exercici 2023.
               label: 'Exercici 2023: pendent d''aplicació en exercicis futurs'
             '1283':
+              help: Consigneu o reviseu la informació fiscal a la casella per completar
+                aquesta autoliquidació.
               label: Saldo negatiu dels rendiments del capital mobiliari imputables
                 al 2024, a integrar en la base imposable de l'estalvi, pendents de
                 compensació en els 4 exercicis següents (caselles [0430] - [0436])
@@ -14017,7 +14271,7 @@ modelo:
               help: Introduïu el rendiment base del producte.
             '1524':
               help: Introduïu els ingressos íntegres de les plantes tèxtils.
-              label: 'Plantes textiles: Ingressos íntegres'
+              label: 'Plantes tèxtils: Ingressos íntegres'
             '1525':
               help: Introduïu l'índex.
             '1526':
@@ -14025,7 +14279,7 @@ modelo:
             '1527':
               help: Introduïu els ingressos íntegres de les activitats accessòries
                 realitzades per agricultors, ramaders o titulars d'activitats forestals.
-              label: 'Activitats accesorias realitzades per agricultors, ramaders
+              label: 'Activitats accessòries realitzades per agricultors, ramaders
                 o titulars d''activitats forestals: Ingressos íntegres'
             '1528':
               help: Introduïu l'índex.
@@ -14572,7 +14826,7 @@ modelo:
               help: Introduïu el NIF de la persona contractada o centre de dia.
               label: NIF de la persona contractada o centre de dia
             '1717':
-              help: Introduïu l’import de "Programa Esport Inclusiu II" aplicat en
+              help: Introduïu l'import de "Programa Esport Inclusiu II" aplicat en
                 aquesta declaració.
             '1718':
               help: Introduïu l'import per naixement de la casella [1990] de l'annex
@@ -15472,8 +15726,8 @@ modelo:
           construct:
             renta-dependent-modelos:
               field:
-                title: Modelo 100 2024 retencions, pagaments fraccionats and withholding
-                  cross-modelo inputs
+                title: Modelo 100 2024 retencions, pagaments fraccionats i retencions
+                  d'altres models relacionats
             renta-final-settlement:
               field:
                 title: Model 100 2024 resultat final de la liquidació
@@ -15482,7 +15736,7 @@ modelo:
                 title: Modelo 100 2024 estimació directa aggregators
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2024 estimació objetiva aggregators
+                title: Modelo 100 2024 estimació objectiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2024 base imposable / base liquidable / quota aggregators
@@ -15801,14 +16055,14 @@ modelo:
             '0255':
               label: Per adquisició de vehicles elèctrics nous
             '0266':
-              label: Ajuts públics als titulars de béns integrants del Patrimoni Històric
-                Espanyol destinats a la seva conservació o rehabilitació. Import imputable
-                a 2025 (empleneu l'Annex C.1)(*)
+              label: Ajudes públiques als titulars de béns integrants del Patrimoni
+                Històric Espanyol destinades a la seva conservació o rehabilitació.
+                Import imputable a 2025 (empleneu l'Annex C.1)(*)
             0279:
               label: Ajuts públics per a la primera instal·lació de joves agricultors
                 previstos en el Marc Nacional de Desenvolupament Rural destinats a
                 l'adquisició d'una participació en el capital d'empreses agrícoles.
-                Import imputable a 2025 (empleneu l'Annex C.1) (*)
+                Import imputable a 2025 (emplenar l'Annex C.1) (*)
             0286:
               label: Import computable ([0283] + [0284] - [0285])
             0288:
@@ -15821,14 +16075,14 @@ modelo:
               label: Subvencions per a l'adquisició d'habitatges de protecció oficial
                 o de preu taxat. Import imputable a 2025 (emplenar l'Annex C.1) (*)
             '0300':
-              label: Altres subvencions o ajuts destinades a l'adquisició o rehabilitació
+              label: Altres subvencions o ajuts destinats a l'adquisició o rehabilitació
                 de l'habitatge habitual o a la reparació de defectes estructurals
-                en la mateixa. Import imputable a 2025 (emplenar l'Annex C.1) (*)
+                en aquest. Import imputable a 2025 (emplenar l'Annex C.1) (*)
             '0301':
               label: Resta guanys patrimonials derivades d'ajuts públiques.
             '0302':
               label: Guanys patrimonials obtingudes pels veïns en 2025 com conseqüència
-                d'aprofitaments forestals en boscos públicos
+                d'aprofitaments forestals en boscos públics
             '0304':
               label: 'Altres guanys i/o pèrdues patrimonials imputables a 2025: Import
                 guanys'
@@ -16053,7 +16307,8 @@ modelo:
             '0460':
               label: Base imposable de l'estalvi calculada segons les caselles ([0424],
                 [0436], [0439], [0440], [0441], [0442], [0443], [0444], [0445], [0447],
-                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455])
+                [0429], [0446], [0449], [0450], [0451], [0452], [0453], [0454], [0455],
+                [0448])
             '0472':
               label: Excessos pendents de reduir procedents dels exercicis 2020 a
                 2024 per aportacions realitzades per la persona amb discapacitat (emplenar
@@ -16165,9 +16420,6 @@ modelo:
             0579:
               label: 'Import de les deduccions autonòmiques a les que es ha perdut
                 el dret en 2025: Part autonòmica'
-            0581:
-              help: 'Indiqueu o reviseu «Interessos de demora corresponents a les
-                deduccions anteriors: Part autonòmica» per completar aquesta autoliquidació.'
             0584:
               label: 'Per residència habitual i efectiva en l''illa de La Palma (import
                 d''aquestes caselles de l''annex A.6): Part autonòmica'
@@ -16261,7 +16513,7 @@ modelo:
                 de la tramitació d'autoliquidacions anteriors o liquidacions administratives
                 corresponents a l'exercici 2025
             '0706':
-              label: '\"Barcelona Music Lab. El Futur de la Música\": Aplicat en aquesta
+              label: '"Barcelona Music Lab. El Futur de la Música\": Aplicat en aquesta
                 declaració'
             0729:
               label: Quotes de l'Impost sobre la Renda de no Residents corresponents
@@ -16406,7 +16658,7 @@ modelo:
               label: '\"Gran Premio d''Espanya de Motociclismo\": Aplicat en aquesta
                 declaració'
             0798:
-              label: '\"Esport Inclusivo III\": Aplicat en aquesta declaració'
+              label: '"Esport Inclusiu III": Aplicat en aquesta declaració'
             0800:
               label: 'Import de deduccions per inversió en habitatge habitual que
                 tingui la consideració de protegida (amb dret a aplicació en exercicis
@@ -16414,7 +16666,7 @@ modelo:
             0802:
               label: 'Reserva per a Inversions en Canàries 2025: Any de la dotació'
             0803:
-              label: Per naixement o adopció de segon i successius fills en concejos
+              label: Per naixement o adopció de segon i successius fills en municipis
                 en risc de despoblament o en crisi demogràfica
             0807:
               label: Import generat en 2024 pendent d'aplicació
@@ -16430,7 +16682,7 @@ modelo:
                 propi, o autònoms, en municipis en risc de despoblament o en crisi
                 demogràfica
             0813:
-              label: Per despeses de transporte públic per a residents en concejos
+              label: Per despeses de transporte públic per a residents en municipis
                 en risc de despoblament o en crisi demogràfica
             0814:
               label: 'Per inversió en habitatge habitual que tingui la consideració
@@ -16607,7 +16859,7 @@ modelo:
               label: Per a contribuents que queden vidus en els exercicis 2023, 2024
                 i 2025
             '1008':
-              label: Per inversió per un ángel inversor per l'adquisició d'accions
+              label: Per inversió per un àngel inversor per l'adquisició d'accions
                 o participacions socials d'entitats noves o de creació recent (import
                 de la casella [1136] de l'annex B.11)
             '1016':
@@ -16651,7 +16903,7 @@ modelo:
               label: Per inversions realitzades en entitats cotitzades en el Mercat
                 Alternatiu Borsari (import de la casella [1142] de l'annex B.11)
             '1055':
-              label: Per inversió en instal·lacions de recursos energéticos renovables
+              label: Per inversió en instal·lacions de recursos energètics renovables
                 (Import de la casella [2001] de l'annex B.12)
             '1057':
               label: Per inversió en l'adquisició d'accions i participacions socials
@@ -16666,7 +16918,7 @@ modelo:
                 interès públic, social o econòmic (import de la casella [2083] de
                 l'annex B.13)
             '1078':
-              label: Per despeses derivats de l'adequació d'un immoble vacío amb destinació
+              label: Per despeses derivats de l'adequació d'un immoble buit amb destinació
                 a l'arrendament com habitatge (informació addicional en l'annex B.15)
             '1083':
               label: Per naixement, adopció, delegació de guarda amb finalitats d'adopció
@@ -17079,9 +17331,9 @@ modelo:
                 fruits no cítrics i altres productes agrícoles no compresos expressament
                 en altres números: Ingressos íntegres'
             '1524':
-              label: 'Plantes textiles: Ingressos íntegres'
+              label: 'Plantes tèxtils: Ingressos íntegres'
             '1527':
-              label: 'Activitats accesorias realitzades per agricultors, ramaders
+              label: 'Activitats accessòries realitzades per agricultors, ramaders
                 o titulars d''activitats forestals: Ingressos íntegres'
             '1530':
               help: 'Producte 15: altres treballs i serveis accessoris d''agricultors,
@@ -17258,7 +17510,7 @@ modelo:
                 2023 i 2024
             '1779':
               label: Import amb dret a la deducció per obres realitzades en edificis
-                d'ús predominantemente residencial en 2025
+                d'ús predominantment residencial en 2025
             '1780':
               label: 'Reserva per a Inversions en les Illes Balears 2024: Import de
                 les dotacions'
@@ -17360,7 +17612,7 @@ modelo:
               label: Per lloguer de l'habitatge habitual de víctimes de violència
                 masclista (import de la casella [2213] de l'annex B.15)
             '2003':
-              label: Per inversió en societats cooperativas agràries i d'habitatge
+              label: Per inversió en societats cooperatives agràries i d'habitatge
                 (import de la casella [2172] de l'Annex B.14
             '2004':
               label: Import generat en 2025
@@ -17422,7 +17674,7 @@ modelo:
               label: Per la posada d'habitatges en el mercat d'arrendament d'habitatges
                 habituals (informació addicional en l'annex B.13)
             '2056':
-              label: De quotes satisfetes a organizaciones professionals agràries
+              label: De quotes satisfetes a organitzacions professionals agràries
             '2057':
               label: Per fomentar la fixació de població ocupada al medi rural
             '2058':
@@ -17493,7 +17745,7 @@ modelo:
               label: Per despeses en l'instal·lació d'infraestructures de recàrrega
                 de vehicles elèctrics
             '2158':
-              label: referència cadastral
+              label: Referència cadastral
             '2159':
               label: si no té referència cadastral, marqui amb una 'X' aquesta casella
             '2162':
@@ -17668,7 +17920,7 @@ modelo:
             '2240':
               label: Per l'adquisició de llibres de text i material escolar
             '2241':
-              label: Per les ajuts rebudes per les persones afectadas per la talidomida
+              label: Per les ajuts rebudes per les persones afectades per la talidomida
                 en Espanya durant el període 1950-1985
             '2242':
               label: Per despeses derivats de la malaltia celíaca diagnosticada
@@ -17726,7 +17978,7 @@ modelo:
             ZRUE2:
               label: Cònjuge país de residència UE o EEE
             base-liq-neg-general-2024-aplicada-maxima:
-              label: 'Base liquidable general negativa ej. 2024: compensació máxima
+              label: 'Base liquidable general negativa ej. 2024: compensació màxima
                 aplicable (límit art.. 50.3 LIRPF) [interno]'
             eo-agraria-reduccion-irregularidad-base:
               label: Rendiments nets de l'activitat agrícola, ramadera o forestal
@@ -17744,7 +17996,7 @@ modelo:
                 title: Model 100 resultat final de la liquidació
             renta-mini-model-actividades-economicas-objetiva:
               field:
-                title: Modelo 100 2025 estimació objetiva aggregators
+                title: Modelo 100 2025 estimació objectiva aggregators
             renta-mini-model-base-y-cuota:
               field:
                 title: Modelo 100 2025 base imposable / base liquidable / quota aggregators

@@ -221,7 +221,10 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "LIRPF art. 98: borrador de declaración."
-required_text = ["La Administración tributaria podrá poner a disposición de los"]
+required_text = [
+    "La Administración tributaria podrá poner a disposición de los",
+    "siempre que obtengan rentas procedentes exclusivamente de las siguientes fuentes",
+]
 
 [legal."ley-58-2003:art-98"]
 evidence_tier = "legal_authority"
@@ -324,7 +327,10 @@ review_status = "agent_reviewed"
 reviewed_at = 2026-07-01
 reviewed_by = "verified against bundled corpus; operator to re-stamp"
 notes = "Ley 40/2015 art. 38: la sede electrónica de las Administraciones Públicas."
-required_text = ["La sede electrónica es aquella dirección electrónica, disponible"]
+required_text = [
+    "La sede electrónica es aquella dirección electrónica, disponible",
+    "conlleva la responsabilidad del titular respecto de la integridad",
+]
 
 [sources."aeat-calendario-contribuyente-2022"]
 evidence_tier = "official_source_guidance"

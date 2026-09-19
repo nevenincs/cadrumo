@@ -4,15 +4,25 @@ modelo:
       casilla:
         continuidad:
           capitalizacion-seguros-resumen-base-negativa:
+            help: A negatív alapú kedvezményezettek rekordjaiban feltüntetett levonási
+              és elszámolt előleg alapok összege.
             label: A levonások és előlegfizetések negatív alapja
           capitalizacion-seguros-resumen-base-positiva:
+            help: A pozitív alapú kedvezményezettek rekordjaiban feltüntetett levonási
+              és elszámolt előleg alapok összege.
             label: A levonások és előlegfizetések alapja
           capitalizacion-seguros-resumen-perceptores-base-negativa:
+            help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási és elszámolt
+              előleg alapja negatív.
             label: Negatív adóalappal rendelkező kedvezményezettek teljes száma
           capitalizacion-seguros-resumen-perceptores-base-positiva:
+            help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási és elszámolt
+              előleg alapja pozitív.
             label: Pozitív adóalappal rendelkező kedvezményezettek teljes száma
           capitalizacion-seguros-resumen-retenciones:
-            label: Levonások és előlegfizetések
+            help: A bevallott jövedelmek után teljesített levonások és elszámolt előlegek
+              összege.
+            label: Forrásadó és részletfizetés
       field:
         official_name: Modelo 188. Adóelőleg-levonások és -befizetések. Tőkésítési
           műveletekből, valamint élet- vagy rokkantsági biztosítási szerződésekből
@@ -24,30 +34,14 @@ modelo:
           construct:
             modelo-188-calculation-construct:
               field:
-                title: '188-as modelo: tájékoztató bevallás tőkésítési műveletek és
-                  élet- vagy rokkantsági biztosítások jövedelméről'
+                title: '188-as nyomtatvány: tájékoztató bevallás tőkésítési műveletek
+                  és élet- vagy rokkantsági biztosítások jövedelméről'
           field:
             label: 188-as modelo, 2022. adóév
         2023-y-siguientes:
-          casilla:
-            '01':
-              help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja
-                pozitív.
-            '02':
-              help: A pozitív alappal rendelkező kedvezményezetti rekordokban szereplő
-                levonási alapok összege.
-            '03':
-              help: A bevallott jövedelmekre alkalmazott levonások és előlegfizetések
-                összege.
-            '04':
-              help: Azon kedvezményezettek (rekordok) száma, akiknek a levonási alapja
-                negatív.
-            '05':
-              help: A negatív alappal rendelkező kedvezményezetti rekordokban szereplő
-                levonási alapok összege.
           construct:
             modelo-188-calculation-construct:
               field:
-                title: '188-as modelo: az önadózás számítása'
+                title: '188-as nyomtatvány: az önadózás számítása'
           field:
             label: 1999. november 17-i rendelet, 2019. adóévtől

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import stat
+import sys
 import threading
 import time
 from collections.abc import Generator
@@ -410,48 +411,68 @@ def _write_windows_local_stage(path: Path, payload: bytes) -> None:
 
 
 def _windows_replace_file(*, target: Path, replacement: Path, backup: Path) -> None:
-    import ctypes
-    from ctypes import wintypes
+    """Replace one custody record through ``ReplaceFileW``.
 
-    replace_file = ctypes.WinDLL("kernel32", use_last_error=True).ReplaceFileW
-    replace_file.argtypes = [
-        wintypes.LPCWSTR,
-        wintypes.LPCWSTR,
-        wintypes.LPCWSTR,
-        wintypes.DWORD,
-        ctypes.c_void_p,
-        ctypes.c_void_p,
-    ]
-    replace_file.restype = wintypes.BOOL
-    if replace_file(str(target), str(replacement), str(backup), 0x00000001, None, None):
-        return
-    error = ctypes.get_last_error()
-    raise ProfileCustodyRecordError("local custody record cannot be atomically compare-and-replaced") from OSError(
-        error,
-        "ReplaceFileW",
-    )
+    The ``sys.platform == "win32"`` block, rather than a guard at the call
+    site or an early return, is what establishes the platform for the Windows
+    API below: it is the only guard shape every checker this project runs
+    narrows on, so those references resolve when the tree is analysed for a
+    platform that does not ship them.
+    """
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+
+        replace_file = ctypes.WinDLL("kernel32", use_last_error=True).ReplaceFileW
+        replace_file.argtypes = [
+            wintypes.LPCWSTR,
+            wintypes.LPCWSTR,
+            wintypes.LPCWSTR,
+            wintypes.DWORD,
+            ctypes.c_void_p,
+            ctypes.c_void_p,
+        ]
+        replace_file.restype = wintypes.BOOL
+        if replace_file(str(target), str(replacement), str(backup), 0x00000001, None, None):
+            return
+        error = ctypes.get_last_error()
+        raise ProfileCustodyRecordError("local custody record cannot be atomically compare-and-replaced") from OSError(
+            error,
+            "ReplaceFileW",
+        )
+    raise ProfileCustodyRecordError("ReplaceFileW compare-and-replace is not available on this platform")
 
 
 # info is the ctypes.Structure windows_file_information_type() builds as a
 # function-local class returning type[Any]; ctypes itself types its field
 # ADAPTER-INTERNAL-ALIAS-RATIONALE-WIN32-FILE-INFO: access as Any, so no concrete annotation is nameable here.
 def _windows_read_handle_bounded(*, handle: int, info: Any, maximum_bytes: int) -> bytes:
-    import ctypes
-    from ctypes import wintypes
+    """Read a bounded record from an already-verified Windows handle.
 
-    size = (int(info.nFileSizeHigh) << 32) | int(info.nFileSizeLow)
-    if size < 1 or size > maximum_bytes:
-        raise ProfileCustodyRecordError("local custody record is not a bounded regular file")
-    buffer = ctypes.create_string_buffer(size)
-    read_count = wintypes.DWORD()
-    read_file = ctypes.WinDLL("kernel32", use_last_error=True).ReadFile
-    read_file.argtypes = [wintypes.HANDLE, ctypes.c_void_p, wintypes.DWORD, ctypes.c_void_p, ctypes.c_void_p]
-    read_file.restype = wintypes.BOOL
-    if not read_file(wintypes.HANDLE(handle), buffer, size, ctypes.byref(read_count), None):
-        raise ProfileCustodyRecordError("local custody record cannot be read for compare-and-clear")
-    if read_count.value != size:
-        raise ProfileCustodyRecordError("local custody record changed during compare-and-clear read")
-    return bytes(buffer.raw)
+    The ``sys.platform == "win32"`` block, rather than a guard at the call
+    site or an early return, is what establishes the platform for the Windows
+    API below: it is the only guard shape every checker this project runs
+    narrows on, so those references resolve when the tree is analysed for a
+    platform that does not ship them.
+    """
+    if sys.platform == "win32":
+        import ctypes
+        from ctypes import wintypes
+
+        size = (int(info.nFileSizeHigh) << 32) | int(info.nFileSizeLow)
+        if size < 1 or size > maximum_bytes:
+            raise ProfileCustodyRecordError("local custody record is not a bounded regular file")
+        buffer = ctypes.create_string_buffer(size)
+        read_count = wintypes.DWORD()
+        read_file = ctypes.WinDLL("kernel32", use_last_error=True).ReadFile
+        read_file.argtypes = [wintypes.HANDLE, ctypes.c_void_p, wintypes.DWORD, ctypes.c_void_p, ctypes.c_void_p]
+        read_file.restype = wintypes.BOOL
+        if not read_file(wintypes.HANDLE(handle), buffer, size, ctypes.byref(read_count), None):
+            raise ProfileCustodyRecordError("local custody record cannot be read for compare-and-clear")
+        if read_count.value != size:
+            raise ProfileCustodyRecordError("local custody record changed during compare-and-clear read")
+        return bytes(buffer.raw)
+    raise ProfileCustodyRecordError("handle-bounded record reads are not available on this platform")
 
 
 def clear_profile_custody_local_record(path: Path) -> None:

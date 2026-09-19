@@ -286,8 +286,7 @@ modelo:
                 title: 'Modelo 309 histórico: declaración-liquidación no periódica
                   (2004-2015)'
           field:
-            label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
-              primero y tercero). Ad-hoc por trigger de obligacion no periodica.
+            label: Modelo 309, ejercicios 2004 a 2015
         2016-2017:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -393,8 +392,7 @@ modelo:
               field:
                 title: Modelo 309 IVA declaración-liquidación no periódica
           field:
-            label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
-              primero y tercero). Ad-hoc por trigger de obligacion no periodica.
+            label: Modelo 309, ejercicios 2016 a 2017
         2018-2022:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -510,8 +508,7 @@ modelo:
               field:
                 title: Modelo 309 IVA declaración-liquidación no periódica
           field:
-            label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
-              primero y tercero). Ad-hoc por trigger de obligacion no periodica.
+            label: Modelo 309, ejercicios 2018 a 2022
         2023-y-siguientes:
           casilla:
             x-chim6r1ec4mm8pb4elhmishd68pg:
@@ -627,5 +624,4 @@ modelo:
               field:
                 title: Modelo 309 IVA declaración-liquidación no periódica
           field:
-            label: Modelo 309 ejercicios 2004 y siguientes (Orden HAC/3625/2003 apartados
-              primero y tercero). Ad-hoc por trigger de obligacion no periodica.
+            label: Modelo 309, ejercicios 2023 y siguientes

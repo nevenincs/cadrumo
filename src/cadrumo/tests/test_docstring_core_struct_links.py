@@ -23,6 +23,7 @@ from __future__ import annotations
 import ast
 import re
 from collections import defaultdict
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -229,8 +230,14 @@ _MINIMUM_MODULES_SCANNED = 400
 _MINIMUM_DOTTED_ROLES_EXAMINED = 50
 
 
-def _module_file_for(parts: list[str]) -> Path | None:
-    """Return the file backing a dotted module path, or ``None`` if there is none."""
+@cache
+def _module_file_for(parts: tuple[str, ...]) -> Path | None:
+    """Return the file backing a dotted module path, or ``None`` if there is none.
+
+    Cached, and keyed on a tuple so it can be: every dotted target probes its
+    own prefixes, and the same prefixes recur across the whole corpus. Uncached
+    this was 46,733 filesystem stats for 2,158 distinct targets.
+    """
     package_init = SRC_CADRUMO.joinpath(*parts, "__init__.py")
     if package_init.is_file():
         return package_init
@@ -238,8 +245,16 @@ def _module_file_for(parts: list[str]) -> Path | None:
     return module_file if module_file is not None and module_file.is_file() else None
 
 
-def _defined_names(path: Path) -> set[str] | None:
-    """Return locally defined names, or ``None`` when the module is unparseable."""
+@cache
+def _defined_names(path: Path) -> frozenset[str] | None:
+    """Return locally defined names, or ``None`` when the module is unparseable.
+
+    Cached because a module is re-examined once per dotted reference that lands
+    on it, and the tree does not change within a run. Uncached, the corpus's
+    5,090 references re-parsed their owning modules 5,090 times -- 13.9 s of the
+    scan's 25 s, for a few hundred distinct files. Returned frozen because the
+    memo hands every caller the same object.
+    """
     try:
         tree = ast.parse(path.read_text(encoding="utf-8", errors="replace"))
     except SyntaxError:
@@ -254,9 +269,10 @@ def _defined_names(path: Path) -> set[str] | None:
             names.add(node.target.id)
         elif isinstance(node, ast.TypeAlias):
             names.add(node.name.id)
-    return names
+    return frozenset(names)
 
 
+@cache
 def _owning_module(target: str) -> tuple[Path, str] | None:
     """Return ``(module_file, symbol)`` for an in-repo dotted target, else ``None``.
 
@@ -265,7 +281,7 @@ def _owning_module(target: str) -> tuple[Path, str] | None:
     a package does not re-export its own submodules through ``__all__``, so
     checking those would flag every module reference in the tree.
     """
-    parts = target.split(".")
+    parts = tuple(target.split("."))
     if parts and parts[0] == "cadrumo":
         parts = parts[1:]
     if len(parts) < 2 or _module_file_for(parts) is not None:
@@ -277,6 +293,7 @@ def _owning_module(target: str) -> tuple[Path, str] | None:
     return None
 
 
+@cache
 def _unresolved_reference(target: str) -> tuple[Path, str] | None:
     """Return the owning module and symbol when a dotted target does not resolve."""
     owned = _owning_module(target)

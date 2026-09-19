@@ -6,52 +6,24 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.core.hashing import sha256_hex
-from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
-from cadrumo.domain.calculations.registry.authority_artifact import (
-    AuthorityArtifact,
-    AuthorityBuildIdentity,
-    AuthorityEvidenceProjection,
-)
-from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import (
-    minimal_catalogues,
-    minimal_modelo,
-    minimal_revision,
-)
 
-from ..compiler.profile_schema import capture_profile_schema
 from ..pipeline.authority_publication import install_validated_authority_database
+from ._authority_generation_support import publishable_artifact
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain, pytest.mark.windows_only]
 
 
-def _artifact(label: str) -> AuthorityArtifact:
-    build = AuthorityBuildIdentity.from_inputs(
-        sha256_hex(f"source:{label}".encode()),
-        sha256_hex(b"compiler"),
-    )
-    profile = capture_profile_schema(bundled_path("registry", "cadrumo", "user_profile", "schema.toml"))[1].model_copy(
-        update={"title": f"Profile schema {label}"}
-    )
-    return AuthorityArtifact(
-        modelos=(minimal_modelo(minimal_revision()),),
-        catalogues=minimal_catalogues(),
-        identity_digest=build.identity_digest,
-        build_identity=build,
-        evidence=AuthorityEvidenceProjection(),
-        profile_schema=profile,
-    )
-
-
 def test_held_reader_finishes_across_atomic_descriptor_cutover(tmp_path: Path) -> None:
-    first = install_validated_authority_database(_artifact("first"), destination=tmp_path, require_current=lambda: None)
+    first = install_validated_authority_database(
+        publishable_artifact("first"), destination=tmp_path, require_current=lambda: None
+    )
     authority = IndexedRegistryAuthority(tmp_path / "authority.current.json")
     try:
         with authority.operation() as held:
             assert held.profile_schema().title == "Profile schema first"
             second = install_validated_authority_database(
-                _artifact("second"),
+                publishable_artifact("second"),
                 destination=tmp_path,
                 require_current=lambda: None,
             )
@@ -65,13 +37,15 @@ def test_held_reader_finishes_across_atomic_descriptor_cutover(tmp_path: Path) -
 
 def test_retired_database_cleanup_is_deferred_until_held_reader_closes(tmp_path: Path) -> None:
     """A held generation survives cutover and is retired by a later publication."""
-    first = install_validated_authority_database(_artifact("first"), destination=tmp_path, require_current=lambda: None)
+    first = install_validated_authority_database(
+        publishable_artifact("first"), destination=tmp_path, require_current=lambda: None
+    )
     authority = IndexedRegistryAuthority(tmp_path / "authority.current.json")
     first_path = tmp_path / first.database
     try:
         with authority.operation() as held:
             second = install_validated_authority_database(
-                _artifact("second"),
+                publishable_artifact("second"),
                 destination=tmp_path,
                 require_current=lambda: None,
             )
@@ -80,7 +54,9 @@ def test_retired_database_cleanup_is_deferred_until_held_reader_closes(tmp_path:
     finally:
         authority.close()
 
-    third = install_validated_authority_database(_artifact("third"), destination=tmp_path, require_current=lambda: None)
+    third = install_validated_authority_database(
+        publishable_artifact("third"), destination=tmp_path, require_current=lambda: None
+    )
     assert not first_path.exists()
     assert not (tmp_path / second.database).exists()
     assert (tmp_path / third.database).is_file()

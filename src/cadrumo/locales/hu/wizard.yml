@@ -9,7 +9,7 @@ wizard:
       created: létrehozva
       saved: mentve
       unchanged: változatlan
-      updated: frissitett
+      updated: frissített
   demo:
     description: Bemutató szekció a varázslófunkció teszteléséhez
     section:
@@ -280,10 +280,10 @@ wizard:
       title: Családi egység
     filing-export:
       charge-iban:
-        help: Az IBAN, amelyet az AEAT megterhelhet, ha a 303-as modell bevallasa
-          csoportos beszedest valaszt. Ez kulonbozik a visszateritesi szamlatol.
-        prompt: IBAN az AEAT csoportos beszedesehez
-      title: A 303-as modell beszedesi szamlaja
+        help: Az IBAN, amelyet az AEAT megterhelhet, ha a 303-as modell bevallása
+          csoportos beszedést választ. Ez különbözik a visszatérítési számlától.
+        prompt: IBAN az AEAT csoportos beszedéséhez
+      title: A 303-as modell beszedési számlája
     flags:
       activity:
         help: Gazdasági tevékenység egyszerű szövegként, vagy IAE fejezet, ha ismeri
@@ -300,7 +300,7 @@ wizard:
       bienes-extranjero-above-threshold:
         help: Külföldi vagyon meghaladja a jogszabályi küszöbértéket
       charge-iban:
-        help: IBAN, amelyet az AEAT megterhelhet a 303-as modell valasztott beszedesehez.
+        help: IBAN, amelyet az AEAT megterhelhet a 303-as modell választott beszedéséhez.
       cloud-evidence-upload:
         help: Érzékeny bizonylatok feltöltésének engedélyezése felhő LLM-szolgáltatókhoz
           (alapból kikapcsolva).
@@ -334,11 +334,11 @@ wizard:
         help: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
       incn-prior-12-months:
         help: Nettó árbevétel (importe neto de la cifra de negocios) az előző 12 hónapban,
-          euróban. 6 000 000 EUR felett a Modelo 202 az LIS 40.3. cikkely szerinti
-          módozatot írja elő; alatta mindkét módozat választható. Opcionális.
+          euróban. 6 000 000 EUR felett a 202-es nyomtatvány az LIS 40.3. cikkely
+          szerinti módozatot írja elő; alatta mindkét módozat választható. Opcionális.
       irpf-estimation-regime:
         help: A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza,
-          hogy Modelo 130 vagy 131 alkalmazandó-e
+          hogy a 130-as vagy 131-es nyomtatvány alkalmazandó-e
       irpf-income-categories:
         help: IRPF jövedelemkategória; adja meg a --irpf-income-categories kapcsolót
           kategóriánként egyszer
@@ -354,15 +354,16 @@ wizard:
       iva-cash-accounting-regime-enrolled:
         help: Az IVA pénzforgalmi különös szabályozásába való bejelentkezés megadása.
       iva-group-dominant-entity-enrolled:
-        help: IVA-csoport dominans szervezetekent bejelentkezett
+        help: IVA-csoport domináns szervezeteként bejelentkezett
       iva-group-member-enrolled:
-        help: IVA-csoport tag szervezetekent bejelentkezett
+        help: IVA-csoport tag szervezeteként bejelentkezett
       iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
         help: Nyilatkozzon a szénhidrogén-adóraktári előlegek levonására való jogosultságról.
       iva-intracommunity-operations-exceed-50000-eur:
         help: Intraközösségi ügyletek meghaladják az 50 000 EUR-t
       iva-m303-regime-composition:
-        help: 'Modelo 303 rendszerösszetétel: általános, egyszerűsített vagy vegyes.'
+        help: '303-es nyomtatvány rendszerösszetétel: általános, egyszerűsített vagy
+          vegyes.'
       iva-oss-enrolled:
         help: OSS-be bejelentkezett
       iva-redeme-enrolled:
@@ -395,11 +396,11 @@ wizard:
       llm-vision:
         help: Helyi LLM-látás engedélyezése a számlák beolvasásához.
       modelo-111-no-retenciones-periods:
-        help: Vesszővel elválasztott Modelo 111 nem kötelezett időszakok, ÉÉÉÉ:IDŐSZAK
-          formátumban (például 2025:2T,2025:3T). Csak akkor használja, ha nem történt
-          forrásadó-köteles kifizetés.
+        help: Vesszővel elválasztott 111-es nyomtatvány nem kötelezett időszakok,
+          ÉÉÉÉ:IDŐSZAK formátumban (például 2025:2T,2025:3T). Csak akkor használja,
+          ha nem történt forrásadó-köteles kifizetés.
       monedas-virtuales-extranjero-above-threshold:
-        help: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
+        help: Külföldi virtuális valuták meghaladják a 721-es nyomtatvány küszöbértékét
       name:
         help: A helyi áttekintésekben megjelenő megjelenítési név
       new-entity-first-two-profit-periods:
@@ -511,7 +512,8 @@ wizard:
       taxpayer-sex:
         help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:
-        help: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
+        help: Harmadik féllel folytatott ügyletek meghaladják a 347-es nyomtatvány
+          küszöbértékét
     format:
       amount-eur: Összeg euróban, tizedesponttal, pl. 50000.00.
       date-iso: Dátum ÉÉÉÉ-HH-NN formátumban, pl. 2024-03-01.
@@ -533,9 +535,9 @@ wizard:
       iva-cash-accounting-regime-enrolled:
         prompt: Be van jelentkezve az IVA pénzforgalmi különleges rendszerébe?
       iva-group-dominant-entity-enrolled:
-        prompt: IVA-csoport dominans szervezetekent bejelentkezett
+        prompt: IVA-csoport domináns szervezeteként bejelentkezett
       iva-group-member-enrolled:
-        prompt: IVA-csoport tag szervezetekent bejelentkezett
+        prompt: IVA-csoport tag szervezeteként bejelentkezett
       iva-hydrocarbon-deposit-advance-payment-deduction-entitled:
         prompt: Jogosult a szénhidrogén-adóraktári előlegek levonására?
       iva-intracommunity-operations-exceed-50000-eur:
@@ -560,7 +562,7 @@ wizard:
             label: Vegyes rendszerek
           simplified:
             label: Csak egyszerűsített rendszer
-        prompt: Melyik Modelo 303 rendszerösszetétel alkalmazandó?
+        prompt: Melyik 303-es nyomtatvány rendszerösszetétel alkalmazandó?
       title: IVA
     notes:
       notes:
@@ -591,7 +593,7 @@ wizard:
               számítódik, csak a felsorolt tevékenységekre.'
             label: Objektív becslés (módszerek)
         help: A gazdasági tevékenység nettó jövedelmének meghatározási módja; meghatározza,
-          hogy Modelo 130 vagy 131 alkalmazandó-e
+          hogy a 130-as vagy 131-es nyomtatvány alkalmazandó-e
         prompt: IRPF becslési rend
       irpf-special-regime:
         choices:
@@ -608,10 +610,10 @@ wizard:
         prompt: A különleges adózási rend kezdőnapja (ÉÉÉÉ-HH-NN)
       modelo-111-no-retenciones-periods:
         help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt retención vagy ingreso a
-          cuenta alá eső kifizetés, ezért nem nyújtandó be üres Modelo 111.
-        prompt: Modelo 111 forrásadó nélküli időszakok
+          cuenta alá eső kifizetés, ezért nem nyújtandó be üres 111-es nyomtatvány.
+        prompt: 111-es nyomtatvány forrásadó nélküli időszakok
       monedas-virtuales-extranjero-above-threshold:
-        prompt: Külföldi virtuális valuták meghaladják a Modelo 721 küszöbértékét
+        prompt: Külföldi virtuális valuták meghaladják a 721-es nyomtatvány küszöbértékét
       objective-estimation-modulos-iae-epigraph:
         help: Évente egyszer kerül a profilba. Az együtthatók továbbra is a modellnyilvántartásban
           maradnak.
@@ -643,8 +645,9 @@ wizard:
       professional-income-withholding-ge-70pct:
         prompt: A szakmai jövedelmek legalább 70%-a előzetes forrásadóval terhelt
       third-party-transactions-above-347-threshold:
-        prompt: Harmadik féllel folytatott ügyletek meghaladják a Modelo 347 küszöbértékét
-      title: Modelo kötelezettségek
+        prompt: Harmadik féllel folytatott ügyletek meghaladják a 347-es nyomtatvány
+          küszöbértékét
+      title: Nyomtatvány kötelezettségek
     preferencias:
       title: Beállítások és képességek
     profile:
@@ -666,7 +669,7 @@ wizard:
             label: Mentes
           general:
             description: 'Általános IVA: az értékesítésre IVA-t számít fel, a beszerzések
-              IVA-ja levonható, negyedéves Modelo 303.'
+              IVA-ja levonható, negyedéves 303-es nyomtatvány.'
             label: Általános adózási rend
           reagp:
             description: 'Mezőgazdasági, állattenyésztési és halászati különös szabályozás
@@ -756,7 +759,7 @@ wizard:
         choices:
           non-resident-irnr:
             description: 'Nem rezidens: csak a spanyol forrású jövedelem adózik IRNR
-              szerint (Modelo 210), és adóügyi képviselő lehet szükséges.'
+              szerint (210-es nyomtatvány), és adóügyi képviselő lehet szükséges.'
             label: Nem rezidens – IRNR (RDLeg 5/2004)
           resident-irpf:
             description: 'Spanyol adóügyi illetőség (183+ nap vagy érdekközpont):
@@ -904,15 +907,15 @@ wizard:
           vagy jövedelemattribúciós szervezet
         prompt: Entitástípus
       incn-prior-12-months:
-        help: Erre azért van szükségünk, hogy meghatározzuk, hogy a Modelo 202 az
-          LIS 40.3. cikkely szerinti módozatot írja-e elő (6 000 000 EUR felett).
+        help: Erre azért van szükségünk, hogy meghatározzuk, hogy a 202-es nyomtatvány
+          az LIS 40.3. cikkely szerinti módozatot írja-e elő (6 000 000 EUR felett).
           Hagyja üresen, ha nem tudja.
         prompt: Mi volt a nettó árbevétele az elmúlt 12 hónapban? (euróban, opcionális)
       irpf-income-categories:
         choices:
           actividad-economica:
-            description: Önálló gazdasági vagy szakmai tevékenység - negyedéves Modelo
-              130 és IVA kötelezettségekkel jár.
+            description: Önálló gazdasági vagy szakmai tevékenység - negyedéves 130-as
+              nyomtatvány és IVA kötelezettségekkel jár.
             label: Gazdasági tevékenység
           capital-inmobiliario:
             description: Ingatlan-bérbeadásból származó jövedelem.
@@ -932,7 +935,7 @@ wizard:
               származó bér vagy nyugdíj.'
             label: Munkaviszonyból származó jövedelem
         help: Válassza ki az összes IRPF jövedelemkategóriát; csak a gazdasági tevékenység
-          vált ki Modelo 130/131 kötelezettséget
+          vált ki 130-as/131-es nyomtatvány kötelezettséget
         prompt: IRPF jövedelemkategóriák
       legal-entity-form:
         choices:

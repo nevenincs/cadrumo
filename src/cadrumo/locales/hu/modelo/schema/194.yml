@@ -6,7 +6,7 @@ modelo:
           capital-ajeno-resumen-base-negativa:
             help: A negatív alappal rendelkező kedvezményezetti rekordok levonási
               alapjainak összege.
-            label: A levonások és előlegfizetések negatív alapja
+            label: A forrásadók és adóelőlegek negatív alapja
           capital-ajeno-resumen-base-positiva:
             help: A pozitív alappal rendelkező kedvezményezetti rekordok levonási
               alapjainak összege.
@@ -22,11 +22,11 @@ modelo:
           capital-ajeno-resumen-retenciones:
             help: A bevallott jövedelmekre alkalmazott levonások és előlegfizetések
               összege.
-            label: Levonások és előlegfizetések
+            label: Forrásadó és részletfizetés
       construct:
         modelo-194-calculation-construct:
           field:
-            title: '194-es modelo: a tőkejövedelmek forrásadójának éves összesítője'
+            title: '194-es nyomtatvány: a tőkejövedelmek forrásadójának éves összesítője'
       field:
         official_name: Modelo 194. A magánszemélyek jövedelemadója, a társasági adó
           és a külföldi illetőségűek jövedelemadója (állandó telephelyek). Tőkejövedelmekre,

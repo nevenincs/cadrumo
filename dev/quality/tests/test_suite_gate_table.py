@@ -57,6 +57,12 @@ _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
         "check-locales",
         "check-docs-api",
         "check-docs-synonyms",
+        # Registry capability checks, like the check-registry family above.
+        "check-bindings",
+        # Third-party security scanners fetched by uvx; the portable code
+        # aggregate runs no network-fetched tool.
+        "check-security-full",
+        "check-workflow-security",
     }
 )
 
@@ -84,14 +90,32 @@ _CODE_GATES: Final[frozenset[str]] = frozenset(
 #: Tokens that name HOW a gate is launched rather than WHAT it checks. The
 #: justfile goes through the quiet wrapper and the suite calls the interpreter
 #: directly, so these differ by construction and are not drift.
+#: The module every recorded run is launched through; its own arguments end
+#: at the ``--`` separator.
+_TEST_RUN_LAUNCHER: Final[str] = "dev.test_runs.command"
+
 _RUNNER_TOKENS: Final[frozenset[str]] = frozenset(
     {"@uv", "uv", "run", "--no-sync", "python", "-m", "dev.quality.quiet", "@"}
 )
 
 
+def _without_test_run_wrapper(tokens: list[str]) -> list[str]:
+    """Drop the test-run launcher prefix, keeping the command it launches.
+
+    A recipe routed through ``dev.test_runs.command`` states its family, label
+    and signal before the ``--`` separator. Those name HOW the run is recorded,
+    not WHAT is checked, so the suite calling the same module directly is not
+    drift.
+    """
+    if _TEST_RUN_LAUNCHER not in tokens or "--" not in tokens:
+        return tokens
+    return tokens[tokens.index("--") + 1 :]
+
+
 def _significant(tokens: list[str]) -> list[str]:
     """Strip launcher tokens, leaving the arguments that decide what is checked."""
-    kept = [token for token in tokens if token not in _RUNNER_TOKENS and not token.endswith("python.exe")]
+    unwrapped = _without_test_run_wrapper(tokens)
+    kept = [token for token in unwrapped if token not in _RUNNER_TOKENS and not token.endswith("python.exe")]
     # The justfile carries shell quoting the argv list does not; a quoted regex
     # and its bare twin are the same argument.
     return [token.strip('"').strip("'") for token in kept]
