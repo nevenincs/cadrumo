@@ -172,6 +172,12 @@ def activate_profile_session(
     # gate below. Otherwise an unsupported modelo is answered with "no active
     # profile", sending the operator to build an environment for a request that
     # is refused regardless of it.
+    if (spec.result_schema.identity or spec.key) == "modelo.work.create":
+        # ``work_create`` parses ``causante_ccaa_raw`` before its ordinary
+        # authority lookup.  Enter the same invocation-owned operation before
+        # the argument-only gate so both parses resolve the CCAA catalogue from
+        # one generation-pinned governed-fact scope.
+        authority_operation(ctx)
     refuse_on_arguments_alone(spec, arguments)
 
     from ...adapters.persistence.storage.master_key.active_session import active_bucket_session_serves
