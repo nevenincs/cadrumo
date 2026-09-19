@@ -34,7 +34,7 @@ from ..models import (
     declared_ledger_destination_ids,
 )
 from ..routes import _SCREEN_BY_AREA, LEDGER_ROUTES, LedgerUnavailableScreen, resolve_ledger_screen
-from .test_ledger_workspace import _controller, _projection
+from .workspace_fixtures import ledger_controller, ledger_projection
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -104,7 +104,7 @@ def test_no_area_resolves_into_another_areas_screen(area: LedgerWorkspaceArea) -
     typed placeholder depends on the doors the host injected, which is the
     caller's business.
     """
-    controller = _controller(_projection())
+    controller = ledger_controller(ledger_projection())
     route = next(candidate for candidate in LEDGER_ROUTES if candidate.area is area)
 
     screen = resolve_ledger_screen(controller, controller.route_target(area))
@@ -125,7 +125,7 @@ def test_the_walk_reaches_real_bodies_and_placeholders_alike() -> None:
     run that exercised only one would leave half the invariant unproven and
     look exactly like a passing test.
     """
-    controller = _controller(_projection())
+    controller = ledger_controller(ledger_projection())
 
     resolved = [resolve_ledger_screen(controller, controller.route_target(area)) for area in LedgerWorkspaceArea]
 
@@ -140,7 +140,7 @@ def test_an_area_the_application_marks_unavailable_reaches_the_placeholder() -> 
     and it is the state that would otherwise reach the operator as a crash.
     """
     unavailable = LedgerWorkspaceArea.RECONCILIATION
-    controller = _controller(_projection(unavailable=unavailable))
+    controller = ledger_controller(ledger_projection(unavailable=unavailable))
 
     screen = resolve_ledger_screen(controller, controller.route_target(unavailable))
 
@@ -156,7 +156,7 @@ def test_the_controller_reads_the_canonical_pairing_rather_than_a_copy() -> None
     declaration, for every area at once, so a copy that happened to agree
     today would still have to be kept in step to keep passing.
     """
-    controller = _controller(_projection())
+    controller = ledger_controller(ledger_projection())
 
     produced = {area: controller.route_target(area).destination for area in LedgerWorkspaceArea}
 

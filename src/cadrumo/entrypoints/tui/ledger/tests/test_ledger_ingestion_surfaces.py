@@ -34,8 +34,7 @@ from ..models import (
 from ..review import LedgerReviewScreen
 from ..workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefreshV1
 from .test_ledger_flows import _ClassificationDoor, _classify_action
-from .test_ledger_slice3 import _evidence_action
-from .test_ledger_workspace import _context, _projection, _review_action
+from .workspace_fixtures import ledger_context, ledger_evidence_action, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -68,7 +67,9 @@ class _InvoiceDoor:
 def _invoice_screen(door: _InvoiceDoor) -> LedgerInvoiceEntryScreen:
     return LedgerInvoiceEntryScreen(
         LedgerWorkspaceController(
-            _context(), _projection(), LedgerWorkspaceInjection(review_action=_review_action(), invoice_add_door=door)
+            ledger_context(),
+            ledger_projection(),
+            LedgerWorkspaceInjection(review_action=ledger_review_action(), invoice_add_door=door),
         )
     )
 
@@ -221,7 +222,7 @@ class _EvidenceDoor:
 
 
 def _evidence_screen(door: _EvidenceDoor, refreshes: list[int]) -> LedgerEvidenceScreen:
-    projection = _projection()
+    projection = ledger_projection()
 
     def refresh() -> LedgerWorkspaceRefreshV1:
         refreshes.append(1)
@@ -230,11 +231,11 @@ def _evidence_screen(door: _EvidenceDoor, refreshes: list[int]) -> LedgerEvidenc
     items: tuple[AttachmentReviewItem, ...] = ()
     return LedgerEvidenceScreen(
         LedgerWorkspaceController(
-            _context(),
+            ledger_context(),
             projection,
             LedgerWorkspaceInjection(
-                review_action=_review_action(),
-                evidence_action=_evidence_action(),
+                review_action=ledger_review_action(),
+                evidence_action=ledger_evidence_action(),
                 evidence_items=items,
                 evidence_door=door,
                 refresh=refresh,
@@ -311,7 +312,7 @@ class _ExclusionDoor:
 
 @pytest.mark.asyncio
 async def test_exclude_names_the_entry_withdraws_on_escape_and_writes_once_on_confirm() -> None:
-    projection = _projection()
+    projection = ledger_projection()
     door = _ExclusionDoor()
     refreshes: list[int] = []
 
@@ -320,10 +321,10 @@ async def test_exclude_names_the_entry_withdraws_on_escape_and_writes_once_on_co
         return LedgerWorkspaceRefreshV1(projection=projection, evidence_items=None)
 
     controller = LedgerWorkspaceController(
-        _context(),
+        ledger_context(),
         projection,
         LedgerWorkspaceInjection(
-            review_action=_review_action(),
+            review_action=ledger_review_action(),
             classify_action=_classify_action(),
             classification_submitter=_ClassificationDoor(),
             exclusion_submitter=door,
@@ -361,8 +362,8 @@ async def test_exclude_names_the_entry_withdraws_on_escape_and_writes_once_on_co
 
 def test_exclude_is_not_offered_without_the_classify_authority() -> None:
     controller = LedgerWorkspaceController(
-        _context(),
-        _projection(),
-        LedgerWorkspaceInjection(review_action=_review_action(), exclusion_submitter=_ExclusionDoor()),
+        ledger_context(),
+        ledger_projection(),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), exclusion_submitter=_ExclusionDoor()),
     )
     assert not controller.can_exclude()

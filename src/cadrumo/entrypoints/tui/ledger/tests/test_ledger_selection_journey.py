@@ -27,7 +27,7 @@ from ..entries import LedgerEntriesScreen
 from ..routes import LedgerUnavailableScreen, resolve_ledger_screen
 from ..workspace_injection import LedgerWorkspaceInjection
 from .test_ledger_flows import _ClassificationDoor, _classify_action
-from .test_ledger_workspace import _context, _projection, _review_action
+from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
 
 if TYPE_CHECKING:
     from textual.pilot import Pilot
@@ -65,10 +65,10 @@ def _entries_screen(*, door: _ClassificationDoor) -> LedgerEntriesScreen:
     """The entries body a newly-opened workspace shows, with no row chosen yet."""
     return LedgerEntriesScreen(
         LedgerWorkspaceController(
-            _context(),
-            _projection(),
+            ledger_context(),
+            ledger_projection(),
             LedgerWorkspaceInjection(
-                review_action=_review_action(),
+                review_action=ledger_review_action(),
                 classify_action=_classify_action(),
                 classification_submitter=door,
             ),
@@ -99,7 +99,7 @@ async def test_a_chosen_entry_survives_the_body_swap_into_classification() -> No
         await pilot.press("enter")
         await pilot.pause()
         chosen = screen.controller.classification_target
-        assert chosen == _projection().entries[0].transaction_id
+        assert chosen == ledger_projection().entries[0].transaction_id
 
         await _choose_area(pilot, screen, LedgerWorkspaceArea.CLASSIFICATION)
         await pilot.pause()
@@ -136,7 +136,7 @@ def test_the_refused_classification_body_names_the_missing_selection() -> None:
     assert refused.refusal is not None
     assert refused.refusal.reason_key == "tui.ledger.refusal.selection_required"
 
-    focused = controller.with_transaction_focus(_projection().entries[0].transaction_id)
+    focused = controller.with_transaction_focus(ledger_projection().entries[0].transaction_id)
     assert isinstance(
         resolve_ledger_screen(focused, focused.route_target(LedgerWorkspaceArea.CLASSIFICATION)),
         LedgerClassificationScreen,
