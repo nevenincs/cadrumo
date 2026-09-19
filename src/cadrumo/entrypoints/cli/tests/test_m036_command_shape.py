@@ -22,6 +22,7 @@ from ....application.modelo.reconciliation_records import (
     ModeloReconciliationEvidenceKind,
     ModeloReconciliationVerdict,
 )
+from ....domain.modelos.filing_text import ACTOR_LABEL_MAX_LENGTH
 from .._modelo_m036_cli import m036_alta, m036_baja, m036_modificacion
 from .._modelo_payloads_m036 import (
     ModeloReconciliationHistoryResult,
@@ -101,7 +102,7 @@ def test_reconciliation_history_row_enforces_the_canonical_entry_contract() -> N
     ``modelo.reconcile.list`` envelope.
     """
     base = dict(
-        event_id="e" * 32,
+        event_id="e" * 64,
         bucket_id="b" * 64,
         work_unit_id="a1" * 32,
         source_kind=ModeloReconciliationEvidenceKind.JUSTIFICANTE,
@@ -126,7 +127,7 @@ def test_reconciliation_history_row_enforces_the_canonical_entry_contract() -> N
         ("unknown verdict", {"verdict": "bogus"}),
         ("negative diff count", {"diff_count": -1}),
         ("blank actor", {"actor": ""}),
-        ("overlong actor", {"actor": "a" * 65}),
+        ("overlong actor", {"actor": "a" * (ACTOR_LABEL_MAX_LENGTH + 1)}),
         ("malformed timestamp", {"reconciled_at": "not-date"}),
     ):
         try:
