@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from collections.abc import Iterator
 from datetime import UTC, datetime
 from decimal import Decimal
@@ -12,18 +11,32 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
+from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.period import Period
+from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
+from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.tests.published_authority import (
+    PublishedGovernedFactSource,
     leased_profile_create_context,
     published_snapshot,
 )
 from ....domain.deadlines.models import M303RegimeComposition
+from ....domain.filing_evidence import FilingEvidenceReference
+from ....domain.iva.regimen_simplificado_rows import (
+    ActividadNoAgricolaSimplificado,
+    EntradaModuloSimplificado,
+    M303RegimenSimplificadoScopeDecision,
+    RegimenSimplificadoFilingRows,
+)
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope
+from ._m303_filing_evidence_support import build_m303_filing_evidence
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
@@ -43,6 +56,7 @@ def _store_current_profile(
     runtime_profile: TestRuntimeProfile,
     *,
     composition: M303RegimeComposition,
+    iae_epigraph: str | None = None,
 ) -> None:
     seed_test_profile_record(
         _create_profile_record_for_test(
@@ -53,6 +67,11 @@ def _store_current_profile(
                 UserProfileFact(path="identity.name", value="M303"),
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="activities.description", value="economic activity"),
+                *(
+                    (UserProfileFact(path="activities.iae_epigraph", value=iae_epigraph),)
+                    if iae_epigraph is not None
+                    else ()
+                ),
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="GENERAL"),
@@ -105,7 +124,76 @@ def _store_zero_prior_compensation(runtime_profile: TestRuntimeProfile) -> None:
     )
 
 
-def _calculate(work_unit_id: str):
+def _filing_evidence_for_composition(
+    *,
+    composition: M303RegimeComposition,
+    operation: PinnedAuthorityOperation,
+) -> tuple[FilingInstanceEvidence, str | None]:
+    """Build the exact evidence and censo IAE fact required by one scope."""
+    period = Period.from_year_and_code(2026, "1T")
+    evidence = build_m303_filing_evidence(period, joint_return_elected=False, operation=operation)
+    scope = M303RegimenSimplificadoScopeDecision(
+        scope=m303_regime_composition_simplified_scope(composition, authority=PublishedGovernedFactSource()),
+    )
+    if scope.is_not_claimed:
+        return evidence, None
+
+    snapshot = resolve_m303_regimen_simplificado_snapshot(
+        registry_snapshot=published_snapshot("303", filing_year=2026, period="1T"),
+        scope_decision=scope,
+    )
+    annual_activity = next(activity for activity in snapshot.orden.activities if activity.kind == "no_agricola")
+    assert annual_activity.iae_epigrafe is not None
+    reference = FilingEvidenceReference(reference="test:m303-scope:annual-orden-activity")
+    rows = RegimenSimplificadoFilingRows(
+        ejercicio=2026,
+        activities=(
+            ActividadNoAgricolaSimplificado(
+                orden_id=annual_activity.orden_id,
+                ejercicio=2026,
+                activity_id="test-m303-scope-activity",
+                iae_epigrafe=annual_activity.iae_epigrafe,
+                auxiliary_activity_indicator=annual_activity.auxiliary_activity_indicator,
+                modulos=tuple(
+                    EntradaModuloSimplificado(
+                        module_identity=module.identity,
+                        declared_quantity=Decimal("1"),
+                        evidence_reference=reference,
+                    )
+                    for module in annual_activity.modulos
+                ),
+                evidence_reference=reference,
+            ),
+        ),
+    )
+    regimen = regimen_simplificado_filing_evidence(
+        period=period,
+        scope_decision=scope,
+        rows=rows,
+        regimen_snapshot=snapshot,
+        dana_eligibility=None,
+        operation=operation,
+    )
+    return (
+        evidence.model_copy(
+            update={"m303": evidence.m303.model_copy(update={"regimen_simplificado": regimen})},
+        ),
+        annual_activity.iae_epigrafe,
+    )
+
+
+def _write_filing_evidence(
+    path: Path,
+    *,
+    composition: M303RegimeComposition,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
+    evidence, iae_epigraph = _filing_evidence_for_composition(composition=composition, operation=operation)
+    path.write_text(evidence.model_dump_json(), encoding="utf-8")
+    return iae_epigraph
+
+
+def _calculate(work_unit_id: str, evidence_path: Path):
     return invoke_cached_cli(
         [
             "--format",
@@ -115,16 +203,22 @@ def _calculate(work_unit_id: str):
             "work",
             "calculate",
             work_unit_id,
-            "--no-m303-joint-return-elected",
+            "--m303-filing-evidence",
+            str(evidence_path),
         ]
     )
 
 
-def test_m303_general_scope_reaches_real_cli_calculation(runtime_profile: TestRuntimeProfile) -> None:
-    _store_current_profile(runtime_profile, composition=M303RegimeComposition.from_registry("general"))
+def test_m303_general_scope_reaches_real_cli_calculation(
+    runtime_profile: TestRuntimeProfile, tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    composition = M303RegimeComposition.from_registry("general")
+    evidence_path = tmp_path / "m303-filing-evidence.json"
+    iae_epigraph = _write_filing_evidence(evidence_path, composition=composition, operation=operation)
+    _store_current_profile(runtime_profile, composition=composition, iae_epigraph=iae_epigraph)
     _store_zero_prior_compensation(runtime_profile)
 
-    result = _calculate(_m303_work_id())
+    result = _calculate(_m303_work_id(), evidence_path)
 
     assert result.exit_code == 0, result.output
     payload = unwrap_schema_envelope(result.output)
@@ -134,15 +228,21 @@ def test_m303_general_scope_reaches_real_cli_calculation(runtime_profile: TestRu
 @pytest.mark.parametrize(
     "composition", (M303RegimeComposition.from_registry("simplified"), M303RegimeComposition.from_registry("mixed"))
 )
-def test_m303_simplified_and_mixed_scope_block_real_cli_before_formula(
+def test_m303_simplified_and_mixed_scope_reach_real_cli_calculation(
     runtime_profile: TestRuntimeProfile,
+    tmp_path: Path,
     composition: M303RegimeComposition,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> None:
-    _store_current_profile(runtime_profile, composition=composition)
+    evidence_path = tmp_path / "m303-filing-evidence.json"
+    iae_epigraph = _write_filing_evidence(evidence_path, composition=composition, operation=operation)
+    assert iae_epigraph is not None
+    _store_current_profile(runtime_profile, composition=composition, iae_epigraph=iae_epigraph)
     _store_zero_prior_compensation(runtime_profile)
 
-    result = _calculate(_m303_work_id())
+    result = _calculate(_m303_work_id(), evidence_path)
 
-    assert result.exit_code != 0
-    error = json.loads(result.output)["error"]
-    assert "S58 evidence projection" in error["message"]
+    assert result.exit_code == 0, result.output
+    payload = unwrap_schema_envelope(result.output)
+    assert "iva.resultado" in payload["casilla_values"]
