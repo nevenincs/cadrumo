@@ -19,8 +19,15 @@ lib64/
 parts/
 sdist/
 var/
-# Local log output and dot-prefixed ad-hoc log variants are ephemeral.
+# Log output is scratch, whatever it is called. Every spelling of the directory
+# is ignored -- a run writes there and nothing reads back across a run boundary,
+# so no log tree is ever a repository source. `just clean-apply` reaps `.logs/`
+# in full apart from `.logs/test-runs/`, which its retention sweep owns because
+# a live pytest invocation is still writing there.
 .logs/
+logs/
+.log/
+log/
 .log-*
 .log^*
 wheels/
@@ -323,7 +330,13 @@ scratch/*
 **/.[Tt][Mm][Pp][-_]*
 **/*.[Tt][Mm][Pp]
 **/*.[Tt][Ee][Mm][Pp]
+# A directory named `cache` is a cache, at any depth and under either spelling.
+# Nothing in this repository keeps a source under one of these names, and
+# `just clean-apply` reaps them by the same rule.
 cache/
+.cache/
+**/cache/
+**/.cache/
 
 # Root-level ad-hoc agent run directories (the retired .runtime-sNN-*
 # convention; ruling R5 mandates scratch/ as the sole scratch location).
