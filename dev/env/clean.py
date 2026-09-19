@@ -21,14 +21,15 @@ Run ``just clean`` for the report and ``just clean-apply`` to act on it.
 The worktree section, which is what the rest of this module implements, sorts
 ignored paths into three populations that are not interchangeable:
 
-**Regenerable output.** ``__pycache__``, the six tool caches, ``build/``,
-``dist/``, the generated documentation trees. Every byte of it is reproduced by
-a command that already exists, nothing reads it across a run boundary, and
-deleting it costs a rebuild. This is the only family this module removes.
+**Regenerable output.** ``__pycache__``, the tool caches, every ``cache`` and
+``.cache`` tree, ``build/``, ``dist/``, the generated documentation trees, and
+the ``.logs/`` scratch root. Every byte of it is reproduced by a command that
+already exists, nothing reads it across a run boundary, and deleting it costs a
+rebuild. This is the only family this module removes.
 
 **State an operator would lose.** ``.env`` and everything under ``env/``, the
 ``.venv``, ``secrets/``, ``cadrumo-storage/``, the ``.vault`` and ``.vaultspec``
-trees, ``.logs/``. Most of it is ignored by git for exactly
+trees. Most of it is ignored by git for exactly
 the reason it must survive a clean: it is local, it is not reproducible from
 the repository, and some of it is live key material and taxpayer financial
 data. This family is protected by name and is never walked, never sized and
@@ -114,7 +115,6 @@ PROTECTED_SEGMENTS: Final[frozenset[str]] = frozenset(
         "env",
         "secrets",
         "cadrumo-storage",
-        ".logs",
         ".claude",
         ".codex",
         ".agents",
