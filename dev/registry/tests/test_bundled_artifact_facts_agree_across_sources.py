@@ -142,11 +142,11 @@ def _capture_identity(path: Path) -> tuple[str | None, str | None]:
     """Return the canonical address and Spanish publication date the capture states."""
     markup = path.read_text(encoding="utf-8", errors="replace")
     link = _CANONICAL_LINK.search(markup)
-    published = sorted(
+    published: list[str] = sorted(
         {
-            match.group("content")
+            str(match.group("content"))
             for match in _ELI_PUBLICATION.finditer(markup)
-            if match.group("about").endswith("/spa")
+            if str(match.group("about")).endswith("/spa")
         }
     )
     return (
@@ -225,6 +225,6 @@ def test_a_capture_that_contradicts_its_row_is_detected(field: str, tmp_path: Pa
 
     disagreements = _publisher_disagreements((target,), base=tmp_path)
 
-    assert disagreements == [
-        f"{target.id} {field}: catalogue {expected_declared!r} vs capture {expected_capture!r}"
-    ], disagreements
+    assert disagreements == [f"{target.id} {field}: catalogue {expected_declared!r} vs capture {expected_capture!r}"], (
+        disagreements
+    )
