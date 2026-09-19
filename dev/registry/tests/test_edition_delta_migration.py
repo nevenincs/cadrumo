@@ -24,7 +24,7 @@ import json
 import re
 import shutil
 from collections import Counter
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 
 import pytest
@@ -74,7 +74,7 @@ _ROW_SOURCE_LINE = re.compile(r"^source_refs = \[[^\]]*\]\n", re.MULTILINE)
 _EXPECTED_KINDS = frozenset({RoundTripFindingKind.EXPORT_UNCHECKED, RoundTripFindingKind.LOCALIZATION})
 
 
-def _registry(destination: Path, modelo_id: str) -> Path:
+def _build_registry(destination: Path, modelo_id: str) -> Path:
     root = copy_registry_tree(_BUNDLED, destination / "registry" / "aeat", modelo_id=modelo_id)
     modelo = root / "modelos" / modelo_id
     definition = load_modelo_directory(modelo)
@@ -201,13 +201,45 @@ def _unexpected(outcome: MigrationOutcome) -> list[tuple[RoundTripFindingKind, s
 
 
 @pytest.fixture(scope="module")
-def pilot_input(tmp_path_factory: pytest.TempPathFactory) -> Path:
-    return _registry(tmp_path_factory.mktemp("pilot-input"), _PILOT)
+def registry_copy(tmp_path_factory: pytest.TempPathFactory) -> Callable[[Path, str], Path]:
+    """Hand out an independent copy of one canonical input tree per modelo.
+
+    ``_build_registry`` re-materialises every edition of a modelo out of the
+    bundled corpus, and its output is a pure function of the modelo id, so the
+    module was paying for the same tree repeatedly: nine builds covering three
+    distinct modelos. Measured here, a build costs 16.6 s for the pilot and 9.1 s
+    for 194 against 0.5 s and 0.3 s to copy the finished tree.
+
+    Every consumer still receives its own directory, because these tests plant
+    defects in the tree they are given.
+    """
+    canonical: dict[str, Path] = {}
+
+    def copy(destination: Path, modelo_id: str) -> Path:
+        source = canonical.get(modelo_id)
+        if source is None:
+            source = _build_registry(tmp_path_factory.mktemp(f"canonical-{modelo_id}"), modelo_id)
+            canonical[modelo_id] = source
+        root = destination / "registry" / "aeat"
+        root.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(source, root)
+        return root
+
+    return copy
 
 
 @pytest.fixture(scope="module")
-def pilot(pilot_input: Path, tmp_path_factory: pytest.TempPathFactory) -> MigrationOutcome:
-    isolated = _registry(tmp_path_factory.mktemp("pilot-live"), _PILOT)
+def pilot_input(registry_copy: Callable[[Path, str], Path], tmp_path_factory: pytest.TempPathFactory) -> Path:
+    return registry_copy(tmp_path_factory.mktemp("pilot-input"), _PILOT)
+
+
+@pytest.fixture(scope="module")
+def pilot(
+    pilot_input: Path,
+    registry_copy: Callable[[Path, str], Path],
+    tmp_path_factory: pytest.TempPathFactory,
+) -> MigrationOutcome:
+    isolated = registry_copy(tmp_path_factory.mktemp("pilot-live"), _PILOT)
     return migrate_modelo(
         registry_root=isolated,
         modelo_id=_PILOT,
@@ -528,8 +560,10 @@ def test_unannotated_rows_do_not_block_and_a_changed_same_id_uses_a_storage_over
     assert successor.casilla_positions == ({"id": "0003", "position": 1},)
 
 
-def test_storage_baseline_removes_lineage_members_without_asserting_legal_predecessor(tmp_path: Path) -> None:
-    registry = _registry(tmp_path / "target", "345")
+def test_storage_baseline_removes_lineage_members_without_asserting_legal_predecessor(
+    tmp_path: Path, registry_copy: Callable[[Path, str], Path]
+) -> None:
+    registry = registry_copy(tmp_path / "target", "345")
     before = _load(registry, "345")
 
     outcome = migrate_modelo(registry_root=registry, modelo_id="345", work_dir=tmp_path / "work")
@@ -696,8 +730,10 @@ def test_the_default_is_the_leading_run_most_rows_open_with_and_a_tie_withholds_
     assert tied.lifted.row_source_refs == 0
 
 
-def test_apply_publishes_a_modelo_whose_proof_is_clean(tmp_path: Path) -> None:
-    registry = _registry(tmp_path / "target", _NO_EXPORT_SURFACE)
+def test_apply_publishes_a_modelo_whose_proof_is_clean(
+    tmp_path: Path, registry_copy: Callable[[Path, str], Path]
+) -> None:
+    registry = registry_copy(tmp_path / "target", _NO_EXPORT_SURFACE)
     before = _load(registry, _NO_EXPORT_SURFACE)
     assert not any(revision.export_layouts for revision in before.revisions.values())
     pristine = shutil.copytree(registry, tmp_path / "pristine" / "registry" / "aeat")
@@ -725,8 +761,9 @@ def test_apply_publishes_a_modelo_whose_proof_is_clean(tmp_path: Path) -> None:
 
 def test_invalid_staged_candidate_leaves_the_live_modelo_byte_identical(
     tmp_path: Path,
+    registry_copy: Callable[[Path, str], Path],
 ) -> None:
-    registry = _registry(tmp_path / "target", _PILOT)
+    registry = registry_copy(tmp_path / "target", _PILOT)
     modelo_dir = registry / "modelos" / _PILOT
     before = {
         path.relative_to(modelo_dir).as_posix(): path.read_bytes() for path in modelo_dir.rglob("*") if path.is_file()
@@ -757,7 +794,10 @@ def test_invalid_staged_candidate_leaves_the_live_modelo_byte_identical(
 
 
 def test_the_command_line_renders_every_successors_export_bytes_from_the_canonical_scenarios(
-    pilot_before: ModeloDefinition, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    pilot_before: ModeloDefinition,
+    tmp_path: Path,
+    registry_copy: Callable[[Path, str], Path],
+    capsys: pytest.CaptureFixture[str],
 ) -> None:
     """A dry run reads the declared scenarios, so every successor's bytes are compared and the proof is clean.
 
@@ -768,7 +808,7 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
     successors = sorted(str(revision.id) for revision in ordered_revisions(pilot_before)[1:])
     assert all(pilot_before.revisions[revision_id].export_layouts for revision_id in successors)
     assert set(edition_export_scenarios(_PILOT)) == set(successors)
-    registry = _registry(tmp_path / "input", _PILOT)
+    registry = registry_copy(tmp_path / "input", _PILOT)
 
     exit_code = main(["--registry-root", str(registry), "--modelo", _PILOT, "--work-dir", str(tmp_path / "work")])
 
@@ -790,8 +830,10 @@ def test_the_command_line_renders_every_successors_export_bytes_from_the_canonic
     assert {str(r.id) for r in _load(registry, _PILOT).revisions.values() if r.predecessor is not None} == set()
 
 
-def test_work_directory_must_not_be_inside_the_registry_root(tmp_path: Path) -> None:
-    registry = _registry(tmp_path / "target", _NO_EXPORT_SURFACE)
+def test_work_directory_must_not_be_inside_the_registry_root(
+    tmp_path: Path, registry_copy: Callable[[Path, str], Path]
+) -> None:
+    registry = registry_copy(tmp_path / "target", _NO_EXPORT_SURFACE)
     work_dir = registry / "migration-work"
 
     with pytest.raises(RegistryError, match="inside registry root"):
@@ -800,8 +842,10 @@ def test_work_directory_must_not_be_inside_the_registry_root(tmp_path: Path) -> 
     assert not work_dir.exists()
 
 
-def test_work_directory_must_not_be_inside_the_production_source_tree(tmp_path: Path) -> None:
-    registry = _registry(tmp_path / "target", _NO_EXPORT_SURFACE)
+def test_work_directory_must_not_be_inside_the_production_source_tree(
+    tmp_path: Path, registry_copy: Callable[[Path, str], Path]
+) -> None:
+    registry = registry_copy(tmp_path / "target", _NO_EXPORT_SURFACE)
     work_dir = REPO_ROOT / "src" / f".edition-delta-migration-test-work-{tmp_path.name}"
 
     assert not work_dir.exists()
@@ -811,8 +855,10 @@ def test_work_directory_must_not_be_inside_the_production_source_tree(tmp_path: 
     assert not work_dir.exists()
 
 
-def test_work_directory_must_not_exist_before_migration(tmp_path: Path) -> None:
-    registry = _registry(tmp_path / "target", _NO_EXPORT_SURFACE)
+def test_work_directory_must_not_exist_before_migration(
+    tmp_path: Path, registry_copy: Callable[[Path, str], Path]
+) -> None:
+    registry = registry_copy(tmp_path / "target", _NO_EXPORT_SURFACE)
     work_dir = tmp_path / "existing-work"
     work_dir.mkdir()
 

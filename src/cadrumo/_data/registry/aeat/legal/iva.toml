@@ -71,7 +71,7 @@ corpus_path = "corpus/normatives/html/orden-eha-789-2010.html"
 sha256 = "fcdf59303556fed6edfed2798c8db2ecc16345cf101a66d289947b22fec0b61d"
 bytes = 104451
 retrieved_at = 2026-05-06
-published_at = 2010-03-31
+published_at = 2010-03-30
 applies_from = 2010-04-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5210"
 review_status = "pending_review"
@@ -923,7 +923,7 @@ record_design_epoch = "2022"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/02-303-ejercicio-2022-y-siguientes-actualizado-27-12-2021-332-kb-xlsx.xlsx"
 sha256 = "6648f6b319579e49cd5bfdaae69e7451db75767e7f19da0b90383b25b79b3f60"
 bytes = 339445
-retrieved_at = 2026-08-14
+retrieved_at = 2026-05-03
 applies_from = 2022-01-01
 applies_to = 2022-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_22/DR303e22.xlsx"
@@ -988,7 +988,7 @@ record_design_epoch = "2026"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
 sha256 = "0be8b156da2250c6b11f6253e0165221ed2e549ec4c65a562021bec6b9b8489b"
 bytes = 386926
-retrieved_at = 2026-05-06
+retrieved_at = 2026-05-03
 applies_from = 2026-01-01
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_300_399/archivos_26/DR303e26v101.xlsx"
 review_status = "pending_review"
@@ -1108,7 +1108,7 @@ kind = "record_design"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/15-303-orden-hap-2373-2014-de-9-de-diciembre-ejercicio-2021-hasta-periodo-06-actualizado-27-04.xlsx"
 sha256 = "cb0226f444e4412336b155655d5b2afda0b60e7e87d6dcda6eafd6497e5f4ee7"
 bytes = 343400
-retrieved_at = 2026-07-21
+retrieved_at = 2026-05-03
 applies_from = 2021-01-01
 applies_to = 2021-12-31
 period_selector = { years = [2021], periods = ["1T", "2T"] }
@@ -1122,7 +1122,7 @@ kind = "record_design"
 corpus_path = "corpus/aeat_official/disenos_registro/modelo_303/files/08-303-orden-hac-646-2021-ejercicio-2021-desde-periodo-07-actualizado-22-12-2021-334-kb-xlsx.xlsx"
 sha256 = "185b8612c9cf4a22b4ed919db0ba45d21b03b7168da957fca3b5758f567ce249"
 bytes = 341383
-retrieved_at = 2026-07-21
+retrieved_at = 2026-05-03
 applies_from = 2021-01-01
 applies_to = 2021-12-31
 period_selector = { years = [2021], periods = ["3T", "4T"] }
@@ -1268,7 +1268,7 @@ corpus_path = "corpus/normatives/html/orden-eha-769-2010.html"
 sha256 = "d57d707f8fe68b1d5d6ecd0f08997325e8e00a93ba57b8200e9d08b00d71fac0"
 bytes = 217318
 retrieved_at = 2026-05-05
-published_at = 2010-03-31
+published_at = 2010-03-29
 applies_from = 2010-04-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2010-5098"
 review_status = "pending_review"
@@ -1499,7 +1499,7 @@ bytes = 64856
 retrieved_at = 2026-05-06
 published_at = 2021-06-18
 applies_from = 2021-07-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2021-10161"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-10161"
 review_status = "pending_review"
 
 [legal."ley-37-1992:art-99"]
@@ -2516,10 +2516,10 @@ corpus_path = "corpus/normatives/html/orden-hfp-1335-2021.html"
 sha256 = "3fda96dcf2dcb3b3f0863bc07b0eabd45e21c6850d4b611e635627befb450c46"
 bytes = 507246
 retrieved_at = 2026-08-14
-published_at = 2021-12-01
+published_at = 2021-12-02
 applies_from = 2022-01-01
 applies_to = 2022-12-31
-source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2021-19904"
+source_url = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2021-19904"
 review_status = "pending_review"
 
 [sources."boe-orden-hfp-1359-2023-iva-authority"]

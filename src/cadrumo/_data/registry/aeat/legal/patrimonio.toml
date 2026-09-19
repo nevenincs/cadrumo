@@ -202,7 +202,7 @@ kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-207-2022.html"
 sha256 = "34094524e4bf0a0dfd0c6308edbbceb6d92fcfd6f101ee41f43513d771fac78b"
 bytes = 156334
-retrieved_at = 2026-08-15
+retrieved_at = 2026-05-06
 published_at = 2022-03-18
 applies_from = 2021-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2022-4296"

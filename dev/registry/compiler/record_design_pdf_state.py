@@ -407,9 +407,14 @@ def _finalise_extraction(
         # case above: without it, relaxing the judgement moment would turn a
         # document the parser cannot read into an extraction carrying zero
         # sheets, which only a caller that checks `is_complete` would notice.
+        # The reason each body was routed carries the whole diagnosis -- which
+        # positions went unread -- and it exists only here. Reporting the count
+        # alone would leave the caller knowing the document failed and nothing
+        # about where.
         raise RegistryValidationError(
             f"{source_label} yielded no readable record sheet; "
-            f"{len(broken)} identified body/bodies were routed to unread"
+            f"{len(broken)} identified body/bodies were routed to unread: "
+            + "; ".join(f"{name}: {reason}" for name, reason in sorted(broken.items()))
         )
     for sheet in returned:
         validate_pdf_sheet(sheet, source_label=source_label)

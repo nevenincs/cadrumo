@@ -439,7 +439,7 @@ bytes = 175536
 retrieved_at = 2026-07-01
 published_at = 2015-11-17
 applies_from = 2016-01-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-12399"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2015-12399"
 review_status = "pending_review"
 
 [sources."boe-modelo-289-base-order"]
@@ -452,7 +452,7 @@ bytes = 105125
 retrieved_at = 2026-07-01
 published_at = 2016-10-27
 applies_from = 2016-10-28
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2016-9834"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2016-9834"
 review_status = "pending_review"
 
 [sources."boe-modelo-289-2017-amendment-hfp-1308"]
@@ -463,7 +463,7 @@ corpus_path = "corpus/normatives/html/orden-hfp-1308-2017.html"
 sha256 = "8fd1cd9a74b4f89b97afda5cf946f30234b517475adc3d60e804d9ceeac8d501"
 bytes = 152601
 retrieved_at = 2026-07-01
-published_at = 2017-12-29
+published_at = 2017-12-30
 applies_from = 2017-12-30
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2017-15845"
 review_status = "pending_review"
@@ -540,7 +540,7 @@ kind = "form_spec"
 corpus_path = "corpus/normatives/html/orden-hfp-1284-2023.html"
 sha256 = "e0539c65dd6549863ff069b29dc0dc50067d46cdfe9e7d012814bf9935c73eff"
 bytes = 307871
-retrieved_at = 2026-07-01
+retrieved_at = 2026-05-05
 published_at = 2023-11-30
 applies_from = 2023-12-01
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412"
@@ -580,7 +580,7 @@ corpus_path = "corpus/normatives/html/orden-hac-1430-2025.html"
 sha256 = "18d600aed76f64c48b4bc86b25ef624c7c6b3a5fe347763c94977851fa5359bf"
 bytes = 110714
 retrieved_at = 2026-07-01
-published_at = 2025-12-16
+published_at = 2025-12-12
 applies_from = 2025-12-17
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-25389"
 review_status = "pending_review"

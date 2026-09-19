@@ -153,13 +153,23 @@ def test_an_explained_revision_still_has_its_divergence_measured() -> None:
     population here. A row written for eighty fields cannot go on explaining
     eight hundred, and a row whose population has been repaired away fails
     rather than standing as a permanent exemption.
+
+    An empty measurement is a legitimate outcome once every divergence has been
+    repaired, and it is tied to the ledger rather than asserted away: with no
+    row claiming to explain a contradiction there is nothing for the population
+    to be checked against, while a row standing over an empty population fails
+    on its own count below. What must never be empty is the comparison's INPUT,
+    and its sibling above asserts that separately.
     """
     contradictions = type_column_contradiction_dispositions()
     explained = {item.subject for item in record_drift_dispositions()} | {item.subject for item in contradictions}
 
     disagreements = _sign_disagreements(_shipped_derivations())
 
-    assert disagreements, "the corpus reports no sign divergence at all, which the census contradicts"
+    assert disagreements or not contradictions, (
+        "the corpus reports no sign divergence at all while rows still claim to explain one; "
+        f"retire the rows for {sorted(row.subject for row in contradictions)}"
+    )
     assert {line.split()[0] for line in disagreements} <= explained
 
     for row in contradictions:

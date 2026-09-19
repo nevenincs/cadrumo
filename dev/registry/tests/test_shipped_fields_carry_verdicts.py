@@ -25,10 +25,6 @@ _UNATTESTED: dict[str, str] = {
         "publication demands a calculation-grade revision and this one is honestly graded "
         "applicability; raising the grade to publish would be the under-declaration it prevents"
     ),
-    "222/2025-y-siguientes": (
-        "publication demands a calculation-grade revision and this one is honestly graded "
-        "applicability; raising the grade to publish would be the under-declaration it prevents"
-    ),
 }
 
 

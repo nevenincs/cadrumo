@@ -46,9 +46,9 @@ corpus_path = "corpus/normatives/html/orden-hac-1197-2025.html"
 sha256 = "48d090dcb2185ecdd7b6cc2fa183bf344af72f8cdebc758593d2092874456051"
 bytes = 43776
 retrieved_at = 2026-07-04
-published_at = 2025-10-21
+published_at = 2025-10-29
 applies_from = 2026-01-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-21726"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-21726"
 review_status = "pending_review"
 
 # Same bundled orden HTML, registered a second time under layout_authority tier
@@ -64,9 +64,9 @@ corpus_path = "corpus/normatives/html/orden-hac-1197-2025.html"
 sha256 = "48d090dcb2185ecdd7b6cc2fa183bf344af72f8cdebc758593d2092874456051"
 bytes = 43776
 retrieved_at = 2026-07-04
-published_at = 2025-10-21
+published_at = 2025-10-29
 applies_from = 2026-01-01
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-21726"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-21726"
 review_status = "pending_review"
 
 [sources."aeat-dr-185-2026"]
@@ -150,7 +150,7 @@ retrieved_at = 2026-08-15
 published_at = 2003-01-30
 applies_from = 2003-01-31
 applies_to = 2025-12-31
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1911"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2003-1911"
 review_status = "pending_review"
 
 # Same bundled orden-hac-96-2003 HTML, registered a second time under
@@ -171,7 +171,7 @@ retrieved_at = 2026-08-15
 published_at = 2003-01-30
 applies_from = 2003-01-31
 applies_to = 2025-12-31
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2003-1911"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2003-1911"
 review_status = "pending_review"
 
 # The as-published BOE Annex I is the original primary record-layout source for

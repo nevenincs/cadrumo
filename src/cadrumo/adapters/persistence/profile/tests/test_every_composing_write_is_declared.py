@@ -61,6 +61,7 @@ from __future__ import annotations
 
 import ast
 from collections.abc import Mapping
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -184,8 +185,16 @@ def _asserts_a_revision(node: ast.Call) -> bool:
     return False
 
 
-def _bare_composing_sites() -> set[tuple[str, str]]:
-    """Return every ``(module, function)`` composing a write with no revision."""
+@cache
+def _bare_composing_sites() -> frozenset[tuple[str, str]]:
+    """Return every ``(module, function)`` composing a write with no revision.
+
+    Cached because both gates below need the same scan and the tree does not
+    change within a run: one asks which sites are undeclared, the other which
+    declarations no longer name a site. Uncached, the package was walked and
+    parsed twice per process. Returned frozen because the memo hands both
+    callers the same object.
+    """
     found: set[tuple[str, str]] = set()
     for path in non_test_package_python_files():
         relative = repo_relative(path)
@@ -200,7 +209,7 @@ def _bare_composing_sites() -> set[tuple[str, str]]:
                 continue
             if _has_bare_composing_call(scope):
                 found.add((relative, scope.name))
-    return found
+    return frozenset(found)
 
 
 def _composing_call_name(node: ast.Call, aliases: Mapping[str, str]) -> str | None:

@@ -2577,7 +2577,7 @@ bytes = 200616
 retrieved_at = 2026-05-05
 published_at = 2014-09-26
 applies_from = 2014-09-27
-source_url = "https://www.boe.es/eli/es/o/2014/09/24/hap1732"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2014-9740"
 review_status = "pending_review"
 
 [sources."boe-modelo-180-2023-form"]
@@ -2590,7 +2590,7 @@ bytes = 307871
 retrieved_at = 2026-05-05
 published_at = 2023-11-30
 applies_from = 2023-12-01
-source_url = "https://www.boe.es/eli/es/o/2023/11/28/hfp1284"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-24412"
 review_status = "pending_review"
 
 [sources."aeat-dr-123-2024-v20"]
@@ -5782,7 +5782,7 @@ retrieved_at = 2026-06-28
 published_at = 2025-03-14
 applies_from = 2024-01-01
 applies_to = 2024-12-31
-source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2025-5049"
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-5049"
 review_status = "pending_review"
 
 [sources."boe-modelo-100-2025-form"]

@@ -18,14 +18,14 @@ enrolled source is compared the moment it is authored, and a source whose file
 leaves the corpus surfaces as a missing capture record rather than silently
 passing.
 
-SCOPE. ``retrieved_at`` is deliberately NOT compared here yet. Three registered
-rows currently disagree with their capture record on that field alone, and the
-registry cannot tell from the inside which side is right: a later re-retrieval
-of identical bytes would legitimately advance the catalogue past the manifest,
-while a typo would look exactly the same. Choosing a winner is an evidence
-judgement, not a mechanical one, so this gate asserts only what is
-unambiguous and leaves that disagreement to be resolved on evidence rather
-than resolved silently by whichever record this module happened to trust.
+``retrieved_at`` is compared with the rest. The manifest row is written by the
+ingest harness at the moment the bytes land; the catalogue row is typed
+afterwards, and the disagreements this comparison first surfaced were all of
+that shape -- the authoring date restated as a retrieval date, in one case
+naming a day before the bytes were ever captured. A genuine re-retrieval is
+not an exception to the rule: the harness rewrites the manifest when it
+re-fetches, so an advanced capture date reaches this gate through the record
+that observed it, not through a hand edit that outruns it.
 """
 
 from __future__ import annotations
@@ -113,6 +113,7 @@ def _provenance_disagreements(
             ("sha256", source.sha256, captured["sha256"]),
             ("bytes", source.bytes, captured["bytes"]),
             ("source_url", str(source.source_url), captured["url"]),
+            ("retrieved_at", str(source.retrieved_at), captured["retrieved_at"]),
         ):
             if declared != observed:
                 disagreements.append(f"{source.id} {field}: catalogue {declared!r} vs capture {observed!r}")
@@ -128,7 +129,15 @@ def test_registered_design_bytes_and_origin_match_their_capture_record() -> None
     )
 
 
-@pytest.mark.parametrize(("field", "falsified"), (("sha256", "0" * 64), ("bytes", 1), ("url", "https://x.invalid/")))
+@pytest.mark.parametrize(
+    ("field", "falsified"),
+    (
+        ("sha256", "0" * 64),
+        ("bytes", 1),
+        ("url", "https://x.invalid/"),
+        ("retrieved_at", "1970-01-01"),
+    ),
+)
 def test_a_falsified_capture_record_is_detected(field: str, falsified: object) -> None:
     """Detector teeth, one representative defect per compared field.
 
