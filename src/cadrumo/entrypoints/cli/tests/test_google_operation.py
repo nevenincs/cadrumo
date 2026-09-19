@@ -245,7 +245,7 @@ def test_cli_command_submits_supervised_export_and_resolves_public_result(tmp_pa
     definition = build_google_sheets_export_operation_definition(prepare_port=lambda _profile: Prepared())
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         services, journal, leases = _services(profile.storage_root, definition=definition)
-        monkeypatch.setattr(operation_composition, "compose_operation_dependencies", lambda: services)
+        monkeypatch.setattr(operation_composition, "compose_operation_dependencies", lambda **_kwargs: services)
         monkeypatch.setattr(cli_module, "resolve_active_profile", lambda: profile.bucket_id)
         monkeypatch.setattr(
             google_operation, "resolve_active_capability", lambda _capability: SimpleNamespace(enabled=True)
