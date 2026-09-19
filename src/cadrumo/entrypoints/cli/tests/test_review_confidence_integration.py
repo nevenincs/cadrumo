@@ -10,7 +10,7 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
 def test_review_queue_out_of_range_confidence_is_instructive() -> None:
-    result = invoke_cached_cli(["app", "review", "queue", "--confidence-below", "1.5"])
+    result = invoke_cached_cli(["--language", "en", "app", "review", "queue", "--confidence-below", "1.5"])
 
     assert result.exit_code != 0
     flattened = " ".join(result.output.replace("│", " ").split())

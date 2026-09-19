@@ -171,6 +171,6 @@ def test_ledger_view_text_shows_usage_ratio_id_when_present() -> None:
     assert Decimal(transaction["business_pct"]) == Decimal("0.60")
     assert transaction["usage_ratio_id"] == "telefonia_movil"
 
-    viewed = _invoke(["app", "ledger", "view", _json(added)["transaction_id"]])
+    viewed = _invoke(["--language", "en", "app", "ledger", "view", _json(added)["transaction_id"]])
     assert viewed.exit_code == 0, viewed.output
     assert "Usage ratio id\ttelefonia_movil" in viewed.output

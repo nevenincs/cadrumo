@@ -25,8 +25,6 @@ RETIRED_COMMAND_PHRASES = tuple(
     for parts in (
         (_AEAT, _CONFIG, "init"),
         (_CONFIG, "init"),
-        (_AEAT, _CONFIG, _PROFILE, "view"),
-        (_CONFIG, _PROFILE, "view"),
         (_AEAT, _CONFIG, _PROFILE, "set"),
         (_CONFIG, _PROFILE, "set"),
         (_AEAT, _CONFIG, _PROFILE, "get"),

@@ -146,9 +146,13 @@ def repair(ctx: typer.Context) -> None:
     """Diagnose and repair local configuration, profile, auth, and log state."""
     if ctx.invoked_subcommand is not None:
         return
+    from ....application.user_profile.language_resolver import refresh_active_profile_output_language
     from ..config_payloads import ConfigRepairResult
     from ..state_projection_support import diagnostics_ports
 
+    # Repair is available without a profile session, so refresh its readable
+    # language hint before rendering diagnostics for an active profile.
+    refresh_active_profile_output_language()
     report = _build_config_repair_report(ports=diagnostics_ports(ctx))
     result = strict_round_trip(ConfigRepairResult, _config_repair_result(report))
     emit_envelope(

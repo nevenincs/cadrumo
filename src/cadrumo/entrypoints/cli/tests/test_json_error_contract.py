@@ -156,7 +156,8 @@ def test_text_mode_domain_refusal_renders_for_a_human_not_as_json() -> None:
     assert result.exit_code == 2, result.output
     assert not result.output.lstrip().startswith("{"), result.output
     assert "not-hex!" in result.output, "the refusal must echo the value the operator typed"
-    assert "prefix:" in result.output, "the refusal's structured facts render for a human too"
+    assert "Prefix:" in result.output, "the refusal's structured facts render for a human too"
+    assert 'action.failed_condition_id: "cli.ledger.transaction_id.resolves"' in result.output
 
 
 def test_text_mode_usage_error_keeps_its_usage_block() -> None:

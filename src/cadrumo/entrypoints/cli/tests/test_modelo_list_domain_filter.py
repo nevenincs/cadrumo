@@ -47,13 +47,12 @@ def test_domain_filter_is_a_strict_subset_of_the_unfiltered_listing() -> None:
     assert all(row["tax_domain"] == "irpf" for row in irpf["modelos"])
 
 
-def test_invalid_domain_is_refused_with_the_accepted_set() -> None:
+def test_invalid_domain_syntax_is_refused_at_parse_boundary() -> None:
     result = invoke_cached_cli(["app", "modelo", "list", "--domain", "not-a-family"])
-    assert result.exit_code != 0
-    # Typer renders the closed TaxDomain enum as a click Choice, so the
-    # accepted-value set is surfaced on the parse failure.
-    assert "iva" in result.output
-    assert "irpf" in result.output
+    assert result.exit_code == 2, result.output
+    # TaxDomain is an open registry identifier, not a closed Typer enum.
+    assert "--domain" in result.output
+    assert "not-a-family" in result.output
 
 
 def test_domain_composes_with_year_filter() -> None:

@@ -393,16 +393,15 @@ def test_modification_refused_when_row_feeds_finalized_modelo(*, operation: Pinn
         ),
     )
 
-    refused = _invoke(["app", "ledger", "update", tx, "--notes", "tweak"])
+    refused = _invoke(["--format", "json", "app", "ledger", "update", tx, "--notes", "tweak"])
     assert refused.exit_code != 0, refused.output
-    # WHICH finalized revision blocks the edit, in the transport form the
-    # refusal context carries. The word "modelo" alone is rendered by every
-    # ledger refusal in every locale, so accepting it asserted only the exit
-    # code; these facts are what an operator needs to go and unlock the row.
-    assert f"work_unit_id: {work_unit_id}" in refused.output
-    assert f"calculation_revision_id: {revision_id}" in refused.output
-    assert "modelo: 303" in refused.output
-    assert "blocking_reference_count: 1" in refused.output
+    # The refusal names the exact finalized revision through language-neutral
+    # context, so the operator can identify the row that blocks the edit.
+    context = json.loads(refused.output)["error"]["context"]
+    assert context["work_unit_id"] == work_unit_id
+    assert context["calculation_revision_id"] == revision_id
+    assert context["modelo"] == "303"
+    assert context["blocking_reference_count"] == "1"
 
 
 # --- Drive document-link fetch-and-encrypt-or-refuse -------------------------------

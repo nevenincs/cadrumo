@@ -63,13 +63,15 @@ class EuMemberStateCatalogue:
             token = self.aliases.get(alias)
             if token is None:
                 raise RegistryValidationError(
-                    f"EU member-state token {value!r} is not declared by fact {_FACT_ID!r}",
+                    f"EU member-state token {value!r} is not declared by fact {_FACT_ID!r}; "
+                    f"accepted tokens: {', '.join(map(str, self.choices))}",
                 )
         else:
             raise RegistryValidationError("EU member-state token must be a string token")
         if token not in self.all_states:
             raise RegistryValidationError(
-                f"EU member-state token {str(token)!r} is not declared by fact {_FACT_ID!r}",
+                f"EU member-state token {str(token)!r} is not declared by fact {_FACT_ID!r}; "
+                f"accepted tokens: {', '.join(map(str, self.choices))}",
             )
         return token
 

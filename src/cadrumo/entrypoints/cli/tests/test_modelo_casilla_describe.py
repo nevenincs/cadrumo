@@ -79,5 +79,6 @@ def test_casilla_describe_refuses_unknown_casilla_instructively() -> None:
     assert invocation.exit_code != 0, invocation.output
     message = invocation.output
     assert "ZZZ999" in message
-    assert "casillas" in message
+    assert "valid casilla ids include:" in message
+    assert "01" in message
     assert "130" in message

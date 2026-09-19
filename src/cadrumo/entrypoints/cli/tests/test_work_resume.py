@@ -281,7 +281,7 @@ def test_resume_refuses_missing_run_with_bad_parameter() -> None:
 def test_resume_refuses_non_resumable_reason() -> None:
     run_id = "c" * 16
     save_run(_aborted_run(run_id, reason=WorkflowAbortReason.USER_CANCELLED))
-    result = _invoke_work(["resume", run_id])
+    result = invoke_cached_cli(["--language", "en", "app", "modelo", "work", "resume", run_id])
     assert result.exit_code != 0
     assert "terminal by design" in result.output
 

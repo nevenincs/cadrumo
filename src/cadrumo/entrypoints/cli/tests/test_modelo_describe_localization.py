@@ -75,11 +75,11 @@ def test_describe_label_keys_distinguish_locales() -> None:
 def test_describe_output_contains_localized_labels_in_english() -> None:
     """``modelo describe 303`` text output contains English label strings.
 
-    The conftest pins CADRUMO_OUTPUT_LANGUAGE=en for the test suite.
+    The invocation explicitly selects English, independent of the profile.
     Each label in the output must match the English catalogue entry
     so a reader can confirm the tr() wiring is live end-to-end.
     """
-    result = invoke_cached_cli(["app", "modelo", "describe", "303"])
+    result = invoke_cached_cli(["--language", "en", "app", "modelo", "describe", "303"])
     assert result.exit_code == 0, result.output
 
     for key in _DESCRIBE_LABEL_KEYS:

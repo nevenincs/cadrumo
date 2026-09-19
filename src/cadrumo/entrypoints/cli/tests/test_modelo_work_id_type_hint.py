@@ -79,34 +79,30 @@ def test_verify_with_work_unit_id_hints_at_calculate() -> None:
 
     The id resolves to a real work unit but to no calculation revision, so the
     refusal must be instructive: it names that the id is a work-unit id, that
-    verify needs a calculation-revision id, and the ``work calculate`` command
-    (echoing the offending id) that produces one -- not a bare "not found".
+    verify needs a calculation-revision id, and the typed ``work calculate``
+    recovery action that produces one.
     """
     work_unit_id = _seed_work_unit_without_revision()
-    result = invoke_cached_cli(["app", "modelo", "work", "verify", work_unit_id])
+    result = invoke_cached_cli(["--language", "en", "app", "modelo", "work", "verify", work_unit_id])
 
     assert result.exit_code != 0, result.output
     collapsed = " ".join(result.output.split())
-    assert "work-unit-id" in collapsed
-    assert "calculation-revision-id" in collapsed
-    assert "--modelo" in collapsed and "130" in collapsed
-    assert "--year" in collapsed and "2026" in collapsed
-    assert "--period" in collapsed and "1T" in collapsed
+    assert "is a work unit, not a calculation revision" in collapsed
+    assert f"--work-unit-id {work_unit_id}" in collapsed
+    assert '"action_id":"operator.modelo.work.calculate"' in collapsed
     assert f"work calculate {work_unit_id}" not in collapsed
 
 
 def test_file_with_work_unit_id_hints_at_calculate() -> None:
     """``work file`` given a work-unit id gets the same instructive id-type hint."""
     work_unit_id = _seed_work_unit_without_revision()
-    result = invoke_cached_cli(["app", "modelo", "work", "file", work_unit_id])
+    result = invoke_cached_cli(["--language", "en", "app", "modelo", "work", "file", work_unit_id])
 
     assert result.exit_code != 0, result.output
     collapsed = " ".join(result.output.split())
-    assert "work-unit-id" in collapsed
-    assert "calculation-revision-id" in collapsed
-    assert "--modelo" in collapsed and "130" in collapsed
-    assert "--year" in collapsed and "2026" in collapsed
-    assert "--period" in collapsed and "1T" in collapsed
+    assert "is a work unit, not a calculation revision" in collapsed
+    assert f"--work-unit-id {work_unit_id}" in collapsed
+    assert '"action_id":"operator.modelo.work.calculate"' in collapsed
     assert f"work calculate {work_unit_id}" not in collapsed
 
 

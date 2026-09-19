@@ -71,7 +71,7 @@ legal_refs = ["ley-35-2006:art-81"]
 [[derived_selectors]]
 pattern = "tax_residence.state_attribution_ratio"
 derived_from = ["tax_residence.jurisdiction_scope"]
-entry_surface = "aeat config profile set tax_residence.jurisdiction_scope"
+entry_surface = "aeat config profile edit --tax-residence-jurisdiction-scope SCOPE"
 description = "Porcentaje atribuible al Estado derivado exclusivamente del regimen territorial declarado."
 legal_refs = ["ley-12-2002:art-29"]
 
