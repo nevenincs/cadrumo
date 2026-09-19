@@ -91,7 +91,19 @@ def _seed_historical_m130_m303_work() -> dict[tuple[str, int, str], str]:
     }
 
 
-def _entries_by_target(entries: list[dict[str, object]]) -> dict[tuple[str, int, str], dict[str, object]]:
+def _calendar_entries_by_target(entries: list[dict[str, object]]) -> dict[tuple[str, str], dict[str, object]]:
+    """Index compact calendar rows by their public target identity."""
+    result: dict[tuple[str, str], dict[str, object]] = {}
+    for entry in entries:
+        modelo = entry.get("modelo")
+        period = entry.get("period")
+        if isinstance(modelo, str) and isinstance(period, str):
+            result[(modelo, period)] = entry
+    return result
+
+
+def _backlog_entries_by_target(entries: list[dict[str, object]]) -> dict[tuple[str, int, str], dict[str, object]]:
+    """Index the detailed backlog rows by their full persisted target identity."""
     result: dict[tuple[str, int, str], dict[str, object]] = {}
     for entry in entries:
         modelo = entry.get("modelo")
@@ -100,22 +112,6 @@ def _entries_by_target(entries: list[dict[str, object]]) -> dict[tuple[str, int,
         if isinstance(modelo, str) and isinstance(filing_year, int) and isinstance(period, str):
             result[(modelo, filing_year, period)] = entry
     return result
-
-
-def _get_nested_dict_value(obj: object, key: str) -> dict[str, object] | None:
-    """Safely access a nested dict value from an object-typed dict.
-
-    ``isinstance(value, dict)`` only proves ``value`` is *some* dict, not
-    that it matches ``dict[str, object]`` — this data always originates from
-    parsed JSON envelope output, so every key is already a ``str``; the
-    comprehension re-keys with ``str(k)`` to give the type checker a real,
-    honestly-typed ``dict[str, object]`` rather than asserting the shape.
-    """
-    if isinstance(obj, dict):
-        value = obj.get(key)
-        if isinstance(value, dict):
-            return {str(k): v for k, v in value.items()}
-    return None
 
 
 def test_calendar_surfaces_created_historical_m130_m303_work_units() -> None:
@@ -137,12 +133,9 @@ def test_calendar_surfaces_created_historical_m130_m303_work_units() -> None:
     )
 
     assert result.exit_code == 0, result.output
-    entries = _entries_by_target(_payload(result.output)["entries"])
-    for (modelo, year, period), work_unit_id in created.items():
-        entry = entries[(modelo, year, f"{year} {period}")]
-        assert entry["source"] == "local_work_unit"
-        assert entry["local_work_unit_id"] == work_unit_id
-        assert entry["local_work_unit_revision_id"]
+    entries = _calendar_entries_by_target(_payload(result.output)["entries"])
+    for modelo, year, period in created:
+        entry = entries[(modelo, f"{year} {period}")]
         assert entry["user_state"] == "late"
 
 
@@ -163,10 +156,12 @@ def test_backlog_default_surface_includes_created_historical_m130_m303_work_unit
     assert result.exit_code == 0, result.output
     payload = _payload(result.output)
     assert payload["range"]["from_date"] <= "2022-01-01"
-    items = _entries_by_target(payload["items"])
+    items = _backlog_entries_by_target(payload["items"])
     for (modelo, year, period), work_unit_id in created.items():
         item = items[(modelo, year, f"{year} {period}")]
-        assert item["source"] == "local_work_unit"
+        # The pinned registry now covers these historical windows. The work
+        # unit enriches the authoritative deadline row rather than replacing it.
+        assert item["source"] == "registry_deadline"
         assert item["local_work_unit_id"] == work_unit_id
         assert item["user_state"] == "late"
 
@@ -215,15 +210,7 @@ def test_filed_historical_work_unit_is_calendar_filed_not_backlog_late() -> None
     )
 
     assert calendar_result.exit_code == 0, calendar_result.output
-    entries = _entries_by_target(_payload(calendar_result.output)["entries"])
-    entry = entries[("130", 2022, "2022 1T")]
-    assert entry["source"] == "local_work_unit"
-    assert entry["local_work_unit_id"] == work_unit_id
-    assert entry["status"] == "FILED"
+    entries = _calendar_entries_by_target(_payload(calendar_result.output)["entries"])
+    entry = entries[("130", "2022 1T")]
     assert entry["user_state"] == "filed"
-    filing_evidence = _get_nested_dict_value(entry, "filing_evidence")
-    assert filing_evidence is not None
-    assert filing_evidence.get("local_filing_state") == "ready_to_file"
-    assert filing_evidence.get("local_filing_record_id") == _CURRENT_FILING_RECORD_ID
-    assert filing_evidence.get("local_calculation_revision_id") == _FILED_CALCULATION_REVISION_ID
-    assert filing_evidence.get("aeat_submission_state") == "not_observed"
+    assert entry["local_filing_state"] == "ready_to_file"

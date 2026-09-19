@@ -70,6 +70,9 @@ __all__ = [
 ]
 
 
+_AUTHORITY_ROOT_ENVIRONMENT_VARIABLE = "CADRUMO_AUTHORITY_ROOT"
+
+
 def as_text_completed_process(
     result: subprocess.CompletedProcess[str | bytes],
 ) -> subprocess.CompletedProcess[str]:
@@ -147,12 +150,18 @@ def subprocess_cli_env(
     ``AEAT_`` and ``PYTEST_`` are pytest/legacy scaffolding never meant to
     reach the CLI, while ``CADRUMO_`` is real product configuration some
     suites deliberately keep out of the child (so a developer's exported
-    ``CADRUMO_*`` cannot silently redirect where the test writes) and others
-    deliberately let through. There is no single default that is right for
-    every caller, so callers name their own set explicitly rather than
-    inheriting one that happens to fit some other test.
+    storage or secret settings cannot silently redirect where the test writes)
+    and others deliberately let through. The selected authority is the one
+    shared product input that must survive that isolation: when a caller strips
+    the whole ``CADRUMO_`` prefix, this helper reattaches the parent's
+    ``CADRUMO_AUTHORITY_ROOT``. It is a published, read-only selector rather
+    than a storage route, and every fresh process must resolve the same
+    authority generation as its parent. A caller that needs a different
+    authority can provide it through ``extra``; explicit caller values win.
     """
     env = {key: value for key, value in os.environ.items() if not key.startswith(tuple(strip_prefixes))}
+    if _AUTHORITY_ROOT_ENVIRONMENT_VARIABLE in os.environ and _AUTHORITY_ROOT_ENVIRONMENT_VARIABLE not in (extra or {}):
+        env[_AUTHORITY_ROOT_ENVIRONMENT_VARIABLE] = os.environ[_AUTHORITY_ROOT_ENVIRONMENT_VARIABLE]
     env.update(
         {
             "PYTHONIOENCODING": "utf-8",

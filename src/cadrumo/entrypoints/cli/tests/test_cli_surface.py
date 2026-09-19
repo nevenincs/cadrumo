@@ -51,7 +51,7 @@ def test_root_help_lists_config_and_app() -> None:
 def test_app_help_lists_singular_domains() -> None:
     result = _invoke(["app", "--help"])
     assert result.exit_code == 0
-    for token in ("overview", "ledger", "live", "modelo", "registry", "review"):
+    for token in ("overview", "ledger", "live", "modelo", "review"):
         assert token in result.output
     for retired_command in ("aeat app invoice", "aeat app declaration", "aeat app archive"):
         assert retired_command not in result.output
@@ -310,6 +310,7 @@ def _assert_ledger_review_filtered_by_period_returns_empty(transaction_id: str) 
     assert filtered_out["filters"] == ["period=2026 06", f"id={transaction_id}"]
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_app_ledger_create_manual_transaction_persists_in_active_bucket() -> None:
     """End-to-end ledger CLI flow: add → list/view → update → classify → allocate → status → track → review.
 
@@ -409,7 +410,10 @@ def test_app_modelo_filing_record_list_text_header_is_well_formed() -> None:
     listed = _invoke(["app", "modelo", "filing-record", "list"])
     assert listed.exit_code == 0, listed.output
 
-    header_line = "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\tfiled_at\tfiled_by"
+    header_line = (
+        "filing_record_id\tbucket_id\tmodelo\tyear\tperiod\tstatus\torigin\tconfirmation\t"
+        "declaration_kind\tamends_filing_record_id\taeat_expediente_id\tfiled_at\tfiled_by"
+    )
     assert header_line in listed.output
     # The corruption symptom was ``bucket_id<TAB><bucket-id>`` replacing the
     # ``modelo`` column name; the well-formed header keeps every column name.

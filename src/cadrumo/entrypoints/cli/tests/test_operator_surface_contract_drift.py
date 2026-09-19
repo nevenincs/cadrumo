@@ -85,6 +85,10 @@ def _resolve_live_surface() -> dict[str, dict[str, frozenset[str]]]:
             continue
         families: dict[str, frozenset[str]] = {}
         for child_name, child_cmd in _direct_children(root_cmd).items():
+            # The TUI leaf hands control to a separate interface process; it
+            # is not an operator-service family represented by this contract.
+            if root_name == "app" and child_name == "tui":
+                continue
             sub_verbs = frozenset(_direct_children(child_cmd))
             families[child_name] = sub_verbs or frozenset({child_name})
         surface[root_name] = families
@@ -102,7 +106,7 @@ def _declared_families() -> dict[str, frozenset[str]]:
 def test_operator_surface_contract_covers_the_live_tree() -> None:
     """The contract declares exactly the mounted families.
 
-    Symmetric difference, no allowlist: a ``root -> child`` group/leaf mounted
+    Symmetric difference after excluding the separate TUI launcher: a ``root -> child`` group/leaf mounted
     by the CLI but absent from ``command_families`` (the agent's manifest would
     omit it), or a contract family with no live mount (a dead manifest entry).
 
@@ -125,12 +129,12 @@ def test_operator_surface_contract_covers_the_live_tree() -> None:
     # single leaf (or none) and terminates silently. Pin the resolved surface
     # against its known shape so a collapsed walk reds here rather than passing
     # a mirror of two empty inventories. The floors sit comfortably below the
-    # live counts (2 roots, 23 families, 151 sub-verbs) yet far above the
+    # live counts (2 roots, 19 operator-service families) yet far above the
     # single-leaf blind-walk failure.
     live_family_total = sum(len(families) for families in live.values())
     live_sub_verb_total = sum(len(sub) for families in live.values() for sub in families.values())
     assert set(live) == _PINNED_ROOTS, f"live surface did not resolve both pinned roots: {sorted(live)}"
-    assert live_family_total >= 20, (
+    assert live_family_total >= 19, (
         f"live tree resolved only {live_family_total} families; the lazy walk likely collapsed"
     )
     assert live_sub_verb_total >= 120, (

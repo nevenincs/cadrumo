@@ -125,7 +125,7 @@ def test_backend_declared_command_families_are_mounted_in_cli() -> None:
     app_children = mounted["app"]
     assert {"profile", "auth", "repair"}.issubset(config_children)
     assert "init" not in config_children
-    assert {"overview", "ledger", "modelo", "registry", "review"}.issubset(app_children)
+    assert {"overview", "ledger", "modelo", "review"}.issubset(app_children)
 
 
 def test_rejected_aliases_do_not_reach_workflow_services() -> None:

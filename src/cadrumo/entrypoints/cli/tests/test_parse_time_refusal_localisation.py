@@ -55,7 +55,20 @@ def test_invalid_choice_refusal_renders_in_requested_locale(locale: str) -> None
     rendering of the parse-invalid-choice key with the same structured facts.
     """
     result = invoke_cached_cli(
-        ["--format", "json", "--language", locale, "config", "profile", "create", "--taxation-type", "9"],
+        [
+            "--format",
+            "json",
+            "--language",
+            locale,
+            "app",
+            "modelo",
+            "work",
+            "dependencies",
+            "--modelo",
+            "999",
+            "--year",
+            "2025",
+        ],
     )
     assert result.exit_code == 2, result.output
     error = _error_member(result.output)
@@ -63,10 +76,11 @@ def test_invalid_choice_refusal_renders_in_requested_locale(locale: str) -> None
     assert error["category"] == "REFUSED"
 
     context = _context(error)
-    assert context["value"] == "9"
+    assert context["value"] == "999"
     accepted = context["accepted"]
     assert isinstance(accepted, str)
-    assert "1" in accepted and "2" in accepted
+    assert accepted
+    assert "999" not in accepted
 
     expected = tr(_PARSE_INVALID_CHOICE_KEY, locale=locale, value=context["value"], accepted=accepted)
     assert error["message"] == expected
@@ -107,13 +121,13 @@ def test_missing_argument_refusal_names_parameter_and_localises() -> None:
     """A missing required argument renders the keyed refusal naming the parameter.
 
     ``config profile create`` has no genuine click-level required argument (its
-    ``--profile`` is optional, resolved by the wizard), so it never reaches
-    click's ``MissingParameter`` path -- it hits a different, unrelated
-    refusal instead. ``config profile rename`` has a real required positional
-    (``source``), so it is the fixture that actually exercises this path.
+    profile name is optional, resolved by the wizard), so it never reaches
+    click's ``MissingParameter`` path. The model work dependencies command has
+    a real required ``--year`` option, so omitting it exercises that path while
+    keeping the command itself live.
     """
     result = invoke_cached_cli(
-        ["--format", "json", "--language", "hu", "config", "profile", "rename"],
+        ["--format", "json", "--language", "hu", "app", "modelo", "work", "dependencies"],
     )
     assert result.exit_code == 2, result.output
     error = _error_member(result.output)

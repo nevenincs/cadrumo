@@ -5,21 +5,18 @@ whole point. That gate asks whether a node loads families its spec does not
 DECLARE. This one asks whether it loads them at RESOLUTION at all -- including
 families it is perfectly entitled to use once an operator actually runs it.
 
-``app/live/verify/list`` is the worked example: it declares ``encrypted-facts``,
-which entitles it to the persistence families, so the declaration gate passes
-while it loads 179 storage modules merely being resolved. Nothing has been
-asked for at that point. Resolution happens on the way to every sibling and on
-every ``--help``, so work done there is paid by operators who never invoke the
-command.
+``app/modelo/work/verify`` is a remaining example: its declared capabilities
+permit registry and persistence access during execution, but resolution still
+loads those modules before the operator invokes the command.
 
 **Cost.** The expectation for a compliant node is *nothing*, and that makes the
 sweep cheap: every node expected to be clean is resolved in ONE child process
 and the union of what it loaded must be empty. An empty union means no
-individual node loaded anything, so one process settles 351 nodes. The
+individual node loaded anything, so one process settles hundreds of nodes. The
 exceptions are then probed one at a time, because there the claim is about each
 node specifically.
 
-Fourteen nodes do not defer yet. Each is named with what it loads and why, and
+Six nodes do not defer yet. Each is named with what it loads and why, and
 a stale case deletes an entry the moment the node stops loading -- so the list
 cannot outlive the problem and start excusing a regression.
 """
@@ -35,16 +32,12 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 #: Nodes whose resolution still loads capability families, with the cause.
 #:
-#: The causes are shared, not fourteen separate defects: a CommandSpec parameter
+#: The causes are shared, not six separate defects: a CommandSpec parameter
 #: ANNOTATION is a deferred target, so building a node's Typer signature imports
 #: whatever module owns each annotated type -- and several of those are package
 #: roots that import heavy siblings eagerly.
 _RESOLUTION_LOADERS: dict[str, str] = {
-    "app/ledger/export": "annotation resolves through ledger.actions_common -> domain.modelos protocols",
     "app/ledger/import": "annotation resolves through ledger.actions_common -> domain.modelos protocols",
-    "app/live/verify/latest": "annotation pulls the persistence families it may use only at execution",
-    "app/live/verify/list": "annotation pulls the persistence families it may use only at execution",
-    "config/auth/diagnostics/report": "annotation pulls the persistence families it may use only at execution",
     "app/modelo/work/verify": "annotation pulls registry and persistence it may use only at execution",
     "app/modelo/work/amend": "annotation pulls the registry it may use only at execution",
     "app/modelo/casillas": "annotation pulls the registry package root",

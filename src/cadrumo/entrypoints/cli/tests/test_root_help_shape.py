@@ -85,6 +85,8 @@ def _console_env(tmp_path: Path) -> dict[str, str]:
             setting_env("cadrumo_output_language"): "en",
         },
     )
+    if base_settings.cadrumo_authority_root is not None:
+        env[setting_env("cadrumo_authority_root")] = str(base_settings.cadrumo_authority_root)
     scripts_dir = str(Path(sys.executable).parent)
     env["PATH"] = os.pathsep.join((scripts_dir, env.get("PATH", "")))
     return env

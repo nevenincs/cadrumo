@@ -225,7 +225,11 @@ def _work_unit_key(unit: _WorkUnit) -> tuple[str, int, str]:
     return (str(unit.modelo), unit.filing_year, unit.period.registry_token)
 
 
-def _registry_window_for_work_unit(unit: _WorkUnit) -> DeadlineWindowDefinition | None:
+def _registry_window_for_work_unit(
+    unit: _WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> DeadlineWindowDefinition | None:
     """Return a registry deadline window for ``unit`` when one is bundled.
 
     Window matching belongs to the deadline domain, which owns the year/token
@@ -233,12 +237,21 @@ def _registry_window_for_work_unit(unit: _WorkUnit) -> DeadlineWindowDefinition 
     same window the extemporaneidad surface consumes and reads the ``opens_on``
     and ``payment_cutoff_on`` fields that surface does not need.
     """
-    return _resolve_filing_window(str(unit.modelo), unit.filing_year, unit.period)
+    return _resolve_filing_window(
+        str(unit.modelo),
+        unit.filing_year,
+        unit.period,
+        authority=operation,
+    )
 
 
-def _work_unit_window_dates(unit: _WorkUnit) -> tuple[date, date, date | None]:
+def _work_unit_window_dates(
+    unit: _WorkUnit,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> tuple[date, date, date | None]:
     """Return the calendar span used to place a local work unit row."""
-    window = _registry_window_for_work_unit(unit)
+    window = _registry_window_for_work_unit(unit, operation=operation)
     if window is not None:
         return window.opens_on, window.closes_on, window.payment_cutoff_on
     if unit.period.has_date_span():
@@ -247,8 +260,13 @@ def _work_unit_window_dates(unit: _WorkUnit) -> tuple[date, date, date | None]:
     return anchor, anchor, None
 
 
-def _work_unit_intersects_range(unit: _WorkUnit, calendar_range: _OverviewCalendarRange) -> bool:
-    opens_on, closes_on, _payment_cutoff_on = _work_unit_window_dates(unit)
+def _work_unit_intersects_range(
+    unit: _WorkUnit,
+    calendar_range: _OverviewCalendarRange,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> bool:
+    opens_on, closes_on, _payment_cutoff_on = _work_unit_window_dates(unit, operation=operation)
     return closes_on >= calendar_range.from_date and opens_on <= calendar_range.to_date
 
 
@@ -309,9 +327,20 @@ def _filing_evidence_with_work_unit_pointers(
     return (*filing_evidence, pointer_evidence)
 
 
-def _annotate_entry_with_work_unit(entry: _OverviewCalendarEntry, unit: _WorkUnit) -> _OverviewCalendarEntry:
+def _annotate_entry_with_work_unit(
+    entry: _OverviewCalendarEntry,
+    unit: _WorkUnit,
+    *,
+    today: date,
+    due_soon_days: int,
+) -> _OverviewCalendarEntry:
+    status = _local_work_unit_status(unit, entry.closes_on, today, due_soon_days)
+    effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, (entry.filing_evidence,))
     return entry.model_copy(
         update={
+            "status": status,
+            "user_state": _user_state_for(status),
+            "filing_evidence": effective_filing_evidence[-1],
             "local_work_unit_id": unit.work_unit_id,
             "local_work_unit_name": unit.name,
             "local_work_unit_revision_id": unit.revision_id,
@@ -328,7 +357,7 @@ def _calendar_entry_from_work_unit(
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     operation: PinnedAuthorityOperation,
 ) -> _OverviewCalendarEntry:
-    opens_on, closes_on, payment_cutoff_on = _work_unit_window_dates(unit)
+    opens_on, closes_on, payment_cutoff_on = _work_unit_window_dates(unit, operation=operation)
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, filing_evidence)
     obligation = _ModeloDeadline(
         modelo=_Modelo(str(unit.modelo)),
@@ -377,10 +406,15 @@ def _merge_work_units_into_entries(
         key = _work_unit_key(unit)
         existing_index = registry_index.get(key)
         if existing_index is not None and key not in annotated_registry_keys:
-            merged[existing_index] = _annotate_entry_with_work_unit(merged[existing_index], unit)
+            merged[existing_index] = _annotate_entry_with_work_unit(
+                merged[existing_index],
+                unit,
+                today=today,
+                due_soon_days=due_soon_days,
+            )
             annotated_registry_keys.add(key)
             continue
-        if not _work_unit_intersects_range(unit, calendar_range):
+        if not _work_unit_intersects_range(unit, calendar_range, operation=operation):
             continue
         merged.append(
             _calendar_entry_from_work_unit(

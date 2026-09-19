@@ -177,13 +177,7 @@ _RETIRED_CUSTODY_SPELLINGS: tuple[tuple[str, str], ...] = (
 #: the enclosing function, never by line number. Each entry states why the
 #: citation is enforcement rather than instruction. A stale entry FAILS: see
 #: :func:`test_every_retired_spelling_exemption_is_still_load_bearing`.
-_SPELLING_EXEMPTIONS: tuple[tuple[str, str, str], ...] = (
-    (
-        "src/cadrumo/adapters/persistence/storage/master_key/tests/test_master_key.py",
-        "test_single_artifact_torn_states_raise",
-        "asserts the spelling is ABSENT from the torn-store refusal text; the citation is the probe, not an instruction",
-    ),
-)
+_SPELLING_EXEMPTIONS: tuple[tuple[str, str, str], ...] = ()
 
 
 def _retired_spelling_scan_corpus() -> list[Path]:

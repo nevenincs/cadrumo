@@ -79,7 +79,7 @@ def test_a_fresh_natural_person_profile_gets_the_history_notice_with_the_sweep_a
     assert notice["severity"] == "info"
     action = notice.get("action")
     assert isinstance(action, dict)
-    assert action["action"]["action"]["action_id"] == "operator.live.filed.pull_all"
+    assert action["action"]["action_id"] == "operator.live.filed.pull_all"
 
 
 def test_a_fresh_sociedades_profile_gets_the_history_notice_with_no_action() -> None:
@@ -112,9 +112,9 @@ def test_one_pulled_observation_from_any_modelo_silences_the_sociedades_notice_t
         repository = CalculationObservationRepository()
         repository.save(
             repository.prepare_observation_envelope(
-                RegistryModeloObservation(modelo="303", filing_year=2025, period="1T"),
+                RegistryModeloObservation(modelo="130", filing_year=2025, period="1T"),
                 source_kind="aeat_sede_justificante",
-                stamped_revision_id=str(published_snapshot("303", filing_year=2025, period="1T").revision.id),
+                stamped_revision_id=str(published_snapshot("130", filing_year=2025, period="1T").revision.id),
             ),
         )
 

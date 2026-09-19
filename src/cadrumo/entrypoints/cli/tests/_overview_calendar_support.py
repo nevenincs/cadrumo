@@ -24,6 +24,8 @@ from ....adapters.persistence.storage.tests.secure_sql import isolated_profile_s
 from ....application.user_profile.censo_sync import CENSO_SOURCE_TAG
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.codes import ModeloCode
@@ -172,21 +174,22 @@ def _modelo_record_with_external_justificante(
 def _justificante_metadata(*, csv: str, tax_id: str = "X1234567L") -> Justificante:
     body = f"{csv}-pdf".encode()
     source_pdf_sha256 = hashlib.sha256(body).hexdigest()
-    return Justificante(
-        csv=csv,
-        modelo="303",
-        period=Period.from_year_and_code(2025, "1T"),
-        ejercicio="2025",
-        presentation_id=None,
-        presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
-        tax_id=tax_id,
-        total_a_ingresar=None,
-        total_a_devolver=None,
-        verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
-        source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
-        source_pdf_sha256=source_pdf_sha256,
-        parsed_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
-    )
+    with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
+        return Justificante(
+            csv=csv,
+            modelo="303",
+            period=Period.from_year_and_code(2025, "1T"),
+            ejercicio="2025",
+            presentation_id=None,
+            presented_at=datetime(2025, 4, 15, 9, 30, tzinfo=UTC),
+            tax_id=tax_id,
+            total_a_ingresar=None,
+            total_a_devolver=None,
+            verification_url=TypeAdapter(AnyHttpUrl).validate_python(justificante_cotejo_url(csv)),
+            source_pdf_path=source_pdf_reference_path(source_pdf_sha256),
+            source_pdf_sha256=source_pdf_sha256,
+            parsed_at=datetime(2025, 4, 16, 12, 0, tzinfo=UTC),
+        )
 
 
 def _stamp_calendar_enrolment_from_censo() -> None:

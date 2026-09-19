@@ -62,8 +62,13 @@ def root_command(
 
         ctx.with_resource(profile_free_adapter_composition())
     else:
+        from ...application.user_profile.profile_record_repository import invocation_profile_record_handoff
         from ..adapter_composition import profile_adapter_composition
 
+        # Enter before adapter composition snapshots the profile language.
+        # The scope is owned by this Click invocation and is reset when its
+        # resource stack closes, never by the process-wide login session.
+        ctx.with_resource(invocation_profile_record_handoff())
         if requested is not None and _requested_leaf_writes_nothing(requested.canonical_cli_path):
             from ...application.user_profile.profile_summary import summary_inventory_snapshot
 

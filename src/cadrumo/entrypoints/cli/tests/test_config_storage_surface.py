@@ -97,12 +97,14 @@ class TestTextOutputIsReadable:
             result = invoke_cached_cli(["config", "storage", "list", "--output-language", "en"])
 
         assert result.exit_code == 0, semantic_cli_output(result)
-        assert "\t" not in result.output
-        assert "Storage root" in result.output
-        assert "Area" in result.output
-        assert "Lifecycle" in result.output
-        assert "Info:" in result.output
-        notice_lines = result.output.split("Info: ", maxsplit=1)[1].splitlines()
+        human_output, notice_separator, _machine_notice = result.output.partition("\nnotice\t")
+        assert notice_separator, result.output
+        assert "\t" not in human_output
+        assert "Storage root" in human_output
+        assert "Area" in human_output
+        assert "Lifecycle" in human_output
+        assert "Info:" in human_output
+        notice_lines = human_output.split("Info: ", maxsplit=1)[1].splitlines()
         assert len(notice_lines) > 1
         assert all(len(line) <= 96 for line in notice_lines)
         assert all(line.startswith("      ") for line in notice_lines[1:])

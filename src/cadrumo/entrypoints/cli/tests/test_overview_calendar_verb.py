@@ -235,33 +235,38 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
         supported_years = published_supported_filing_years()
         assert supported_years is not None
 
-        for filing_year in supported_years.years:
-            from_date = date(filing_year, 1, 1)
-            to_date = date(filing_year + 1, 12, 31)
-            result = _invoke(
-                [
-                    "--format",
-                    "json",
-                    "app",
-                    "overview",
-                    "calendar",
-                    "--from",
-                    from_date.isoformat(),
-                    "--to",
-                    to_date.isoformat(),
-                    "--allow-incomplete",
-                ],
-            )
-            assert result.exit_code == 0, result.output
+        # One range covers every coordinate the test compares.  Invoking the
+        # complete CLI and calendar builder once avoids rebuilding the same
+        # registry schedules for every supported filing year.
+        from_date = date(min(supported_years.years), 1, 1)
+        to_date = date(max(supported_years.years) + 1, 12, 31)
+        result = _invoke(
+            [
+                "--format",
+                "json",
+                "app",
+                "overview",
+                "calendar",
+                "--from",
+                from_date.isoformat(),
+                "--to",
+                to_date.isoformat(),
+                "--allow-incomplete",
+            ],
+        )
+        assert result.exit_code == 0, result.output
 
-            with bundled_indexed_authority().operation() as operation:
-                expected_calendar = build_overview_calendar(
-                    profile,
-                    OverviewCalendarRange(from_date=from_date, to_date=to_date),
-                    operation=operation,
-                    today=reference_today,
-                    raw_values=raw_values,
-                )
+        with bundled_indexed_authority().operation() as operation:
+            expected_calendar = build_overview_calendar(
+                profile,
+                OverviewCalendarRange(from_date=from_date, to_date=to_date),
+                operation=operation,
+                today=reference_today,
+                raw_values=raw_values,
+            )
+        entries = json.loads(result.output)["result"]["entries"]
+
+        for filing_year in supported_years.years:
             expected = tuple(
                 (
                     entry.modelo,
@@ -272,7 +277,6 @@ def test_calendar_json_matches_application_coordinates_for_every_supported_year(
                 for entry in expected_calendar.entries
                 if entry.period.filing_year == filing_year
             )
-            entries = json.loads(result.output)["result"]["entries"]
             actual = tuple(
                 (
                     entry["modelo"],
