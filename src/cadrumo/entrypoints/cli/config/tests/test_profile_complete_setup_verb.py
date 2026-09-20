@@ -18,7 +18,7 @@ from cadrumo.adapters.persistence.profile.tests.profile_registration import regi
 
 from .....application.user_profile.profile_record_repository import (
     ProfileRecordRepository,
-    _active_record_session,
+    active_profile_record_session,
 )
 from .....domain.user_profile.values import ProfileSetupState
 from ...tests.cli_runner import invoke_cached_cli
@@ -45,7 +45,7 @@ def _stored_state(profile_id: str) -> tuple[ProfileSetupState, int]:
     from uuid import UUID
 
     identity = UUID(profile_id)
-    session = _active_record_session()
+    session = active_profile_record_session()
     assert session is not None and session.profile_id == identity
     record = ProfileRecordRepository(session=session).load(identity)
     return record.setup_state, record.record_revision

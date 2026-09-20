@@ -147,7 +147,7 @@ def activate_profile_record_session(session: ProfileRecordSession) -> None:
     one, so a profile switch cannot leave facts decryptable through a prior
     session.
     """
-    previous = _active_record_session()
+    previous = active_profile_record_session()
     if previous is not None and previous is not session:
         previous.close()
     _ACTIVE_RECORD_AUTHORITY.bind(_ProfileRecordAuthority(session=session, session_derived=True))
@@ -162,7 +162,7 @@ def bind_active_profile_record_session(session: ProfileRecordSession) -> Profile
     fails, without a transient plaintext re-authentication or a duplicate
     record-session constructor.
     """
-    previous = _active_record_session()
+    previous = active_profile_record_session()
     # Session-derived like the activating door: handover binds the candidate's
     # authority beside the candidate's bucket session, and restores the prior
     # authority beside the prior bucket session on rollback. Both halves are
@@ -183,9 +183,14 @@ def clear_active_profile_record_session_binding(expected: ProfileRecordSession) 
         _ACTIVE_RECORD_AUTHORITY.clear_bound(authority)
 
 
+def active_profile_record_session() -> ProfileRecordSession | None:
+    """Return the record session this process currently holds, whatever installed it."""
+    return _active_record_session()
+
+
 def close_active_profile_record_session() -> None:
     """Zeroise and clear the process-local record authority."""
-    session = _active_record_session()
+    session = active_profile_record_session()
     if session is not None:
         session.close()
     _ACTIVE_RECORD_AUTHORITY.bind(None)
@@ -521,6 +526,7 @@ class ProfileRecordRepository:
 __all__ = [
     "ProfileRecordRepository",
     "activate_profile_record_session",
+    "active_profile_record_session",
     "bind_active_profile_record_session",
     "bound_profile_record_session",
     "clear_active_profile_record_session_binding",

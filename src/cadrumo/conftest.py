@@ -350,13 +350,13 @@ def _evict_test_bound_profile_record_session() -> Iterator[None]:
         yield
         return
     from .application.user_profile.profile_record_repository import (
-        _active_record_session,
+        active_profile_record_session,
         close_active_profile_record_session,
     )
 
-    inherited = _active_record_session()
+    inherited = active_profile_record_session()
     yield
-    bound = _active_record_session()
+    bound = active_profile_record_session()
     if bound is not None and bound is not inherited:
         close_active_profile_record_session()
 
