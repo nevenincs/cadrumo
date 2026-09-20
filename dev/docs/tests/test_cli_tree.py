@@ -43,6 +43,22 @@ from ..cli_tree import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.docs]
 
 
+def test_projection_environment_preserves_the_published_authority_dependency(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The isolated docs process keeps authority while discarding product state."""
+    authority_root = tmp_path / "authority"
+    monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(authority_root))
+    monkeypatch.setenv("CADRUMO_TOKEN_DIR", str(tmp_path / "ambient-tokens"))
+
+    environment = _reference_subprocess_environment(tmp_path / "state")
+
+    assert environment["CADRUMO_AUTHORITY_ROOT"] == str(authority_root)
+    assert environment["CADRUMO_LOCAL_STORAGE_ROOT"] == str(tmp_path / "state")
+    assert "CADRUMO_TOKEN_DIR" not in environment
+
+
 def _collect_all_path_keys_in_subprocess() -> set[str]:
     """Return every command path authored by the immutable graph."""
     code = textwrap.dedent(
