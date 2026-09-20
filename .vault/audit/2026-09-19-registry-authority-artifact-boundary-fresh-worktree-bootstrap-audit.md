@@ -5,7 +5,7 @@ tags:
 date: '2026-09-19'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:20b9b0d146f39399ee322bde89f76a5ef4242aef7cb1ad1622d3176c6d077e12'
+body_hash: 'sha256:b5e09fd2941170607c4f126b6779f5b40a96c3b3e3b7d28ef6a287bc7ae348b6'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
@@ -31,7 +31,7 @@ Fresh Linux CI proved two duplicated filesystem observations were unsafe around 
 
 ### self-hosted-runner-authority-posture | low | CI clean checkout explicitly selects the default arm
 
-The shared setup action clears `CADRUMO_AUTHORITY_ROOT` only for clean-checkout initialization, preventing a self-hosted runner service environment from changing which build posture CI exercises. Product and developer invocations retain the required contract: a non-empty explicit override that does not exist fails. Actionlint, focused build-hook tests, Ruff, and ty pass.
+The shared setup action explicitly unsets `CADRUMO_AUTHORITY_ROOT` only for clean-checkout initialization, preventing a self-hosted runner service environment from changing which build posture CI exercises. Product and developer invocations retain the required contract: a non-empty explicit override that does not exist fails. Actionlint, focused build-hook tests, Ruff, and ty pass.
 
 Result: PASS. The medium finding is resolved; no critical, high, or actionable finding remains.
 
