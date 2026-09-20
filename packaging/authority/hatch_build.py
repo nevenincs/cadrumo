@@ -104,12 +104,8 @@ def _authority_root(build_root: Path) -> Path | None:
     embedded = build_root / _SDIST_DESTINATION
     if embedded.is_dir():
         return embedded
-    compiler = build_root / "dev" / "registry" / "compiler" / "authority.py"
-    authored_registry = build_root / "src" / "cadrumo" / "_data" / "registry" / "aeat"
-    if compiler.is_file() and authored_registry.is_dir():
-        _publish_source_tree_authority(build_root, source_tree)
-        return source_tree if source_tree.is_dir() else None
-    return None
+    _publish_source_tree_authority(build_root, source_tree)
+    return source_tree if source_tree.is_dir() else None
 
 
 def _publish_source_tree_authority(build_root: Path, destination: Path) -> None:

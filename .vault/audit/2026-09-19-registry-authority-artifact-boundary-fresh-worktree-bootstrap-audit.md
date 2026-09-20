@@ -5,7 +5,7 @@ tags:
 date: '2026-09-19'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:d8f851b79cf3d5e4f384d8206479145842613080e3a1c511428ff349c77f10a8'
+body_hash: 'sha256:a0ea9e0a60a216f72080901ea1ee4333857983663a0ffca1a558c92829277d89'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
@@ -19,21 +19,21 @@ Reviewed the source-tree build bootstrap and complete worktree initialization pa
 
 ### fresh-worktree-bootstrap | low | No unresolved bootstrap or packaging defect
 
-The build hook invokes the canonical compiler only for a real source tree whose default `.authority/` is absent. An explicit missing override still fails closed, and an sdist rebuild consumes its embedded descriptor/database pair without reaching development tooling. The isolated dependency closure reproduced complete publication, plain `uv sync` created the default repo-root authority, and the packaged/runtime boundary tests passed.
+The build hook invokes the canonical compiler only when an explicit override, the default source publication, and an embedded sdist publication have all been excluded. An explicit missing override still fails closed, and an sdist rebuild consumes its embedded descriptor/database pair without reaching development tooling. Selection remains descriptor-driven and runtime never generates authority.
 
 ### complete-init | low | The provisioning facade preserves established owners
 
 `just init` delegates locked Python synchronization and default Vaultspec installation to `dev.init`, delegates RAG provisioning to its official installer, and delegates final authority compilation to the canonical publisher. It adds no alternate compiler, RAG lifecycle alias, or runtime source fallback. The real command completed and the exact runtime-load check admitted 58 modelos and 146 revisions.
 
-### fresh-runner-source-detection | medium | Clean-tree reproduction isolated the failure to the explicit override arm
+### source-shape-inference | medium | Resolved non-portable precondition before canonical compilation
 
-The first CI failure looked like duplicated source-shape inference in `_authority_root`. Removing that inference made a Git-archive `uv sync --locked` publish successfully, but the second CI run still refused before compilation. That proved the self-hosted runner was taking the earlier explicit-override arm. The broader hook change was reverted so malformed sdists retain their precise fail-closed behavior.
+Fresh Linux CI showed that checking selected authoring paths to re-prove a source checkout could return false before the compiler was invoked. Those checks duplicated knowledge the control flow already established. The explicit override and embedded-sdist arms return earlier; after both are absent, the canonical compiler is now the authority on whether the source inputs are coherent. A Git-archive `uv sync --locked` with no generated authority passed this exact path.
 
-### self-hosted-runner-authority-override | medium | Resolved CI contamination without weakening operator refusal
+### self-hosted-runner-authority-posture | low | CI clean checkout explicitly selects the default arm
 
-The shared setup action now clears `CADRUMO_AUTHORITY_ROOT` only for clean-checkout initialization, which deliberately exercises the packaged-default posture. Product and developer invocations retain the required contract: a non-empty explicit override that does not exist fails. Actionlint, focused build-hook tests, Ruff, and ty pass after the correction.
+The shared setup action clears `CADRUMO_AUTHORITY_ROOT` only for clean-checkout initialization, preventing a self-hosted runner service environment from changing which build posture CI exercises. Product and developer invocations retain the required contract: a non-empty explicit override that does not exist fails. Actionlint, focused build-hook tests, Ruff, and ty pass.
 
-Result: PASS. Both medium findings are resolved; no critical, high, or actionable finding remains.
+Result: PASS. The medium finding is resolved; no critical, high, or actionable finding remains.
 
 ## Recommendations
 
