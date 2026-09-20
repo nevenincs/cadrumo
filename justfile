@@ -969,6 +969,7 @@ test-release-tooling:
 [doc('Run CI, repair-safety, deployment, release, and benchmark contracts with independent scheduler verdicts.')]
 [group('test')]
 test-ci-contracts:
+    @uv run --no-sync python -m dev.docs.build --single-page docs/index.md
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_fixes.py dev/quality/tests/test_ty_fix_boundary.py
     @uv run --no-sync pytest -v -n0 -m "serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests
     @uv run --no-sync pytest -v -n0 -m "perf" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_ty_fix_boundary.py

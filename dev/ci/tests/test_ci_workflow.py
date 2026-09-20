@@ -334,6 +334,30 @@ def test_the_ci_contracts_recipe_carries_the_substance_the_workflow_delegates() 
         assert directory in recipe, f"the delegated lane no longer reaches {directory}"
 
 
+def test_ci_contracts_builds_real_docs_before_running_deployment_tests() -> None:
+    """Provision the real HTML corpus before deployment preflight tests read it.
+
+    The deployment search-index contracts intentionally copy real built pages
+    from ``docs/_build/html``.  A clean checkout therefore needs the small
+    single-page build before any pytest pass; a full docs build would make this
+    CI contract unnecessarily expensive.
+    """
+    lines = _JUSTFILE.read_text(encoding="utf-8").splitlines()
+    start = lines.index("test-ci-contracts:")
+    body: list[str] = []
+    for line in lines[start + 1 :]:
+        if line and not line.startswith((" ", "\t")):
+            break
+        body.append(line.strip())
+
+    build = "uv run --no-sync python -m dev.docs.build --single-page docs/index.md"
+    assert body.count(f"@{build}") == 1, "the CI contract must provision one canonical single-page docs build"
+    build_index = body.index(f"@{build}")
+    pytest_indices = [index for index, line in enumerate(body) if " pytest " in f" {line} "]
+    assert pytest_indices, "the CI contract has no pytest pass to exercise deployment tests"
+    assert build_index < min(pytest_indices), "the docs corpus must be built before any CI-contract pytest pass"
+
+
 def test_the_test_unit_recipe_carries_the_substance_the_workflow_delegates() -> None:
     """`test-unit` is the same recipe local runs invoke; emptying it must not pass.
 
