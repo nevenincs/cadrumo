@@ -77,11 +77,23 @@ _DESCRIPTOR_NAME = "authority.current.json"
 _DATABASE_NAME = re.compile(r"authority-[0-9a-f]{64}\.sqlite3")
 
 
+def _is_object_mapping(value: object) -> TypeGuard[dict[object, object]]:
+    """Narrow a decoded or framework-provided mapping to object values."""
+    return isinstance(value, dict)
+
+
 def _is_string_mapping(value: object) -> TypeGuard[dict[str, str]]:
     """Recognize Hatch's force-include mapping without trusting its Any payload."""
-    return isinstance(value, dict) and all(
-        isinstance(key, str) and isinstance(item, str) for key, item in value.items()
-    )
+    if not _is_object_mapping(value):
+        return False
+    return all(isinstance(key, str) and isinstance(item, str) for key, item in value.items())
+
+
+def _is_descriptor_mapping(value: object) -> TypeGuard[dict[str, object]]:
+    """Recognize a decoded JSON object with string member names."""
+    if not _is_object_mapping(value):
+        return False
+    return all(isinstance(key, str) for key in value)
 
 
 def _authority_root(build_root: Path) -> Path:
@@ -143,7 +155,7 @@ def _selected_pair(root: Path) -> tuple[Path, Path]:
     if not descriptor.is_file():
         raise FileNotFoundError(f"published authority has no descriptor: {descriptor}")
     document = json.loads(descriptor.read_text(encoding="utf-8"))
-    if not isinstance(document, dict):
+    if not _is_descriptor_mapping(document):
         raise TypeError(f"authority descriptor is not a mapping: {descriptor}")
     name = document.get("database")
     if not isinstance(name, str) or _DATABASE_NAME.fullmatch(name) is None:
