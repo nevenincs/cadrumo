@@ -38,6 +38,7 @@ class _InMemoryTransactionCatalogueRepository(TransactionCatalogueRepositoryProt
 
     def __init__(self) -> None:
         self._catalogue = TransactionCatalogue()
+        self.load_by_ids_calls = 0
 
     @property
     @override
@@ -60,6 +61,7 @@ class _InMemoryTransactionCatalogueRepository(TransactionCatalogueRepositoryProt
 
     @override
     def load_by_ids(self, transaction_ids: Iterable[str]) -> TransactionCatalogue:
+        self.load_by_ids_calls += 1
         requested = tuple(sorted(set(transaction_ids)))
         return TransactionCatalogue.from_transactions(
             transaction
@@ -230,13 +232,16 @@ def test_targeted_id_read_reuses_an_already_decrypted_partition(
     memoized = MemoizedTransactionCatalogueRepository(repository)
 
     partition = memoized.partition_by_date_range(date(2024, 1, 1), date(2024, 3, 31))
+    full_partition_read = memoized.load_by_ids(tuple(partition.in_window.transactions))
     repository.save(_catalogue(february_transaction))
     targeted = memoized.load_by_ids((january_transaction.transaction_id,))
 
+    assert full_partition_read is partition.in_window
     assert targeted.get(january_transaction.transaction_id) is partition.in_window.get(
         january_transaction.transaction_id,
     )
     assert _transaction_ids(targeted) == {january_transaction.transaction_id}
+    assert repository.load_by_ids_calls == 0
     assert _transaction_ids(repository.load_by_ids((january_transaction.transaction_id,))) == set()
 
 

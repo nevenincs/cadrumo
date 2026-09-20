@@ -58,10 +58,11 @@ from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass
 from datetime import date, datetime
 from decimal import Decimal
+from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError, field_validator
-from sqlalchemy import delete, select, update
+from sqlalchemy import delete, func, select, update
 
 from ....core.config import load_settings
 from ....core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
@@ -87,7 +88,7 @@ from ....domain.iva.lookup import rate_kinds_for_declared_rate
 from ....domain.iva.schema import IvaCategory, IvaRateKind, spanish_eu_member_state
 from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
 from ....domain.transactions.enums import TransactionDirection
-from ....domain.transactions.errors import LedgerStorageError, StoredTransactionDriftError
+from ....domain.transactions.errors import LedgerStorageError, StoredTransactionDriftError, TransactionValidationError
 from ....domain.transactions.models import (
     LedgerDatePartition,
     OutOfWindowTransactionIndexEntry,
@@ -125,6 +126,24 @@ _log = get_logger(__name__)
 # make excluded transactions dominate a period-scoped read.
 _OUT_OF_WINDOW_ROW_PROJECTION_LIMIT = 1024
 _JSON_OBJECT = TypeAdapter(dict[str, object])
+
+
+def _catalogue_from_loaded_transactions(transactions: Iterable[Transaction]) -> TransactionCatalogue:
+    """Assemble a catalogue from rows that already crossed the secure boundary.
+
+    ``_load_transactions_by_ids`` has parsed each row through its encrypted
+    envelope and checked that its embedded id matches the addressed object key.
+    Running ``TransactionCatalogue.from_transactions`` here would repeat every
+    transaction model validator for the same immutable objects. Keep the
+    catalogue mapping frozen, while relying on those preceding row-level
+    validation and identity checks for the member invariants.
+    """
+    members: dict[str, Transaction] = {}
+    for transaction in transactions:
+        if transaction.transaction_id in members:
+            raise TransactionValidationError(f"duplicate transaction_id: {transaction.transaction_id}")
+        members[transaction.transaction_id] = transaction
+    return TransactionCatalogue.model_construct(transactions=MappingProxyType(members))
 
 
 class _TransactionIndex(BaseModel):
@@ -895,21 +914,67 @@ class TransactionCatalogueRepository:
             index_complete=False,
         )
 
-    def _partition_from_complete_index(
-        self,
-        index_rows: dict[str, _IndexedTransactionDates],
-        start: date,
-        end: date,
-    ) -> LedgerDatePartition:
-        """Partition through a complete plaintext date index and targeted decrypt."""
-        in_window_ids = {transaction_id for transaction_id, dates in index_rows.items() if dates.overlaps(start, end)}
-        transactions = self._load_transactions_by_ids(in_window_ids, read_context="partition read")
-        out_of_window_rows = tuple(
-            (transaction_id, dates.filing_date)
-            for transaction_id, dates in index_rows.items()
-            if transaction_id not in in_window_ids
+    def _partition_from_complete_index(self, start: date, end: date) -> LedgerDatePartition:
+        """Partition through a complete plaintext date index and targeted decrypt.
+
+        The completeness gate has already compared the index's transaction ids
+        with the encrypted membership index. The partition query therefore only
+        needs to materialise the candidate rows that overlap this window and a
+        compact aggregate for the out-of-window remainder. Constructing a
+        Python date projection for every row on every cumulative M130 quarter
+        was an avoidable O(n) CPU cost even though only the in-window ids need
+        decryption and large remainders are represented by a summary.
+        """
+        outside_condition = (TransactionDateIndexRow.eligible_from > end) | (
+            TransactionDateIndexRow.eligible_to < start
         )
-        out_of_window_summary = _out_of_window_summary(out_of_window_rows)
+        with self._objects.guarded_session_scope() as session:
+            in_window_ids = set(
+                session.execute(
+                    select(TransactionDateIndexRow.transaction_id).where(
+                        TransactionDateIndexRow.bucket_id == self._bucket_id,
+                        TransactionDateIndexRow.eligible_from <= end,
+                        TransactionDateIndexRow.eligible_to >= start,
+                    ),
+                ).scalars(),
+            )
+            out_count, min_filing_date, max_filing_date = session.execute(
+                select(
+                    func.count(TransactionDateIndexRow.id),
+                    func.min(TransactionDateIndexRow.filing_date),
+                    func.max(TransactionDateIndexRow.filing_date),
+                ).where(
+                    TransactionDateIndexRow.bucket_id == self._bucket_id,
+                    outside_condition,
+                ),
+            ).one()
+            out_of_window_rows: tuple[tuple[str, date], ...] = ()
+            if out_count <= _OUT_OF_WINDOW_ROW_PROJECTION_LIMIT:
+                projected_rows: list[tuple[str, date]] = []
+                for transaction_id, filing_date in session.execute(
+                    select(
+                        TransactionDateIndexRow.transaction_id,
+                        TransactionDateIndexRow.filing_date,
+                    ).where(
+                        TransactionDateIndexRow.bucket_id == self._bucket_id,
+                        outside_condition,
+                    ),
+                ).all():
+                    if not isinstance(filing_date, date):
+                        raise InternalInvariantError("transaction date index filing_date is not a date")
+                    projected_rows.append((str(transaction_id), filing_date))
+                out_of_window_rows = tuple(projected_rows)
+
+        transactions = self._load_transactions_by_ids(in_window_ids, read_context="partition read")
+        out_of_window_summary = (
+            None
+            if not out_count
+            else OutOfWindowTransactionSummary(
+                count=int(out_count),
+                min_filing_date=min_filing_date,
+                max_filing_date=max_filing_date,
+            )
+        )
         out_of_window_index_entries = _out_of_window_index_entries(out_of_window_rows)
         _log.debug(
             "partitioned transaction catalogue via date index bucket_id=%s window=%s..%s in_window=%d out_of_window=%d",
@@ -917,10 +982,10 @@ class TransactionCatalogueRepository:
             start.isoformat(),
             end.isoformat(),
             len(transactions),
-            len(out_of_window_rows),
+            int(out_count),
         )
         return LedgerDatePartition(
-            in_window=TransactionCatalogue.from_transactions(transactions),
+            in_window=_catalogue_from_loaded_transactions(transactions),
             out_of_window=out_of_window_index_entries,
             out_of_window_summary=out_of_window_summary,
             index_complete=True,
@@ -970,15 +1035,14 @@ class TransactionCatalogueRepository:
                 index_complete=True,
             )
 
-        index_rows = self._all_date_index_rows()
-        index_row_ids = set(index_rows)
-        if index_row_ids != index_ids:
+        index_row_ids, index_row_count = self._date_index_ids_and_count()
+        if index_row_count != len(index_ids) or index_row_ids != index_ids:
             # Stale, partially-synced, or missing index rows for this bucket:
             # fall back to a full decrypt scan and partition in memory so
             # correctness never depends on index freshness.
             return self._partition_from_full_scan(start, end)
 
-        return self._partition_from_complete_index(index_rows, start, end)
+        return self._partition_from_complete_index(start, end)
 
     def _load_transactions_by_ids(self, transaction_ids: Iterable[str], *, read_context: str) -> list[Transaction]:
         """Load selected transaction rows through one targeted secure-object batch."""
@@ -1069,6 +1133,26 @@ class TransactionCatalogueRepository:
                 )
                 for transaction_id, filing_date, eligible_from, eligible_to in rows
             }
+
+    def _date_index_ids_and_count(self) -> tuple[set[str], int]:
+        """Return date-index ids and physical row count for the completeness gate.
+
+        The partition path only needs identity for the gate; loading all four
+        routing columns into Python is deferred to the targeted window query.
+        Keeping the row count alongside the id set also refuses duplicate index
+        rows instead of allowing set projection to hide them.
+        """
+        with self._objects.guarded_session_scope() as session:
+            rows = (
+                session.execute(
+                    select(TransactionDateIndexRow.transaction_id).where(
+                        TransactionDateIndexRow.bucket_id == self._bucket_id,
+                    ),
+                )
+                .scalars()
+                .all()
+            )
+        return set(rows), len(rows)
 
     def _date_index_candidate_ids(self, start: date, end: date) -> set[str] | None:
         """Return the candidate transaction ids in ``[start, end]`` per the plaintext index.
