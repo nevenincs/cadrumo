@@ -18,31 +18,26 @@ STORAGE_ROOT_MODE: Final[int] = 0o700
 
 
 def ensure_storage_tree(settings: Settings | None = None) -> Path:
-    """Materialize the declared state directories and harden their root.
+    """Validate explicit storage dependencies and materialize owned defaults.
 
     This is the sole opt-in topology materialization boundary.  Settings and
-    derived-path reads never enter it implicitly.
+    derived-path reads never enter it implicitly. Operator-selected directory
+    overrides must already exist; the application-owned root and derived
+    defaults are provisioned idempotently.
     """
     from .storage_taxonomy_locations import storage_tree_targets
 
     resolved = settings if settings is not None else load_settings()
     root = Path(resolved.cadrumo_local_storage_root)
+    targets = storage_tree_targets(resolved)
+    derived_targets = frozenset(storage_tree_targets(resolved, include_explicit=False))
 
-    for target in (root, *storage_tree_targets(resolved)):
-        try:
-            mode = target.stat().st_mode
-        except OSError:
-            mode = None
-        if mode is not None:
-            if not S_ISDIR(mode):
-                raise CoreValidationError(
-                    translated_message="errors.integrity.integrity_cadrumo_core_validation",
-                    context={
-                        "state_directory_target": str(target),
-                        "occupied_by_file": True,
-                        "directory_created": False,
-                    },
-                )
+    for target in targets:
+        if target not in derived_targets:
+            _require_directory(target, explicit_override=True)
+
+    for target in (root, *derived_targets):
+        if _require_directory(target, explicit_override=False):
             continue
         try:
             target.mkdir(parents=True, exist_ok=True)
@@ -61,3 +56,48 @@ def ensure_storage_tree(settings: Settings | None = None) -> Path:
 
     restrict_directory_permissions(root)
     return root
+
+
+def _require_directory(target: Path, *, explicit_override: bool) -> bool:
+    """Return whether ``target`` is a directory, refusing invalid dependencies."""
+    try:
+        mode = target.stat().st_mode
+    except FileNotFoundError:
+        if explicit_override:
+            raise CoreValidationError(
+                translated_message="errors.integrity.integrity_cadrumo_core_validation",
+                context={
+                    "state_directory_target": str(target),
+                    "occupied_by_file": False,
+                    "directory_created": False,
+                    "explicit_override": True,
+                },
+            ) from None
+        return False
+    except OSError as exc:
+        context: dict[str, str | bool] = {
+            "state_directory_target": str(target),
+            "occupied_by_file": False,
+            "directory_created": False,
+            "stat_error_type": type(exc).__name__,
+        }
+        if explicit_override:
+            context["explicit_override"] = True
+        raise CoreValidationError(
+            translated_message="errors.integrity.integrity_cadrumo_core_validation",
+            context=context,
+        ) from exc
+
+    if not S_ISDIR(mode):
+        context = {
+            "state_directory_target": str(target),
+            "occupied_by_file": True,
+            "directory_created": False,
+        }
+        if explicit_override:
+            context["explicit_override"] = True
+        raise CoreValidationError(
+            translated_message="errors.integrity.integrity_cadrumo_core_validation",
+            context=context,
+        )
+    return True
