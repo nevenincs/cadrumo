@@ -466,7 +466,7 @@ def inicio_actividad_prorrata_provenance(
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> ProrrataProvisionalProvenance:
-    """Return the registry-declared inicio-de-actividad provenance token."""
+    """Return the registry-declared start-of-activity provenance token."""
     return resolve_prorrata_register_catalogue(
         effective_date=effective_date,
         authority=authority,

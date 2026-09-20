@@ -53,6 +53,7 @@ from typing import TYPE_CHECKING
 from cadrumo.core.directory_scan import scan_directory
 from cadrumo.core.external_constants import UTF_8_ENCODING, OutputLanguage
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
+from dev._paths import AUTHORITY_ROOT_ENV
 
 from ._locale_chrome import docs_chrome
 
@@ -166,9 +167,12 @@ def _reference_subprocess_environment(storage_root: Path) -> dict[str, str]:
     Args:
         storage_root: Isolated Cadrumo local-storage root for the subprocess.
     """
+    authority_root = os.environ.get(AUTHORITY_ROOT_ENV, "").strip()
     environment = {key: value for key, value in os.environ.items() if not key.upper().startswith(("CADRUMO_", "AEAT_"))}
     environment["CADRUMO_OUTPUT_LANGUAGE"] = "en"
     environment["CADRUMO_LOCAL_STORAGE_ROOT"] = str(storage_root)
+    if authority_root:
+        environment[AUTHORITY_ROOT_ENV] = authority_root
     return environment
 
 

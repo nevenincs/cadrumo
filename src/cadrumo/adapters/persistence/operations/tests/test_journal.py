@@ -12,7 +12,8 @@ from multiprocessing.queues import Queue
 from multiprocessing.synchronize import Event
 from pathlib import Path
 from queue import Empty
-from typing import override
+from types import FrameType
+from typing import TYPE_CHECKING, override
 
 import pytest
 
@@ -61,6 +62,9 @@ from ..journal import OperationJournalRepository
 from ..lease import OperationLeaseFilesystemRepository, OperationLeaseStorage
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+if TYPE_CHECKING:
+    from _typeshed import TraceFunction
 
 
 _STARTED = datetime(2026, 8, 13, 20, tzinfo=UTC)
@@ -257,7 +261,7 @@ def _observe_in_process(
     """
     acquisitions = {"exclusive_file_lock"}
 
-    def trace(frame: object, event: str, argument: object) -> object:
+    def trace(frame: FrameType, event: str, argument: object) -> TraceFunction:
         del argument
         code = getattr(frame, "f_code", None)
         if event == "call" and getattr(code, "co_name", None) in acquisitions:

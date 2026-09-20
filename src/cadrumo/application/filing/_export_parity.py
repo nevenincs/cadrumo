@@ -63,13 +63,14 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from decimal import Decimal
 
+from ...core.aggregation import BindingAggregationOp
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.filing_producer_key import FilingProducerKey
 from ...core.modelo import Modelo
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_requires_bank_account
-from ...domain.calculations.registry.binding_aggregation import BindingAggregationOp, binding_aggregation_op
+from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import binding_row_set_selector
 from ...domain.calculations.registry.export import fixed_width_record_casilla_ids
 from ...domain.calculations.registry.export_parse import xml_dictionary_entries

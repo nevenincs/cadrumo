@@ -12,18 +12,22 @@ import json
 from collections.abc import Generator
 from contextlib import contextmanager
 from http import HTTPStatus
+from pathlib import Path
 from typing import ClassVar, override
 
 import pytest
 
 from ...core.config import override_settings
-from ...core.errors.hierarchy import CadrumoError, CoreError
+from ...core.errors.hierarchy import CadrumoError, CoreError, CoreValidationError
 from ...core.model_catalogue import ModelRole
 from ...core.optional_extras import OPTIONAL_EXTRAS, MissingOptionalExtraError, OptionalExtra, require_optional_extra
+from ...domain.calculations.registry.authority_store import AuthorityDescriptor, AuthorityStoreError
+from ...domain.calculations.registry.errors import AuthorityDescriptorUnavailableError
 from ...tests.loopback_llm import SilentLoopbackHandler, serving_loopback, write_raw_response
 from ..local_reader import probe_local_reader
 from ..provisioning import (
     DependencyStatus,
+    ensure_cli_startup_dependencies,
     probe_optional_extra,
     probe_optional_extras,
 )
@@ -160,3 +164,63 @@ def test_missing_optional_extra_is_not_absorbed_by_an_import_error_handler() -> 
             require_optional_extra(extra)
         except ImportError:
             pytest.fail("the typed refusal was absorbed as an ImportError")
+
+
+def test_startup_dependencies_refuse_missing_explicit_storage_before_materializing_defaults(tmp_path: Path) -> None:
+    """An invalid operator path fails before startup creates application-owned paths."""
+    root = tmp_path / "state"
+    tokens = tmp_path / "operator-tokens"
+
+    with (
+        override_settings(cadrumo_local_storage_root=root, cadrumo_token_dir=tokens),
+        pytest.raises(CoreValidationError) as refusal,
+    ):
+        ensure_cli_startup_dependencies()
+
+    assert refusal.value.context == {
+        "state_directory_target": str(tokens),
+        "occupied_by_file": False,
+        "directory_created": False,
+        "explicit_override": True,
+    }
+    assert not root.exists()
+
+
+def test_startup_dependencies_require_the_selected_published_authority(tmp_path: Path) -> None:
+    """Startup never creates or falls back from an explicitly selected authority root."""
+    root = tmp_path / "state"
+    authority_root = tmp_path / "absent-authority"
+
+    with (
+        override_settings(cadrumo_local_storage_root=root, cadrumo_authority_root=authority_root),
+        pytest.raises(AuthorityDescriptorUnavailableError) as refusal,
+    ):
+        ensure_cli_startup_dependencies()
+
+    assert refusal.value.authority_root_configured is True
+    assert refusal.value.searched_path == authority_root / "authority.current.json"
+    assert (root / "cache" / "llm-cache").is_dir()
+    assert not authority_root.exists(), "runtime startup must not generate or provision authority"
+
+
+def test_startup_dependencies_require_the_descriptor_selected_database(tmp_path: Path) -> None:
+    """A descriptor without its shipped database is an unavailable authority."""
+    root = tmp_path / "state"
+    authority_root = tmp_path / "authority"
+    authority_root.mkdir()
+    digest = "0" * 64
+    descriptor = AuthorityDescriptor(
+        database=f"authority-{digest}.sqlite3",
+        database_size=1,
+        database_sha256=digest,
+        logical_generation="1" * 64,
+    )
+    (authority_root / "authority.current.json").write_bytes(descriptor.to_bytes())
+
+    with (
+        override_settings(cadrumo_local_storage_root=root, cadrumo_authority_root=authority_root),
+        pytest.raises(AuthorityStoreError, match="authority database is unavailable"),
+    ):
+        ensure_cli_startup_dependencies()
+
+    assert not (authority_root / descriptor.database).exists(), "runtime startup must not generate authority bytes"

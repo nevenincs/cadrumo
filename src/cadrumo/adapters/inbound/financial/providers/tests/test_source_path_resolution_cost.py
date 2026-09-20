@@ -20,9 +20,9 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 @pytest.fixture(autouse=True)
 def _forget_resolved_paths() -> Iterator[None]:
-    provider_base._clear_resolved_source_paths()
+    provider_base._resolved_absolute_source_path.cache_clear()
     yield
-    provider_base._clear_resolved_source_paths()
+    provider_base._resolved_absolute_source_path.cache_clear()
 
 
 @pytest.fixture

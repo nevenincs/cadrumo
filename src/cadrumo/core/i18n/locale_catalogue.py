@@ -176,17 +176,6 @@ def _locale_catalogue_generation_for(domain: str, observation: tuple[str, ...]) 
         return _locale_catalogue_generation
 
 
-def read_locale_catalogue_current_coordinate(*, locale: str) -> LocaleCatalogueCurrentCoordinate:
-    """Return the typed current coordinate for same-domain capture validation."""
-    normalized = _supported_locale(locale)
-    observation = _locale_catalogue_observation(normalized)
-    domain = _locale_catalogue_comparison_domain(normalized)
-    return LocaleCatalogueCurrentCoordinate(
-        comparison_domain=domain,
-        generation=_locale_catalogue_generation_for(domain, observation),
-    )
-
-
 def capture_locale_catalogue(translation_key: str, /, *, locale: str) -> LocaleCatalogueCapture:
     """Read one catalogue entry over a window in which the catalogue did not move.
 
@@ -223,5 +212,4 @@ __all__ = [
     "LocaleCatalogueCaptureError",
     "LocaleCatalogueCurrentCoordinate",
     "capture_locale_catalogue",
-    "read_locale_catalogue_current_coordinate",
 ]

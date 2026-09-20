@@ -8,9 +8,9 @@ related:
 supersedes:
   - '2026-06-04-just-tooling-bootstrap-adr'
   - '2026-06-09-justfile-redesign-adr'
-modified: '2026-09-11'
+modified: '2026-09-19'
 body_schema: 'body-v2'
-body_hash: 'sha256:149dbe98177c645337131c8436025aec476878b2ec70717bc224ad701bede6cf'
+body_hash: 'sha256:c2a31725107e41581d4e19756a07d9db376d9752ea6c06ca5d1ca8c093ed5eaa'
 ---
 # `justfile-design` adr: `Operator-intent command and tooling boundaries` | (**status:** `accepted`)
 
@@ -45,7 +45,7 @@ A replacement taxonomy is required. This decision supersedes the public-command 
 - Registry runtime authority remains immutable and artifact-backed; validation, currentness, publication, and runtime loading cannot collapse into repair or compilation.
 - The exact product `bundled_authority()` path currently lacks a development-owned loadability verdict and must gain one.
 - Documentation retains its `docs-*` exception, but each recipe still discloses posture.
-- Removing the justfile RAG surface does not decide whether underlying RAG implementation packages remain.
+- Focused RAG operation recipes remain outside the public justfile surface, but one complete worktree-initialization facade may provision the installed RAG service and its dependencies.
 
 ## Implementation
 
@@ -57,7 +57,7 @@ Blocking verification uses subject aggregates for code, registry, and repository
 
 `audit-*` exposes advisory investigation. `report-*` renders findings or status with an explicit exit contract. Hard verdicts use `check-*`; mandatory security verdicts do not remain disguised as audits.
 
-Setup performs minimal repository convergence. Optional browser, workstation, and other capability provisioning stays separately named. Doctor recipes are read-only and capability-specific.
+`setup` performs minimal repository convergence. A distinct top-level `init` facade performs complete new-worktree provisioning: locked Python synchronization, default Vaultspec installation, RAG installation with its default external provisioning, and runtime-authority compilation. Optional browser and workstation provisioning stays separately named. Doctor recipes are read-only and capability-specific.
 
 Documentation remains under `docs-*`, with names distinguishing checking, generation, building, serving, reporting, maintenance, infrastructure provisioning, and publication.
 
@@ -67,13 +67,13 @@ Release commands distinguish readiness checks, previews, publication, and rollba
 
 Release publication remains owned by external automation and has no justfile recipe. Public publication mutations are limited to explicitly named documentation and registry products.
 
-All RAG recipes and their connected doctor probe, semantic check, resident-service test, and resident terminology sweep are removed from the public justfile surface without replacement.
+Focused RAG recipes and their connected doctor probe, semantic check, resident-service test, and resident terminology sweep are removed from the public justfile surface. The `init` facade may invoke RAG installation as one provisioning phase; it does not expose RAG lifecycle operations as aliases.
 
 Within `dev/`, each primitive fact has one semantic owner. Alternate implementations are consolidated, delegated to that owner, or retired; public aggregates may compose but do not duplicate the verdict.
 
 ### Required public surface
 
-The setup surface is `setup`, `setup-python`, `setup-repository-tools`, `setup-env`, optional `setup-workstation-tools`, optional `setup-browser`, and read-only `setup-check`. Diagnosis is `doctor-product`, `doctor-dev`, `doctor-python`, and `doctor-browser`.
+The setup surface is `init`, `setup`, `setup-python`, `setup-repository-tools`, `setup-env`, optional `setup-workstation-tools`, optional `setup-browser`, and read-only `setup-check`. `init` is the complete new-worktree facade; `setup` remains the minimal convergence facade. Diagnosis is `doctor-product`, `doctor-dev`, `doctor-python`, and `doctor-browser`.
 
 Blocking subjects are `check-code`, `check-registry`, and `check-repository`, with `check-hooks` retained only as non-aggregated hook replay and dependency vulnerabilities exposed as an explicit blocking security check. Registry leaves distinguish validity, oracle bindings, per-target currentness, authority currency, and exact artifact-backed runtime loadability.
 
@@ -88,7 +88,7 @@ Policy entrypoints are `gate-local` and, only when proven against hosted policy,
 dependency-vulnerability verdict; the subject `check-*` aggregates remain portable and
 network-free. There is no public `check-all`, `test-all`, `build-all`, `audit-all`,
 unqualified `ci`, generic `registry-update`, mixed-authority `dev-*` pass-through,
-release publication/rollback mutation recipe, or RAG surface.
+release publication/rollback mutation recipe, or focused RAG lifecycle surface.
 
 ## Rationale
 
@@ -98,7 +98,7 @@ Subject aggregates align with deterministic CI composition while the single-owne
 
 ## Consequences
 
-Developers gain predictable command vocabulary, narrower aggregates, truthful setup and release operations, and a registry status model distinguishing validity, currentness, publication, and runtime loadability.
+Developers gain predictable command vocabulary, narrower aggregates, a one-command complete worktree initializer alongside the minimal setup facade, truthful setup and release operations, and a registry status model distinguishing validity, currentness, publication, and runtime loadability.
 
 The redesign requires coordinated changes to the justfile, `dev/` ownership boundaries, workflows, hooks, and contributor documentation. Existing aliases and broad aggregates are removed rather than preserved as compatibility layers.
 

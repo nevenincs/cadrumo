@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-09-17'
+modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:67c33b3564e3cd2be816bbcc0aadc6c502a06431a70266638bde5ba40fab0b3c'
+body_hash: 'sha256:53a3db4703567ae99253d5cbcf5dc427a20e1b00ed1917710285c25c70f87cea'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
@@ -170,6 +170,19 @@ related:
 - `S135` `M` `docs/how-to/publish-runtime-authority.md`
 - `S135` `M` `docs/reference/registry-legal-api.md`
 - `S135` `verify:` `documentation updated from implemented descriptor and component contracts` -> `pass`
+- `S138` `M` `packaging/authority/hatch_build.py`
+- `S138` `M` `pyproject.toml`
+- `S138` `A` `dev/packaging/tests/test_authority_build_hook.py`
+- `S138` `verify:` `ruff, ty, compileall, diff check` -> `pass`
+- `S138` `A` `.vault/audit/2026-09-19-registry-authority-artifact-boundary-fresh-worktree-bootstrap-audit.md`
+- `S138` `verify:` `phase-close integrated review` -> `pass`
+- `S138` `M` `dev/packaging/tests/test_authority_build_hook.py`
+- `S138` `M` `.vault/audit/2026-09-19-registry-authority-artifact-boundary-fresh-worktree-bootstrap-audit.md`
+- `S138` `verify:` `fresh bootstrap correction focused tests, ruff, and ty` -> `pass`
+- `S138` `verify:` `fresh git-archive locked uv sync publishes authority` -> `pass`
+- `S138` `M` `.github/actions/setup/action.yml`
+- `S138` `verify:` `actionlint plus build-hook ruff, ty, and focused tests` -> `pass`
+- `S138` `verify:` `clean Linux locked setup plus affected lint, types, and 136 tests` -> `pass`
 
 ## Notes
 

@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import subprocess
 import sys
+import threading
 from dataclasses import replace
 
 import pytest
@@ -52,8 +53,8 @@ def _completed(stdout: str = "", stderr: str = "", returncode: int = 0) -> subpr
 
 def test_an_empty_stream_is_refused_rather_than_read_as_clean() -> None:
     """The defect: a checker that never ran answered exactly like a clean tree."""
-    with pytest.raises(RuntimeError, match="produced no report"):
-        require_report("", _completed(stderr="ty: command not found"), "ty")
+    with pytest.raises(RuntimeError, match=r"produced no report.*return code -9"):
+        require_report("", _completed(stderr="ty: command not found", returncode=-9), "ty")
 
 
 def test_the_refusal_names_the_checker_that_went_silent() -> None:
@@ -138,6 +139,66 @@ def test_the_sweep_covers_every_supported_platform(monkeypatch: pytest.MonkeyPat
     assert sorted(seen) == sorted(
         (checker, platform.key) for platform in _PLATFORMS for checker in ("ty", "pyrefly", "basedpyright")
     )
+
+
+def test_checker_families_do_not_overlap_platform_sweeps(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep one process per checker family resident at a time.
+
+    The old nine-future schedule allowed a fast family worker to pick up a
+    second platform while another worker still held that family's first
+    platform. The test releases the other two first-platform calls while the
+    ``ty`` call remains blocked; that schedule necessarily overlaps ``ty``
+    under the old implementation, but not under the family-serial sweep.
+    """
+    started = {name: threading.Event() for name in ("ty", "pyrefly", "basedpyright")}
+    release = {name: threading.Event() for name in ("ty", "pyrefly", "basedpyright")}
+    active = {name: 0 for name in started}
+    maximum = {name: 0 for name in started}
+    overlap = threading.Event()
+    lock = threading.Lock()
+
+    def fake_collector(name: str):
+        def collect(platform: TargetPlatform) -> list[Diagnostic]:
+            with lock:
+                active[name] += 1
+                maximum[name] = max(maximum[name], active[name])
+                if active[name] > 1:
+                    overlap.set()
+            try:
+                if platform.key == "linux":
+                    started[name].set()
+                    assert release[name].wait(timeout=5), f"{name} did not receive its release"
+                return []
+            finally:
+                with lock:
+                    active[name] -= 1
+
+        return collect
+
+    monkeypatch.setattr("dev.quality.types.collect_ty", fake_collector("ty"))
+    monkeypatch.setattr("dev.quality.types.collect_pyrefly", fake_collector("pyrefly"))
+    monkeypatch.setattr("dev.quality.types.collect_basedpyright", fake_collector("basedpyright"))
+
+    worker = threading.Thread(target=collect_all)
+    worker.start()
+    overlap_seen = False
+    try:
+        assert all(event.wait(timeout=5) for event in started.values())
+        release["pyrefly"].set()
+        release["basedpyright"].set()
+        # Under the old global queue, one of those freed workers picked up
+        # ty's next platform while ty/linux was still resident. The new
+        # family task cannot do that. Keep this wait bounded before releasing
+        # ty so a broken schedule fails as an assertion rather than hanging.
+        overlap_seen = overlap.wait(timeout=1)
+    finally:
+        for event in release.values():
+            event.set()
+        worker.join(timeout=5)
+
+    assert not worker.is_alive()
+    assert not overlap_seen
+    assert maximum == {name: 1 for name in started}
 
 
 def test_the_live_configuration_pins_every_checker_to_one_swept_platform() -> None:

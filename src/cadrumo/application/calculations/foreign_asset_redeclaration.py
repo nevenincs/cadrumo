@@ -1,4 +1,4 @@
-"""Foreign-asset re-declaration advisory helpers for Modelo 720 and 721.
+"""Foreign-asset re-declaration advisory helpers for Modelo 720.
 
 Every projection here reads a persisted :class:`CalculationRevision` against the
 registry's :class:`ModeloRevision` for the same filing context, and emits its
@@ -15,15 +15,12 @@ See Also:
     ``application.calculations.tests.test_modelo_720_prior_year_baseline_fidelity``
         Exercises the Modelo 720 prior-year baseline advisory path with real
         observations across two filing years.
-    ``application.calculations.tests.test_modelo_721_cripto_extranjero_fidelity``
-        Exercises the Modelo 721 token baseline sibling through the same
-        advisory mechanism.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 from urllib.parse import quote
 
@@ -59,37 +56,6 @@ class _RedeclarationPosition:
     value_eur: Decimal
 
 
-@dataclass(slots=True)
-class _Modelo721PositionState:
-    """Mutable row-order state while projecting one Modelo 721 observation."""
-
-    positions: dict[tuple[str, ...], _RedeclarationPosition] = field(default_factory=dict)
-    custodian_name: str = ""
-    custodian_country: str = ""
-    token: str = ""
-
-
-@dataclass(frozen=True, slots=True)
-class _Modelo721RegistryFields:
-    """Selected revision fields used by the generic Modelo 721 row reducer."""
-
-    custodian_name: CasillaId | None
-    custodian_country: CasillaId | None
-    token: CasillaId | None
-    balance: CasillaId | None
-
-
-def _resolve_foreign_asset_registry_declarations(
-    *,
-    modelo: str,
-    filing_year: int,
-    period: str,
-    operation: PinnedAuthorityOperation,
-) -> ModeloRevision:
-    """Resolve the selected foreign-asset model and casilla declarations."""
-    return operation.revision_for_context(modelo, filing_year=filing_year, period=period)
-
-
 def _registry_valuation_casillas(
     modelo_revision: ModeloRevision,
     *,
@@ -113,41 +79,6 @@ def _registry_valuation_casillas(
                 result[group] = casilla.id
                 break
     return result
-
-
-def _registry_modelo_721_fields(
-    observation: RegistryModeloObservation,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> _Modelo721RegistryFields:
-    """Resolve the selected Modelo 721 identity/value fields from registry metadata."""
-    revision = _resolve_foreign_asset_registry_declarations(
-        modelo=observation.modelo,
-        filing_year=observation.filing_year,
-        period=observation.period,
-        operation=operation,
-    )
-    custodian_fields = tuple(
-        casilla.id
-        for casilla in revision.casillas
-        if len(casilla.section) >= 2 and casilla.section[:2] == ("custodio", "identificacion")
-    )
-    token_fields = tuple(
-        casilla.id
-        for casilla in revision.casillas
-        if len(casilla.section) >= 2 and casilla.section[:2] == ("moneda", "identificacion")
-    )
-    balance_fields = tuple(
-        casilla.id
-        for casilla in revision.casillas
-        if (len(casilla.section) >= 2 and casilla.section[:2] == ("moneda", "valoracion") and casilla.required)
-    )
-    return _Modelo721RegistryFields(
-        custodian_name=custodian_fields[0] if len(custodian_fields) > 0 else None,
-        custodian_country=custodian_fields[1] if len(custodian_fields) > 1 else None,
-        token=token_fields[0] if token_fields else None,
-        balance=balance_fields[0] if balance_fields else None,
-    )
 
 
 def _foreign_asset_binding_ids(
@@ -250,42 +181,6 @@ def modelo_720_redeclaration_advisory_findings(
     )
 
 
-def modelo_721_redeclaration_advisory_findings(
-    *,
-    prior_observation: RegistryModeloObservation,
-    current_observation: RegistryModeloObservation,
-    current_declaration_observation: RegistryModeloObservation | None = None,
-    operation: PinnedAuthorityOperation,
-) -> tuple[ModeloVerificationFinding, ...]:
-    """Return non-blocking M721 re-declaration advisories for omitted grown tokens.
-
-    See Also:
-        :class:`~core.foreign_asset_obligation.ForeignAssetObligationGroup`
-            Provides the registry-projected group token used for the Modelo 721
-            re-declaration threshold.
-    """
-    return _redeclaration_advisory_findings(
-        modelo=Modelo("721").value,
-        prior_positions=_modelo_721_positions(
-            prior_observation,
-            registry_fields=_registry_modelo_721_fields(current_observation, operation=operation),
-            operation=operation,
-        ),
-        current_positions=_modelo_721_positions(
-            current_observation,
-            registry_fields=_registry_modelo_721_fields(current_observation, operation=operation),
-            operation=operation,
-        ),
-        declared_positions=_modelo_721_positions(
-            current_declaration_observation or current_observation,
-            registry_fields=_registry_modelo_721_fields(current_observation, operation=operation),
-            operation=operation,
-        ),
-        filing_year=current_observation.filing_year,
-        operation=operation,
-    )
-
-
 def _redeclaration_advisory_findings(
     *,
     modelo: str,
@@ -352,72 +247,6 @@ def _modelo_720_positions(
         )
         for group, value in totals.items()
     }
-
-
-def _modelo_721_positions(
-    observation: RegistryModeloObservation,
-    *,
-    registry_fields: _Modelo721RegistryFields,
-    operation: PinnedAuthorityOperation,
-) -> Mapping[tuple[str, ...], _RedeclarationPosition]:
-    state = _Modelo721PositionState()
-    for item in observation.observations:
-        if item.casilla_id == registry_fields.balance:
-            _accumulate_modelo_721_balance(state, item.value, operation=operation)
-            continue
-        _update_modelo_721_position_identity(
-            state,
-            item.casilla_id,
-            item.value,
-            registry_fields=registry_fields,
-        )
-    return state.positions
-
-
-def _accumulate_modelo_721_balance(
-    state: _Modelo721PositionState,
-    value: Decimal | str,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    if not state.token or not isinstance(value, Decimal):
-        return
-    del operation
-    virtual_currency_group = resolve_foreign_asset_obligation_catalogue().group_for_asset_class(
-        ForeignAssetClass.VIRTUAL_CURRENCY,
-    )
-    key = (virtual_currency_group.value, state.custodian_name, state.custodian_country, state.token)
-    existing = state.positions.get(key)
-    value_eur = value if existing is None else existing.value_eur + value
-    state.positions[key] = _RedeclarationPosition(
-        key=key,
-        group=virtual_currency_group,
-        value_eur=value_eur,
-    )
-    state.token = ""
-
-
-def _update_modelo_721_position_identity(
-    state: _Modelo721PositionState,
-    casilla_id: CasillaId,
-    value: Decimal | str,
-    *,
-    registry_fields: _Modelo721RegistryFields,
-) -> None:
-    if casilla_id == registry_fields.custodian_name:
-        state.custodian_name = _modelo_721_identifier_text(value)
-    elif casilla_id == registry_fields.custodian_country:
-        state.custodian_country = _modelo_721_identifier_text(value)
-    elif casilla_id == registry_fields.token:
-        state.token = _modelo_721_identifier_text(value)
-
-
-def _modelo_721_identifier_text(value: Decimal | str) -> str:
-    return _decimal_text(value) if isinstance(value, Decimal) else value
-
-
-def _decimal_text(value: Decimal) -> str:
-    return format(value, "f")
 
 
 def _position_key_code(key: tuple[str, ...]) -> str:
@@ -704,5 +533,4 @@ __all__ = [
     "modelo_720_evidence_observation",
     "modelo_720_prior_baseline_observation",
     "modelo_720_redeclaration_advisory_findings",
-    "modelo_721_redeclaration_advisory_findings",
 ]

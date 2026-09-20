@@ -1,11 +1,9 @@
 """A `just <name>` a reachability walk trusts must name a recipe that exists.
 
 `ci_invoked_recipe_triggers` closes over recipe-to-recipe calls through
-``bodies.get(name, "")``. That default is load-bearing and must stay: the
-callee regex matches the word after any `just`, and a justfile body can contain
-that word without calling anything -- `workstation-tools` iterates
-``for tool in uv just node npx``, from which the walk harvests `node`. Raising
-instead of defaulting would crash the walk on that shell word list.
+``bodies.get(name, "")``. That default is load-bearing and must stay: a missing
+recipe body is an unresolved call, not a reason for the reachability walk to
+crash. Resolution is asserted here rather than enforced in the traversal.
 
 What the default cannot distinguish is the other population: a workflow, or a
 recipe body, naming a recipe that has been RENAMED. The walk reads it as
@@ -29,15 +27,6 @@ from ..lane_reachability import _recipe_bodies, _recipes_invoked_by, _workflow_r
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _UTF_8: Final = "utf-8"
-
-#: The callee matches that are not calls, keyed by the recipe they appear in.
-#:
-#: Keyed by the PAIR, not by the bare word: the exemption is the context, not
-#: the name. `workstation-tools` runs ``for tool in uv just node npx``, so the
-#: word after `just` is a loop element. Were `node` ever declared as a recipe
-#: the pair would stop being unresolved and would simply resolve; were a second
-#: shell word list added, it would be named here rather than absorbed.
-_NOT_CALLS: Final = frozenset({("workstation-tools", "node")})
 
 
 def _declared_recipes(root: Path) -> frozenset[str]:
@@ -101,8 +90,8 @@ def test_every_workflow_just_call_names_a_declared_recipe() -> None:
     assert _unresolved_workflow_callees(REPO_ROOT) == []
 
 
-def test_every_recipe_body_callee_resolves_or_is_a_named_shell_word_list() -> None:
-    """A recipe-to-recipe call resolves, or is one of the matches classified as not a call."""
+def test_every_recipe_body_callee_resolves() -> None:
+    """Every recipe-to-recipe call names a declared recipe."""
     declared = _declared_recipes(REPO_ROOT)
     unresolved = {
         (caller, name)
@@ -111,7 +100,7 @@ def test_every_recipe_body_callee_resolves_or_is_a_named_shell_word_list() -> No
         for caller in callers
     }
 
-    assert unresolved == set(_NOT_CALLS)
+    assert unresolved == set()
 
 
 def test_a_renamed_recipe_is_named_rather_than_read_as_invoking_nothing(tmp_path: Path) -> None:

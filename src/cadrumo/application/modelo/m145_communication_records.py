@@ -29,7 +29,7 @@ from __future__ import annotations
 
 import re
 from collections.abc import Callable, Mapping
-from datetime import datetime
+from datetime import date, datetime
 from decimal import InvalidOperation
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated
@@ -56,12 +56,16 @@ from ...domain.calculations.registry.casilla_membership import (
     casillas_by_id,
     undeclared_casilla_ids,
 )
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.export import resolve_export_layout
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_exports import ExportRecordDefinition
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
+from ...domain.calculations.registry.situacion_familiar_m145_catalogue import (
+    require_situacion_familiar_m145,
+)
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
 from ...domain.modelos.errors import ModeloError, ModeloExportError
 from ..calculations.revision_carry_gate import revision_carry_outcome
@@ -83,6 +87,7 @@ _ISO_DATE_PATTERN = re.compile(r"^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$")
 _AEAT_DATE_PATTERN = re.compile(r"^(0[1-9]|[12]\d|3[01])(0[1-9]|1[0-2])\d{4}$")
 _LINE_ENDINGS: Mapping[str, bytes] = {"none": b"", "lf": b"\n", "crlf": b"\r\n"}
 _M145_COMMUNICATION_EVENT_ACTOR = M145_COMMUNICATION_SERVICE_OWNER
+_M145_FAMILY_SITUATION_ROLE = "modelo_145_perceptor_situacion_familiar"
 _LOGGER = get_logger(__name__)
 
 M145CommunicationRecordId = Hex64Str
@@ -693,7 +698,7 @@ def validate_m145_communication_record(
     casillas = casillas_by_id(revision)
     issues = _m145_authority_issues(record, revision, revision_legal_refs, revision_source_refs)
     issues.extend(_m145_unknown_casilla_issues(record, revision, revision_legal_refs, revision_source_refs))
-    issues.extend(_m145_declared_casilla_issues(record, casillas))
+    issues.extend(_m145_declared_casilla_issues(record, casillas, operation=operation))
 
     result_issues = tuple(issues)
     return M145CommunicationValidationResult(
@@ -759,16 +764,20 @@ def _m145_unknown_casilla_issues(
 def _m145_declared_casilla_issues(
     record: M145CommunicationRecord,
     casillas: Mapping[CasillaId, CasillaDefinition],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> list[M145CommunicationValidationIssue]:
     issues: list[M145CommunicationValidationIssue] = []
     for casilla in sorted(casillas.values(), key=lambda item: item.id):
-        issues.extend(_m145_casilla_issues(record, casilla))
+        issues.extend(_m145_casilla_issues(record, casilla, operation=operation))
     return issues
 
 
 def _m145_casilla_issues(
     record: M145CommunicationRecord,
     casilla: CasillaDefinition,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> list[M145CommunicationValidationIssue]:
     value = record.field_values.get(casilla.id)
     if casilla.required and (value is None or not value.strip()):
@@ -782,13 +791,16 @@ def _m145_casilla_issues(
     if value is None:
         return [] if missing is None else [missing]
     issues = [] if missing is None else [missing]
-    issues.extend(_m145_value_issues(casilla, value))
+    issues.extend(_m145_value_issues(casilla, value, communication_year=record.communication_year, operation=operation))
     return issues
 
 
 def _m145_value_issues(
     casilla: CasillaDefinition,
     value: str,
+    *,
+    communication_year: int,
+    operation: PinnedAuthorityOperation,
 ) -> list[M145CommunicationValidationIssue]:
     issues: list[M145CommunicationValidationIssue] = []
     if not casilla.legal_refs or not casilla.source_refs:
@@ -805,6 +817,20 @@ def _m145_value_issues(
             _issue(
                 M145CommunicationValidationIssueKind.INVALID_VALUE,
                 f"casilla {casilla.id!r} {value_issue}",
+                casilla=casilla,
+            ),
+        )
+    registry_value_issue = _m145_registry_value_issue(
+        casilla,
+        value,
+        communication_year=communication_year,
+        operation=operation,
+    )
+    if value_issue is None and registry_value_issue is not None:
+        issues.append(
+            _issue(
+                M145CommunicationValidationIssueKind.INVALID_VALUE,
+                f"casilla {casilla.id!r} {registry_value_issue}",
                 casilla=casilla,
             ),
         )
@@ -826,6 +852,27 @@ def _m145_value_issues(
             ),
         )
     return issues
+
+
+def _m145_registry_value_issue(
+    casilla: CasillaDefinition,
+    value: str,
+    *,
+    communication_year: int,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
+    """Validate the M145 family-situation value through its dated fact catalogue."""
+    if casilla.semantic_role != _M145_FAMILY_SITUATION_ROLE:
+        return None
+    try:
+        require_situacion_familiar_m145(
+            value,
+            effective_date=date(communication_year, 12, 31),
+            authority=operation,
+        )
+    except RegistryValidationError as exc:
+        return f"value is not a registry-declared Modelo 145 family-situation token: {exc}"
+    return None
 
 
 def _validation_issue_summary(result: M145CommunicationValidationResult) -> str:

@@ -791,6 +791,7 @@ def test_iva_quarterly_budget_still_fails_without_the_partition(
     )
 
 
+@pytest.mark.serial
 def test_modelo_130_calculate_p95_cpu_within_budget_and_full_scan_control(
     scale_bucket: SecureObjectRepository,
     caplog: pytest.LogCaptureFixture,

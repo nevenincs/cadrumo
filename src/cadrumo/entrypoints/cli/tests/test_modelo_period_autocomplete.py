@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import pytest
 
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 # ---------------------------------------------------------------------------
@@ -62,6 +64,7 @@ class TestDeclaredPeriodTokensAutocomplete:
         self,
         caplog: pytest.LogCaptureFixture,
         monkeypatch: pytest.MonkeyPatch,
+        operation: PinnedAuthorityOperation,
     ) -> None:
         """A non-CadrumoError from the resources layer is logged at DEBUG and swallowed.
 
@@ -86,7 +89,7 @@ class TestDeclaredPeriodTokensAutocomplete:
 
         monkeypatch.setattr(_modelo_module, "declared_modelo_period_tokens", _raise_unexpected)
         with caplog.at_level(logging.DEBUG, logger=logger.name):
-            assert _declared_period_tokens("303", operation=object()) == ()
+            assert _declared_period_tokens("303", operation=operation) == ()
 
         debug_records = [
             record

@@ -927,16 +927,6 @@ def _manifest_generation_for(domain: str, observation: tuple[str, ...]) -> int:
         return _manifest_capture_generation
 
 
-def _current_coordinate_for_manifest(
-    manifest: ModeloWorkspaceFieldManifestV1,
-    domain: str,
-) -> ModeloWorkspaceManifestCurrentCoordinate:
-    return ModeloWorkspaceManifestCurrentCoordinate(
-        comparison_domain=domain,
-        generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
-    )
-
-
 def _capture_for_manifest(
     manifest: ModeloWorkspaceFieldManifestV1,
     domain: str,
@@ -946,18 +936,6 @@ def _capture_for_manifest(
         comparison_domain=domain,
         generation=_manifest_generation_for(domain, (str(manifest.manifest_digest),)),
     )
-
-
-def read_modelo_workspace_manifest_current_coordinate(
-    snapshot: RegistrySnapshot,
-) -> ModeloWorkspaceManifestCurrentCoordinate:
-    """Return the typed current coordinate for same-domain capture validation.
-
-    Core types:
-    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
-    """
-    manifest = generate_modelo_workspace_field_manifest(snapshot)
-    return _current_coordinate_for_manifest(manifest, _manifest_comparison_domain(snapshot))
 
 
 def capture_modelo_workspace_manifest(snapshot: RegistrySnapshot) -> ModeloWorkspaceManifestCapture:
@@ -972,14 +950,6 @@ def capture_modelo_workspace_manifest(snapshot: RegistrySnapshot) -> ModeloWorks
     """
     manifest = generate_modelo_workspace_field_manifest(snapshot)
     return _capture_for_manifest(manifest, _manifest_comparison_domain(snapshot))
-
-
-def read_modelo_workspace_manifest_current_coordinate_for_inspection(
-    inspection: RegistryRevisionInspection,
-) -> ModeloWorkspaceManifestCurrentCoordinate:
-    """Return the typed current coordinate for same-domain STATIC_INSPECTION capture validation."""
-    manifest = generate_modelo_workspace_field_manifest_for_inspection(inspection)
-    return _current_coordinate_for_manifest(manifest, _inspection_manifest_comparison_domain(inspection))
 
 
 def capture_modelo_workspace_manifest_for_inspection(
@@ -1000,6 +970,4 @@ __all__ = [
     "capture_modelo_workspace_manifest_for_inspection",
     "generate_modelo_workspace_field_manifest",
     "generate_modelo_workspace_field_manifest_for_inspection",
-    "read_modelo_workspace_manifest_current_coordinate",
-    "read_modelo_workspace_manifest_current_coordinate_for_inspection",
 ]

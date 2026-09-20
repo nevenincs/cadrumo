@@ -87,7 +87,7 @@ jobs:
       - name: Semgrep diff scan
         if: ${{ !inputs.full }}
         shell: bash
-        run: just check-security-diff base="$GATE_BASE"
+        run: just check-security-diff "$GATE_BASE"
 
       - name: Semgrep full scan
         if: ${{ inputs.full }}
@@ -112,7 +112,7 @@ jobs:
       - name: Scoped tests
         if: ${{ !cancelled() && steps.setup.outcome == 'success' }}
         shell: bash
-        run: just test-gate base="$GATE_BASE"
+        run: just test-gate "$GATE_BASE"
 
   verdict:
     name: "Check: Merge gate (Linux)"

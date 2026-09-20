@@ -199,40 +199,9 @@ def require_situacion_familiar_m145(
     ).require(value)
 
 
-def situacion_familiar_m145_choices(
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> tuple[SituacionFamiliarM145, ...]:
-    """Return Modelo 145 family-situation choices in authority order."""
-    return resolve_situacion_familiar_m145_catalogue(
-        effective_date=effective_date,
-        authority=authority,
-    ).choices
-
-
-def situacion_familiar_m145_is_eligible_for_supplementary_reduction(
-    value: object,
-    *,
-    effective_date: date | None = None,
-    authority: GovernedFactSource | None = None,
-) -> bool:
-    """Return the registry-declared supplementary-reduction eligibility."""
-    return (
-        resolve_situacion_familiar_m145_catalogue(
-            effective_date=effective_date,
-            authority=authority,
-        )
-        .definition(value)
-        .supplementary_reduction_eligible
-    )
-
-
 __all__ = [
     "SituacionFamiliarM145Catalogue",
     "SituacionFamiliarM145Definition",
     "require_situacion_familiar_m145",
     "resolve_situacion_familiar_m145_catalogue",
-    "situacion_familiar_m145_choices",
-    "situacion_familiar_m145_is_eligible_for_supplementary_reduction",
 ]

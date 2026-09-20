@@ -167,8 +167,8 @@ def test_bindings_list_missing_m200_surfaces_m202_relation_inputs() -> None:
     """M200 missing-input discovery names the feeding relation id of each relation-fed binding.
 
     The guidance is registry-derived (each
-    :class:`~cadrumo.domain.calculations.registry.RelationDefinition` declares
-    its ``target_binding``), so the discovery generalises to any modelo
+    :class:`~cadrumo.domain.calculations.registry.relations.RegistryFoldRequirement`
+    declares its ``target_bindings``), so the discovery generalises to any modelo
     rather than enumerating a hardcoded M200 channel table.
     """
 
@@ -639,10 +639,10 @@ def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() 
     annual settlement folds in were previously discoverable only by
     triggering a failing ``calculate``. The typed ``bindings list``
     payload now carries ``relation_inputs`` -- the registry relation ids
-    whose ``target_binding`` is the row's binding -- so a relation-fed
+    whose ``target_bindings`` include the row's binding -- so a relation-fed
     binding's source is discoverable in the listing ahead of any
     calculation. The mapping is derived from the resolved revision
-    (``RelationDefinition.target_binding``), not a per-form table, so it
+    (``RegistryFoldRequirement.target_bindings``), not a per-form table, so it
     generalises to every modelo.
     """
     # The readiness column is catalogue text -- the payload field is built with

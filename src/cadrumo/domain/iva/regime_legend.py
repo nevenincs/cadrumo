@@ -35,9 +35,9 @@ an amount, a rate, or a category the phrase does not name.
 See Also:
     :class:`IvaCategory`
         The closed catalogue a legend resolves into.
-    :data:`NO_PRINTED_TAX_IVA_CATEGORIES`
-        The categories whose invoices carry no printed tax line, which is the
-        expectation a legend's ``expects_repercutido_line`` states per legend.
+    :func:`~cadrumo.domain.iva.components.registry_category_projection`
+        The registry category projection used to identify categories whose
+        invoices carry no printed tax line.
 """
 
 from __future__ import annotations

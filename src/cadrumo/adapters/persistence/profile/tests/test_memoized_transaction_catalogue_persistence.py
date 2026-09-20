@@ -205,7 +205,13 @@ def test_targeted_id_reads_match_the_current_persisted_partition(
     }
     assert _transaction_ids(targeted) == {january_transaction.transaction_id}
 
-    _repository(runtime_profile).save(_catalogue(february_transaction))
+    updated_january = january_transaction.model_copy(update={"group_label": "externally-updated"})
+    external_repository = _repository(runtime_profile)
+    external_repository.save(_catalogue(updated_january, february_transaction))
+    refreshed = repository.load_by_ids((january_transaction.transaction_id,))
+    assert refreshed.transactions[january_transaction.transaction_id].group_label == "externally-updated"
+
+    external_repository.save(_catalogue(february_transaction))
     assert _transaction_ids(repository.load_by_ids((january_transaction.transaction_id,))) == set()
 
 

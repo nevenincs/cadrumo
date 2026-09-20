@@ -23,6 +23,7 @@ import yaml
 
 from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
+from dev.test_runs.logging import collect_only_listing
 
 from ..lane_reachability import (
     _JUST_CALL,
@@ -544,7 +545,12 @@ def test_dropping_the_exclusion_lets_a_real_lane_actually_collect_a_member() -> 
         cwd=_REPOSITORY_ROOT,
         timeout_seconds=_COLLECTION_TIMEOUT_SECONDS,
     )
-    collected = result.stdout.replace("\\", "/")
+    listing, _summary = collect_only_listing(result.stdout)
+    collected = (
+        result.stdout
+        if listing is None or not listing.is_file()
+        else listing.read_text(encoding="utf-8", errors="replace")
+    ).replace("\\", "/")
     assert any(member in collected for member in members), (
         f"dropping `{lane.source}/{lane.recipe}`'s exclusion did not make real pytest collect a "
         f"harness member\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}"

@@ -761,7 +761,7 @@ def _run_evidence_confirm(
                 operation_type=operation_type,
                 supply_nature=supply_nature,
                 # Leave an omitted class omitted so document-derived defaults survive.
-                **_invoice_class_kwarg(invoice_class, operation=operation, effective_date=period.end_date),
+                **_invoice_class_kwarg(invoice_class, effective_date=period.end_date),
                 rectifies_invoice_number=rectifies,
                 series=series,
                 notes=notes,
@@ -821,7 +821,6 @@ def _resolved_outcome(result: InvoiceConfirmationResult) -> str | None:
 def _invoice_class_kwarg(
     invoice_class: str | None,
     *,
-    operation: PinnedAuthorityOperation,
     effective_date: date,
 ) -> _InvoiceClassKwarg:
     """Keep an omitted invoice class omitted so document-derived defaults survive."""
@@ -833,7 +832,6 @@ def _invoice_class_kwarg(
     )
 
     catalogue = resolve_invoice_legal_classification_catalogue(
-        authority=operation,
         effective_date=effective_date,
     )
     try:

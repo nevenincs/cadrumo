@@ -59,11 +59,24 @@ class MemoizedTransactionCatalogueRepository:
         if cached is None:
             requested = set(key)
             for partition in self._partition_catalogues.values():
-                available = partition.in_window.transactions
+                available_catalogue = partition.in_window
+                available = available_catalogue.transactions
                 if requested.issubset(available):
-                    from ...domain.transactions.models import TransactionCatalogue
+                    # A full partition is already the canonical, validated
+                    # immutable catalogue returned by the repository. Reusing
+                    # it avoids rebuilding the same Pydantic mapping when the
+                    # ledger snapshot anchor asks for all source ids after the
+                    # aggregation has consumed that partition. Keep the
+                    # validated projection for a genuine subset, whose shape
+                    # and identity remain independent of the partition cache.
+                    if requested == set(available):
+                        cached = available_catalogue
+                    else:
+                        from ...domain.transactions.models import TransactionCatalogue
 
-                    cached = TransactionCatalogue.from_transactions(available[transaction_id] for transaction_id in key)
+                        cached = TransactionCatalogue.from_transactions(
+                            available[transaction_id] for transaction_id in key
+                        )
                     break
             if cached is None:
                 cached = self._repository.load_by_ids(key)

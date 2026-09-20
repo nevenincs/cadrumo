@@ -358,9 +358,10 @@ class TestEnvelopePathNormalisation:
     def _first_detail(golden: SequenceGolden) -> str:
         envelope = golden.frames[0].envelope
         assert envelope is not None
-        result = cast("dict[str, object]", envelope["result"])
-        preflight = cast("list[dict[str, object]]", result["preflight"])
-        return cast("str", preflight[0]["detail"])
+        result = cast("dict[str, JsonValue]", envelope["result"])
+        preflight = cast("list[JsonValue]", result["preflight"])
+        first_preflight = cast("dict[str, JsonValue]", preflight[0])
+        return cast("str", first_preflight["detail"])
 
     def test_build_bakes_stable_tokens_for_sandbox_and_checkout_paths(self) -> None:
         storage = r"C:\Temp\cli-sequence-AAA\cadrumo-storage"
@@ -430,7 +431,7 @@ class TestEnvelopePathNormalisation:
             storage_root=r"C:\Temp\cli-sequence-AAA\cadrumo-storage",
             workdir=r"C:\Temp\cli-sequence-AAA\workdir",
         )
-        result = cast("dict[str, object]", normalised["result"])
+        result = cast("dict[str, JsonValue]", normalised["result"])
         assert result["detail"] == unrelated
 
 

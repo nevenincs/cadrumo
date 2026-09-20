@@ -867,7 +867,12 @@ def bucket_scoped_storage_path(
     return bucket_root / location.relative_path()
 
 
-def storage_tree_targets(settings: Settings) -> tuple[Path, ...]:
+def storage_tree_targets(
+    settings: Settings,
+    *,
+    include_explicit: bool = True,
+    include_derived: bool = True,
+) -> tuple[Path, ...]:
     """Return every directory :func:`~core.storage_materialization.ensure_storage_tree` creates.
 
     Derived from the declaration and from nothing else, so the materialiser
@@ -879,10 +884,18 @@ def storage_tree_targets(settings: Settings) -> tuple[Path, ...]:
     Members with no settings field are fixed layout the bucket lifecycle
     provisions per bucket, and members whose field is absent are opt-in
     locations the operator has not asked for; neither is materialised here.
+    ``include_explicit`` and ``include_derived`` select settings named in, or
+    absent from, :attr:`Settings.model_fields_set`. This lets callers
+    distinguish application-owned defaults from operator-owned dependencies
+    without maintaining a second taxonomy, including when both resolve to the
+    same path.
     """
     targets: list[Path] = []
     for location in _ROOT_LOCATIONS:
         if location.settings_field is None:
+            continue
+        is_explicit = location.settings_field in settings.model_fields_set
+        if (is_explicit and not include_explicit) or (not is_explicit and not include_derived):
             continue
         value = getattr(settings, location.settings_field, None)
         if value is None:

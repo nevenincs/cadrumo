@@ -4,8 +4,10 @@ from __future__ import annotations
 
 from datetime import date
 from decimal import Decimal
+from typing import cast
 
 import pytest
+from _pytest.mark import ParameterSet
 from pydantic import ValidationError
 
 from cadrumo.core.aggregation import BindingAggregationOp
@@ -17,6 +19,7 @@ from cadrumo.domain.calculations.registry.binding_value_contract import (
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
+    IvaLedgerObservation,
     LedgerIvaProvider,
     resolve_ledger_iva_aggregation_binding_values,
     unsupported_ledger_iva_observations,
@@ -134,7 +137,7 @@ def _minimal_revision_with_bindings(*bindings: BindingDefinition) -> ModeloRevis
     )
 
 
-def _malformed_exemption_article_selector_cases() -> tuple[object, ...]:
+def _malformed_exemption_article_selector_cases() -> tuple[ParameterSet, ...]:
     """Build governed selector cases only when this proof executes."""
     with validating_governed_facts(compiled_bundled_authority()):
         return (
@@ -154,10 +157,10 @@ def _malformed_exemption_article_selector_cases() -> tuple[object, ...]:
 def test_validate_rejects_malformed_exemption_article_selector_without_registry_resources() -> None:
     for case in _malformed_exemption_article_selector_cases():
         with pytest.raises(ValidationError, match="exemption_articles"):
-            _article_filter_binding(**case.values[0])
+            _article_filter_binding(**cast("dict[str, object]", case.values[0]))
 
 
-def _single_binding_selector_cases() -> tuple[object, ...]:
+def _single_binding_selector_cases() -> tuple[ParameterSet, ...]:
     """Build governed observation cases only when their resolver proof executes."""
     with validating_governed_facts(compiled_bundled_authority()):
         return (
@@ -227,7 +230,9 @@ def _single_binding_selector_cases() -> tuple[object, ...]:
 def test_resolve_filters_by_binding_selector() -> None:
     failures: list[str] = []
     for case in _single_binding_selector_cases():
-        binding_id, observations, expected_amount = case.values
+        binding_id, observations, expected_amount = cast(
+            "tuple[str, tuple[IvaLedgerObservation, ...], Decimal]", case.values
+        )
         try:
             revision = _revision_with_bindings(_binding(binding_id))
             result = resolve_ledger_iva_aggregation_binding_values(revision, observations)

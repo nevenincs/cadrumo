@@ -26,7 +26,7 @@ import subprocess
 import sys
 import tomllib
 from collections import Counter
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass
 from pathlib import Path
@@ -256,7 +256,9 @@ def require_report(payload: str, result: subprocess.CompletedProcess[str], check
     if payload:
         return
     sys.stderr.write(result.stderr)
-    raise RuntimeError(f"{checker} produced no report; see the captured stderr above")
+    raise RuntimeError(
+        f"{checker} produced no report (return code {result.returncode}); see the captured stderr above",
+    )
 
 
 def collect_ty(platform: TargetPlatform) -> list[Diagnostic]:
@@ -372,22 +374,39 @@ def collect_basedpyright(platform: TargetPlatform) -> list[Diagnostic]:
     return diagnostics
 
 
+def _collect_checker(collector: Callable[[TargetPlatform], list[Diagnostic]]) -> list[Diagnostic]:
+    """Run one checker family across every target platform, serially.
+
+    The three checker families run concurrently, but the platform sweep inside
+    each family is deliberately serial.  A checker process can hold a large
+    analysis graph; allowing a second process from the same family to start
+    while the first is still resident multiplied peak memory on the Linux
+    runner and let the operating system kill one without a report.  Keeping
+    one process per family at a time preserves all nine measurements while
+    bounding that pressure.
+    """
+    diagnostics: list[Diagnostic] = []
+    for platform in _PLATFORMS:
+        diagnostics.extend(collector(platform))
+    return diagnostics
+
+
 def collect_all() -> list[Diagnostic]:
     """Run every checker against every supported platform and return the union.
 
-    The nine runs are independent subprocesses and overlap. Checked rather than
-    assumed: three concurrent basedpyright processes over a frozen snapshot
-    worktree answered identically to three sequential ones, twice, so they do
-    not contend for the analysis cache. `fold_platforms` sorts the union
-    afterwards, so the report order does not depend on who finished first.
+    The three checker families overlap, while each family's platform sweep is
+    serial. This retains cross-checker concurrency without starting multiple
+    large instances of the same analyzer at once. `fold_platforms` sorts the
+    union afterwards, so the report order does not depend on who finished
+    first.
 
     A sweep of a tree being edited underneath it will disagree with itself --
     that is the tree moving, not this gate being unstable, and it is why the
     contention question was settled on a snapshot instead of on `src`.
     """
     collectors = (collect_ty, collect_pyrefly, collect_basedpyright)
-    with ThreadPoolExecutor(max_workers=len(_PLATFORMS)) as pool:
-        futures = [pool.submit(collect, platform) for platform in _PLATFORMS for collect in collectors]
+    with ThreadPoolExecutor(max_workers=len(collectors)) as pool:
+        futures = [pool.submit(_collect_checker, collector) for collector in collectors]
         return [diagnostic for future in futures for diagnostic in future.result()]
 
 

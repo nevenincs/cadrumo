@@ -11,7 +11,6 @@ from ..locale_catalogue import (
     LocaleCatalogueCaptureError,
     LocaleCatalogueCurrentCoordinate,
     capture_locale_catalogue,
-    read_locale_catalogue_current_coordinate,
 )
 from ..render import lookup_translation_entry, override_locales_root
 
@@ -58,11 +57,19 @@ def test_capture_is_singleflight_and_refuses_a_superseded_catalogue(tmp_path: Pa
         assert first.generation == second.generation
         assert first.comparison_domain == second.comparison_domain
 
-        current = read_locale_catalogue_current_coordinate(locale="es")
+        current_capture = capture_locale_catalogue(_KEY, locale="es")
+        current = LocaleCatalogueCurrentCoordinate(
+            comparison_domain=current_capture.comparison_domain,
+            generation=current_capture.generation,
+        )
         assert first.require_current(current) is first
 
         _write_catalogue(tmp_path, locale="es", value="Suma total")
-        advanced = read_locale_catalogue_current_coordinate(locale="es")
+        advanced_capture = capture_locale_catalogue(_KEY, locale="es")
+        advanced = LocaleCatalogueCurrentCoordinate(
+            comparison_domain=advanced_capture.comparison_domain,
+            generation=advanced_capture.generation,
+        )
 
     assert advanced.generation > first.generation
     with pytest.raises(LocaleCatalogueCaptureError):
@@ -76,7 +83,11 @@ def test_a_capture_from_another_locale_scope_is_not_current(tmp_path: Path) -> N
 
     with override_locales_root(tmp_path):
         spanish = capture_locale_catalogue(_KEY, locale="es")
-        english_coordinate = read_locale_catalogue_current_coordinate(locale="en")
+        english_capture = capture_locale_catalogue(_KEY, locale="en")
+        english_coordinate = LocaleCatalogueCurrentCoordinate(
+            comparison_domain=english_capture.comparison_domain,
+            generation=english_capture.generation,
+        )
 
     assert spanish.comparison_domain != english_coordinate.comparison_domain
     with pytest.raises(LocaleCatalogueCaptureError):

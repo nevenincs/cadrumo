@@ -26,8 +26,6 @@ from ..workspace_manifest import (
     capture_modelo_workspace_manifest_for_inspection,
     generate_modelo_workspace_field_manifest,
     generate_modelo_workspace_field_manifest_for_inspection,
-    read_modelo_workspace_manifest_current_coordinate,
-    read_modelo_workspace_manifest_current_coordinate_for_inspection,
 )
 from ..workspace_models import ModeloWorkspaceSchemaClassification, ModeloWorkspaceSchemaReferenceV1
 from ..workspace_producers import (
@@ -319,7 +317,10 @@ def test_capture_is_singleflight_and_current_against_its_own_coordinate() -> Non
     assert first.generation == second.generation
     assert first.comparison_domain == second.comparison_domain
 
-    current = read_modelo_workspace_manifest_current_coordinate(snapshot)
+    current = ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=second.comparison_domain,
+        generation=second.generation,
+    )
     assert first.require_current(current) is first
 
 
@@ -329,7 +330,11 @@ def test_a_distinct_snapshot_coordinate_is_a_distinct_owner_scope() -> None:
     other = published_snapshot("303", filing_year=2025, period="3T")
 
     captured = capture_modelo_workspace_manifest(snapshot)
-    other_coordinate = read_modelo_workspace_manifest_current_coordinate(other)
+    other_capture = capture_modelo_workspace_manifest(other)
+    other_coordinate = ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=other_capture.comparison_domain,
+        generation=other_capture.generation,
+    )
 
     assert captured.comparison_domain != other_coordinate.comparison_domain
     with pytest.raises(ModeloWorkspaceManifestCaptureError):
@@ -440,14 +445,21 @@ def test_inspection_capture_is_singleflight_and_current_against_its_own_coordina
     assert first.generation == second.generation
     assert first.comparison_domain == second.comparison_domain
 
-    current = read_modelo_workspace_manifest_current_coordinate_for_inspection(inspection)
+    current = ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=second.comparison_domain,
+        generation=second.generation,
+    )
     assert first.require_current(current) is first
 
 
 def test_inspection_and_snapshot_manifest_captures_never_share_a_comparison_domain() -> None:
     """The two admissions' captures must never validate against each other's coordinate."""
     inspection_captured = capture_modelo_workspace_manifest_for_inspection(_inspection())
-    snapshot_coordinate = read_modelo_workspace_manifest_current_coordinate(_snapshot())
+    snapshot_capture = capture_modelo_workspace_manifest(_snapshot())
+    snapshot_coordinate = ModeloWorkspaceManifestCurrentCoordinate(
+        comparison_domain=snapshot_capture.comparison_domain,
+        generation=snapshot_capture.generation,
+    )
 
     assert inspection_captured.comparison_domain != snapshot_coordinate.comparison_domain
     with pytest.raises(ModeloWorkspaceManifestCaptureError):

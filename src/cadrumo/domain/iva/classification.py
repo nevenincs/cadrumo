@@ -1090,6 +1090,7 @@ def classify_iva(
     """
     from ..calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
     from ..calculations.registry.iva_rate_kind_catalogue import resolve_iva_rate_kind_catalogue
+    from ..calculations.registry.iva_schema_vocabulary import resolve_iva_art69_dos_service_catalogue
 
     _registry_iva_classification_catalogue(criteria.transaction_date, operation=operation)
     vocabulary = resolve_iva_classification_catalogue(criteria.transaction_date, operation=operation)
@@ -1104,6 +1105,11 @@ def classify_iva(
     vocabulary.require_territorial_scope(criteria.issuer_residency)
     vocabulary.require_territorial_scope(criteria.customer_residency)
     vocabulary.require_customer_tax_status(criteria.customer_tax_status)
+    if criteria.art_69_dos_service is not None:
+        resolve_iva_art69_dos_service_catalogue(
+            effective_date=criteria.transaction_date,
+            authority=operation,
+        ).require(criteria.art_69_dos_service)
     resolve_transaction_kind_catalogue(
         criteria.transaction_date,
         operation=operation,

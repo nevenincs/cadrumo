@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from .command_spec import CommandSpec
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
+from ...core.type_guards import is_object_collection, is_object_dict
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
 from ._framework_localisation import (
@@ -169,7 +170,7 @@ def main() -> None:
     progress_sink = nullcontext()
     if not metadata_invocation:
         try:
-            _refuse_former_product_state_at_startup()
+            _provision_dependencies_at_startup()
         except typer.Exit as exit_request:
             raise SystemExit(exit_request.exit_code) from None
         from ...adapters.outbound.aeat.operator_progress import operator_progress_sink
@@ -179,19 +180,19 @@ def main() -> None:
         app(prog_name=_PRODUCT_IDENTITY.cli_executable)
 
 
-def _refuse_former_product_state_at_startup() -> None:
-    """Route a refused retired ``aeat`` state root through the typed CLI error boundary."""
+def _provision_dependencies_at_startup() -> None:
+    """Provision startup dependencies through the typed CLI error boundary."""
     from ...application.profile_preconditions import (
         FormerProductDetectionScope,
         former_product_state_verdict,
     )
-    from ...core.config import Settings
+    from ...application.provisioning import ensure_cli_startup_dependencies
     from ...core.config_state_root import FormerProductStateError
-    from ...core.errors.hierarchy import ActiveProfilePointerError
+    from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
     from .errors import CliRefusedBoundaryError, emit_error_and_exit, project_cli_boundary_error
 
     try:
-        Settings()
+        ensure_cli_startup_dependencies()
     except FormerProductStateError as error:
         emit_error_and_exit(
             attach_cli_policy_verdict(
@@ -202,7 +203,9 @@ def _refuse_former_product_state_at_startup() -> None:
             )
         )
     except ActiveProfilePointerError as error:
-        emit_error_and_exit(project_cli_boundary_error(error, _refuse_former_product_state_at_startup))
+        emit_error_and_exit(project_cli_boundary_error(error, _provision_dependencies_at_startup))
+    except CadrumoError as error:
+        emit_error_and_exit(project_cli_boundary_error(error, _provision_dependencies_at_startup))
 
 
 @contextmanager
@@ -275,9 +278,9 @@ def _jsonable_command_surface_value(value: object) -> object:
         return value.value
     if is_dataclass(value) and not isinstance(value, type):
         return {field.name: _jsonable_command_surface_value(getattr(value, field.name)) for field in fields(value)}
-    if isinstance(value, dict):
+    if is_object_dict(value):
         return {str(key): _jsonable_command_surface_value(item) for key, item in value.items()}
-    if isinstance(value, (tuple, list, set, frozenset)):
+    if is_object_collection(value):
         items = (_jsonable_command_surface_value(item) for item in value)
         return sorted(items, key=str) if isinstance(value, (set, frozenset)) else list(items)
     if isinstance(value, BaseModel):

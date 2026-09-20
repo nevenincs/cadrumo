@@ -25,13 +25,14 @@ from ..compiler import identity as identity_module
 from ..compiler.identity import (
     FingerprintTuples,
     RegistryIdentityOrigin,
+    compute_installed_tree_digest,
     read_registry_identity_stamp,
     registry_identity_stamp_location,
     resolve_registry_identity,
     stamped_cache_key_tuples,
 )
 from ..compiler.loader_fingerprints import clear_fingerprint_cache
-from ..maintenance_support import compute_installed_tree_digest, write_registry_identity_stamp
+from ..maintenance_support import write_registry_identity_stamp
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

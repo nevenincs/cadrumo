@@ -341,7 +341,7 @@ jobs:
 
   runner-queue-watchdog:
     name: "Check: Runner queue (Linux)"
-    needs: [build-cohort, runtime-inventory]
+    needs: [check-prove-ref, build-cohort, runtime-inventory]
     if: inputs.phase == 'prove'
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 20

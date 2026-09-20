@@ -1,6 +1,6 @@
 """Adapter-legal resolution gate for registry extraction-parser dotted paths.
 
-The domain registry validator (:func:`validate_dotted_callable`) checks only the
+The domain registry validator (``validate_dotted_callable``) checks only the
 STRUCTURAL shape of a ``parser =`` dotted path, so the domain registry validation
 stays free of any ``adapters`` coupling (the ports-inversion boundary: the domain
 must not name or import a parser module, even by string). This gate enforces the
@@ -15,7 +15,7 @@ authorities, fails here. This is the adapter-owned complement to the
 ports-inversion boundary.
 
 See Also:
-    :func:`~domain.calculations.registry._validate_extraction_profiles.validate_dotted_callable`
+    ``dev.registry.compiler._validate_extraction_profiles.validate_dotted_callable``
         Domain-side structural validator that deliberately avoids importing
         adapter parser modules.
     :func:`~adapters.inbound.declaracion.parser.parse_declaracion`

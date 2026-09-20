@@ -316,7 +316,8 @@ def _safe_violation_field_hints(
 
 def _violation_location(item: Mapping[str, object], declared: frozenset[str]) -> str:
     """Render a pydantic location, or safe field hints for a model-level error."""
-    location = tuple(item.get("loc", ()))
+    raw_location = item.get("loc", ())
+    location = cast(tuple[object, ...], raw_location) if isinstance(raw_location, tuple) else ()
     if location:
         return _violation_path(location, declared)
     hints = _safe_violation_field_hints(item, declared)

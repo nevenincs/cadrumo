@@ -167,7 +167,7 @@ def test_the_provision_is_resolved_from_the_rule_and_not_from_the_category() -> 
     """Two rules reaching one category carry different articles and different natures.
 
     ``R12`` and ``R15`` both resolve to
-    :attr:`~cadrumo.domain.iva.IvaCategory.DOMESTIC_NOT_SUBJECT`, and they rest
+    ``IvaCategory("domestic_not_subject")``, and they rest
     on different provisions: art. 69 locates the service, art. 68 locates the
     goods. A grounding derived from the category could not tell them apart.
     """

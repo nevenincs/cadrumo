@@ -48,6 +48,7 @@ import hashlib
 import json
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Any, TypeGuard, override
 
@@ -76,32 +77,69 @@ _DESCRIPTOR_NAME = "authority.current.json"
 _DATABASE_NAME = re.compile(r"authority-[0-9a-f]{64}\.sqlite3")
 
 
+def _is_object_mapping(value: object) -> TypeGuard[dict[object, object]]:
+    """Narrow a decoded or framework-provided mapping to object values."""
+    return isinstance(value, dict)
+
+
 def _is_string_mapping(value: object) -> TypeGuard[dict[str, str]]:
     """Recognize Hatch's force-include mapping without trusting its Any payload."""
-    return isinstance(value, dict) and all(
-        isinstance(key, str) and isinstance(item, str) for key, item in value.items()
-    )
+    if not _is_object_mapping(value):
+        return False
+    return all(isinstance(key, str) and isinstance(item, str) for key, item in value.items())
 
 
-def _authority_root(build_root: Path) -> Path | None:
-    """Return the directory holding the published pair, or ``None`` when absent.
+def _is_descriptor_mapping(value: object) -> TypeGuard[dict[str, object]]:
+    """Recognize a decoded JSON object with string member names."""
+    if not _is_object_mapping(value):
+        return False
+    return all(isinstance(key, str) for key in value)
+
+
+def _authority_root(build_root: Path) -> Path:
+    """Return the published pair directory, compiling a fresh source tree if needed.
 
     A source-tree build reads the gitignored ``.authority/`` beside the project,
     or the directory ``CADRUMO_AUTHORITY_ROOT`` names. A build from an extracted
     sdist finds the pair already embedded at the published path and must read it
-    from there, because the sdist carries no ``.authority/``.
+    from there, because the sdist carries no ``.authority/``. When a real source
+    tree has no publication yet, the canonical compiler publishes one to its
+    repo-root ``.authority/`` before packaging continues.
     """
     override = os.environ.get(_AUTHORITY_ROOT_ENV)
     if override:
         candidate = Path(override)
-        return candidate if candidate.is_dir() else None
+        if not candidate.is_dir():
+            raise FileNotFoundError(f"configured ${_AUTHORITY_ROOT_ENV} directory is unavailable: {candidate}")
+        return candidate
     source_tree = build_root / _SOURCE_TREE_DIRECTORY
     if source_tree.is_dir():
         return source_tree
     embedded = build_root / _SDIST_DESTINATION
     if embedded.is_dir():
         return embedded
-    return None
+    return _publish_source_tree_authority(build_root, source_tree)
+
+
+def _publish_source_tree_authority(build_root: Path, destination: Path) -> Path:
+    """Compile the canonical authority and return its publication directory."""
+    import_paths = (str(build_root), str(build_root / "src"))
+    original_path = sys.path.copy()
+    try:
+        sys.path[:0] = import_paths
+        from dev.registry.compiler.authority import AuthoritySourceSet
+        from dev.registry.pipeline.authority_publication import publish_sqlite_authority_candidate
+
+        sources = AuthoritySourceSet.bundled()
+        publish_sqlite_authority_candidate(
+            registry_root=sources.registry_root,
+            source_root=sources.source_evidence_root,
+            profile_schema_path=sources.profile_schema_path,
+            destination=destination,
+        )
+        return destination
+    finally:
+        sys.path[:] = original_path
 
 
 def _selected_pair(root: Path) -> tuple[Path, Path]:
@@ -117,7 +155,7 @@ def _selected_pair(root: Path) -> tuple[Path, Path]:
     if not descriptor.is_file():
         raise FileNotFoundError(f"published authority has no descriptor: {descriptor}")
     document = json.loads(descriptor.read_text(encoding="utf-8"))
-    if not isinstance(document, dict):
+    if not _is_descriptor_mapping(document):
         raise TypeError(f"authority descriptor is not a mapping: {descriptor}")
     name = document.get("database")
     if not isinstance(name, str) or _DATABASE_NAME.fullmatch(name) is None:
@@ -148,12 +186,6 @@ class CustomBuildHook(BuildHookInterface[BuilderConfig[PluginManager], PluginMan
         """Inject the selected descriptor and database into the force-include map."""
         build_root = Path(self.root)
         root = _authority_root(build_root)
-        if root is None:
-            raise FileNotFoundError(
-                "no published registry authority to package: expected "
-                f"{build_root / _SOURCE_TREE_DIRECTORY} (or ${_AUTHORITY_ROOT_ENV}) in a source-tree build, "
-                f"or {build_root / _SDIST_DESTINATION} in a build from an sdist",
-            )
         descriptor, database = _selected_pair(root)
         destination = _SDIST_DESTINATION if self.target_name == "sdist" else _WHEEL_DESTINATION
         force_include = build_data.setdefault("force_include", {})

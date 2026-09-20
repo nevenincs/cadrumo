@@ -73,6 +73,61 @@ def test_calling_it_again_is_a_no_op(tmp_path: Path) -> None:
     )
 
 
+def test_missing_explicit_directory_is_refused_before_defaults_are_created(tmp_path: Path) -> None:
+    """An operator-owned path is a dependency, not a directory to invent."""
+    root = tmp_path / "state"
+    explicit_tokens = tmp_path / "operator-tokens"
+
+    with (
+        override_settings(cadrumo_local_storage_root=root, cadrumo_token_dir=explicit_tokens),
+        pytest.raises(CoreValidationError) as refusal,
+    ):
+        ensure_storage_tree()
+
+    assert refusal.value.context == {
+        "state_directory_target": str(explicit_tokens),
+        "occupied_by_file": False,
+        "directory_created": False,
+        "explicit_override": True,
+    }
+    assert not root.exists(), "explicit dependencies must be checked before default materialization"
+
+
+def test_missing_explicit_directory_is_refused_when_it_aliases_a_default(tmp_path: Path) -> None:
+    """Path equality cannot turn an operator dependency into an owned default."""
+    root = tmp_path / "state"
+    aliased_cache = root / "cache" / "llm-cache"
+
+    with (
+        override_settings(cadrumo_local_storage_root=root, cadrumo_token_dir=aliased_cache),
+        pytest.raises(CoreValidationError) as refusal,
+    ):
+        ensure_storage_tree()
+
+    assert refusal.value.context == {
+        "state_directory_target": str(aliased_cache),
+        "occupied_by_file": False,
+        "directory_created": False,
+        "explicit_override": True,
+    }
+    assert not root.exists(), "an aliased explicit dependency must still be checked first"
+
+
+def test_existing_explicit_directory_is_preserved_while_defaults_are_created(tmp_path: Path) -> None:
+    """A provisioned override passes and does not suppress sibling defaults."""
+    root = tmp_path / "state"
+    explicit_tokens = tmp_path / "operator-tokens"
+    explicit_tokens.mkdir()
+    sentinel = explicit_tokens / "sentinel"
+    sentinel.write_text("kept", encoding="utf-8")
+
+    with override_settings(cadrumo_local_storage_root=root, cadrumo_token_dir=explicit_tokens):
+        assert ensure_storage_tree() == root
+
+    assert sentinel.read_text(encoding="utf-8") == "kept"
+    assert (root / "cache" / "llm-cache").is_dir()
+
+
 def test_a_file_valued_setting_gets_its_parent_not_a_directory(tmp_path: Path) -> None:
     """One entry in the taxonomy names a JSON file, not a directory.
 

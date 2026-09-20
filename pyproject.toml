@@ -67,6 +67,9 @@ dependencies = [
   # libsecret). Pure-Python, gracefully degrades when no usable backend
   # is detected; the substrate's file fallback covers headless / CI.
   "keyring>=25.6.0,<26",
+  # The Windows ACL hardening path imports pywin32 directly. Keep it in the
+  # base runtime on Windows rather than relying on mcp's transitive supply.
+  "pywin32>=311 ; sys_platform == 'win32'",
   "openpyxl>=3.1.5,<4",
   # PDF parsing for justificantes.
   "pdfplumber>=0.11.9,<1",
@@ -229,9 +232,26 @@ all = [
 ]
 
 [build-system]
-# Floored at the release whose BuildHookInterface takes both type parameters,
-# which the authority build hook subscripts; an older backend cannot load it.
-requires = ["hatchling>=1.32.3,<2"]
+# The build hook compiles a missing source-tree authority before packaging it.
+# Keep this closure aligned with the canonical compiler's direct import and
+# official-source extraction requirements; normal runtime dependencies remain
+# declared separately under project.dependencies.
+requires = [
+  "hatchling>=1.32.3,<2",
+  "beautifulsoup4[lxml]>=4.12,<5",
+  "defusedxml>=0.7.1,<1",
+  "openpyxl>=3.1.5,<4",
+  "pdfplumber>=0.11.9,<1",
+  "pydantic>=2.12.5,<3",
+  "pydantic-settings>=2.9.1,<3",
+  "pypdfium2>=5.7.1,<6",
+  "python-dotenv>=1.2.2,<2",
+  "python-i18n>=0.3.9,<1",
+  "PyYAML>=6.0.3,<7",
+  "rtoml>=0.13.0,<1",
+  "tzdata>=2026.2 ; sys_platform == 'win32'",
+  "xlrd>=2.0.1,<3",
+]
 build-backend = "hatchling.build"
 
 # Deny-by-default. Without an explicit target, hatchling packs every
@@ -443,6 +463,10 @@ managed-torch-direct-dependency = true
 registry = [
   # Registry load-census tooling imports grimp directly for the executed import graph.
   "grimp>=3.15,<4",
+  # Registry authoring preserves TOML comments and formatting through tomlkit directly.
+  "tomlkit>=0.15,<1",
+  # The indexed-authority benchmark measures process RSS directly.
+  "psutil>=5.9",
 ]
 dev = [
   { include-group = "registry" },
@@ -495,11 +519,6 @@ dev = [
   "pytest-playwright>=0.6.0",
   # Parallel unit suite via opt-in `uv run pytest -n auto -m unit`.
   "pytest-xdist>=3.6.0",
-  # pytest-xdist's `-n auto` calls psutil.cpu_count; pin so `uv sync` restores
-  # a clean install if the cached one is corrupted (observed on this worktree:
-  # __init__.py missing, only the .pyc remained, so AttributeError evaded the
-  # xdist ImportError fallback).
-  "psutil>=5.9",
   # Reproducible light-theme CLI GIFs for the repository README.
   "pillow==12.3.0",
   # Used only to generate synthetic fixture PDFs in tests.
@@ -1346,6 +1365,10 @@ ignore_names = [
 [tool.deptry.package_module_name_map]
 "PyYAML" = ["yaml"]
 "pyyaml" = ["yaml"]
+# pywin32 ships these modules across its distribution roots; deptry's package
+# metadata cannot discover all of them. Keep the direct Windows ACL and COM
+# dependencies visible to the declaration check.
+"pywin32" = ["ntsecuritycon", "pythoncom", "pywintypes", "win32security"]
 # The NVML binding's distribution name and its import name differ, so the
 # mapping is stated rather than guessed: deptry's fallback would be
 # `nvidia_ml_py`, making the accelerator probe's `import pynvml` read as an
@@ -1377,6 +1400,11 @@ DEP002 = [
   "cadrumo-data-official",
   "pillow",
   "python-dotenv",
+  # Typer imports Rich for runtime help/error rendering. The application
+  # intentionally reaches it through Typer's public rich_utils boundary rather
+  # than importing Rich directly, while the base declaration keeps that
+  # runtime reliance independent of Typer's transitive metadata.
+  "rich",
   "tzdata",
 ]
 # `pydantic_core` is re-exported by pydantic — a legitimate transitive use.

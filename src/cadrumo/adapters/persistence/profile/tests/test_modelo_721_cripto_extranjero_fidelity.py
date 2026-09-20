@@ -19,7 +19,7 @@ threshold per art. 42-quater), a new declaration is required in N+1 even if
 the filer would otherwise be below threshold. This mirrors the M720 A3
 re-declaration trigger for bienes y derechos.
 
-This module covers the data-fidelity and advisory-trigger layer:
+This module covers the data-fidelity layer:
 
 - Year N (2023): custodian Coinbase (US) holding BTC at €60,000 and ETH at
   €55,000 at 31 December 2023. Both exceed the €50,000 initial threshold.
@@ -28,16 +28,12 @@ This module covers the data-fidelity and advisory-trigger layer:
 - Observations persist via the real CalculationObservationRepository and reload
   with strict pydantic equality. Token identity (custodio + moneda.clave-token)
   survives the roundtrip unchanged — the cross-year baseline resolver's anchor.
-- The advisory helper fires when the grown BTC custodian+token pair is absent
-  from the current declaration, and stays silent when the required token is
-  present or the delta stays below the €20,000 re-declaration threshold.
 - Anti-tautology: omitting the saldo-31-diciembre casilla produces strict
   inequality, proving the roundtrip assertions are not vacuously true.
 
 Evidence class: THRESHOLD_CONTINUITY. The two-year per-custodian/per-token
 roundtrip together with valuation isolation, identity continuity, and the
-advisory trigger constitute the current real ≥2-renta threshold-continuity
-contract.
+roundtrip constitute the current real ≥2-renta threshold-continuity contract.
 
 Legal grounding: DA-18 letra d Ley 58/2003 LGT (obligation); Ley 11/2021
 DA-10 (enabling statute); RD 1065/2007 art. 42-quater (reglamentary development,
@@ -45,10 +41,6 @@ DA-10 (enabling statute); RD 1065/2007 art. 42-quater (reglamentary development,
 arts. 1-3 (form approval, filing period January–March following ejercicio).
 
 See Also:
-    :mod:`~application.calculations._foreign_asset_redeclaration`
-        Shared M720/M721 re-declaration advisory implementation exercised here.
-    :func:`~application.calculations._foreign_asset_redeclaration.modelo_721_redeclaration_advisory_findings`
-        Modelo 721 advisory entry point pinned by the grown/omitted BTC case.
     :class:`~application.calculations.observations_repository.CalculationObservationRepository`
         Real repository used for the two-year observation roundtrip.
     :class:`~domain.calculations.registry.RegistryModeloObservation`
@@ -71,18 +63,16 @@ from cadrumo.adapters.persistence.profile.calculation_observations import Calcul
 from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_two_ejercicio_round_trip
 from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import find_observation
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.foreign_asset_redeclaration import modelo_721_redeclaration_advisory_findings
 from cadrumo.application.foreign_asset_thresholds import foreign_asset_declaration_thresholds
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.foreign_asset_obligation import ForeignAssetObligationGroup
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observation_rows,
     revision_id_for_observation,
 )
-from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingKind, ModeloVerificationFindingSeverity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -139,8 +129,6 @@ _CUSTODIO_CODIGO_PAIS_CASILLA: CasillaId = validated_casilla_id("custodio.codigo
 _MONEDA_CLAVE_TOKEN_CASILLA: CasillaId = validated_casilla_id("moneda.clave-token")
 _MONEDA_SALDO_CASILLA: CasillaId = validated_casilla_id("moneda.saldo-31-diciembre")
 _SALDO_31_DICIEMBRE_CASILLAS: tuple[CasillaId, ...] = (_MONEDA_SALDO_CASILLA,)
-_M721_SOURCE_REFS = ("aeat-modelo-721-procedure",)
-_M721_LEGAL_REFS = _MONEDAS_VIRTUALES_THRESHOLD.legal_refs
 
 
 def _values_for(observation: RegistryModeloObservation, casilla_id: CasillaId) -> tuple[Decimal, ...]:
@@ -151,87 +139,6 @@ def _values_for(observation: RegistryModeloObservation, casilla_id: CasillaId) -
         assert isinstance(item.value, Decimal), f"casilla {casilla_id!r} must carry a numeric observation"
         values.append(item.value)
     return tuple(values)
-
-
-def _advisory_observation(
-    *,
-    filing_year: int,
-    casilla_values: tuple[tuple[CasillaId, Decimal], ...],
-) -> RegistryModeloObservation:
-    return RegistryModeloObservation(
-        modelo=_MODELO,
-        filing_year=filing_year,
-        period="0A",
-        observations=tuple(
-            CasillaObservation(
-                casilla_id=casilla_id,
-                value=value,
-                legal_refs=_M721_LEGAL_REFS,
-                source_refs=_M721_SOURCE_REFS,
-            )
-            for casilla_id, value in casilla_values
-        ),
-    )
-
-
-def _year_n_advisory_observation() -> RegistryModeloObservation:
-    return _advisory_observation(
-        filing_year=_YEAR_N,
-        casilla_values=(
-            (_EJERCICIO_CASILLA, Decimal(str(_YEAR_N))),
-            (_TIPO_DECLARACION_CASILLA, Decimal("1")),
-            (_CUSTODIO_NOMBRE_CASILLA, _CUSTODIO_NOMBRE),
-            (_CUSTODIO_CODIGO_PAIS_CASILLA, _CUSTODIO_PAIS),
-            (_MONEDA_CLAVE_TOKEN_CASILLA, Decimal("1")),
-            (_MONEDA_SALDO_CASILLA, _BTC_N),
-            (_MONEDA_CLAVE_TOKEN_CASILLA, Decimal("2")),
-            (_MONEDA_SALDO_CASILLA, _ETH_N),
-        ),
-    )
-
-
-def _year_n_plus_1_advisory_observation() -> RegistryModeloObservation:
-    return _advisory_observation(
-        filing_year=_YEAR_N_PLUS_1,
-        casilla_values=(
-            (_EJERCICIO_CASILLA, Decimal(str(_YEAR_N_PLUS_1))),
-            (_TIPO_DECLARACION_CASILLA, Decimal("1")),
-            (_CUSTODIO_NOMBRE_CASILLA, _CUSTODIO_NOMBRE),
-            (_CUSTODIO_CODIGO_PAIS_CASILLA, _CUSTODIO_PAIS),
-            (_MONEDA_CLAVE_TOKEN_CASILLA, Decimal("1")),
-            (_MONEDA_SALDO_CASILLA, _BTC_N1),
-            (_MONEDA_CLAVE_TOKEN_CASILLA, Decimal("2")),
-            (_MONEDA_SALDO_CASILLA, _ETH_N1),
-        ),
-    )
-
-
-def _year_n_plus_1_advisory_without_btc() -> RegistryModeloObservation:
-    return _advisory_observation(
-        filing_year=_YEAR_N_PLUS_1,
-        casilla_values=(
-            (_EJERCICIO_CASILLA, Decimal(str(_YEAR_N_PLUS_1))),
-            (_TIPO_DECLARACION_CASILLA, Decimal("1")),
-            (_CUSTODIO_NOMBRE_CASILLA, _CUSTODIO_NOMBRE),
-            (_CUSTODIO_CODIGO_PAIS_CASILLA, _CUSTODIO_PAIS),
-            (_MONEDA_CLAVE_TOKEN_CASILLA, Decimal("2")),
-            (_MONEDA_SALDO_CASILLA, _ETH_N1),
-        ),
-    )
-
-
-def _year_n_plus_1_advisory_without_eth() -> RegistryModeloObservation:
-    return _advisory_observation(
-        filing_year=_YEAR_N_PLUS_1,
-        casilla_values=(
-            (_EJERCICIO_CASILLA, Decimal(str(_YEAR_N_PLUS_1))),
-            (_TIPO_DECLARACION_CASILLA, Decimal("1")),
-            (_CUSTODIO_NOMBRE_CASILLA, _CUSTODIO_NOMBRE),
-            (_CUSTODIO_CODIGO_PAIS_CASILLA, _CUSTODIO_PAIS),
-            (_MONEDA_CLAVE_TOKEN_CASILLA, Decimal("1")),
-            (_MONEDA_SALDO_CASILLA, _BTC_N1),
-        ),
-    )
 
 
 def _year_n_observation() -> RegistryModeloObservation:
@@ -528,8 +435,6 @@ def test_year_n_plus_1_btc_delta_exceeds_redeclaration_threshold(tmp_path: Path)
     not be obliged. The test asserts both stored values are correct and the
     re-declaration trigger condition is satisfied in the stored data.
 
-    The application advisory helper is tested separately below because it also needs
-    the current declaration row set to prove the grown token is absent.
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
@@ -564,57 +469,6 @@ def test_year_n_plus_1_btc_delta_exceeds_redeclaration_threshold(tmp_path: Path)
         assert delta > _REDECLARATION_DELTA_EUR, (
             f"year-N+1 minus year-N BTC delta ({delta}) must exceed €{_REDECLARATION_DELTA_EUR} "
             f"to satisfy art. 42-quater re-declaration trigger condition"
-        )
-
-
-def test_redeclaration_advisory_fires_when_grown_btc_token_is_absent_from_current_declaration() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        findings = modelo_721_redeclaration_advisory_findings(
-            prior_observation=_year_n_advisory_observation(),
-            current_observation=_year_n_plus_1_advisory_observation(),
-            current_declaration_observation=_year_n_plus_1_advisory_without_btc(),
-            operation=_authority_operation_for_test,
-        )
-
-        assert len(findings) == 1
-        finding = findings[0]
-        assert finding.kind is ModeloVerificationFindingKind.ADVISORY
-        assert finding.severity is ModeloVerificationFindingSeverity.WARNING
-        assert finding.message_locale_key == "application.modelo.findings.foreign_asset_redeclaration"
-        assert dict(finding.message_facts) == {
-            "modelo_code": _MODELO,
-            "filing_year": _YEAR_N_PLUS_1,
-            "position_key": "monedas_virtuales|1|840|1",
-            "group_code": ForeignAssetObligationGroup.from_registry("monedas_virtuales").value,
-            "prior_value_eur": _BTC_N,
-            "current_value_eur": _BTC_N1,
-            "delta_value_eur": _BTC_N1 - _BTC_N,
-            "redeclaration_increase_threshold_eur": _REDECLARATION_DELTA_EUR,
-        }
-        assert "rd-1065-2007:art-42-quater" in finding.legal_refs
-        assert "aeat-modelo-721-procedure" in finding.source_refs
-
-
-def test_redeclaration_advisory_is_silent_when_required_token_is_declared_or_delta_is_below_threshold() -> None:
-    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
-        assert (
-            modelo_721_redeclaration_advisory_findings(
-                prior_observation=_year_n_advisory_observation(),
-                current_observation=_year_n_plus_1_advisory_observation(),
-                current_declaration_observation=_year_n_plus_1_advisory_observation(),
-                operation=_authority_operation_for_test,
-            )
-            == ()
-        )
-
-        assert (
-            modelo_721_redeclaration_advisory_findings(
-                prior_observation=_year_n_advisory_observation(),
-                current_observation=_year_n_plus_1_advisory_observation(),
-                current_declaration_observation=_year_n_plus_1_advisory_without_eth(),
-                operation=_authority_operation_for_test,
-            )
-            == ()
         )
 
 
@@ -662,8 +516,8 @@ def test_enrollment_recorder_evidences_two_distinct_annual_cycles_and_matches_ma
     commit as this test.
 
     Evidence class: THRESHOLD_CONTINUITY. The two-year per-custodian/per-token
-    roundtrip plus advisory-trigger assertions constitute the current
-    threshold-continuity contract for M721.
+    roundtrip assertions constitute the current threshold-continuity contract
+    for M721.
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()

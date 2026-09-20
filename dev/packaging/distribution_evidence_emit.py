@@ -33,7 +33,7 @@ import json
 import re
 from datetime import UTC, datetime
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, cast
 
 from pydantic import JsonValue
 
@@ -301,7 +301,7 @@ def build_installed_oracle_evidence(
     if mcp_evidence is not None:
         _assert_mcp_oracle_bound_to_cohort(cohort=cohort, mcp_evidence=mcp_evidence)
     commands = tuple(_command_transcript(command) for command in tax_evidence.commands)
-    cli_observations = {
+    cli_observations: dict[str, JsonValue] = {
         "requested_executable": tax_evidence.requested_executable,
         "resolved_executable": tax_evidence.resolved_executable,
         "version_output": tax_evidence.version_output,
@@ -314,9 +314,9 @@ def build_installed_oracle_evidence(
         "target_casilla": tax_evidence.target_casilla,
         "target_value": tax_evidence.target_value,
         "formula_id": tax_evidence.formula_id,
-        "legal_refs": list(tax_evidence.legal_refs),
-        "source_refs": list(tax_evidence.source_refs),
-        "notice_codes": list(tax_evidence.notice_codes),
+        "legal_refs": [reference for reference in tax_evidence.legal_refs],
+        "source_refs": [reference for reference in tax_evidence.source_refs],
+        "notice_codes": [code for code in tax_evidence.notice_codes],
     }
     observations: dict[str, JsonValue]
     if mcp_evidence is None:
@@ -355,7 +355,10 @@ def build_installed_oracle_evidence(
             f"via {mcp_evidence.formula_id}",
             "every persisted observation carried legal and source grounding",
         )
-        observations = {"cli_oracle": cli_observations, "mcp_oracle": _mcp_observations(mcp_evidence)}
+        observations = {
+            "cli_oracle": cli_observations,
+            "mcp_oracle": cast("JsonValue", _mcp_observations(mcp_evidence)),
+        }
     result = ResultIdentity(
         status=EvidenceStatus.PASSED,
         assertions=assertions,

@@ -63,6 +63,14 @@ def test_iva_category_values_roundtrip_through_strenum(operation: PinnedAuthorit
         assert catalogue.require(member.value) == member
 
 
+def test_iva_category_catalogue_reuses_the_scoped_projection(operation: PinnedAuthorityOperation) -> None:
+    """Repeated reads in one pinned operation do not rebuild immutable metadata."""
+    first = resolve_iva_category_catalogue(effective_date=_ON_DATE, authority=operation)
+    second = resolve_iva_category_catalogue(effective_date=_ON_DATE, authority=operation)
+
+    assert second is first
+
+
 def test_eu_member_state_has_27_strict_member_states_plus_xi_prefix(
     operation: PinnedAuthorityOperation,
 ) -> None:

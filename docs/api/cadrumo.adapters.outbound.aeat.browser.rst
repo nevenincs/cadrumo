@@ -19,7 +19,6 @@ Submodules
    cadrumo.adapters.outbound.aeat.browser.errors
    cadrumo.adapters.outbound.aeat.browser.evasion
    cadrumo.adapters.outbound.aeat.browser.factory
-   cadrumo.adapters.outbound.aeat.browser.health
    cadrumo.adapters.outbound.aeat.browser.profile
    cadrumo.adapters.outbound.aeat.browser.session
    cadrumo.adapters.outbound.aeat.browser.site_health_records

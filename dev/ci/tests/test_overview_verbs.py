@@ -28,6 +28,7 @@ from click.testing import CliRunner
 
 from cadrumo.adapters.persistence.profile.filing_drafts import ModeloDraftRepository
 from cadrumo.application.filing.tests.filing_support import build_registry_filing_draft
+from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.json_contract import ResolvedNoticeAction
@@ -175,6 +176,7 @@ def test_overview_status_actions_match_fresh_resolution_in_one_bounded_invocatio
     )
 
 
+@pytest.mark.usefixtures("governed_fact_scope")
 def test_overview_status_period_filter_matches_typed_draft_period(
     operation: PinnedAuthorityOperation,
 ) -> None:
@@ -205,18 +207,23 @@ def test_overview_status_period_filter_matches_typed_draft_period(
     assert q2_draft.draft_id not in result.output
 
 
-def test_overview_status_period_filter_accepts_instalment_period() -> None:
+@pytest.mark.usefixtures("governed_fact_scope")
+def test_overview_status_period_filter_accepts_instalment_period(
+    operation: PinnedAuthorityOperation,
+) -> None:
     p1_draft = _minimal_stored_draft(
         modelo="202",
         period=Period.from_year_and_code(2026, "1P"),
         casilla_id=_M202_CUOTA_CASILLA,
         amount=Decimal("1800.00"),
+        operation=operation,
     )
     q1_draft = _minimal_stored_draft(
         modelo="303",
         period=Period.from_year_and_code(2026, "1T"),
         casilla_id=_M202_CUOTA_CASILLA,
         amount=Decimal("168.00"),
+        operation=operation,
     )
     repository = ModeloDraftRepository()
     repository.save(p1_draft)
@@ -230,7 +237,10 @@ def test_overview_status_period_filter_accepts_instalment_period() -> None:
     assert q1_draft.draft_id not in result.output
 
 
-def test_overview_status_period_display_matches_typed_period_in_text_and_json() -> None:
+@pytest.mark.usefixtures("governed_fact_scope")
+def test_overview_status_period_display_matches_typed_period_in_text_and_json(
+    operation: PinnedAuthorityOperation,
+) -> None:
     """The real overview CLI renders one canonical typed-period display in both formats."""
 
     period = Period.from_year_and_code(2026, "1T")
@@ -239,6 +249,7 @@ def test_overview_status_period_display_matches_typed_period_in_text_and_json() 
         period=period,
         casilla_id=_M130_INGRESOS_CASILLA,
         amount=Decimal("1000.00"),
+        operation=operation,
     )
     ModeloDraftRepository().save(draft)
 
@@ -309,6 +320,7 @@ def _minimal_stored_draft(
     period: Period,
     casilla_id: CasillaId,
     amount: Decimal,
+    operation: PinnedAuthorityOperation,
 ) -> ModeloDraft:
     now = datetime(2026, 4, 20, 12, 0, tzinfo=UTC)
     values = (
@@ -319,7 +331,12 @@ def _minimal_stored_draft(
             source="overview period filter regression",
         ),
     )
-    revision_id = "overview-period-filter-test"
+    revision_id = active_registry_revision_id(
+        modelo=modelo,
+        filing_year=period.filing_year,
+        period=period.registry_token,
+        operation=operation,
+    )
     schema_version = registry_schema_version(modelo=modelo, revision_id=revision_id)
     snapshot_ref = _snapshot_ref(modelo=modelo, period=period, revision_id=revision_id)
     draft_id = compute_modelo_draft_id(

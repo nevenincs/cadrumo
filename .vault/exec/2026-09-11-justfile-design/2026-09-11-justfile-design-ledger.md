@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#justfile-design'
 date: '2026-09-11'
-modified: '2026-09-17'
+modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:b8ac75b2ab71c219fda1ec8309b0a45d32dfb502f9676069a3c60b96cde55413'
+body_hash: 'sha256:47e34bfacc9769a5157c2c7a6b67d0cc5dd45219a3b5896622fe0260f1060dcc'
 related:
   - "[[2026-09-11-justfile-design-plan]]"
 ---
@@ -238,6 +238,13 @@ related:
 - `S78` `verify:` `uv run --no-sync ruff check dev/test_runs` -> `pass`
 - `S78` `verify:` `just --show test-registry` -> `pass`
 - `S78` `verify:` `just test-registry` -> `fail`
+- `S79` `M` `justfile`
+- `S79` `M` `dev/init/README.md`
+- `S79` `M` `.vault/adr/2026-09-11-justfile-design-adr.md`
+- `S79` `verify:` `registry runtime-load` -> `pass`
+- `S79` `M` `dev/env/_install.py`
+- `S79` `M` `dev/env/tests/test_install.py`
+- `S79` `verify:` `clean Linux locked setup plus affected lint, types, and 136 tests` -> `pass`
 
 ## Notes
 

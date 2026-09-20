@@ -322,6 +322,9 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
     tmp_path.mkdir(parents=True, exist_ok=True)
     storage_root = tmp_path / "cadrumo-storage"
     passphrase = load_settings().cadrumo_dev_test_database_password
+    secret_overrides = storage_overrides(tmp_path, StorageCategory.SECRETS)
+    for dependency in secret_overrides.values():
+        dependency.mkdir(parents=True, exist_ok=True)
     with override_settings(
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile=None,
@@ -338,7 +341,7 @@ def isolated_profile_storage_root(*, tmp_path: Path) -> Generator[Path]:
         # Anchored on ``tmp_path``, not on the storage root, so the secret
         # substrate stays a sibling of the bucket tree rather than nesting
         # inside it -- the production custody split.
-        **storage_overrides(tmp_path, StorageCategory.SECRETS),
+        **secret_overrides,
     ) as settings:
         dispose_engine(settings)
         try:
