@@ -66,4 +66,5 @@ def test_explicit_missing_override_does_not_fall_back_to_repo_root(
     (tmp_path / ".authority").mkdir()
     monkeypatch.setenv("CADRUMO_AUTHORITY_ROOT", str(tmp_path / "missing"))
 
-    assert hook._authority_root(tmp_path) is None
+    with pytest.raises(FileNotFoundError, match=r"configured \$CADRUMO_AUTHORITY_ROOT directory is unavailable"):
+        hook._authority_root(tmp_path)

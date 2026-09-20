@@ -84,7 +84,7 @@ def _is_string_mapping(value: object) -> TypeGuard[dict[str, str]]:
     )
 
 
-def _authority_root(build_root: Path) -> Path | None:
+def _authority_root(build_root: Path) -> Path:
     """Return the published pair directory, compiling a fresh source tree if needed.
 
     A source-tree build reads the gitignored ``.authority/`` beside the project,
@@ -97,7 +97,9 @@ def _authority_root(build_root: Path) -> Path | None:
     override = os.environ.get(_AUTHORITY_ROOT_ENV)
     if override:
         candidate = Path(override)
-        return candidate if candidate.is_dir() else None
+        if not candidate.is_dir():
+            raise FileNotFoundError(f"configured ${_AUTHORITY_ROOT_ENV} directory is unavailable: {candidate}")
+        return candidate
     source_tree = build_root / _SOURCE_TREE_DIRECTORY
     if source_tree.is_dir():
         return source_tree
@@ -172,12 +174,6 @@ class CustomBuildHook(BuildHookInterface[BuilderConfig[PluginManager], PluginMan
         """Inject the selected descriptor and database into the force-include map."""
         build_root = Path(self.root)
         root = _authority_root(build_root)
-        if root is None:
-            raise FileNotFoundError(
-                "no published registry authority to package: expected "
-                f"{build_root / _SOURCE_TREE_DIRECTORY} (or ${_AUTHORITY_ROOT_ENV}) in a source-tree build, "
-                f"or {build_root / _SDIST_DESTINATION} in a build from an sdist",
-            )
         descriptor, database = _selected_pair(root)
         destination = _SDIST_DESTINATION if self.target_name == "sdist" else _WHEEL_DESTINATION
         force_include = build_data.setdefault("force_include", {})
