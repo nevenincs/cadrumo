@@ -34,6 +34,7 @@ if TYPE_CHECKING:
     from .command_spec import CommandSpec
 from ...core.cli_metadata import is_metadata_invocation as _is_metadata_invocation
 from ...core.product_identity import PRODUCT_IDENTITY as _PRODUCT_IDENTITY
+from ...core.type_guards import is_object_collection, is_object_dict
 from ._command_policy import CommandExecutionPolicy as _CommandExecutionPolicy
 from ._command_runtime import build_command_app as _build_command_app
 from ._framework_localisation import (
@@ -277,9 +278,9 @@ def _jsonable_command_surface_value(value: object) -> object:
         return value.value
     if is_dataclass(value) and not isinstance(value, type):
         return {field.name: _jsonable_command_surface_value(getattr(value, field.name)) for field in fields(value)}
-    if isinstance(value, dict):
+    if is_object_dict(value):
         return {str(key): _jsonable_command_surface_value(item) for key, item in value.items()}
-    if isinstance(value, (tuple, list, set, frozenset)):
+    if is_object_collection(value):
         items = (_jsonable_command_surface_value(item) for item in value)
         return sorted(items, key=str) if isinstance(value, (set, frozenset)) else list(items)
     if isinstance(value, BaseModel):
