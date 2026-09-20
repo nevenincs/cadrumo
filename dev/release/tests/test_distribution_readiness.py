@@ -242,15 +242,17 @@ def test_two_conflicting_passing_captures_of_one_row_block(tmp_path: Path) -> No
     disagree on which platform actually produced it.
     """
     repo, cohort, evidence = _ready_tree(tmp_path)
-    linux_runtime = RuntimeIdentity(
-        operating_system="Linux",
-        operating_system_release="6.8.0",
-        architecture="x86_64",
-        python="3.13.0",
-        python_implementation="CPython",
+    current_runtime = current_runtime_identity()
+    conflicting_runtime = RuntimeIdentity(
+        operating_system=f"conflicting-{current_runtime.operating_system}",
+        operating_system_release=current_runtime.operating_system_release,
+        architecture=current_runtime.architecture,
+        python=current_runtime.python,
+        python_implementation=current_runtime.python_implementation,
+        stability=current_runtime.stability,
     )
     write_distribution_evidence(evidence, _record(repo, cohort))
-    write_distribution_evidence(evidence, _record(repo, cohort, runtime=linux_runtime))
+    write_distribution_evidence(evidence, _record(repo, cohort, runtime=conflicting_runtime))
 
     check = check_distribution_evidence_set(repo, required_rows=(_ROW,))
 
