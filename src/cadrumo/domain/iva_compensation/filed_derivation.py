@@ -11,14 +11,11 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING, Literal
+from typing import Literal
 
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import ZERO
-from . import carry_forward as _carry_forward
-
-if TYPE_CHECKING:
-    pass
+from .carry_forward import derive_303_compensation_available
 
 
 @dataclass(frozen=True, slots=True)
@@ -86,8 +83,7 @@ def derive_m303_compensation_available_from_casillas(
     resultado = casilla_values.get(declarations.result)
     if resultado is None:
         return None
-    operation = getattr(_carry_forward, "derive" + "_303_" + "compensation_available")
-    available = operation(
+    available = derive_303_compensation_available(
         posterior=posterior,
         resultado=resultado,
         refunded=refunded,

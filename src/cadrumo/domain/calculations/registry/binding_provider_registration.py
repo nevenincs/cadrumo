@@ -113,7 +113,6 @@ __all__ = [
     "ProviderDisposition",
     "ProviderOutputShape",
     "ProviderRouteOwnership",
-    "ProviderRowAssembly",
     "RouteOwnership",
     "provider_model_for",
     "registration_for",
@@ -127,18 +126,6 @@ type BindingProviderValidator = Callable[[BindingDefinition], list[str]]
 
 BindingRouteStage = Literal["pre_mesh", "mesh", "conditional", "post_mesh", "manual"]
 """A production calculation-route stage, spelled as the route table spells it."""
-
-ProviderRowAssembly = Literal["grouped", "provider_native"]
-"""Which of the two row channels assembles a row-producing family's rows.
-
-``grouped`` families are assembled by the shared row-set assembler and name the
-grouping axis it dispatches on. ``provider_native`` families emit their rows
-from their own resolver -- the invoice catalogue its detail rows, the inventory
-resolver its row binding values, the profile resolver its repeating typed
-collections -- and name no grouping, because no grouped assembler consumes
-them and a grouping the closed dispatcher does not know would fail at resolve
-time rather than at build time.
-"""
 
 ProviderOutputShape = Literal["scalar", "rows", "scalar_and_rows"]
 """What a resolver for this kind can emit."""

@@ -23,8 +23,8 @@ from cadrumo.application.modelo.work_addressing import (
     ModeloRevisionPick,
     ModeloVisibleFilingTarget,
     ModeloWorkCaptureError,
+    ModeloWorkCurrentCoordinate,
     capture_modelo_work_resolution,
-    read_modelo_work_current_coordinate,
     resolve_modelo_revision_for_operator_target,
     resolve_modelo_revision_pick,
 )
@@ -552,7 +552,6 @@ def _capture_source_imports() -> str:
         inspect.getsource(member)
         for member in (
             work_addressing.capture_modelo_work_resolution,
-            work_addressing.read_modelo_work_current_coordinate,
             work_addressing._work_capture_observation,
         )
     )
@@ -573,7 +572,10 @@ def test_work_capture_is_singleflight_for_one_unchanged_observation(
 
         assert first.generation == second.generation
         assert first.comparison_domain == second.comparison_domain
-        coordinate = read_modelo_work_current_coordinate(request, catalogue_repository=repository)
+        coordinate = ModeloWorkCurrentCoordinate(
+            comparison_domain=second.comparison_domain,
+            generation=second.generation,
+        )
         assert first.require_current(coordinate) is first
 
 
@@ -589,15 +591,16 @@ def test_work_capture_generation_advances_and_refuses_a_superseded_capture(
         stale = capture_modelo_work_resolution(request, catalogue_repository=repository)
 
         successor_revision_id = "2019-y-siguientes-successor"
+        successor_work_unit_id = derive_work_unit_id(
+            bucket_id=first_unit.bucket_id,
+            modelo=first_unit.modelo,
+            filing_year=first_unit.filing_year,
+            period=first_unit.period,
+            revision_id=successor_revision_id,
+        )
         payload = first_unit.model_dump()
         payload.update(
-            work_unit_id=derive_work_unit_id(
-                bucket_id=first_unit.bucket_id,
-                modelo=first_unit.modelo,
-                filing_year=first_unit.filing_year,
-                period=first_unit.period,
-                revision_id=successor_revision_id,
-            ),
+            work_unit_id=successor_work_unit_id,
             revision_id=successor_revision_id,
             name="130-2026-1T-successor",
             created_at=_T0 + timedelta(seconds=1),
@@ -605,7 +608,14 @@ def test_work_capture_generation_advances_and_refuses_a_superseded_capture(
         )
         repository.save(build_work_unit_catalogue((first_unit, WorkUnit(**payload))))
 
-        current = read_modelo_work_current_coordinate(request, catalogue_repository=repository)
+        current_capture = capture_modelo_work_resolution(
+            request.model_copy(update={"work_unit_id": successor_work_unit_id}),
+            catalogue_repository=repository,
+        )
+        current = ModeloWorkCurrentCoordinate(
+            comparison_domain=current_capture.comparison_domain,
+            generation=current_capture.generation,
+        )
 
         assert current.generation > stale.generation
         with pytest.raises(ModeloWorkCaptureError):
@@ -712,9 +722,13 @@ def test_distinct_storage_roots_cannot_compare_their_coordinates(
         _seed_ready_profile(second_profile.repository, bucket_id=second_profile.bucket_id)
         second_repository = WorkUnitCatalogueRepository(objects=second_profile.repository)
         _seed_work_unit(second_repository, bucket_id=second_profile.bucket_id, operation=operation)
-        second_coordinate = read_modelo_work_current_coordinate(
+        second_capture = capture_modelo_work_resolution(
             _capture_request(second_profile.bucket_id),
             catalogue_repository=second_repository,
+        )
+        second_coordinate = ModeloWorkCurrentCoordinate(
+            comparison_domain=second_capture.comparison_domain,
+            generation=second_capture.generation,
         )
 
     assert first_capture.comparison_domain != second_coordinate.comparison_domain

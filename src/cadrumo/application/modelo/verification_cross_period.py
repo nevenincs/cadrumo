@@ -22,7 +22,6 @@ from ...domain.calculations.registry.applicability_modelo202 import Modelo202Mod
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
 from ...domain.calculations.registry.ids import LegalRefId, SourceRefId
-from ...domain.calculations.registry.queries import RegistryQueryService
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
@@ -88,58 +87,6 @@ def registry_modality_finding(
     """
     del work_unit, profile
     return None
-
-
-def cross_period_verification_declarations(
-    snapshot: RegistrySnapshot | None = None,
-    *,
-    query_service: RegistryQueryService | None = None,
-    modelo: str | None = None,
-    filing_year: int | None = None,
-    period: str | None = None,
-    as_of: date | None = None,
-    operation: PinnedAuthorityOperation | None = None,
-) -> tuple[object, ...]:
-    """Return relation and verification declarations for one selected revision.
-
-    Core types:
-    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
-    """
-    if snapshot is not None:
-        revision = snapshot.revision
-    elif operation is not None:
-        if modelo is None or filing_year is None or period is None:
-            raise ValueError("cross-period declarations require a selected registry coordinate")
-        revision = operation.revision_for_context(
-            modelo,
-            filing_year=filing_year,
-            period=period,
-            on=as_of,
-        )
-    else:
-        if modelo is None or filing_year is None or period is None:
-            raise ValueError("cross-period declarations require a selected registry coordinate")
-        if query_service is not None:
-            revision = query_service.revision_for_scope(
-                modelo,
-                filing_year=filing_year,
-                period=period,
-                as_of=as_of,
-            )
-        else:
-            with bundled_indexed_authority().operation() as indexed_operation:
-                revision = indexed_operation.revision_for_context(
-                    modelo,
-                    filing_year=filing_year,
-                    period=period,
-                    on=as_of,
-                )
-    return (
-        *revision.bindings,
-        *revision.verification_expectations,
-        *revision.verification_predicates,
-        *revision.constructs,
-    )
 
 
 def cross_period_clean_state_verdict_for_work_unit(
@@ -742,7 +689,6 @@ __all__ = [
     "cross_period_clean_state_findings",
     "cross_period_clean_state_verdict_for_work_unit",
     "cross_period_expected_member_sets_from_profile",
-    "cross_period_verification_declarations",
     "registry_modality_finding",
     "require_cross_period_clean_state",
     "zero_value_previous_filing_binding_ids",

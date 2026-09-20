@@ -30,7 +30,12 @@ from ...domain.iva.flow import (
     is_inversion_sujeto_pasivo_flow,
 )
 from ...domain.iva.invoice_classification import classify_invoice_line_for_iva, invoice_line_to_iva_observation
-from ...domain.iva.recargo_equivalencia import recargo_rate_for_applied_rate, resolve_recargo_rate_for_applied_rate
+from ...domain.iva.recargo_equivalencia import (
+    load_recargo_rate_table,
+    recargo_rate_for_applied_rate,
+    recargo_rate_record_from_fact,
+    resolve_recargo_rate_for_applied_rate,
+)
 from ...domain.iva.schema import IvaCategory, IvaLedgerObservationRole
 from ...domain.transactions.models import OutOfWindowTransactionSummary
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
@@ -546,15 +551,28 @@ def _recargo_rate_divergence(
     recargo_rate = recargo_rate_for_applied_rate(applied_rate, devengo_date, operation=operation)
     if recargo_rate is None:
         return None
+    records = tuple(
+        record
+        for record in load_recargo_rate_table(operation=operation)
+        if record.iva_rate == applied_rate and record.covers(devengo_date)
+    )
+    if not records:
+        return None
+    if len(records) == 1:
+        record = records[0]
+    else:
+        # Keep the exact resolver as the fail-closed overlap check. Published
+        # authorities should not produce this branch, but a malformed one must
+        # never be reduced to an arbitrary table row.
+        record = recargo_rate_record_from_fact(
+            resolve_recargo_rate_for_applied_rate(applied_rate, devengo_date, operation=operation),
+        )
     expected = round_to_cents(line.subtotal * recargo_rate)
     if round_to_cents(recorded) == expected:
         return None
     # The provision the advisory names is the pairing fact's own grounding,
     # so the message cites whatever the registry cites for that window.
-    legal_refs = tuple(
-        str(ref)
-        for ref in resolve_recargo_rate_for_applied_rate(applied_rate, devengo_date, operation=operation).legal_refs
-    )
+    legal_refs = tuple(str(ref) for ref in record.legal_refs)
     provisions = tuple(
         f"art. {article}"
         for article in (operation.legal_reference(ref).article for ref in legal_refs)

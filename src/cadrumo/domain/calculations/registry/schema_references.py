@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from datetime import date, timedelta
+from datetime import date
 from enum import StrEnum, auto
-from types import MappingProxyType
 from typing import Annotated, Final, Literal, Self
 from typing import override as typing_override
 
@@ -53,7 +51,6 @@ __all__ = [
     "SourceReference",
     "TemporalProjectionDirection",
     "TemporalSupportEnvelope",
-    "materialize_date_window_series",
     "source_window_applies_across",
 ]
 
@@ -326,58 +323,6 @@ class RegistryTemporalBounds(RegistryModel):
         if self.valid_from is not None and self.valid_to is not None and self.valid_to < self.valid_from:
             raise RegistryValidationError("valid_to must be on or after valid_from")
         return self
-
-
-def materialize_date_window_series(
-    declarations: Sequence[tuple[str, RegistryTemporalBounds]],
-    *,
-    support: DateSupportEnvelope,
-) -> Mapping[str, RegistryValidityWindow]:
-    """Materialize one ordered delta series into concrete, gap-free default windows.
-
-    The first omitted lower endpoint propagates backward to ``support.floor``.
-    Every later declaration must state its lower endpoint, because otherwise no
-    authored event locates that transition. An omitted upper endpoint closes on
-    the day before the next declaration; the last propagates forward to the hard
-    ceiling, or stays open when the support envelope is open. Explicit endpoints
-    are retained verbatim.
-    """
-    if not declarations:
-        empty: dict[str, RegistryValidityWindow] = {}
-        return MappingProxyType(empty)
-    identifiers = [identifier for identifier, _ in declarations]
-    if len(set(identifiers)) != len(identifiers):
-        raise RegistryValidationError("temporal delta series identifiers must be unique")
-
-    starts: list[date] = []
-    for index, (identifier, bounds) in enumerate(declarations):
-        if bounds.valid_from is not None:
-            start = bounds.valid_from
-        elif index == 0:
-            start = support.floor
-        else:
-            raise RegistryValidationError(
-                f"temporal delta {identifier!r} must declare valid_from; only the first declaration "
-                "can propagate backward to the support floor"
-            )
-        if starts and start <= starts[-1]:
-            raise RegistryValidationError("temporal delta series valid_from values must be strictly increasing")
-        starts.append(start)
-
-    materialized: dict[str, RegistryValidityWindow] = {}
-    for index, (identifier, bounds) in enumerate(declarations):
-        if bounds.valid_to is not None:
-            end = bounds.valid_to
-        elif index + 1 < len(declarations):
-            end = starts[index + 1] - timedelta(days=1)
-        else:
-            end = support.hard_ceiling
-        if end is not None and index + 1 < len(declarations) and end >= starts[index + 1]:
-            raise RegistryValidationError(
-                f"temporal delta {identifier!r} valid_to overlaps successor {identifiers[index + 1]!r}"
-            )
-        materialized[identifier] = RegistryValidityWindow(valid_from=starts[index], valid_to=end)
-    return MappingProxyType(materialized)
 
 
 class PeriodScopedValidityWindow(RegistryValidityWindow):

@@ -183,11 +183,6 @@ def clear_active_profile_record_session_binding(expected: ProfileRecordSession) 
         _ACTIVE_RECORD_AUTHORITY.clear_bound(authority)
 
 
-def active_profile_record_session() -> ProfileRecordSession | None:
-    """Return the record session this process currently holds, whatever installed it."""
-    return _active_record_session()
-
-
 def close_active_profile_record_session() -> None:
     """Zeroise and clear the process-local record authority."""
     session = _active_record_session()

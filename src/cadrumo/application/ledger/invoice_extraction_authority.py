@@ -139,12 +139,21 @@ def _overlapping_iva_rate_pcts(
     from ...domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
     from ...domain.iva.errors import IvaRateNotFoundError
     from ...domain.iva.lookup import coexisting_tier_rates, lookup_rate
-    from ...domain.iva.rates import IVA_RATE_FACT_ID
+    from ...domain.iva.rates import load_iva_rate_table
     from ...domain.iva.schema import spanish_eu_member_state
 
     overlapping: set[Decimal] = set()
     boundary_dates = {period.start_date}
-    for fact_id in (IVA_RATE_FACT_ID, "iva-rate-slot-catalogue", "eu-member-state-catalogue"):
+    spanish_state = spanish_eu_member_state(effective_date=period.start_date, authority=operation)
+    for record in load_iva_rate_table(operation=operation).get(spanish_state, ()):
+        if period.start_date <= record.effective_from <= period.end_date:
+            boundary_dates.add(record.effective_from)
+        if record.effective_until is not None and record.effective_until < period.end_date:
+            following = record.effective_until + timedelta(days=1)
+            if period.start_date <= following <= period.end_date:
+                boundary_dates.add(following)
+
+    for fact_id in ("iva-rate-slot-catalogue", "eu-member-state-catalogue"):
         fact = operation.governed_fact(fact_id)
         for variant in fact.variants:
             if variant.valid_from is not None and period.start_date <= variant.valid_from <= period.end_date:

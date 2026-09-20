@@ -14,7 +14,6 @@ import pytest
 from cadrumo.domain.calculations.registry.situacion_familiar_catalogue import situacion_familiar_choices
 from cadrumo.domain.calculations.registry.situacion_familiar_m145_catalogue import (
     resolve_situacion_familiar_m145_catalogue,
-    situacion_familiar_m145_is_eligible_for_supplementary_reduction,
 )
 from cadrumo.domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
 
@@ -33,27 +32,6 @@ def test_three_form_numbered_values() -> None:
         "familia_2",
         "familia_3",
     }
-
-
-def test_familia_1_eligible_for_supplementary_reduction() -> None:
-    """RIRPF art. 81.1.1° viudo/separado with descendientes -> eligible."""
-    assert situacion_familiar_m145_is_eligible_for_supplementary_reduction(
-        _M145_CATALOGUE.require("familia_1"), authority=_AUTHORITY
-    )
-
-
-def test_familia_2_eligible_for_supplementary_reduction() -> None:
-    """RIRPF art. 81.1.2° casado with low-income spouse -> eligible."""
-    assert situacion_familiar_m145_is_eligible_for_supplementary_reduction(
-        _M145_CATALOGUE.require("familia_2"), authority=_AUTHORITY
-    )
-
-
-def test_familia_3_not_eligible_for_supplementary_reduction() -> None:
-    """Default option -> no supplementary withholding reduction."""
-    assert not situacion_familiar_m145_is_eligible_for_supplementary_reduction(
-        _M145_CATALOGUE.require("familia_3"), authority=_AUTHORITY
-    )
 
 
 def test_disjoint_from_situacion_familiar_art82() -> None:

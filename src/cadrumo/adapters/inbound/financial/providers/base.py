@@ -209,11 +209,6 @@ def _resolved_absolute_source_path(absolute_path: str) -> Path:
     return Path(absolute_path).resolve()
 
 
-def _clear_resolved_source_paths() -> None:
-    """Forget every resolved source path (for tests that move files under one)."""
-    _resolved_absolute_source_path.cache_clear()
-
-
 class FinancialProvider(ABC):
     """Abstract base class for file-backed raw transaction providers.
 

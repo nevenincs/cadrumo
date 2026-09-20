@@ -1120,23 +1120,6 @@ def capture_modelo_work_resolution(
     )
 
 
-def read_modelo_work_current_coordinate(
-    request: ModeloWorkSelectorRequest,
-    *,
-    catalogue_repository: WorkUnitCatalogueRepositoryProtocol,
-) -> ModeloWorkCurrentCoordinate:
-    """Return the typed current coordinate for same-domain capture validation."""
-    bucket_id, _catalogue, observation, implicit = _work_capture_observation(
-        request,
-        catalogue_repository=catalogue_repository,
-    )
-    domain = _work_capture_comparison_domain(bucket_id=bucket_id, implicit=implicit)
-    return ModeloWorkCurrentCoordinate(
-        comparison_domain=domain,
-        generation=_work_capture_generation_for(domain, observation),
-    )
-
-
 def ensure_modelo_work_unit_for_active_target(
     *,
     bucket_id: str,
@@ -1556,7 +1539,6 @@ __all__ = [
     "law_selected_revision_for_work_target",
     "modelo_work_address_from_operator_target",
     "project_modelo_work_unit",
-    "read_modelo_work_current_coordinate",
     "resolve_exportable_modelo_calculation_revision_address",
     "resolve_fileable_modelo_calculation_revision_address",
     "resolve_modelo_calculation_revision_address",
