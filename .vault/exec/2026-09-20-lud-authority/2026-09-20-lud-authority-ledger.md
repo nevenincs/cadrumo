@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:e567e49af621a4b65c7aa5b23fad4d5e2600604dee174a82b3e6c1d71946bf3c'
+body_hash: 'sha256:0cca4fd1bb31543164ad02ab4661114105e485bf3becad3b861fe82e501e7784'
 related:
   - "[[2026-09-20-lud-authority-plan]]"
 ---
@@ -68,6 +68,12 @@ related:
 - `S02` `verify:` `platform-independent distribution evidence conflict contract` -> `pass`
 - `S02` `verify:` `isolated 30000-row Modelo 130 CPU benchmark at unchanged ceiling` -> `pass`
 - `S02` `verify:` `just test-ci-contracts after Linux scoped-gate repair` -> `pass`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/transactions.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/tests/test_memoized_transaction_catalogue_persistence.py`
+- `S02` `verify:` `transaction persistence and date-index contracts (23 cases)` -> `pass`
+- `S02` `verify:` `Ty, Pyrefly, and BasedPyright on optimized transaction repository` -> `pass`
+- `S02` `verify:` `locked Linux IVA and Modelo 130 scale contracts at unchanged ceiling` -> `pass`
+- `S02` `verify:` `just test-ci-contracts after revision-cache optimization` -> `pass`
 
 ## Notes
 
@@ -77,3 +83,4 @@ related:
 - `S02` Unscoped historical corpus remains outside Lud Authority: 26 feature warnings, 116 execution-mapping findings, 392 body-section findings, and one unrelated ADR grounding error; the feature-scoped check is clean.
 - `S02` Post-push Linux lint exposed same-checker process multiplication in the existing cross-platform type orchestrator; the scheduler now preserves all nine measurements while serializing each checker family's platform sweep.
 - `S02` Post-push Linux scoped contracts exposed a Linux-matching conflict fixture and one contended CPU benchmark; the fixture is platform-independent and the benchmark now runs in the existing serial performance lane without changing its threshold or control.
+- `S02` The isolated Linux rerun proved contention was not the whole cause: both period benchmarks exceeded the unchanged ceiling. Revision-validated immutable-row reuse now removes repeat decrypt/validation cost without hiding external updates, deletions, revision-less rows, or cold-read integrity checks.

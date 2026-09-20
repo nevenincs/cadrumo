@@ -402,6 +402,13 @@ class TransactionCatalogueRepository:
     never substitutes for the save-time ``namespace_payload_hashes`` store-side
     scan; it only skips re-deriving the FRESH-SERIALIZATION side of that
     comparison for rows the same process already loaded unchanged.
+
+    ``_transaction_revision_cache`` is the corresponding read-path cache for
+    immutable transaction rows. Targeted reads first query the stored revision
+    ids without loading ciphertext and reuse a validated ``Transaction`` only
+    while that exact revision remains current. A changed, deleted, or
+    revision-less row is loaded and validated again, so the cache cannot hide
+    an external writer or legacy payload.
     """
 
     def __init__(self, *, bucket_id: str, objects: SecureObjectRepository | None = None) -> None:
@@ -414,6 +421,7 @@ class TransactionCatalogueRepository:
             )
         self._objects = objects or _secure_objects_for_bucket(self._bucket_id)
         self._serialized_hash_cache: dict[int, str] = {}
+        self._transaction_revision_cache: dict[str, tuple[str, Transaction]] = {}
 
     @property
     def bucket_id(self) -> str:
@@ -1039,15 +1047,39 @@ class TransactionCatalogueRepository:
         if not selected_ids:
             return []
 
-        transaction_id_by_digest = {
-            secure_object_key_digest(transaction_object_key(self._bucket_id, transaction_id)): transaction_id
-            for transaction_id in selected_ids
+        object_key_by_id = {
+            transaction_id: transaction_object_key(self._bucket_id, transaction_id) for transaction_id in selected_ids
         }
-        object_keys = tuple(transaction_object_key(self._bucket_id, transaction_id) for transaction_id in selected_ids)
         transactions_by_id: dict[str, Transaction] = {}
+        cache = self._transaction_revision_cache
+        current_revisions: Mapping[str, str | None] = dict[str, str | None]()
+        if cache:
+            current_revisions = self._objects.peek_many_revision_ids(
+                TRANSACTION_CATALOGUE_NAMESPACE.namespace,
+                object_key_by_id.values(),
+            )
+            missing_ids: list[str] = []
+            for transaction_id, object_key in object_key_by_id.items():
+                revision = current_revisions.get(object_key)
+                cached = cache.get(transaction_id)
+                if revision is not None and cached is not None and cached[0] == revision:
+                    transactions_by_id[transaction_id] = cached[1]
+                    continue
+                cache.pop(transaction_id, None)
+                if object_key in current_revisions:
+                    missing_ids.append(transaction_id)
+        else:
+            # Preserve the cold-read contract: schema cutover, outer integrity,
+            # decryption, and payload validation share one addressed snapshot.
+            # Revision probes exist only to validate already-decoded rows.
+            missing_ids = list(selected_ids)
+
+        transaction_id_by_digest = {
+            secure_object_key_digest(object_key_by_id[transaction_id]): transaction_id for transaction_id in missing_ids
+        }
         records = self._objects.load_many_current(
             TRANSACTION_CATALOGUE_NAMESPACE.namespace,
-            object_keys,
+            (object_key_by_id[transaction_id] for transaction_id in missing_ids),
             expected_class=TRANSACTION_CATALOGUE_NAMESPACE.sensitivity,
             current_version=TRANSACTION_CATALOGUE_NAMESPACE.schema_version,
             refuse_legacy=self._refuse_targeted_implicit_migration,
@@ -1069,6 +1101,7 @@ class TransactionCatalogueRepository:
             transaction = envelope.payload
             self._assert_transaction_row_identity(transaction, expected_transaction_id=transaction_id)
             transactions_by_id[transaction_id] = transaction
+            cache[transaction_id] = (str(record.revision_id), transaction)
         return [
             transactions_by_id[transaction_id]
             for transaction_id in selected_ids
