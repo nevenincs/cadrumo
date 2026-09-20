@@ -30,9 +30,9 @@ def test_fresh_source_tree_bootstraps_repo_root_authority(
     expected = tmp_path / ".authority"
     calls: list[tuple[Path, Path]] = []
 
-    def publish(build_root: Path, destination: Path) -> None:
+    def publish(build_root: Path, destination: Path) -> Path:
         calls.append((build_root, destination))
-        destination.mkdir()
+        return destination
 
     monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
     monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)

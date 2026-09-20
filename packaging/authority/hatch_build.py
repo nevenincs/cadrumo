@@ -104,12 +104,11 @@ def _authority_root(build_root: Path) -> Path | None:
     embedded = build_root / _SDIST_DESTINATION
     if embedded.is_dir():
         return embedded
-    _publish_source_tree_authority(build_root, source_tree)
-    return source_tree if source_tree.is_dir() else None
+    return _publish_source_tree_authority(build_root, source_tree)
 
 
-def _publish_source_tree_authority(build_root: Path, destination: Path) -> None:
-    """Compile the canonical authority when a fresh source tree has no publication."""
+def _publish_source_tree_authority(build_root: Path, destination: Path) -> Path:
+    """Compile the canonical authority and return its publication directory."""
     import_paths = (str(build_root), str(build_root / "src"))
     original_path = sys.path.copy()
     try:
@@ -124,6 +123,7 @@ def _publish_source_tree_authority(build_root: Path, destination: Path) -> None:
             profile_schema_path=sources.profile_schema_path,
             destination=destination,
         )
+        return destination
     finally:
         sys.path[:] = original_path
 

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-19'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0ea9e0a60a216f72080901ea1ee4333857983663a0ffca1a558c92829277d89'
+body_hash: 'sha256:20b9b0d146f39399ee322bde89f76a5ef4242aef7cb1ad1622d3176c6d077e12'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
@@ -25,9 +25,9 @@ The build hook invokes the canonical compiler only when an explicit override, th
 
 `just init` delegates locked Python synchronization and default Vaultspec installation to `dev.init`, delegates RAG provisioning to its official installer, and delegates final authority compilation to the canonical publisher. It adds no alternate compiler, RAG lifecycle alias, or runtime source fallback. The real command completed and the exact runtime-load check admitted 58 modelos and 146 revisions.
 
-### source-shape-inference | medium | Resolved non-portable precondition before canonical compilation
+### source-bootstrap-postcondition | medium | Resolved redundant filesystem inference around canonical publication
 
-Fresh Linux CI showed that checking selected authoring paths to re-prove a source checkout could return false before the compiler was invoked. Those checks duplicated knowledge the control flow already established. The explicit override and embedded-sdist arms return earlier; after both are absent, the canonical compiler is now the authority on whether the source inputs are coherent. A Git-archive `uv sync --locked` with no generated authority passed this exact path.
+Fresh Linux CI proved two duplicated filesystem observations were unsafe around canonical publication: source-shape checks could prevent compiler entry, and a post-publication `is_dir()` probe could discard a successful publisher return on the self-hosted workspace filesystem. The explicit override and embedded-sdist arms already return earlier. The remaining arm now returns the canonical publisher's destination directly, after which `_selected_pair` validates the descriptor and exact database bytes. A Git-archive `uv sync --locked` with no generated authority passed the publication path.
 
 ### self-hosted-runner-authority-posture | low | CI clean checkout explicitly selects the default arm
 

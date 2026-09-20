@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:fbb8aa44c298f36541e416b14ae06a04a2f97addbef82eddefc54a7664fdc884'
+body_hash: 'sha256:7c3e74656d5a8d02f13dbbc18ea61b254a5d9f5dcd6cd35624f12b961cf9ae5b'
 related:
   - "[[2026-09-20-lud-authority-plan]]"
 ---
@@ -23,7 +23,7 @@ Reviewed the completed L1 plan against its accepted ownership policy and the int
 
 ### fresh-linux-authority-bootstrap | medium | Resolved CI setup refusal before lint dispatch
 
-Fresh Linux CI proved the build hook's source-shape predicate could reject a clean checkout before invoking the canonical authority compiler. The explicit override and embedded-sdist arms already resolve first, so the remaining missing-default arm now invokes the compiler directly and fails there if source inputs are incoherent. A Git-archive `uv sync --locked` proved that path publishes authority successfully. CI also clears `CADRUMO_AUTHORITY_ROOT` only during clean-checkout setup so a self-hosted runner environment cannot alter the tested default posture; runtime and developer calls still fail on missing explicit overrides.
+Fresh Linux CI exposed redundant filesystem inference around canonical authority publication. After explicit override and embedded-sdist arms are excluded, the missing-default arm now invokes the compiler directly and returns its destination instead of re-probing directory existence; `_selected_pair` remains the hard verification of the descriptor and exact database bytes. A Git-archive `uv sync --locked` proved the publication path. CI also clears `CADRUMO_AUTHORITY_ROOT` only during clean-checkout setup so a self-hosted runner environment cannot alter the tested default posture; runtime and developer calls still fail on missing explicit overrides.
 
 ## Recommendations
 
