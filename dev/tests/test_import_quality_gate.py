@@ -155,7 +155,26 @@ def _run_gate_recipe(root: Path, **updates: str) -> tuple[int, str]:
         errors="replace",
         timeout_seconds=120,
     )
-    return result.returncode, (result.stdout + result.stderr)
+    output = result.stdout + result.stderr
+    run_finished: dict[str, object] | None = None
+    for line in reversed(result.stdout.splitlines()):
+        try:
+            candidate = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if isinstance(candidate, dict) and candidate.get("event") == "run_finished":
+            run_finished = {str(key): value for key, value in candidate.items()}
+            break
+    assert run_finished is not None, output
+    run_outputs = run_finished.get("run_outputs")
+    assert isinstance(run_outputs, dict), run_finished
+    log_value = run_outputs.get("log")
+    assert isinstance(log_value, str), run_finished
+    log_path = Path(log_value)
+    assert log_path.is_file(), run_finished
+    exit_status = run_finished.get("exit_status")
+    assert isinstance(exit_status, int), run_finished
+    return exit_status, output + log_path.read_text(encoding=UTF_8, errors="replace")
 
 
 def _section(payload: dict[str, object], key: str) -> dict[str, object]:
