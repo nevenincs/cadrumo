@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#justfile-design'
 date: '2026-09-11'
-modified: '2026-09-19'
+modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:c993d911759e07d5e34bc7a8bbce7ee30fe68465ea9381a03aab5d2fcb411b0d'
+body_hash: 'sha256:47e34bfacc9769a5157c2c7a6b67d0cc5dd45219a3b5896622fe0260f1060dcc'
 related:
   - "[[2026-09-11-justfile-design-plan]]"
 ---
@@ -242,6 +242,9 @@ related:
 - `S79` `M` `dev/init/README.md`
 - `S79` `M` `.vault/adr/2026-09-11-justfile-design-adr.md`
 - `S79` `verify:` `registry runtime-load` -> `pass`
+- `S79` `M` `dev/env/_install.py`
+- `S79` `M` `dev/env/tests/test_install.py`
+- `S79` `verify:` `clean Linux locked setup plus affected lint, types, and 136 tests` -> `pass`
 
 ## Notes
 

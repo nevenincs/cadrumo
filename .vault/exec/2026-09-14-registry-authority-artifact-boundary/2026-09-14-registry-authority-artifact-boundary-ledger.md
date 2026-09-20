@@ -5,7 +5,7 @@ tags:
 date: '2026-09-14'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:bac69dcbfa54c55cac92177fe36b9570dc09f98de1158043501ad85d066cfb87'
+body_hash: 'sha256:53a3db4703567ae99253d5cbcf5dc427a20e1b00ed1917710285c25c70f87cea'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
@@ -182,6 +182,7 @@ related:
 - `S138` `verify:` `fresh git-archive locked uv sync publishes authority` -> `pass`
 - `S138` `M` `.github/actions/setup/action.yml`
 - `S138` `verify:` `actionlint plus build-hook ruff, ty, and focused tests` -> `pass`
+- `S138` `verify:` `clean Linux locked setup plus affected lint, types, and 136 tests` -> `pass`
 
 ## Notes
 

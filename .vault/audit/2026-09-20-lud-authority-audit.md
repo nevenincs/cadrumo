@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:0c8287edcfc966a06114053683516a9d2151ab3a95510e271449504cdba85efa'
+body_hash: 'sha256:eb18901f4634cb64916639bd1a23203bf211d100da69ea207d5dc8ca32f0cead'
 related:
   - "[[2026-09-20-lud-authority-plan]]"
 ---
@@ -21,9 +21,9 @@ Reviewed the completed L1 plan against its accepted ownership policy and the int
 
 `just check-code` retains unrelated diagnostics in untouched modules and several pre-existing structural gates. `just test-gate` retains failures in `dev/tests/test_import_quality_gate.py` caused by its event/schema and count expectations. The full Vaultspec check likewise retains 25 errors in historical execution mappings and one unrelated ADR. All Lud Authority scoped Vaultspec checks, focused suites, CLI contracts, production-module type checks, logging gate, lint, and formatting pass.
 
-### fresh-linux-authority-bootstrap | medium | Resolved CI setup refusal before lint dispatch
+### fresh-linux-authority-bootstrap | medium | Resolved synthesized default crossing the setup subprocess boundary
 
-Fresh Linux CI exposed redundant filesystem inference around canonical authority publication. After explicit override and embedded-sdist arms are excluded, the missing-default arm now invokes the compiler directly and returns its destination instead of re-probing directory existence; `_selected_pair` remains the hard verification of the descriptor and exact database bytes. A Git-archive `uv sync --locked` proved the publication path. CI also explicitly unsets `CADRUMO_AUTHORITY_ROOT` only during clean-checkout setup so a self-hosted runner environment cannot alter the tested default posture; runtime and developer calls still fail on missing explicit overrides.
+Developer path initialization seeds `CADRUMO_AUTHORITY_ROOT` with the checkout's default `.authority` location. Fresh setup inherited that synthesized value into `uv sync`, so the build hook correctly treated it as an explicit dependency and refused it before default publication. The sync subprocess now removes only the canonical checkout default while preserving genuine relocated overrides. A clean Linux Git-archive run built the package and authority, passed Linux Ruff and formatting, all three type checkers on changed production modules, 37 affected setup/packaging/storage/application tests, and all 99 CLI contract tests. Runtime authority generation remains forbidden.
 
 ## Recommendations
 
