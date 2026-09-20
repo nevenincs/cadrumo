@@ -235,20 +235,6 @@ class _IndexedTransactionDates:
         return self.eligible_from <= end and self.eligible_to >= start
 
 
-def _out_of_window_summary(
-    rows: tuple[tuple[str, date], ...],
-) -> OutOfWindowTransactionSummary | None:
-    """Summarise out-of-window index rows without reading transaction payloads."""
-    if not rows:
-        return None
-    filing_dates = tuple(filing_date for _transaction_id, filing_date in rows)
-    return OutOfWindowTransactionSummary(
-        count=len(rows),
-        min_filing_date=min(filing_dates),
-        max_filing_date=max(filing_dates),
-    )
-
-
 def _out_of_window_index_entries(
     rows: tuple[tuple[str, date], ...],
 ) -> tuple[OutOfWindowTransactionIndexEntry, ...]:
