@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:86703cdcd8ed09247f9c6fc8be34a00bb6c70ac0dafd42103287167d430c09ee'
+body_hash: 'sha256:df5fa822217870e070a05f367f5e09a9e7130ce28984674f009c999c43419e55'
 related:
   - "[[2026-09-20-lud-authority-reference]]"
 ---
@@ -32,7 +32,7 @@ Normal CLI commands require a coherent writable state topology and a published r
 
 ## Constraints
 
-The implementation reuses the typed taxonomy and `model_fields_set`; it adds no path registry or environment-variable inventory. Authority verification uses the canonical published reader and performs no source compilation. Failures derive from core exceptions and cross the existing typed CLI error boundary. Metadata invocations remain exempt. The warm path performs existence checks only and must not rewrite, hash, or fully hydrate authority solely for startup.
+The implementation reuses the typed taxonomy and `model_fields_set`; it adds no path registry or environment-variable inventory. The configured state root remains the application-owned creation anchor even when its location is selected explicitly; the pre-existing dependency rule applies to explicit taxonomy member paths beneath or outside that anchor. Authority verification uses the canonical published reader and performs no source compilation. Failures derive from core exceptions and cross the existing typed CLI error boundary. Metadata invocations remain exempt. The warm path performs existence checks only and must not rewrite, hash, or fully hydrate authority solely for startup.
 
 ## Implementation
 
