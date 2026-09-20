@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:c1c99b0be6db5d362421a34fa1d606f8dcc5a1858f071ef2d456ed11d09a2509'
+body_hash: 'sha256:41cd4f418c627e8a4c7714a7491885974249013df4fc18d0a204a4302dbe89bc'
 related:
   - "[[2026-09-20-lud-authority-plan]]"
 ---
@@ -24,6 +24,10 @@ The committed tree passes `just check-code`, including strict typing, import bou
 ### modelo-130-performance-control | medium | Resolved latent full-pipeline performance failure without weakening the contract
 
 The full local pipeline exposed a Modelo 130 p95 CPU regression in the repository's existing scale benchmark. The transaction read path now reuses calculation-scoped validated state and queries the complete indexed partition directly. The unchanged performance budget and its full-scan control pass both standalone and through the top-level diff-aware gate; no threshold, marker, or fixture was relaxed.
+
+### linux-type-sweep-resource-bound | medium | Resolved same-checker process multiplication
+
+The first post-push Linux lint run exposed a resource-sensitive defect in the existing cross-platform type orchestrator: its global nine-task queue could overlap multiple processes from the same checker family. Historical runner evidence included a BasedPyright timeout, and this run lost the Darwin Ty subprocess without a report. The scheduler now runs Ty, Pyrefly, and BasedPyright families concurrently while serializing each family's three-platform sweep, preserving all nine measurements with bounded same-engine residency. Empty-report errors also name the subprocess return code. The repaired gate passes locally on Windows and in the locked Python 3.13.11 Linux development image; 24 focused harness tests, the complete code gate, and the top-level test gate also pass.
 
 ### historical-vault-corpus | low | Unscoped debt remains outside Lud Authority
 

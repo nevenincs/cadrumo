@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:5a4025cc90ed8fa587593bbac0cff2cacdd24c35db3fb179ac6731a7dcf12335'
+body_hash: 'sha256:72ae421e186864a00c307789784290b3a6d1ad5f7bffdd31ac1f56a40d6b4456'
 related:
   - "[[2026-09-20-lud-authority-plan]]"
 ---
@@ -57,6 +57,12 @@ related:
 - `S02` `verify:` `just check-security-diff origin/main` -> `pass`
 - `S02` `verify:` `just check-registry-gate` -> `pass`
 - `S02` `verify:` `vaultspec-core vault check all --feature lud-authority` -> `pass`
+- `S02` `M` `dev/quality/types.py`
+- `S02` `M` `dev/quality/tests/test_types_gate.py`
+- `S02` `verify:` `Linux Python 3.13.11 just check-types` -> `pass`
+- `S02` `verify:` `pytest dev/quality/tests/test_types_gate.py` -> `pass`
+- `S02` `verify:` `just check-code after type scheduler repair` -> `pass`
+- `S02` `verify:` `just test-gate origin/main after type scheduler repair` -> `pass`
 
 ## Notes
 
@@ -64,3 +70,4 @@ related:
 - `S02` just test-gate retains 64 pre-existing failures in dev/tests/test_import_quality_gate.py caused by the branch import-gate event/schema and count mismatch; 64 tests pass and no Lud Authority feature file appears in those failures.
 - `S02` The full Vaultspec pipeline retains 25 errors and 507 warnings in other features: 24 legacy execution-mapping errors, one unrelated ungrounded ADR schema error, and historical corpus warnings; all Lud Authority scoped checks pass.
 - `S02` Unscoped historical corpus remains outside Lud Authority: 26 feature warnings, 116 execution-mapping findings, 392 body-section findings, and one unrelated ADR grounding error; the feature-scoped check is clean.
+- `S02` Post-push Linux lint exposed same-checker process multiplication in the existing cross-platform type orchestrator; the scheduler now preserves all nine measurements while serializing each checker family's platform sweep.
