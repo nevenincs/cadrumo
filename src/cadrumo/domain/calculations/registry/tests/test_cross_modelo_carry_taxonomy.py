@@ -29,8 +29,8 @@ direct-selector predicate, and no binding may be both relation-targeted and
 ``previous_filing``-sourced.
 
 See Also:
-    :mod:`cadrumo.domain.calculations.registry._validate_relation_sources`
-        The build-time slot-source hygiene gates this module asserts against
+    ``dev.registry.compiler.validate_relation_sources``
+        The build-time slot-source hygiene gate this module asserts against
         the bundled corpus.
 """
 

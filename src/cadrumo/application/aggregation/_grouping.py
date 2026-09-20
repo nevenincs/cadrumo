@@ -1,12 +1,12 @@
 """Shared group-by, name-cache, casilla-fold, period-window, and rollup-total helpers for per-modelo aggregators.
 
-Used by: :mod:`retenciones`, :mod:`_counterpart` to bucket observations and cache canonical names;
-:mod:`_foreign_assets` to bucket observations by ``(source_kind, asset_class)`` with no name cache;
-:mod:`_renta_income_ledger`, :mod:`_renta_gasto_ledger`, :mod:`_impatriado_income_ledger`, and
-:mod:`_irnr_income_ledger` to fold their observations into a :class:`CasillaAggregation`;
-:mod:`_renta_income_ledger` and :mod:`_renta_gasto_ledger` to resolve the pago-fraccionado
+Used by: :mod:`retenciones`, :mod:`counterpart` to bucket observations and cache canonical names;
+:mod:`foreign_assets` to bucket observations by ``(source_kind, asset_class)`` with no name cache;
+:mod:`renta_income_ledger`, :mod:`renta_gasto_ledger`, :mod:`impatriado_income_ledger`, and
+:mod:`irnr_income_ledger` to fold their observations into a :class:`CasillaAggregation`;
+:mod:`renta_income_ledger` and :mod:`renta_gasto_ledger` to resolve the pago-fraccionado
 year-to-date window both halves of the Modelo 130 base must share;
-:mod:`retenciones`, :mod:`_counterpart`, and :mod:`_foreign_assets` to prove a declared rollup
+:mod:`retenciones`, :mod:`counterpart`, and :mod:`foreign_assets` to prove a declared rollup
 total against the sum of its rollups.
 
 Treat that list as a claim to re-check, not a guarantee. It is accurate for the callers it
@@ -155,7 +155,7 @@ def filter_observations_for_modelo[T, AttrValue](
 ) -> tuple[T, ...]:
     """Keep observations whose classifying attribute is in-scope for ``modelo``.
 
-    Shared by both per-modelo aggregators: ``_counterpart`` filters on
+    Shared by both per-modelo aggregators: ``counterpart`` filters on
     ``operation_kind`` against the registry's Modelo 347 / 349 operation
     catalogue; ``retenciones`` filters on ``scheme`` against a
     :class:`RetencionScheme` catalogue. The only per-domain inputs are

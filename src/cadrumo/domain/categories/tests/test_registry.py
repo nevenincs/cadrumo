@@ -1,8 +1,8 @@
-"""Unit tests for :data:`~cadrumo.domain.categories._PROFILES_2025`.
+"""Unit tests for :func:`~cadrumo.domain.categories.registry.resolve_category_profiles`.
 
 Verifies the curated 2025 registry covers every
 :class:`~cadrumo.domain.categories.SpendingCategory`, that every profile
-carries at least one citation, and that the manual-loader entry point returns
+carries at least one citation, and that the registry-backed entry point returns
 the curated registry surface.
 
 Locks the conservative encodings for known edge categories
