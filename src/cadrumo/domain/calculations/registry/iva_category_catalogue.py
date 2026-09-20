@@ -146,18 +146,6 @@ def _bundled_entries(effective_date: date) -> Mapping[str, str]:
     raise RegistryValidationError("IVA category catalogue requires an explicit authority operation or scope")
 
 
-def _selected_entries(
-    *,
-    effective_date: date | None,
-    authority: GovernedFactSource | None,
-) -> Mapping[str, str]:
-    coordinate = effective_date or today_madrid()
-    selected = authority or governed_facts_in_scope()
-    if selected is None:
-        return _bundled_entries(coordinate)
-    return _resolve_entries(effective_date=coordinate, authority=selected)
-
-
 def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
     definitions: list[IvaCategoryDefinition] = []
     for raw_token in unique_mapping_tokens(entries, _ORDER_KEY, subject=_ENTRY_SUBJECT):
@@ -222,13 +210,38 @@ def _catalogue_from_entries(entries: Mapping[str, str]) -> IvaCategoryCatalogue:
     )
 
 
+@cache_governed_projection(maxsize=64)
+def _scoped_catalogue(effective_date: date) -> IvaCategoryCatalogue:
+    """Project the category catalogue once for the active authority scope.
+
+    Callers normally pass the pinned operation explicitly, but the operation
+    itself is also the ambient governed-fact scope for a runtime request.
+    Keeping the projection cache attached to that scope avoids reparsing the
+    same immutable mapping for every transaction while preserving generation
+    isolation: a different operation (including a candidate authority) gets
+    a different cache owner.
+    """
+    authority = governed_facts_in_scope()
+    if authority is None:
+        raise RegistryValidationError(
+            "IVA category catalogue requires an explicit authority operation or scope",
+        )
+    return _catalogue_from_entries(_resolve_entries(effective_date=effective_date, authority=authority))
+
+
 def resolve_iva_category_catalogue(
     *,
     effective_date: date | None = None,
     authority: GovernedFactSource | None = None,
 ) -> IvaCategoryCatalogue:
     """Resolve the complete IVA category vocabulary through fact 0084."""
-    return _catalogue_from_entries(_selected_entries(effective_date=effective_date, authority=authority))
+    coordinate = effective_date or today_madrid()
+    selected = authority or governed_facts_in_scope()
+    if selected is None:
+        return _catalogue_from_entries(_bundled_entries(coordinate))
+    if selected is governed_facts_in_scope():
+        return _scoped_catalogue(coordinate)
+    return _catalogue_from_entries(_resolve_entries(effective_date=coordinate, authority=selected))
 
 
 def require_iva_category(
