@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from decimal import Decimal
 from pathlib import Path
-from typing import cast, override
+from typing import override
 
 import pytest
 
@@ -385,11 +385,7 @@ def test_auth_session_store_default_isolates_active_profile_writes(tmp_path: Pat
     assert isinstance(cookies, list)
     first_cookie = cookies[0]
     assert isinstance(first_cookie, dict)
-    # storage_state is the untyped Playwright Mapping[str, object]; the cookie
-    # entries are str-keyed dicts at runtime. The cast restores the str key type
-    # the isinstance-narrowed dict[Unknown, Unknown] erases (key type Never).
-    cookie_fields = cast("dict[str, object]", first_cookie)
-    assert cookie_fields["value"] == _BUCKET_A_ID
+    assert first_cookie["value"] == _BUCKET_A_ID
 
 
 def test_transaction_repository_default_isolates_bucket_writes(tmp_path: Path) -> None:

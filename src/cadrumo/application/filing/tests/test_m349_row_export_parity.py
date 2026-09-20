@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from decimal import Decimal
+from typing import cast
 
 import pytest
 
@@ -84,4 +85,7 @@ def test_m349_populated_operator_rows_are_rendered_and_missing_required_nif_refu
         )
 
     assert refusal.value.translated_message == "application.filing.export_parity.errors.required_casillas_omitted"
-    assert {item["casilla_id"] for item in refusal.value.context["missing_casillas"]} == {"op.nif-comunitario"}
+    context = refusal.value.context
+    assert context is not None
+    missing_casillas = cast("tuple[dict[str, object], ...]", context["missing_casillas"])
+    assert {item["casilla_id"] for item in missing_casillas} == {"op.nif-comunitario"}
