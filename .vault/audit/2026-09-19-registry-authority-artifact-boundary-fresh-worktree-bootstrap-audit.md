@@ -3,13 +3,12 @@ tags:
   - '#audit'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-19'
-modified: '2026-09-19'
+modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:be06048b0495199d42876587f5816b7438e4826390c477f325e7c0c56bde6ced'
+body_hash: 'sha256:3d84f89b09d8a0687246a30c6b612263c1c89daf048102f29656e49e0c4dd92f'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
-
 # `registry-authority-artifact-boundary` audit: `fresh worktree bootstrap`
 
 ## Scope
@@ -26,7 +25,11 @@ The build hook invokes the canonical compiler only for a real source tree whose 
 
 `just init` delegates locked Python synchronization and default Vaultspec installation to `dev.init`, delegates RAG provisioning to its official installer, and delegates final authority compilation to the canonical publisher. It adds no alternate compiler, RAG lifecycle alias, or runtime source fallback. The real command completed and the exact runtime-load check admitted 58 modelos and 146 revisions.
 
-Result: PASS. No critical, high, medium, or actionable low finding remains.
+### fresh-runner-source-detection | medium | Resolved duplicated source-shape inference that blocked CI bootstrap
+
+Fresh Linux CI showed the editable-build hook could reach its missing-authority refusal before publication because `_authority_root` duplicated assumptions about which authoring paths prove a source checkout. The correction makes the already-selected control flow authoritative: an explicit override and an embedded sdist return earlier; otherwise absence of the default source publication invokes the canonical compiler directly. Focused build-hook and staging tests, Ruff, and ty pass after the correction.
+
+Result: PASS. The medium finding is resolved; no critical, high, or actionable finding remains.
 
 ## Recommendations
 

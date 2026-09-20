@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-authority-artifact-boundary'
 date: '2026-09-14'
-modified: '2026-09-19'
+modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:a939f127cd50b03ad7cb8e631a3217c8e6f3d102b5a891be1cffa8918606f8a4'
+body_hash: 'sha256:b8bd4e69920822785b2c9a690f8a5d571ed75af68e522c2784cf8417067c17d1'
 related:
   - "[[2026-09-14-registry-authority-artifact-boundary-plan]]"
 ---
@@ -176,6 +176,9 @@ related:
 - `S138` `verify:` `ruff, ty, compileall, diff check` -> `pass`
 - `S138` `A` `.vault/audit/2026-09-19-registry-authority-artifact-boundary-fresh-worktree-bootstrap-audit.md`
 - `S138` `verify:` `phase-close integrated review` -> `pass`
+- `S138` `M` `dev/packaging/tests/test_authority_build_hook.py`
+- `S138` `M` `.vault/audit/2026-09-19-registry-authority-artifact-boundary-fresh-worktree-bootstrap-audit.md`
+- `S138` `verify:` `fresh bootstrap correction focused tests, ruff, and ty` -> `pass`
 
 ## Notes
 
