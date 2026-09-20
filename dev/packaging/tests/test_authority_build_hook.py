@@ -27,6 +27,9 @@ def test_fresh_source_tree_bootstraps_repo_root_authority(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     hook = _hook_module()
+    (tmp_path / "dev" / "registry" / "compiler").mkdir(parents=True)
+    (tmp_path / "dev" / "registry" / "compiler" / "authority.py").touch()
+    (tmp_path / "src" / "cadrumo" / "_data" / "registry" / "aeat").mkdir(parents=True)
     expected = tmp_path / ".authority"
     calls: list[tuple[Path, Path]] = []
 

@@ -28,6 +28,10 @@ runs:
 
     - name: Initialize the worktree
       shell: bash
+      # Self-hosted runner services can carry a workstation authority override.
+      # CI exercises the packaged-default posture from a clean checkout.
+      env:
+        CADRUMO_AUTHORITY_ROOT: ""
       run: just setup
 
     - name: Provision Playwright Chromium
