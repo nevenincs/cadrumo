@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Iterator, Mapping
+from collections.abc import Generator, Iterable, Mapping
 from contextlib import contextmanager
 from typing import TYPE_CHECKING
 
@@ -53,7 +53,7 @@ PARTICIPE_CLAVE_BEARING_COUNTRY = "2"
 
 
 @contextmanager
-def _pinned_registry_scope() -> Iterator[None]:
+def _pinned_registry_scope() -> Generator[None]:
     """Pin the published generation these rules read their vocabularies from.
 
     Entity type, legal form, IRPF income category and fiscal residency are
