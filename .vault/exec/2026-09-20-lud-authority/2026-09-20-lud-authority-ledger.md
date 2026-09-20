@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:0cca4fd1bb31543164ad02ab4661114105e485bf3becad3b861fe82e501e7784'
+body_hash: 'sha256:89a8c8c6edd1975d1b1886cd4133985c04769faec33b9f19fc1c6faac2d27d8b'
 related:
   - "[[2026-09-20-lud-authority-plan]]"
 ---
@@ -74,6 +74,11 @@ related:
 - `S02` `verify:` `Ty, Pyrefly, and BasedPyright on optimized transaction repository` -> `pass`
 - `S02` `verify:` `locked Linux IVA and Modelo 130 scale contracts at unchanged ceiling` -> `pass`
 - `S02` `verify:` `just test-ci-contracts after revision-cache optimization` -> `pass`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/iva_category_catalogue.py`
+- `S02` `M` `src/cadrumo/domain/iva/tests/test_categories.py`
+- `S02` `verify:` `Ruff and Ty, Pyrefly, and BasedPyright on scoped IVA projection cache` -> `pass`
+- `S02` `verify:` `focused IVA category contracts (5 cases)` -> `pass`
+- `S02` `verify:` `locked Linux combined IVA and Modelo 130 scale contracts (3 cases)` -> `pass`
 
 ## Notes
 
@@ -84,3 +89,4 @@ related:
 - `S02` Post-push Linux lint exposed same-checker process multiplication in the existing cross-platform type orchestrator; the scheduler now preserves all nine measurements while serializing each checker family's platform sweep.
 - `S02` Post-push Linux scoped contracts exposed a Linux-matching conflict fixture and one contended CPU benchmark; the fixture is platform-independent and the benchmark now runs in the existing serial performance lane without changing its threshold or control.
 - `S02` The isolated Linux rerun proved contention was not the whole cause: both period benchmarks exceeded the unchanged ceiling. Revision-validated immutable-row reuse now removes repeat decrypt/validation cost without hiding external updates, deletions, revision-less rows, or cold-read integrity checks.
+- `S02` Authority-scoped IVA category projections now reuse the existing generation-owned projection cache; the final locked-Linux measurements were 1.356 CPU-seconds IVA P95 and 1.566 CPU-seconds Modelo 130 worst-quarter against the unchanged 3.0-second ceiling.

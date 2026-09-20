@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:1f185e01491f1ecd29c52c4c3400df0bbab977b4daa77e293a2eabe9e4cb6f0b'
+body_hash: 'sha256:2a7951fbc7df8eb8b6f194cedc318d4fcfc780d87237d6ab42a0b44f87d5d86e'
 related:
   - "[[2026-09-20-lud-authority-plan]]"
 ---
@@ -31,7 +31,7 @@ The first post-push Linux lint run exposed a resource-sensitive defect in the ex
 
 ### linux-contract-portability-and-ledger-performance | medium | Resolved fixture defect and real repeated-read cost
 
-The second post-push scoped gate exposed a platform-dependent fixture and then a real repeated-read cost. The distribution-readiness conflict fixture hard-coded Linux/x86_64, which matched the runner on the identity axes production intentionally compares; it now derives a guaranteed-different operating-system identity from the executing platform. Moving the M130 30,000-row CPU benchmark into the existing serial performance lane removed worker contention but honestly revealed that both the IVA and M130 period paths still exceeded the unchanged 3.0 CPU-second ceiling on Linux. The transaction repository now reuses an immutable decoded row only while a cheap persisted-revision probe proves that exact row remains current. Cold reads still perform schema cutover, outer integrity, decryption, and payload validation in one addressed snapshot; external updates, deletions, and revision-less rows reload and revalidate. Production behavior, sample sizes, thresholds, and full-scan anti-vacuity controls are unchanged. The 23-case persistence suite, all three strict module type checkers, all three serial scale contracts in the locked Linux image, and the complete local `just test-ci-contracts` recipe pass.
+The second post-push scoped gate exposed a platform-dependent fixture and then a real repeated-read cost. The distribution-readiness conflict fixture hard-coded Linux/x86_64, which matched the runner on the identity axes production intentionally compares; it now derives a guaranteed-different operating-system identity from the executing platform. Moving the M130 30,000-row CPU benchmark into the existing serial performance lane removed worker contention but honestly revealed that both the IVA and M130 period paths still exceeded the unchanged 3.0 CPU-second ceiling on Linux. The transaction repository now reuses an immutable decoded row only while a cheap persisted-revision probe proves that exact row remains current. Cold reads still perform schema cutover, outer integrity, decryption, and payload validation in one addressed snapshot; external updates, deletions, and revision-less rows reload and revalidate. The IVA category catalogue also uses the existing governed-projection cache while an authority operation is pinned, so repeated calculations no longer rebuild the same immutable projection; cache ownership continues to isolate authority generations and candidates. Production behavior, sample sizes, thresholds, and full-scan anti-vacuity controls are unchanged. The 23-case persistence suite, focused category contracts, all three strict module type checkers, all three serial scale contracts in the locked Linux image, and the complete local `just test-ci-contracts` recipe pass. The final locked-Linux run measured IVA P95 at 1.356 CPU-seconds and Modelo 130 worst-quarter CPU at 1.566 seconds against the unchanged 3.0-second ceiling.
 
 ### historical-vault-corpus | low | Unscoped debt remains outside Lud Authority
 
