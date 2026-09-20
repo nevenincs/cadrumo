@@ -93,6 +93,26 @@ def test_missing_explicit_directory_is_refused_before_defaults_are_created(tmp_p
     assert not root.exists(), "explicit dependencies must be checked before default materialization"
 
 
+def test_missing_explicit_directory_is_refused_when_it_aliases_a_default(tmp_path: Path) -> None:
+    """Path equality cannot turn an operator dependency into an owned default."""
+    root = tmp_path / "state"
+    aliased_cache = root / "cache" / "llm-cache"
+
+    with (
+        override_settings(cadrumo_local_storage_root=root, cadrumo_token_dir=aliased_cache),
+        pytest.raises(CoreValidationError) as refusal,
+    ):
+        ensure_storage_tree()
+
+    assert refusal.value.context == {
+        "state_directory_target": str(aliased_cache),
+        "occupied_by_file": False,
+        "directory_created": False,
+        "explicit_override": True,
+    }
+    assert not root.exists(), "an aliased explicit dependency must still be checked first"
+
+
 def test_existing_explicit_directory_is_preserved_while_defaults_are_created(tmp_path: Path) -> None:
     """A provisioned override passes and does not suppress sibling defaults."""
     root = tmp_path / "state"

@@ -11,6 +11,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from queue import LifoQueue
 from secrets import token_hex
+from stat import S_ISREG
 from threading import RLock
 from typing import Final
 
@@ -129,6 +130,26 @@ class AuthorityDescriptor:
                 "logical_generation": self.logical_generation,
             }
         )
+
+
+def require_authority_store_available(descriptor_path: Path) -> None:
+    """Quickly validate the descriptor-selected database dependency.
+
+    This startup probe validates the canonical descriptor and requires the
+    confined database to be a regular file of the published size. Full digest,
+    SQLite manifest, and component checks remain owned by
+    :class:`SQLiteAuthorityReader` when an authority operation is admitted.
+    """
+    descriptor = AuthorityDescriptor.read(descriptor_path)
+    database_path = descriptor_path.parent / descriptor.database
+    try:
+        status = database_path.stat()
+    except OSError as exc:
+        raise AuthorityStoreError(f"authority database is unavailable at {database_path}") from exc
+    if not S_ISREG(status.st_mode):
+        raise AuthorityStoreError(f"authority database is not a regular file at {database_path}")
+    if status.st_size != descriptor.database_size:
+        raise AuthorityStoreCorruptionError("authority database size disagrees with the published descriptor")
 
 
 @dataclass(frozen=True, slots=True)

@@ -169,7 +169,7 @@ def main() -> None:
     progress_sink = nullcontext()
     if not metadata_invocation:
         try:
-            _refuse_former_product_state_at_startup()
+            _provision_dependencies_at_startup()
         except typer.Exit as exit_request:
             raise SystemExit(exit_request.exit_code) from None
         from ...adapters.outbound.aeat.operator_progress import operator_progress_sink
@@ -179,19 +179,19 @@ def main() -> None:
         app(prog_name=_PRODUCT_IDENTITY.cli_executable)
 
 
-def _refuse_former_product_state_at_startup() -> None:
-    """Route a refused retired ``aeat`` state root through the typed CLI error boundary."""
+def _provision_dependencies_at_startup() -> None:
+    """Provision startup dependencies through the typed CLI error boundary."""
     from ...application.profile_preconditions import (
         FormerProductDetectionScope,
         former_product_state_verdict,
     )
-    from ...core.config import Settings
+    from ...application.provisioning import ensure_cli_startup_dependencies
     from ...core.config_state_root import FormerProductStateError
-    from ...core.errors.hierarchy import ActiveProfilePointerError
+    from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
     from .errors import CliRefusedBoundaryError, emit_error_and_exit, project_cli_boundary_error
 
     try:
-        Settings()
+        ensure_cli_startup_dependencies()
     except FormerProductStateError as error:
         emit_error_and_exit(
             attach_cli_policy_verdict(
@@ -202,7 +202,9 @@ def _refuse_former_product_state_at_startup() -> None:
             )
         )
     except ActiveProfilePointerError as error:
-        emit_error_and_exit(project_cli_boundary_error(error, _refuse_former_product_state_at_startup))
+        emit_error_and_exit(project_cli_boundary_error(error, _provision_dependencies_at_startup))
+    except CadrumoError as error:
+        emit_error_and_exit(project_cli_boundary_error(error, _provision_dependencies_at_startup))
 
 
 @contextmanager

@@ -29,12 +29,11 @@ def ensure_storage_tree(settings: Settings | None = None) -> Path:
 
     resolved = settings if settings is not None else load_settings()
     root = Path(resolved.cadrumo_local_storage_root)
-    targets = storage_tree_targets(resolved)
-    derived_targets = frozenset(storage_tree_targets(resolved, include_explicit=False))
+    explicit_targets = storage_tree_targets(resolved, include_derived=False)
+    derived_targets = storage_tree_targets(resolved, include_explicit=False)
 
-    for target in targets:
-        if target not in derived_targets:
-            _require_directory(target, explicit_override=True)
+    for target in explicit_targets:
+        _require_directory(target, explicit_override=True)
 
     for target in (root, *derived_targets):
         if _require_directory(target, explicit_override=False):

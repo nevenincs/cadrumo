@@ -9,8 +9,6 @@ body_hash: 'sha256:a1a3d89b1b3b859c75a0ea3161e0ea1d37626ac0816fd905cec4e833cdbb8
 related: []
 ---
 
-
-
 # `lud-authority` reference: `startup provisioning and authority loading`
 
 Current-tree reference at commit `81a3943c0fec468822fd6c55fa6a0b6233032e9f`. The inspection followed normal CLI startup from settings resolution through storage materialization and published-authority selection, then checked the focused tests and configuration gates that constrain a change.

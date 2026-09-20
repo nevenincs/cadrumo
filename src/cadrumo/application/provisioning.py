@@ -1,10 +1,10 @@
-"""Typed external-dependency probes for graceful degradation and ``config check``.
+"""Typed dependency probes and CLI startup dependency provisioning.
 
-This module is the read-only application doctor surface: each probe asks whether
-one external service or optional package extra is usable on this workstation and
-returns a typed :class:`DependencyStatus` with measured facts and a closed
-precondition outcome when it is not. Probes do not provision, unlock, write profile state, or raise on
-absence; a missing dependency is report data, not an exception path.
+The doctor probes in this module are read-only: each asks whether one external
+service or optional package extra is usable on this workstation and returns a
+typed :class:`DependencyStatus`. The startup coordinator is the separate,
+explicit composition boundary that provisions application-owned directories
+and validates operator-owned and shipped dependencies before command dispatch.
 
 The on-host readers are probed per role by
 :func:`~cadrumo.application.local_reader.probe_local_reader`, so a down server or
@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 from ..core.config import Settings, load_settings
 from ..core.hardware import AcceleratorKind, ContentionCause, HardwareTier, hardware_tier_for_free_bytes
 from ..core.i18n.render import tr
+from ..core.logging import get_logger
 from ..core.model_catalogue import (
     DeploymentLicencePosture,
     ModelCandidate,
@@ -68,6 +69,7 @@ __all__ = [
     "assess_model_load_contention",
     "binding_free_bytes",
     "cadrumo_selected_models",
+    "ensure_cli_startup_dependencies",
     "probe_hardware_profile",
     "probe_local_inference_hardware",
     "probe_local_model_provisioning",
@@ -112,6 +114,25 @@ from .provisioning_runtime import (
     unload_runtime_model,
     verify_model_ready,
 )
+
+_LOGGER = get_logger(__name__)
+
+
+def ensure_cli_startup_dependencies() -> None:
+    """Provision owned storage defaults and validate the shipped authority.
+
+    Explicit storage overrides are dependencies and are validated by the
+    materializer rather than created. Authority admission validates the
+    published descriptor and content-addressed SQLite generation without
+    hydrating registry components or reaching development authoring inputs.
+    """
+    from ..core.storage_materialization import ensure_storage_tree
+    from ..domain.calculations.registry.authority import bundled_authority_descriptor_path
+    from ..domain.calculations.registry.authority_store import require_authority_store_available
+
+    ensure_storage_tree(load_settings())
+    require_authority_store_available(bundled_authority_descriptor_path())
+    _LOGGER.debug("CLI startup storage and authority dependencies admitted")
 
 
 class DependencyStatus(ProvisioningOutcome):

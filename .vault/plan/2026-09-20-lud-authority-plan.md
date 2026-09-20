@@ -8,7 +8,7 @@ related:
   - '[[2026-09-20-lud-authority-adr]]'
 modified: '2026-09-20'
 body_schema: body-v2
-body_hash: 'sha256:995efe84d1ab6b408c6b4f6495b48ae6b496250bcd8471312664e8c99d0801d0'
+body_hash: 'sha256:5d50866a81e12ab9ba80987d690856b61f423460bfecb8fdb969a2d3b2c204e9'
 ---
 
 # `lud-authority` plan
@@ -22,7 +22,7 @@ Implement the accepted startup ownership policy in `2026-09-20-lud-authority-adr
 ## Steps
 
 - [x] `S01` - Distinguish derived storage defaults from explicit directory dependencies and prove both paths; `src/cadrumo/core/storage_materialization.py and owning tests`.
-- [ ] `S02` - Compose authority and storage preflight into normal CLI startup with logging, strict typing, and focused integration coverage; `application provisioning and CLI startup surfaces`.
+- [x] `S02` - Compose authority and storage preflight into normal CLI startup with logging, strict typing, and focused integration coverage; `core storage materialization, application provisioning, authority store, and CLI startup surfaces`.
 
 ## Parallelization
 

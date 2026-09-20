@@ -29,11 +29,13 @@ _ACTIVE_PROFILE_WITHOUT_SECRET_HARNESS = dedent(
 
     storage_root = Path(sys.argv[1])
     cli_args = sys.argv[2:]
+    secret_store = storage_root / "fallback-store"
+    secret_store.mkdir(parents=True)
     settings = Settings(
         _env_file=None,
         cadrumo_local_storage_root=storage_root,
         cadrumo_active_profile="11111111-1111-4111-8111-111111111111",
-        cadrumo_secret_store_dir=storage_root / "fallback-store",
+        cadrumo_secret_store_dir=secret_store,
         cadrumo_output_language="en",
     )
     token = config_module.settings_override.set(settings)
@@ -87,6 +89,25 @@ def test_app_modelo_list_starts_without_unlocking_active_profile(tmp_path: Path)
     _assert_no_startup_crash(output)
     assert "code\ttitle\tcadence\tdomain\trevisions\tlocal_work\tlocal_work_guidance" in output
     assert "303" in output
+    assert (tmp_path / "cache" / "llm-cache").is_dir()
+    assert (tmp_path / "cache" / "corpus-search").is_dir()
+
+
+def test_normal_startup_refuses_a_missing_environment_directory_override(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A real ``CADRUMO_*_DIR`` override must be provisioned by the operator."""
+    explicit_tokens = tmp_path / "operator-tokens"
+    monkeypatch.setenv("CADRUMO_TOKEN_DIR", str(explicit_tokens))
+
+    result = _run_startup_smoke(tmp_path, "app", "modelo", "list")
+
+    output = _combined_output(result)
+    assert result.returncode != 0
+    _assert_no_startup_crash(output)
+    assert not explicit_tokens.exists()
+    assert not (tmp_path / "cache").exists(), "explicit dependencies are checked before defaults are provisioned"
 
 
 def test_config_repair_integrity_help_starts_without_unlocking_active_profile(tmp_path: Path) -> None:

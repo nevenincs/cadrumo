@@ -5,15 +5,12 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:ae84a466998189068329567fd2fbcbd012ed101efadb2ea13c97b213e63bb6dc'
+body_hash: 'sha256:86703cdcd8ed09247f9c6fc8be34a00bb6c70ac0dafd42103287167d430c09ee'
 related:
   - "[[2026-09-20-lud-authority-reference]]"
 ---
 
-
-
 # `lud-authority` adr: `startup dependency provisioning policy` | (**status:** `accepted`)
-
 
 ## Problem Statement
 
