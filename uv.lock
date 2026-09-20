@@ -226,6 +226,7 @@ dependencies = [
     { name = "pypdfium2" },
     { name = "python-dotenv" },
     { name = "python-i18n" },
+    { name = "pywin32", marker = "sys_platform == 'win32'" },
     { name = "pyyaml" },
     { name = "questionary" },
     { name = "rich" },
@@ -326,6 +327,7 @@ dev = [
     { name = "sphinxcontrib-mermaid" },
     { name = "sphinxext-opengraph" },
     { name = "spylls" },
+    { name = "tomlkit" },
     { name = "torch", version = "2.14.0", source = { registry = "https://pypi.org/simple" }, marker = "sys_platform != 'linux' and sys_platform != 'win32'" },
     { name = "torch", version = "2.14.0+cu130", source = { registry = "https://download.pytorch.org/whl/cu130" }, marker = "sys_platform == 'linux' or sys_platform == 'win32'" },
     { name = "ty" },
@@ -343,6 +345,8 @@ dev = [
 ]
 registry = [
     { name = "grimp" },
+    { name = "psutil" },
+    { name = "tomlkit" },
 ]
 
 [package.metadata]
@@ -383,6 +387,7 @@ requires-dist = [
     { name = "pypdfium2", specifier = ">=5.7.1,<6" },
     { name = "python-dotenv", specifier = ">=1.2.2,<2" },
     { name = "python-i18n", specifier = ">=0.3.9,<1" },
+    { name = "pywin32", marker = "sys_platform == 'win32'", specifier = ">=311" },
     { name = "pywin32", marker = "sys_platform == 'win32' and extra == 'workbook-windows'", specifier = ">=311" },
     { name = "pyyaml", specifier = ">=6.0.3,<7" },
     { name = "questionary", specifier = ">=2.1.1,<3" },
@@ -450,6 +455,7 @@ dev = [
     { name = "sphinxcontrib-mermaid", specifier = ">=1.0" },
     { name = "sphinxext-opengraph", specifier = ">=0.9" },
     { name = "spylls", specifier = "==0.1.7" },
+    { name = "tomlkit", specifier = ">=0.15,<1" },
     { name = "torch", marker = "sys_platform != 'linux' and sys_platform != 'win32'", specifier = ">=2.4" },
     { name = "torch", marker = "sys_platform == 'linux' or sys_platform == 'win32'", specifier = ">=2.4", index = "https://download.pytorch.org/whl/cu130" },
     { name = "ty", specifier = ">=0.0.81" },
@@ -465,7 +471,11 @@ dev = [
     { name = "vulture", specifier = ">=2.16" },
     { name = "yamllint", specifier = ">=1.38,<2" },
 ]
-registry = [{ name = "grimp", specifier = ">=3.15,<4" }]
+registry = [
+    { name = "grimp", specifier = ">=3.15,<4" },
+    { name = "psutil", specifier = ">=5.9" },
+    { name = "tomlkit", specifier = ">=0.15,<1" },
+]
 
 [[package]]
 name = "cadrumo-data-manuals"
