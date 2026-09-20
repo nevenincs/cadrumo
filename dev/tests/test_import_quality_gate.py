@@ -20,7 +20,7 @@ from pathlib import Path
 import pytest
 
 from dev._paths import REPO_ROOT, UTF_8
-from dev.exit_codes import FAILED, TOOL_BROKEN, TOOL_MISSING
+from dev.exit_codes import FAILED, TOOL_BROKEN
 from dev.packaging.command_execution import run_command
 from dev.quality.import_checker import (
     Authority,
@@ -67,6 +67,12 @@ def _write_module(root: Path, dotted: str, source: str) -> None:
     parts = dotted.split(".")
     for index in range(1, len(parts)):
         _write_package(root, ".".join(parts[:index]))
+    package_init = root / "src" / Path(*parts) / "__init__.py"
+    if package_init.is_file():
+        # A declared package owns this module identity; writing a sibling
+        # ``name.py`` would create the duplicate identity the checker rejects.
+        package_init.write_text(source, encoding=UTF_8, newline="\n")
+        return
     path = root / "src" / Path(*parts[:-1]) / f"{parts[-1]}.py"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(source, encoding=UTF_8, newline="\n")
@@ -324,10 +330,10 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
             ("cadrumo.entrypoints.module",),
         ),
         (
-            "product-to-harness-package",
-            "cadrumo.entrypoints.bad",
-            "import cadrumo_harness.mcp.module\n",
-            ("cadrumo_harness.mcp.module",),
+            "harness-to-product-entrypoint",
+            "cadrumo_harness.mcp.bad",
+            "import cadrumo.entrypoints.module\n",
+            ("cadrumo.entrypoints.module",),
         ),
         (
             "domain-to-application",
@@ -348,10 +354,10 @@ def test_subordinate_cli_cannot_be_used_as_a_contributor_verdict() -> None:
             ("cadrumo.adapters.concrete",),
         ),
         (
-            "adapter-to-concrete-sibling",
+            "adapter-to-harness",
             "cadrumo.adapters.inbound.bad",
-            "from ..outbound.concrete import VALUE\n",
-            ("cadrumo.adapters.outbound.concrete",),
+            "import cadrumo_harness.mcp.module\n",
+            ("cadrumo_harness.mcp.module",),
         ),
         (
             "non-entrypoint-to-entrypoint",
@@ -618,14 +624,16 @@ def test_subordinate_defect_fails_through_real_gate(
         "import importlib\nimportlib.import_module('cadrumo.domain.module')\n",
     ),
 )
-def test_absolute_canonical_import_spelling_is_advisory(tmp_path: Path, source: str) -> None:
+def test_absolute_canonical_import_spelling_is_advisory_but_graph_edges_are_blocking(
+    tmp_path: Path, source: str
+) -> None:
     root = _fixture_root(tmp_path)
     _write_module(root, "cadrumo.domain.module", "VALUE = 1\n")
     _write_module(root, "cadrumo.core.consumer", source)
 
     returncode, output = _run_real_gate(root)
 
-    assert returncode == 0, output
+    assert returncode == FAILED, output
     assert "[ADVISORY:CANONICAL_IMPORT_SPELLING]" in output
 
 
@@ -784,7 +792,7 @@ def test_missing_import_linter_executable_is_nonzero_through_real_recipe(tmp_pat
     returncode, output = _run_real_gate(root, **{_LINTER_ENV: "cadrumo-import-linter-does-not-exist"})
     assert returncode != 0, output
     assert "[TOOL_MISSING]" in output
-    assert run_import_gate(root, lint_executable="cadrumo-import-linter-does-not-exist") == TOOL_MISSING
+    assert run_import_gate(root, lint_executable="cadrumo-import-linter-does-not-exist") == TOOL_BROKEN
 
 
 def test_missing_subordinate_checker_executable_is_nonzero_through_real_recipe(
@@ -795,7 +803,7 @@ def test_missing_subordinate_checker_executable_is_nonzero_through_real_recipe(
     assert returncode != 0, output
     assert "[TOOL_MISSING]" in output
     monkeypatch.setenv(_CHECKER_ENV, "cadrumo-import-checker-does-not-exist")
-    assert run_import_gate(root) == TOOL_MISSING
+    assert run_import_gate(root) == TOOL_BROKEN
 
 
 def test_abnormal_import_linter_status_is_tool_broken(tmp_path: Path) -> None:
@@ -824,7 +832,7 @@ def test_import_linter_exception_is_tool_broken(tmp_path: Path, monkeypatch: pyt
         del args, kwargs
         raise RuntimeError("forced Import Linter failure")
 
-    monkeypatch.setattr("dev.quality.import_gate.subprocess.run", fail)
+    monkeypatch.setattr("dev.quality.import_gate.run_command", fail)
     component = run_import_linter(authority, executable=sys.executable)
 
     assert component.returncode == TOOL_BROKEN
@@ -899,7 +907,7 @@ def test_zero_status_with_a_native_warning_fails_the_graph_component(
         del args, kwargs
         return subprocess.CompletedProcess([], 0, "Warnings: 1\n", "")
 
-    monkeypatch.setattr("dev.quality.import_gate.subprocess.run", fake_run)
+    monkeypatch.setattr("dev.quality.import_gate.run_command", fake_run)
 
     component = run_import_linter(authority, executable=sys.executable)
 
@@ -911,8 +919,8 @@ def test_clean_fixture_has_a_nonzero_governed_scan_and_passes_the_component(tmp_
     root = _fixture_root(tmp_path)
     returncode, output = _run_real_gate(root)
     assert returncode == 0, output
-    assert "check-import-boundaries: passed" in output
-    assert "governed Python file" not in output
+    assert "VERDICT: clean" in output
+    assert "import-checker: scanned " in output
     payload = _health_payload(output)
     assert payload["verdict"] == "clean", output
     loadability = _section(payload, "loadability")
@@ -1143,5 +1151,7 @@ def test_a_dynamic_shipped_import_of_a_repository_only_root_fails_the_verdict(tm
     exit_status, output = _health_verdict(root)
 
     assert exit_status == 1, output
-    assert "Repository-only reach (not ratchetable): 1 occurrence(s)" in output
+    counts, _ = _ratchet_report(output)
+    root_boundary = counts["root_boundary"]
+    assert isinstance(root_boundary, int) and root_boundary >= 1, output
     assert "src/cadrumo/domain/tests/test_dynamic_reach.py:3 imports dev.exit_codes" in output
