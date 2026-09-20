@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:eb18901f4634cb64916639bd1a23203bf211d100da69ea207d5dc8ca32f0cead'
+body_hash: 'sha256:c1c99b0be6db5d362421a34fa1d606f8dcc5a1858f071ef2d456ed11d09a2509'
 related:
   - "[[2026-09-20-lud-authority-plan]]"
 ---
@@ -17,9 +17,17 @@ Reviewed the completed L1 plan against its accepted ownership policy and the int
 
 ## Findings
 
-### pre-existing-quality-gate-debt | low | Repository-wide gates remain red outside this feature
+### local-quality-pipeline | informational | Resolved all code and test gate findings before CI
 
-`just check-code` retains unrelated diagnostics in untouched modules and several pre-existing structural gates. `just test-gate` retains failures in `dev/tests/test_import_quality_gate.py` caused by its event/schema and count expectations. The full Vaultspec check likewise retains 25 errors in historical execution mappings and one unrelated ADR. All Lud Authority scoped Vaultspec checks, focused suites, CLI contracts, production-module type checks, logging gate, lint, and formatting pass.
+The committed tree passes `just check-code`, including strict typing, import boundaries, dependency declarations, reachability, symbol and export consumption, secure-storage and persistence-write checks, and documentation references. `just test-ci-contracts` passes its 967-case main population, two serialized IVA performance cases, and one repair-performance case. The diff-aware `just test-gate origin/main` independently passes its 128 broad-change contracts, repeats those CI-contract populations, and passes all four pytest-harness cases. The focused Lud Authority storage, provisioning, build-hook, startup, authority-root, logging, and strict-type checks also pass.
+
+### modelo-130-performance-control | medium | Resolved latent full-pipeline performance failure without weakening the contract
+
+The full local pipeline exposed a Modelo 130 p95 CPU regression in the repository's existing scale benchmark. The transaction read path now reuses calculation-scoped validated state and queries the complete indexed partition directly. The unchanged performance budget and its full-scan control pass both standalone and through the top-level diff-aware gate; no threshold, marker, or fixture was relaxed.
+
+### historical-vault-corpus | low | Unscoped debt remains outside Lud Authority
+
+`vaultspec-core vault check all --feature lud-authority` is clean. The unscoped repository check still reports historical records outside this feature: 26 feature warnings, 116 execution-mapping findings, 392 body-section findings, and one unrelated ADR grounding error. Those records pre-date and do not govern Lud Authority, so this delivery does not rewrite them.
 
 ### fresh-linux-authority-bootstrap | medium | Resolved synthesized default crossing the setup subprocess boundary
 
@@ -27,4 +35,4 @@ Developer path initialization seeds `CADRUMO_AUTHORITY_ROOT` with the checkout's
 
 ## Recommendations
 
-Track the repository-wide quality-gate debt independently. The feature-caused medium finding is resolved, and no follow-on architectural decision is required for Lud Authority before delivery.
+Track the historical unscoped Vaultspec corpus independently. All Lud Authority findings and all local code/test pipeline blockers are resolved; no follow-on architectural decision is required before delivery.

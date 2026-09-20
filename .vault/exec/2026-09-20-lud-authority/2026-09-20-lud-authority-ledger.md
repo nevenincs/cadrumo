@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:57d81c8c8283090609065624308d14e93638fe1b0c4d8467c1f49eaff67e5bad'
+body_hash: 'sha256:5a4025cc90ed8fa587593bbac0cff2cacdd24c35db3fb179ac6731a7dcf12335'
 related:
   - "[[2026-09-20-lud-authority-plan]]"
 ---
@@ -42,9 +42,25 @@ related:
 - `S02` `verify:` `logging binding gate` -> `pass`
 - `S02` `verify:` `just check-code` -> `fail`
 - `S02` `verify:` `vaultspec-core vault check all` -> `fail`
+- `S02` `M` `packaging/authority/hatch_build.py`
+- `S02` `M` `src/cadrumo/adapters/persistence/profile/transactions.py`
+- `S02` `M` `src/cadrumo/application/modelo/_transaction_catalogue_cache.py`
+- `S02` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S02` `M` `src/cadrumo/application/modelo/tests/test_memoized_transaction_catalogue_repository.py`
+- `S02` `M` `src/cadrumo/application/user_profile/profile_record_repository.py`
+- `S02` `M` `src/cadrumo/conftest.py`
+- `S02` `M` `src/cadrumo/entrypoints/cli/config/tests/test_profile_complete_setup_verb.py`
+- `S02` `M` `.vault/audit/2026-09-20-lud-authority-audit.md`
+- `S02` `verify:` `just check-code` -> `pass`
+- `S02` `verify:` `just test-ci-contracts` -> `pass`
+- `S02` `verify:` `just test-gate origin/main` -> `pass`
+- `S02` `verify:` `just check-security-diff origin/main` -> `pass`
+- `S02` `verify:` `just check-registry-gate` -> `pass`
+- `S02` `verify:` `vaultspec-core vault check all --feature lud-authority` -> `pass`
 
 ## Notes
 
 - `S02` just check-code retains 17 unrelated type diagnostics plus pre-existing import-boundary, dependency-declaration, reachability, symbol-usage, export-consumption, and docstring-reference failures outside this feature; style, format, data-format, and secure/persistence write-path gates pass.
 - `S02` just test-gate retains 64 pre-existing failures in dev/tests/test_import_quality_gate.py caused by the branch import-gate event/schema and count mismatch; 64 tests pass and no Lud Authority feature file appears in those failures.
 - `S02` The full Vaultspec pipeline retains 25 errors and 507 warnings in other features: 24 legacy execution-mapping errors, one unrelated ungrounded ADR schema error, and historical corpus warnings; all Lud Authority scoped checks pass.
+- `S02` Unscoped historical corpus remains outside Lud Authority: 26 feature warnings, 116 execution-mapping findings, 392 body-section findings, and one unrelated ADR grounding error; the feature-scoped check is clean.
