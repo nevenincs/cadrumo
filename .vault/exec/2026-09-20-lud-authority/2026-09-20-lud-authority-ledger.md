@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:72ae421e186864a00c307789784290b3a6d1ad5f7bffdd31ac1f56a40d6b4456'
+body_hash: 'sha256:e567e49af621a4b65c7aa5b23fad4d5e2600604dee174a82b3e6c1d71946bf3c'
 related:
   - "[[2026-09-20-lud-authority-plan]]"
 ---
@@ -63,6 +63,11 @@ related:
 - `S02` `verify:` `pytest dev/quality/tests/test_types_gate.py` -> `pass`
 - `S02` `verify:` `just check-code after type scheduler repair` -> `pass`
 - `S02` `verify:` `just test-gate origin/main after type scheduler repair` -> `pass`
+- `S02` `M` `dev/release/tests/test_distribution_readiness.py`
+- `S02` `M` `dev/ci/tests/test_ledger_scale_benchmark.py`
+- `S02` `verify:` `platform-independent distribution evidence conflict contract` -> `pass`
+- `S02` `verify:` `isolated 30000-row Modelo 130 CPU benchmark at unchanged ceiling` -> `pass`
+- `S02` `verify:` `just test-ci-contracts after Linux scoped-gate repair` -> `pass`
 
 ## Notes
 
@@ -71,3 +76,4 @@ related:
 - `S02` The full Vaultspec pipeline retains 25 errors and 507 warnings in other features: 24 legacy execution-mapping errors, one unrelated ungrounded ADR schema error, and historical corpus warnings; all Lud Authority scoped checks pass.
 - `S02` Unscoped historical corpus remains outside Lud Authority: 26 feature warnings, 116 execution-mapping findings, 392 body-section findings, and one unrelated ADR grounding error; the feature-scoped check is clean.
 - `S02` Post-push Linux lint exposed same-checker process multiplication in the existing cross-platform type orchestrator; the scheduler now preserves all nine measurements while serializing each checker family's platform sweep.
+- `S02` Post-push Linux scoped contracts exposed a Linux-matching conflict fixture and one contended CPU benchmark; the fixture is platform-independent and the benchmark now runs in the existing serial performance lane without changing its threshold or control.

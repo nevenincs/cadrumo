@@ -5,7 +5,7 @@ tags:
 date: '2026-09-20'
 modified: '2026-09-20'
 body_schema: 'body-v2'
-body_hash: 'sha256:41cd4f418c627e8a4c7714a7491885974249013df4fc18d0a204a4302dbe89bc'
+body_hash: 'sha256:827ad85ae8e61e9b519ead70f3203f5a60f7c7b2681c4e7330998d590d1e6766'
 related:
   - "[[2026-09-20-lud-authority-plan]]"
 ---
@@ -19,15 +19,19 @@ Reviewed the completed L1 plan against its accepted ownership policy and the int
 
 ### local-quality-pipeline | informational | Resolved all code and test gate findings before CI
 
-The committed tree passes `just check-code`, including strict typing, import boundaries, dependency declarations, reachability, symbol and export consumption, secure-storage and persistence-write checks, and documentation references. `just test-ci-contracts` passes its 967-case main population, two serialized IVA performance cases, and one repair-performance case. The diff-aware `just test-gate origin/main` independently passes its 128 broad-change contracts, repeats those CI-contract populations, and passes all four pytest-harness cases. The focused Lud Authority storage, provisioning, build-hook, startup, authority-root, logging, and strict-type checks also pass.
+The committed tree passes `just check-code`, including strict typing, import boundaries, dependency declarations, reachability, symbol and export consumption, secure-storage and persistence-write checks, and documentation references. After the Linux CI repair, `just test-ci-contracts` passes its 966-case parallel population, three serialized performance cases, and one repair-performance case. The earlier diff-aware `just test-gate origin/main` independently passed its 128 broad-change contracts, the complete CI-contract population, and all four pytest-harness cases. The focused Lud Authority storage, provisioning, build-hook, startup, authority-root, logging, and strict-type checks also pass.
 
 ### modelo-130-performance-control | medium | Resolved latent full-pipeline performance failure without weakening the contract
 
-The full local pipeline exposed a Modelo 130 p95 CPU regression in the repository's existing scale benchmark. The transaction read path now reuses calculation-scoped validated state and queries the complete indexed partition directly. The unchanged performance budget and its full-scan control pass both standalone and through the top-level diff-aware gate; no threshold, marker, or fixture was relaxed.
+The full local pipeline exposed a Modelo 130 p95 CPU regression in the repository's existing scale benchmark. The transaction read path now reuses calculation-scoped validated state and queries the complete indexed partition directly. The unchanged performance budget and its full-scan control pass both standalone and through the top-level diff-aware gate; no threshold or fixture was relaxed.
 
 ### linux-type-sweep-resource-bound | medium | Resolved same-checker process multiplication
 
 The first post-push Linux lint run exposed a resource-sensitive defect in the existing cross-platform type orchestrator: its global nine-task queue could overlap multiple processes from the same checker family. Historical runner evidence included a BasedPyright timeout, and this run lost the Darwin Ty subprocess without a report. The scheduler now runs Ty, Pyrefly, and BasedPyright families concurrently while serializing each family's three-platform sweep, preserving all nine measurements with bounded same-engine residency. Empty-report errors also name the subprocess return code. The repaired gate passes locally on Windows and in the locked Python 3.13.11 Linux development image; 24 focused harness tests, the complete code gate, and the top-level test gate also pass.
+
+### linux-contract-portability-and-isolation | medium | Resolved platform-dependent fixture and contended benchmark
+
+The second post-push scoped gate exposed two latent contract-harness defects. The distribution-readiness conflict fixture hard-coded Linux/x86_64, which matched the runner on the identity axes production intentionally compares; it now derives a guaranteed-different operating-system identity from the executing platform. The M130 30,000-row CPU benchmark was the only timing-sensitive calculation benchmark left in the eight-worker population; it now uses the existing serial lane, like the neighboring IVA timing contracts. Production behavior, the 3.0 CPU-second ceiling, and the full-scan anti-vacuity control are unchanged. Both focused cases and the complete local `just test-ci-contracts` recipe pass.
 
 ### historical-vault-corpus | low | Unscoped debt remains outside Lud Authority
 
