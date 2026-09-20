@@ -19,6 +19,7 @@ from ...core.operations import (
     OperationLifecycle,
     OperationTerminalCondition,
 )
+from . import models as operation_models
 from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_host import SupervisorHost
@@ -40,7 +41,6 @@ from .models import (
     OperationReference,
     OperationRequest,
     OperationTerminalReceipt,
-    new_operation_id,
 )
 from .persistence.events import (
     OperationEvent,
@@ -145,7 +145,7 @@ class SupervisorExecutionMixin(SupervisorHost):
         self._validate_request_payload(request, definition.request_type)
         now = self._clock()
         identity = OperationIdentity(
-            operation_id=operation_id or new_operation_id(),
+            operation_id=operation_id or operation_models.new_operation_id(),
             definition_id=request.definition_id,
             subject_ref=request.subject_ref,
         )

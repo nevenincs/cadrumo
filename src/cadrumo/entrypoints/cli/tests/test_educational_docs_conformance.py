@@ -19,6 +19,7 @@ relocations that churn the autodoc tree.
 from __future__ import annotations
 
 import re
+import sys
 from functools import cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -26,6 +27,7 @@ from tempfile import TemporaryDirectory
 import pytest
 
 from ....core.directory_scan import scan_directory
+from ....tests.audited_process import run_audited_process
 from ....tests.inventory import REPO_ROOT
 from .cli_runner import invoke_cached_cli
 
@@ -143,8 +145,25 @@ def _generated_cli_reference_links() -> frozenset[str]:
     surface against the generator in an isolated temporary docs root so this
     gate checks the current output contract without mutating the worktree.
     """
-    from dev.docs.cli_reference import generate_cli_reference
-
     with TemporaryDirectory(prefix="cadrumo-doc-link-check-") as temporary_root:
-        generated = generate_cli_reference(Path(temporary_root))
-    return frozenset(generated)
+        docs_root = Path(temporary_root)
+        result = run_audited_process(
+            [
+                sys.executable,
+                "-c",
+                "from pathlib import Path; from dev.docs.cli_reference import generate_cli_reference; "
+                "generate_cli_reference(Path(__import__('sys').argv[1]))",
+                str(docs_root),
+            ],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            text=True,
+            timeout=300,
+            check=False,
+        )
+        assert result.returncode == 0, result.stderr
+        output_dir = docs_root / "cli"
+        return frozenset(
+            f"cli/{path.relative_to(output_dir).as_posix()}"
+            for path in scan_directory(output_dir, pattern="*.rst", recursive=True)
+        )
