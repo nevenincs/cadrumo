@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import json
 from datetime import date
 from decimal import Decimal
 
 import pytest
+import typer
 from pydantic import ValidationError
 
 from ....application.aggregation.invoice_retencion import (
@@ -18,6 +20,7 @@ from ....application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxStatus,
 )
 from ....core.aggregation import RetencionClave
+from ....core.period import Period
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -81,6 +84,26 @@ def _request(invoice: Invoice) -> InvoiceWithholdingEvidenceRequest:
     )
 
 
+def _capital_request(invoice: Invoice) -> InvoiceWithholdingEvidenceRequest:
+    """Build the public payload for an unpaid, exigible capital allocation."""
+    return InvoiceWithholdingEvidenceRequest.model_validate(
+        {
+            "invoice_id": invoice.invoice_id,
+            "income_kind": WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL,
+            "scheme": "intereses",
+            "recipient_tax_status": WithholdingRecipientTaxStatus.RESIDENT,
+            "recipient_tax_regime": WithholdingRecipientTaxRegime.IRPF,
+            "exigibility_event_id": "capital-exigibility-q4",
+            "exigibility_occurred_on": date(2025, 12, 15),
+            "allocation_id": "capital-allocation-q4",
+            "allocated_base": Decimal("500.00"),
+            "allocated_withholding": Decimal("95.00"),
+            "allocated_settlement": Decimal("0.00"),
+            "idempotency_key": "cli-capital-q4",
+        }
+    )
+
+
 def _annual_detail(invoice: Invoice) -> WithholdingObservation:
     return WithholdingObservation(
         source_id=invoice.invoice_id,
@@ -135,12 +158,73 @@ def test_cli_evidence_shape_refuses_a_caller_authored_recognition_date() -> None
         InvoiceWithholdingEvidenceRequest.model_validate(payload)
 
 
+def test_capital_cli_evidence_derives_the_123_exigibility_period_without_a_payment() -> None:
+    """The public request carries evidence, never a caller-selected 123 quarter."""
+    from .._modelo_aggregate_cli import _parse_typed_cli_observations
+
+    invoice = _invoice()
+    parsed = _parse_typed_cli_observations(
+        [_capital_request(invoice).model_dump_json()],
+        model=InvoiceWithholdingEvidenceRequest,
+        flag="--received-invoice-retencion",
+    )
+    assert len(parsed) == 1
+    request = parsed[0]
+    capture = build_invoice_withholding_capture(
+        invoice,
+        catalogue_revision_id="a" * 64,
+        request=request,
+        applicable_year=2025,
+    )
+
+    assert capture.scope.modelo == "123"
+    assert capture.scope.period == Period.from_year_and_code(2025, "4T")
+    evidence = capture.command.recognition_evidence
+    assert evidence.exigibility is not None
+    assert evidence.exigibility.event_id == "capital-exigibility-q4"
+    assert evidence.payment_or_satisfaction is None
+
+
+@pytest.mark.parametrize(
+    ("update", "message"),
+    (
+        ({"payment_event_id": "half-payment"}, "payment evidence requires both event id and date"),
+        ({"exigibility_occurred_on": None}, "exigibility evidence requires both event id and date"),
+    ),
+)
+def test_capital_cli_evidence_refuses_partial_underlying_events(
+    update: dict[str, object],
+    message: str,
+) -> None:
+    """A CLI payload cannot create an event identity without its legal date."""
+    from .._modelo_aggregate_cli import _parse_typed_cli_observations
+
+    invoice = _invoice()
+    payload = json.loads(_capital_request(invoice).model_dump_json()) | update
+
+    with pytest.raises(typer.BadParameter, match=message) as exc_info:
+        _parse_typed_cli_observations(
+            [json.dumps(payload)],
+            model=InvoiceWithholdingEvidenceRequest,
+            flag="--received-invoice-retencion",
+        )
+
+    assert isinstance(exc_info.value.__cause__, ValidationError)
+
+
 def test_modelo_aggregate_module_no_longer_exposes_direct_retencion_persistence() -> None:
-    """The 111/115 CLI module has no direct set-replace mutation helper."""
+    """The 111/115/123 CLI module has no direct set-replace mutation helper."""
     from .. import _modelo_aggregate_cli
 
     assert not hasattr(_modelo_aggregate_cli, "_persist_retencion_observations")
     assert not hasattr(_modelo_aggregate_cli, "_persist_cli_owned_observations")
+
+
+def test_modelo_aggregate_keeps_capital_out_of_the_raw_mutation_path() -> None:
+    """The 123 transport remains gated until its annual and count contracts are complete."""
+    from .. import _modelo_aggregate_cli
+
+    assert "123" in _modelo_aggregate_cli._INVOICE_WITHHOLDING_MODELOS
 
 
 def test_rent_cli_evidence_refuses_missing_property_detail() -> None:

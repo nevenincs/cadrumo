@@ -47,6 +47,7 @@ from cadrumo.domain.calculations.registry.withholding_bindings import Withholdin
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 _PROFESSIONAL_SCHEME = RetencionScheme("actividades_profesionales")
+_CAPITAL_SCHEME = RetencionScheme("intereses")
 
 
 def _producer_for(objects: object) -> tuple[WithholdingProducer, WithholdingObservationService]:
@@ -125,6 +126,53 @@ def _command(
         idempotency_key=f"capture-{allocation_id}",
         modelo_180_property=property_detail,
         modelo_190_detail=annual_detail,
+    )
+
+
+def _capital_command(
+    *,
+    allocation_id: str = "capital-allocation-1",
+    scheme: RetencionScheme = _CAPITAL_SCHEME,
+    payment_id: str | None = None,
+    paid_on: date | None = None,
+    exigibility_id: str = "capital-exigibility-2025-12",
+    exigible_on: date = date(2025, 12, 15),
+    settlement_amount: str = "0.00",
+) -> WithholdingEvidenceCaptureCommand:
+    """Build one resident-IRPF capital allocation with explicit due evidence."""
+    return WithholdingEvidenceCaptureCommand(
+        source_kind=BindingSourceKind.PAYABLE_INVOICE,
+        source_object_id="capital-invoice-2025-12",
+        source_revision_id="capital-invoice-revision-1",
+        allocation_id=allocation_id,
+        perceptor_nif="11111111H",
+        perceptor_name="Resident Capital Recipient",
+        scheme=scheme,
+        taxable_base=Decimal("500.00"),
+        retencion_amount=Decimal("95.00"),
+        settlement_amount=Decimal(settlement_amount),
+        liability_snapshot=SourceLiabilitySnapshot(
+            source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+            source_object_id="capital-invoice-2025-12",
+            source_revision_id="capital-invoice-revision-1",
+            liability_base=Decimal("500.00"),
+            liability_withholding=Decimal("95.00"),
+            liability_settlement=Decimal("405.00"),
+        ),
+        recognition_evidence=WithholdingRecognitionEvidence(
+            applicable_year=2025,
+            recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
+            recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
+            income_kind=WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL,
+            operation_kind=WithholdingOperationKind.ORDINARY,
+            exigibility=WithholdingDatedEvent(event_id=exigibility_id, occurred_on=exigible_on),
+            payment_or_satisfaction=(
+                WithholdingDatedEvent(event_id=payment_id, occurred_on=paid_on)
+                if payment_id is not None and paid_on is not None
+                else None
+            ),
+        ),
+        idempotency_key=f"capital-capture-{allocation_id}",
     )
 
 
@@ -239,6 +287,115 @@ def test_professional_payment_producer_reopens_and_feeds_pinned_m111_resolver(tm
         assert resolution.binding_values["modelo-111-actividades-dinerario-perceptores"] == Decimal("1")
         assert resolution.binding_values["modelo-111-actividades-dinerario-base"] == Decimal("500.00")
         assert resolution.binding_values["modelo-111-actividades-dinerario-retenciones"] == Decimal("95.00")
+
+
+def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate_123_liability(
+    tmp_path: Path,
+) -> None:
+    """The due event owns 123; a later settlement only revises that allocation."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        producer, _service = _producer_for(profile.repository)
+        unpaid = producer.capture(_capital_command())
+
+        assert unpaid is not None
+        assert unpaid.scope == WithholdingWindowScope(
+            modelo="123",
+            period=Period.from_year_and_code(2025, "4T"),
+        )
+        assert unpaid.recognition.recognized_on == date(2025, 12, 15)
+        assert unpaid.recognition.recognition_event_id == "capital-exigibility-2025-12"
+        assert unpaid.recognition.settlement_event_id is None
+
+        reopened_producer, reopened_service = _producer_for(profile.repository)
+        before_settlement = reopened_service.read_window(unpaid.scope)
+        assert len(before_settlement.entries) == 1
+        persisted = RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations(
+            "123", unpaid.scope.period
+        )
+        assert len(persisted) == 1
+        assert persisted[0].accrued_on == "2025-12-15"
+
+        settled_evidence = _capital_command().recognition_evidence.model_copy(
+            update={
+                "payment_or_satisfaction": WithholdingDatedEvent(
+                    event_id="capital-settlement-2026-01",
+                    occurred_on=date(2026, 1, 15),
+                )
+            }
+        )
+        settled_command = _capital_command().model_copy(
+            update={
+                "settlement_amount": Decimal("405.00"),
+                "recognition_evidence": settled_evidence,
+                "mode": WithholdingMutationMode.REPLACE,
+                "baseline": unpaid.mutation.baseline,
+                "reason": "synthetic later capital settlement",
+                "supersedes_generation_id": unpaid.mutation.baseline.generation_id,
+                "idempotency_key": "capital-settlement-capture-2026-01",
+            }
+        )
+        settled = reopened_producer.capture(settled_command)
+
+        assert settled is not None
+        assert settled.scope == unpaid.scope
+        assert settled.recognition.recognized_on == date(2025, 12, 15)
+        assert settled.recognition.recognition_event_id == unpaid.recognition.recognition_event_id
+        assert settled.recognition.settlement_event_id == "capital-settlement-2026-01"
+        after_settlement = reopened_service.read_window(unpaid.scope)
+        assert len(after_settlement.entries) == 1
+        assert after_settlement.entries[0].identity.settlement_event_id == "capital-settlement-2026-01"
+        assert after_settlement.entries[0].allocation.allocated_settlement == Decimal("405.00")
+
+        persisted_after_settlement = RetencionObservationRepositoryAdapter(
+            objects=profile.repository
+        ).load_observations("123", unpaid.scope.period)
+        assert len(persisted_after_settlement) == 1
+        aggregation = RetencionesAggregationSourceResolver.aggregate(
+            "123", persisted_after_settlement, period=unpaid.scope.period
+        )
+        assert aggregation.total_taxable_base == Decimal("500.00")
+        assert aggregation.total_retencion == Decimal("95.00")
+        assert {row.scheme for row in aggregation.rollups} == {RetencionScheme("intereses")}
+
+        replay = reopened_producer.capture(settled_command)
+        assert replay is not None and replay.mutation.replayed
+        assert len(reopened_service.read_window(unpaid.scope).entries) == 1
+
+        audit = reopened_service.read_generation(unpaid.scope, settled.mutation.baseline.generation_id)
+        assert audit is not None
+        assert audit.supersedes_generation_id == unpaid.mutation.baseline.generation_id
+
+
+def test_capital_exigibility_is_required_before_a_123_window_is_mutated(tmp_path: Path) -> None:
+    """A payment-free capital command cannot use an invoice date as a fallback."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        producer, service = _producer_for(profile.repository)
+        command = _capital_command()
+        missing_exigibility = command.model_copy(
+            update={"recognition_evidence": command.recognition_evidence.model_copy(update={"exigibility": None})}
+        )
+
+        with pytest.raises(ValueError, match="missing_exigibility_evidence"):
+            producer.capture(missing_exigibility)
+
+        scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "4T"))
+        assert service.read_window(scope).entries == ()
+        assert (
+            RetencionObservationRepositoryAdapter(objects=profile.repository).load_observations("123", scope.period)
+            == ()
+        )
+
+
+def test_capital_producer_refuses_noncapital_scheme_before_a_123_window_is_mutated(tmp_path: Path) -> None:
+    """The resident capital slice admits only the selected 123 scheme catalogue."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        producer, service = _producer_for(profile.repository)
+
+        with pytest.raises(WithholdingProducerError, match="scheme_income_kind_mismatch"):
+            producer.capture(_capital_command(scheme=RetencionScheme("actividades_profesionales")))
+
+        scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "4T"))
+        assert service.read_window(scope).entries == ()
 
 
 def test_invalid_recognition_refuses_before_any_encrypted_projection_write(tmp_path: Path) -> None:

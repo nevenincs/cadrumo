@@ -224,6 +224,16 @@ def _modelo_for(income_kind: WithholdingIncomeKind, scheme: RetencionScheme) -> 
     elif income_kind is WithholdingIncomeKind.URBAN_RENT:
         allowed = (RetencionScheme("arrendamiento_urbano"),)
         modelo = "115"
+    elif income_kind is WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL:
+        # The selected 2025 withholding-scheme catalogue is the scope here.
+        # It deliberately does not make formalisation, IS, or IRNR branches
+        # reachable through this resident-IRPF producer.
+        allowed = (
+            RetencionScheme("intereses"),
+            RetencionScheme("dividendos"),
+            RetencionScheme("otros_capital_mobiliario"),
+        )
+        modelo = "123"
     else:
         raise WithholdingProducerError("unsupported_income_projection")
     if scheme not in allowed:

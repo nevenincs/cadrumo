@@ -38,7 +38,7 @@ from .state_projection_support import (
     withholding_observation_service,
 )
 
-_INVOICE_WITHHOLDING_MODELOS = frozenset({"111", "115"})
+_INVOICE_WITHHOLDING_MODELOS = frozenset({"111", "115", "123"})
 
 
 def _capture_invoice_withholding_into_command(
@@ -50,8 +50,8 @@ def _capture_invoice_withholding_into_command(
 ) -> PerModeloAggregationCommand:
     """Capture one canonical-invoice allocation, then read its active projection.
 
-    The existing aggregate command is still a reporting projection, but 111
-    and 115 must never use it as a writable retención transport.  Reading the
+    The existing aggregate command remains a reporting projection: 111, 115,
+    and 123 must never use it as a writable retención transport. Reading the
     active encrypted projection after the shared service succeeds also makes
     omission a genuine no-op rather than an empty set replacement.
     """
@@ -62,7 +62,9 @@ def _capture_invoice_withholding_into_command(
             )
         return command
     if has_caller_authored_retenciones:
-        raise typer.BadParameter("--retencion-observation is not accepted for Modelo 111 or 115; use invoice evidence")
+        raise typer.BadParameter(
+            f"--retencion-observation is not accepted for Modelo {command.modelo}; use invoice evidence"
+        )
     if len(requests) > 1:
         raise typer.BadParameter(
             "one invoice withholding allocation is accepted per command; submit each allocation explicitly"
@@ -90,7 +92,7 @@ def _capture_invoice_withholding_into_command(
     except (InvoiceWithholdingEvidenceError, ValueError) as exc:
         raise typer.BadParameter(str(exc)) from exc
     if capture.scope.modelo != command.modelo or capture.scope.period != command.period:
-        raise typer.BadParameter("payment recognition period does not match the requested modelo period")
+        raise typer.BadParameter("derived recognition period does not match the requested modelo period")
 
     try:
         from ...application.aggregation.withholding_producer import WithholdingProducer
@@ -177,6 +179,11 @@ def aggregate_modelo(
     """Delegate per-modelo aggregation execution to the backend service."""
     operation = authority_operation(ctx)
     with validating_governed_facts(operation):
+        if modelo == Modelo("123").value and (retencion_observation or received_invoice_retencion):
+            raise typer.BadParameter(
+                "Modelo 123 public capture is incomplete: the current Número de rentas count and "
+                "Modelo 193 annual disclosure cannot yet be verified; no withholding evidence was written"
+            )
         if modelo == Modelo("190").value and withholding_observation:
             raise typer.BadParameter(
                 "--withholding-observation is not accepted for Modelo 190; "

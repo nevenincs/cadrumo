@@ -51,7 +51,7 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Self
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import BindingSourceKind, RetencionScheme
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -233,13 +233,13 @@ class InvoiceWithholdingEvidenceError(ValueError):
 
 
 class InvoiceWithholdingEvidenceRequest(BaseModel):
-    """CLI-safe evidence for one payment allocation of a canonical invoice.
+    """CLI-safe recognition and settlement evidence for one invoice allocation.
 
     The invoice catalogue supplies the source revision, liability limits,
     currency and recipient identity.  This request holds only facts that the
-    catalogue cannot establish: the recipient's supported tax status and the
-    actual payment/satisfaction allocation.  It intentionally has no
-    recognition date or liability-total field.
+    catalogue cannot establish: the recipient's supported tax status and
+    underlying payment/satisfaction or exigibility evidence.  It intentionally
+    has no recognition date or liability-total field.
     """
 
     model_config = _STRICT_FROZEN
@@ -249,8 +249,10 @@ class InvoiceWithholdingEvidenceRequest(BaseModel):
     scheme: RetencionScheme
     recipient_tax_status: WithholdingRecipientTaxStatus
     recipient_tax_regime: WithholdingRecipientTaxRegime
-    payment_event_id: str
-    payment_occurred_on: date
+    payment_event_id: str | None = Field(default=None, min_length=1, max_length=128)
+    payment_occurred_on: date | None = None
+    exigibility_event_id: str | None = Field(default=None, min_length=1, max_length=128)
+    exigibility_occurred_on: date | None = None
     allocation_id: str
     allocated_base: Decimal
     allocated_withholding: Decimal
@@ -262,6 +264,15 @@ class InvoiceWithholdingEvidenceRequest(BaseModel):
     supersedes_generation_id: str | None = None
     modelo_180_property: Modelo180PropertyEvidence | None = None
     modelo_190_detail: WithholdingObservation | None = None
+
+    @model_validator(mode="after")
+    def _dated_evidence_is_complete(self) -> Self:
+        """Keep each underlying event atomic at the public transport edge."""
+        if (self.payment_event_id is None) != (self.payment_occurred_on is None):
+            raise ValueError("payment evidence requires both event id and date")
+        if (self.exigibility_event_id is None) != (self.exigibility_occurred_on is None):
+            raise ValueError("exigibility evidence requires both event id and date")
+        return self
 
 
 class InvoiceWithholdingCapture(BaseModel):
@@ -309,9 +320,21 @@ def build_invoice_withholding_capture(
         recipient_tax_regime=request.recipient_tax_regime,
         income_kind=request.income_kind,
         operation_kind=WithholdingOperationKind.ORDINARY,
-        payment_or_satisfaction=WithholdingDatedEvent(
-            event_id=request.payment_event_id,
-            occurred_on=request.payment_occurred_on,
+        payment_or_satisfaction=(
+            WithholdingDatedEvent(
+                event_id=request.payment_event_id,
+                occurred_on=request.payment_occurred_on,
+            )
+            if request.payment_event_id is not None and request.payment_occurred_on is not None
+            else None
+        ),
+        exigibility=(
+            WithholdingDatedEvent(
+                event_id=request.exigibility_event_id,
+                occurred_on=request.exigibility_occurred_on,
+            )
+            if request.exigibility_event_id is not None and request.exigibility_occurred_on is not None
+            else None
         ),
     )
     # The catalogue revision proves this invoice was read consistently from the
@@ -372,6 +395,8 @@ def _modelo_for_income(income_kind: WithholdingIncomeKind) -> str:
         return "111"
     if income_kind is WithholdingIncomeKind.URBAN_RENT:
         return "115"
+    if income_kind is WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL:
+        return "123"
     raise InvoiceWithholdingEvidenceError("unsupported_income_projection")
 
 
