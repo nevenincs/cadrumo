@@ -6,27 +6,23 @@ from datetime import date
 from decimal import Decimal
 
 import typer
-from pydantic import BaseModel
 
 from ...application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ...application.actividad_asset.operations import ActivityAssetFilingHandoff, ActivityAssetOperations
 from ...application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.actividad_asset_bindings import ActivityAssetAuthoritySelection
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+from ._actividad_asset_payloads import (
+    ActivityAssetClaimPayload,
+    ActivityAssetFilingHandoffPayload,
+    ActivityAssetForecastPayload,
+    ActivityAssetHistoryPayload,
+    ActivityAssetInspectionPayload,
+)
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .state_projection_support import authority_operation, calculation_action_ports_factory
-
-
-class ActivityAssetInspectionPayload(BaseModel):
-    """Stable JSON-capable inspection result."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    asset_id: str
-    revisions: tuple[ActivityAssetRevision, ...]
 
 
 class ActivityAssetCli:
@@ -39,7 +35,10 @@ class ActivityAssetCli:
         return self._operations.create(ActivityAssetRevision.model_validate_json(revision_json))
 
     def inspect(self, asset_id: str) -> ActivityAssetInspectionPayload:
-        return ActivityAssetInspectionPayload(asset_id=asset_id, revisions=self._operations.inspect(asset_id))
+        return ActivityAssetInspectionPayload(
+            asset_id=asset_id,
+            revisions=[revision.model_dump(mode="json") for revision in self._operations.inspect(asset_id)],
+        )
 
     def correct(self, revision_json: str) -> ActivityAssetHistory:
         return self._operations.correct(ActivityAssetRevision.model_validate_json(revision_json))
@@ -115,10 +114,11 @@ def _runtime_cli(ctx: typer.Context) -> ActivityAssetCli:
 def actividad_asset_create(ctx: typer.Context, revision_json: str) -> None:
     """Create an activity asset from a typed JSON revision."""
     result = _runtime_cli(ctx).create(revision_json)
+    payload = ActivityAssetHistoryPayload(root=result.model_dump(mode="json"))
     emit_envelope(
         ctx,
         command="ledger.actividad_asset.create",
-        result=result,
+        result=payload,
         lines=(f"revisions\t{len(result.revisions)}",),
     )
 
@@ -137,10 +137,11 @@ def actividad_asset_inspect(ctx: typer.Context, asset_id: str) -> None:
 def actividad_asset_correct(ctx: typer.Context, revision_json: str) -> None:
     """Append a typed JSON correction revision."""
     result = _runtime_cli(ctx).correct(revision_json)
+    payload = ActivityAssetHistoryPayload(root=result.model_dump(mode="json"))
     emit_envelope(
         ctx,
         command="ledger.actividad_asset.correct",
-        result=result,
+        result=payload,
         lines=(f"revisions\t{len(result.revisions)}",),
     )
 
@@ -159,7 +160,8 @@ def actividad_asset_forecast(
         covered_from=covered_from,
         covered_until=covered_until,
     )
-    emit_envelope(ctx, command="ledger.actividad_asset.forecast", result=result, lines=(f"amount\t{result.amount}",))
+    payload = ActivityAssetForecastPayload(root=result.model_dump(mode="json"))
+    emit_envelope(ctx, command="ledger.actividad_asset.forecast", result=payload, lines=(f"amount\t{result.amount}",))
 
 
 def actividad_asset_record_claim(
@@ -177,9 +179,25 @@ def actividad_asset_record_claim(
     emit_envelope(
         ctx,
         command="ledger.actividad_asset.claim",
-        result=result,
+        result=_claim_payload(result),
         lines=(f"claim_id\t{result.claim.claim_id}", f"reused\t{str(result.reused_existing_claim).lower()}"),
     )
+
+
+def _claim_payload(result: ActivityAssetHistoryClaimResult) -> ActivityAssetClaimPayload:
+    """Project the computed canonical claim identity into the strict CLI receipt.
+
+    ``claim_id`` deliberately remains a derived domain property, so Pydantic's
+    serialized record does not include it by default. An operator receipt must
+    nevertheless name the exact immutable claim that a later correction or
+    filing handoff references.
+    """
+    document = result.model_dump(mode="json")
+    claim_document = document["claim"]
+    if not isinstance(claim_document, dict):  # pragma: no cover - domain result invariant
+        raise RuntimeError("activity-asset claim result must serialize a claim object")
+    document["claim"] = {**claim_document, "claim_id": result.claim.claim_id}
+    return ActivityAssetClaimPayload(root=document)
 
 
 def actividad_asset_filing_handoff(ctx: typer.Context, tax_year: int, m130_period: str) -> None:
@@ -188,7 +206,7 @@ def actividad_asset_filing_handoff(ctx: typer.Context, tax_year: int, m130_perio
     emit_envelope(
         ctx,
         command="ledger.actividad_asset.filing_handoff",
-        result=result,
+        result=ActivityAssetFilingHandoffPayload(root=result.model_dump(mode="json")),
         lines=(
             f"m100_material\t{result.material_m100.amount}",
             f"m100_intangible\t{result.intangible_m100.amount}",
@@ -200,7 +218,6 @@ def actividad_asset_filing_handoff(ctx: typer.Context, tax_year: int, m130_perio
 
 __all__ = [
     "ActivityAssetCli",
-    "ActivityAssetInspectionPayload",
     "actividad_asset_correct",
     "actividad_asset_create",
     "actividad_asset_filing_handoff",

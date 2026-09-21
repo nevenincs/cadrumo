@@ -9,6 +9,7 @@ from .command_spec import (
     ArgumentSpec,
     CommandSpec,
     DeferredTarget,
+    ExecutionPolicySpec,
     InvocationSpec,
     LazyBinding,
     OptionSpec,
@@ -56,7 +57,7 @@ def _leaf(
     *,
     schema_module: str,
     schema_name: str,
-    policy=_POLICY_5,
+    policy: ExecutionPolicySpec = _POLICY_5,
 ) -> CommandSpec:
     return CommandSpec(
         key,
@@ -96,8 +97,8 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "create",
         "actividad_asset_create",
         (_argument("revision_json"),),
-        schema_module="cadrumo.application.actividad_asset.history",
-        schema_name="ActivityAssetHistory",
+        schema_module="._actividad_asset_payloads",
+        schema_name="ActivityAssetHistoryPayload",
         policy=_POLICY_4,
     ),
     _leaf(
@@ -105,7 +106,7 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "inspect",
         "actividad_asset_inspect",
         (_argument("asset_id"),),
-        schema_module="._actividad_asset_cli",
+        schema_module="._actividad_asset_payloads",
         schema_name="ActivityAssetInspectionPayload",
     ),
     _leaf(
@@ -113,8 +114,8 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "correct",
         "actividad_asset_correct",
         (_argument("revision_json"),),
-        schema_module="cadrumo.application.actividad_asset.history",
-        schema_name="ActivityAssetHistory",
+        schema_module="._actividad_asset_payloads",
+        schema_name="ActivityAssetHistoryPayload",
         policy=_POLICY_4,
     ),
     _leaf(
@@ -127,8 +128,8 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option("covered_from", "--covered-from"),
             _option("covered_until", "--covered-until"),
         ),
-        schema_module="cadrumo.domain.renta.actividad_asset.schedule",
-        schema_name="ScheduledAmortizationCharge",
+        schema_module="._actividad_asset_payloads",
+        schema_name="ActivityAssetForecastPayload",
         policy=_POLICY_6,
     ),
     _leaf(
@@ -140,8 +141,8 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _option("creating_operation", "--creating-operation"),
             _option("supersedes_claim_id", "--supersedes-claim-id", optional=True),
         ),
-        schema_module="cadrumo.application.actividad_asset.history",
-        schema_name="ActivityAssetHistoryClaimResult",
+        schema_module="._actividad_asset_payloads",
+        schema_name="ActivityAssetClaimPayload",
         policy=_POLICY_4,
     ),
     _leaf(
@@ -149,8 +150,8 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "filing-handoff",
         "actividad_asset_filing_handoff",
         (_option("tax_year", "--tax-year", integer=True), _option("m130_period", "--m130-period")),
-        schema_module="cadrumo.application.actividad_asset.operations",
-        schema_name="ActivityAssetFilingHandoff",
+        schema_module="._actividad_asset_payloads",
+        schema_name="ActivityAssetFilingHandoffPayload",
         policy=_POLICY_6,
     ),
 )
