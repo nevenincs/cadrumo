@@ -749,21 +749,6 @@ application:
           with `aeat app live borrador 100 list`.
         unsupported_modelo: Borrador binding is not supported for modelo %{modelo};
           the registry manifest must declare the borrador capability.
-    lifecycle:
-      calculate: Calculate
-      verify: Verify
-      file: Record local filing
-      export: Export
-      export_destination_placeholder: Export destination path
-      file_confirm_title: Record a local filing?
-      file_confirm_message: This records the verified declaration in this application's local filing history. It does not submit anything to AEAT.
-      file_confirm_accept: Record local filing
-      file_confirm_cancel: Cancel
-      file_cancelled: Local filing was cancelled; nothing was recorded.
-      refusal:
-        calculation_required: Calculate this declaration before continuing.
-        verification_required: Verify this calculation before recording a local filing.
-        export_destination_required: Enter an export destination path.
     errors:
       amendment_complementaria_liability_decrease: A complementaria for modelo {modelo}
         filing year {filing_year} period {period} would lower the declared result
@@ -1114,9 +1099,9 @@ application:
         asset %{position_key} in group %{group_code} rose from %{prior_value_eur}
         EUR to %{current_value_eur} EUR, an increase of %{delta_value_eur} EUR above
         the %{redeclaration_increase_threshold_eur} EUR redeclaration threshold.'
-      iva_compensation_annual_source_evidence_failure: 'Required Modelo 303 annual
+      iva_compensation_annual_source_evidence_failure: Required Modelo 303 annual
         source evidence for Modelo 390 is unresolved (%{source_issue_count} issue(s));
-        completion is blocked.'
+        completion is blocked.
       iva_selected_scope_evidence_failure: 'Selected-scope IVA evidence is incomplete
         (%{source_ref_count} source references; %{unidentified_source_count} unidentified),
         so verification is blocked. Source-reference identifiers, not financial values:
@@ -1185,6 +1170,22 @@ application:
       seed_negative_amount: The seed amount cannot be negative.
       seed_no_nif: No NIF defined for the seed operation; associate one with the active
         profile before seeding.
+    lifecycle:
+      calculate: Calculate
+      export: Export
+      export_destination_placeholder: Export destination path
+      file: Record local filing
+      file_cancelled: Local filing was cancelled; nothing was recorded.
+      file_confirm_accept: Record local filing
+      file_confirm_cancel: Cancel
+      file_confirm_message: This records the verified declaration in this application's
+        local filing history. It does not submit anything to AEAT.
+      file_confirm_title: Record a local filing?
+      refusal:
+        calculation_required: Calculate this declaration before continuing.
+        export_destination_required: Enter an export destination path.
+        verification_required: Verify this calculation before recording a local filing.
+      verify: Verify
     profile_binding:
       errors:
         boolean_value_channel_mismatch: The profile fact for binding {binding_id}
@@ -1334,6 +1335,8 @@ application:
         is newer than this application supports.
       row_all_values_blank: 'No value was supplied for the ''%{section}'' row. Populate
         at least one of: %{fields}.'
+      row_not_found: Row '%{row}' does not exist in section '%{section}'; nothing
+        was written.
       row_unknown_field: 'Section ''%{section}'' declares no such fields: %{unknown}.
         Available fields: %{fields}.'
     notices:

@@ -49,6 +49,68 @@ class ProfileRepeatableRowMutationOutcome:
     row_index: int
 
 
+@dataclass(frozen=True, slots=True)
+class ProfileRepeatableRowChangeOutcome:
+    """Encrypted record and stable schema row key produced by update or removal."""
+
+    record: UserProfileRecord
+    section_key: str
+    row_key: str
+    changed: bool
+
+
+def _repeatable_section(schema: ProfileSchemaDefinition, section_key: str) -> ProfileSectionDefinition:
+    section = schema.section(section_key)
+    if not section.repeatable:
+        raise ProfileSchemaValidationError("profile row mutation requires a schema-declared repeatable section")
+    return section
+
+
+def _row_path(section_key: str, row_key: str, field_key: str) -> str:
+    return f"{section_key}.{field_key}" if not row_key else f"{section_key}.{row_key}.{field_key}"
+
+
+def _require_existing_row(section_key: str, row_key: str, current: UserProfileRecord) -> None:
+    if row_key not in profile_section_rows(section_key, record_to_path_values(current)):
+        raise ProfileSchemaValidationError(
+            translated_message="application.user_profile.errors.row_not_found",
+            context={"section": section_key, "row": row_key or "base"},
+        )
+
+
+def _validate_field_keys(
+    section: ProfileSectionDefinition,
+    *,
+    values: Mapping[str, str],
+    clear_fields: Iterable[str] = (),
+) -> tuple[str, ...]:
+    declared = {field.key for field in section.fields}
+    clears = tuple(clear_fields)
+    unknown = tuple(sorted(({*values} | set(clears)) - declared))
+    if unknown:
+        raise ProfileSchemaValidationError(
+            translated_message="application.user_profile.errors.row_unknown_field",
+            context={
+                "section": section.key,
+                "unknown": ", ".join(unknown),
+                "fields": ", ".join(sorted(declared)),
+            },
+        )
+    overlap = tuple(sorted(set(values) & set(clears)))
+    if overlap:
+        raise ProfileSchemaValidationError(
+            "a repeatable-row field cannot be assigned and cleared in the same mutation",
+            context={"section": section.key, "fields": ", ".join(overlap)},
+        )
+    blank = tuple(sorted(key for key, value in values.items() if not value.strip()))
+    if blank:
+        raise ProfileSchemaValidationError(
+            "blank repeatable-row values are ambiguous; omit unchanged fields or clear them explicitly",
+            context={"section": section.key, "fields": ", ".join(blank)},
+        )
+    return clears
+
+
 def next_section_row_index(section_key: str, present: Iterable[str]) -> int:
     """Return the row index a new row of ``section_key`` may occupy.
 
@@ -70,9 +132,9 @@ def next_section_row_index(section_key: str, present: Iterable[str]) -> int:
 
     Args:
         section_key: The repeatable section a row is being added to.
-        present: Paths carrying a value, by the shared presence rule -- so a
-            row whose every field is blank is not a row here, and its index
-            is free to reuse.
+        present: Paths whose identities have been allocated, including clear
+            tombstones. A removed row's index stays occupied so a later add
+            cannot acquire an identity retained by an older reader.
 
     Returns:
         An index no existing row occupies: one above the highest in use, and
@@ -146,29 +208,18 @@ def add_profile_repeatable_section_row(
     authority operation; this operation does not consult bundled authoring
     data.
     """
-    section = schema.section(section_key)
-    if not section.repeatable:
-        raise ProfileSchemaValidationError("profile row mutation requires a schema-declared repeatable section")
+    section = _repeatable_section(schema, section_key)
     # Two different mistakes, refused apart. section_row_facts deliberately
     # ignores keys it does not declare, so a mistyped field used to arrive here
     # as "no populated field" -- which told an operator who had populated one
     # that they had not, and never mentioned the key that was wrong.
+    _validate_field_keys(section, values=values)
     declared = {field.key for field in section.fields}
-    unknown = tuple(sorted(key for key in values if key not in declared))
-    if unknown:
-        raise ProfileSchemaValidationError(
-            translated_message="application.user_profile.errors.row_unknown_field",
-            context={
-                "section": section.key,
-                "unknown": ", ".join(unknown),
-                "fields": ", ".join(sorted(declared)),
-            },
-        )
     current = ProfileRecordRepository.for_current_session(
         profile_id,
         profile_decode_context=profile_decode_context,
     ).load(profile_id)
-    row_index = next_section_row_index(section.key, record_to_path_values(current))
+    row_index = next_section_row_index(section.key, (fact.path for fact in current.facts))
     facts = section_row_facts(section, row_index=row_index, values=values)
     if not facts:
         raise ProfileSchemaValidationError(
@@ -179,14 +230,95 @@ def add_profile_repeatable_section_row(
         profile_id=profile_id,
         changes=facts,
         door=ProfileFactWriteDoor.MANAGER_ROW,
+        expected_record=current,
         profile_decode_context=profile_decode_context,
     )
     return ProfileRepeatableRowMutationOutcome(record=record, section_key=section.key, row_index=row_index)
 
 
+def update_profile_repeatable_section_row(
+    *,
+    profile_id: str,
+    section_key: str,
+    row_key: str,
+    values: Mapping[str, str],
+    clear_fields: Iterable[str],
+    schema: ProfileSchemaDefinition,
+    profile_decode_context: ProfileDecodeContext,
+) -> ProfileRepeatableRowChangeOutcome:
+    """Modify one stable row, retaining omissions and clearing only explicit fields."""
+    section = _repeatable_section(schema, section_key)
+    clears = _validate_field_keys(section, values=values, clear_fields=clear_fields)
+    if not values and not clears:
+        raise ProfileSchemaValidationError("repeatable-row update requires a value or explicit clear")
+    repository = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    )
+    current = repository.load(profile_id)
+    _require_existing_row(section.key, row_key, current)
+    changes = tuple(
+        UserProfileFact(path=_row_path(section.key, row_key, field.key), value=values[field.key].strip())
+        for field in section.fields
+        if field.key in values
+    ) + tuple(
+        UserProfileFact(path=_row_path(section.key, row_key, field.key), value=None)
+        for field in section.fields
+        if field.key in clears
+    )
+    record = apply_profile_fact_changes(
+        profile_id=profile_id,
+        changes=changes,
+        door=ProfileFactWriteDoor.MANAGER_ROW,
+        expected_record=current,
+        profile_decode_context=profile_decode_context,
+    )
+    return ProfileRepeatableRowChangeOutcome(
+        record=record,
+        section_key=section.key,
+        row_key=row_key,
+        changed=record.record_revision != current.record_revision,
+    )
+
+
+def remove_profile_repeatable_section_row(
+    *,
+    profile_id: str,
+    section_key: str,
+    row_key: str,
+    schema: ProfileSchemaDefinition,
+    profile_decode_context: ProfileDecodeContext,
+) -> ProfileRepeatableRowChangeOutcome:
+    """Remove one stable row by publishing explicit clear tombstones for its values."""
+    section = _repeatable_section(schema, section_key)
+    repository = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    )
+    current = repository.load(profile_id)
+    _require_existing_row(section.key, row_key, current)
+    present = record_to_path_values(current)
+    changes = tuple(
+        UserProfileFact(path=path, value=None)
+        for field in section.fields
+        if (path := _row_path(section.key, row_key, field.key)) in present
+    )
+    record = apply_profile_fact_changes(
+        profile_id=profile_id,
+        changes=changes,
+        door=ProfileFactWriteDoor.MANAGER_ROW,
+        expected_record=current,
+        profile_decode_context=profile_decode_context,
+    )
+    return ProfileRepeatableRowChangeOutcome(record=record, section_key=section.key, row_key=row_key, changed=True)
+
+
 __all__ = [
+    "ProfileRepeatableRowChangeOutcome",
     "ProfileRepeatableRowMutationOutcome",
     "add_profile_repeatable_section_row",
     "next_section_row_index",
+    "remove_profile_repeatable_section_row",
     "section_row_facts",
+    "update_profile_repeatable_section_row",
 ]

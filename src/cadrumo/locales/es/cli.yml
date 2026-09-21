@@ -347,8 +347,8 @@ cli:
           un cálculo de renta pueda fundamentarla.
         kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes
           a un proveedor)'
-        line_help: Objeto JSON repetible para una línea de factura; pase un objeto por
-          cada --line. Para la entrada estructurada sustituye a los campos escalares
+        line_help: Objeto JSON repetible para una línea de factura; pase un objeto
+          por cada --line. Para la entrada estructurada sustituye a los campos escalares
           --taxable-base y --iva-rate.
         list_help: Lista las facturas del catálogo de conciliación.
         operation_date_help: Fecha en que se realizo la entrega o prestación (AAAA-MM-DD).
@@ -1076,9 +1076,11 @@ cli:
         casilla_help: Valor de casilla con la sintaxis CASILLA_ID=DECIMAL (repetible).
         ccaa_help: Código de comunidad autónoma para la proyección territorial.
         no_m130_revisions: No existen revisiones borrador trimestrales del Modelo
-          130 para el ejercicio %{year}. Ejecuta antes `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T`.
+          130 para el ejercicio %{year}. Ejecuta antes `aeat app modelo work calculate
+          --modelo 130 --year %{year} --period 1T`.
         no_m130_units: No existen unidades de trabajo Modelo 130 en borrador para
-          el ejercicio %{year}. Crea antes una con `aeat app modelo work create --modelo 130 --year %{year} --period 1T`.
+          el ejercicio %{year}. Crea antes una con `aeat app modelo work create --modelo
+          130 --year %{year} --period 1T`.
         year_help: Ejercicio fiscal para la proyección.
       project_help: Ejecutar proyecciones agregadas de modelos (p. ej. agregación
         anual del Modelo 130).
@@ -2270,6 +2272,8 @@ cli:
           judicial -- el dato almacenado no permite distinguirlo de un hijo real.
           Confirme que este descendiente es un hijo, o indique la relación real con
           RELACION=.
+        guarderia_spend_shapes_conflict: Para un descendiente, declare GASTOS_GUARDERIA
+          o GASTOS_GUARDERIA_MENSUAL, pero no ambos.
         help: Declarar descendientes para el mínimo por descendientes del art. 58/61
           LIRPF.
         index_out_of_range: Índice %{index} fuera de rango; el perfil tiene %{total}
@@ -2277,12 +2281,15 @@ cli:
         invalid_flag: El valor de --descendiente no es válido. Cada fila debe declarar
           NACIMIENTO=YYYY-MM-DD; otras claves como RELACION, DISCAPACIDAD o CONVIVENCIA
           son opcionales.
-        guarderia_spend_shapes_conflict: Para un descendiente, declare GASTOS_GUARDERIA
-          o GASTOS_GUARDERIA_MENSUAL, pero no ambos.
         list_help: Listar los descendientes declarados en el perfil activo.
         remove_help: Eliminar un descendiente por índice (base 0) del perfil activo.
         remove_index_help: Índice (base 0) del descendiente a eliminar.
       edit_help: Vuelve a ejecutar el asistente sobre un perfil existente
+      edit_row:
+        clear_help: Campo declarado que se vacía de forma explícita; repítalo si es
+          necesario.
+        help: Modifica una fila identificada de una sección repetible del perfil.
+        value_help: Campo de fila como CAMPO=VALOR; repítalo para cada campo que cambie.
       help: Gestionar valores de configuración del perfil activo
       history:
         invalid_event_type: 'Tipo de evento desconocido: {value}. Tipos de evento
@@ -2350,6 +2357,14 @@ cli:
         verification_mismatch: El código introducido no coincide; no se registró nada.
         verification_prompt: 'Escribe el código de recuperación para confirmar que
           lo tienes: '
+      remove_row:
+        help: Elimina una fila identificada de una sección repetible del perfil.
+      row:
+        invalid_row: '''%{row}'' no es una clave de fila válida; use un entero no
+          negativo o base.'
+        row_help: Clave estable de la fila mostrada por profile view; use base para
+          la fila sin índice.
+        section_help: Clave de la sección repetible del perfil.
       sandbox:
         active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
           perfil real; todos los comandos se ejecutan contra este bucket aislado y
@@ -2819,9 +2834,9 @@ cli:
         automáticamente y no puede establecerse a mano. Elige una de: BUSINESS, PERSONAL,
         MIXED, u omite --classification para dejar la fila sin clasificar.'
       taxable_base_help: Importe de base imponible
-      usage_ratio_help: 'Identificador de una proporción de uso configurada, no texto
+      usage_ratio_help: Identificador de una proporción de uso configurada, no texto
         libre. Consulta las proporciones y categorías admitidas antes de crearla o
-        asignarla; la --category-id del movimiento debe tener ya esa proporción.'
+        asignarla; la --category-id del movimiento debe tener ya esa proporción.
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;

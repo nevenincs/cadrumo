@@ -444,6 +444,17 @@ class ConfigProfileAddRowResult(OutputSchema):
     content_digest: NonEmptyStr
 
 
+class ConfigProfileRowChangeResult(OutputSchema):
+    """Result of one update or removal of an identified repeatable row."""
+
+    profile_id: ProfileId
+    section: NonEmptyStr
+    row: NonEmptyStr
+    changed: bool
+    record_revision: PositiveCount
+    content_digest: NonEmptyStr
+
+
 class ConfigProfileValidateResult(OutputSchema):
     """JSON envelope for ``aeat config profile validate``.
 

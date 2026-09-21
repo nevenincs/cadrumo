@@ -1060,9 +1060,11 @@ cli:
         casilla_help: Mezőérték CASILLA_ID=DECIMAL szintaxissal (ismételhető).
         ccaa_help: Autonóm közösség kódja a területi vetítéshez.
         no_m130_revisions: Nincs negyedéves 130-as nyomtatvány piszkozat revízió a(z)
-          %{year} adóévre. Előbb futtasd az `aeat app modelo work calculate --modelo 130 --year %{year} --period 1T` parancsot.
+          %{year} adóévre. Előbb futtasd az `aeat app modelo work calculate --modelo
+          130 --year %{year} --period 1T` parancsot.
         no_m130_units: Nincs 130-as nyomtatvány piszkozat munkaegység a(z) %{year}
-          adóévre. Előbb hozd létre az `aeat app modelo work create --modelo 130 --year %{year} --period 1T` paranccsal.
+          adóévre. Előbb hozd létre az `aeat app modelo work create --modelo 130 --year
+          %{year} --period 1T` paranccsal.
         year_help: Adóév a vetítéshez.
       project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves 130-as nyomtatvány
         összesítés).
@@ -2242,20 +2244,24 @@ cli:
           kiskorú esetén -- a tárolt tény nem különbözteti meg őket egy valódi gyermektől.
           Erősítse meg, hogy ez a leszármazott gyermek, vagy adja meg a tényleges
           relációt a RELACION= mezővel.
+        guarderia_spend_shapes_conflict: Egy leszármazottnál a GASTOS_GUARDERIA vagy
+          a GASTOS_GUARDERIA_MENSUAL értéket adja meg, mindkettőt ne.
         help: Leszármazottak megadása a LIRPF 58/61. cikk szerinti leszármazotti minimumhoz.
         index_out_of_range: A(z) %{index} index tartományon kívül esik; a profilon
           %{total} leszármazott van.
         invalid_flag: A --descendiente értéke érvénytelen. Minden sornak tartalmaznia
           kell a NACIMIENTO=YYYY-MM-DD mezőt; a többi kulcs, például RELACION, DISCAPACIDAD
           vagy CONVIVENCIA, opcionális.
-        guarderia_spend_shapes_conflict: Egy leszármazottnál a GASTOS_GUARDERIA vagy a
-          GASTOS_GUARDERIA_MENSUAL értéket adja meg, mindkettőt ne.
         list_help: Az aktív profilon megadott leszármazottak listázása.
         remove_help: Egy leszármazott eltávolítása 0-alapú index szerint az aktív
           profilról.
         remove_index_help: Az eltávolítandó leszármazott 0-alapú indexe.
       edit_help: A varázsló újrafuttatása meglévő profil ellen, értékek frissítése
         helyben.
+      edit_row:
+        clear_help: Kifejezetten törlendő deklarált sormező; szükség szerint ismételhető.
+        help: Az ismételhető profilszakasz azonosított sorának módosítása.
+        value_help: Sormező MEZŐ=ÉRTÉK alakban; ismételje meg minden módosítandó mezőhöz.
       help: Aktív profilkonfigurációs értékek kezelése.
       history:
         invalid_event_type: 'Ismeretlen eseménytípus: {value}. Érvényes eseménytípusok:
@@ -2323,6 +2329,14 @@ cli:
         verification_mismatch: A begépelt kód nem egyezik; semmi sem lett rögzítve.
         verification_prompt: 'Gépeld vissza a helyreállítási kódot annak megerősítésére,
           hogy megvan: '
+      remove_row:
+        help: Az ismételhető profilszakasz azonosított sorának eltávolítása.
+      row:
+        invalid_row: A(z) '%{row}' nem érvényes sorkulcs; használjon nemnegatív egész
+          számot vagy base értéket.
+        row_help: A profile view által mutatott stabil sorkulcs; az index nélküli
+          sorhoz használja a base értéket.
+        section_help: Az ismételhető profilszakasz kulcsa.
       sandbox:
         active_indicator_info: A(z) %{label} homokozóban dolgozol, nem egy valódi
           profilban; minden parancs ebben az elkülönített, eldobható tárolóban fut.
@@ -2774,10 +2788,10 @@ cli:
         állítja be, kézzel nem adható meg. Válassz egyet: BUSINESS, PERSONAL, MIXED,
         vagy hagyd ki a --classification kapcsolót, hogy a sor besorolatlan maradjon.'
       taxable_base_help: ÁFA-mentes alapösszeg.
-      usage_ratio_help: 'Beállított használatiarány-azonosító, nem tetszőleges szöveg.
+      usage_ratio_help: Beállított használatiarány-azonosító, nem tetszőleges szöveg.
         Új arány létrehozása vagy hozzárendelése előtt ellenőrizze a beállított arányokat
         és a jogosult kategóriákat; a tétel --category-id kategóriájához már tartoznia
-        kell ennek az aránynak.'
+        kell ennek az aránynak.
       value_date_help: Értékdátum (ÉÉÉÉ-HH-NN).
     allocate:
       business_pct_help: Üzleti célú arány 0 és 1 között MIXED/arányos sorokhoz; teljesen
@@ -2882,12 +2896,12 @@ cli:
       help: Egyetlen főkönyvi tranzakció besorolása az aktív profilban.
       id_help: A besorolandó főkönyvi tranzakció azonosítója.
       id_required: Tranzakció-azonosító szükséges, ha a --file nincs megadva.
-      irpf_category_help: 'IRPF-kategória azonosítója. Nettó szakmai számlákhoz actividad_economica;
+      irpf_category_help: IRPF-kategória azonosítója. Nettó szakmai számlákhoz actividad_economica;
         nettó bérleti díjakhoz arrendamiento_local vagy arrendamiento_vivienda_afecto.
         A Royalties és az SGAE-bevétel capital mobiliario a LIRPF 25.4. cikke szerint,
         ha az adózó nem a szerző, és gazdasági tevékenység a LIRPF 27. cikke szerint,
-        ha az, és folytatja a tevékenységet. Az összes azonosítóért tekintse meg
-        a főkönyvi kategóriák katalógusát.'
+        ha az, és folytatja a tevékenységet. Az összes azonosítóért tekintse meg a
+        főkönyvi kategóriák katalógusát.
       iva_amount_help: IVA-összeg.
       iva_category_help: Explicit IVA-kategória felülbírálat erre a tranzakcióra (pl.
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
@@ -2999,8 +3013,8 @@ cli:
         között).
       unknown_category: 'Ismeretlen --category-id: {category!r}. Egyszerű kategóriaazonosítót
         adjon meg, például {example!r}, ne kategóriacsalád- előtaggal ellátott vagy
-        összetett kulcsot. A felismert azonosítókért tekintse meg a főkönyvi
-        kategóriák katalógusát.'
+        összetett kulcsot. A felismert azonosítókért tekintse meg a főkönyvi kategóriák
+        katalógusát.'
       unknown_provider: 'Ismeretlen importálási --provider {provider!r}. Elismert
         szolgáltatók: {providers}.'
     exclude:

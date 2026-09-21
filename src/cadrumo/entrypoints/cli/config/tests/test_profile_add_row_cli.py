@@ -126,3 +126,35 @@ def test_a_mistyped_field_and_an_all_blank_row_are_refused_apart() -> None:
     assert mistyped_context["unknown"] == "descripcion"
     assert "unknown" not in blank_context
     assert profile_facts() == before
+
+
+@pytest.mark.usefixtures("live_cli_profile")
+def test_row_edit_clear_remove_and_missing_row_are_atomic_and_survive_reopen() -> None:
+    """All row verbs share stable identity, explicit clears, and durable outcomes."""
+    added = profile_cli("add-row", "activities", "--value", "description=First")
+    assert added.exit_code == 0, added.output
+    row = str(json.loads(added.stdout)["result"]["row_index"])
+
+    edited = profile_cli("edit-row", "activities", row, "--value", "description=Changed")
+    assert edited.exit_code == 0, edited.output
+    assert json.loads(edited.stdout)["result"]["changed"] is True
+    assert profile_facts()[f"activities.{row}.description"] == "Changed"
+
+    no_op = profile_cli("edit-row", "activities", row, "--value", "description=Changed")
+    assert no_op.exit_code == 0, no_op.output
+    assert json.loads(no_op.stdout)["result"]["changed"] is False
+
+    cleared = profile_cli("edit-row", "activities", row, "--clear", "description")
+    assert cleared.exit_code == 0, cleared.output
+    assert f"activities.{row}.description" not in profile_facts()
+
+    missing = profile_cli("remove-row", "activities", row)
+    assert missing.exit_code == 2, missing.output
+    assert json.loads(missing.stderr)["error"]["context"] == {"row": row, "section": "activities"}
+
+    replacement = profile_cli("add-row", "activities", "--value", "description=Replacement")
+    replacement_row = str(json.loads(replacement.stdout)["result"]["row_index"])
+    assert int(replacement_row) > int(row)
+    removed = profile_cli("remove-row", "activities", replacement_row)
+    assert removed.exit_code == 0, removed.output
+    assert f"activities.{replacement_row}.description" not in profile_facts()
