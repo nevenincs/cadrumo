@@ -1,8 +1,8 @@
 # Calendar obligations checkpoint
 
-Status: partial. Session `calendar-obligations`; provider, lead model, cc number and UUID remain pending because the operator did not assign them. Worktree `Y:\code\cadrumo-worktrees\tui-modelo`, branch `tui/modelo`. Consumed CALENDAR-01 revision 0.1, session-policy revision 1.6 and ACCEPTANCE-01 revision 1.5.
+Status: complete. Session `calendar-obligations`; provider, lead model, cc number and UUID remain pending because the operator did not assign them. Worktree `Y:\code\cadrumo-worktrees\tui-modelo`, branch `tui/modelo`. Consumed CALENDAR-01 revision 0.1, session-policy revision 1.6 and ACCEPTANCE-01 revision 1.5.
 
-Approved plan: `2026-09-21-calendar-obligations-plan`, feature `calendar-obligations`. Next open Step: P02.S05. Governing accepted decisions are linked from the plan. Live AEAT access, environment setup, authentication, notification content opening, acknowledgement, response and filing submission remain excluded.
+Approved plan: `2026-09-21-calendar-obligations-plan`, feature `calendar-obligations`. All nine Steps are closed and the final integrated review is PASS. Governing accepted decisions are linked from the plan. Live AEAT access, environment setup, authentication, notification content opening, acknowledgement, response and filing submission remain excluded and NOT EXERCISED.
 
 Discovery: Luna Max `calendar_discovery` inspected the bounded calendar delta at HEAD `f72ef01f760f87bbe36e83016ed6393921335090` against anchor `bbbc47407efa8fb41ff16126c9fb08aea11ee723`. It found no calendar-path delta, identified raw-versus-adjusted status, historical applicability and cessation risks, and reported shared TUI composition collisions. No tests were run by discovery.
 
@@ -15,11 +15,13 @@ Completed commits:
 
 No live paths were exercised. Repository-wide Vaultspec check still has unrelated legacy errors; feature-local plan/schema/markdown checks were clean at the recorded Steps. The RAG service could not start because its installed interpreter lacks a supported accelerator; no environment repair was attempted.
 
-Next bounded actions:
+Completion evidence:
 
-1. P02.S05: inspect the existing event/document taxonomy only around notification-to-filing association; keep messages explicitly unlinked unless structured coordinates exist, and prove metadata projection cannot upgrade filing evidence or derive response deadlines.
-2. P02.S06: reuse `work_plazo` conditional surcharge posture; do not assess liability or conflate parsed sanction amounts.
-3. Run the P02 phase-close review, then P03 CLI, TUI and isolated synthetic parity Steps.
+1. `7303c28b91` closes P02.S05 with unlinked-notification and replay regressions.
+2. `e0d2d10681` closes P02.S06 with shared, unassessed conditional surcharge guidance.
+3. `b8518c1801` and `2ef234bd50` close the CLI and TUI projections.
+4. `4bc2828a49` plus `fc0a8e9766` close offline CLI/TUI parity and its ledger evidence.
+5. The bounded integrated run passed 97 application/CLI/acceptance tests and 18 TUI tests; the final audit commit is `f32d555a56`.
 
 Deferred capability: persistent notification-to-filing association remains outside
 this plan. P02.S05 requires notifications without authoritative filing coordinates
