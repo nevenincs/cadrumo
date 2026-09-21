@@ -25,7 +25,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:bd2b1db5fa32ef4cca9fd94a349097af99cad3121635fc54dd1fc3101815a293'
+body_hash: 'sha256:517d81761751fc4544d19f280e97b8be60ceb8f85f125071c2b040504d084cfc'
 ---
 
 # `income-tax-workflow` plan
@@ -48,7 +48,7 @@ The versioned synthetic scenario and independent oracle are the single source fo
 
 Pin the latest completed year, compatible Modelo 130 and Modelo 100 revisions, authority generation, and actual export capability before building frontend journeys.
 
-- [ ] `P01.S01` - Resolve and report the latest completed supported income-tax year, pinned authority generation, compatible revisions, and Modelo 100 Aux/VERSION export admission without filtering gaps; `dev/acceptance/income_tax/** and owning registry/export tests`.
+- [x] `P01.S01` - Resolve and report the latest completed supported income-tax year, pinned authority generation, compatible revisions, and Modelo 100 Aux/VERSION export admission without filtering gaps; `dev/acceptance/income_tax/** and owning registry/export tests`.
 
 ### Phase `P02` - Define shared scenario and prove CLI
 
