@@ -12,7 +12,7 @@ related:
   - '[[2026-08-19-profile-setup-completion-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:d49a8d391b177db4813b432bd23f81a896615c1f0c43c3f1b42e4ba0b14812f9'
+body_hash: 'sha256:a574012e14df854178b839a31e885ed284f3d7707fa5a1cc3980654971751c7b'
 ---
 
 # `taxpayer-profile` plan
@@ -34,7 +34,7 @@ Accepted decisions already govern profile session identity, encrypted semantic r
 Establish current source ownership, frontend writer coverage, one filing-critical fact trace, and reproducible gaps before any product fix.
 
 - [x] `P01.S01` - Record bounded delta, ownership coordination, and profile field writer consumer matrix; `.agents/session-briefs/handoffs/2026-09-21-taxpayer-profile-checkpoint.md`.
-- [ ] `P01.S02` - Add focused synthetic reproductions for clearing, stale writes, entity switching, and frontend writer gaps; `profile application, CLI config, and TUI test areas`.
+- [x] `P01.S02` - Record focused synthetic reproductions for clearing, stale writes, entity switching, census precedence, and frontend writer gaps; `.agents/session-briefs/handoffs/2026-09-21-taxpayer-profile-checkpoint.md`.
 - [ ] `P01.S03` - Establish current versus historical filing context and escalate any undefined temporal contract; `profile binding and profile projection modules`.
 
 ### Phase `P02` - repair canonical backend profile contracts

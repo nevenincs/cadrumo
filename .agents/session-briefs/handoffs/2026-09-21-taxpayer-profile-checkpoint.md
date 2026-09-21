@@ -44,3 +44,19 @@ PR1-PR12 are not exercised. Source evidence supports existing shared writers, en
 - P01.S02: add exact synthetic reproductions for explicit clear versus older dated value, stale CAS writes, in-flight user switch, census precedence, and representative typed TUI editors. Reserve only the selected nodes before running them.
 - P01.S03: inspect current filing/profile snapshot callers and calendar ownership, then issue a decision packet if earlier-period evaluation cannot be expressed without new temporal semantics.
 - Do not edit dirty Modelo, persistence namespace, launcher, or tax-lane files until their active owner confirms transfer or a disjoint insertion point.
+
+## Verification reservations
+
+- Owner `taxpayer-profile` / root; reserved 2026-09-21; status queued: direct clear-after-dated-value projection probe using synthetic `UserProfileFact` values only.
+- Owner `taxpayer-profile` / root; reserved 2026-09-21; status queued: `uv run pytest -n 0` for `test_effective_window_end_is_reported_not_enforced.py::test_a_closed_window_still_projects_its_value`, `test_profile_edit_verb.py::test_a_blank_optional_flag_clears_the_fact_and_records_one_change`, `test_pointer_transition_authority.py::test_real_child_a_to_b_to_a_advances_every_transition_and_refuses_stale_aba`, `test_censo_pull_verb.py::test_a_clear_and_a_value_conflict_raise_separate_notices`, `test_manager_field_editors.py::test_a_date_box_says_which_layout_it_wants`, and `test_app.py::test_change_user_returns_typed_identity_and_revokes_old_profile_root`. No aggregate lane is reserved.
+
+## P01.S02 reproduction results
+
+- Explicit clear after an older dated value: **failed/reproduced**. A temporary exact regression asserted that a 2021 `value=None` fact removes `contact.postcode` after a 2019 value. `record_to_path_values` returned `28001`; pytest exited 1 with 1 failed. Sanitized run metadata: `20260921T152855.776195Z-pytest-30676-c63fa612/run.json`. The temporary test was removed; the permanent test must land with the P02 projection fix.
+- Stale selection/CAS foundations: **proven at focused unit level**. Pointer A-to-B-to-A stale ABA refusal passed. `ProfileRecordRepository.apply_fact_changes` independently compares expected revision and digest before replacement; a profile-switch-specific in-flight integration remains missing.
+- Entity switching: **partial**. The focused TUI handover test passed and proves a successful F5 outcome revokes the old composed catalogue/search root and returns the new immutable profile identity. It does not start a profile write before F5, so the brief's in-flight-write transition remains not exercised and is assigned to P03.S07.
+- Census precedence and clear visibility: **proven at focused entrypoint level**. The exact CLI notice test passed: an explicit clear and an ordinary value conflict remain separate outcomes. Source inspection confirms reconciliation consumes `record_to_effective_facts`, so it sees the latest clear and does not share the value-projection defect.
+- CLI clear and TUI date usability: **proven at focused entrypoint level**. CLI blank optional edit persisted an explicit clear and one change; the TUI date editor exposed the required date layout. Collection row creation/removal, numeric units, and installed continuation remain not exercised.
+- First reserved command selected three unit nodes and deselected the three integration nodes under the repository default marker expression: 3 passed, 3 deselected, exit 0, metadata `20260921T152912.909723Z-pytest-17540-4811be5e/run.json`. The explicit `-m integration` follow-up ran the three previously deselected exact nodes: 3 passed, exit 0, metadata `20260921T152929.219311Z-pytest-56856-ee8dfe50/run.json`.
+
+Reservations above are released. No aggregate gate or shared external resource was used.
