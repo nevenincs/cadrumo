@@ -185,10 +185,7 @@ def apply_manager_profile_field_mutation(
     if (
         expected_revision is not None
         and expected_content_digest is not None
-        and (
-            current.record_revision != expected_revision
-            or current.content_digest != expected_content_digest
-        )
+        and (current.record_revision != expected_revision or current.content_digest != expected_content_digest)
     ):
         from .capsule_record import ProfileRecordConflictError
 

@@ -448,9 +448,7 @@ async def test_a_write_failing_wordlessly_is_named_rather_than_shown_blank(tmp_p
     otherwise pass on the other's test.
     """
 
-    def _persist_wordlessly(
-        path: str, value: str, _expected_revision: int, _expected_content_digest: str
-    ):
+    def _persist_wordlessly(path: str, value: str, _expected_revision: int, _expected_content_digest: str):
         raise RuntimeError
 
     with isolated_profile_storage_root(tmp_path=tmp_path):

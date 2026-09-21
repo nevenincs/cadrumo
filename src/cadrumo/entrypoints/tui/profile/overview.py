@@ -279,10 +279,7 @@ class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
             field
             for index, field in enumerate(section.fields)
             if field.path.rsplit(".", 1)[-1]
-            not in {
-                earlier.path.rsplit(".", 1)[-1]
-                for earlier in section.fields[:index]
-            }
+            not in {earlier.path.rsplit(".", 1)[-1] for earlier in section.fields[:index]}
         )
 
     @override
@@ -445,8 +442,7 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         *,
         persist: Callable[[str, str, int, str], ProfileOverview],
         add_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None,
-        update_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview]
-        | None = None,
+        update_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview] | None = None,
         remove_row: Callable[[str, str, int, str], ProfileOverview] | None = None,
         complete_setup: Callable[[], ProfileOverview] | None = None,
         validate: Callable[[str, str], str | None] | None = None,
@@ -681,11 +677,7 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         if field is None:
             return None
         candidate = self._row_key_for_field(section, field)
-        group = tuple(
-            item
-            for item in section.fields
-            if self._row_key_for_field(section, item) == candidate
-        )
+        group = tuple(item for item in section.fields if self._row_key_for_field(section, item) == candidate)
         return candidate if any(item.present for item in group) else None
 
     @staticmethod
@@ -1035,9 +1027,7 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         if section is not None and section.repeatable:
             row_key = self._row_key_for_field(section, field)
             row_fields = tuple(
-                candidate
-                for candidate in section.fields
-                if self._row_key_for_field(section, candidate) == row_key
+                candidate for candidate in section.fields if self._row_key_for_field(section, candidate) == row_key
             )
             if not any(candidate.present for candidate in row_fields):
                 # The unfilled group is the section's add affordance, not an

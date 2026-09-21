@@ -97,8 +97,7 @@ def compose_account_factories(
     profile_overview: ProfileOverview,
     persist_profile_field: Callable[[str, str, int, str], ProfileOverview],
     add_profile_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None,
-    update_profile_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview]
-    | None = None,
+    update_profile_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview] | None = None,
     remove_profile_row: Callable[[str, str, int, str], ProfileOverview] | None = None,
     login_choices: Sequence[ProfileLoginChoice],
     authenticate: Callable[[str, str], ProfileLoginAttempt],

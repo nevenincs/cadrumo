@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:d17f3ff57c50f09cfdd1e43e17fe9331e35b1a2605ea829bb9b53fa070ab28a7'
+body_hash: 'sha256:2682e42fb1cfe8cdb75c5f3f27f5df5b6489a4bc7e0d17e49b8af58373a62a4e'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -88,6 +88,12 @@ related:
 - `S11` `verify:` `integrated-profile-review-no-critical-high` -> `pass`
 - `S10` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_acquisition_launch_write_serialisation.py`
 - `S10` `verify:` `targeted-ruff-ty` -> `pass`
+- `S10` `M` `.importlinter`
+- `S10` `M` `src/cadrumo/application/user_profile/fact_write.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/account.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_generation_composition.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_screen.py`
 
 ## Notes
 
@@ -104,4 +110,5 @@ related:
 - `S10` canonical import gate stable but failed on 10 external findings; no PROFILE-01 occurrence
 - `S11` plan handoff cannot close while required repository import gate remains red outside PROFILE-01
 - `S10` target canonical import gate exit 7: external findings and concurrent source drift; no PROFILE-01 finding
+- `S10` stable repository gates at snapshot 1f0761810f remain red; classified external findings pending owners
 
