@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:ba5d59f40ad0f5cc4f0cfb487bc3fdd9e29a483fdd9ba41da62a7c0f1e5d5e10'
+body_hash: 'sha256:c8795375462783580026fee98127518f25ac87189c99a44dbcdcb3efc2052718'
 related:
   - "[[2026-09-21-calendar-obligations-plan]]"
 ---
@@ -41,3 +41,10 @@ related:
 - `S03` `verify:` `uv run ty check deadline engine` -> `pass`
 - `S03` `verify:` `uv run pytest -n 0 deadline engine lifecycle rereview` -> `pass`
 - `S03` `A` `.vault/audit/2026-09-21-calendar-obligations-audit.md`
+- `S04` `M` `src/cadrumo/application/modelo/declarations_calendar.py`
+- `S04` `M` `src/cadrumo/application/modelo/tests/test_declarations_calendar.py`
+- `S04` `M` `src/cadrumo/entrypoints/tui/declarations/tests/calendar_fixtures.py`
+- `S04` `verify:` `uv run pytest -n 0 declarations calendar application and TUI` -> `pass`
+- `S04` `verify:` `uv run ruff check declarations calendar files` -> `pass`
+- `S04` `verify:` `uv run ruff and ty check declarations calendar` -> `pass`
+

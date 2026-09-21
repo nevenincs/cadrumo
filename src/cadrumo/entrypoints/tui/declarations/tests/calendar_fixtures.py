@@ -50,13 +50,18 @@ def calendar_row(
         filing_year=2026,
         period=Period.from_year_and_code(2026, period_code),
         opens_on=closes.replace(day=1),
+        closes_on=closes,
         adjusted_closes_on=closes,
+        shift_reason="fixture",
         payment_cutoff_on=closes.replace(day=max(1, closes.day - 5)),
+        evaluated_on=date(2026, 9, 3),
+        days_overdue=(date(2026, 9, 3) - closes).days if legal is ObligationStatus.OVERDUE else None,
         legal_status=legal,
         user_state=user,
         local_filing_state=local,
         aeat_submission_state=aeat,
         justificante_verified=None if aeat is None else False,
+        evidence_conflicted=False,
         source=OverviewCalendarEntrySource.REGISTRY_DEADLINE,
     )
 

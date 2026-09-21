@@ -175,11 +175,15 @@ def test_exact_source_axis_matrix_and_safe_full_row_are_preserved() -> None:
     )
     row = projection.entries[0]
     assert row.semantic_key() == ("303", 2026, "1T")
-    assert (row.opens_on, row.adjusted_closes_on, row.payment_cutoff_on) == (
+    assert (row.opens_on, row.closes_on, row.adjusted_closes_on, row.payment_cutoff_on) == (
         date(2026, 4, 1),
+        date(2026, 4, 20),
         date(2026, 4, 20),
         None,
     )
+    assert row.evaluated_on == date(2026, 1, 1)
+    assert row.days_overdue is None
+    assert row.evidence_conflicted is False
     assert row.legal_status is ObligationStatus.UPCOMING
     assert row.user_state is OverviewPeriodState.DUE
     assert row.local_filing_state is OverviewLocalFilingState.READY_TO_FILE

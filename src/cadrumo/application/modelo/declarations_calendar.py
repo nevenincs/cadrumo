@@ -111,13 +111,18 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     filing_year: FilingYear
     period: Period
     opens_on: date
+    closes_on: date
     adjusted_closes_on: date
+    shift_reason: str
     payment_cutoff_on: date | None = None
+    evaluated_on: date
+    days_overdue: NonNegativeInt | None = None
     legal_status: ObligationStatus
     user_state: OverviewPeriodState
     local_filing_state: OverviewLocalFilingState | None
     aeat_submission_state: OverviewAeatSubmissionState | None
     justificante_verified: bool | None
+    evidence_conflicted: bool
     source: OverviewCalendarEntrySource
     recovery_action: DeclaredNextAction | None = Field(default=None, exclude=True, repr=False)
 
@@ -128,6 +133,8 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
             raise ValueError("calendar natural address year and period disagree")
         if self.opens_on > self.adjusted_closes_on:
             raise ValueError("calendar opening cannot follow its adjusted close")
+        if self.closes_on > self.adjusted_closes_on:
+            raise ValueError("calendar original close cannot follow its adjusted close")
         if self.payment_cutoff_on is not None and self.payment_cutoff_on > self.adjusted_closes_on:
             raise ValueError("calendar payment cutoff cannot follow its adjusted close")
         expected_user_state = {
@@ -140,6 +147,12 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
         }[self.legal_status]
         if self.user_state is not expected_user_state:
             raise ValueError("calendar legal status and user state disagree")
+        expected_days_overdue = max(0, (self.evaluated_on - self.adjusted_closes_on).days)
+        if self.legal_status is ObligationStatus.OVERDUE:
+            if self.days_overdue != expected_days_overdue or expected_days_overdue == 0:
+                raise ValueError("calendar overdue age must measure the effective close")
+        elif self.days_overdue is not None:
+            raise ValueError("calendar overdue age is only valid for an overdue obligation")
         if self.aeat_submission_state is None:
             if self.justificante_verified is not None:
                 raise ValueError("unknown AEAT evidence cannot carry justificante certainty")
@@ -332,13 +345,18 @@ def _project_calendar_row(
         filing_year=entry.period.filing_year,
         period=entry.period,
         opens_on=entry.opens_on,
+        closes_on=entry.closes_on,
         adjusted_closes_on=entry.adjusted_closes_on,
+        shift_reason=entry.shift_reason,
         payment_cutoff_on=entry.payment_cutoff_on,
+        evaluated_on=entry.evaluated_on,
+        days_overdue=entry.days_overdue,
         legal_status=entry.status,
         user_state=entry.user_state,
         local_filing_state=local_filing_state,
         aeat_submission_state=aeat_submission_state,
         justificante_verified=justificante_verified,
+        evidence_conflicted=bool(authority.aeat_evidence_conflict_reference_ids),
         source=entry.source,
         recovery_action=entry.recovery_action,
     )
