@@ -8,7 +8,8 @@ from pydantic import BaseModel, Field
 
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period
-from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
+from ....domain.calculations.registry.actividad_asset_bindings import ActivityAssetAuthoritySelection
+from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 
 
@@ -31,20 +32,15 @@ class ActivityAssetForecastRequestV1(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
     asset_id: str = Field(min_length=1, max_length=128)
-    regime: str = Field(min_length=1, max_length=32)
-    asset_kind: AssetKind
-    authority_class_key: str = Field(min_length=1, max_length=128)
+    selection: ActivityAssetAuthoritySelection
     covered_from: date
     covered_until: date
 
 
-class ActivityAssetAuthorityInputV1(BaseModel):
-    """Frontend authority coordinates with no caller-authored rate."""
+class ActivityAssetAuthorityInputV1(ActivityAssetAuthoritySelection):
+    """Strict TUI transport over the canonical rate-free authority selection."""
 
     model_config = STRICT_FROZEN_CONFIG
-    regime: str = Field(min_length=1, max_length=32)
-    asset_kind: AssetKind
-    authority_class_key: str = Field(min_length=1, max_length=128)
 
 
 class ActivityAssetClaimRequestV1(BaseModel):

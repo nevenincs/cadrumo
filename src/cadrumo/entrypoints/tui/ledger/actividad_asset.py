@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import date
 from typing import override
 
@@ -11,6 +12,8 @@ from textual.widgets import Button, Input, Static
 
 from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operations import ActivityAssetFilingHandoff, ActivityAssetOperations
+from ....core.period import Period
+from ....domain.calculations.registry.actividad_asset_bindings import ActivityAssetAuthoritySelection
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
@@ -23,6 +26,14 @@ from .models_actividad_asset import (
     ActivityAssetForecastRequestV1,
     ActivityAssetInspectionV1,
 )
+
+
+@dataclass(frozen=True, slots=True)
+class _ActivityAssetScreenResult:
+    """One shared-operation response projected into public screen controls."""
+
+    message: str
+    current_revision_id: str | None = None
 
 
 class ActivityAssetTuiActionsV1:
@@ -48,11 +59,9 @@ class ActivityAssetTuiActionsV1:
 
     def forecast(self, request: ActivityAssetForecastRequestV1) -> ScheduledAmortizationCharge:
         """Preview a schedule through the application boundary."""
-        return self._operations.forecast_selected(
+        return self._operations.forecast(
             asset_id=request.asset_id,
-            regime=request.regime,
-            asset_kind=request.asset_kind,
-            authority_class_key=request.authority_class_key,
+            selection=ActivityAssetAuthoritySelection.model_validate(request.selection.model_dump()),
             covered_from=request.covered_from,
             covered_until=request.covered_until,
         )
@@ -90,12 +99,16 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         yield Button("Crear", id="asset-create")
         yield Button("Inspeccionar", id="asset-inspect")
         yield Button("Corregir", id="asset-correct")
+        yield Static("", id="asset-current-revision-id", markup=False)
         yield Input(placeholder="Selección de autoridad (JSON)", id="asset-selection-json")
         yield Input(value="2025-01-01", id="asset-covered-from")
         yield Input(value="2026-01-01", id="asset-covered-until")
         yield Button("Calcular previsión", id="asset-forecast")
         yield Input(value="actividad_asset.tui.claim", id="asset-creating-operation")
         yield Button("Registrar amortización", id="asset-claim")
+        yield Input(value="2025", id="asset-filing-tax-year")
+        yield Input(value="4T", id="asset-filing-m130-period")
+        yield Button("Preparar traslado a modelos", id="asset-filing-handoff")
         yield Static("", id="asset-result", markup=False)
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
@@ -103,25 +116,31 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         try:
             result = await asyncio.to_thread(self._dispatch, event.button.id)
         except (ValueError, RuntimeError) as exc:
-            result = f"refused\t{exc}"
-        self.query_one("#asset-result", Static).update(result)
+            self.query_one("#asset-result", Static).update(f"refused\t{exc}")
+            return
+        self.query_one("#asset-result", Static).update(result.message)
+        if result.current_revision_id is not None:
+            self.query_one("#asset-current-revision-id", Static).update(
+                f"current_revision_id\t{result.current_revision_id}"
+            )
 
-    def _dispatch(self, button_id: str | None) -> str:
+    def _dispatch(self, button_id: str | None) -> _ActivityAssetScreenResult:
+        """Delegate one public action, retaining no screen-local tax arithmetic."""
         asset_id = self.query_one("#asset-id", Input).value
         revision_json = self.query_one("#asset-revision-json", Input).value
         if button_id == "asset-create":
             result = self._actions.create(
                 ActivityAssetCreationRequestV1(revision=ActivityAssetRevision.model_validate_json(revision_json)),
             )
-            return f"created\t{result.asset_id}\trevisions={len(result.revisions)}"
+            return self._inspection_result(prefix="created", result=result)
         if button_id == "asset-inspect":
             result = self._actions.inspect(asset_id)
-            return f"asset\t{result.asset_id}\trevisions={len(result.revisions)}"
+            return self._inspection_result(prefix="asset", result=result)
         if button_id == "asset-correct":
             result = self._actions.correct(
                 ActivityAssetCorrectionRequestV1(revision=ActivityAssetRevision.model_validate_json(revision_json)),
             )
-            return f"corrected\t{result.asset_id}\trevisions={len(result.revisions)}"
+            return self._inspection_result(prefix="corrected", result=result)
         if button_id == "asset-forecast":
             selection = ActivityAssetAuthorityInputV1.model_validate_json(
                 self.query_one("#asset-selection-json", Input).value,
@@ -129,14 +148,14 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             self._last_forecast = self._actions.forecast(
                 ActivityAssetForecastRequestV1(
                     asset_id=asset_id,
-                    regime=selection.regime,
-                    asset_kind=selection.asset_kind,
-                    authority_class_key=selection.authority_class_key,
+                    selection=selection,
                     covered_from=date.fromisoformat(self.query_one("#asset-covered-from", Input).value),
                     covered_until=date.fromisoformat(self.query_one("#asset-covered-until", Input).value),
                 ),
             )
-            return f"forecast\t{self._last_forecast.amount}\t{self._last_forecast.source_reference}"
+            return _ActivityAssetScreenResult(
+                message=f"forecast\t{self._last_forecast.amount}\t{self._last_forecast.source_reference}"
+            )
         if button_id == "asset-claim":
             if self._last_forecast is None:
                 raise ValueError("calculate a forecast before recording a claim")
@@ -146,8 +165,38 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                     creating_operation=self.query_one("#asset-creating-operation", Input).value,
                 ),
             )
-            return f"claim\t{result.claim.claim_id}\treused={str(result.reused_existing_claim).lower()}"
+            return _ActivityAssetScreenResult(
+                message=f"claim\t{result.claim.claim_id}\treused={str(result.reused_existing_claim).lower()}"
+            )
+        if button_id == "asset-filing-handoff":
+            tax_year = int(self.query_one("#asset-filing-tax-year", Input).value)
+            m130_period = Period.from_year_and_code(
+                tax_year,
+                self.query_one("#asset-filing-m130-period", Input).value,
+            )
+            result = self._actions.filing_handoff(
+                ActivityAssetFilingRequestV1(tax_year=tax_year, m130_period=m130_period),
+            )
+            return _ActivityAssetScreenResult(
+                message=(
+                    "filing_handoff"
+                    f"\tm100_material={result.material_m100.amount}"
+                    f"\tm100_intangible={result.intangible_m100.amount}"
+                    f"\tm130_material={result.material_m130.amount}"
+                    f"\tm130_intangible={result.intangible_m130.amount}"
+                )
+            )
         raise ValueError("unknown activity-asset action")
+
+    @staticmethod
+    def _inspection_result(*, prefix: str, result: ActivityAssetInspectionV1) -> _ActivityAssetScreenResult:
+        """Project the current immutable revision identity alongside its count."""
+        if not result.revisions:  # pragma: no cover - application inspection invariant
+            raise RuntimeError("activity-asset inspection returned no current revision")
+        return _ActivityAssetScreenResult(
+            message=f"{prefix}\t{result.asset_id}\trevisions={len(result.revisions)}",
+            current_revision_id=result.revisions[-1].revision_id,
+        )
 
 
 __all__ = ["ActivityAssetScreen", "ActivityAssetTuiActionsV1"]
