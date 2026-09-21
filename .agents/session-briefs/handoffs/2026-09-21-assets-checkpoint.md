@@ -1,7 +1,7 @@
 # ASSETS-01 implementation checkpoint
 
 Updated: 2026-09-21
-Status: implementation active; P01-P03, P04.S07, and P05.S09-S10 complete and reviewed; integrated export and installed acceptance remain open
+Status: implementation and acceptance complete; AS1-AS12 proven
 
 ## Session identity
 
@@ -21,6 +21,11 @@ Status: implementation active; P01-P03, P04.S07, and P05.S09-S10 complete and re
 - P04 reciprocal IVA linkage commit: `55a2db2be2`
 - P05 shared CLI/TUI operations commit: `d155360719`
 - AS7 free-depreciation implementation commit: `5b0d03887a`
+- IVA readiness/source-mesh repair commit: `d7fa2d1d33`
+- TUI operation parity commits: `2a15e04fe5`, `b08f1b79a8`
+- Strict CLI payload commit: `3ed255ad7a`
+- Installed export acceptance commit: `aea0c84f74`
+- Installed TUI continuation acceptance commit: `c207d15e1d`
 - Brief source anchor: `b5920969129a85b22c448fc8cdd6ae6c8d468a11`
 
 ## Goal and acceptance state
@@ -35,9 +40,9 @@ expenses, separates material/intangible destinations, and refuses the matching
 full-cost ledger deduction. P04 adds reciprocal canonical IVA linkage without
 coupling the stores. P05 exposes shared create, inspect, correct, forecast, claim,
 and filing-handoff operations through CLI and TUI without frontend arithmetic.
-The conservative matrix is: AS3, AS4, AS5, AS6, AS7, AS8, and AS10 proven; AS1, AS2,
-AS9, AS11, and AS12 blocked. No completed installed asset journey or
-validated official export is claimed.
+The current matrix is AS1-AS12 proven. Installed TUI-to-CLI and CLI-to-TUI
+continuations completed over separate encrypted stores, and the asset-derived
+Modelo 100 artifact passed the pinned official 2025 XSD.
 
 ## Discovery and decision coverage
 
@@ -71,10 +76,11 @@ validated official export is claimed.
   edits until the coordinator assigns ownership.
 - No new universal ledger, duplicate calculator, tax table, plaintext asset store,
   CLI-to-TUI import, or frontend-local arithmetic may be introduced.
-- Latest completed year remains 2025 and must be resolved programmatically with
-  actual authority capability; this checkpoint does not claim filing-grade support.
+- Latest completed year remains 2025 and is resolved programmatically from the
+  published authority capability. Filing-grade support is claimed only for the
+  validated 2025 paths recorded below.
 
-## Gate and next bounded action
+## Final integrated evidence
 
 The administrative dispatch gate was superseded by the user's assets-core
 implementation authorization. The lifecycle ADR and its accepted cost-basis
@@ -88,7 +94,24 @@ passed 11 asset resolver/source-mesh tests and 44 surrounding regressions. P04.S
 passed four focused linkage tests. P05 lead checks passed 11 focused shared-operation,
 CLI, TUI, and evidence tests plus Ruff, `ty`, BasedPyright, and diff hygiene. The
 installed wheel exposes the complete `actividad-asset` command group and imports
-from site-packages, but the isolated TUI child produced no terminal result. P04.S08
-and AS12 remain blocked on the shared filing/export owner's active changes; AS11
-remains blocked until independent installed CLI/TUI process journeys terminate and
-prove both continuation directions over isolated encrypted stores.
+from site-packages. The final installed authority is logical generation
+`065049eb22e4a46f70281b940b5ce9ffeb2564adce39e050665d6fa370f21a98`
+with database SHA-256
+`fc63cb9dcf7162cc19a2855a6e6040068f0bd9706be6595b079dcc07d706f462`;
+the focused asset authority/runtime suite passed 10 tests against it.
+
+The installed export journey recorded one EUR 300 claim, calculated M130 Q4
+income EUR 12,000 and expenses EUR 2,700 (EUR 2,400 control plus the claim),
+populated M100 material amortization EUR 300 and intangible amortization EUR 0,
+and produced a 2,490-byte XML artifact that passed the pinned official 2025 XSD
+without errors. Its XML SHA-256 is
+`f3dab3814c905cba8038fa902f6ce5d42c1d59a440747430c827ea0a27dc596a`.
+
+The installed TUI lifecycle completed public setup, creation, inspection,
+correction, forecast, initial claim, idempotent replay, filing handoff and clean
+exit. A fresh TUI process reconstructed the history; installed CLI continuation
+then inspected two revisions and returned EUR 180 material M100/M130 projections.
+The reverse scenario created one revision through installed CLI and a fresh TUI
+process read it back with the canonical revision identity. Neither scenario timed
+out or required forced cleanup. The repaired live IVA source-mesh fixture resolves
+casilla 43 to EUR 200 and retains the negative incomplete-profile refusal.

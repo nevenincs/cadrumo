@@ -29,15 +29,20 @@ class AssetAcceptanceEvidence:
 ASSET_ACCEPTANCE_EVIDENCE: tuple[AssetAcceptanceEvidence, ...] = (
     AssetAcceptanceEvidence(
         "AS1",
-        AcceptanceStatus.BLOCKED,
-        ("encrypted history restart reconstruction proven", "CLI and TUI create operations registered"),
-        "installed frontend-to-encrypted-store restart journey has not been executed",
+        AcceptanceStatus.PROVEN,
+        (
+            "installed TUI creates and corrects encrypted asset history through public operations",
+            "a fresh installed TUI process reconstructs the two-revision history and canonical revision identity",
+        ),
     ),
     AssetAcceptanceEvidence(
         "AS2",
-        AcceptanceStatus.BLOCKED,
-        ("ordinary expense, resale stock, and unsafe full-cost regression are pinned",),
-        "installed classification-to-asset journey remains unexercised",
+        AcceptanceStatus.PROVEN,
+        (
+            "ordinary expense, resale stock, and unsafe full-cost regression are pinned",
+            "installed filing calculation adds the single EUR 300 claim to total expenses and the material destination "
+            "without consuming acquisition cost twice",
+        ),
     ),
     AssetAcceptanceEvidence(
         "AS3",
@@ -74,12 +79,11 @@ ASSET_ACCEPTANCE_EVIDENCE: tuple[AssetAcceptanceEvidence, ...] = (
     ),
     AssetAcceptanceEvidence(
         "AS9",
-        AcceptanceStatus.BLOCKED,
+        AcceptanceStatus.PROVEN,
         (
             "reciprocal linkage and the independent initial-deduction, regularization, disposal, "
             "and missing-facts rules are tested",
         ),
-        "the live source-mesh integration fixture does not satisfy the required taxpayer-profile readiness contract",
     ),
     AssetAcceptanceEvidence(
         "AS10",
@@ -88,15 +92,20 @@ ASSET_ACCEPTANCE_EVIDENCE: tuple[AssetAcceptanceEvidence, ...] = (
     ),
     AssetAcceptanceEvidence(
         "AS11",
-        AcceptanceStatus.BLOCKED,
-        ("direct CLI-only/TUI-only creation and both continuation directions pass through shared operations",),
-        "independent installed-process journeys over isolated encrypted stores have not been executed",
+        AcceptanceStatus.PROVEN,
+        (
+            "installed TUI-to-CLI continuation preserves two revisions and the EUR 180 non-consuming handoff",
+            "installed CLI-to-TUI continuation exposes the asset and canonical revision identity in a fresh process",
+        ),
     ),
     AssetAcceptanceEvidence(
         "AS12",
-        AcceptanceStatus.BLOCKED,
-        ("claim projections retain pinned authority and source provenance",),
-        "asset-derived validated official export journey is owned by the shared exporter and remains unexercised",
+        AcceptanceStatus.PROVEN,
+        (
+            "claim projections retain pinned authority and source provenance",
+            "installed M130/M100 calculation carries one EUR 300 claim and the generated Modelo 100 XML passes "
+            "the pinned official 2025 XSD",
+        ),
     ),
 )
 
