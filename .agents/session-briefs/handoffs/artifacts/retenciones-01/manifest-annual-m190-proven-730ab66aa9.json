@@ -1,0 +1,111 @@
+{
+  "artifact_schema_version": "retenciones-01-installed-annual-m190-proof-v1",
+  "brief": {
+    "id": "RETENCIONES-01",
+    "revision": "0.2"
+  },
+  "acceptance_pattern": {
+    "id": "ACCEPTANCE-01",
+    "revision": "1.6"
+  },
+  "authority": {
+    "logical_generation": "db354561492ec6670dc775f9dd7fa24526098b74ab6b86dac0d5134df16430b4",
+    "database": "authority-42e5e11abb0fe17de0fbd5aebb2b3d9e425c2c6aa3b07d772ff575bd6b8f03b6.sqlite3",
+    "database_sha256": "42e5e11abb0fe17de0fbd5aebb2b3d9e425c2c6aa3b07d772ff575bd6b8f03b6"
+  },
+  "installed_product": {
+    "source_commit": "730ab66aa919cd678e3f7a95d68ad22a597d13cd",
+    "source_identity": "730ab66aa919cd678e3f7a95d68ad22a597d13cd",
+    "wheel_sha256": "fb57c3348a1ebec6682545d59f2ad2fccf77a0bd6fccc57415643cfc57555e17",
+    "wheel_bytes": 67671110,
+    "executable_sha256": "51919751e01cd4ad6d4477abbb76b312169cd2be86d0655cb95dd8c569b4bdf0",
+    "python": "CPython 3.13.15",
+    "installation_origin": "fresh virtual environment site-packages wheel installation"
+  },
+  "run_root_retained_for_diagnosis": "C:\\Users\\hello\\AppData\\Local\\Temp\\cadrumo-retenciones-m190-installed-730ab66aa9-1fc900357efa47eb925f2ee2ae0fec9c",
+  "outcome": {
+    "modelo_190": "proven_selected_annual_slice",
+    "campaign_scope": "selected_annual_slices",
+    "live_submission_attempted": false
+  },
+  "modelo_190_proof": {
+    "receipt": {
+      "path": "modelo-190-2025-0A-proven-receipt-730ab66aa9.json",
+      "sha256": "5041adeb8f13b460b34978547480a01cc2ef45909cb30fc3a9800e4621e97d13",
+      "bytes": 12862,
+      "status": "partial",
+      "command_count": 22
+    },
+    "validated_export": {
+      "path": "modelo-190-2025-0A-proven-export-730ab66aa9.boe",
+      "sha256": "fe8b3f693b3c35b482a211a9fae2e325ca6926b7b2eaf3259080343e6bdd6528",
+      "bytes": 1500,
+      "official_layout": "modelo-190-fichero-boe"
+    },
+    "public_workflow": [
+      "professional payment-evidence capture through the installed CLI",
+      "fresh-process reopening of three persisted payment allocations",
+      "public M111 no-retenciones attestations for 1T, 3T, and 4T",
+      "local 2T source calculation, verification, and filing record",
+      "annual create, calculate, verify, export, and official-layout parse"
+    ],
+    "source_period_evidence": {
+      "1T": "no_relevant_payment_attested",
+      "2T": {
+        "casillas": {
+          "07": "1",
+          "08": "600",
+          "09": "110",
+          "28": "110",
+          "30": "110"
+        },
+        "verification_granted": true,
+        "local_filing_record": true
+      },
+      "3T": "no_relevant_payment_attested",
+      "4T": "no_relevant_payment_attested"
+    },
+    "independent_layout_assertions": {
+      "emitted_type2_count": 2,
+      "header": {
+        "total_percepciones": "2",
+        "percepciones_total": "600",
+        "retenciones_total": "110"
+      },
+      "header_count_matches_emitted_rows": true,
+      "rows": [
+        {
+          "recipient_nif": "B12345674",
+          "recipient_name": "Synthetic Professional",
+          "province": "28",
+          "territorial_clave": "0",
+          "clave": "G",
+          "subclave": "01",
+          "base": "500",
+          "withholding": "95"
+        },
+        {
+          "recipient_nif": "B12345674",
+          "recipient_name": "Synthetic Professional",
+          "province": "28",
+          "territorial_clave": "0",
+          "clave": "G",
+          "subclave": "02",
+          "base": "100",
+          "withholding": "15"
+        }
+      ]
+    }
+  },
+  "prior_m180_proof_preserved": {
+    "manifest": "manifest-annual-m180-proven-m190-grouping-blocked-8ee967def7.json",
+    "receipt": "modelo-180-2025-0A-proven-receipt-8ee967def7.json",
+    "export": "modelo-180-2025-0A-proven-export-8ee967def7.boe"
+  },
+  "sanitization": {
+    "credentials_retained": false,
+    "encrypted_store_retained_in_handoff": false,
+    "raw_process_log_retained": false,
+    "validated_synthetic_export_retained": true
+  }
+}
