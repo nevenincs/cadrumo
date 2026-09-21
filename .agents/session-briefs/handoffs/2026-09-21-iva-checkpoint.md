@@ -661,7 +661,7 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   custody code from that ambiguous editable-runtime exception.
 - The supported real-wheel client fixture is already owned in
   `dev/packaging/release_cohort_support.py::client_venv_template` and used by
-  IVA TUI. A bounded worker is changing only IVA CLI acceptance test binding
+  IVA TUI. A bounded worker changed only IVA CLI acceptance test binding
   (new test fixture + three test modules) to that wheel console script,
   preserving the unstaged refund diff and fresh stores. Ruff/format/ty/diff
   pass. The exact serial four-node real-wheel check ran under PID 76512; log
@@ -669,12 +669,28 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   ordinary M303 PASS, 2025/4T compensar PASS, 2025/4T local devolver PASS;
   multirate FAIL at `app modelo work calculate` with
   `ERROR_FINANCIAL_AGGREGATION_VALIDATION` (bucket-derived bindings conflict
-  with supplied input). Luna Max is tracing only that multirate conflict.
+  with supplied input). Luna Max traced that multirate conflict to the
+  contradictory synthetic transaction category below.
   The worker's first 30-second tool yield was not process completion; final
   exit was 1 at 22:52:56 UTC. Wheel payload digest was computed/validated by
   the shared fixture but not retained in a sanitized receipt, so do not invent
-  a digest or relabel old editable receipts as wheel receipts. Fixture/test
-  edits are not yet committed while the red multirate case is resolved.
+  a digest or relabel old editable receipts as wheel receipts.
+- Luna Max found the multirate fixture's 10% sale transaction was tagged
+  `domestic_general` while its linked invoice RATE_10 line derived
+  `domestic_reduced`. The invoice-vs-ledger silence guard was right to refuse
+  this contradiction; no aggregation code changed. The fixture now uses
+  explicit `domestic_general` for 21% and `domestic_reduced` for 10%.
+  One exact real-wheel multirate rerun passed 1/1 (session 91381, exit 0,
+  125.22s; log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T230053.950203Z-pytest-11180-3275ba4b/run.log`).
+  Independent oracle: general 21.00 + reduced 5.00 - deductible 10.50 =
+  `iva.resultado` 15.50; verification complete. The wheel-bound ordinary,
+  compensar, and local devolver nodes had passed unchanged in the preceding
+  serial run. Ruff, format, ty and diff checks passed on all six touched
+  files. Wheel fixture + refund contrast + corrected multirate fixture were
+  committed as `2a58781fb1`. The test receipts remain in-memory and the
+  wheel payload digest is NOT retained, so claim only the observed run/log
+  identities, not a retrospectively invented artifact digest.
 - Annual 390 read-only candidate: existing `docs/_sequences/how-to/modelo-390/
   modelo-390-annual-2025.json` frames 25-27 have a 2025/0A ordinary-regime
   chain over four locally filed 303 periods. Independent oracle accrued
