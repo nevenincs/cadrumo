@@ -170,7 +170,12 @@ async def test_classification_is_explicit_confirmable_cancelable_and_catalogue_a
     async with app.run_test(size=(80, 24)) as pilot:
         await pilot.pause()
         table = screen.query_one("#ledger-classifications", DataTable)
-        assert tuple(row.key.value for row in table.ordered_rows) == ("BUSINESS", "PERSONAL", "REVIEWED_EXCLUDED")
+        assert tuple(row.key.value for row in table.ordered_rows) == (
+            "BUSINESS",
+            "PERSONAL",
+            "MIXED",
+            "REVIEWED_EXCLUDED",
+        )
         target_copy = str(screen.query_one("#ledger-classification-target", Static).render())
         assert "1" in target_copy and "2" in target_copy and "aaaaaaaaaaaa" in target_copy
         await pilot.press("enter")
@@ -450,7 +455,7 @@ async def test_flow_copy_is_localized_while_semantic_choices_are_invariant(local
             assert "tui.ledger." not in rendered
             assert tuple(
                 row.key.value for row in classification.query_one("#ledger-classifications", DataTable).ordered_rows
-            ) == ("BUSINESS", "PERSONAL", "REVIEWED_EXCLUDED")
+            ) == ("BUSINESS", "PERSONAL", "MIXED", "REVIEWED_EXCLUDED")
         import_screen = LedgerImportScreen(controller)
         import_app = ScreenHostApp[None](import_screen)
         async with import_app.run_test(size=(80, 24)) as pilot:
@@ -484,6 +489,15 @@ async def test_classification_flow_has_exact_focus_and_real_compositor_geometry(
         assert app.focused is screen.query_one(f"#{table_id}", DataTable)
         assert tuple(widget.id for widget in screen.focus_chain) == (
             "ledger-navigation",
+            "ledger-classification-taxable-base",
+            "ledger-classification-iva-rate",
+            "ledger-classification-iva-amount",
+            "ledger-classification-iva-category",
+            "ledger-classification-deduction-fact-kind",
+            "ledger-classification-irpf-category",
+            "ledger-classification-business-pct",
+            "ledger-classification-usage-ratio-id",
+            "ledger-classification-prorrata-reference",
             table_id,
             "ledger-classification-cancel",
         )

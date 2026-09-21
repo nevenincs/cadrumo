@@ -1190,17 +1190,20 @@ tui:
         local: Helyi állapot
       detail:
         action: 'Enter művelete: {action}'
-        axes: 'Jogi: {legal} · Helyi: {local} · AEAT: {aeat} · Igazolás: {receipt} · Bizonyíték konzisztenciája: {conflict}'
-        dates: 'Nyitás: {opening} · Fizetés: {payment} · Eredeti zárás: {original} · Tényleges zárás: {effective} · Értékelés: {evaluated} · Késedelmes napok: {overdue} · Eltolás: {shift}'
+        axes: 'Jogi: {legal} · Helyi: {local} · AEAT: {aeat} · Igazolás: {receipt}
+          · Bizonyíték konzisztenciája: {conflict}'
+        dates: 'Nyitás: {opening} · Fizetés: {payment} · Eredeti zárás: {original}
+          · Tényleges zárás: {effective} · Értékelés: {evaluated} · Késedelmes napok:
+          {overdue} · Eltolás: {shift}'
         source: '{source}: {availability} · Megfigyelve: {observed}'
-      evidence:
-        clear: Nem figyelhető meg ellentmondás
-        conflicted: Ellentmondó AEAT-bizonyíték figyelhető meg
       empty:
         known: Ebben az időszakban nincs kötelezettség.
         search: Nincs a keresésnek és szűrőnek megfelelő kötelezettség.
         stale: Az utoljára megfigyelt napirendben ({observed}) nincs sor; az adatok
           elavultak.
+      evidence:
+        clear: Nem figyelhető meg ellentmondás
+        conflicted: Ellentmondó AEAT-bizonyíték figyelhető meg
       justificante:
         not_verified: Nincs ellenőrizve
         unknown: Ismeretlen
@@ -1464,12 +1467,25 @@ tui:
       stale: Elavult
       unavailable: Nem érhető el
     classification:
+      boundary: A bemeneti besorolást, a prorrata-szektort és a beszerzési bizonylatot
+        külön rögzítési vagy csatolási folyamatban rögzítjük.
       business: Üzleti
       cancel: Mégse
       confirm: Megerősítés
       confirming: Erősítse meg a kiválasztott besorolást.
       excluded: Ellenőrizve és kizárva
       failure: A besorolás mentése nem sikerült.
+      field:
+        business_pct: Üzleti hányad (0 és 1 közötti tizedes tört; csak Vegyes)
+        deduction_fact_kind: Levonási tény típusa (nyilvántartási azonosító)
+        irpf_category: IRPF-kategória (nyilvántartási azonosító)
+        iva_amount: IVA összege
+        iva_category: IVA-kategória (nyilvántartási azonosító)
+        iva_rate: IVA-kulcs (tizedes tört, pl. 0.21)
+        prorrata_reference: Prorrata-hivatkozás
+        taxable_base: Adóalap
+        usage_ratio_id: Felhasználási arány azonosítója
+      mixed: Vegyes (üzleti hányad)
       personal: Személyes
       progress: Besorolás mentése…
       prompt: Válasszon besorolást a kijelölt tételhez.
@@ -1623,6 +1639,7 @@ tui:
         invoice_date: Számla dátuma (ÉÉÉÉ-HH-NN)
         invoice_number: Számlaszám
         iva_rate: IVA-kulcs (%)
+        iva_category: Áfakezelés (nyilvántartási azonosító)
         kind: Számla típusa
         notes: Megjegyzések
         retention_amount: IRPF-visszatartás összege
@@ -1803,6 +1820,10 @@ tui:
     unreadable: Az olvasó állapotát nem sikerült lekérdezni.
     verify: Modell ellenőrzése
   modelo:
+    edit:
+      apply: 'Bevallott értékek alkalmazása'
+      scalar: '{casilla}. rovat'
+      binding: 'Bevallott adat: {binding}'
     assertion:
       matched: Egyezik
       mismatched: Nem egyezik

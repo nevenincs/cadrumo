@@ -1199,17 +1199,20 @@ tui:
         local: Estat local
       detail:
         action: 'Acció en prémer Retorn: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant: {receipt} · Coherència de l''evidència: {conflict}'
-        dates: 'Obertura: {opening} · Pagament: {payment} · Tancament original: {original} · Tancament efectiu: {effective} · Avaluat: {evaluated} · Dies de retard: {overdue} · Ajust: {shift}'
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant: {receipt}
+          · Coherència de l''evidència: {conflict}'
+        dates: 'Obertura: {opening} · Pagament: {payment} · Tancament original: {original}
+          · Tancament efectiu: {effective} · Avaluat: {evaluated} · Dies de retard:
+          {overdue} · Ajust: {shift}'
         source: '{source}: {availability} · Observat: {observed}'
-      evidence:
-        clear: No s'ha observat cap conflicte
-        conflicted: S'ha observat evidència AEAT contradictòria
       empty:
         known: No hi ha obligacions en aquest interval.
         search: Cap obligació coincideix amb la cerca i l'àmbit.
         stale: L'última agenda observada ({observed}) no té files; les dades estan
           desactualitzades.
+      evidence:
+        clear: No s'ha observat cap conflicte
+        conflicted: S'ha observat evidència AEAT contradictòria
       justificante:
         not_verified: No verificat
         unknown: Desconegut
@@ -1473,12 +1476,25 @@ tui:
       stale: Desactualitzat
       unavailable: No disponible
     classification:
+      boundary: La classificació d'entrada, el sector de prorrata i el justificant
+        de compra es recullen mitjançant els seus fluxos específics de captura o d'adjunció.
       business: Professional
       cancel: Cancel·la
       confirm: Confirma
       confirming: Confirma la classificació seleccionada.
       excluded: Revisat i exclòs
       failure: No s'ha pogut desar la classificació.
+      field:
+        business_pct: Percentatge professional (fracció de 0 a 1; només Mixta)
+        deduction_fact_kind: Tipus de fet de deducció (identificador del registre)
+        irpf_category: Categoria d'IRPF (identificador del registre)
+        iva_amount: Quota d'IVA
+        iva_category: Categoria d'IVA (identificador del registre)
+        iva_rate: Tipus d'IVA (fracció decimal; p. ex., 0.21)
+        prorrata_reference: Referència de prorrata
+        taxable_base: Base imposable
+        usage_ratio_id: ID de proporció d'ús
+      mixed: Mixta (percentatge professional)
       personal: Personal
       progress: S'està desant la classificació…
       prompt: Tria una classificació per a l'assentament seleccionat.
@@ -1632,6 +1648,7 @@ tui:
         invoice_date: Data de la factura (AAAA-MM-DD)
         invoice_number: Número de factura
         iva_rate: Tipus d'IVA (%)
+        iva_category: Tractament de l'IVA (clau del registre)
         kind: Tipus de factura
         notes: Notes
         retention_amount: Import de la retenció d'IRPF
@@ -1815,6 +1832,10 @@ tui:
     unreadable: No s'ha pogut llegir l'estat del lector.
     verify: Comprova el model
   modelo:
+    edit:
+      apply: 'Aplica els valors declarats'
+      scalar: 'Casella {casilla}'
+      binding: 'Dada declarada {binding}'
     assertion:
       matched: Coincideix
       mismatched: No coincideix

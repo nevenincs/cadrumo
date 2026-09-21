@@ -1168,16 +1168,19 @@ tui:
         local: Local status
       detail:
         action: 'Enter action: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Receipt: {receipt} · Evidence consistency: {conflict}'
-        dates: 'Opens: {opening} · Payment: {payment} · Original close: {original} · Effective close: {effective} · Evaluated: {evaluated} · Days overdue: {overdue} · Shift: {shift}'
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Receipt: {receipt}
+          · Evidence consistency: {conflict}'
+        dates: 'Opens: {opening} · Payment: {payment} · Original close: {original}
+          · Effective close: {effective} · Evaluated: {evaluated} · Days overdue:
+          {overdue} · Shift: {shift}'
         source: '{source}: {availability} · Observed: {observed}'
-      evidence:
-        clear: No conflict observed
-        conflicted: Conflicting AEAT evidence observed
       empty:
         known: There are no obligations in this range.
         search: No obligation matches the search and scope.
         stale: The last observed agenda ({observed}) has no rows; the data is stale.
+      evidence:
+        clear: No conflict observed
+        conflicted: Conflicting AEAT evidence observed
       justificante:
         not_verified: Not verified
         unknown: Unknown
@@ -1442,12 +1445,25 @@ tui:
       stale: Out of date
       unavailable: Unavailable
     classification:
+      boundary: Input classification, the prorrata sector, and purchase evidence are
+        recorded through their dedicated capture or attachment flows.
       business: Business
       cancel: Cancel
       confirm: Confirm
       confirming: Confirm the selected classification.
       excluded: Reviewed and excluded
       failure: The classification could not be saved.
+      field:
+        business_pct: Business share (decimal fraction from 0 to 1; Mixed only)
+        deduction_fact_kind: Deduction fact kind (registry token)
+        irpf_category: IRPF category (registry token)
+        iva_amount: IVA amount
+        iva_category: IVA category (registry token)
+        iva_rate: IVA rate (decimal fraction; e.g. 0.21)
+        prorrata_reference: Prorrata reference
+        taxable_base: Taxable base
+        usage_ratio_id: Usage ratio ID
+      mixed: Mixed (business share)
       personal: Personal
       progress: Saving classification…
       prompt: Choose a classification for the selected entry.
@@ -1601,6 +1617,7 @@ tui:
         invoice_date: Invoice date (YYYY-MM-DD)
         invoice_number: Invoice number
         iva_rate: IVA rate (%)
+        iva_category: IVA treatment (registry token)
         kind: Invoice type
         notes: Notes
         retention_amount: IRPF retention amount
@@ -1780,6 +1797,10 @@ tui:
     unreadable: The reader's state could not be read.
     verify: Check model
   modelo:
+    edit:
+      apply: 'Apply declared values'
+      scalar: 'Box {casilla}'
+      binding: 'Declared input {binding}'
     assertion:
       matched: Matches
       mismatched: Does not match

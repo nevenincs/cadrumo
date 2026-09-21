@@ -1210,17 +1210,20 @@ tui:
         local: Estado local
       detail:
         action: 'Acción al pulsar Intro: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificante: {receipt} · Coherencia de evidencia: {conflict}'
-        dates: 'Apertura: {opening} · Pago: {payment} · Cierre original: {original} · Cierre efectivo: {effective} · Evaluado: {evaluated} · Días de retraso: {overdue} · Ajuste: {shift}'
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificante: {receipt}
+          · Coherencia de evidencia: {conflict}'
+        dates: 'Apertura: {opening} · Pago: {payment} · Cierre original: {original}
+          · Cierre efectivo: {effective} · Evaluado: {evaluated} · Días de retraso:
+          {overdue} · Ajuste: {shift}'
         source: '{source}: {availability} · Observado: {observed}'
-      evidence:
-        clear: Sin conflicto observado
-        conflicted: Evidencia AEAT contradictoria observada
       empty:
         known: No hay obligaciones en este intervalo.
         search: Ninguna obligación coincide con la búsqueda y el ámbito.
         stale: No hay filas en la última agenda observada ({observed}); los datos
           están desactualizados.
+      evidence:
+        clear: Sin conflicto observado
+        conflicted: Evidencia AEAT contradictoria observada
       justificante:
         not_verified: No verificado
         unknown: Desconocido
@@ -1485,12 +1488,25 @@ tui:
       stale: Desactualizado
       unavailable: No disponible
     classification:
+      boundary: La clasificación de entrada, el sector de prorrata y el justificante
+        de compra se registran mediante sus propios flujos de captura o adjunto.
       business: Profesional
       cancel: Cancelar
       confirm: Confirmar
       confirming: Confirma la clasificación seleccionada.
       excluded: Revisado y excluido
       failure: No se pudo guardar la clasificación.
+      field:
+        business_pct: Porcentaje profesional (fracción de 0 a 1; solo Mixta)
+        deduction_fact_kind: Tipo de hecho de deducción (identificador del registro)
+        irpf_category: Categoría de IRPF (identificador del registro)
+        iva_amount: Cuota de IVA
+        iva_category: Categoría de IVA (identificador del registro)
+        iva_rate: Tipo de IVA (fracción decimal; p. ej., 0.21)
+        prorrata_reference: Referencia de prorrata
+        taxable_base: Base imponible
+        usage_ratio_id: ID de proporción de uso
+      mixed: Mixta (porcentaje profesional)
       personal: Personal
       progress: Guardando clasificación…
       prompt: Elige una clasificación para el apunte seleccionado.
@@ -1645,6 +1661,7 @@ tui:
         invoice_date: Fecha de la factura (AAAA-MM-DD)
         invoice_number: Número de factura
         iva_rate: Tipo de IVA (%)
+        iva_category: Tratamiento del IVA (clave del registro)
         kind: Tipo de factura
         notes: Notas
         retention_amount: Importe de la retención de IRPF
@@ -1829,6 +1846,10 @@ tui:
     unreadable: No se ha podido leer el estado del lector.
     verify: Comprobar modelo
   modelo:
+    edit:
+      apply: 'Aplicar valores declarados'
+      scalar: 'Casilla {casilla}'
+      binding: 'Dato declarado {binding}'
     assertion:
       matched: Coincide
       mismatched: No coincide
