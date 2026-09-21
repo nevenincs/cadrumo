@@ -294,6 +294,30 @@ def test_inventory_row_templates_expand_complete_activities_in_canonical_rows() 
     assert "zeta" not in public
 
 
+def test_resale_stock_acquisition_projects_to_anexo_d_not_the_amortization_casilla() -> None:
+    """A stock purchase remains an inventory cost, distinct from a 0208 expense."""
+    result = InventorySourceResolver(
+        inventory_repository=_InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("retail"),)))
+    ).resolve(_context(_revision(inventory=True)))
+
+    assert result.row_binding_values == {
+        ("inventory-0177", 1): Decimal("100.00"),
+        ("inventory-0181", 1): Decimal("100.00"),
+        ("inventory-0182", 1): Decimal("0.00"),
+    }
+    assert all("0208" not in binding_id for binding_id, _row_index in result.row_binding_values)
+    assert result.unresolved_binding_ids == ()
+    assert result.diagnostics == ()
+
+
+def test_resale_stock_document_refuses_duplicate_activity_year_collision() -> None:
+    """One stock ledger is authoritative for an activity/year coordinate."""
+    stock = inventory_ledger("retail")
+
+    with pytest.raises(ValidationError, match="duplicate actividad/year"):
+        InventoryLedgerDocument(ledgers=(stock, stock))
+
+
 def test_inventory_activity_order_is_insertion_invariant_and_semantic_change_changes_fingerprint() -> None:
     alpha = inventory_ledger("alpha")
     zeta = inventory_ledger("zeta")
