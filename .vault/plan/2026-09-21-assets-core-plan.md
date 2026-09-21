@@ -11,7 +11,7 @@ related:
   - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:ef232c04492c5b3b7ff9306ee9ba840f40f46f6bc9350b62c7bca205e21d7980'
+body_hash: 'sha256:e31f62f037a7546beb9ac2d99d7e2506c94652852f206bdb5e330f32251bbd57'
 ---
 
 # `assets-core` plan
@@ -66,7 +66,7 @@ Enroll the authoritative source and integrate M130 and M100 with explicit collis
 Preserve independent IVA treatment while proving the persisted acquisition through verified filing artifacts.
 
 - [x] `P04.S07` - Link acquisitions reciprocally without merging IRPF assets and IVA bienes-inversion; `src/cadrumo/application/actividad_asset/iva_linkage.py, src/cadrumo/application/actividad_asset/tests/test_iva_linkage.py`.
-- [ ] `P04.S08` - Prove calculation, verification, provenance, and validated export for asset-derived deductions; `src/cadrumo/application/modelo/, src/cadrumo/application/filing/, src/cadrumo/application/modelo/tests/`.
+- [x] `P04.S08` - Prove calculation, verification, provenance, and validated export for asset-derived deductions; `src/cadrumo/application/modelo/, src/cadrumo/application/filing/, src/cadrumo/application/modelo/tests/`.
 
 ### Phase `P05` - Frontend operations and acceptance
 
@@ -74,8 +74,8 @@ Expose shared operations through CLI and TUI and prove AS1-AS12 in isolated inst
 
 - [x] `P05.S09` - Expose shared asset operations through the established CLI hierarchy; `src/cadrumo/entrypoints/cli/_app_ledger_actividad_asset_command_specs.py, src/cadrumo/entrypoints/cli/_actividad_asset_cli.py, src/cadrumo/entrypoints/cli/tests/test_actividad_asset_commands.py`.
 - [x] `P05.S10` - Expose shared asset operations through TUI composition without frontend arithmetic; `src/cadrumo/entrypoints/tui/ledger/actividad_asset.py, src/cadrumo/entrypoints/tui/ledger/models_actividad_asset.py, src/cadrumo/entrypoints/tui/ledger/routes.py, src/cadrumo/entrypoints/tui/ledger/tests/test_actividad_asset_parity.py`.
-- [ ] `P05.S11` - Implement isolated AS1-AS12 acceptance scenarios and independent financial oracles; `dev/acceptance/assets/, dev/acceptance/tests/`.
-- [ ] `P05.S12` - Run integrated quality gates and complete the final architecture review; `.vault/audit/2026-09-21-assets-core-audit.md, affected source and test paths`.
+- [x] `P05.S11` - Implement isolated AS1-AS12 acceptance scenarios and independent financial oracles; `dev/acceptance/assets/, dev/acceptance/tests/`.
+- [x] `P05.S12` - Run integrated quality gates and complete the final architecture review; `.vault/audit/2026-09-21-assets-core-audit.md, affected source and test paths`.
 
 ## Parallelization
 

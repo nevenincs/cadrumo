@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:b3316cc1e950c91ba102fe88f56a4e53d6f4f8c197837b4388d670c05516ca8e'
+body_hash: 'sha256:7ca1ff1e22bf8b559886fb387727e9e7b477c5ee68e262a8f367b172cf17ecac'
 related:
   - "[[2026-09-21-assets-core-plan]]"
 ---
@@ -95,6 +95,20 @@ related:
 - `S11` `verify:` `IVA lifecycle reserved unit evidence (11 tests)` -> `pass`
 - `S11` `verify:` `IVA live source-mesh integration` -> `fail: taxpayer-profile readiness fixture incomplete`
 - `S11` `verify:` `free-depreciation affected suite (34 tests)` -> `pass`
+- `S08` `A` `dev/acceptance/assets/export_journey.py`
+- `S08` `A` `dev/acceptance/assets/tests/test_export_journey.py`
+- `S08` `verify:` `installed M130/M100 asset overlay and official 2025 XSD validation` -> `pass`
+- `S08` `by:` `/root`
+- `S11` `M` `dev/acceptance/assets/evidence.py`
+- `S11` `M` `dev/acceptance/assets/installed_journey.py`
+- `S11` `M` `dev/acceptance/assets/installed_tui_child.py`
+- `S11` `A` `dev/acceptance/assets/installed_profile_setup.py`
+- `S11` `verify:` `installed TUI-to-CLI and CLI-to-TUI continuation` -> `pass`
+- `S11` `by:` `/root`
+- `S12` `M` `.vault/audit/2026-09-21-assets-core-audit.md`
+- `S12` `M` `.agents/session-briefs/handoffs/2026-09-21-assets-checkpoint.md`
+- `S12` `verify:` `final integrated review; no critical or high findings` -> `pass`
+- `S12` `by:` `/root`
 
 ## Notes
 

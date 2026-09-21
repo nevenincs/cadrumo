@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:c8170c6a668e8fcea03ebe90f7073456641d6a1273079cc06a22026eef284d7f'
+body_hash: 'sha256:ff31bf13887ea49474fb6b157decf375a0a85a2258f14f4fb7923756561a5cf3'
 related:
   - "[[2026-09-21-assets-core-plan]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
@@ -117,6 +117,27 @@ typed `FilingInstanceEvidence` authoring/resolution operation.
 
 Result: AS9 and AS12 remain blocked on these exact owner contracts. No exporter
 repair is inferred and no official filing artifact is claimed.
+
+### final-integrated-acceptance | low | installed parity and filing artifacts close the remaining scope
+
+The repaired profile and IVA fixtures now use canonical readiness facts and
+retain negative incomplete-profile refusal. The current published authority
+still resolves the 2025 linear and low-value asset branches. Installed TUI
+journeys complete creation, immutable-revision inspection, correction, forecast,
+first claim, idempotent replay, non-consuming filing handoff, restart readback,
+and both CLI/TUI continuation directions without timeout or forced cleanup.
+
+The installed filing journey independently overlays one EUR 300 asset claim on
+the established EUR 2,400 expense control. Modelo 130 reports EUR 2,700 total
+expenses; Modelo 100 reports the same claim in its material-amortization
+destination and zero intangible amortization. This is destination composition,
+not a second basis consumption. The exported Modelo 100 XML passes the pinned
+official 2025 XSD. The public filing-evidence operation remains scoped to M303;
+IRPF export does not acquire an unrelated exonerado-390 dependency.
+
+Result: PASS. P04.S08 and P05.S11 are complete, and the final integrated review
+found no critical or high findings. AS1-AS12 are supported by their recorded
+domain, application, installed frontend, IVA source-mesh, and export evidence.
 
 ## Recommendations
 
