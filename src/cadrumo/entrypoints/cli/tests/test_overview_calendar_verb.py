@@ -186,8 +186,15 @@ def test_calendar_accepts_censo_stamped_enrolment() -> None:
     payload = json.loads(result.output)["result"]
     warning_codes = {warning["code"] for warning in payload["warnings"]}
     assert "censo.enrolment_unverified" not in warning_codes
+    assert payload["as_of"] == today_madrid().isoformat()
     modelo_303 = next(entry for entry in payload["entries"] if entry["modelo"] == "303")
     assert modelo_303["censo_enrolment_state"] == "verified"
+    assert modelo_303["closes_on"] <= modelo_303["adjusted_closes_on"]
+    assert modelo_303["shift_reason"]
+    assert modelo_303["evaluated_on"] == payload["as_of"]
+    assert "payment_cutoff_on" in modelo_303
+    assert "days_overdue" in modelo_303
+    assert "recovery_action" in modelo_303
 
 
 def test_calendar_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -> None:

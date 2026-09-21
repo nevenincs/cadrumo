@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:e6070a4251d5deb25fa56cf06ca2a8fb6f750089673edf738924ed11a5e57f53'
+body_hash: 'sha256:6e387abb76befe5cf35dfb5cb19eb9205d9fde58e9553ce4581b4c38fae8c84c'
 related:
   - "[[2026-09-21-calendar-obligations-plan]]"
 ---
@@ -54,4 +54,8 @@ related:
 - `S06` `M` `src/cadrumo/application/modelo/work_plazo.py`
 - `S06` `M` `src/cadrumo/application/modelo/tests/test_declarations_calendar.py`
 - `S06` `verify:` `uv run ruff check src/cadrumo/application/modelo/declarations_calendar.py src/cadrumo/application/modelo/work_plazo.py src/cadrumo/application/modelo/tests/test_declarations_calendar.py` -> `pass`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_overview_payloads.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/_overview_rendering.py`
+- `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_calendar_verb.py`
+- `S07` `verify:` `uv run ruff check src/cadrumo/entrypoints/cli/_overview_payloads.py src/cadrumo/entrypoints/cli/_overview_rendering.py src/cadrumo/entrypoints/cli/tests/test_overview_calendar_verb.py` -> `pass`
 

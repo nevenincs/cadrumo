@@ -162,13 +162,19 @@ class OverviewCalendarEntrySummaryPayload(OutputSchema):
 
     modelo: str
     period: str
+    closes_on: str
     adjusted_closes_on: str
+    shift_reason: str
+    payment_cutoff_on: str | None = None
+    evaluated_on: str
+    days_overdue: int | None = None
     user_state: Literal["due", "late", "filed", "unknown"]
     censo_enrolment_state: Literal["not_checked", "not_required", "unverified", "verified"]
     local_filing_state: OverviewLocalFilingStateValue
     aeat_submission_state: OverviewAeatSubmissionStateValue
     justificante_verified: bool
     detail_action: ResolvedNoticeAction
+    recovery_action: ResolvedNoticeAction | None = None
 
 
 class OverviewCalendarEventSummaryPayload(OutputSchema):
@@ -378,6 +384,7 @@ class OverviewCalendarResult(OutputSchema):
     events: list[OverviewCalendarEventSummaryPayload] = []
     warnings: list[OverviewCalendarWarningPayload] = []
     generated_at: str | None = None
+    as_of: str | None = None
     completeness: OverviewCalendarCompletenessPayload | None = None
     taxpayer_model_declared: bool | None = None
     incomplete_reason: str | None = None

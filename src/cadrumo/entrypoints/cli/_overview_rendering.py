@@ -387,6 +387,9 @@ def _calendar_entry_text_line(entry: OverviewCalendarEntry) -> str:
         f"\tcloses={entry.closes_on.isoformat()}"
         f"\tadjusted={entry.adjusted_closes_on.isoformat()}"
         f"\tshift={calendar_shift_reason_text(entry.shift_reason)}"
+        f"\tpayment_cutoff={entry.payment_cutoff_on.isoformat() if entry.payment_cutoff_on else 'none'}"
+        f"\tas_of={entry.evaluated_on.isoformat()}"
+        f"\tdays_overdue={entry.days_overdue if entry.days_overdue is not None else 'none'}"
         f"\tcenso_enrolment={entry.censo_enrolment_state.value}"
         f"\t{_calendar_filing_evidence_text_fields(entry.filing_evidence)}"
         f"\t{_calendar_entry_work_unit_text_fields(entry)}"
@@ -509,13 +512,19 @@ def overview_calendar_output(
         OverviewCalendarEntrySummaryPayload(
             modelo=entry.modelo,
             period=str(entry.period),
+            closes_on=entry.closes_on.isoformat(),
             adjusted_closes_on=entry.adjusted_closes_on.isoformat(),
+            shift_reason=entry.shift_reason,
+            payment_cutoff_on=entry.payment_cutoff_on.isoformat() if entry.payment_cutoff_on else None,
+            evaluated_on=entry.evaluated_on.isoformat(),
+            days_overdue=entry.days_overdue,
             user_state=entry.user_state.value,
             censo_enrolment_state=entry.censo_enrolment_state.value,
             local_filing_state=entry.filing_evidence.local_filing_state.value,
             aeat_submission_state=entry.filing_evidence.aeat_submission_state,
             justificante_verified=entry.filing_evidence.justificante_verified,
             detail_action=_calendar_entry_detail_action(entry),
+            recovery_action=_resolved_action(entry.recovery_action),
         ).model_dump(mode="json")
         for entry in cal.entries
     ]
@@ -551,6 +560,7 @@ def overview_calendar_output(
                     for warning in cal.warnings
                 ],
                 "generated_at": cal.generated_at.isoformat(),
+                "as_of": cal.evaluated_on.isoformat(),
                 "completeness": cal.completeness.model_dump(mode="json"),
                 "taxpayer_model_declared": cal.taxpayer_model_declared,
                 "incomplete_reason": cal.incomplete_reason,
