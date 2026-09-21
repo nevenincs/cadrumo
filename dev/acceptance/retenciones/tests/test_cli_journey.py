@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any, cast
 
 import pytest
 
-from dev.acceptance.income_tax.cli_journey import CommandEvidence
+from dev.acceptance.income_tax.cli_journey import CommandEvidence, InstalledCli
 
-from ..cli_journey import RetencionesInstalledCliError, _failure_evidence, _is_full_campaign, _select_slices
+from ..cli_journey import (
+    RetencionesInstalledCliError,
+    _create_withholding_profile,
+    _failure_evidence,
+    _is_full_campaign,
+    _select_slices,
+)
 from ..scenario import build_installed_periodic_cli_slices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -74,3 +82,35 @@ def test_failure_receipt_keeps_redacted_command_evidence_and_artifact_roots(tmp_
     assert receipt.storage_root == str(tmp_path / "storage")
     assert receipt.output_dir == str(tmp_path / "exports")
     assert "passphrase" not in str(receipt.to_dict()).lower()
+
+
+def test_synthetic_withholding_profile_explicitly_attests_not_a_colegio_concertado() -> None:
+    """M111 readiness must not depend on a defaulted profile fact."""
+    cli = _ProfileCli()
+
+    _create_withholding_profile(cast(InstalledCli, cli), year=2025)
+
+    assert cli.created_year == 2025
+    assert "--no-colegio-concertado" in cli.calls[0]
+
+
+class _ProfileCli:
+    """Minimal secure-runner double for profile command construction."""
+
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, ...]] = []
+        self.created_year: int | None = None
+
+    def create_profile(self, *, year: int) -> None:
+        self.created_year = year
+
+    def run(
+        self,
+        args: Sequence[str],
+        *,
+        authenticated: bool = True,
+        allow_error: bool = False,
+    ) -> dict[str, Any]:
+        del authenticated, allow_error
+        self.calls.append(tuple(args))
+        return {"status": "success", "result": {}}

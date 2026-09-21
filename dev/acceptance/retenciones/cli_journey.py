@@ -274,6 +274,10 @@ def _create_withholding_profile(cli: InstalledCli, *, year: int) -> None:
             "--pays-professionals-with-retencion",
             "--pays-rent-with-retencion",
             "--no-pays-capital-income-with-retencion",
+            # Modelo 111 requires this filing-header attestation.  The value
+            # is a synthetic operator fact, deliberately supplied through
+            # the now-public profile edit surface rather than seeded.
+            "--no-colegio-concertado",
         ),
         stage="profile_enable_withholding_duties",
     )
