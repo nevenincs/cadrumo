@@ -397,11 +397,16 @@ class IvaCompensationAnnualPartitionSourceResolver:
         if isinstance(loaded, CalculationSourceResolution):
             return loaded
         envelopes = loaded
-        binding_values = resolve_iva_compensation_annual_partition_binding_values(
-            revision,
-            envelopes,
-            filing_year=context.filing_year,
-            operation=self._operation,
+        observed_periods = {envelope.observation.period for envelope in envelopes}
+        binding_values = (
+            resolve_iva_compensation_annual_partition_binding_values(
+                revision,
+                envelopes,
+                filing_year=context.filing_year,
+                operation=self._operation,
+            )
+            if observed_periods == set(requirement.source_periods)
+            else {}
         )
         unresolved = _unresolved_partition_bindings(requirement.binding_ids, binding_values)
         return CalculationSourceResolution(

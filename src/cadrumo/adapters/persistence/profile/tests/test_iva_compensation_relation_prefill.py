@@ -204,6 +204,56 @@ def test_modelo_390_carry_boxes_resolve_through_fifo_partition_with_carried_pend
     assert {item.source_modelo for item in resolution.provenance} == {"303"}
 
 
+def test_modelo_390_partition_refuses_missing_intermediate_m303_periods(tmp_path: Path) -> None:
+    """A 1T/4T pair cannot make the declared four-quarter source complete."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_FIFO_BUCKET_ID):
+        observation_repo = CalculationObservationRepository()
+        for period, resultado, generada, posterior, disponible in (
+            ("1T", Decimal("-100.00"), Decimal("100.00"), Decimal("0.00"), Decimal("100.00")),
+            ("4T", Decimal("-50.00"), Decimal("50.00"), Decimal("100.00"), Decimal("150.00")),
+        ):
+            _save_normalized_m303_carry_observation(
+                observation_repo,
+                registry_grounded_modelo_observation(
+                    modelo="303",
+                    filing_year=2025,
+                    period=period,
+                    casilla_values={
+                        _M303_RESULTADO_CASILLA: resultado,
+                        _M303_GENERADA_CASILLA: generada,
+                        _M303_COMPENSACION_APLICADA_CASILLA: Decimal("0.00"),
+                        _M303_POSTERIOR_CASILLA: posterior,
+                        _M303_DISPONIBLE_CASILLA: disponible,
+                    },
+                ),
+                disposition=ResultDisposition.COMPENSACION,
+            )
+
+        snapshot = _modelo_390_annual_snapshot()
+        with _indexed_authority_for_test().operation() as authority_operation:
+            resolution = IvaCompensationAnnualPartitionSourceResolver(
+                repository=observation_repo,
+                registry_snapshot=snapshot,
+                operation=authority_operation,
+            ).resolve(
+                CalculationSourceContext(
+                    bucket_id=_FIFO_BUCKET_ID,
+                    modelo="390",
+                    filing_year=2025,
+                    period=Period.from_year_and_code(2025, "0A"),
+                    revision=snapshot.revision,
+                ),
+            )
+
+    assert not resolution.binding_values
+    assert set(resolution.unresolved_binding_ids) == {_BOX_97_BINDING, _BOX_662_BINDING}
+    assert {
+        diagnostic.binding_id
+        for diagnostic in resolution.diagnostics
+        if diagnostic.reason == "iva_compensation_annual_source_evidence_failure"
+    } == {_BOX_97_BINDING, _BOX_662_BINDING}
+
+
 def test_modelo_390_compensation_bindings_resolve_from_secure_iva_history(tmp_path: Path) -> None:
     """M390 ordinary 303 totals use relations; compensation uses the FIFO partition.
 
