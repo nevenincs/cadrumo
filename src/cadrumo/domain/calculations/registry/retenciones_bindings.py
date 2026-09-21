@@ -255,20 +255,28 @@ def _validated_retenciones_aggregation_selector(binding: BindingDefinition) -> R
         if op is not BindingAggregationOp.ROWS:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires aggregation op 'rows'")
         if selector.row_field is None:
-            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key")
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'row_field' selector key"
+            )
         if selector.grouping is None:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'grouping' selector key")
         if selector.record is None:
             raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'record' selector key")
         if selector.data_type is None:
-            raise RegistryValidationError(f"binding {binding.id!r} fact 'row_field' requires a 'data_type' selector key")
+            raise RegistryValidationError(
+                f"binding {binding.id!r} fact 'row_field' requires a 'data_type' selector key"
+            )
         if selector.schemes:
             raise RegistryValidationError(f"binding {binding.id!r} Modelo 180 type-2 row binding cannot filter schemes")
         return selector
     if op is BindingAggregationOp.ROWS:
-        raise RegistryValidationError(f"binding {binding.id!r} scalar retenciones fact cannot use aggregation op 'rows'")
+        raise RegistryValidationError(
+            f"binding {binding.id!r} scalar retenciones fact cannot use aggregation op 'rows'"
+        )
     if any(value is not None for value in (selector.row_field, selector.grouping, selector.record, selector.data_type)):
-        raise RegistryValidationError(f"binding {binding.id!r} scalar retenciones fact cannot declare row selector keys")
+        raise RegistryValidationError(
+            f"binding {binding.id!r} scalar retenciones fact cannot declare row selector keys"
+        )
     if selector.fact is RetencionesAggregationFact.TYPE2_RECORD_COUNT and selector.schemes:
         raise RegistryValidationError(f"binding {binding.id!r} type-2 record count cannot filter schemes")
     return selector
@@ -386,7 +394,9 @@ def _retenciones_selector_value(
         try:
             return values[selector.fact]
         except KeyError as exc:  # pragma: no cover - protected by selector validation
-            raise RegistryValidationError(f"retenciones scalar binding declares unsupported fact {selector.fact!r}") from exc
+            raise RegistryValidationError(
+                f"retenciones scalar binding declares unsupported fact {selector.fact!r}"
+            ) from exc
 
     declared_schemes = _registry_schemes_for_modelo(aggregation, authority=authority)
     unknown_schemes = frozenset(selector.schemes).difference(declared_schemes)

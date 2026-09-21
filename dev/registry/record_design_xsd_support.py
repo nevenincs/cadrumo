@@ -105,7 +105,7 @@ def _repair_pattern_value(value: str) -> str:
 
 
 def repair_xsd_regex_escapes(schema_text: str) -> tuple[str, int]:
-    """Return ``schema_text`` with illegal ``xs:pattern`` escapes removed, and the repair count.
+    r"""Return ``schema_text`` with illegal ``xs:pattern`` escapes removed, and the repair count.
 
     Soundness
     ---------

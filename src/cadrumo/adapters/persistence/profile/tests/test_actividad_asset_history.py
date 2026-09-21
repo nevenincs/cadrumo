@@ -8,7 +8,11 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.renta.actividad_asset.claims import AmortizationClaim, effective_claims, effective_free_depreciation_claims
+from .....domain.renta.actividad_asset.claims import (
+    AmortizationClaim,
+    effective_claims,
+    effective_free_depreciation_claims,
+)
 from .....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from .....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
