@@ -12,6 +12,7 @@ from ..adapter_composition import ProfileAdapterComposition
 if TYPE_CHECKING:
     from ...application.aggregation.percepciones_observations_repository import PercepcionObservationPortsFactory
     from ...application.aggregation.retencion_observations_repository import RetencionObservationPortsFactory
+    from ...application.aggregation.withholding_observation_service import WithholdingObservationService
     from ...application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
     from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ...application.auth.operator_probe_ports import OperatorProbePorts
@@ -153,6 +154,11 @@ def censal_fetch_port(ctx: typer.Context) -> CensalFetchPort:
 def retencion_observation_ports_factory(ctx: typer.Context) -> RetencionObservationPortsFactory:
     """Return the required retención observation capability factory from the CLI root."""
     return _adapter_composition(ctx).retencion_observation_ports_factory
+
+
+def withholding_observation_service(ctx: typer.Context, *, bucket_id: str) -> WithholdingObservationService:
+    """Return the root-composed atomic withholding mutation service."""
+    return _adapter_composition(ctx).withholding_observation_service_factory(bucket_id)
 
 
 def percepcion_observation_ports_factory(ctx: typer.Context) -> PercepcionObservationPortsFactory:
@@ -300,5 +306,6 @@ __all__ = [
     "review_package_signing_keypair_capability_factory",
     "state_projection_read_ports",
     "verification_repository_bundle_factory",
+    "withholding_observation_service",
     "work_lifecycle_ports_factory",
 ]

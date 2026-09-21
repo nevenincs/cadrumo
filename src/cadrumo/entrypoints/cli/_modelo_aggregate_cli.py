@@ -10,19 +10,13 @@ from pydantic import BaseModel, ValidationError
 from ...application.aggregation.counterpart import CounterpartObservation
 from ...application.aggregation.foreign_assets import ForeignAssetIngestObservation
 from ...application.aggregation.invoice_retencion import (
-    InvoiceRetencionProjection,
-    InvoiceRetencionRouteRequest,
-    merge_manual_and_routed_retencion_observations,
-    route_invoice_retenciones,
+    InvoiceWithholdingEvidenceError,
+    InvoiceWithholdingEvidenceRequest,
+    build_invoice_withholding_capture,
 )
-from ...application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ...application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPorts,
     persist_percepcion_observations,
-)
-from ...application.aggregation.retencion_observations_repository import (
-    RetencionObservationPorts,
-    persist_retencion_observations,
 )
 from ...application.aggregation.retenciones import RetencionObservation
 from ...application.aggregation.service import (
@@ -30,9 +24,8 @@ from ...application.aggregation.service import (
     PerModeloAggregationResult,
     aggregate_per_modelo,
 )
-from ...application.invoices.catalogue_lifecycle import resolve_catalogue_invoice
 from ...core.i18n.render import tr
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import Notice
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.withholding_bindings import (
@@ -42,33 +35,77 @@ from ...domain.calculations.registry.withholding_bindings import (
 )
 from ._modelo_behavior_support import resolve_year_period
 from ._modelo_payloads import ModeloAggregateResult
-from .common import active_bucket_id_or_refuse, emit_envelope, load_invoices
+from .common import active_bucket_id_or_refuse, emit_envelope
 from .state_projection_support import (
     authority_operation,
     percepcion_observation_ports_factory,
     retencion_observation_ports_factory,
+    withholding_observation_service,
 )
 
+_INVOICE_WITHHOLDING_MODELOS = frozenset({"111", "115"})
 
-def _route_invoice_retenciones_into_command(
-    command: PerModeloAggregationCommand, requests: tuple[InvoiceRetencionRouteRequest, ...]
-) -> tuple[PerModeloAggregationCommand, tuple[InvoiceRetencionProjection, ...]]:
-    """Merge invoice-routed retenciones into the command and return the excluded verdicts."""
-    if not requests:
-        return (command, ())
-    if not RetencionesAggregationSourceResolver.supports_modelo(command.modelo):
-        raise typer.BadParameter(tr("cli.app.modelo.aggregate.invoice_retencion_wrong_modelo", modelo=command.modelo))
-    catalogue = load_invoices()
-    entries = tuple((resolve_catalogue_invoice(catalogue, request.invoice_id), request.scheme) for request in requests)
-    routing = route_invoice_retenciones(entries)
-    merged = command.model_copy(
-        update={
-            "retencion_observations": merge_manual_and_routed_retencion_observations(
-                command.retencion_observations, routing.observations
+
+def _capture_invoice_withholding_into_command(
+    ctx: typer.Context,
+    command: PerModeloAggregationCommand,
+    requests: tuple[InvoiceWithholdingEvidenceRequest, ...],
+    *,
+    has_caller_authored_retenciones: bool,
+) -> PerModeloAggregationCommand:
+    """Capture one canonical-invoice allocation, then read its active projection.
+
+    The existing aggregate command is still a reporting projection, but 111
+    and 115 must never use it as a writable retención transport.  Reading the
+    active encrypted projection after the shared service succeeds also makes
+    omission a genuine no-op rather than an empty set replacement.
+    """
+    if command.modelo not in _INVOICE_WITHHOLDING_MODELOS:
+        if requests:
+            raise typer.BadParameter(
+                tr("cli.app.modelo.aggregate.invoice_retencion_wrong_modelo", modelo=command.modelo)
             )
-        }
+        return command
+    if has_caller_authored_retenciones:
+        raise typer.BadParameter("--retencion-observation is not accepted for Modelo 111 or 115; use invoice evidence")
+    if len(requests) > 1:
+        raise typer.BadParameter(
+            "one invoice withholding allocation is accepted per command; submit each allocation explicitly"
+        )
+
+    bucket_id = active_bucket_id_or_refuse()
+    ports = retencion_observation_ports_factory(ctx)(bucket_id=bucket_id)
+    if not requests:
+        return command.model_copy(
+            update={"retencion_observations": ports.repository.load_observations(command.modelo, command.period)}
+        )
+
+    from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+    from ...application.invoices.catalogue_lifecycle import resolve_catalogue_invoice
+
+    catalogue, catalogue_revision_id = InvoiceCatalogueRepository(bucket_id=bucket_id).load_revisioned()
+    try:
+        invoice = resolve_catalogue_invoice(catalogue, requests[0].invoice_id)
+        capture = build_invoice_withholding_capture(
+            invoice,
+            catalogue_revision_id=catalogue_revision_id,
+            request=requests[0],
+            applicable_year=command.period.filing_year,
+        )
+    except (InvoiceWithholdingEvidenceError, ValueError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if capture.scope.modelo != command.modelo or capture.scope.period != command.period:
+        raise typer.BadParameter("payment recognition period does not match the requested modelo period")
+
+    try:
+        from ...application.aggregation.withholding_producer import WithholdingProducer
+
+        WithholdingProducer(service=withholding_observation_service(ctx, bucket_id=bucket_id)).capture(capture.command)
+    except ValueError as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    return command.model_copy(
+        update={"retencion_observations": ports.repository.load_observations(command.modelo, command.period)}
     )
-    return (merged, routing.excluded)
 
 
 def _persist_cli_owned_observations(
@@ -84,22 +121,6 @@ def _persist_cli_owned_observations(
             filing_year=command.period.filing_year,
             period=command.period,
             observations=command.withholding_observations,
-        )
-
-
-def _persist_retencion_observations(
-    command: PerModeloAggregationCommand,
-    *,
-    ports: RetencionObservationPorts,
-) -> None:
-    """Persist retención rows through the explicitly composed application port."""
-    if RetencionesAggregationSourceResolver.supports_modelo(command.modelo):
-        persist_retencion_observations(
-            ports=ports,
-            modelo=command.modelo,
-            filing_year=command.period.filing_year,
-            period=command.period,
-            observations=command.retencion_observations,
         )
 
 
@@ -136,27 +157,6 @@ def _aggregate_output_lines(
         )
     lines.extend(notice.message for notice in notices)
     return lines
-
-
-def _invoice_retencion_excluded_notice(projection: InvoiceRetencionProjection) -> Notice:
-    """Project one excluded invoice-retención verdict into an operator-facing Notice.
-
-    The excluded half of an :class:`~application.aggregation.invoice_retencion.InvoiceRetencionRouting`
-    must be surfaced, never dropped -- an excluded retención is a liability the
-    taxpayer may still owe. The notice names the typed defect tokens so the
-    operator sees exactly why the invoice did not route.
-    """
-    reasons = ", ".join(defect.value for defect in projection.defects)
-    return Notice(
-        severity=NoticeSeverity.WARNING,
-        code="modelo.aggregate.invoice_retencion_excluded",
-        message=tr(
-            "cli.app.modelo.aggregate.invoice_retencion_excluded_notice",
-            invoice_id=projection.invoice_id,
-            reasons=reasons,
-        ),
-        context={"invoice_id": projection.invoice_id, "defects": reasons},
-    )
 
 
 def _parse_typed_cli_observations[ObservationT: BaseModel](
@@ -201,8 +201,12 @@ def aggregate_modelo(
         command = PerModeloAggregationCommand(
             modelo=modelo,
             period=resolve_year_period(year, period, modelo=modelo),
-            retencion_observations=_parse_typed_cli_observations(
-                retencion_observation, model=RetencionObservation, flag="--retencion-observation"
+            retencion_observations=(
+                ()
+                if modelo in _INVOICE_WITHHOLDING_MODELOS
+                else _parse_typed_cli_observations(
+                    retencion_observation, model=RetencionObservation, flag="--retencion-observation"
+                )
             ),
             counterpart_observations=_parse_typed_cli_observations(
                 counterpart_observation, model=CounterpartObservation, flag="--counterpart-observation"
@@ -214,25 +218,26 @@ def aggregate_modelo(
                 withholding_observation, model=WithholdingObservation, flag="--withholding-observation"
             ),
         )
-        invoice_retencion_requests = _parse_typed_cli_observations(
-            received_invoice_retencion, model=InvoiceRetencionRouteRequest, flag="--received-invoice-retencion"
+        invoice_withholding_requests = _parse_typed_cli_observations(
+            received_invoice_retencion,
+            model=InvoiceWithholdingEvidenceRequest,
+            flag="--received-invoice-retencion",
         )
-    command, excluded_invoice_retencions = _route_invoice_retenciones_into_command(command, invoice_retencion_requests)
+    command = _capture_invoice_withholding_into_command(
+        ctx,
+        command,
+        invoice_withholding_requests,
+        has_caller_authored_retenciones=bool(retencion_observation),
+    )
     if command.modelo == Modelo("190").value:
         bucket_id = active_bucket_id_or_refuse()
         _persist_cli_owned_observations(
             command,
             ports=percepcion_observation_ports_factory(ctx)(bucket_id=bucket_id),
         )
-    if RetencionesAggregationSourceResolver.supports_modelo(command.modelo):
-        bucket_id = active_bucket_id_or_refuse()
-        _persist_retencion_observations(
-            command,
-            ports=retencion_observation_ports_factory(ctx)(bucket_id=bucket_id),
-        )
     result = aggregate_per_modelo(command, operation=operation)
     clave_breakdown = _clave_breakdown(command)
     aggregate_result = ModeloAggregateResult.from_aggregation_result(result, clave_breakdown=clave_breakdown)
-    notices = [_invoice_retencion_excluded_notice(projection) for projection in excluded_invoice_retencions]
+    notices: list[Notice] = []
     lines = _aggregate_output_lines(result, clave_breakdown=clave_breakdown, notices=notices)
     emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines, notices=notices)

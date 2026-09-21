@@ -17,7 +17,7 @@ Core types:
 
 from __future__ import annotations
 
-from collections.abc import Generator, Mapping
+from collections.abc import Callable, Generator, Mapping
 from contextlib import ExitStack, asynccontextmanager, contextmanager
 from functools import cached_property
 from typing import TYPE_CHECKING, override
@@ -49,6 +49,7 @@ if TYPE_CHECKING:
         RetencionObservationPorts,
         RetencionObservationPortsFactory,
     )
+    from ..application.aggregation.withholding_observation_service import WithholdingObservationService
     from ..application.auth.apoderado_repository import ApoderadoConfigurationRepositoryFactory
     from ..application.auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..application.auth.operator_probe_ports import OperatorProbePorts
@@ -212,6 +213,11 @@ class ProfileAdapterComposition:
     def retencion_observation_ports_factory(self) -> RetencionObservationPortsFactory:
         """Resolve the retencion observation ports factory on first read."""
         return build_retencion_observation_ports
+
+    @property
+    def withholding_observation_service_factory(self) -> Callable[[str], WithholdingObservationService]:
+        """Resolve the sole atomic withholding mutation service for one bucket."""
+        return lambda bucket_id: build_withholding_observation_service(bucket_id=bucket_id)
 
     @property
     def percepcion_observation_ports_factory(self) -> PercepcionObservationPortsFactory:

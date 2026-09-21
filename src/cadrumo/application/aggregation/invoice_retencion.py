@@ -46,6 +46,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Self
@@ -55,12 +56,29 @@ from pydantic import BaseModel, model_validator
 from ...core.aggregation import BindingSourceKind, RetencionScheme
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.hashing import content_hash_hex
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.hex_ids import InvoiceId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.iva.components import category_components, registry_retencion_role_token
 from .errors import AggregationValidationError
 from .retenciones import RetencionObservation
+from .withholding_observation_service import (
+    SourceLiabilitySnapshot,
+    WithholdingMutationMode,
+    WithholdingWindowBaseline,
+    WithholdingWindowScope,
+)
+from .withholding_producer import WithholdingEvidenceCaptureCommand
+from .withholding_recognition import (
+    WithholdingDatedEvent,
+    WithholdingIncomeKind,
+    WithholdingOperationKind,
+    WithholdingRecipientTaxRegime,
+    WithholdingRecipientTaxStatus,
+    WithholdingRecognitionEvidence,
+    derive_withholding_recognition,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Iterable, Sequence
@@ -203,6 +221,159 @@ class InvoiceRetencionRouteRequest(BaseModel):
 
     invoice_id: InvoiceId
     scheme: RetencionScheme
+
+
+class InvoiceWithholdingEvidenceError(ValueError):
+    """Payload-free refusal while making invoice evidence capture-ready."""
+
+    def __init__(self, code: str) -> None:
+        self.code = code
+        super().__init__(f"invoice withholding evidence refused: {code}")
+
+
+class InvoiceWithholdingEvidenceRequest(BaseModel):
+    """CLI-safe evidence for one payment allocation of a canonical invoice.
+
+    The invoice catalogue supplies the source revision, liability limits,
+    currency and recipient identity.  This request holds only facts that the
+    catalogue cannot establish: the recipient's supported tax status and the
+    actual payment/satisfaction allocation.  It intentionally has no
+    recognition date or liability-total field.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    invoice_id: InvoiceId
+    income_kind: WithholdingIncomeKind
+    scheme: RetencionScheme
+    recipient_tax_status: WithholdingRecipientTaxStatus
+    recipient_tax_regime: WithholdingRecipientTaxRegime
+    payment_event_id: str
+    payment_occurred_on: date
+    allocation_id: str
+    allocated_base: Decimal
+    allocated_withholding: Decimal
+    allocated_settlement: Decimal
+    idempotency_key: str
+    mode: WithholdingMutationMode = WithholdingMutationMode.APPEND
+    baseline: WithholdingWindowBaseline | None = None
+    reason: str | None = None
+    supersedes_generation_id: str | None = None
+
+
+class InvoiceWithholdingCapture(BaseModel):
+    """Canonical invoice-derived producer command and its consistent read revision."""
+
+    model_config = _STRICT_FROZEN
+
+    command: WithholdingEvidenceCaptureCommand
+    scope: WithholdingWindowScope
+    catalogue_read_revision_id: str
+
+
+def build_invoice_withholding_capture(
+    invoice: Invoice,
+    *,
+    catalogue_revision_id: str,
+    request: InvoiceWithholdingEvidenceRequest,
+    applicable_year: int,
+) -> InvoiceWithholdingCapture:
+    """Derive one producer command from the current canonical invoice revision.
+
+    This is deliberately the sole invoice-to-withholding translation.  It
+    refuses missing catalogue facts rather than accepting caller substitutes
+    for a liability limit, source revision, recognition coordinate, or
+    recipient identity.
+    """
+    if request.invoice_id != invoice.invoice_id:
+        raise InvoiceWithholdingEvidenceError("invoice_identity_mismatch")
+    defects = tuple(_defects_for(invoice))
+    if defects:
+        raise InvoiceWithholdingEvidenceError(defects[0].value)
+    base = invoice.base_total_eur
+    withholding = invoice.retention_amount_eur
+    total = invoice.grand_total_eur
+    if base is None or withholding is None or total is None:
+        raise InvoiceWithholdingEvidenceError("invoice_eur_liability_unavailable")
+    settlement = total - withholding
+    if settlement < Decimal("0"):
+        raise InvoiceWithholdingEvidenceError("contradictory_invoice_settlement")
+    if invoice.counterparty_tax_id is None:
+        raise InvoiceWithholdingEvidenceError("missing_counterparty_tax_id")
+    evidence = WithholdingRecognitionEvidence(
+        applicable_year=applicable_year,
+        recipient_tax_status=request.recipient_tax_status,
+        recipient_tax_regime=request.recipient_tax_regime,
+        income_kind=request.income_kind,
+        operation_kind=WithholdingOperationKind.ORDINARY,
+        payment_or_satisfaction=WithholdingDatedEvent(
+            event_id=request.payment_event_id,
+            occurred_on=request.payment_occurred_on,
+        ),
+    )
+    # The catalogue revision proves this invoice was read consistently from the
+    # encrypted singleton.  It is deliberately not the source revision: that
+    # singleton changes for unrelated invoices, and using it as the allocation
+    # identity would strand a later payment behind a false liability conflict.
+    source_revision_id = content_hash_hex(
+        {
+            "invoice_id": invoice.invoice_id,
+            "currency": invoice.currency,
+            "base": str(base),
+            "withholding": str(withholding),
+            "settlement": str(settlement),
+            "perceptor_nif": invoice.counterparty_tax_id,
+        }
+    )
+    command = WithholdingEvidenceCaptureCommand(
+        source_kind=BindingSourceKind.PAYABLE_INVOICE,
+        source_object_id=invoice.invoice_id,
+        source_revision_id=source_revision_id,
+        allocation_id=request.allocation_id,
+        perceptor_nif=invoice.counterparty_tax_id,
+        perceptor_name=invoice.counterparty_name,
+        scheme=request.scheme,
+        taxable_base=request.allocated_base,
+        retencion_amount=request.allocated_withholding,
+        settlement_amount=request.allocated_settlement,
+        liability_snapshot=SourceLiabilitySnapshot(
+            source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+            source_object_id=invoice.invoice_id,
+            source_revision_id=source_revision_id,
+            liability_base=base,
+            liability_withholding=withholding,
+            liability_settlement=settlement,
+        ),
+        recognition_evidence=evidence,
+        mode=request.mode,
+        idempotency_key=request.idempotency_key,
+        baseline=request.baseline,
+        reason=request.reason,
+        supersedes_generation_id=request.supersedes_generation_id,
+    )
+    recognition = derive_withholding_recognition(evidence, modelo=_modelo_for_income(request.income_kind))
+    return InvoiceWithholdingCapture(
+        command=command,
+        scope=WithholdingWindowScope(
+            modelo=_modelo_for_income(request.income_kind),
+            period=_quarter_for(recognition.recognized_on),
+        ),
+        catalogue_read_revision_id=catalogue_revision_id,
+    )
+
+
+def _modelo_for_income(income_kind: WithholdingIncomeKind) -> str:
+    if income_kind in {WithholdingIncomeKind.WORK, WithholdingIncomeKind.PROFESSIONAL}:
+        return "111"
+    if income_kind is WithholdingIncomeKind.URBAN_RENT:
+        return "115"
+    raise InvoiceWithholdingEvidenceError("unsupported_income_projection")
+
+
+def _quarter_for(recognized_on: date):
+    from ...core.period import Period
+
+    return Period.from_year_and_code(recognized_on.year, f"{((recognized_on.month - 1) // 3) + 1}T")
 
 
 def project_received_invoice_retencion(
