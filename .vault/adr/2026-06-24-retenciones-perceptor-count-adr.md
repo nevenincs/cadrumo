@@ -3,11 +3,12 @@ tags:
   - '#adr'
   - '#retenciones-perceptor-count'
 date: '2026-06-24'
-modified: '2026-07-17'
-body_hash: 'sha256:3bdab9bdd661c523e974608bc2c90e0495b51c217a89c26807b7ab36c28059a3'
+modified: '2026-09-21'
+body_hash: 'sha256:f98d9de0c0e7ac7d7f1daec06e3298b5d47e46d8f5a1b942cc9ea0bf7c556fb0'
 related:
   - '[[2026-06-21-eoy-final-calculation-audit]]'
   - '[[2026-06-30-retenciones-perceptor-count-research]]'
+  - '[[2026-09-21-retenciones-recognition-property-authority-research]]'
 ---
 
 # `retenciones-perceptor-count` adr: `Retenciones perceptor count must derive from one repository-backed distinct-NIF source in the calc mesh` | (**status:** `accepted`)
@@ -79,6 +80,24 @@ per-perceptor source in the live calc path.
 
 ## Implementation
 
+### Amendment accepted 2026-09-21
+
+The earlier distinct-NIF conclusion remains valid only for aggregates whose official row identity
+is one row per recipient. It is superseded for Modelo 180 and Modelo 193 where their selected
+official designs count emitted type-2 records and permit several rows for the same NIF. This
+amendment does not reverse the dedicated encrypted observation source, the shared calc-mesh
+resolver, or the ban on summing quarterly counts.
+
+For Modelo 180 `decl.total-perceptores` is the count of canonical emitted type-2 rows. Supported
+positive rows group by filing year, recipient NIF, modality, accrual year, and property identity;
+reimbursements also separate by sign. Property identity follows the official situation,
+conditional cadastral reference, and address alternatives. The same recipient with two distinct
+row identities counts twice. For Modelo 193 the count likewise follows its canonical emitted
+type-2 row set, including separately classified pending and prior-accrual settlement disclosures.
+Keep `perceptor_count_distinct` as a distinct-recipient fact for consumers that require it and add
+a separate `type2_record_count`; calculation and export derive the filed count from the same
+materialized rows. Modelo 190 remains governed by its separate perception-row identity contract.
+
 Introduce ONE repository-backed per-perceptor retención source feeding the calc mesh, and route the
 retenciones perceptor counts through it:
 
@@ -94,8 +113,9 @@ retenciones perceptor counts through it:
 - Retire the M180 perceptores `op = "sum"` relation in both revisions and re-point
   `modelo-180-total-perceptores` at the binding; keep the base/retenciones monetary relations.
   Re-stamp the perceptor binding's `source` from `relation_prefill` to the new source kind.
-- Extend the same source to the M190/M193 `perceptor_count` bindings (family-wide unification), so
-  all three modelos count distinctly from one source.
+- Extend the same source to the M190/M193 count bindings. Each filed count uses its modelo's
+  canonical row identity; it must not assume distinct NIF where several official type-2 rows are
+  emitted for that NIF.
 - Gate it: a pull==calculate parity test for the perceptor count; a distinct-count regression (a
   perceptor across two quarters counts once); the distinct-NIF anti-tautology proof on the
   aggregation primitive.
@@ -114,7 +134,7 @@ traced the calc-vs-pull split end to end.
 
 ## Consequences
 
-Gains: the filed perceptor count becomes correct (distinct) on the calc path; pull and calculate
+Gains: the filed perceptor count becomes correct (canonical emitted-row count where required) on the calc path; pull and calculate
 reconcile; the whole retenciones-count family is unified on one grounded source; the wrong M115-sum
 count relation is deleted. Difficulties: the load-bearing prerequisite is a new persisted
 per-perceptor store — a real data-model addition, not wiring; it must live in the encrypted
@@ -128,9 +148,7 @@ serves both surfaces; the plan proceeds on this basis.
 
 ## Codification candidates
 
-- **Rule slug:** `retenciones-counts-are-distinct-not-summed`.
-  **Rule:** An annual-summary perceptor/recipient COUNT (Modelo 180/190/193 "número total de
-  perceptores") MUST be a distinct-identity (NIF) count from one repository-backed source shared by
-  the pull and calculate surfaces, never the arithmetic sum of quarterly aggregate counts; monetary
-  annual relations remain additive sums. Promote after the fix lands and the lesson holds across one
-  execution cycle.
+- **Rule slug:** `retenciones-counts-follow-canonical-annual-rows`.
+  **Rule:** An annual-summary perceptor count MUST derive from the modelo's canonical emitted row
+  identities in one repository-backed source shared by pull and calculate, never from summed
+  quarterly counts or an assumed distinct-NIF shortcut; monetary annual relations remain additive.
