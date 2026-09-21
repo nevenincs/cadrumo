@@ -17,6 +17,7 @@ from cadrumo.application.aggregation.retencion_observations_repository import Re
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.aggregation.withholding_observation_service import (
     ABSENT_WITHHOLDING_GENERATION_ID,
+    SourceLiabilitySnapshot,
     WithholdingObservationService,
     WithholdingWindowScope,
 )
@@ -65,6 +66,10 @@ def _command(
     income_kind: WithholdingIncomeKind = WithholdingIncomeKind.PROFESSIONAL,
     scheme: RetencionScheme = _PROFESSIONAL_SCHEME,
     recipient_status: WithholdingRecipientTaxStatus = WithholdingRecipientTaxStatus.RESIDENT,
+    settlement_amount: str | None = None,
+    liability_base: str = "500.00",
+    liability_withholding: str = "95.00",
+    liability_settlement: str = "500.00",
 ) -> WithholdingEvidenceCaptureCommand:
     return WithholdingEvidenceCaptureCommand(
         # This source intentionally represents a March-issued payable invoice;
@@ -78,6 +83,15 @@ def _command(
         scheme=scheme,
         taxable_base=Decimal(taxable_base),
         retencion_amount=Decimal(retencion_amount),
+        settlement_amount=Decimal(settlement_amount or taxable_base),
+        liability_snapshot=SourceLiabilitySnapshot(
+            source_kind=BindingSourceKind.PAYABLE_INVOICE.value,
+            source_object_id="invoice-issued-2025-03-31",
+            source_revision_id="invoice-revision-1",
+            liability_base=Decimal(liability_base),
+            liability_withholding=Decimal(liability_withholding),
+            liability_settlement=Decimal(liability_settlement),
+        ),
         recognition_evidence=WithholdingRecognitionEvidence(
             applicable_year=2025,
             recipient_tax_status=recipient_status,
@@ -188,3 +202,61 @@ def test_income_scheme_mismatch_refuses_without_choosing_another_modelo(tmp_path
             )
             == ()
         )
+
+
+@pytest.mark.parametrize(
+    ("first", "second", "expected"),
+    (
+        (
+            {"taxable_base": "300.00", "retencion_amount": "57.00", "settlement_amount": "300.00"},
+            {"taxable_base": "201.00", "retencion_amount": "38.00", "settlement_amount": "200.00"},
+            "liability_base_exceeded",
+        ),
+        (
+            {"taxable_base": "100.00", "retencion_amount": "20.00", "settlement_amount": "100.00"},
+            {"taxable_base": "100.00", "retencion_amount": "76.00", "settlement_amount": "100.00"},
+            "liability_withholding_exceeded",
+        ),
+        (
+            {"taxable_base": "100.00", "retencion_amount": "19.00", "settlement_amount": "300.00"},
+            {"taxable_base": "100.00", "retencion_amount": "19.00", "settlement_amount": "201.00"},
+            "liability_settlement_exceeded",
+        ),
+    ),
+)
+def test_liability_dimensions_refuse_before_a_second_projection_write(
+    tmp_path: Path,
+    first: dict[str, str],
+    second: dict[str, str],
+    expected: str,
+) -> None:
+    """Each monetary dimension is bounded independently at the atomic boundary."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        producer, service = _producer_for(profile.repository)
+        producer.capture(_command(**first))
+
+        with pytest.raises(ValueError, match=expected):
+            producer.capture(_command(allocation_id="allocation-2", payment_id="payment-2", **second))
+
+        scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
+        assert len(service.read_window(scope).entries) == 1
+
+
+def test_exact_liability_cap_and_replay_do_not_double_count(tmp_path: Path) -> None:
+    """The exact cap succeeds once and its idempotent retry consumes no capacity."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        producer, service = _producer_for(profile.repository)
+        first = _command(taxable_base="300.00", retencion_amount="57.00", settlement_amount="300.00")
+        producer.capture(first)
+        replay = producer.capture(first)
+        producer.capture(
+            _command(
+                allocation_id="allocation-2",
+                payment_id="payment-2",
+                taxable_base="200.00",
+                retencion_amount="38.00",
+                settlement_amount="200.00",
+            )
+        )
+        assert replay is not None and replay.mutation.replayed
+        assert len(service.read_window(replay.scope).entries) == 2

@@ -456,7 +456,7 @@ WITHHOLDING_WORKFLOW_NAMESPACE = SecureObjectNamespaceDefinition(
     owner="cadrumo.application.aggregation",
     sensitivity=SensitivityClass.FINANCIAL,
     schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
-    object_key_grammar="{window|generation|idempotency}:{sha256(scope)}[:{sha256(value)}]",
+    object_key_grammar="{window|generation|idempotency|guard}:{sha256(scope)}[:{sha256(value)}]",
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )

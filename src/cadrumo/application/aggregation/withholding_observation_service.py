@@ -8,8 +8,9 @@ authority which makes a coordinated change to those projections safe.
 from __future__ import annotations
 
 import json
+from decimal import Decimal
 from enum import StrEnum
-from typing import Protocol
+from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -91,12 +92,63 @@ class WithholdingProjectionIdentity(BaseModel):
         return sha256_hex(_canonical_json(identity).encode("utf-8"))
 
 
+class SourceLiabilitySnapshot(BaseModel):
+    """The canonical, revision-bound limit for allocations from one source."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    source_kind: str = Field(min_length=1, max_length=64)
+    source_object_id: str = Field(min_length=1, max_length=128)
+    source_revision_id: str = Field(min_length=1, max_length=128)
+    currency: Literal["EUR"] = "EUR"
+    liability_base: Decimal = Field(ge=Decimal("0"))
+    liability_withholding: Decimal = Field(ge=Decimal("0"))
+    liability_settlement: Decimal = Field(ge=Decimal("0"))
+
+    @property
+    def source_token(self) -> str:
+        """Return the guard scope, deliberately independent of revisions."""
+        return sha256_hex(
+            _canonical_json({"source_kind": self.source_kind, "source_object_id": self.source_object_id}).encode(
+                "utf-8"
+            )
+        )
+
+
+class EconomicAllocation(BaseModel):
+    """One economic allocation counted once even when it has several roles."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    liability: SourceLiabilitySnapshot
+    recognition_event_id: str = Field(min_length=1, max_length=128)
+    allocation_id: str = Field(min_length=1, max_length=128)
+    allocated_base: Decimal = Field(ge=Decimal("0"))
+    allocated_withholding: Decimal = Field(ge=Decimal("0"))
+    allocated_settlement: Decimal = Field(ge=Decimal("0"))
+
+    @property
+    def guard_identity(self) -> str:
+        """Return the allocation identity without revision or settlement IDs."""
+        return sha256_hex(
+            _canonical_json(
+                {
+                    "source_kind": self.liability.source_kind,
+                    "source_object_id": self.liability.source_object_id,
+                    "recognition_event_id": self.recognition_event_id,
+                    "allocation_id": self.allocation_id,
+                }
+            ).encode("utf-8")
+        )
+
+
 class WithholdingProjectionEntry(BaseModel):
     """One active projection, identified independently from recipient grouping."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     identity: WithholdingProjectionIdentity
+    allocation: EconomicAllocation
     retencion: RetencionObservation | None = None
     percepcion: WithholdingObservation | None = None
 
@@ -116,6 +168,24 @@ class WithholdingProjectionEntry(BaseModel):
             raise ValueError("projection role must match its payload")
         if source_object_id != self.identity.source_object_id:
             raise ValueError("projection source must match its composite identity")
+        if (
+            self.allocation.liability.source_kind != self.identity.source_kind
+            or self.allocation.liability.source_object_id != self.identity.source_object_id
+            or self.allocation.liability.source_revision_id != self.identity.source_revision_id
+            or self.allocation.recognition_event_id != self.identity.recognition_event_id
+            or self.allocation.allocation_id != self.identity.allocation_id
+        ):
+            raise ValueError("economic allocation must match its projection identity")
+        if self.retencion is not None and (
+            self.retencion.taxable_base != self.allocation.allocated_base
+            or self.retencion.retencion_amount != self.allocation.allocated_withholding
+        ):
+            raise ValueError("retencion projection amounts must match economic allocation")
+        if self.percepcion is not None and (
+            self.percepcion.percibido_dinerario != self.allocation.allocated_base
+            or self.percepcion.retencion_practicada != self.allocation.allocated_withholding
+        ):
+            raise ValueError("percepcion projection amounts must match economic allocation")
         return self
 
 
@@ -301,6 +371,8 @@ def _canonical_json(value: object) -> str:
 
 __all__ = [
     "ABSENT_WITHHOLDING_GENERATION_ID",
+    "EconomicAllocation",
+    "SourceLiabilitySnapshot",
     "WithholdingGenerationAudit",
     "WithholdingIdempotencyReplay",
     "WithholdingMutationEnvelope",

@@ -19,6 +19,8 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from .retenciones import RetencionObservation
 from .withholding_observation_service import (
+    EconomicAllocation,
+    SourceLiabilitySnapshot,
     WithholdingMutationEnvelope,
     WithholdingMutationMode,
     WithholdingMutationResult,
@@ -65,6 +67,8 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
     scheme: RetencionScheme
     taxable_base: Decimal = Field(ge=Decimal("0"))
     retencion_amount: Decimal = Field(ge=Decimal("0"))
+    settlement_amount: Decimal = Field(ge=Decimal("0"))
+    liability_snapshot: SourceLiabilitySnapshot
     recognition_evidence: WithholdingRecognitionEvidence
     mode: WithholdingMutationMode = WithholdingMutationMode.APPEND
     idempotency_key: str = Field(min_length=1, max_length=128)
@@ -115,6 +119,14 @@ class WithholdingProducer:
                 settlement_event_id=recognition.settlement_event_id,
                 allocation_id=command.allocation_id,
                 projection_role=WithholdingProjectionRole.RETENCION,
+            ),
+            allocation=EconomicAllocation(
+                liability=command.liability_snapshot,
+                recognition_event_id=recognition.recognition_event_id,
+                allocation_id=command.allocation_id,
+                allocated_base=command.taxable_base,
+                allocated_withholding=command.retencion_amount,
+                allocated_settlement=command.settlement_amount,
             ),
             retencion=RetencionObservation(
                 source_kind=command.source_kind,

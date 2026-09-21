@@ -14,6 +14,8 @@ from cadrumo.adapters.persistence.profile.withholding_observation_workflow impor
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.retenciones import RetencionObservation
 from cadrumo.application.aggregation.withholding_observation_service import (
+    EconomicAllocation,
+    SourceLiabilitySnapshot,
     WithholdingMutationEnvelope,
     WithholdingMutationMode,
     WithholdingObservationMutationError,
@@ -37,22 +39,43 @@ def _entry(
     recognition_event_id: str | None = None,
     settlement_event_id: str | None = None,
     allocation_id: str | None = None,
+    source_object_id: str = "source-1",
+    source_revision_id: str = "revision-1",
+    liability_base: str = "10000",
+    liability_withholding: str = "1900",
+    liability_settlement: str = "10000",
 ) -> WithholdingProjectionEntry:
     identity = WithholdingProjectionIdentity(
         source_kind="manual",
-        source_object_id="source-1",
-        source_revision_id="revision-1",
+        source_object_id=source_object_id,
+        source_revision_id=source_revision_id,
         recognition_event_id=recognition_event_id or f"recognition-{suffix}",
         settlement_event_id=settlement_event_id or f"payment-{suffix}",
         allocation_id=allocation_id or f"allocation-{suffix}",
         projection_role=WithholdingProjectionRole.RETENCION if retencion else WithholdingProjectionRole.PERCEPCION,
     )
+    allocation = EconomicAllocation(
+        liability=SourceLiabilitySnapshot(
+            source_kind=identity.source_kind,
+            source_object_id=identity.source_object_id,
+            source_revision_id=identity.source_revision_id,
+            liability_base=Decimal(liability_base),
+            liability_withholding=Decimal(liability_withholding),
+            liability_settlement=Decimal(liability_settlement),
+        ),
+        recognition_event_id=identity.recognition_event_id,
+        allocation_id=identity.allocation_id,
+        allocated_base=Decimal("100"),
+        allocated_withholding=Decimal("19"),
+        allocated_settlement=Decimal("100"),
+    )
     if retencion:
         return WithholdingProjectionEntry(
             identity=identity,
+            allocation=allocation,
             retencion=RetencionObservation(
                 source_kind=BindingSourceKind.LEDGER_TRANSACTION,
-                source_object_id="source-1",
+                source_object_id=source_object_id,
                 perceptor_nif="11111111H",
                 perceptor_name="Synthetic recipient",
                 scheme=RetencionScheme("actividades_economicas"),
@@ -63,8 +86,9 @@ def _entry(
         )
     return WithholdingProjectionEntry(
         identity=identity,
+        allocation=allocation,
         percepcion=WithholdingObservation(
-            source_id="source-1",
+            source_id=source_object_id,
             perceptor_tax_id="11111111H",
             perceptor_legal_name="Synthetic recipient",
             country_code="ES",
@@ -485,3 +509,186 @@ def test_distinct_concurrent_appends_converge_after_a_real_head_cas_race(tmp_pat
             "allocation-two",
             "allocation-three",
         }
+
+
+def test_same_source_cross_window_guard_rejects_combined_over_allocation(tmp_path: Path) -> None:
+    """Separate window heads share one source guard rather than separate limits."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        service, _workflow = _service_for(profile.repository)
+        first_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "1T"))
+        second_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
+        first = _entry(
+            suffix="cross-window-one",
+            retencion=True,
+            source_object_id="shared-liability",
+            liability_base="100",
+            liability_withholding="19",
+            liability_settlement="100",
+        )
+        second = _entry(
+            suffix="cross-window-two",
+            retencion=True,
+            source_object_id="shared-liability",
+            liability_base="100",
+            liability_withholding="19",
+            liability_settlement="100",
+        )
+        first_command = WithholdingMutationEnvelope(
+            scope=first_scope,
+            mode=WithholdingMutationMode.APPEND,
+            idempotency_key="cross-window-first",
+            entries=(first,),
+        )
+        second_command = WithholdingMutationEnvelope(
+            scope=second_scope,
+            mode=WithholdingMutationMode.APPEND,
+            idempotency_key="cross-window-second",
+            entries=(second,),
+        )
+        service.apply(first_command)
+        with pytest.raises(WithholdingObservationMutationError, match="liability_base_exceeded"):
+            service.apply(second_command)
+        assert service.read_window(second_scope).entries == ()
+
+
+def test_cross_window_concurrent_guard_cas_retries_then_refuses_over_cap(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Two writers prepared at absence cannot collectively exceed one source limit."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        first_service, _first_workflow = _service_for(profile.repository)
+        second_service, _second_workflow = _service_for(profile.repository)
+        first_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "1T"))
+        second_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
+        first_command = WithholdingMutationEnvelope(
+            scope=first_scope,
+            mode=WithholdingMutationMode.APPEND,
+            idempotency_key="guard-race-first",
+            entries=(
+                _entry(
+                    suffix="guard-race-first",
+                    retencion=True,
+                    source_object_id="guard-race-source",
+                    liability_base="100",
+                    liability_withholding="19",
+                    liability_settlement="100",
+                ),
+            ),
+        )
+        second_command = WithholdingMutationEnvelope(
+            scope=second_scope,
+            mode=WithholdingMutationMode.APPEND,
+            idempotency_key="guard-race-second",
+            entries=(
+                _entry(
+                    suffix="guard-race-second",
+                    retencion=True,
+                    source_object_id="guard-race-source",
+                    liability_base="100",
+                    liability_withholding="19",
+                    liability_settlement="100",
+                ),
+            ),
+        )
+        original_apply_batch = profile.repository.apply_batch
+        injected = False
+
+        def _race_apply_batch(writes, deletions=()):
+            nonlocal injected
+            if not injected:
+                injected = True
+                second_service.apply(second_command)
+            return original_apply_batch(writes, deletions)
+
+        monkeypatch.setattr(profile.repository, "apply_batch", _race_apply_batch)
+        with pytest.raises(WithholdingObservationMutationError, match="liability_base_exceeded"):
+            first_service.apply(first_command)
+
+        assert first_service.read_window(first_scope).entries == ()
+        assert len(second_service.read_window(second_scope).entries) == 1
+
+
+def test_clear_releases_source_capacity_without_erasing_generation_history(tmp_path: Path) -> None:
+    """A clear updates the derived guard atomically and leaves its audit queryable."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        service, _workflow = _service_for(profile.repository)
+        first_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "1T"))
+        second_scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
+        first_entry = _entry(
+            suffix="capacity-first",
+            retencion=True,
+            source_object_id="capacity-release-source",
+            liability_base="100",
+            liability_withholding="19",
+            liability_settlement="100",
+        )
+        initial = service.apply(
+            WithholdingMutationEnvelope(
+                scope=first_scope,
+                mode=WithholdingMutationMode.APPEND,
+                idempotency_key="capacity-initial",
+                entries=(first_entry,),
+            )
+        )
+        assert initial is not None
+        cleared = service.apply(
+            WithholdingMutationEnvelope(
+                scope=first_scope,
+                mode=WithholdingMutationMode.CLEAR,
+                idempotency_key="capacity-clear",
+                baseline=initial.baseline,
+                reason="synthetic source correction",
+            )
+        )
+        assert cleared is not None
+        assert service.read_generation(first_scope, initial.baseline.generation_id) is not None
+        assert service.read_generation(first_scope, cleared.baseline.generation_id) is not None
+
+        service.apply(
+            WithholdingMutationEnvelope(
+                scope=second_scope,
+                mode=WithholdingMutationMode.APPEND,
+                idempotency_key="capacity-reused",
+                entries=(
+                    _entry(
+                        suffix="capacity-second",
+                        retencion=True,
+                        source_object_id="capacity-release-source",
+                        liability_base="100",
+                        liability_withholding="19",
+                        liability_settlement="100",
+                    ),
+                ),
+            )
+        )
+        assert len(service.read_window(second_scope).entries) == 1
+
+
+def test_conflicting_source_revision_snapshots_refuse_before_any_window_write(tmp_path: Path) -> None:
+    """One source mutation cannot combine allocations from contradictory revisions."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        service, _workflow = _service_for(profile.repository)
+        scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
+        with pytest.raises(WithholdingObservationMutationError, match="contradictory_liability_snapshot"):
+            service.apply(
+                WithholdingMutationEnvelope(
+                    scope=scope,
+                    mode=WithholdingMutationMode.APPEND,
+                    idempotency_key="conflicting-snapshots",
+                    entries=(
+                        _entry(
+                            suffix="revision-one",
+                            retencion=True,
+                            source_object_id="revision-conflict-source",
+                        ),
+                        _entry(
+                            suffix="revision-two",
+                            retencion=True,
+                            source_object_id="revision-conflict-source",
+                            source_revision_id="revision-2",
+                        ),
+                    ),
+                )
+            )
+        assert service.read_window(scope).entries == ()
