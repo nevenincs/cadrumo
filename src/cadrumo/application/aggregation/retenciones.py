@@ -20,6 +20,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field, InstanceOf, NonNegativeInt, field_validator, model_validator
@@ -41,7 +42,9 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 from ...domain.calculations.registry.schema_base import DateAxis
+from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ._grouping import assert_rollup_totals_match, filter_observations_for_modelo, group_and_collect_names
+from .withholding_recognition import WithholdingDatedEvent
 
 
 def _retenciones_source_kind(value: object) -> BindingSourceKind:
@@ -122,6 +125,55 @@ class Modelo180PropertyEvidence(BaseModel):
         return f"4:local:{self.property_key}"
 
 
+class Modelo193NonpaymentCause(StrEnum):
+    """The one authority-grounded unpaid capital cause in the scoped 2025 slice."""
+
+    HOLDER_NOT_PRESENTED_FOR_COLLECTION = "holder_not_presented_for_collection"
+
+
+class Modelo193PendingPaymentEvidence(BaseModel):
+    """Actual-recipient evidence for the narrow Modelo 193 pending-payment sequence.
+
+    The 2025 record design permits the ``PENDIENTE`` treatment only for keys
+    A, B and D when the holder did not present for collection.  It deliberately
+    retains the actual recipient detail here: the recognition-year materializer
+    substitutes the prescribed pending values, while a later settlement can
+    emit the actual recipient without asking the caller to re-enter it.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    perception_key: Literal["A", "B", "D"]
+    nonpayment_cause: Modelo193NonpaymentCause
+    actual_recipient_detail: WithholdingObservation
+
+    @model_validator(mode="after")
+    def _is_a_supported_unpaid_perception(self) -> Modelo193PendingPaymentEvidence:
+        detail = self.actual_recipient_detail
+        if detail.clave.value != self.perception_key:
+            raise ValueError("Modelo 193 perception key must match actual-recipient annual detail")
+        if detail.pendiente_flag is not None:
+            raise ValueError("Modelo 193 pending flag is derived by materialization")
+        if detail.accrual_year is not None:
+            raise ValueError("Modelo 193 accrual year is derived by materialization")
+        return self
+
+
+class Modelo193CapitalDetail(BaseModel):
+    """Persisted capital disclosure evidence coupled to one active allocation.
+
+    ``settlement_event`` is copied only from the typed recognition evidence by
+    the producer.  It is therefore a correction-safe fact of the allocation,
+    not a caller-authored annual phase or an independently writable store.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    pending_payment: Modelo193PendingPaymentEvidence
+    recognition_event_id: str = Field(min_length=1, max_length=128)
+    settlement_event: WithholdingDatedEvent | None = None
+
+
 class RetencionObservation(BaseModel):
     """One typed observation feeding a retenciones aggregator.
 
@@ -158,6 +210,13 @@ class RetencionObservation(BaseModel):
     retencion_amount: Decimal = Field(ge=Decimal("0"))
     accrued_on: IsoDateString = Field(min_length=10, max_length=10)
     modelo_180_property: Modelo180PropertyEvidence | None = None
+    modelo_193_capital: Modelo193CapitalDetail | None = None
+
+    @model_validator(mode="after")
+    def _annual_detail_belongs_to_one_supported_family(self) -> RetencionObservation:
+        if self.modelo_180_property is not None and self.modelo_193_capital is not None:
+            raise ValueError("a retención allocation cannot carry both Modelo 180 and Modelo 193 annual detail")
+        return self
 
     @field_validator("source_kind", mode="before")
     @classmethod
@@ -621,6 +680,9 @@ __all__ = [
     "Modelo180PropertyEvidence",
     "Modelo180StructuredAddress",
     "Modelo180Type2Row",
+    "Modelo193CapitalDetail",
+    "Modelo193NonpaymentCause",
+    "Modelo193PendingPaymentEvidence",
     "RetencionObservation",
     "RetencionPerceptorRollup",
     "RetencionesAggregation",

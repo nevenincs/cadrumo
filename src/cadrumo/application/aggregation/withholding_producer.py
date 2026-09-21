@@ -18,7 +18,12 @@ from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
-from .retenciones import Modelo180PropertyEvidence, RetencionObservation
+from .retenciones import (
+    Modelo180PropertyEvidence,
+    Modelo193CapitalDetail,
+    Modelo193PendingPaymentEvidence,
+    RetencionObservation,
+)
 from .withholding_observation_service import (
     EconomicAllocation,
     SourceLiabilitySnapshot,
@@ -78,6 +83,7 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
     supersedes_generation_id: str | None = Field(default=None, min_length=64, max_length=64)
     modelo_180_property: Modelo180PropertyEvidence | None = None
     modelo_190_detail: WithholdingObservation | None = None
+    modelo_193_pending_payment: Modelo193PendingPaymentEvidence | None = None
 
     @model_validator(mode="after")
     def _annual_detail_matches_income_kind(self) -> WithholdingEvidenceCaptureCommand:
@@ -96,6 +102,9 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
             raise ValueError(
                 "work and professional income require Modelo 190 annual detail and other income forbids it"
             )
+        is_capital = self.recognition_evidence.income_kind is WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL
+        if not is_capital and self.modelo_193_pending_payment is not None:
+            raise ValueError("only ordinary movable capital can carry Modelo 193 pending-payment evidence")
         return self
 
 
@@ -132,6 +141,11 @@ class WithholdingProducer:
             modelo=modelo,
             period=_quarter_for(recognition.recognized_on),
         )
+        modelo_193_capital = _modelo_193_capital_detail(
+            pending_payment=command.modelo_193_pending_payment,
+            command=command,
+            recognition=recognition,
+        )
         retencion_entry = WithholdingProjectionEntry(
             identity=WithholdingProjectionIdentity(
                 source_kind=command.source_kind.value,
@@ -160,6 +174,7 @@ class WithholdingProducer:
                 retencion_amount=command.retencion_amount,
                 accrued_on=recognition.recognized_on.isoformat(),
                 modelo_180_property=command.modelo_180_property,
+                modelo_193_capital=modelo_193_capital,
             ),
         )
         entries: tuple[WithholdingProjectionEntry, ...]
@@ -280,6 +295,59 @@ def _annual_percepcion(
     if detail.source_allocation_id and detail.source_allocation_id != command.allocation_id:
         raise WithholdingProducerError("modelo_190_detail_source_allocation_id_mismatch")
     return detail.model_copy(update={"source_allocation_id": command.allocation_id})
+
+
+def _modelo_193_capital_detail(
+    *,
+    pending_payment: Modelo193PendingPaymentEvidence | None,
+    command: WithholdingEvidenceCaptureCommand,
+    recognition: WithholdingRecognition,
+) -> Modelo193CapitalDetail | None:
+    """Couple the narrow 2025 pending-payment facts to their capital allocation.
+
+    The only accepted cause is retained through a later correction so the
+    payment-year phase can prove why it carries an earlier accrual year.  A
+    same-year payment conflicts with that cause: it must use a separately
+    grounded ordinary Modelo 193 path, rather than an invented pending row.
+    """
+    if pending_payment is None:
+        return None
+    detail = pending_payment.actual_recipient_detail
+    expected = {
+        "source_id": command.source_object_id,
+        "perceptor_tax_id": command.perceptor_nif,
+        "perceptor_legal_name": command.perceptor_name,
+        "percibido_dinerario": command.taxable_base,
+        "retencion_practicada": command.retencion_amount,
+        "base_retenciones": command.taxable_base,
+    }
+    for field, value in expected.items():
+        if getattr(detail, field) != value:
+            raise WithholdingProducerError(f"modelo_193_detail_{field}_mismatch")
+    if detail.source_allocation_id and detail.source_allocation_id != command.allocation_id:
+        raise WithholdingProducerError("modelo_193_detail_source_allocation_id_mismatch")
+
+    settlement = command.recognition_evidence.payment_or_satisfaction
+    if settlement is None:
+        expected_detail_date = recognition.recognized_on
+    else:
+        if settlement.event_id != recognition.settlement_event_id:
+            raise AssertionError("ordinary-capital recognition must preserve its settlement event")
+        if settlement.occurred_on.year <= recognition.recognized_on.year:
+            raise WithholdingProducerError("modelo_193_nonpayment_cause_conflicts_with_same_year_settlement")
+        expected_detail_date = settlement.occurred_on
+    if detail.transaction_date != expected_detail_date:
+        raise WithholdingProducerError("modelo_193_detail_transaction_date_mismatch")
+
+    return Modelo193CapitalDetail(
+        pending_payment=pending_payment.model_copy(
+            update={
+                "actual_recipient_detail": detail.model_copy(update={"source_allocation_id": command.allocation_id})
+            }
+        ),
+        recognition_event_id=recognition.recognition_event_id,
+        settlement_event=settlement,
+    )
 
 
 __all__ = [

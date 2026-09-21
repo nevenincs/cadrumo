@@ -63,7 +63,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ...domain.iva.components import category_components, registry_retencion_role_token
 from .errors import AggregationValidationError
-from .retenciones import Modelo180PropertyEvidence, RetencionObservation
+from .retenciones import Modelo180PropertyEvidence, Modelo193PendingPaymentEvidence, RetencionObservation
 from .withholding_observation_service import (
     SourceLiabilitySnapshot,
     WithholdingMutationMode,
@@ -264,6 +264,7 @@ class InvoiceWithholdingEvidenceRequest(BaseModel):
     supersedes_generation_id: str | None = None
     modelo_180_property: Modelo180PropertyEvidence | None = None
     modelo_190_detail: WithholdingObservation | None = None
+    modelo_193_pending_payment: Modelo193PendingPaymentEvidence | None = None
 
     @model_validator(mode="after")
     def _dated_evidence_is_complete(self) -> Self:
@@ -378,6 +379,7 @@ def build_invoice_withholding_capture(
         supersedes_generation_id=request.supersedes_generation_id,
         modelo_180_property=request.modelo_180_property,
         modelo_190_detail=request.modelo_190_detail,
+        modelo_193_pending_payment=request.modelo_193_pending_payment,
     )
     recognition = derive_withholding_recognition(evidence, modelo=_modelo_for_income(request.income_kind))
     return InvoiceWithholdingCapture(
