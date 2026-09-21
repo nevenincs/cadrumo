@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:a184c6b2c2b078feae6e7beb4b093103ed7fde76bb51ef34ba6223aac45a4869'
+body_hash: 'sha256:6a3b305cbb39f033798d48518b8c713733608bae310758d0af916474ea9663ef'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -83,6 +83,9 @@ related:
 - `S10` `M` `.vault/audit/2026-09-21-taxpayer-profile-audit.md`
 - `S10` `A` `dev/acceptance/profile/tests/test_installed_tui_child.py`
 - `S10` `verify:` `acceptance-harness-14-tests` -> `pass`
+- `S11` `M` `.vault/audit/2026-09-21-taxpayer-profile-audit.md`
+- `S11` `M` `.agents/session-briefs/handoffs/2026-09-21-taxpayer-profile-checkpoint.md`
+- `S11` `verify:` `integrated-profile-review-no-critical-high` -> `pass`
 
 ## Notes
 
@@ -97,4 +100,5 @@ related:
 - `S09` Installed wheel execution intentionally remains S10.
 - `S10` canonical import gate unavailable: governed tree changed concurrently; no PROFILE-01 occurrence
 - `S10` canonical import gate stable but failed on 10 external findings; no PROFILE-01 occurrence
+- `S11` plan handoff cannot close while required repository import gate remains red outside PROFILE-01
 

@@ -127,7 +127,7 @@ The isolated authority publication was confined to the acceptance run root. The 
 | PR2 | not exercised | Focused switching and stale-result tests pass, but installed acceptance uses one profile per journey and does not prove a real two-entity in-flight F5 continuation. |
 | PR3 | proven | Field/writer/consumer matrix, typed shared row mutations, CLI/TUI parity, explicit clear, and stable identities are covered. Scope is the current-profile supported row contract. |
 | PR4 | proven | Supported current activity row facts, selector preservation, validation, and nonordinal targeting are covered; unsupported historical applicability is excluded. |
-| PR5 | proven | Focused races cover save, no-op, clear, cancel/navigation, invalid input, stale CAS, removal-before-save, repeated activation, and persistence failure; journey8 proves persisted frontend outcomes. |
+| PR5 | proven | Focused races cover save, no-op, clear, cancel/navigation, invalid input, stale CAS, removal-before-save, repeated activation, and persistence failure; journey9 proves persisted frontend outcomes. |
 | PR6 | blocked | Historical/as-of profile resolution and production filing snapshot pinning remain undefined cross-lane decisions. Current records are not presented as filing-time snapshots. |
 | PR7 | blocked | Synthetic census clear/conflict behavior is focused-test proven, but real certificate ingestion remains blocked on grounded document-layout/specimen evidence. |
 | PR8 | proven | Affected typed Modelo binding tests and the public sealed profile archive consumer retain current-profile meaning; full tax-lane recalculation was deliberately reused rather than rerun. |

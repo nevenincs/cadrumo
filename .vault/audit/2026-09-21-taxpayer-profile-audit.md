@@ -74,6 +74,8 @@ Two shared-worktree runs were invalidated by concurrent source changes. A clean 
 
 P04 code/acceptance review result: PASS for PROFILE-01 behavior after the no-op correction. No unresolved critical or high product/acceptance finding remains. Plan close remains blocked solely by the required repository-wide import-boundary gate.
 
+Final re-review at `26ba3fd5b3`: PASS. Journey9's receipt hash recomputes, both TUI-bearing mutation paths retain exactly one typed no-op observation, and the exact localized predicate plus negative saved-result regression close the prior high finding. The PR1-PR12 dispositions are conservative and accepted. No critical or high PROFILE-01 finding remains.
+
 ## Recommendations
 
 - Fix clear projection at the shared projection boundary and add an anti-resurfacing regression before touching consumers.
