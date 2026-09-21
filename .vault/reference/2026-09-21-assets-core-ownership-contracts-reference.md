@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:05e451b9eff8568a2f90707b7c9d7b5896285a6eb7bc5edf81ad20d51deb6b62'
+body_hash: 'sha256:c2c3dad4120ab96fb695000b9c8c6bd255f19f745e886b8386f56f9be7efec7f'
 related:
   - "[[2026-08-23-amortization-casilla-mapping-adr]]"
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]"
@@ -13,7 +13,7 @@ related:
 
 # `assets-core` reference: `IRPF asset ownership and integration contracts`
 
-Source state `8c3a40fecffcd98be5684dce4859c186e8a74d31`. This reference maps the
+Source state `bbbc47407efa8fb41ff16126c9fb08aea11ee723`. This reference maps the
 existing acquisition, persistence, calculation, filing, and frontend owners
 that the new IRPF activity-asset capability must extend without duplicating.
 
@@ -68,3 +68,44 @@ bounded traces. A dedicated IRPF asset domain with paired application,
 profile-persistence, typed-provider, and aggregation owners fits the live
 boundaries. Identity, history revisions, M130 collision semantics, mixed-use
 allocation, CLI token, and namespace key remain decisions rather than code facts.
+
+Transaction identity is content-derived from amount, narrative, provider ID,
+and value date in `src/cadrumo/domain/transactions/models.py:89`. Direction,
+invoice linkage, classification, allocation, and categories are not identity
+inputs. An ID-changing edit creates a replacement while preserving the prior
+ID in `TransactionEditLineageEntry` through
+`src/cadrumo/application/ledger/actions_manual.py:884` and
+`src/cadrumo/domain/transactions/lineage_models.py:229`. Asset evidence must
+therefore retain the acquisition transaction ID observed by the asset revision
+and follow canonical lineage for current-state invalidation; it must not mint a
+second transaction identity.
+
+Calculation identity already covers source IDs, provenance, inputs, and outputs
+in `src/cadrumo/domain/modelos/calculation_revision.py:171`, with identical
+reruns reusing the content-derived revision contract at
+`src/cadrumo/domain/modelos/calculation_revision.py:715`. Filing identity is
+derived from work unit, calculation revision, actor, and member identity in
+`src/cadrumo/domain/modelos/filing_record.py:223`; idempotent re-file returns the
+current record in `src/cadrumo/application/modelo/filing_actions.py:297`. No
+existing identity covers asset revision, schedule fingerprint, tax year,
+covered period, projection role, and claim amount together.
+
+M130 casilla 02 currently has one owner:
+`src/cadrumo/domain/calculations/registry/ledger_renta_gastos_pago_fraccionado_bindings.py:56`.
+It sums cumulative year-to-date outgoing observations in
+`src/cadrumo/application/aggregation/renta_gasto_ledger.py:210`. The generic
+source resolution contract rejects duplicate binding or casilla ownership at
+`src/cadrumo/application/aggregation/source_resolution_operations.py:296`.
+Asset depreciation must therefore enter the existing expense owner as an
+additional typed component, not register a second owner or replace ordinary
+expenses.
+
+Current transaction allocation maps BUSINESS to one and MIXED to the stored
+business percentage in
+`src/cadrumo/application/aggregation/business_proportion.py:28`. Usage-ratio facts
+must equal that percentage when both exist under
+`src/cadrumo/domain/usage_ratios/model.py:249`. Home-office censo facts expose
+only office area divided by total area at
+`src/cadrumo/application/user_profile/censo_sync.py:408`; no existing asset owner
+stores construction, land, or legal ownership basis. Applying both transaction
+business percentage and a new home allocation would allocate twice.

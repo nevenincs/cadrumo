@@ -10,7 +10,7 @@ related:
   - '[[2026-09-21-assets-core-lifecycle-contract-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:d7cecab5a278bc208ae54e5061d4e83f530261be00647bb320d46c6e285315da'
+body_hash: 'sha256:d00c83bde59004a2e638fd23e5b69151bdec2a94822cc8625b87e1d77c3a2a8f'
 ---
 
 # `assets-core` plan
@@ -43,7 +43,7 @@ Their occupancy does not block independent owned work.
 
 Ground uncovered contracts and reproduce current acquisition-cost routing without changing shared integrations.
 
-- [ ] `P01.S01` - Ground and accept the missing identity, recorded-history, Modelo 130, and mixed-use-home contracts; `.vault/reference/2026-09-21-assets-core-ownership-contracts-reference.md, .vault/research/2026-09-21-assets-core-lifecycle-and-integration-research.md, .vault/adr/2026-09-21-assets-core-lifecycle-contract-adr.md`.
+- [x] `P01.S01` - Ground and accept the missing identity, recorded-history, Modelo 130, and mixed-use-home contracts; `.vault/reference/2026-09-21-assets-core-ownership-contracts-reference.md, .vault/research/2026-09-21-assets-core-lifecycle-and-integration-research.md, .vault/adr/2026-09-21-assets-core-lifecycle-contract-adr.md`.
 - [x] `P01.S02` - Reproduce and lock the current ordinary-expense, stock, and amortizable-category acquisition-cost behavior; `src/cadrumo/domain/renta/tests/, src/cadrumo/application/aggregation/tests/`.
 
 ### Phase `P02` - Schedule and persisted history

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:8ea5f4e71ac90f9910c9bcaf0c69333e875f964d4aaab1a9591a0e37fbb1e6db'
+body_hash: 'sha256:e7656b60d8e4866f5584e48bb6c2c892b1ea4ccd4b4ca8a2b52e7a99d9ebb7c0'
 related:
   - "[[2026-09-21-assets-core-plan]]"
 ---
@@ -43,3 +43,8 @@ related:
 - `S02` `M` `src/cadrumo/application/aggregation/tests/test_inventory_source.py`
 - `S02` `verify:` `uv run ruff check two P01.S02 test files` -> `pass`
 - `S02` `by:` `assets-stage1-regression`
+- `S01` `M` `.vault/reference/2026-09-21-assets-core-ownership-contracts-reference.md`
+- `S01` `M` `.vault/research/2026-09-21-assets-core-lifecycle-and-integration-research.md`
+- `S01` `M` `.vault/adr/2026-09-21-assets-core-lifecycle-contract-adr.md`
+- `S01` `verify:` `vaultspec assets-core focused checks` -> `pass`
+- `S01` `by:` `root`
