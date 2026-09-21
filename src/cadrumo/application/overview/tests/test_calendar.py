@@ -652,6 +652,66 @@ def test_notification_snapshots_project_message_events_on_notification_date() ->
     assert events[0].event_date == date(2025, 3, 12)
     assert events[0].reference_id == "2596230606502"
     assert events[0].status == "unread"
+    assert events[0].modelo is None
+    assert events[0].filing_year is None
+    assert events[0].period is None
+    assert events[0].aeat_submission_state is None
+    assert events[0].aeat_submitted_at is None
+    assert events[0].justificante_verified is None
+    assert events[0].verified_justificante_csv is None
+
+
+def test_notification_filing_like_text_stays_unlinked_and_replay_is_idempotent() -> None:
+    """A message cannot become filing evidence through suggestive metadata."""
+    row = RemoteNotification(
+        certificado_id="2596230606502",
+        tipo="notificacion",
+        concepto="Modelo 303 1T 2025 pagado con justificante",
+        titular_nif="B12345674",
+        titular_nombre="Test S.L.",
+        destinatario_nif="B12345674",
+        destinatario_nombre="Test S.L.",
+        fecha_emision=date(2025, 4, 20),
+        fecha_notificacion=date(2025, 4, 21),
+        modo_notificacion="DEHú",
+        leida=True,
+        source_url=_SOURCE_URL,
+    )
+    first = PersistedNotificationsSnapshot(
+        snapshot_id="a" * 64,
+        bucket_id=_BUCKET_ID,
+        captured_at=datetime(2025, 4, 21, 10, 0, tzinfo=UTC),
+        source_url=_SOURCE_URL,
+        authenticated_identity="B12345674",
+        rows=(row,),
+        persisted_at=datetime(2025, 4, 21, 10, 5, tzinfo=UTC),
+    )
+    replay = first.model_copy(
+        update={
+            "snapshot_id": "b" * 64,
+            "captured_at": datetime(2025, 4, 22, 10, 0, tzinfo=UTC),
+            "persisted_at": datetime(2025, 4, 22, 10, 5, tzinfo=UTC),
+        }
+    )
+
+    events = calendar_events_from_notification_snapshots(
+        (first, replay),
+        OverviewCalendarRange(from_date=date(2025, 4, 1), to_date=date(2025, 4, 30)),
+        as_of=date(2025, 4, 22),
+        expected_tax_id="B12345674",
+    )
+
+    assert len(events) == 1
+    event = events[0]
+    assert event.event_type is OverviewCalendarEventType.MESSAGE
+    assert event.reference_id == row.certificado_id
+    assert event.modelo is None
+    assert event.filing_year is None
+    assert event.period is None
+    assert event.aeat_submission_state is None
+    assert event.aeat_submitted_at is None
+    assert event.justificante_verified is None
+    assert event.verified_justificante_csv is None
 
 
 def test_notification_snapshots_filter_message_events_by_expected_taxpayer() -> None:

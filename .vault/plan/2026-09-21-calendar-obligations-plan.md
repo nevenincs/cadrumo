@@ -12,7 +12,7 @@ related:
   - '[[2026-09-17-filing-chain-reconciliation-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:5b7132fb75cddb9fca4377340d78504b4faa10a83be143501dc10b5c4255a321'
+body_hash: 'sha256:a9acfbd02f5a0694c6679df442b3b4d92f0a9e65f346080f9388b49dbad8dab8'
 ---
 
 # `calendar-obligations` plan
@@ -42,7 +42,7 @@ Prove and correct one effective deadline, evaluation date, authority provenance 
 Expose existing evidence strength, query coverage, reconciliation and safe recovery semantics without adding live reads or a second reconciliation owner.
 
 - [x] `P02.S04` - Expose filing evidence grade, query coverage, freshness and recovery actions without collapsing local, AEAT or receipt state; `src/cadrumo/application/overview/calendar_models.py, src/cadrumo/application/overview/calendar_evidence.py, src/cadrumo/application/modelo/declarations_calendar.py and owning tests`.
-- [ ] `P02.S05` - Keep ungrounded notifications explicitly unlinked and incapable of proving filing or response deadlines; `src/cadrumo/application/overview/calendar.py, src/cadrumo/application/overview/calendar_models.py and owning tests`.
+- [x] `P02.S05` - Keep ungrounded notifications explicitly unlinked and incapable of proving filing or response deadlines; `src/cadrumo/application/overview/calendar.py, src/cadrumo/application/overview/calendar_models.py and owning tests`.
 - [ ] `P02.S06` - Project the existing conditional surcharge guidance without assessing liability or conflating sanction amounts; `src/cadrumo/application/modelo/declarations_calendar.py, src/cadrumo/application/modelo/work_plazo.py and owning tests`.
 
 ### Phase `P03` - CLI and TUI task completion

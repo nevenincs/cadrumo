@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:c8795375462783580026fee98127518f25ac87189c99a44dbcdcb3efc2052718'
+body_hash: 'sha256:955f37feb91b5f2209e4410a63ff2409a4431ca6884ea8a0058674d24280a930'
 related:
   - "[[2026-09-21-calendar-obligations-plan]]"
 ---
@@ -47,4 +47,7 @@ related:
 - `S04` `verify:` `uv run pytest -n 0 declarations calendar application and TUI` -> `pass`
 - `S04` `verify:` `uv run ruff check declarations calendar files` -> `pass`
 - `S04` `verify:` `uv run ruff and ty check declarations calendar` -> `pass`
+- `S05` `M` `src/cadrumo/application/overview/tests/test_calendar.py`
+- `S05` `M` `.agents/session-briefs/handoffs/2026-09-21-calendar-obligations-checkpoint.md`
+- `S05` `verify:` `uv run pytest src/cadrumo/application/overview/tests/test_calendar.py -q` -> `pass`
 
