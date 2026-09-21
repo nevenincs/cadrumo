@@ -491,3 +491,78 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   unknown add/classify refusing without catalogue/event mutation, valid dated
   transaction/invoice tokens, legacy invalid in-scope calculation refusal, and
   out-of-scope/excluded controls. No second registry or TUI-side check.
+
+## 2026-09-21 continuation after user instruction (baseline 135d6c116a)
+
+- User explicitly directed commit-first integration while preserving collisions.
+  Combined IVA/income TUI classification, tests and four locale catalogues were
+  committed on `tui/modelo` as `c33e3e48f6`; this preserved the peer-added
+  `irpf_category` field and did not stage peer invoice/assets changes. Exact
+  post-commit focused integration command
+  `uv run --no-sync pytest -q -n0 -m integration
+  src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_classification_iva.py
+  src/cadrumo/entrypoints/tui/ledger/tests/test_ledger_flows.py` passed 26/26;
+  log `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T210643.753336Z-pytest-76408-b17711ff/run.log`.
+- The broader ledger boundary gate's exact invariant is no CLI, adapter or
+  `domain.calculations` imports inside the TUI ledger screen package. The
+  remaining imports are in committed assets-owned `actividad_asset.py` and
+  `models_actividad_asset.py`; this is a real assets integration dependency,
+  not an IVA classification regression. Income handoff identifies concurrent
+  owner for dirty invoice entry/ledger door changes. Do not weaken the test.
+- Luna Max export trace: the 2025 DP30300 official design has a four-character
+  `Versión del Programa` at 93-96 and developer NIF at 101-109. Official Note 1
+  says the development entity fills both; it does not state AEAT assignment.
+  The accepted export ADR already requires explicit product authority, so it
+  was reused unchanged. The stronger incorrect `AEAT-assigned` docstring was
+  corrected in `domain/filing/software_identity.py` and committed as
+  `fcba11eb2b`; targeted Ruff/format/diff checks passed. `PACKAGE_VERSION`
+  handling for M100 is separate and its 3-byte `051` cannot fill M303's
+  4-byte field. A genuine approved release identifier or derivation, developer
+  NIF, and reviewed evidence reference/digest are still missing; user asked
+  asynchronously for the exact values/approver. No identity was invented.
+- Luna Max verification audit: `verificado_completo` is a calculation/evidence
+  grant, not export readiness; CLI and IVA acceptance already report
+  `verified_export_blocked` separately. TUI file affordance may show a report
+  ID without checking grant, but the export authority still refuses; its
+  lifecycle/workbench owners are peer-dirty. Proposed TUI affordance correction
+  is pending owner coordination; no verification downgrade.
+- Leased writer implementation now in progress with Terra High: only
+  `application/ledger/actions_manual.py` and focused application-ledger tests.
+  It will use `require_iva_category(category,
+  effective_date=command.booked_date, authority=ports.operation)` before
+  create/update persistence, preserving declared tokens and batch atomicity.
+  Exact reserved test: `uv run --no-sync pytest -q -n0
+  src/cadrumo/application/ledger/tests/test_manual_iva_category_membership.py`;
+  result pending. No full lane reserved.
+- One Terra Max owns a new installed IVA TUI-only capture/classification and
+  fresh-process reopen acceptance test under `dev/acceptance/iva/`; its focused
+  installed lane is reserved exclusively, result pending. No M303 calculation
+  or export claim from that slice. Luna Max is tracing the public product
+  identity injection/evidence seam while values remain externally pending.
+- Shared ledger validation delivered as `9865586749`: `actions_manual.py`
+  checks typed category membership through the pinned authority at booked date
+  before create and shared update persistence. `None` remains unset;
+  registry-declared `unknown`, `operacion_no_sujeta`/`domestic_not_subject` and
+  `erroneous_invoice` are not remapped or treated as declarable. Real-authority
+  focused tests passed 5/5 (final log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T211612.310031Z-pytest-752-b9eeaa6b/run.log`);
+  targeted Ruff/format/basedpyright/diff passed. Two existing integrated
+  handoff nodes (270-row bulk save-once and CLI update load-once) passed 2/2,
+  log `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T211744.150068Z-pytest-30552-7630a09f/run.log`.
+  Batch preserves existing partial-success semantics: one valid row persists
+  once, invalid later row remains unchanged and appears as a failure. No
+  aggregation defense was removed.
+- User clarified they are Cadrumo's developer but are not official/approved and
+  these EEDD header fields are not fillable by Cadrumo. Luna Max found no
+  product-level secure enrollment owner and no official/accepted authority for
+  a blank non-EEDD substitute. The accepted registry audit
+  `.vault/audit/2026-09-01-registry-temporal-coverage-live-remeasurement-adr-regrounding-audit.md`
+  at 9268-9289 says EEDD-delegated positions must not be authored as registry
+  values; their emission remains a product-authority question. Therefore do
+  not add a CLI identity injection, fabricate values, emit blanks, or call
+  M303 export accepted. Retain the exact installed export refusal. An
+  independently valid non-EEDD path would require new official evidence and
+  an accepted authority decision.
+- TUI-only installed capture/reopen worker still owns its exclusive lane under
+  `dev/acceptance/iva/`; no result yet. A new Luna Max is selecting one
+  distinct identity-independent IVA acceptance case beyond the €10.50 path.
