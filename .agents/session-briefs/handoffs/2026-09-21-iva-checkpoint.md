@@ -349,3 +349,15 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
 - Next bounded action: compose the ordinary filing envelope using the resolver,
   then expose secure attestation collection and that transient authoring request
   through the installed CLI without full-envelope plaintext input.
+- Ordinary envelope composition completed: the transient request accepts only
+  the exact coordinate, joint-return and annual-volume elections, and the secure
+  applicability reference. It derives current profile scope, pinned annual Orden
+  snapshot, empty general-scope rows and calculation result through production
+  owners, then validates the existing `FilingInstanceEvidence`. Simplified or
+  mixed profile scope refuses as unsupported; no draft is persisted.
+- Independent authoring verification: 4 focused real custody/profile/authority
+  tests passed; targeted Ruff, formatting, basedpyright and diff checks passed.
+- Next bounded action is installed CLI wiring: secure attestation collection and
+  ordinary transient authoring must feed the existing calculate action directly;
+  the full-envelope plaintext file remains internal/legacy and is not production
+  authority.
