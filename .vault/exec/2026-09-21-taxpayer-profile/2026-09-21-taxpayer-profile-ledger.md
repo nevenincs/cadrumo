@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:2d2352d6beecf651b59cbf058db3ef4163a6cbcef19a80c95f4af5ed486290f9'
+body_hash: 'sha256:a184c6b2c2b078feae6e7beb4b093103ed7fde76bb51ef34ba6223aac45a4869'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -81,6 +81,8 @@ related:
 - `S10` `M` `dev/acceptance/profile/tui_journey.py`
 - `S10` `M` `dev/acceptance/profile/tests/test_tui_journey.py`
 - `S10` `M` `.vault/audit/2026-09-21-taxpayer-profile-audit.md`
+- `S10` `A` `dev/acceptance/profile/tests/test_installed_tui_child.py`
+- `S10` `verify:` `acceptance-harness-14-tests` -> `pass`
 
 ## Notes
 

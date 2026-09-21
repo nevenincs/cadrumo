@@ -309,9 +309,26 @@ async def _submit_visible_no_op(*, pilot: Any, row_key: str, scenario: ProfileRo
     await pilot.app.workers.wait_for_complete()
     await pilot.pause()
     status = cast("PinnedStatusBar", query_public_selector(pilot, "#manager-status", PinnedStatusBar))
-    if status.tone != "success" or not status.message or not _field_is_present(pilot=pilot, path=path):
+    if not _is_exact_visible_no_op_outcome(
+        status_tone=status.tone,
+        status_message=status.message,
+        field_visible=_field_is_present(pilot=pilot, path=path),
+    ):
         raise ProfileTuiChildAcceptanceError("visible_no_op_not_landed")
     return True
+
+
+def _is_exact_visible_no_op_outcome(*, status_tone: str, status_message: str, field_visible: bool) -> bool:
+    """Accept only the localized outcome the visible manager declares for no change.
+
+    The installed child does not read an overview revision or content digest:
+    those are not part of the visible operator surface.  It instead requires
+    the exact rendered ``no_change`` status produced by the same localized UI
+    path, while retaining only a boolean in its durable receipt.
+    """
+    from cadrumo.core.i18n.render import tr
+
+    return status_tone == "success" and status_message == tr("flows.manager.edit.no_change") and field_visible
 
 
 async def _remove_activity_row(*, pilot: Any, row_key: str, scenario: ProfileRowLifecycleScenario) -> None:

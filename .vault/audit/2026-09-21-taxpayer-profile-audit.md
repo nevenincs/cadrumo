@@ -66,7 +66,7 @@ Phase P03 result after correction: PASS. Both high findings were fixed and the f
 
 ### installed-no-op-evidence | high | Initial installed receipt did not audit the claimed no-op
 
-The first P04 review rejected journey7 because its receipt did not retain typed no-op evidence and the TUI paths had no explicit no-op operation. S10 was reopened. The visible TUI child now saves the already-visible value unchanged, requires the localized successful no-change outcome, and emits only `no_op_observed`; TUI-only and CLI-to-TUI both execute it. Journey8 aggregates that evidence with the CLI `changed=false` result and records `no_op_observed=true`. The high finding is resolved.
+The first P04 review rejected journey7 because its receipt did not retain typed no-op evidence and the TUI paths had no explicit no-op operation. A second review rejected journey8 because its child accepted any successful message. S10 was reopened. The visible TUI child now saves the already-visible value unchanged, requires the exact localized `flows.manager.edit.no_change` outcome, rejects `flows.manager.edit.saved`, and emits only `no_op_observed`; TUI-only and CLI-to-TUI both execute it. Journey9 aggregates that evidence with the CLI `changed=false` result and records `no_op_observed=true`. Positive and negative predicate regressions pass. The high finding is resolved.
 
 ### repository-import-gate | medium | Stable canonical gate remains red outside PROFILE-01
 
