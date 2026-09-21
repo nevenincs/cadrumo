@@ -12,7 +12,7 @@ related:
   - '[[2026-08-19-profile-setup-completion-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:caf45f174847c71a129d0de20fcbd8c0508f2773265c4e8f7293848311b19767'
+body_hash: 'sha256:feab583e468a423dbba36191ce19e82e70725a2ca014cb49519ff8458701f470'
 ---
 
 # `taxpayer-profile` plan
@@ -49,7 +49,7 @@ Fix only reproduced backend validation, persistence, selection, provenance, read
 Expose shared backend behavior through independent CLI and TUI adapters with honest save, selection, provenance, and capability messaging.
 
 - [x] `P03.S06` - Complete CLI profile configuration, selection, typed editing, and actionable diagnostics; `application user_profile section rows and entrypoints CLI config packages`.
-- [ ] `P03.S07` - Complete TUI profile configuration, typed editing, switching safety, provenance, and acquisition affordances; `entrypoints TUI profile, app, and registration modules`.
+- [x] `P03.S07` - Complete TUI profile configuration, typed editing, switching safety, provenance, and acquisition affordances; `entrypoints TUI profile, app, and registration modules`.
 - [ ] `P03.S08` - Align localized operator copy without coupling CLI and TUI adapters; `src/cadrumo/locales`.
 
 ### Phase `P04` - prove secure cross-entrypoint operation

@@ -40,6 +40,20 @@ if TYPE_CHECKING:
     from ...domain.user_profile.schema import ProfileSchemaDefinition, ProfileSectionDefinition
 
 
+def _require_baseline(
+    current: UserProfileRecord,
+    *,
+    expected_revision: int | None,
+    expected_content_digest: str | None,
+) -> None:
+    if expected_revision is None or expected_content_digest is None:
+        return
+    if current.record_revision != expected_revision or current.content_digest != expected_content_digest:
+        from .capsule_record import ProfileRecordConflictError
+
+        raise ProfileRecordConflictError("profile row mutation baseline is stale")
+
+
 @dataclass(frozen=True, slots=True)
 class ProfileRepeatableRowMutationOutcome:
     """The exact encrypted record and row identity produced by one row addition."""
@@ -196,6 +210,8 @@ def add_profile_repeatable_section_row(
     profile_id: str,
     section_key: str,
     values: Mapping[str, str],
+    expected_revision: int | None = None,
+    expected_content_digest: str | None = None,
     schema: ProfileSchemaDefinition,
     profile_decode_context: ProfileDecodeContext,
 ) -> ProfileRepeatableRowMutationOutcome:
@@ -219,6 +235,11 @@ def add_profile_repeatable_section_row(
         profile_id,
         profile_decode_context=profile_decode_context,
     ).load(profile_id)
+    _require_baseline(
+        current,
+        expected_revision=expected_revision,
+        expected_content_digest=expected_content_digest,
+    )
     row_index = next_section_row_index(section.key, (fact.path for fact in current.facts))
     facts = section_row_facts(section, row_index=row_index, values=values)
     if not facts:
@@ -243,6 +264,8 @@ def update_profile_repeatable_section_row(
     row_key: str,
     values: Mapping[str, str],
     clear_fields: Iterable[str],
+    expected_revision: int | None = None,
+    expected_content_digest: str | None = None,
     schema: ProfileSchemaDefinition,
     profile_decode_context: ProfileDecodeContext,
 ) -> ProfileRepeatableRowChangeOutcome:
@@ -256,6 +279,11 @@ def update_profile_repeatable_section_row(
         profile_decode_context=profile_decode_context,
     )
     current = repository.load(profile_id)
+    _require_baseline(
+        current,
+        expected_revision=expected_revision,
+        expected_content_digest=expected_content_digest,
+    )
     _require_existing_row(section.key, row_key, current)
     changes = tuple(
         UserProfileFact(path=_row_path(section.key, row_key, field.key), value=values[field.key].strip())
@@ -286,6 +314,8 @@ def remove_profile_repeatable_section_row(
     profile_id: str,
     section_key: str,
     row_key: str,
+    expected_revision: int | None = None,
+    expected_content_digest: str | None = None,
     schema: ProfileSchemaDefinition,
     profile_decode_context: ProfileDecodeContext,
 ) -> ProfileRepeatableRowChangeOutcome:
@@ -296,6 +326,11 @@ def remove_profile_repeatable_section_row(
         profile_decode_context=profile_decode_context,
     )
     current = repository.load(profile_id)
+    _require_baseline(
+        current,
+        expected_revision=expected_revision,
+        expected_content_digest=expected_content_digest,
+    )
     _require_existing_row(section.key, row_key, current)
     present = record_to_path_values(current)
     changes = tuple(

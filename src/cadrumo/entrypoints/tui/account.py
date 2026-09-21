@@ -9,7 +9,7 @@ alternative credential, language, appearance, or sign-out screen.
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from dataclasses import dataclass
 from enum import StrEnum, auto
 from functools import partial
@@ -95,7 +95,11 @@ class AccountFactoriesV1:
 def compose_account_factories(
     *,
     profile_overview: ProfileOverview,
-    persist_profile_field: Callable[[str, str], ProfileOverview],
+    persist_profile_field: Callable[[str, str, int, str], ProfileOverview],
+    add_profile_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None,
+    update_profile_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview]
+    | None = None,
+    remove_profile_row: Callable[[str, str, int, str], ProfileOverview] | None = None,
     login_choices: Sequence[ProfileLoginChoice],
     authenticate: Callable[[str, str], ProfileLoginAttempt],
     assess_password: Callable[[str], ProfilePasswordAssessment],
@@ -123,6 +127,9 @@ def compose_account_factories(
         return ProfileManagerScreen(
             profile_overview,
             persist=persist_profile_field,
+            add_row=add_profile_row,
+            update_row=update_profile_row,
+            remove_row=remove_profile_row,
             complete_setup=complete_setup,
             validate=validate_profile_field,
             launch_source=launch_profile_source,

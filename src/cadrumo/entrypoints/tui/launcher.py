@@ -438,12 +438,15 @@ class InstalledWorkbenchAccountInputsV1:
 
     profile_id: str
     profile_overview: ProfileOverview
-    persist_profile_field: Callable[[str, str], ProfileOverview]
+    persist_profile_field: Callable[[str, str, int, str], ProfileOverview]
     login_choices: Sequence[ProfileLoginChoice]
     authenticate: Callable[[str, str], ProfileLoginAttempt]
     assess_password: Callable[[str], ProfilePasswordAssessment]
     rotate_password: Callable[[str, str, str], PassphraseChangeAttempt]
     complete_setup: Callable[[], ProfileOverview] | None = None
+    add_profile_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None
+    update_profile_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview] | None = None
+    remove_profile_row: Callable[[str, str, int, str], ProfileOverview] | None = None
 
     def __post_init__(self) -> None:
         """Bind every account door to one exact authenticated profile identity."""
@@ -458,6 +461,9 @@ class InstalledWorkbenchAccountInputsV1:
         return compose_account_factories(
             profile_overview=self.profile_overview,
             persist_profile_field=self.persist_profile_field,
+            add_profile_row=self.add_profile_row,
+            update_profile_row=self.update_profile_row,
+            remove_profile_row=self.remove_profile_row,
             login_choices=self.login_choices,
             authenticate=self.authenticate,
             assess_password=self.assess_password,

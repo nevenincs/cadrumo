@@ -247,7 +247,9 @@ def _account_inputs(
     label: str = "Synthetic profile",
     choice_label: str = "Synthetic profile",
 ) -> InstalledWorkbenchAccountInputsV1:
-    def persist(_path: str, _value: str) -> ProfileOverview:
+    def persist(
+        _path: str, _value: str, _expected_revision: int, _expected_content_digest: str
+    ) -> ProfileOverview:
         raise AssertionError("profile persistence must not run while composing the workbench")
 
     def authenticate(_profile_id: str, _password: str) -> ProfileLoginAttempt:

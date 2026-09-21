@@ -28,7 +28,7 @@ See Also:
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable, Mapping, Sequence
 from contextvars import copy_context
 from dataclasses import replace
 from typing import TYPE_CHECKING, ClassVar, cast, override
@@ -258,6 +258,85 @@ class FieldEditScreen(ModalScreen[str | None]):
         self.dismiss(None)
 
 
+class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
+    """Collect one new repeatable row without deciding what may be stored.
+
+    Blank boxes are omitted rather than interpreted as clears: a new row has
+    no prior value to clear.  The application row door remains the authority
+    for required fields, value shape, and relationship rules.
+    """
+
+    DEFAULT_CSS = _EDIT_DIALOG_CSS
+    BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
+
+    def __init__(self, section: ProfileSectionView) -> None:
+        super().__init__()
+        self._section = section
+        # The blank projection for an empty section and every extant row both
+        # carry the declaration in display order.  Keep one field per key for
+        # the new row; repeated extant rows must not duplicate form controls.
+        self._fields = tuple(
+            field
+            for index, field in enumerate(section.fields)
+            if field.path.rsplit(".", 1)[-1]
+            not in {
+                earlier.path.rsplit(".", 1)[-1]
+                for earlier in section.fields[:index]
+            }
+        )
+
+    @override
+    def compose(self) -> ComposeResult:
+        with Vertical(id="edit-dialog"):
+            yield Label(tr("cli.config.profile.add_row.help"), id="edit-label")
+            for index, field in enumerate(self._fields):
+                yield Label(f"{field.label}{_REQUIRED_MARK if field.required else ''}")
+                yield Input(placeholder=profile_field_shape_hint(field.field_type) or "", id=f"row-input-{index}")
+            with Horizontal(id="edit-actions"):
+                yield Button(tr("flows.manager.edit.cancel"), id="btn-row-cancel")
+                yield Button(tr("flows.manager.edit.save"), id="btn-row-save", classes="-primary")
+
+    def on_mount(self) -> None:
+        if self._fields:
+            self.query_one("#row-input-0", Input).focus()
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        if event.button.id == "btn-row-save":
+            self.dismiss(
+                {
+                    field.path.rsplit(".", 1)[-1]: self.query_one(f"#row-input-{index}", Input).value
+                    for index, field in enumerate(self._fields)
+                    if self.query_one(f"#row-input-{index}", Input).value.strip()
+                }
+            )
+            return
+        self.dismiss(None)
+
+    def action_cancel(self) -> None:
+        self.dismiss(None)
+
+
+class RepeatableRowRemoveScreen(ModalScreen[bool]):
+    """Require an explicit confirmation before clearing an identified row."""
+
+    DEFAULT_CSS = _EDIT_DIALOG_CSS
+    BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
+
+    @override
+    def compose(self) -> ComposeResult:
+        with Vertical(id="edit-dialog"):
+            yield Label(tr("cli.config.profile.remove_row.help"), id="edit-label")
+            with Horizontal(id="edit-actions"):
+                yield Button(tr("flows.manager.edit.cancel"), id="btn-row-cancel")
+                yield Button(tr("flows.confirm.yes"), id="btn-row-remove", classes="-error")
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        self.dismiss(event.button.id == "btn-row-remove")
+
+    def action_cancel(self) -> None:
+        self.dismiss(False)
+
+
 """The profile field deciding what language this page is written in.
 
 Named here because the page reaches for it directly, which it does for no
@@ -339,7 +418,11 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         self,
         overview: ProfileOverview,
         *,
-        persist: Callable[[str, str], ProfileOverview],
+        persist: Callable[[str, str, int, str], ProfileOverview],
+        add_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None,
+        update_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview]
+        | None = None,
+        remove_row: Callable[[str, str, int, str], ProfileOverview] | None = None,
         complete_setup: Callable[[], ProfileOverview] | None = None,
         validate: Callable[[str, str], str | None] | None = None,
         launch_source: Callable[[ProfileAcquisitionSourceV1], Awaitable[None]] | None = None,
@@ -390,6 +473,14 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         reloaded overview rather than ``None`` is what keeps the screen
         from ever displaying its own optimistic guess — whatever the store
         made of the value is what appears."""
+        self._add_row = add_row
+        self._update_row = update_row
+        self._remove_row = remove_row
+        """Shared repeatable-row doors, bound by composition to one profile.
+
+        Calls carry the overview baseline captured when the dialog opened;
+        completion never substitutes whichever profile happens to be visible.
+        """
         self._field_by_key: dict[str, ProfileFieldView] = {}
         self._table_by_section: dict[str, DataTable[str]] = {}
         """The live table per section, so a single-field edit can address a
@@ -508,6 +599,13 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         if event.button.id == "manager-complete-setup":
             self.action_complete_setup()
             return
+        button_id = event.button.id or ""
+        if button_id.startswith("manager-add-row-"):
+            self._open_add_row(button_id.removeprefix("manager-add-row-"))
+            return
+        if button_id.startswith("manager-remove-row-"):
+            self._open_remove_selected_row(button_id.removeprefix("manager-remove-row-"))
+            return
         card = event.button.parent
         if isinstance(card, SourceActionCard) and card.id == _DOCUMENT_READER_CARD_ID:
             if self._open_document_reader is not None:
@@ -529,6 +627,79 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
             self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
         await self._launch_source(source)
+
+    def _section(self, key: str) -> ProfileSectionView | None:
+        """Return the displayed section without treating display order as identity."""
+        return next((section for section in self.overview.sections if section.key == key), None)
+
+    @staticmethod
+    def _row_key_for_field(section: ProfileSectionView, field: ProfileFieldView) -> str:
+        """Recover the stored row key from a schema-expanded fact path."""
+        parts = field.path.split(".")
+        if len(parts) == 2 and parts[0] == section.key:
+            return ""
+        if len(parts) == 3 and parts[0] == section.key:
+            return parts[1]
+        # A projected repeatable field must have one of these shapes.  Do not
+        # guess from display position if a malformed projection reaches TUI.
+        raise ValueError(f"cannot determine row identity from {field.path!r}")
+
+    def _existing_row_key(self, section: ProfileSectionView, table: DataTable[str] | None = None) -> str | None:
+        """Return the selected stable row only when it has an extant value."""
+        table = table or self._table_by_section.get(section.key)
+        if table is None or not table.is_valid_row_index(table.cursor_row):
+            return None
+        # DataTable exposes the key through its coordinate; use the field map
+        # keyed by that path, not cursor order as the row identity.
+        coordinate = table.coordinate_to_cell_key(table.cursor_coordinate)
+        field = self._field_by_key.get(str(coordinate.row_key.value))
+        if field is None:
+            return None
+        candidate = self._row_key_for_field(section, field)
+        group = tuple(
+            item
+            for item in section.fields
+            if self._row_key_for_field(section, item) == candidate
+        )
+        return candidate if any(item.present for item in group) else None
+
+    @staticmethod
+    def _has_existing_row(section: ProfileSectionView) -> bool:
+        """Whether this projection contains a real row rather than its blank template."""
+        return any(field.present for field in section.fields)
+
+    def _open_add_row(self, section_key: str) -> None:
+        if self._pending_write is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        section = self._section(section_key)
+        if section is None or not section.repeatable or self._add_row is None:
+            return
+        baseline_revision = self.overview.record_revision
+        baseline_digest = self.overview.content_digest
+        self.app.push_screen(
+            RepeatableRowAddScreen(section),
+            lambda values: self._add_repeatable_row(section.key, values, baseline_revision, baseline_digest),
+        )
+
+    def _open_remove_selected_row(self, section_key: str) -> None:
+        if self._pending_write is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        section = self._section(section_key)
+        if section is None or self._remove_row is None:
+            return
+        row_key = self._existing_row_key(section)
+        if row_key is None:
+            return
+        baseline_revision = self.overview.record_revision
+        baseline_digest = self.overview.content_digest
+        self.app.push_screen(
+            RepeatableRowRemoveScreen(),
+            lambda confirmed: self._remove_repeatable_row(
+                section.key, row_key, baseline_revision, baseline_digest, confirmed
+            ),
+        )
 
     # ── rendering ───────────────────────────────────────────────────────
 
@@ -587,6 +758,24 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
                 # or pushing the value column off-screen — see
                 # ``_FIELD_COLUMN_WIDTH``.
                 table.add_row(*self._rendered_row(field), key=key, height=None)
+            if section.repeatable:
+                # These use the same established CLI wording, rather than
+                # introducing a second vocabulary before the locale pass.
+                await panel.mount(
+                    Button(
+                        tr("cli.config.profile.add_row.help"),
+                        id=f"manager-add-row-{section.key}",
+                        compact=True,
+                    )
+                )
+                if self._has_existing_row(section):
+                    await panel.mount(
+                        Button(
+                            tr("cli.config.profile.remove_row.help"),
+                            id=f"manager-remove-row-{section.key}",
+                            compact=True,
+                        )
+                    )
 
     async def _apply_overview(self, updated: ProfileOverview) -> None:
         """Show ``updated`` by repainting only what differs from the page on screen.
@@ -817,6 +1006,20 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         field = self._field_by_key.get(str(key))
         if field is None:
             return
+        section = self._section(field.path.split(".", 1)[0])
+        if section is not None and section.repeatable:
+            row_key = self._row_key_for_field(section, field)
+            row_fields = tuple(
+                candidate
+                for candidate in section.fields
+                if self._row_key_for_field(section, candidate) == row_key
+            )
+            if not any(candidate.present for candidate in row_fields):
+                # The unfilled group is the section's add affordance, not an
+                # extant base row.  Opening an edit would turn omission into
+                # an accidental update of an identity that does not exist.
+                self._open_add_row(section.key)
+                return
         self.app.push_screen(
             FieldEditScreen(field, validate=self._validator_for(field)),
             self._apply_edit_for(field),
@@ -837,6 +1040,8 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
 
     def _apply_edit_for(self, field: ProfileFieldView):
         """Build the dismissal callback that persists one field's new value."""
+        baseline_revision = self.overview.record_revision
+        baseline_digest = self.overview.content_digest
 
         def _apply(value: str | None) -> None:
             if value is None:
@@ -849,11 +1054,23 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
             if field.required and not value.strip():
                 self._refuse(tr("flows.manager.edit.required_blank", field=field.label))
                 return
-            self._persist(field.path, value)
+            section = self._section(field.path.split(".", 1)[0])
+            if section is not None and section.repeatable:
+                row_key = self._row_key_for_field(section, field)
+                self._update_repeatable_row(
+                    section.key,
+                    row_key,
+                    {field.path.rsplit(".", 1)[-1]: value.strip()} if value.strip() else {},
+                    () if value.strip() else (field.path.rsplit(".", 1)[-1],),
+                    baseline_revision,
+                    baseline_digest,
+                )
+                return
+            self._persist(field.path, value, baseline_revision, baseline_digest)
 
         return _apply
 
-    def _persist(self, path: str, value: str) -> None:
+    def _persist(self, path: str, value: str, expected_revision: int, expected_content_digest: str) -> None:
         """Write one field through the injected door, off the event loop.
 
         The write reaches encrypted storage and takes long enough to be felt.
@@ -881,7 +1098,10 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         write_context = copy_context()
 
         def _write() -> ProfileOverview:
-            written = cast("ProfileOverview | None", write_context.run(self._persist_field, path, value))
+            written = cast(
+                "ProfileOverview | None",
+                write_context.run(self._persist_field, path, value, expected_revision, expected_content_digest),
+            )
             if written is None:
                 # The door declares it hands back the reloaded page, so this
                 # is a broken contract rather than a refused value. Raised
@@ -897,6 +1117,79 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         self._pending_write = self.run_worker(
             _write,
             name="profile-field-write",
+            group="profile-field-write",
+            exit_on_error=False,
+            thread=True,
+        )
+
+    def _add_repeatable_row(
+        self,
+        section_key: str,
+        values: Mapping[str, str] | None,
+        expected_revision: int,
+        expected_content_digest: str,
+    ) -> None:
+        """Publish one explicitly requested row against the opened baseline."""
+        door = self._add_row
+        if values is None or door is None:
+            return
+        self._run_row_write(
+            f"{section_key}:add",
+            lambda: door(section_key, values, expected_revision, expected_content_digest),
+        )
+
+    def _update_repeatable_row(
+        self,
+        section_key: str,
+        row_key: str,
+        values: Mapping[str, str],
+        clear_fields: Sequence[str],
+        expected_revision: int,
+        expected_content_digest: str,
+    ) -> None:
+        """Modify or explicitly clear the row that supplied the selected field."""
+        door = self._update_row
+        if door is None:
+            return
+        self._run_row_write(
+            f"{section_key}:{row_key or 'base'}",
+            lambda: door(section_key, row_key, values, clear_fields, expected_revision, expected_content_digest),
+        )
+
+    def _remove_repeatable_row(
+        self,
+        section_key: str,
+        row_key: str,
+        expected_revision: int,
+        expected_content_digest: str,
+        confirmed: bool,
+    ) -> None:
+        """Clear an identified row only after the confirmation modal affirmed it."""
+        door = self._remove_row
+        if not confirmed or door is None:
+            return
+        self._run_row_write(
+            f"{section_key}:{row_key or 'base'}",
+            lambda: door(section_key, row_key, expected_revision, expected_content_digest),
+        )
+
+    def _run_row_write(self, identity: str, write: Callable[[], ProfileOverview]) -> None:
+        """Run a shared row door once; a duplicate activation cannot start another CAS write."""
+        if self._pending_write is not None:
+            self._refuse(tr("flows.manager.edit.write_in_flight"))
+            return
+        write_context = copy_context()
+
+        def _write() -> ProfileOverview:
+            written = cast("ProfileOverview | None", write_context.run(write))
+            if written is None:
+                raise TypeError("the profile row write door returned no overview to render")
+            return written
+
+        self._pending_write_path = identity
+        self._pending_write = self.run_worker(
+            _write,
+            name="profile-row-write",
             group="profile-field-write",
             exit_on_error=False,
             thread=True,
@@ -979,6 +1272,12 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         written_path = self._pending_write_path
         self._pending_write_path = None
         if worker.state is WorkerState.SUCCESS and worker.result is not None:
+            if worker.result.profile_id != self.overview.profile_id:
+                # A completion for another profile must never repaint this
+                # screen. Installed composition captures profile_id, and this
+                # guard makes a broken host a refusal rather than a redirect.
+                self._refuse(tr("flows.manager.edit.write_failed"))
+                return
             if written_path == PROFILE_OUTPUT_LANGUAGE_PATH:
                 # The page is now written in a different language, and the
                 # incremental path cannot express that: it repaints the
@@ -1021,10 +1320,14 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         if error is None:
             rendered = ""
         else:
+            from ....application.user_profile.capsule_record import ProfileRecordConflictError
             from ....core.errors.error_codes import resolve_error_message
             from ....core.errors.hierarchy import CadrumoError
 
-            rendered = resolve_error_message(error) if isinstance(error, CadrumoError) else ""
+            if isinstance(error, ProfileRecordConflictError):
+                rendered = tr("errors.fail.fail_storage_secure_object_revision_conflict")
+            else:
+                rendered = resolve_error_message(error) if isinstance(error, CadrumoError) else ""
         self._refuse(rendered or tr(message_key))
 
     async def action_quit(self) -> None:
@@ -1037,7 +1340,7 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         behaviour, and it is bounded by a single storage round trip.
 
         """
-        if self._pending_write is not None:
+        if self._pending_write is not None or self._pending_completion is not None:
             self._refuse(tr("flows.manager.edit.write_in_flight"))
             return
         self.dismiss(None)

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:14b574d967cb8ef89eeeeecbce6f8a0ba7bfdec64f37ff892263fdbf77e4ff10'
+body_hash: 'sha256:94b8839713a99e95ae7ed49d148479dca4bd5edc9d1cc9209bb55f9388d4f081'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -43,6 +43,18 @@ related:
 - `S06` `M` `src/cadrumo/locales/ca/application.yml`
 - `S06` `M` `src/cadrumo/locales/hu/application.yml`
 - `S06` `verify:` `uv run --no-sync ty check targeted-profile-row-files` -> `pass`
+- `S07` `M` `src/cadrumo/application/user_profile/fact_write.py`
+- `S07` `M` `src/cadrumo/application/user_profile/overview.py`
+- `S07` `M` `src/cadrumo/application/user_profile/section_rows.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/account.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/installed_session.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_account.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_generation_composition.py`
+- `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_screen.py`
+- `S07` `A` `src/cadrumo/entrypoints/tui/profile/tests/test_repeatable_row_race_safety.py`
+- `S07` `verify:` `targeted ruff and ty` -> `pass`
 
 ## Notes
 
@@ -50,3 +62,5 @@ related:
 - `S02` The failing probe reproduced the intended defect; missing in-flight-write plus F5 integration remains assigned to P03.S07. Temporary failing regression was removed and will land atomically with the projection fix.
 - `S03` PR6 implementation blocked pending a cross-lane temporal-context decision; three bounded options recorded.
 - `S05` Verification-only Step; no persistence namespace or Modelo source edit was required. Production filing snapshot pinning remains blocked.
+- `S07` Installed-generation aggregate currently fails before profile composition because concurrent calendar fixture omits required OverviewCalendar.evaluated_on.
+

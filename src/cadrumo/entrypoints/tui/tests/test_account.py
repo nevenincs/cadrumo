@@ -70,7 +70,9 @@ def _factories(
 
     selected_appearance = appearance or default_appearance
 
-    def persist_profile_field(_path: str, _value: str) -> ProfileOverview:
+    def persist_profile_field(
+        _path: str, _value: str, _expected_revision: int, _expected_content_digest: str
+    ) -> ProfileOverview:
         _unexpected("persist")
 
     def assess_password(_candidate: str) -> ProfilePasswordAssessment:

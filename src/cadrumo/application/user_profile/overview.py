@@ -293,6 +293,7 @@ class ProfileSectionView(BaseModel):
 
     key: str
     title: str
+    repeatable: bool
     fields: tuple[ProfileFieldView, ...]
 
     @property
@@ -312,6 +313,8 @@ class ProfileOverview(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     profile_id: ProfileId
+    record_revision: int
+    content_digest: str
     label: str
     setup_state: ProfileSetupState
     sections: tuple[ProfileSectionView, ...]
@@ -727,6 +730,7 @@ def build_profile_overview(
             ProfileSectionView(
                 key=section.key,
                 title=profile_section_title(section),
+                repeatable=section.repeatable,
                 fields=tuple(
                     _section_field_views(
                         section,
@@ -745,6 +749,8 @@ def build_profile_overview(
     divergence_notice = censo_divergence_notice(record)
     return ProfileOverview(
         profile_id=record.profile_id,
+        record_revision=record.record_revision,
+        content_digest=record.content_digest,
         label=label,
         setup_state=record.setup_state,
         sections=tuple(sections),
