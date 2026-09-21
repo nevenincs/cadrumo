@@ -7,6 +7,8 @@ from decimal import Decimal
 
 import pytest
 
+from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
+from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
@@ -16,6 +18,7 @@ from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
     resolve_activity_asset_schedule_authority,
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetUnsupportedError
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
@@ -27,7 +30,11 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from cadrumo.domain.renta.actividad_asset.schedule import AmortizationMethod, FreeDepreciationElection
+from cadrumo.domain.renta.actividad_asset.schedule import (
+    AmortizationMethod,
+    FreeDepreciationElection,
+    ScheduledAmortizationCharge,
+)
 
 from ..compiler.loader import load_modelo_directory
 
@@ -156,6 +163,95 @@ def test_low_value_free_refuses_intangible_and_missing_explicit_election() -> No
                 requested_amount=Decimal("300.00"),
             ),
         )
+
+
+def test_low_value_free_real_authority_forecast_records_one_idempotent_encrypted_history_claim() -> None:
+    class MemoryHistoryRepository:
+        def __init__(self) -> None:
+            self.history = ActivityAssetHistory()
+
+        def load(self) -> ActivityAssetHistory:
+            return self.history
+
+        def append_revision(self, revision: ActivityAssetRevision) -> ActivityAssetHistory:
+            self.history = self.history.append_revision(revision)
+            return self.history
+
+        def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
+            recorded = self.history.record_claim(claim)
+            self.history = recorded.history
+            return recorded
+
+    asset = ActivityAssetRevision(
+        asset_id="published-free-depreciation-tool",
+        revision_number=1,
+        acquisition=AcquisitionLineageReference(
+            observed_transaction_id="a" * 64,
+            invoice_evidence_id="canonical-new-material-invoice",
+            evidence_fingerprint="b" * 64,
+        ),
+        acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE,
+        asset_kind=AssetKind.MATERIAL,
+        basis=ActivityAssetBasis(
+            stage=AssetBasisStage.BUSINESS_ALLOCATED,
+            basis_amount=Decimal("300.00"),
+            prior_allocation_provenance="reviewed allocation",
+        ),
+        in_service_date=date(2025, 1, 1),
+        opening_history=OpeningAmortizationHistory(
+            status=OpeningHistoryStatus.KNOWN,
+            accumulated_amount=Decimal("0"),
+        ),
+    )
+    selection = ActivityAssetAuthoritySelection(
+        regime=DirectEstimationRegime.NORMAL,
+        asset_kind=AssetKind.MATERIAL,
+        authority_class_key="mobiliario",
+        method=ActivityAssetAmortizationMethod.LOW_VALUE_FREE,
+        free_depreciation_election=FreeDepreciationElection(
+            election_reference="operator-elected-full-amount",
+            new_material_evidence_reference="canonical-new-material-invoice",
+            unit_acquisition_value=Decimal("300.00"),
+            requested_amount=Decimal("300.00"),
+        ),
+    )
+    repository = MemoryHistoryRepository()
+
+    def forecast(
+        revision: ActivityAssetRevision,
+        *,
+        selection: ActivityAssetAuthoritySelection,
+        covered_from: date,
+        covered_until: date,
+        accumulated_effective_claims: Decimal,
+        accumulated_effective_free_depreciation_claims: Decimal,
+    ) -> ScheduledAmortizationCharge:
+        return forecast_activity_asset_charge(
+            revision,
+            modelo_100_revision=_revision(),
+            authority_generation="published-registry-test-generation",
+            selection=selection,
+            covered_from=covered_from,
+            covered_until=covered_until,
+            accumulated_effective_claims=accumulated_effective_claims,
+            accumulated_effective_free_depreciation_claims=accumulated_effective_free_depreciation_claims,
+        )
+
+    operations = ActivityAssetOperations(repository=repository, forecast_operation=forecast)
+    operations.create(asset)
+    forecast_charge = operations.forecast(
+        asset_id=asset.asset_id,
+        selection=selection,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+    )
+    first = operations.record_claim(forecast_charge, creating_operation="test.real-authority-free-depreciation")
+    retry = operations.record_claim(forecast_charge, creating_operation="test.real-authority-free-depreciation")
+
+    assert forecast_charge.amount == Decimal("300.00")
+    assert first.claim.method is AmortizationMethod.LOW_VALUE_FREE
+    assert "libertad-amortizacion-umbral-unitario" in first.claim.source_reference
+    assert retry.reused_existing_claim is True
     with pytest.raises(ValueError, match="explicit election"):
         ActivityAssetAuthoritySelection(
             regime=DirectEstimationRegime.SIMPLIFIED,
