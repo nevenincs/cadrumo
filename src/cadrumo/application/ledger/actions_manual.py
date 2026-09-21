@@ -31,6 +31,7 @@ from ...domain.attachments.protocols import AttachmentStoreProtocol as _Attachme
 from ...domain.attachments.service import link_attachment_transaction
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.buckets.event_repository import bucket_event_history_write
+from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import invoice_evidence_authority
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
@@ -155,6 +156,7 @@ def create_manual_transaction(
                 "movement, or omit --idempotency-key to append a deliberate duplicate",
                 translated_message="application.ledger.errors.idempotency_key_conflict",
             )
+    _require_declared_iva_category(command, ports=ports)
     transaction_base = _transaction_from_command(
         command,
         occurred_at=now,
@@ -900,6 +902,7 @@ def _prepare_manual_transaction_update(
     contract). Lifecycle and blocking-modelo guards remain the caller's
     responsibility before invoking this builder.
     """
+    _require_declared_iva_category(command, ports=ports)
     replacement = _transaction_from_command(
         command,
         occurred_at=now,
@@ -1414,6 +1417,20 @@ def _invoice_evidence_provenance(
         source_locator=record.evidence_id,
         evidence_digest=record.attachment_id,
     )
+
+
+def _require_declared_iva_category(
+    command: ManualLedgerTransactionCommand,
+    *,
+    ports: LedgerActionPorts,
+) -> None:
+    """Refuse a non-canonical IVA category before a ledger write is built."""
+    if command.iva_category is not None:
+        require_iva_category(
+            command.iva_category,
+            effective_date=command.booked_date,
+            authority=ports.operation,
+        )
 
 
 def _transaction_from_command(
