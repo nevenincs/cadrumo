@@ -15,6 +15,7 @@ import os
 import secrets
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass
+from decimal import Decimal
 from importlib import metadata, resources
 from pathlib import Path
 from typing import Any, Final, Literal, cast
@@ -212,6 +213,11 @@ def _sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
 
 
+def _canonical_ledger_decimal_text(value: str) -> str:
+    """Render independent expected fixed-point text for the public Ledger view."""
+    return format(Decimal(value).normalize(), "f")
+
+
 def _source_identity(workspace_root: Path) -> SourceIdentity:
     """Hash the exact critical source members before the supported wheel build."""
     root = workspace_root.resolve(strict=True)
@@ -353,7 +359,7 @@ async def _activate(pilot: Any, selector: str) -> None:
     """Activate a visible public button without a coordinate-dependent click."""
     from textual.widgets import Button
 
-    button = cast(Button, query_public_selector(pilot, selector, Button))
+    button = query_public_selector(pilot, selector, Button)
     button.focus()
     await pilot.press("enter")
 
@@ -398,12 +404,12 @@ async def _import_statement(pilot: Any, *, statement: Path) -> None:
     await wait_for_public_selector(pilot, "#ledger-import-path", polls=180)
     cast(Select[str], query_public_selector(pilot, "#ledger-import-kind", Select)).value = "bank_statement"
     cast(Select[str], query_public_selector(pilot, "#ledger-import-provider", Select)).value = "csv"
-    cast(Input, query_public_selector(pilot, "#ledger-import-path", Input)).value = str(statement)
+    query_public_selector(pilot, "#ledger-import-path", Input).value = str(statement)
     await _activate(pilot, "#ledger-import-preview-button")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-import-confirm", polls=180)
     refusal = _visible_text(query_public_selector(pilot, "#ledger-refusal", Static))
-    confirm = cast(Button, query_public_selector(pilot, "#ledger-import-confirm", Button))
+    confirm = query_public_selector(pilot, "#ledger-import-confirm", Button)
     if refusal or confirm.disabled:
         raise InstalledTuiChildError("installed Ledger import preview did not reach its visible confirmation state")
     await _activate(pilot, "#ledger-import-confirm")
@@ -488,7 +494,7 @@ async def _classify_transaction(
         "#ledger-classification-deduction-fact-kind": scenario_row.deduction_fact_kind,
     }
     for selector, value in values.items():
-        cast(Input, query_public_selector(pilot, selector, Input)).value = value
+        query_public_selector(pilot, selector, Input).value = value
     await select_public_data_table_row(
         pilot=pilot,
         table_selector="#ledger-classifications",
@@ -515,6 +521,42 @@ def _child_authority() -> AuthorityIdentity:
         return _authority_identity(Path(raw))
     except IvaInstalledTuiError as exc:
         raise InstalledTuiChildError(str(exc)) from exc
+
+
+async def _login_existing_profile_through_tui(*, passphrase: str) -> None:
+    """Unlock the capture profile through the installed production Login screen."""
+    from textual.widgets import Input
+
+    from cadrumo.application.user_profile.login_interaction import (
+        ProfileLoginInventoryState,
+        attempt_profile_login,
+        observe_profile_login_inventory,
+    )
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+    from cadrumo.entrypoints.tui.secret.login import LoginScreen
+
+    inventory = observe_profile_login_inventory()
+    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
+        raise InstalledTuiChildError("installed IVA TUI login did not recognize the captured profile")
+    with bundled_indexed_authority().operation() as operation:
+        screen = LoginScreen(
+            choices=inventory.choices,
+            authenticate=lambda profile_id, secret: attempt_profile_login(
+                profile_id,
+                secret,
+                profile_decode_context=operation.profile_decode_context(),
+            ),
+            preselected=inventory.preselected_profile_id,
+        )
+        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
+            await wait_for_public_selector(pilot, "#field-passphrase")
+            query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
+            await pilot.click("#btn-unlock")
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+    if screen.outcome is None:
+        raise InstalledTuiChildError("installed IVA TUI Login screen did not admit the captured profile")
 
 
 def _capture_child(
@@ -605,7 +647,15 @@ def _reopen_child(
 
     from textual.widgets import DataTable
 
+    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+    from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
     from cadrumo.entrypoints.tui.launcher import main
+
+    # A fresh headless launcher truthfully declines to display credential
+    # screens. Admit this already-captured profile through that screen first;
+    # its canonical session is then what the production launcher reuses.
+    with live_exchange_rate_composition(), profile_adapter_composition():
+        asyncio.run(_login_existing_profile_through_tui(passphrase=passphrase))
 
     async def drive(pilot: Any) -> None:
         nonlocal observed, reopen_error, reopen_stage
@@ -754,9 +804,9 @@ def _readback_canonical_fields(
             transaction_id,
             {
                 "business_classification": "BUSINESS",
-                "taxable_base": scenario_row.taxable_base,
+                "taxable_base": _canonical_ledger_decimal_text(scenario_row.taxable_base),
                 "iva_rate": "0.21",
-                "iva_amount": scenario_row.iva_amount,
+                "iva_amount": _canonical_ledger_decimal_text(scenario_row.iva_amount),
                 "iva_category": "domestic_general",
             },
         )
@@ -778,7 +828,9 @@ def _readback_canonical_fields(
                 raise IvaInstalledTuiError("installed public ledger view returned a different transaction identity")
             for field_name, expected_value in expected_fields.items():
                 if transaction.get(field_name) != expected_value:
-                    raise IvaInstalledTuiError("installed public ledger view did not preserve a submitted IVA field")
+                    raise IvaInstalledTuiError(
+                        f"installed public Ledger view did not preserve submitted canonical field {field_name!r}"
+                    )
             observed.append(
                 (
                     transaction_id,

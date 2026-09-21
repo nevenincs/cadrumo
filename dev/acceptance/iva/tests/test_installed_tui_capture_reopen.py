@@ -11,13 +11,7 @@ from ..installed_tui_capture_reopen import run_installed_tui_capture_reopen
 
 pytestmark = [pytest.mark.integration, pytest.mark.serial, pytest.mark.hex_entrypoint]
 
-_PENDING_FRESH_LAUNCHER_ADMISSION = (
-    "pending installed-session admission: fresh installed launcher returns before the "
-    "drive_after_home callback, so no TUI reopen proof exists"
-)
 
-
-@pytest.mark.skip(reason=_PENDING_FRESH_LAUNCHER_ADMISSION)
 def test_installed_tui_captures_classifies_and_reopens_ordinary_iva_rows(tmp_path: Path) -> None:
     """Exercise the real installed Ledger TUI and stop before Modelo 303 work."""
     workspace_root = Path(__file__).resolve().parents[4]
