@@ -323,6 +323,8 @@ cli:
           calculation to ground it.
         kind_help: 'Invoice kind: issued (a customer owes you) or received (you owe
           a supplier)'
+        line_help: Repeatable JSON object for one invoice line; pass one object per
+          --line. For structured input it replaces scalar --taxable-base and --iva-rate.
         list_help: List reconciliation catalogue invoices.
         operation_date_help: Date the entrega or prestacion took place (YYYY-MM-DD).
           This is the LIVA art. 75 devengo date that decides which period declares

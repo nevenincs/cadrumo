@@ -29,8 +29,10 @@ import pytest
 from openpyxl import Workbook
 from pydantic import ValidationError
 
+from ....core.hashing import sha256_hex
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.classification import InvoiceKind
+from ....domain.transactions.raw_transaction import SourceFormat
 from ..bulk_import import BulkInvoiceImportRow, import_invoices_from_rows, read_bulk_invoice_import_source
 from ..catalogue_creation_ports import CatalogueCreationPorts
 from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
@@ -201,6 +203,83 @@ def test_import_still_accepts_the_canonical_euro_amount(tmp_path: Path) -> None:
         assert result.created == 1
 
 
+def test_bulk_import_attaches_canonical_source_provenance_to_accepted_invoice(
+    tmp_path: Path,
+    authority_operation: object,
+) -> None:
+    """Accepted rows retain basename, file digest, and their one-based row only."""
+    del authority_operation
+    csv_path = tmp_path / "nested" / "invoices.csv"
+    csv_path.parent.mkdir()
+    csv_path.write_text(
+        "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
+        f"{_CIF},Papeleria Sol SL,BULK-PROV-001,2026-05-01,100.00,21\n",
+        encoding="utf-8",
+    )
+
+    source = read_bulk_invoice_import_source(csv_path)
+    source_provenance = source.rows[0].provenance
+    assert source_provenance is not None
+    assert source_provenance.source_path == Path("invoices.csv")
+    assert source_provenance.source_sha256 == sha256_hex(csv_path.read_bytes())
+    assert source_provenance.source_row_index == 2
+
+    with _in_memory_ports() as ports:
+        result = import_invoices_from_rows(
+            source,
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            declared_country="ES",
+            ports=ports,
+        )
+        assert result.created == 1
+        invoice = next(iter(ports.invoice_repository.load().invoices.values()))
+
+    assert invoice.provenance == source_provenance
+    provenance_payload = invoice.provenance.model_dump(mode="json") if invoice.provenance else {}
+    assert set(provenance_payload) == {
+        "source_path",
+        "source_sha256",
+        "source_row_index",
+        "source_format",
+        "ingested_at",
+        "provider_name",
+    }
+    assert str(tmp_path) not in str(provenance_payload)
+    assert "raw_fields" not in provenance_payload
+
+
+def test_bulk_import_without_source_identity_keeps_manual_invoice_provenance_empty(
+    tmp_path: Path,
+    authority_operation: object,
+) -> None:
+    """Source rows assembled by callers remain valid and do not invent provenance."""
+    del authority_operation
+    source = _csv_source(
+        "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
+        f"{_CIF},Papeleria Sol SL,BULK-PROV-002,2026-05-01,100.00,21\n",
+        tmp_path,
+    )
+    source = source.model_copy(
+        update={
+            "rows": tuple(row.model_copy(update={"provenance": None}) for row in source.rows),
+        },
+    )
+
+    with _in_memory_ports() as ports:
+        result = import_invoices_from_rows(
+            source,
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            declared_country="ES",
+            ports=ports,
+        )
+        assert result.created == 1
+        invoice = next(iter(ports.invoice_repository.load().invoices.values()))
+
+    assert invoice.provenance is None
+
+
 def test_import_keeps_an_already_numeric_workbook_cell_unjudged(tmp_path: Path) -> None:
     """A numeric XLSX cell carries the workbook's representation, not the operator's grammar.
 
@@ -230,7 +309,7 @@ def test_import_keeps_an_already_numeric_workbook_cell_unjudged(tmp_path: Path) 
 
 
 def test_read_bulk_invoice_import_rows_reads_csv_and_xlsx_identically(tmp_path: Path) -> None:
-    """The CSV and XLSX readers yield the same row content for the same data."""
+    """The delimited and XLSX readers yield the same row content and identity."""
     csv_path = tmp_path / "invoices.csv"
     csv_path.write_text(
         "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
@@ -246,9 +325,16 @@ def test_read_bulk_invoice_import_rows_reads_csv_and_xlsx_identically(tmp_path: 
     )
     sheet.append([_CIF, "Papeleria Sol SL", "BULK-E-001", "2026-05-01", 100.00, 21])
     workbook.save(xlsx_path)
+    tsv_path = tmp_path / "invoices.tsv"
+    tsv_path.write_text(
+        "counterparty_nif\tcounterparty_name\tinvoice_number\tinvoice_date\ttaxable_base\tiva_rate\n"
+        f"{_CIF}\tPapeleria Sol SL\tBULK-E-001\t2026-05-01\t100.00\t21\n",
+        encoding="utf-8",
+    )
 
     csv_source = read_bulk_invoice_import_source(csv_path)
     xlsx_source = read_bulk_invoice_import_source(xlsx_path)
+    tsv_source = read_bulk_invoice_import_source(tsv_path)
 
     assert len(csv_source.rows) == 1
     assert len(xlsx_source.rows) == 1
@@ -264,6 +350,50 @@ def test_read_bulk_invoice_import_rows_reads_csv_and_xlsx_identically(tmp_path: 
     assert isinstance(csv_base, str | int | float | Decimal)
     assert isinstance(xlsx_base, str | int | float | Decimal)
     assert Decimal(csv_base) == Decimal(xlsx_base)
+
+    csv_provenance = csv_source.rows[0].provenance
+    xlsx_provenance = xlsx_source.rows[0].provenance
+    tsv_provenance = tsv_source.rows[0].provenance
+    assert csv_provenance is not None
+    assert xlsx_provenance is not None
+    assert tsv_provenance is not None
+    assert csv_provenance.source_path == Path("invoices.csv")
+    assert xlsx_provenance.source_path == Path("invoices.xlsx")
+    assert tsv_provenance.source_path == Path("invoices.tsv")
+    assert csv_provenance.source_sha256 == sha256_hex(csv_path.read_bytes())
+    assert xlsx_provenance.source_sha256 == sha256_hex(xlsx_path.read_bytes())
+    assert tsv_provenance.source_sha256 == sha256_hex(tsv_path.read_bytes())
+    assert csv_provenance.source_row_index == xlsx_provenance.source_row_index == 2
+    assert tsv_provenance.source_row_index == 2
+    assert csv_provenance.source_format is SourceFormat.CSV
+    assert xlsx_provenance.source_format is SourceFormat.XLSX
+    assert tsv_provenance.source_format is SourceFormat.CSV
+
+
+def test_read_bulk_invoice_import_source_reads_file_bytes_once(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The source reader reads each supported input once before parsing it."""
+    csv_path = tmp_path / "once.csv"
+    csv_path.write_text(
+        "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
+        f"{_CIF},Papeleria Sol SL,BULK-ONCE-001,2026-05-01,100.00,21\n",
+        encoding="utf-8",
+    )
+    original_read_bytes = Path.read_bytes
+    read_count = 0
+
+    def counted_read_bytes(path: Path) -> bytes:
+        nonlocal read_count
+        read_count += 1
+        return original_read_bytes(path)
+
+    monkeypatch.setattr(Path, "read_bytes", counted_read_bytes)
+    source = read_bulk_invoice_import_source(csv_path)
+
+    assert read_count == 1
+    assert source.rows[0].provenance is not None
 
 
 def test_read_bulk_invoice_import_rows_rejects_unknown_extension(tmp_path: Path) -> None:

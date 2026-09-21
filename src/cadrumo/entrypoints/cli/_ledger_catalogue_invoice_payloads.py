@@ -33,9 +33,23 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.json_contract import OutputSchema
 from ...core.parsing.codes import IsoCurrencyCode
 from ...core.text_bounds import NonEmptyStr, NonNegativeDecimal, PositiveCount, PositiveDecimal
-from ...domain.invoices.enums import PaymentStatus
+from ...domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ...domain.invoices.validators import validate_counterparty_tax_id, validate_country_code
 from ...domain.iva.classification import InvoiceKind
+from ...domain.iva.schema import IvaCategory, IvaRateKind
+
+
+class CatalogueInvoiceLinePayload(OutputSchema):
+    """One canonical persisted invoice line in the structured CLI readback."""
+
+    description: NonEmptyStr
+    quantity: PositiveDecimal
+    unit_price: NonNegativeDecimal
+    subtotal: NonNegativeDecimal
+    iva_rate: IvaRate
+    iva_amount: NonNegativeDecimal
+    spending_category_id: str | None = None
+    oss_rate_kind: IvaRateKind | None = None
 
 
 class CatalogueInvoiceRecordPayload(OutputSchema):
@@ -73,6 +87,13 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     retention_amount: NonNegativeDecimal | None = None
     recargo_amount: NonNegativeDecimal | None = None
     operation_type: IntracomOperationType | None = None
+    lines: list[CatalogueInvoiceLinePayload] = Field(min_length=1)
+    invoice_class: InvoiceClass
+    series: str | None = None
+    operation_date: date | None = None
+    operation_date_role: InvoiceOperationDateRole | None = None
+    iva_category: IvaCategory | None = None
+    rectifies_invoice_number: str | None = None
     # The euro conversion stamp and the euro projection of the three totals.
     # Present at parity with the evidence-confirm surface through the shared
     # field tuple both projections read. A foreign invoice whose rate could not

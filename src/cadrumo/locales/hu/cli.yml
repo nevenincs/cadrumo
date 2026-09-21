@@ -342,6 +342,9 @@ cli:
           megalapozhassa.
         kind_help: 'Számla típusa: kiállított (vevő tartozik) vagy beérkezett (szállítónak
           tartozol).'
+        line_help: Egy számlasorhoz ismételhető JSON-objektum; minden --line opcióhoz
+          egy objektumot adjon meg. Strukturált bemenetnél a skaláris --taxable-base
+          és --iva-rate opció helyett használja.
         list_help: Az egyeztetési katalógus számláinak listázása.
         operation_date_help: A teljesítés (termekertekesites vagy szolgaltatasnyujtas)
           időpontja (EEEE-HH-NN). Ez a LIVA 75. cikke szerinti adófizetési kötelezettség

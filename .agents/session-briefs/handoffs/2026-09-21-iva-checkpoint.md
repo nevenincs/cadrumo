@@ -1,7 +1,7 @@
 # IVA-01 implementation checkpoint
 
 Updated: 2026-09-21
-Status: Phase 0 and Phase 1 complete; Phase 2 capture/readback is next
+Status: Phase 0 and Phase 1 complete; Phase 2 capture/readback in progress
 
 ## Session identity
 
@@ -174,3 +174,72 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
 - Next bounded action: Phase 2 Luna delta for canonical multi-line public write,
   structured readback, secure import provenance and deduction/prorrata write
   surfaces. Coordinate shared invoice/ledger files before edits.
+
+## Active Phase-2 slice
+
+- Luna Phase-2 mapping completed read-only at HEAD `baafa3748c`. The shared
+  catalogue writer already accepts ordered `InvoiceLine` values and the encrypted
+  repository reopens them. The CLI remains scalar and structured readback omits
+  canonical document and line facts. Bulk import retains a row number during
+  parsing but no accepted-record source digest/row identity.
+- Existing transaction commands already expose IVA facts, deduction kind,
+  business-use allocation, prorrata reference/sector and purchase-evidence
+  linkage. This slice does not create another transaction or evidence writer.
+- Accepted decision:
+  `.vault/adr/2026-09-21-iva-workflow-cli-invoice-lines-adr.md` chooses one
+  repeatable `--line` JSON object per canonical invoice line, preserves order,
+  performs no frontend arithmetic and refuses mixed scalar/structured input.
+- Import provenance follows the existing `RawProvenance` shape: basename,
+  SHA-256 and one-based row only. No original path or raw row is persisted.
+- Terra Phase-2 CLI Principal owns only the invoice CLI command/spec/projection
+  surfaces and directly related tests. Reserved checks: focused catalogue
+  invoice payload/command tests with `-q -n0`, followed by targeted Ruff and
+  strict typing for edited modules. It must not edit invoice domain persistence,
+  bulk import, TUI, ledger calculation, locales or authority files.
+- Terra Phase-2 Provenance Executor owns only the canonical invoice provenance,
+  bulk-import capture, encrypted round-trip and focused import/persistence tests.
+  Reserved checks: focused bulk-import and secure-storage round-trip tests with
+  `-q -n0`, followed by targeted Ruff and strict typing. It must stop if reuse of
+  the existing provenance type requires an architectural relocation or creates
+  a domain dependency violation.
+- Both agents are working in a shared tree and must preserve peer and other-session
+  changes. Neither may run broad lanes or commit until its bounded result has been
+  reviewed and the two slices are reconciled.
+
+## Phase-2 completion
+
+- Acceptance advanced: V1 canonical CLI capture/readback and secure import
+  provenance are implemented; V2 has a complete shared write surface for invoice
+  lines while transaction IVA/deduction/allocation/prorrata facts continue through
+  the pre-existing ledger operations. Installed capture-to-303 acceptance remains
+  outstanding.
+- Root causes: the CLI exposed only scalar base/rate and omitted canonical fields
+  from structured output; the application writer still required a caller-computed
+  base beside supplied lines; accepted bulk-import rows lost their source identity.
+- Existing owners extended: catalogue application writer, invoice CLI command/spec
+  and payload, canonical `Invoice`, bulk import, and encrypted catalogue roundtrip.
+- Repeatable `--line` accepts one strict JSON object per occurrence, preserves
+  order, refuses mixed scalar input before mutation, and delegates all totals to
+  the application/domain owner. Mixed RATE_21/RATE_10 regression coverage passes.
+- Structured readback now requires at least one canonical line and includes invoice
+  class, series, operation date/role, IVA category and rectification reference.
+- Bulk import reads the source bytes once, records basename, SHA-256, one-based row,
+  format, ingest time and provider label, and retains that exact association across
+  encrypted save/reopen. Absolute paths and raw rows are not persisted.
+- The existing `RawProvenance` type remains the single owner for this bounded slice.
+  Import-linter keeps the Domain boundary, no cycle or qualified-class persistence
+  exists, and neutral relocation would touch roughly 160 cross-session import sites.
+  No duplicate or compatibility alias was introduced.
+- CLI/application focused selection: 22 passed; explicit CLI integration: 16
+  passed; final command-spec help wiring: 2 passed. Provenance focused selection:
+  4 passed with 22 marker-deselected; explicit CSV/TSV/XLSX, one-read and encrypted
+  import-to-reopen nodes: 5 passed. Locale parity/inventory: 5 passed. Targeted
+  Ruff, formatting and basedpyright passed; scoped diff checks passed.
+- Import-linter was also run once as the affected integrated boundary gate: Domain
+  remained KEPT and no IVA dependency was reported. The command remains globally
+  non-zero on five pre-existing/cross-session contracts, including the concurrent
+  `dev.acceptance` exhaustive-lane addition and unrelated test-layer imports.
+- Phase-2 implementation was prepared on moving shared branch base
+  `5f70f630e84881b76790958caff6008feddffda1`; final commit identity is recorded
+  after integration. Other sessions' income, assets, withholding, calendar and TUI
+  changes remain unstaged.

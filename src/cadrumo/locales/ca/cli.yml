@@ -346,6 +346,9 @@ cli:
           de renda la pugui fonamentar.
         kind_help: 'Tipus de factura: emesa (un client t''ha de pagar) o rebuda (deus
           a un proveïdor)'
+        line_help: Objecte JSON repetible per a una línia de factura; passeu un objecte
+          per cada --line. Per a l'entrada estructurada substitueix els camps escalars
+          --taxable-base i --iva-rate.
         list_help: Llista les factures del catàleg de conciliació.
         operation_date_help: Data en que es va fer el lliurament o la prestació (AAAA-MM-DD).
           Es la data de meritació de l'art. 75 LIVA que determina en quin període

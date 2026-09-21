@@ -55,6 +55,37 @@ def test_import_invoices_from_rows_persists_through_create_catalogue_invoice(tmp
             assert invoice_id in catalogue.invoices
 
 
+def test_bulk_import_provenance_survives_encrypted_catalogue_reopen(tmp_path: Path) -> None:
+    """One accepted row keeps its exact sanitized source association after reopen."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
+        source = _csv_source(
+            "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"
+            f"{_CIF},Papeleria Sol SL,BULK-PROV-REOPEN,2026-05-01,100.00,21\n",
+            tmp_path,
+        )
+        expected_provenance = source.rows[0].provenance
+        assert expected_provenance is not None
+        result = import_invoices_from_rows(
+            source,
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            declared_country="ES",
+            ports=ports,
+        )
+
+        assert result.created == 1
+        assert len(result.created_invoice_ids) == 1
+        reopened = InvoiceCatalogueRepository(bucket_id=_BUCKET_ID).load()
+        invoice = reopened.invoices[result.created_invoice_ids[0]]
+
+        assert invoice.provenance == expected_provenance
+        assert invoice.provenance is not None
+        assert invoice.provenance.source_path == Path("bulk.csv")
+        assert str(tmp_path) not in invoice.provenance.model_dump_json()
+        assert "raw_fields" not in invoice.provenance.model_dump_json()
+
+
 def test_import_invoices_from_rows_reimport_is_idempotent_no_op(tmp_path: Path) -> None:
     """Re-running the identical rows a second time skips every row as a duplicate."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):

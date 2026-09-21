@@ -253,7 +253,7 @@ def resolve_iva_rate_slot(iva_rate: Decimal | None, on_date: date) -> IvaRate:
 
 def _resolve_invoice_line_totals(
     *,
-    taxable_base: Decimal,
+    taxable_base: Decimal | None,
     lines: Sequence[InvoiceLine] | None,
     invoice_number: str,
     rate_slot: IvaRate,
@@ -261,21 +261,20 @@ def _resolve_invoice_line_totals(
 ) -> tuple[Decimal, Decimal, object]:
     """Return the authoritative line payload and totals for one invoice.
 
-    Supplied lines own their own amounts and must agree with the declared base;
-    otherwise this is the sole synthesis of the one operator-supplied rate line.
+    Supplied lines own their own amounts; otherwise this is the sole synthesis
+    of the one operator-supplied rate line.
     """
-    if lines:
+    if lines is not None:
+        if not lines:
+            raise InvoiceValidationError("lines must not be empty")
         if not all(isinstance(item, InvoiceLine) for item in lines):
             raise InvoiceValidationError("lines must be InvoiceLine records")
         base_total = round_to_cents(sum((item.subtotal for item in lines), Decimal("0")))
         iva_total = round_to_cents(sum((item.iva_amount for item in lines), Decimal("0")))
-        declared_base = round_to_cents(taxable_base)
-        if declared_base != base_total:
-            raise InvoiceValidationError(
-                f"taxable_base {declared_base} does not equal the summed line subtotals {base_total}",
-            )
         return base_total, iva_total, [item.model_dump(mode="json") for item in lines]
 
+    if taxable_base is None:
+        raise InvoiceValidationError("taxable_base is required when lines are not supplied")
     base_total = round_to_cents(taxable_base)
     iva_amount = Decimal("0") if iva_percentage is None else round_to_cents(taxable_base * iva_percentage)
     return (
@@ -364,9 +363,9 @@ def build_catalogue_invoice(
     counterparty_country: str,
     invoice_number: str,
     issued_at: date,
-    taxable_base: Decimal,
-    iva_rate: Decimal | None,
     currency: str,
+    taxable_base: Decimal | None = None,
+    iva_rate: Decimal | None = None,
     payment_status: PaymentStatus = PaymentStatus.PENDING,
     notes: str = "",
     iva_category: IvaCategory | None = None,
@@ -397,10 +396,9 @@ def build_catalogue_invoice(
     to the wrong rate, and the per-rate breakdown is precisely what the IVA
     modelos declare.
 
-    ``taxable_base`` must then AGREE with the summed line subtotals, and a
-    mismatch refuses rather than resolving. Two disagreeing sources of truth
-    for the same base is the shape that silently mis-declares, so the caller is
-    made to state one number, not two.
+    Structured callers do not supply ``taxable_base`` or ``iva_rate``: those
+    scalar synthesis inputs would create a second source of truth for the line
+    set. The application derives the canonical totals from the ordered lines.
 
     ``iva_category`` carries the intra-community classification the M349
     recapitulative resolver reads for historical goods/triangulation records.
@@ -461,20 +459,33 @@ def build_catalogue_invoice(
     # reads it: a padded or lowercase token ("gbp", " gbp ") must resolve the
     # SAME provider rate as its canonical "GBP" form, not silently miss the
     # rate and leave the invoice unstamped.
+    if lines is not None and (taxable_base is not None or iva_rate is not None):
+        raise InvoiceValidationError("structured lines cannot be combined with taxable_base or iva_rate")
     currency = normalise_iso_4217_currency(currency)
     devengo_date = operation_date or issued_at
-    with validating_governed_facts(operation):
-        rate_slot = resolve_iva_rate_slot(iva_rate, devengo_date)
-        # The exact devengo date is present at this composition boundary, so both
-        # synthesis and Invoice validation project the same authority fact.
-        pct = iva_rate_percentage(rate_slot, devengo_date)
-    base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
-        taxable_base=taxable_base,
-        lines=lines,
-        invoice_number=invoice_number,
-        rate_slot=rate_slot,
-        iva_percentage=pct,
-    )
+    if lines is None:
+        with validating_governed_facts(operation):
+            rate_slot = resolve_iva_rate_slot(iva_rate, devengo_date)
+            # The exact devengo date is present at this composition boundary, so both
+            # synthesis and Invoice validation project the same authority fact.
+            pct = iva_rate_percentage(rate_slot, devengo_date)
+        base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
+            taxable_base=taxable_base,
+            lines=None,
+            invoice_number=invoice_number,
+            rate_slot=rate_slot,
+            iva_percentage=pct,
+        )
+    else:
+        if not lines:
+            raise InvoiceValidationError("lines must not be empty")
+        base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
+            taxable_base=None,
+            lines=lines,
+            invoice_number=invoice_number,
+            rate_slot=lines[0].iva_rate,
+            iva_percentage=None,
+        )
     # The recargo de equivalencia rides INSIDE the invoice total (LIVA art. 161)
     # while a retencion is settled outside it, which is why only the recargo
     # appears here. The model re-checks this identity exactly, so a caller that

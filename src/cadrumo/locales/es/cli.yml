@@ -347,6 +347,9 @@ cli:
           un cálculo de renta pueda fundamentarla.
         kind_help: 'Tipo de factura: emitida (un cliente te debe) o recibida (debes
           a un proveedor)'
+        line_help: Objeto JSON repetible para una línea de factura; pase un objeto por
+          cada --line. Para la entrada estructurada sustituye a los campos escalares
+          --taxable-base y --iva-rate.
         list_help: Lista las facturas del catálogo de conciliación.
         operation_date_help: Fecha en que se realizo la entrega o prestación (AAAA-MM-DD).
           Es la fecha de devengo del art. 75 LIVA que determina en que periodo se

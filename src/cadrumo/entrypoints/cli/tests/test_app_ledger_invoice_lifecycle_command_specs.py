@@ -107,6 +107,7 @@ def _option(
     default_kind: str = "literal",
     is_flag: bool = False,
     flag_value: object = None,
+    multiple: bool = False,
 ) -> tuple[object, ...]:
     """State the complete ordinary-option contract as literal facts."""
     return (
@@ -124,7 +125,7 @@ def _option(
         (f"--{name.replace('_', '-')}",),
         is_flag,
         flag_value,
-        False,
+        multiple,
         False,
         None,
         None,
@@ -153,7 +154,7 @@ _EXPECTED_PARAMETERS = {
             "cli.app.ledger.evidence.invoice_date_help",
             default_kind="required",
         ),
-        _option("taxable_base", "builtins:str", None, None, default_kind="required"),
+        _option("taxable_base", "builtins:str", None, None),
         _option(
             "country_code",
             "builtins:str",
@@ -190,6 +191,7 @@ _EXPECTED_PARAMETERS = {
         _option(
             "iva_category", "cadrumo.domain.iva.schema:IvaCategory", None, "cli.app.ledger.invoice.iva_category_help"
         ),
+        _option("line", "builtins:str", (), "cli.app.ledger.invoice.line_help", multiple=True),
         _option("notes", "builtins:str", "", None),
     ),
     "app_ledger_invoice_remove": (
@@ -309,9 +311,14 @@ def test_shared_immutable_parameters_preserve_distinct_command_facts() -> None:
     assert type(INVOICE_LIFECYCLE_METADATA_OPTIONS) is tuple
     assert remove.parameters[0] is update.parameters[0] is view.parameters[0] is _REQUIRED_INVOICE_ID_ARGUMENT
     assert add.parameters[0] is wizard.parameters[0] is INVOICE_INTAKE_WIZARD_CORE_OPTIONS[0]
+    assert add.parameters[4] is not INVOICE_INTAKE_WIZARD_CORE_OPTIONS[4]
     assert all(
         actual is expected
-        for actual, expected in zip(add.parameters[1:8], INVOICE_INTAKE_WIZARD_CORE_OPTIONS[1:], strict=True)
+        for actual, expected in zip(add.parameters[1:4], INVOICE_INTAKE_WIZARD_CORE_OPTIONS[1:4], strict=True)
+    )
+    assert all(
+        actual is expected
+        for actual, expected in zip(add.parameters[5:8], INVOICE_INTAKE_WIZARD_CORE_OPTIONS[5:8], strict=True)
     )
     assert all(
         actual is expected
@@ -335,7 +342,7 @@ def test_shared_immutable_parameters_preserve_distinct_command_facts() -> None:
         for actual, expected in zip(add.parameters[14:16], INVOICE_LIFECYCLE_METADATA_OPTIONS[5:], strict=True)
     )
     assert add.parameters[16] is wizard.parameters[16] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[0]
-    assert add.parameters[18] is wizard.parameters[18] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1]
+    assert add.parameters[19] is wizard.parameters[18] is INVOICE_INTAKE_WIZARD_TRAILING_OPTIONS[1]
 
     update_notes = update.parameters[3]
     wizard_notes = wizard.parameters[-1]

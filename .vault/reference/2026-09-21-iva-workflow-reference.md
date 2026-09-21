@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:3ca75d820699e7c3c82320a250aa96724af7169bd357b6c674247a05e6c41fa2'
+body_hash: 'sha256:ad4308fd046e371cc949b4462d78bd0c761bdba934306c4ce3667d23e4c6175d'
 related: []
 ---
 
@@ -97,6 +97,43 @@ invoice reference; split cash-accounting payments are transaction evidence parts
 The public shared operations can create the invoice, create/update the transaction,
 attach immutable purchase evidence and link the two without establishing silent
 precedence.
+
+The Phase-2 delta confirms that the shared catalogue writer already accepts an
+ordered `Sequence[InvoiceLine]` at
+`src/cadrumo/application/invoices/catalogue_creation.py:358`, and the encrypted
+catalogue repository reopens those lines at
+`src/cadrumo/adapters/persistence/profile/invoices.py:161`. The public CLI still
+projects only scalar base/rate facts at
+`src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py:244`, while its JSON
+payload omits line details and canonical invoice class, operation, category and
+rectification facts at
+`src/cadrumo/entrypoints/cli/_ledger_catalogue_invoice_payloads.py:57`.
+
+Bulk import retains a one-based row during parsing but does not attach immutable
+source identity to the accepted invoice at
+`src/cadrumo/application/invoices/bulk_import.py:87`. The existing canonical
+provenance precedent is basename, SHA-256 and one-based row in
+`src/cadrumo/domain/transactions/raw_transaction.py:50`; secure attachment
+storage separately retains content digest and artifact identity in
+`src/cadrumo/domain/attachments/models.py:101`. Filename-only provenance is not
+sufficient, and neither the original path nor raw imported row belongs in the
+accepted invoice record.
+
+Phase-2 implementation closes those capture gaps. The catalogue writer now
+derives totals from supplied ordered lines and refuses scalar/structured mixing
+at `src/cadrumo/application/invoices/catalogue_creation.py:357`. The CLI parses
+each repeatable `--line` occurrence through the canonical line model at
+`src/cadrumo/entrypoints/cli/_ledger_business_invoice_cli.py:169`, and the typed
+readback owns required line projections at
+`src/cadrumo/entrypoints/cli/_ledger_catalogue_invoice_payloads.py:42`.
+
+Accepted invoices now carry optional canonical provenance at
+`src/cadrumo/domain/invoices/models.py:403`. Bulk import reads and hashes the
+source once at `src/cadrumo/application/invoices/bulk_import.py:706` and attaches
+the immutable per-row identity to the accepted invoice at
+`src/cadrumo/application/invoices/bulk_import.py:853`. Focused tests prove CSV,
+TSV and XLSX identity, one source read, exact encrypted import-to-reopen
+association, and absence of absolute paths or raw row payloads.
 
 The selected-scope completeness gap found during this audit is now closed. Missing or contradictory
 transaction IVA facts produce typed aggregation issues and no observation at

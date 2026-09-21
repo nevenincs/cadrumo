@@ -98,6 +98,14 @@ def test_catalogue_invoice_record_projects_a_canonical_invoice() -> None:
     assert payload.kind is InvoiceKind.RECEIVED
     assert payload.issued_at == date(2026, 3, 10)
     assert payload.grand_total == Decimal("121.00")
+    assert len(payload.lines) == 1
+    assert payload.lines[0].iva_rate == "RATE_21"
+    assert payload.invoice_class is not None
+    assert payload.series is None
+    assert payload.operation_date is None
+    assert payload.operation_date_role is None
+    assert payload.iva_category is None
+    assert payload.rectifies_invoice_number is None
 
 
 @pytest.mark.parametrize(
@@ -109,6 +117,7 @@ def test_catalogue_invoice_record_projects_a_canonical_invoice() -> None:
         ("base_total", Decimal("-1")),
         ("counterparty_tax_id", "12345678A"),
         ("linked_transaction_ids", ["bad"]),
+        ("lines", []),
     ],
 )
 def test_catalogue_invoice_record_refuses_noncanonical_values(field: str, value: object) -> None:
