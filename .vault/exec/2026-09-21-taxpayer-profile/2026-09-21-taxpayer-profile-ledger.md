@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:94b8839713a99e95ae7ed49d148479dca4bd5edc9d1cc9209bb55f9388d4f081'
+body_hash: 'sha256:ea522ca33f874a66bd0a8270c44bc62ccfd0097071b3bae718409a78dc8c624b'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -55,6 +55,12 @@ related:
 - `S07` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_screen.py`
 - `S07` `A` `src/cadrumo/entrypoints/tui/profile/tests/test_repeatable_row_race_safety.py`
 - `S07` `verify:` `targeted ruff and ty` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
+- `S08` `M` `src/cadrumo/locales/en/flows.yml`
+- `S08` `M` `src/cadrumo/locales/es/flows.yml`
+- `S08` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S08` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S08` `verify:` `profile application flows and tui locale domains complete` -> `pass`
 
 ## Notes
 
@@ -63,4 +69,5 @@ related:
 - `S03` PR6 implementation blocked pending a cross-lane temporal-context decision; three bounded options recorded.
 - `S05` Verification-only Step; no persistence namespace or Modelo source edit was required. Production filing snapshot pinning remains blocked.
 - `S07` Installed-generation aggregate currently fails before profile composition because concurrent calendar fixture omits required OverviewCalendar.evaluated_on.
+- `S08` Repository-wide locale status remains open for 48 concurrent assets/modelo CLI cells and 8 unrelated inventory declarations.
 

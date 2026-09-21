@@ -74,6 +74,9 @@ flows:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'
     required_field_unavailable: Kötelező profilmező
+    rows:
+      add: Sor hozzáadása
+      remove: Sor eltávolítása
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'
   modelo_review:

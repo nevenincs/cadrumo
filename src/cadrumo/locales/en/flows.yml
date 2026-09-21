@@ -74,6 +74,9 @@ flows:
       unavailable: This profile does not offer a language setting.
     namespace_detail: detail {number}
     required_field_unavailable: Required profile field
+    rows:
+      add: Add row
+      remove: Remove row
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
   modelo_review:

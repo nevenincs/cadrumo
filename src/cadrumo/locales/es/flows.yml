@@ -74,6 +74,9 @@ flows:
       unavailable: Este perfil no ofrece un ajuste de idioma.
     namespace_detail: detalle {number}
     required_field_unavailable: Campo obligatorio del perfil
+    rows:
+      add: Añadir fila
+      remove: Eliminar fila
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   modelo_review:

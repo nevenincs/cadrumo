@@ -75,6 +75,9 @@ flows:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     namespace_detail: detall {number}
     required_field_unavailable: Camp obligatori del perfil
+    rows:
+      add: Afegir fila
+      remove: Eliminar fila
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   modelo_review:

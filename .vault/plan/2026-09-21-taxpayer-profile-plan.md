@@ -12,7 +12,7 @@ related:
   - '[[2026-08-19-profile-setup-completion-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:feab583e468a423dbba36191ce19e82e70725a2ca014cb49519ff8458701f470'
+body_hash: 'sha256:728fc743fc5f5763b3c461ee04899235e25f9c706213615e0dcb78aba248ec7c'
 ---
 
 # `taxpayer-profile` plan
@@ -50,7 +50,7 @@ Expose shared backend behavior through independent CLI and TUI adapters with hon
 
 - [x] `P03.S06` - Complete CLI profile configuration, selection, typed editing, and actionable diagnostics; `application user_profile section rows and entrypoints CLI config packages`.
 - [x] `P03.S07` - Complete TUI profile configuration, typed editing, switching safety, provenance, and acquisition affordances; `entrypoints TUI profile, app, and registration modules`.
-- [ ] `P03.S08` - Align localized operator copy without coupling CLI and TUI adapters; `src/cadrumo/locales`.
+- [x] `P03.S08` - Align localized operator copy without coupling CLI and TUI adapters; `src/cadrumo/locales`.
 
 ### Phase `P04` - prove secure cross-entrypoint operation
 

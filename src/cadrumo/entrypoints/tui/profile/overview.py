@@ -288,7 +288,7 @@ class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="edit-dialog"):
-            yield Label(tr("cli.config.profile.add_row.help"), id="edit-label")
+            yield Label(tr("flows.manager.rows.add"), id="edit-label")
             for index, field in enumerate(self._fields):
                 yield Label(f"{field.label}{_REQUIRED_MARK if field.required else ''}")
                 yield Input(placeholder=profile_field_shape_hint(field.field_type) or "", id=f"row-input-{index}")
@@ -325,7 +325,7 @@ class RepeatableRowRemoveScreen(ModalScreen[bool]):
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="edit-dialog"):
-            yield Label(tr("cli.config.profile.remove_row.help"), id="edit-label")
+            yield Label(tr("flows.manager.rows.remove"), id="edit-label")
             with Horizontal(id="edit-actions"):
                 yield Button(tr("flows.manager.edit.cancel"), id="btn-row-cancel")
                 yield Button(tr("flows.confirm.yes"), id="btn-row-remove", classes="-error")
@@ -763,7 +763,7 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
                 # introducing a second vocabulary before the locale pass.
                 await panel.mount(
                     Button(
-                        tr("cli.config.profile.add_row.help"),
+                        tr("flows.manager.rows.add"),
                         id=f"manager-add-row-{section.key}",
                         compact=True,
                     )
@@ -771,7 +771,7 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
                 if self._has_existing_row(section):
                     await panel.mount(
                         Button(
-                            tr("cli.config.profile.remove_row.help"),
+                            tr("flows.manager.rows.remove"),
                             id=f"manager-remove-row-{section.key}",
                             compact=True,
                         )
