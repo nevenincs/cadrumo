@@ -9,7 +9,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.nif", f
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-representative-nif"
@@ -17,7 +21,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.nif-rep
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-name"
@@ -25,7 +33,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.nombre"
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-recipient-province"
@@ -33,7 +45,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.provinc
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-modality"
@@ -41,7 +57,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.modalid
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-base"
@@ -49,7 +69,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.base", 
 value = { data_type = "money", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-withholding-percentage"
@@ -57,7 +81,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.porcent
 value = { data_type = "decimal", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-retenciones"
@@ -65,7 +93,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.retenci
 value = { data_type = "money", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-accrual-year"
@@ -73,7 +105,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.ejercic
 value = { data_type = "integer", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-property-situation"
@@ -81,7 +117,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.situaci
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-cadastral-reference"
@@ -89,7 +129,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.referen
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-street-type"
@@ -97,7 +141,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-street-name"
@@ -105,7 +153,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-number-type"
@@ -113,7 +165,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-house-number"
@@ -121,7 +177,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-number-qualifier"
@@ -129,7 +189,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-block"
@@ -137,7 +201,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-portal"
@@ -145,7 +213,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-staircase"
@@ -153,7 +225,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-floor"
@@ -161,7 +237,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-door"
@@ -169,7 +249,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-complement"
@@ -177,7 +261,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-locality"
@@ -185,7 +273,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-municipality"
@@ -193,7 +285,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-municipality-code"
@@ -201,7 +297,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-property-province"
@@ -209,7 +309,11 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
 
 [[revisions.2023-y-siguientes.bindings]]
 id = "modelo-180-perceptor-row-postal-code"
@@ -217,4 +321,8 @@ provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmuebl
 value = { data_type = "text", channel = "row_set" }
 aggregation = { op = "rows" }
 legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
-source_refs = ["aeat-dr-180-2023"]
+source_refs = ["aeat-dr-180-2023", "aeat-modelo-180-procedure"]
+
+[[revisions.2023-y-siguientes.bindings.source_citations]]
+source_ref = "aeat-modelo-180-procedure"
+required_text = ["modelo 180"]
