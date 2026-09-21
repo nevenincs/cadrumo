@@ -812,6 +812,7 @@ def resolve_bucket_source_mesh(
                     ports=renta_catalogue_read_ports,
                     prorrata_register_repository=prorrata_register_repository,
                     usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
+                    activity_asset_history_repository=ports.activity_asset_history_repository,
                 )
             ),
             # M130 actividad-económica income (ledger_renta_income_aggregation).
@@ -827,6 +828,7 @@ def resolve_bucket_source_mesh(
                 LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
                     transaction_repository=memoized_transaction_repository,
                     prorrata_register_repository=prorrata_register_repository,
+                    activity_asset_history_repository=ports.activity_asset_history_repository,
                 )
             ),
             # M151 impatriado (Ley Beckham) Spanish-source base

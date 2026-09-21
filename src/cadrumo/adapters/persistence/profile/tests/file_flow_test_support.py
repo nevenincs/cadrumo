@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy.engine import Engine
 
+from cadrumo.adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
 from cadrumo.adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import (
@@ -187,6 +188,10 @@ def calculation_ports_for_test(
             calculation_repository=resolved_calculation_repository,
             bucket_event_repository=resolved_bucket_event_repository,
             transaction_repository=resolved_transaction_repository,
+            activity_asset_history_repository=ActividadAssetHistoryRepository(
+                bucket_id=normalized_bucket_id,
+                objects=objects,
+            ),
             usage_ratio_profile_loader=usage_ratio_profile_loader,
             profile_read_ports=ProfileReadPorts(path_values=profile_path_values),
             invoice_repository=resolved_invoice_repository,

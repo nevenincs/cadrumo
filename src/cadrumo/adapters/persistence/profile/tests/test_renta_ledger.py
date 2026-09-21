@@ -9,6 +9,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
 from cadrumo.adapters.persistence.profile.catalogue_reads import (
     InvoiceCatalogueReadAdapter,
     TransactionCatalogueReadAdapter,
@@ -346,6 +347,9 @@ def test_renta_filing_aggregation_resolves_registry_bound_inputs(secure_objects:
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
         usage_ratio_profile_loader=load_usage_ratios,
+        activity_asset_history_repository=ActividadAssetHistoryRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     ).resolve(
         CalculationSourceContext(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
@@ -401,6 +405,9 @@ def test_renta_filing_aggregation_routes_office_software_and_marketing_to_m100_e
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
         usage_ratio_profile_loader=load_usage_ratios,
+        activity_asset_history_repository=ActividadAssetHistoryRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     ).resolve(
         CalculationSourceContext(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,
@@ -446,6 +453,9 @@ def test_renta_filing_aggregation_loads_usage_ratios_for_mobile_phone_expenses(
             bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
         ),
         usage_ratio_profile_loader=load_usage_ratios,
+        activity_asset_history_repository=ActividadAssetHistoryRepository(
+            bucket_id=SECURE_OBJECTS_BUCKET_ID, objects=secure_objects
+        ),
     ).resolve(
         CalculationSourceContext(
             bucket_id=SECURE_OBJECTS_BUCKET_ID,

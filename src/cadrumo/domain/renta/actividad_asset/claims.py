@@ -97,7 +97,7 @@ class ClaimProjection(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    target_casilla_id: str = Field(pattern=r"^0\d{3}$")
+    target_casilla_id: str = Field(pattern=r"^(?:\d{2}|0\d{3})$")
     tax_year: int = Field(ge=2025, le=2025)
     claim_ids: tuple[str, ...]
     amount: Decimal
@@ -190,7 +190,7 @@ def project_m130(claims: tuple[AmortizationClaim, ...], *, period: Period, asset
         and claim.asset_kind is asset_kind
         and claim.covered_until <= cutoff + timedelta(days=1)
     )
-    return _project(selected, tax_year=period.filing_year, target_casilla_id="0002")
+    return _project(selected, tax_year=period.filing_year, target_casilla_id="02")
 
 
 def _project(claims: tuple[AmortizationClaim, ...], *, tax_year: int, target_casilla_id: str) -> ClaimProjection:

@@ -13,6 +13,7 @@ import pytest
 from cadrumo.domain.calculations.registry.tests.published_authority import published_revision, published_snapshot
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ....core.aggregation import BindingSourceKind
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
@@ -32,6 +33,18 @@ from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
+from ....domain.renta.actividad_asset.claims import AmortizationClaim
+from ....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
+from ....domain.renta.actividad_asset.lifecycle import (
+    AcquisitionLineageReference,
+    AcquisitionShape,
+    ActivityAssetBasis,
+    ActivityAssetRevision,
+    AssetBasisStage,
+    AssetKind,
+    OpeningAmortizationHistory,
+    OpeningHistoryStatus,
+)
 from ....domain.transactions.dates import transaction_eligible_date_span, transaction_filing_date
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import (
@@ -50,7 +63,10 @@ from ..errors import (
 from ..iva_ledger import (
     IvaLedgerAggregationIssueReason,
 )
-from ..modelo_bindings import LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver
+from ..modelo_bindings import (
+    LedgerIvaAggregationSourceResolver as _LedgerIvaAggregationSourceResolver,
+)
+from ..modelo_bindings import LedgerRentaGastosPagoFraccionadoAggregationSourceResolver
 from ..modelo_bindings_renta_expenses import (
     LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
 )
@@ -78,6 +94,27 @@ class _EmptyTransactionCatalogueReader:
 
     def partition_by_date_range(self, start: date, end: date) -> LedgerDatePartition:
         return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
+
+
+class _EmptyActivityAssetHistoryRepository:
+    def load(self) -> ActivityAssetHistory:
+        return ActivityAssetHistory()
+
+    def append_revision(self, revision: ActivityAssetRevision) -> ActivityAssetHistory:
+        del revision
+        raise AssertionError("empty resolver repository is read-only")
+
+    def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
+        del claim
+        raise AssertionError("empty resolver repository is read-only")
+
+
+class _StaticActivityAssetHistoryRepository(_EmptyActivityAssetHistoryRepository):
+    def __init__(self, history: ActivityAssetHistory) -> None:
+        self._history = history
+
+    def load(self) -> ActivityAssetHistory:
+        return self._history
 
 
 def _empty_catalogue_read_ports() -> InvoiceCatalogueReadPorts:
@@ -302,20 +339,24 @@ def _renta_transaction(
     provider_id: str,
     *,
     purchase_invoice_evidence_id: str | None,
+    amount: Decimal = Decimal("121.00"),
+    category: SpendingCategory | None = None,
 ) -> Transaction:
     return Transaction.model_validate(
         {
             "raw": _raw_transaction(
                 provider_id,
                 booked_date=date(2025, 4, 5),
-                amount=Decimal("121.00"),
+                amount=amount,
             ),
             "direction": TransactionDirection.OUTGOING,
             "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
-            "category_id": SpendingCategory.from_registry("asesoria_fiscal").value,
+            "category_id": (
+                SpendingCategory.from_registry("asesoria_fiscal") if category is None else category
+            ).value,
             "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },
@@ -1040,6 +1081,7 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
         ports=_catalogue_read_ports(invoice_repository=invoice_repo, transaction_repository=tx_repo),
         prorrata_register_repository=_empty_prorrata_repository(),
         usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
+        activity_asset_history_repository=_EmptyActivityAssetHistoryRepository(),
     ).resolve(
         CalculationSourceContext(
             bucket_id=_BUCKET_ID,
@@ -1057,6 +1099,197 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
         f"transaction:{linked.transaction_id}",
         f"purchase-invoice-evidence:{invoice.invoice_id}",
     }
+
+
+def test_renta_source_mesh_refuses_acquisition_cost_competing_with_asset_claim() -> None:
+    revision = _revision("100", "2025")
+    tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
+    acquisition = _renta_transaction(
+        "asset-acquisition",
+        purchase_invoice_evidence_id=None,
+        amount=Decimal("2000.00"),
+        category=SpendingCategory.from_registry("hardware_amortizable"),
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((acquisition,)))
+    asset = ActivityAssetRevision(
+        asset_id="computer",
+        revision_number=1,
+        acquisition=AcquisitionLineageReference(
+            observed_transaction_id=acquisition.transaction_id,
+            invoice_evidence_id="invoice-asset",
+            evidence_fingerprint="a" * 64,
+        ),
+        acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE,
+        asset_kind=AssetKind.MATERIAL,
+        basis=ActivityAssetBasis(
+            stage=AssetBasisStage.BUSINESS_ALLOCATED,
+            basis_amount=Decimal("2000.00"),
+            prior_allocation_provenance="ledger-business-allocation",
+        ),
+        in_service_date=date(2025, 1, 1),
+        opening_history=OpeningAmortizationHistory(
+            status=OpeningHistoryStatus.KNOWN,
+            accumulated_amount=Decimal("0"),
+        ),
+    )
+    claim = AmortizationClaim(
+        asset_id=asset.asset_id,
+        asset_revision_id=asset.revision_id,
+        asset_kind=asset.asset_kind,
+        tax_year=2025,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+        amount=Decimal("500.00"),
+        schedule_fingerprint="b" * 64,
+        authority_generation="published-test-generation",
+        source_reference="modelo-100:2025:parameter:computer",
+        creating_operation="record-amortization",
+    )
+    history = ActivityAssetHistory(revisions=(asset,), claims=(claim,))
+
+    with pytest.raises(ActividadAssetClaimConflictError, match="retain acquisition evidence"):
+        LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
+            ports=_catalogue_read_ports(
+                invoice_repository=_InMemoryInvoiceCatalogueRepository(),
+                transaction_repository=tx_repo,
+            ),
+            prorrata_register_repository=_empty_prorrata_repository(),
+            usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
+            activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
+        ).resolve(
+            CalculationSourceContext(
+                bucket_id=_BUCKET_ID,
+                modelo="100",
+                filing_year=2025,
+                period=Period.from_year_and_code(2025, "0A"),
+                revision=revision,
+            ),
+        )
+
+
+def test_renta_source_mesh_projects_recorded_asset_claim_without_full_cost() -> None:
+    revision = _revision("100", "2025")
+    asset = ActivityAssetRevision(
+        asset_id="computer",
+        revision_number=1,
+        acquisition=AcquisitionLineageReference(
+            observed_transaction_id="c" * 64,
+            invoice_evidence_id="invoice-asset",
+            evidence_fingerprint="d" * 64,
+        ),
+        acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE,
+        asset_kind=AssetKind.MATERIAL,
+        basis=ActivityAssetBasis(
+            stage=AssetBasisStage.BUSINESS_ALLOCATED,
+            basis_amount=Decimal("2000.00"),
+            prior_allocation_provenance="ledger-business-allocation",
+        ),
+        in_service_date=date(2025, 1, 1),
+        opening_history=OpeningAmortizationHistory(
+            status=OpeningHistoryStatus.KNOWN,
+            accumulated_amount=Decimal("0"),
+        ),
+    )
+    claim = AmortizationClaim(
+        asset_id=asset.asset_id,
+        asset_revision_id=asset.revision_id,
+        asset_kind=asset.asset_kind,
+        tax_year=2025,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+        amount=Decimal("500.00"),
+        schedule_fingerprint="e" * 64,
+        authority_generation="published-test-generation",
+        source_reference="modelo-100:2025:parameter:computer",
+        creating_operation="record-amortization",
+    )
+    history = ActivityAssetHistory(revisions=(asset,), claims=(claim,))
+
+    resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
+        ports=_empty_catalogue_read_ports(),
+        prorrata_register_repository=_empty_prorrata_repository(),
+        usage_ratio_profile_loader=lambda *, bucket_id, operation: UsageRatioProfile(),
+        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="100",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            revision=revision,
+        ),
+    )
+    target_binding = next(
+        binding
+        for binding in revision.bindings
+        if str(binding.source) == "ledger_renta_gastos_estimacion_directa_aggregation"
+        and str(binding.provider.target_casilla_id) == "0208"
+    )
+
+    assert resolution.binding_values[target_binding.id] == Decimal("500.00")
+    assert Decimal("2000.00") not in resolution.binding_values.values()
+    assert {item.source_ref for item in resolution.provenance} == {f"activity-asset-claim:{claim.claim_id}"}
+
+
+def test_m130_source_mesh_adds_recorded_claim_through_existing_expense_owner() -> None:
+    revision = _revision("130", "2019-y-siguientes")
+    asset = ActivityAssetRevision(
+        asset_id="computer",
+        revision_number=1,
+        acquisition=AcquisitionLineageReference(
+            observed_transaction_id="c" * 64,
+            invoice_evidence_id="invoice-asset",
+            evidence_fingerprint="d" * 64,
+        ),
+        acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE,
+        asset_kind=AssetKind.MATERIAL,
+        basis=ActivityAssetBasis(
+            stage=AssetBasisStage.BUSINESS_ALLOCATED,
+            basis_amount=Decimal("2000.00"),
+            prior_allocation_provenance="ledger-business-allocation",
+        ),
+        in_service_date=date(2025, 1, 1),
+        opening_history=OpeningAmortizationHistory(
+            status=OpeningHistoryStatus.KNOWN,
+            accumulated_amount=Decimal("0"),
+        ),
+    )
+    claim = AmortizationClaim(
+        asset_id=asset.asset_id,
+        asset_revision_id=asset.revision_id,
+        asset_kind=asset.asset_kind,
+        tax_year=2025,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2025, 4, 1),
+        amount=Decimal("125.00"),
+        schedule_fingerprint="e" * 64,
+        authority_generation="published-test-generation",
+        source_reference="modelo-100:2025:parameter:computer",
+        creating_operation="record-amortization",
+    )
+    history = ActivityAssetHistory(revisions=(asset,), claims=(claim,))
+
+    resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
+        transaction_repository=_InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID),
+        prorrata_register_repository=_empty_prorrata_repository(),
+        activity_asset_history_repository=_StaticActivityAssetHistoryRepository(history),
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="130",
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "1T"),
+            revision=revision,
+        ),
+    )
+    target_binding = next(
+        binding
+        for binding in revision.bindings
+        if str(binding.source) == "ledger_renta_gastos_pago_fraccionado_aggregation"
+    )
+
+    assert resolution.binding_values[target_binding.id] == Decimal("125.00")
+    assert {item.source_ref for item in resolution.provenance} == {f"activity-asset-claim:{claim.claim_id}"}
 
 
 def test_oss_source_mesh_resolver_matches_candidate_binding_aggregation() -> None:

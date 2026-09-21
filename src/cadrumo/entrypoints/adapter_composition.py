@@ -951,6 +951,7 @@ def build_calculation_action_ports(
     profile_record: object | None = None,
 ) -> CalculationActionPorts:
     """Compose every persisted authority required by one Modelo calculation."""
+    from ..adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
     from ..adapters.persistence.profile.bienes_inversion import BienesInversionIvaRegisterRepository
     from ..adapters.persistence.profile.buckets import BucketEventHistoryRepository
     from ..adapters.persistence.profile.calculation_observations import (
@@ -1024,6 +1025,10 @@ def build_calculation_action_ports(
         ),
         bucket_event_repository=bucket_event_repository,
         transaction_repository=TransactionCatalogueRepository(
+            bucket_id=normalized_bucket_id,
+            objects=objects,
+        ),
+        activity_asset_history_repository=ActividadAssetHistoryRepository(
             bucket_id=normalized_bucket_id,
             objects=objects,
         ),

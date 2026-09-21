@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:1551b84c047a7ca2d77ea8c816fe26b9f630b779c6c38afef2a52ef3a2fe122c'
+body_hash: 'sha256:c8170c6a668e8fcea03ebe90f7073456641d6a1273079cc06a22026eef284d7f'
 related:
   - "[[2026-09-21-assets-core-plan]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
@@ -24,6 +24,10 @@ Reviewed Phase P02 across the accepted lifecycle and cost-basis decisions, the
 typed asset/revision/claim contracts, 2025 normal and simplified authority
 tables, deterministic day-count schedule, encrypted CAS-guarded persistence,
 restart reconstruction, and focused verification evidence.
+
+Reviewed Phase P03 across exact-key authority resolution, mandatory encrypted
+history wiring, the live Modelo 100 and Modelo 130 source mesh, scoped
+acquisition-cost collisions, and claim provenance.
 
 ## Findings
 
@@ -48,6 +52,18 @@ checks pass.
 
 Result: PASS. No critical or high findings. The unrelated shared-test failure is
 recorded as an integration dependency rather than hidden or overwritten.
+
+### phase-03 | low | non-linear and special intangible methods remain explicit refusals
+
+The live resolver supports the enrolled 2025 normal and simplified linear-table
+classes, including their software destinations. The separately authored
+non-estimable-life and goodwill limits are not silently selected, and unsupported
+methods or class keys refuse. This is an explicit support boundary, not an
+under-declared zero.
+
+Result: PASS. No critical or high findings. Live regression evidence proves the
+scheduled EUR 500 charge, additive M130 ownership, distinct M100 destinations,
+and refusal of the competing EUR 2,000 acquisition-cost route.
 
 ## Recommendations
 

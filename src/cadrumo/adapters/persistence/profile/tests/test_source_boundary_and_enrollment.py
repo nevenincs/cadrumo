@@ -29,6 +29,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.catalogue_reads import (
@@ -478,6 +479,10 @@ def test_s09_ledger_renta_income_resolver_enrolled_fires_on_m130(
                 ports=catalogue_read_ports,
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
                 usage_ratio_profile_loader=_empty_usage_ratio_profile_loader,
+                activity_asset_history_repository=ActividadAssetHistoryRepository(
+                    bucket_id=_BUCKET_ID,
+                    objects=secure_objects,
+                ),
             ).resolve(context),
             LedgerRentaIncomeAggregationSourceResolver(ports=catalogue_read_ports).resolve(context),
             OssIossLedgerSourceResolver(ports=catalogue_read_ports, candidates=()).resolve(context),

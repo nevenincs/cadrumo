@@ -86,5 +86,6 @@ def test_m100_and_m130_reference_same_effective_claim_without_duplicate_basis_us
 
     assert material_m100.target_casilla_id == "0208"
     assert intangible_m100.target_casilla_id == "0227"
+    assert material_m130.target_casilla_id == "02"
     assert material_m100.claim_ids == material_m130.claim_ids == (material.claim_id,)
     assert material_m100.amount == material_m130.amount == Decimal("200.00")

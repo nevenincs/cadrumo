@@ -87,6 +87,7 @@ from ...domain.transactions.irpf_categories import has_activity_irpf_category, h
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.transactions.tipo_actividad_partitions import tipo_actividad_code_set
+from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from ._modelo_bindings_invoice_iva import (
     category_counterparty_mismatch_diagnostics,
@@ -117,6 +118,11 @@ from .iva_ledger import (
     IvaLedgerProrrataApportionment,
     aggregate_iva_ledger_observations_from_repositories,
     resolve_iva_ledger_binding_values,
+)
+from .modelo_bindings_actividad_assets import (
+    CompetingDepreciationTreatment,
+    activity_asset_expense_observations,
+    refuse_competing_depreciation_treatments,
 )
 from .renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
 from .renta_income_ledger import (
@@ -1161,10 +1167,12 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         *,
         transaction_repository: TransactionCatalogueRepositoryProtocol,
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+        activity_asset_history_repository: ActivityAssetHistoryRepository,
     ) -> None:
         """Bind repositories used to resolve Renta expense sources."""
         self._transaction_repository = transaction_repository
         self._prorrata_register_repository = prorrata_register_repository
+        self._activity_asset_history_repository = activity_asset_history_repository
 
     def resolve(self, context: CalculationSourceContext) -> CalculationSourceResolution:
         """Resolve Renta expense observations for one calculation context."""
@@ -1194,20 +1202,42 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 source_kinds=self.owned_sources,
                 error=exc,
             )
+        asset_history = self._activity_asset_history_repository.load()
+        refuse_competing_depreciation_treatments(
+            asset_history.revisions,
+            asset_history.claims,
+            tuple(
+                CompetingDepreciationTreatment(
+                    asset_id=asset.asset_id,
+                    transaction_id=observation.transaction_id,
+                    category="m130_deductible_expense",
+                    tax_year=observation.filing_date.year,
+                )
+                for observation in aggregation.observations
+                for asset in asset_history.revisions
+                if observation.transaction_id == asset.acquisition.observed_transaction_id
+            ),
+        )
+        asset_observations = activity_asset_expense_observations(
+            asset_history.claims,
+            modelo="130",
+            period=aggregation_period,
+        )
+        all_observations = (*aggregation.observations, *asset_observations)
         # Fail-closed advisory parity with the income screen: a non-zero
         # declarable gasto whose target_casilla_id matches no
         # ledger_renta_gastos_pago_fraccionado_aggregation binding would otherwise be silently
         # dropped (no-silent-under-declaration). Calculate still succeeds; the
         # operator sees the unrouted expense instead of an under-declared form.
         unrouted = unsupported_ledger_renta_gastos_pago_fraccionado_observations(
-            context.revision, aggregation.observations
+            context.revision, all_observations
         )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
                 context.revision,
-                aggregation.observations,
+                all_observations,
             ),
             source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
             diagnostics=out_of_window_summary_diagnostics(
@@ -1246,6 +1276,19 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                     parent_source_ref=None,
                     terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 ),
+            )
+            + tuple(
+                CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
+                    resolved_binding_source=BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION,
+                    contributor_source_kind="activity_asset_claim",
+                    contributor_binding_source=None,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
+                    source_ref=f"activity-asset-claim:{observation.claim_id}",
+                    parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+                )
+                for observation in asset_observations
             ),
         )
 

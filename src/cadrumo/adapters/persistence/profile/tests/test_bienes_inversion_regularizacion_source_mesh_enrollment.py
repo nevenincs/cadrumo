@@ -100,6 +100,7 @@ def _source_mesh_ports(
         calculation_repository=ports.calculation_repository,
         bucket_event_repository=ports.bucket_event_repository,
         transaction_repository=transaction_repository,
+        activity_asset_history_repository=ports.activity_asset_history_repository,
         usage_ratio_profile_loader=_empty_usage_ratio_profile_loader,
         profile_read_ports=empty_profile_read_ports(),
         invoice_repository=invoice_repository,

@@ -11,7 +11,7 @@ related:
   - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:cd9315d08a7326bdef0f6f1e95b91ef1a7023ebf5b999d5887f01e4a866290cd'
+body_hash: 'sha256:304bdbc2b5faee4ce46e8bfa440b23c63adf90fdcd312656eb1b530543bf77d2'
 ---
 
 # `assets-core` plan
@@ -58,8 +58,8 @@ Implement the legally governed schedule, lifecycle model, and encrypted replayab
 
 Enroll the authoritative source and integrate M130 and M100 with explicit collision and incompleteness behavior.
 
-- [ ] `P03.S05` - Enroll the typed asset-schedule source and refuse incomplete or competing amortization claims; `src/cadrumo/domain/calculations/registry/, src/cadrumo/application/calculations/actividad_asset_schedule.py, src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`.
-- [ ] `P03.S06` - Integrate annual and year-to-date deductions into Modelo 100 and Modelo 130; `src/cadrumo/application/aggregation/modelo_bindings.py, src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py, src/cadrumo/application/aggregation/renta_gasto_ledger.py`.
+- [x] `P03.S05` - Enroll the typed asset-schedule source and refuse incomplete or competing amortization claims; `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py, src/cadrumo/application/calculations/actividad_asset_schedule.py, src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py, dev/registry/tests/test_activity_asset_schedule_authority_resolution.py, src/cadrumo/application/aggregation/tests/test_modelo_bindings_actividad_assets.py`.
+- [x] `P03.S06` - Integrate annual and year-to-date deductions into Modelo 100 and Modelo 130; `src/cadrumo/application/aggregation/modelo_bindings.py, src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py, src/cadrumo/application/modelo/calculation_action_ports.py, src/cadrumo/application/modelo/calculation_actions.py, src/cadrumo/entrypoints/adapter_composition.py, src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`.
 
 ### Phase `P04` - IVA linkage and filing integration
 

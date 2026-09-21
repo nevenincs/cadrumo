@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:3c720094dd4d1c12db9726fa08ef738884f45591dc03f8198f3af0a4bb7df9a2'
+body_hash: 'sha256:4963fdf631630e78cddd1e764fe9e2bee83166fcd635607895c91081ecb01956'
 related:
   - "[[2026-09-21-assets-core-plan]]"
 ---
@@ -41,6 +41,29 @@ related:
 - `S03` `verify:` `focused asset domain and authority pytest (13 tests)` -> `pass`
 - `S04` `verify:` `focused combined P02 pytest (20 tests)` -> `pass`
 - `S04` `verify:` `Ruff ty basedpyright git diff --check` -> `pass`
+- `S05` `A` `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`
+- `S05` `A` `src/cadrumo/application/calculations/actividad_asset_schedule.py`
+- `S05` `A` `src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`
+- `S05` `A` `dev/registry/tests/test_activity_asset_schedule_authority_resolution.py`
+- `S05` `A` `src/cadrumo/application/aggregation/tests/test_modelo_bindings_actividad_assets.py`
+- `S05` `by:` `OpenAI GPT-5 lead; Terra High resolver worker`
+- `S06` `verify:` `live asset source mesh tests (11 tests)` -> `pass`
+- `S05` `verify:` `asset authority and pure composition tests (7 tests)` -> `pass`
+- `S06` `verify:` `surrounding source boundary regression tests (44 tests)` -> `pass`
+- `S06` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S06` `M` `src/cadrumo/domain/renta/actividad_asset/tests/test_claims.py`
+- `S06` `M` `src/cadrumo/application/aggregation/modelo_bindings.py`
+- `S06` `M` `src/cadrumo/application/aggregation/modelo_bindings_renta_expenses.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_action_ports.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_actions.py`
+- `S06` `M` `src/cadrumo/entrypoints/adapter_composition.py`
+- `S06` `M` `src/cadrumo/application/aggregation/tests/test_modelo_source_mesh_ledger.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/file_flow_test_support.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_bienes_inversion_regularizacion_source_mesh_enrollment.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_renta_ledger.py`
+- `S06` `M` `src/cadrumo/adapters/persistence/profile/tests/test_source_boundary_and_enrollment.py`
+- `S06` `by:` `OpenAI GPT-5 lead; Terra High resolver worker`
+- `S06` `verify:` `Ruff ty basedpyright git diff --check` -> `pass`
 
 ## Notes
 

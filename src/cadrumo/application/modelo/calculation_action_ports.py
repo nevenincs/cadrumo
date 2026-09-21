@@ -27,6 +27,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.inventory import InventoryLedgerRepositoryProtocol
 from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
@@ -83,6 +84,7 @@ class CalculationActionPorts:
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol
     bucket_event_repository: BucketEventHistoryRepositoryProtocol
     transaction_repository: CalculationTransactionRepositoryProtocol
+    activity_asset_history_repository: ActivityAssetHistoryRepository
     usage_ratio_profile_loader: UsageRatioProfileLoader
     profile_read_ports: ProfileReadPorts
     invoice_repository: InvoiceCatalogueRepositoryProtocol
