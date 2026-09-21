@@ -123,6 +123,7 @@ def run_iva_multirate_cli_journey(
         taxable_base=_GENERAL_BASE,
         iva_rate="0.21",
         iva_amount=_GENERAL_IVA,
+        iva_category="domestic_general",
         idempotency_key="iva-acceptance-multirate-general-2025-1t",
     )
     reduced_transaction_id = _add_transaction(
@@ -134,6 +135,7 @@ def run_iva_multirate_cli_journey(
         taxable_base=_REDUCED_BASE,
         iva_rate="0.10",
         iva_amount=_REDUCED_IVA,
+        iva_category="domestic_reduced",
         idempotency_key="iva-acceptance-multirate-reduced-2025-1t",
     )
     issued_invoice_id = _add_issued_invoice(
@@ -363,6 +365,7 @@ def _add_transaction(
     taxable_base: Decimal,
     iva_rate: str,
     iva_amount: Decimal,
+    iva_category: str,
     idempotency_key: str,
 ) -> str:
     transaction = _result(
@@ -391,7 +394,7 @@ def _add_transaction(
                 "--iva-amount",
                 f"{iva_amount:.2f}",
                 "--iva-category",
-                "domestic_general",
+                iva_category,
                 "--source-jurisdiction",
                 "ES",
                 "--idempotency-key",

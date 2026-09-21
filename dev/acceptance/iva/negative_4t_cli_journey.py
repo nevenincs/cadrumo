@@ -1,9 +1,9 @@
 """Installed-CLI acceptance for one negative 2025/4T Modelo 303 filing.
 
 The scenario records one synthetic deductible purchase and no sale, then proves
-that a locally filed ``compensar`` result is retained as local, pending state
-and becomes one available IVA compensation lot.  It never exports or submits
-anything to AEAT.
+that a locally filed negative result remains local and pending.  ``compensar``
+creates one available IVA compensation lot, while ``devolver`` creates none.
+It never exports or submits anything to AEAT.
 """
 
 from __future__ import annotations
@@ -13,7 +13,7 @@ from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
-from typing import Final, cast
+from typing import Final, Literal, cast
 
 from dev.acceptance.income_tax.cli_journey import InstalledCli, JourneyError
 
@@ -30,12 +30,18 @@ from .cli_journey import (
 )
 from .multirate_cli_journey import _create_profile
 
-_ACCEPTANCE_ID: Final = "IVA-01-NEGATIVE-2025-4T-COMPENSAR"
+RefundElection = Literal["compensar", "devolver"]
+
+_ACCEPTANCE_IDS: Final[Mapping[RefundElection, str]] = {
+    "compensar": "IVA-01-NEGATIVE-2025-4T-COMPENSAR",
+    "devolver": "IVA-01-NEGATIVE-2025-4T-DEVOLVER",
+}
 _YEAR: Final = 2025
 _PERIOD: Final = "4T"
 _PRIOR_PERIOD: Final = "3T"
 _PURCHASE_IVA: Final = Decimal("10.50")
 _EXPECTED_RESULT: Final = -_PURCHASE_IVA
+_ZERO: Final = Decimal("0.00")
 _PRIVATE_ARTIFACT_PLACEHOLDER: Final = "<synthetic-purchase-artifact>"
 
 
@@ -59,6 +65,7 @@ class IvaNegative4TCliJourneyReceipt:
     work_unit_id: str
     calculation_revision_id: str
     iva_resultado: str
+    local_refund_election: RefundElection
     filing_record_id: str
     filing_origin: str
     filing_confirmation: str
@@ -68,7 +75,7 @@ class IvaNegative4TCliJourneyReceipt:
     wallet_generated_amount: str
     wallet_available_end_amount: str
     wallet_carry_forward_lot_count: int
-    wallet_remaining_lot_amount: str
+    wallet_remaining_lot_amount: str | None
     commands: tuple[SanitizedCommandReceipt, ...]
 
     def to_dict(self) -> dict[str, object]:
@@ -82,8 +89,9 @@ def run_iva_negative_4t_cli_journey(
     authority_root: Path,
     storage_root: Path,
     artifact_root: Path,
+    refund_election: RefundElection = "compensar",
 ) -> IvaNegative4TCliJourneyReceipt:
-    """File one 2025/4T compensación locally, then reopen its wallet history."""
+    """File one 2025/4T local negative election, then reopen its wallet history."""
     if storage_root.exists() and any(storage_root.iterdir()):
         raise IvaCliJourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
@@ -334,9 +342,9 @@ def run_iva_negative_4t_cli_journey(
                 "file",
                 calculation_revision_id,
                 "--refund-election",
-                "compensar",
+                refund_election,
                 "--notes",
-                "Synthetic local pending compensacion filing; not sent to AEAT",
+                f"Synthetic local pending {refund_election} filing; not sent to AEAT",
             ),
             result_keys=("filing_record_id",),
         )
@@ -367,13 +375,13 @@ def run_iva_negative_4t_cli_journey(
         )
     )
     wallet_row_count, wallet_generated, wallet_available, wallet_lot_count, wallet_remaining = _assert_wallet_history(
-        history
+        history, refund_election=refund_election
     )
 
     descriptor = authority_root.resolve(strict=True) / "authority.current.json"
     return IvaNegative4TCliJourneyReceipt(
-        schema_version="iva-01-negative-2025-4t-installed-cli-journey-v1",
-        acceptance_ids=(_ACCEPTANCE_ID,),
+        schema_version="iva-01-negative-2025-4t-installed-cli-journey-v2",
+        acceptance_ids=(_acceptance_id(refund_election),),
         executable=str(cli.executable),
         executable_sha256=_sha256_path(cli.executable),
         source_identity=_checkout_source_identity(),
@@ -388,6 +396,7 @@ def run_iva_negative_4t_cli_journey(
         work_unit_id=work_unit_id,
         calculation_revision_id=calculation_revision_id,
         iva_resultado=f"{iva_resultado:.2f}",
+        local_refund_election=refund_election,
         filing_record_id=filing_record_id,
         filing_origin=filing_origin,
         filing_confirmation=filing_confirmation,
@@ -397,7 +406,7 @@ def run_iva_negative_4t_cli_journey(
         wallet_generated_amount=f"{wallet_generated:.2f}",
         wallet_available_end_amount=f"{wallet_available:.2f}",
         wallet_carry_forward_lot_count=wallet_lot_count,
-        wallet_remaining_lot_amount=f"{wallet_remaining:.2f}",
+        wallet_remaining_lot_amount=None if wallet_remaining is None else f"{wallet_remaining:.2f}",
         commands=tuple(receipts),
     )
 
@@ -412,8 +421,10 @@ def _decimal_casilla(calculated: Mapping[str, object], casilla_id: str) -> Decim
         raise IvaCliJourneyError(f"Modelo 303 calculate returned no decimal {casilla_id}") from exc
 
 
-def _assert_wallet_history(history: Mapping[str, object]) -> tuple[int, Decimal, Decimal, int, Decimal]:
-    """Validate the required 3T zero seed, 4T filing row, and available lot."""
+def _assert_wallet_history(
+    history: Mapping[str, object], *, refund_election: RefundElection
+) -> tuple[int, Decimal, Decimal, int, Decimal | None]:
+    """Validate the required 3T seed and the election-specific 4T wallet result."""
     if history.get("as_of_year") != _YEAR:
         raise IvaCliJourneyError("fresh-process IVA wallet history returned another as-of year")
     rows = history.get("rows")
@@ -421,19 +432,28 @@ def _assert_wallet_history(history: Mapping[str, object]) -> tuple[int, Decimal,
     if not isinstance(rows, list) or not isinstance(row_count, int) or row_count != len(rows):
         raise IvaCliJourneyError("fresh-process IVA wallet history returned an invalid row projection")
     prior_seed = _unique_history_row(rows, period=_PRIOR_PERIOD, provenance="operator_seed")
-    if _decimal_history_amount(prior_seed, "generated_amount") != Decimal("0.00"):
+    if _decimal_history_amount(prior_seed, "generated_amount") != _ZERO:
         raise IvaCliJourneyError("fresh-process IVA wallet history did not retain the 3T zero seed")
-    if _decimal_history_amount(prior_seed, "available_end_amount") != Decimal("0.00"):
+    if _decimal_history_amount(prior_seed, "available_end_amount") != _ZERO:
         raise IvaCliJourneyError("fresh-process IVA wallet history did not retain the 3T zero availability")
     filed_row = _unique_history_row(rows, period=_PERIOD, provenance="app_filing")
     generated = _decimal_history_amount(filed_row, "generated_amount")
     available = _decimal_history_amount(filed_row, "available_end_amount")
+    lot_count = history.get("carry_forward_lot_count")
+    lots = history.get("carry_forward_lots")
+    if refund_election == "devolver":
+        if generated != _ZERO or available != _ZERO:
+            raise IvaCliJourneyError("fresh-process IVA wallet history retained carry after the devolver election")
+        if not isinstance(lot_count, int) or lot_count != 0:
+            raise IvaCliJourneyError("fresh-process IVA wallet history returned a carry-forward lot after devolver")
+        if not isinstance(lots, list) or lots:
+            raise IvaCliJourneyError("fresh-process IVA wallet history returned non-empty lots after devolver")
+        return row_count, generated, available, lot_count, None
+
     if generated != _PURCHASE_IVA or available != _PURCHASE_IVA:
         raise IvaCliJourneyError("fresh-process IVA wallet history did not retain the generated available credit")
-    lot_count = history.get("carry_forward_lot_count")
     if not isinstance(lot_count, int) or lot_count != 1:
         raise IvaCliJourneyError("fresh-process IVA wallet history did not return one carry-forward lot")
-    lots = history.get("carry_forward_lots")
     if not isinstance(lots, list) or len(lots) != 1 or not isinstance(lots[0], Mapping):
         raise IvaCliJourneyError("fresh-process IVA wallet history returned no one-lot projection")
     lot = lots[0]
@@ -445,6 +465,11 @@ def _assert_wallet_history(history: Mapping[str, object]) -> tuple[int, Decimal,
     if remaining != _PURCHASE_IVA:
         raise IvaCliJourneyError("fresh-process IVA wallet lot did not retain the remaining credit")
     return row_count, generated, available, lot_count, remaining
+
+
+def _acceptance_id(refund_election: RefundElection) -> str:
+    """Return the acceptance identifier for the explicit local election."""
+    return _ACCEPTANCE_IDS[refund_election]
 
 
 def _unique_history_row(rows: list[object], *, period: str, provenance: str) -> Mapping[str, object]:

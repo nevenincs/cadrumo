@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import sys
 from decimal import Decimal
 from pathlib import Path
 
@@ -13,16 +12,14 @@ from ..multirate_cli_journey import run_iva_multirate_cli_journey
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def test_installed_multirate_cli_journey(tmp_path: Path) -> None:
+def test_installed_multirate_cli_journey(tmp_path: Path, installed_wheel_aeat: Path) -> None:
     """One issued invoice preserves 21% and 10% IVA through verification."""
     repository_root = Path(__file__).resolve().parents[4]
-    executable = Path(sys.executable).with_name("aeat.exe")
     authority_root = repository_root / ".authority"
-    assert executable.is_file(), executable
     assert (authority_root / "authority.current.json").is_file(), authority_root
 
     receipt = run_iva_multirate_cli_journey(
-        executable=executable,
+        executable=installed_wheel_aeat,
         authority_root=authority_root,
         storage_root=tmp_path / "secure-store",
         artifact_root=tmp_path / "private-source-artifacts",
