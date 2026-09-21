@@ -209,13 +209,23 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         self.app.push_screen(OperationModal(controller), self._on_lifecycle_operation_settled)
 
     def _on_lifecycle_operation_settled(self, outcome: object) -> None:
-        """Refresh the captured generation only for a terminal success."""
+        """Publish the terminal result and refresh only after success."""
         from ...operations.modal import OperationModalSettledOutcomeV1
 
-        if not (
-            isinstance(outcome, OperationModalSettledOutcomeV1)
-            and outcome.view_model.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-        ):
+        if not isinstance(outcome, OperationModalSettledOutcomeV1):
+            return
+        condition = outcome.view_model.projection.terminal_condition
+        terminal_copy = {
+            OperationTerminalCondition.SUCCEEDED: tr("operation.modal.terminal.succeeded"),
+            OperationTerminalCondition.REFUSED: tr("operation.modal.terminal.refused"),
+            OperationTerminalCondition.FAILED: tr("operation.modal.terminal.failed"),
+            OperationTerminalCondition.CANCELLED: tr("operation.modal.terminal.cancelled"),
+            OperationTerminalCondition.TIMED_OUT: tr("operation.modal.terminal.timed_out"),
+            OperationTerminalCondition.INTERRUPTED: tr("operation.modal.terminal.interrupted"),
+        }.get(condition)
+        if terminal_copy is not None:
+            self._notice(terminal_copy)
+        if condition is not OperationTerminalCondition.SUCCEEDED:
             return
         actions = self._session.lifecycle_actions
         refresh = None if actions is None else getattr(actions, "refresh_after_success", None)

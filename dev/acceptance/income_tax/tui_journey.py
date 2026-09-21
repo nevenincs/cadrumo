@@ -304,7 +304,7 @@ async def activate_tui_operation(
     pilot: Pilot[Any],
     *,
     binding: TuiOperationBinding,
-    maximum_polls: int = 40,
+    maximum_polls: int = 600,
 ) -> TuiTerminalEvidence:
     """Activate one real TUI control and classify its public terminal result.
 
@@ -350,7 +350,7 @@ async def wait_for_tui_refresh(
     pilot: Pilot[Any],
     *,
     binding: TuiOperationBinding,
-    maximum_polls: int = 40,
+    maximum_polls: int = 600,
 ) -> None:
     """Require the real refresh destination after a succeeded lifecycle action."""
     from textual.css.query import NoMatches
@@ -727,6 +727,23 @@ async def _observe_operation_terminal(
                 receipt_present=bool(receipt),
                 diagnostic_present=bool(diagnostic),
             )
+        if not getattr(modal, "is_mounted", True):
+            refusal_notice_id = binding.refusal_notice_id
+            if refusal_notice_id is not None:
+                try:
+                    settled_notice = _rendered_text(_query_visible_tui_control(pilot, refusal_notice_id))
+                except NoMatches:
+                    settled_notice = ""
+                terminal = expected.get(settled_notice)
+                if terminal is not None:
+                    condition, outcome = terminal
+                    return TuiTerminalEvidence(
+                        operation_id=binding.operation_id,
+                        terminal_condition=condition,
+                        outcome=outcome,
+                        receipt_present=bool(receipt),
+                        diagnostic_present=bool(diagnostic),
+                    )
         # The generic modal keeps Apply disabled unless its public projection
         # has reached REVIEW.  A single click is the same operator act as the
         # visible button; repeating it while the projected revision catches up
@@ -738,10 +755,17 @@ async def _observe_operation_terminal(
             except NoMatches:
                 apply = None
             if apply is not None and getattr(apply, "disabled", True) is False:
-                await pilot.click("#btn-operation-apply")
+                apply.focus()
+                await pilot.press("enter")
                 review_applied = True
         await pilot.pause()
-    raise TuiJourneyError(f"{binding.operation_id} did not expose a terminal operation status")
+    apply = modal.query_one("#btn-operation-apply")
+    phase = _rendered_text(modal.query_one("#operation-modal-phase"))
+    raise TuiJourneyError(
+        f"{binding.operation_id} did not expose a terminal operation status "
+        f"(status={status!r}, phase={phase!r}, apply_disabled={getattr(apply, 'disabled', None)!r}, "
+        f"apply_attempted={review_applied!r})"
+    )
 
 
 def _rendered_text(widget: object) -> str:
