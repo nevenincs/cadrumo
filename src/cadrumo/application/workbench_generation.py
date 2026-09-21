@@ -800,7 +800,8 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         """Project lifecycle references from the same catalogues as this generation."""
         if modelo is None or verification is None or self.bucket_event_repository is None:
             return None
-        from .modelo.history import ModeloHistoryPorts, assemble_work_unit_history
+        from .modelo.history import assemble_work_unit_history
+        from .modelo.history_ports import ModeloHistoryPorts
 
         ports = ModeloHistoryPorts(
             work_unit_repository=self.work_unit_repository,
