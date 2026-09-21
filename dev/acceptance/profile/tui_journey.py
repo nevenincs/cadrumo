@@ -44,7 +44,7 @@ from .scenario import (
 _SCHEMA_VERSION = "profile-01-installed-cross-entrypoint-v1"
 _CHILD_MODULE = "dev.acceptance.profile.installed_tui_child"
 _ProfilePath = Literal["cli_only", "tui_only", "cli_to_tui", "tui_to_cli"]
-_ProfileTuiOperation = Literal["create-add", "add", "edit", "clear", "remove", "assert-clear", "assert-absent"]
+_ProfileTuiOperation = Literal["create-add", "add", "edit", "no-op", "clear", "remove", "assert-clear", "assert-absent"]
 
 
 class ProfileInstalledAcceptanceError(RuntimeError):
@@ -66,6 +66,7 @@ class ProfileTuiOperationEvidence:
     row_visible: bool
     clear_visible_absent: bool
     selector_fact_visible: bool
+    no_op_observed: bool
     product_origin: str
     product_init_sha256: str
     returncode: int
@@ -110,6 +111,7 @@ class ProfileInstalledAcceptanceEvidence:
     tui_python_sha256: str
     run_root: str
     journeys: tuple[ProfileJourneyEvidence, ...]
+    no_op_observed: bool
     retention: str
 
     def to_dict(self) -> dict[str, object]:
@@ -210,6 +212,12 @@ def run_profile_installed_acceptance(
 
     cli = cli_executable.resolve(strict=True)
     python = tui_python.resolve(strict=True)
+    no_op_observed = _tui_no_op_observed(journeys)
+    if not no_op_observed:
+        raise ProfileInstalledAcceptanceError(
+            stage="receipt_aggregation",
+            diagnostic_code="TUI_NO_OP_EVIDENCE_MISSING",
+        )
     return ProfileInstalledAcceptanceEvidence(
         schema_version=_SCHEMA_VERSION,
         status="proven",
@@ -227,6 +235,7 @@ def run_profile_installed_acceptance(
         tui_python_sha256=_sha256_file(python),
         run_root=str(run_root.resolve()),
         journeys=tuple(journeys),
+        no_op_observed=no_op_observed,
         retention="caller_owned_encrypted_stores_sealed_synthetic_archives_and_sanitized_receipts",
     )
 
@@ -303,6 +312,17 @@ def _run_tui_only(
         operation="edit",
         row_key=row_key,
     )
+    no_op = _run_tui_child(
+        tui_python=tui_python,
+        workspace_root=workspace_root,
+        authority_root=authority_root,
+        storage_root=storage,
+        receipt_dir=receipts,
+        profile_label=label,
+        passphrase=passphrase,
+        operation="no-op",
+        row_key=row_key,
+    )
     cleared = _run_tui_child(
         tui_python=tui_python,
         workspace_root=workspace_root,
@@ -356,6 +376,8 @@ def _run_tui_only(
     archive = archive_cli.export_current_profile(artifact_dir=root / "artifacts")
     if not edited.row_visible or not cleared.clear_visible_absent or not reopened_clear.clear_visible_absent:
         raise ProfileInstalledAcceptanceError(stage="tui_only", diagnostic_code="TUI_CLEAR_OUTCOME_MISMATCH")
+    if not no_op.no_op_observed:
+        raise ProfileInstalledAcceptanceError(stage="tui_only", diagnostic_code="TUI_NO_OP_OUTCOME_MISMATCH")
     if not cleared.selector_fact_visible or not reopened_clear.selector_fact_visible:
         raise ProfileInstalledAcceptanceError(stage="tui_only", diagnostic_code="TUI_SELECTOR_OUTCOME_MISMATCH")
     if removed.row_visible or reopened_removed.row_visible:
@@ -373,7 +395,7 @@ def _run_tui_only(
         retired_identifier_refused=True,
         archive_consumer=archive,
         cli_commands=archive_cli.commands,
-        tui_operations=(created, edited, cleared, reopened_clear, removed, reopened_removed),
+        tui_operations=(created, edited, no_op, cleared, reopened_clear, removed, reopened_removed),
         retention="caller_owned_encrypted_store_sealed_synthetic_archive_and_sanitized_child_receipts",
     )
 
@@ -411,6 +433,17 @@ def _run_cli_to_tui(
         profile_label=label,
         passphrase=passphrase,
         operation="edit",
+        row_key=row_key,
+    )
+    no_op = _run_tui_child(
+        tui_python=tui_python,
+        workspace_root=workspace_root,
+        authority_root=authority_root,
+        storage_root=storage,
+        receipt_dir=receipts,
+        profile_label=label,
+        passphrase=passphrase,
+        operation="no-op",
         row_key=row_key,
     )
     cleared = _run_tui_child(
@@ -460,6 +493,8 @@ def _run_cli_to_tui(
     archive = cli.export_current_profile(artifact_dir=root / "artifacts")
     if not edited.row_visible or not cleared.clear_visible_absent or not reopened_clear.clear_visible_absent:
         raise ProfileInstalledAcceptanceError(stage="cli_to_tui", diagnostic_code="TUI_CLEAR_OUTCOME_MISMATCH")
+    if not no_op.no_op_observed:
+        raise ProfileInstalledAcceptanceError(stage="cli_to_tui", diagnostic_code="TUI_NO_OP_OUTCOME_MISMATCH")
     if not cleared.selector_fact_visible or not reopened_clear.selector_fact_visible:
         raise ProfileInstalledAcceptanceError(stage="cli_to_tui", diagnostic_code="TUI_SELECTOR_OUTCOME_MISMATCH")
     if removed.row_visible or not retired_refused:
@@ -475,7 +510,7 @@ def _run_cli_to_tui(
         retired_identifier_refused=True,
         archive_consumer=archive,
         cli_commands=cli.commands,
-        tui_operations=(edited, cleared, reopened_clear, removed),
+        tui_operations=(edited, no_op, cleared, reopened_clear, removed),
         retention="caller_owned_encrypted_store_sealed_synthetic_archive_and_sanitized_child_receipts",
     )
 
@@ -654,11 +689,25 @@ def _parse_tui_child_evidence(
         row_visible=_required_bool(payload, key="row_visible", stage=operation),
         clear_visible_absent=_required_bool(payload, key="clear_visible_absent", stage=operation),
         selector_fact_visible=_required_bool(payload, key="selector_fact_visible", stage=operation),
+        no_op_observed=_required_bool(payload, key="no_op_observed", stage=operation),
         product_origin=product_origin,
         product_init_sha256=product_hash,
         returncode=outer.returncode,
         child_receipt_sha256=outer.receipt_sha256,
     )
+
+
+def _tui_no_op_observed(journeys: Sequence[ProfileJourneyEvidence]) -> bool:
+    """Require one proven visible TUI no-op in each intended TUI lifecycle path."""
+    expected_paths = frozenset(("tui_only", "cli_to_tui"))
+    observations = {
+        journey.frontend_path: tuple(
+            operation.no_op_observed for operation in journey.tui_operations if operation.operation == "no-op"
+        )
+        for journey in journeys
+        if journey.frontend_path in expected_paths
+    }
+    return all(observations.get(path) == (True,) for path in expected_paths)
 
 
 def _required_child_row(evidence: ProfileTuiOperationEvidence, *, stage: str) -> str:

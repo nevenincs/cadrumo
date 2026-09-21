@@ -11,6 +11,7 @@ from dev.acceptance.income_tax.installed_tui_child import InstalledTuiChildProce
 
 from ..tui_journey import (
     ProfileInstalledAcceptanceError,
+    ProfileInstalledAcceptanceEvidence,
     ProfileInstalledAcceptanceFailure,
     _parse_tui_child_evidence,
     write_profile_installed_receipt,
@@ -46,6 +47,7 @@ def test_tui_child_receipt_keeps_only_public_operation_identity(tmp_path: Path) 
                 "row_visible": True,
                 "clear_visible_absent": True,
                 "selector_fact_visible": True,
+                "no_op_observed": False,
             }
         ),
         encoding="utf-8",
@@ -56,6 +58,62 @@ def test_tui_child_receipt_keeps_only_public_operation_identity(tmp_path: Path) 
     assert evidence.row_key == "4"
     assert evidence.clear_visible_absent is True
     assert evidence.selector_fact_visible is True
+    assert evidence.no_op_observed is False
+
+
+def test_tui_no_op_receipt_is_typed_and_preserved(tmp_path: Path) -> None:
+    """A visible no-op has an explicit, sanitized observation in the child receipt."""
+    receipt = tmp_path / "no-op.json"
+    receipt.write_text(
+        json.dumps(
+            {
+                "schema_version": "profile-01-installed-tui-row-child-v1",
+                "status": "proven",
+                "operation": "no-op",
+                "product_origin": "site-packages",
+                "product_init_sha256": "d" * 64,
+                "row_key": "4",
+                "row_visible": True,
+                "clear_visible_absent": False,
+                "selector_fact_visible": True,
+                "no_op_observed": True,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    evidence = _parse_tui_child_evidence(outer=_outer(), receipt_path=receipt, operation="no-op")
+
+    assert evidence.operation == "no-op"
+    assert evidence.no_op_observed is True
+
+
+def test_top_level_receipt_makes_no_op_observation_auditable() -> None:
+    """The durable aggregate receipt retains a typed no-op observation."""
+    evidence = ProfileInstalledAcceptanceEvidence(
+        schema_version="fixture-v1",
+        status="proven",
+        pattern_id="ACCEPTANCE-01",
+        pattern_revision="1.6",
+        brief_id="PROFILE-01",
+        brief_revision="0.1",
+        scenario="fixture",
+        year=2026,
+        source_identity="fixture-source",
+        package_identity="fixture-package",
+        cli_executable="fixture-cli",
+        cli_executable_sha256="a" * 64,
+        tui_python="fixture-python",
+        tui_python_sha256="b" * 64,
+        run_root="fixture-root",
+        journeys=(),
+        no_op_observed=True,
+        retention="fixture",
+    )
+
+    receipt = evidence.to_dict()
+
+    assert receipt["no_op_observed"] is True
 
 
 def test_tui_child_failure_is_not_promoted_to_acceptance(tmp_path: Path) -> None:

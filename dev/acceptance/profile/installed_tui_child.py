@@ -31,8 +31,8 @@ from dev.acceptance.income_tax.installed_tui_child import (
 from .scenario import ProfileRowLifecycleScenario, build_profile_row_lifecycle_scenario
 
 _SCHEMA_VERSION = "profile-01-installed-tui-row-child-v1"
-_OPERATION_CHOICES = ("create-add", "add", "edit", "clear", "remove", "assert-clear", "assert-absent")
-ProfileTuiOperation = Literal["create-add", "add", "edit", "clear", "remove", "assert-clear", "assert-absent"]
+_OPERATION_CHOICES = ("create-add", "add", "edit", "no-op", "clear", "remove", "assert-clear", "assert-absent")
+ProfileTuiOperation = Literal["create-add", "add", "edit", "no-op", "clear", "remove", "assert-clear", "assert-absent"]
 
 
 class ProfileTuiChildAcceptanceError(RuntimeError):
@@ -57,6 +57,7 @@ class ProfileTuiChildEvidence:
     row_visible: bool
     clear_visible_absent: bool
     selector_fact_visible: bool
+    no_op_observed: bool
 
     def to_dict(self) -> dict[str, object]:
         """Return only durable status/identity observations for the outer driver."""
@@ -75,7 +76,9 @@ def run_profile_tui_operation(
     """Run exactly one visible operation against an installed profile manager."""
     if operation not in _OPERATION_CHOICES:
         raise ProfileTuiChildAcceptanceError("unknown_operation")
-    if operation in {"edit", "clear", "remove", "assert-clear", "assert-absent"} and not _valid_row_key(row_key):
+    if operation in {"edit", "no-op", "clear", "remove", "assert-clear", "assert-absent"} and not _valid_row_key(
+        row_key
+    ):
         raise ProfileTuiChildAcceptanceError("numeric_row_required")
     scenario = scenario or build_profile_row_lifecycle_scenario()
     product = installed_product_evidence(workspace_root=workspace_root)
@@ -92,6 +95,7 @@ def run_profile_tui_operation(
     clear_absent: list[bool] = [False]
     row_visible: list[bool] = [False]
     selector_visible: list[bool] = [False]
+    no_op_observed: list[bool] = [False]
 
     async def drive_after_home(pilot: Any) -> None:
         await pilot.press("f4")
@@ -114,6 +118,16 @@ def run_profile_tui_operation(
                 pilot=pilot,
                 path=scenario.path(target_row, scenario.selector_field),
             )
+        elif operation == "no-op":
+            target_row = _required_row_key(row_key)
+            no_op_observed[0] = await _submit_visible_no_op(pilot=pilot, row_key=target_row, scenario=scenario)
+            row_visible[0] = _row_is_visible(pilot=pilot, row_key=target_row, scenario=scenario)
+            selector_visible[0] = _field_is_present(
+                pilot=pilot,
+                path=scenario.path(target_row, scenario.selector_field),
+            )
+            if not no_op_observed[0] or not row_visible[0] or not selector_visible[0]:
+                raise ProfileTuiChildAcceptanceError("visible_no_op_outcome_mismatch")
         elif operation == "clear":
             target_row = _required_row_key(row_key)
             await _clear_clearable_field(pilot=pilot, row_key=target_row, scenario=scenario)
@@ -174,6 +188,7 @@ def run_profile_tui_operation(
         row_visible=row_visible[0],
         clear_visible_absent=clear_absent[0],
         selector_fact_visible=selector_visible[0],
+        no_op_observed=no_op_observed[0],
     )
 
 
@@ -269,6 +284,34 @@ async def _clear_clearable_field(*, pilot: Any, row_key: str, scenario: ProfileR
     input_widget.value = ""
     await pilot.click("#btn-edit-save")
     await pilot.app.workers.wait_for_complete()
+
+
+async def _submit_visible_no_op(*, pilot: Any, row_key: str, scenario: ProfileRowLifecycleScenario) -> bool:
+    """Submit the exact visible value through the normal modal and observe a successful landing.
+
+    This is deliberately not a synthetic callback invocation.  The child opens
+    the identified row's public editor, verifies that the prior visible edit
+    reached the screen, saves that untouched value, and waits for the real
+    worker.  The row mutation contract therefore receives an explicit value
+    identical to the current fact, which is its typed no-op case.
+    """
+    from textual.widgets import Input
+
+    from cadrumo.entrypoints.tui.components.status import PinnedStatusBar
+
+    path = scenario.path(row_key, scenario.clearable_field)
+    await open_profile_manager_field(pilot=pilot, path=path)
+    await wait_for_public_selector(pilot, "#edit-input")
+    input_widget = cast("Input", query_public_selector(pilot, "#edit-input", Input))
+    if input_widget.value != scenario.amended_cnae:
+        raise ProfileTuiChildAcceptanceError("visible_no_op_value_mismatch")
+    await pilot.click("#btn-edit-save")
+    await pilot.app.workers.wait_for_complete()
+    await pilot.pause()
+    status = cast("PinnedStatusBar", query_public_selector(pilot, "#manager-status", PinnedStatusBar))
+    if status.tone != "success" or not status.message or not _field_is_present(pilot=pilot, path=path):
+        raise ProfileTuiChildAcceptanceError("visible_no_op_not_landed")
+    return True
 
 
 async def _remove_activity_row(*, pilot: Any, row_key: str, scenario: ProfileRowLifecycleScenario) -> None:
