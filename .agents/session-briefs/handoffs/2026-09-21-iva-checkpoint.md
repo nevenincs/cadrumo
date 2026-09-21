@@ -627,3 +627,19 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T221624.849106Z-pytest-21976-b35ac94f/run.log`.
   This proves local pending compensation history, not external
   confirmation, refund approval/payment, annual reconciliation, or export.
+- Refund-election contrast is a bounded unstaged diff in only the same two
+  `negative_4t_cli_journey.py`/test files. It parameterizes the local election
+  and expects a fresh 2025/4T `devolver` filing to retain no generated carry
+  or lot. The public contract labels this an election only: local pending
+  settlement remains `NOT_REQUESTED`, with no approved/paid claim.
+  Ruff/format/ty/diff passed. One reserved serial two-node check retained
+  compensar PASS, but devolver failed before calculation at synthetic
+  `app ledger invoice add` with `INTERNAL_CLI_UNEXPECTED_BOUNDARY`; log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T222406.397163Z-pytest-38880-64a092be/run.log`.
+  Read-only failed-store diagnostics locate an unbound
+  `profile_custody_port` invariant through profile-summary/catalogue-port
+  resolution; a nested SyntaxError/FileNotFoundError leaves the antecedent
+  uncertain. Luna Max is tracing the precise composition owner and check.
+  Do not stage the failing refund test as accepted, infer a refund request, or
+  mutate profile-owned code without coordination. Installed package remains
+  `cadrumo==0.5.1`, authority generation `db354561492ec6670dc775f9dd7fa24526098b74ab6b86dac0d5134df16430b4`.
