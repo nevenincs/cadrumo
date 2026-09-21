@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:f95deba377e088f73d60f430218c6633e089e997de0c4b8633ea1e063a21a710'
+body_hash: 'sha256:a00052330bda14f62863d919525f05148f27c2e685d46a839cebcbae735e1385'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -35,6 +35,16 @@ The TUI test proves successful handover revokes the old composed root. It does n
 The checkpoint records two stopped Luna attempts and the accelerator-bound RAG service failure. The lead stayed within the policy fallback by using retained preflight evidence and targeted reads. Confidence is appropriately limited rather than overstated.
 
 Result: PASS. No critical or high review finding blocks P02.
+
+### clear-projection-closure | low | Shared current-value projections now agree on explicit clears
+
+Phase P02 resolves the latest fact per path before dropping null values. The regression covers path-keyed, selector-keyed, and typed Modelo indexes while the effective-fact projection still exposes the clear and provenance. Focused CLI and census tests confirm the writer and reconciliation contracts remain aligned. No parallel projection or consumer-specific workaround was introduced.
+
+### persistence-boundary-review | low | Projection repair leaves custody and filing provenance owners intact
+
+The implementation changes only `application/user_profile/projections.py` and its owning test. Snapshot canonicality, required event emission, real-path profile binding, absent-fact handling, and profile-derived export identity all pass. No secure-object namespace, repository, event type, or Modelo source was changed. Production snapshot pinning remains honestly blocked rather than inferred from passing snapshot unit tests.
+
+Phase P02 result: PASS. No critical or high finding blocks frontend work.
 
 ## Recommendations
 
