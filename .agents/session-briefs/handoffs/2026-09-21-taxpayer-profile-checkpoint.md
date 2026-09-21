@@ -78,3 +78,9 @@ Bounded options requiring coordinator/adviser decision:
 Impact: options 1 and 2 require an accepted decision and coordinated ownership with calendar plus tax workflow plans. Option 3 requires an explicit capability/refusal surface in later PROFILE-01 Steps but no new temporal architecture. Until decided, no current projection will be relabelled historical, and persisted filings will not be rewritten.
 
 Evidence checks NOT RUN: no filing creation or installed frontend journey was executed for this audit. Existing snapshot unit tests prove canonical construction/refusal only, not production pinning.
+
+## P02.S04 verification reservation
+
+- Owner `taxpayer-profile` / root; reserved 2026-09-21; status complete/released: exact projection regression plus the owning effective-window file and relation-prefill activity-start consumer passed 8 tests, exit 0, metadata `20260921T153550.328112Z-pytest-46628-1d698dde/run.json`. Explicit integration selection for CLI clear and census clear precedence passed 2 tests, exit 0, metadata `20260921T153607.685354Z-pytest-50184-efcd11a7/run.json`. `ruff check` and `ty check` passed both touched files. No aggregate lane or shared external resource was used.
+
+P02.S04 outcome: **fixed**. The canonical effective-fact map now resolves the latest dated fact including an explicit clear before value projections omit nulls. Path values, selector values, and the typed Modelo profile-binding index can no longer resurrect an older value; the provenance projection continues to expose the clear itself.

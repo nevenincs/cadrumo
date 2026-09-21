@@ -34,7 +34,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....domain.calculations.registry.tests.published_authority import published_profile_schema
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
-from ..projections import record_to_path_values
+from ..projections import facts_to_values, profile_fact_index, record_to_effective_facts, record_to_path_values
 from ..validation import ProfileValidationService
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
@@ -69,6 +69,20 @@ def test_a_closed_window_still_projects_its_value() -> None:
     expired = UserProfileFact(path=_PATH, value="28001", valid_from=date(2019, 1, 1), valid_to=date(2020, 12, 31))
 
     assert record_to_path_values(_record(expired))[_PATH] == "28001"
+
+
+def test_a_later_explicit_clear_does_not_resurface_an_older_dated_value() -> None:
+    """Every canonical value projection honours the same latest clear."""
+    older = UserProfileFact(path=_PATH, value="28001", valid_from=date(2019, 1, 1))
+    cleared = UserProfileFact(path=_PATH, value=None, valid_from=date(2021, 1, 1))
+    record = _record(cleared, older)
+    schema = published_profile_schema()
+
+    assert _PATH not in record_to_path_values(record)
+    assert "address.postcode" not in facts_to_values(record.facts, schema=schema)
+    assert _PATH not in profile_fact_index(record, schema)
+    assert "address.postcode" not in profile_fact_index(record, schema)
+    assert record_to_effective_facts(record)[_PATH].value is None
 
 
 def test_the_effective_facts_own_end_date_is_reported() -> None:
