@@ -13,7 +13,7 @@ from ....core.money.rounding import round_to_cents
 from ....core.period import Period
 from .errors import ActividadAssetClaimConflictError, ActividadAssetValidationError
 from .lifecycle import AssetKind
-from .schedule import ScheduledAmortizationCharge
+from .schedule import AmortizationMethod, ScheduledAmortizationCharge
 
 
 class AmortizationClaim(BaseModel):
@@ -35,6 +35,11 @@ class AmortizationClaim(BaseModel):
     supersedes_claim_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     calculation_revision_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     filing_revision_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
+    method: AmortizationMethod = AmortizationMethod.LINEAR
+    free_depreciation_election_reference: str | None = Field(default=None, min_length=1, max_length=256)
+    free_depreciation_new_material_evidence_reference: str | None = Field(default=None, min_length=1, max_length=512)
+    free_depreciation_unit_acquisition_value: Decimal | None = None
+    free_depreciation_annual_cap: Decimal | None = None
 
     @field_validator("amount")
     @classmethod
@@ -43,12 +48,39 @@ class AmortizationClaim(BaseModel):
             raise ValueError("claim amount must be a non-negative Decimal rounded to euro cents")
         return value
 
+    @field_validator("free_depreciation_unit_acquisition_value", "free_depreciation_annual_cap")
+    @classmethod
+    def _require_optional_positive_cents_amount(cls, value: Decimal | None) -> Decimal | None:
+        if value is not None and (
+            not value.is_finite() or value <= Decimal("0") or value != round_to_cents(value)
+        ):
+            raise ValueError("free-depreciation claim amounts must be positive Decimal amounts rounded to euro cents")
+        return value
+
     @model_validator(mode="after")
     def _validate_interval(self) -> AmortizationClaim:
         if self.covered_until <= self.covered_from:
             raise ValueError("claim covered interval must be half-open and non-empty")
         if not (date(self.tax_year, 1, 1) <= self.covered_from < self.covered_until <= date(self.tax_year + 1, 1, 1)):
             raise ValueError("claim covered interval must stay inside tax_year")
+        if self.method is AmortizationMethod.LOW_VALUE_FREE:
+            if (
+                self.free_depreciation_election_reference is None
+                or self.free_depreciation_new_material_evidence_reference is None
+                or self.free_depreciation_unit_acquisition_value is None
+                or self.free_depreciation_annual_cap is None
+            ):
+                raise ValueError("free-depreciation claim requires election and annual-cap provenance")
+        elif any(
+            value is not None
+            for value in (
+                self.free_depreciation_election_reference,
+                self.free_depreciation_new_material_evidence_reference,
+                self.free_depreciation_unit_acquisition_value,
+                self.free_depreciation_annual_cap,
+            )
+        ):
+            raise ValueError("linear claim cannot carry free-depreciation facts")
         return self
 
     @property
@@ -79,6 +111,11 @@ class AmortizationClaim(BaseModel):
             source_reference=schedule.source_reference,
             creating_operation=creating_operation,
             supersedes_claim_id=supersedes_claim_id,
+            method=schedule.method,
+            free_depreciation_election_reference=schedule.free_depreciation_election_reference,
+            free_depreciation_new_material_evidence_reference=schedule.free_depreciation_new_material_evidence_reference,
+            free_depreciation_unit_acquisition_value=schedule.free_depreciation_unit_acquisition_value,
+            free_depreciation_annual_cap=schedule.free_depreciation_annual_cap,
         )
 
 
@@ -156,6 +193,7 @@ def record_claim(
             candidate.covered_until,
         ):
             raise ActividadAssetClaimConflictError("activity-asset claims cannot cover overlapping intervals")
+    _require_free_depreciation_cap(existing_claims, candidate)
     return ClaimRecordResult(
         claims=(*existing_claims, candidate),
         claim=candidate,
@@ -167,6 +205,49 @@ def effective_claims(claims: tuple[AmortizationClaim, ...]) -> tuple[Amortizatio
     """Return auditable-history claims that still consume lawful basis, in order."""
     superseded = {claim.supersedes_claim_id for claim in claims if claim.supersedes_claim_id is not None}
     return tuple(claim for claim in claims if claim.claim_id not in superseded)
+
+
+def effective_free_depreciation_claims(
+    claims: tuple[AmortizationClaim, ...],
+    *,
+    tax_year: int,
+) -> tuple[AmortizationClaim, ...]:
+    """Return effective low-value claims for the taxpayer's asset-history scope.
+
+    One encrypted activity-asset history is bucket-bound to the taxpayer
+    profile; summing its effective claims makes the statutory annual ceiling
+    cover every enrolled asset and activity rather than the current asset or
+    request order.
+    """
+    return tuple(
+        claim
+        for claim in effective_claims(claims)
+        if claim.tax_year == tax_year and claim.method is AmortizationMethod.LOW_VALUE_FREE
+    )
+
+
+def _require_free_depreciation_cap(
+    existing_claims: tuple[AmortizationClaim, ...],
+    candidate: AmortizationClaim,
+) -> None:
+    """Enforce the elected annual ceiling against effective CAS-replayed history."""
+    if candidate.method is not AmortizationMethod.LOW_VALUE_FREE:
+        return
+    annual_cap = candidate.free_depreciation_annual_cap
+    if annual_cap is None:  # defensive: model validation proves unreachable
+        raise ActividadAssetValidationError("free-depreciation claim lacks annual-cap provenance")
+    effective = effective_free_depreciation_claims(
+        (*existing_claims, candidate),
+        tax_year=candidate.tax_year,
+    )
+    cap_values = {claim.free_depreciation_annual_cap for claim in effective}
+    if cap_values != {annual_cap}:
+        raise ActividadAssetClaimConflictError(
+            "effective free-depreciation claims disagree on the annual-cap authority",
+        )
+    total = sum((claim.amount for claim in effective), Decimal("0"))
+    if total > annual_cap:
+        raise ActividadAssetClaimConflictError("free-depreciation effective claims exceed the annual cap")
 
 
 def project_m100(claims: tuple[AmortizationClaim, ...], *, asset_kind: AssetKind, tax_year: int) -> ClaimProjection:
@@ -211,6 +292,7 @@ __all__ = [
     "ClaimProjection",
     "ClaimRecordResult",
     "effective_claims",
+    "effective_free_depreciation_claims",
     "project_m100",
     "project_m130",
     "record_claim",

@@ -9,11 +9,12 @@ from cadrumo.application.actividad_asset.history import ActivityAssetHistory, Ac
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
+    ActivityAssetAmortizationMethod,
     ActivityAssetAuthoritySelection,
     DirectEstimationRegime,
 )
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
-from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetValidationError
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -24,7 +25,12 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from cadrumo.domain.renta.actividad_asset.schedule import ScheduleAuthority, schedule_charge
+from cadrumo.domain.renta.actividad_asset.schedule import (
+    AmortizationMethod,
+    FreeDepreciationElection,
+    ScheduleAuthority,
+    schedule_charge,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -46,9 +52,15 @@ class _MemoryRepository:
         return result
 
 
-def _revision(*, number: int = 1, supersedes: str | None = None) -> ActivityAssetRevision:
+def _revision(
+    *,
+    asset_id: str = "laptop-1",
+    basis_amount: Decimal = Decimal("2000"),
+    number: int = 1,
+    supersedes: str | None = None,
+) -> ActivityAssetRevision:
     return ActivityAssetRevision(
-        asset_id="laptop-1",
+        asset_id=asset_id,
         revision_number=number,
         supersedes_revision_id=supersedes,
         acquisition=AcquisitionLineageReference(
@@ -60,7 +72,7 @@ def _revision(*, number: int = 1, supersedes: str | None = None) -> ActivityAsse
         asset_kind=AssetKind.MATERIAL,
         basis=ActivityAssetBasis(
             stage=AssetBasisStage.BUSINESS_ALLOCATED,
-            basis_amount=Decimal("2000"),
+            basis_amount=basis_amount,
             prior_allocation_provenance="ledger allocation allocation-1",
         ),
         in_service_date=date(2025, 1, 1),
@@ -85,7 +97,15 @@ def _selection() -> ActivityAssetAuthoritySelection:
     )
 
 
-def _forecast(revision, *, selection, covered_from, covered_until, accumulated_effective_claims):
+def _forecast(
+    revision,
+    *,
+    selection,
+    covered_from,
+    covered_until,
+    accumulated_effective_claims,
+    accumulated_effective_free_depreciation_claims,
+):
     assert selection == _selection()
     return schedule_charge(
         revision,
@@ -93,6 +113,7 @@ def _forecast(revision, *, selection, covered_from, covered_until, accumulated_e
         covered_from=covered_from,
         covered_until=covered_until,
         accumulated_effective_claims=accumulated_effective_claims,
+        accumulated_effective_free_depreciation_claims=accumulated_effective_free_depreciation_claims,
     )
 
 
@@ -139,3 +160,80 @@ def test_correction_must_supersede_the_current_revision() -> None:
     history = operations.correct(corrected)
     assert operations.inspect(first.asset_id) == (first, corrected)
     assert history.revisions[-1] == corrected
+
+
+def test_operations_use_effective_profile_history_for_the_free_depreciation_cap_without_forecast_consumption() -> None:
+    repository = _MemoryRepository()
+
+    def free_forecast(
+        revision,
+        *,
+        selection,
+        covered_from,
+        covered_until,
+        accumulated_effective_claims,
+        accumulated_effective_free_depreciation_claims,
+    ):
+        election = selection.free_depreciation_election
+        assert election is not None
+        return schedule_charge(
+            revision,
+            ScheduleAuthority(
+                asset_kind=AssetKind.MATERIAL,
+                authority_generation="irpf-2025-published-test",
+                source_reference="modelo-100:2025:low-value-free",
+                method=AmortizationMethod.LOW_VALUE_FREE,
+                free_depreciation_unit_threshold=Decimal("300.00"),
+                free_depreciation_annual_cap=Decimal("500.00"),
+                free_depreciation_election=election,
+            ),
+            covered_from=covered_from,
+            covered_until=covered_until,
+            accumulated_effective_claims=accumulated_effective_claims,
+            accumulated_effective_free_depreciation_claims=accumulated_effective_free_depreciation_claims,
+        )
+
+    operations = ActivityAssetOperations(repository=repository, forecast_operation=free_forecast)
+    first_asset = _revision(asset_id="low-value-first", basis_amount=Decimal("300.00"))
+    second_asset = _revision(asset_id="low-value-second", basis_amount=Decimal("300.00"))
+    operations.create(first_asset)
+    operations.create(second_asset)
+
+    def selection(*, requested_amount: Decimal) -> ActivityAssetAuthoritySelection:
+        return ActivityAssetAuthoritySelection(
+            regime=DirectEstimationRegime.NORMAL,
+            asset_kind=AssetKind.MATERIAL,
+            authority_class_key="mobiliario",
+            method=ActivityAssetAmortizationMethod.LOW_VALUE_FREE,
+            free_depreciation_election=FreeDepreciationElection(
+                election_reference=f"election-{requested_amount}",
+                new_material_evidence_reference="canonical-new-material-evidence",
+                unit_acquisition_value=Decimal("300.00"),
+                requested_amount=requested_amount,
+            ),
+        )
+
+    forecast = operations.forecast(
+        asset_id=first_asset.asset_id,
+        selection=selection(requested_amount=Decimal("300.00")),
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+    )
+    assert repository.history.claims == ()
+    operations.record_claim(forecast, creating_operation="test.free-depreciation")
+
+    with pytest.raises(ActividadAssetUnsupportedError, match="annual cap"):
+        operations.forecast(
+            asset_id=second_asset.asset_id,
+            selection=selection(requested_amount=Decimal("300.00")),
+            covered_from=date(2025, 1, 1),
+            covered_until=date(2026, 1, 1),
+        )
+    exact_cap_forecast = operations.forecast(
+        asset_id=second_asset.asset_id,
+        selection=selection(requested_amount=Decimal("200.00")),
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+    )
+    operations.record_claim(exact_cap_forecast, creating_operation="test.free-depreciation")
+    assert sum((claim.amount for claim in repository.history.claims), Decimal("0")) == Decimal("500.00")

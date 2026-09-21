@@ -8,7 +8,7 @@ from pathlib import Path
 
 import pytest
 
-from .....domain.renta.actividad_asset.claims import AmortizationClaim, effective_claims
+from .....domain.renta.actividad_asset.claims import AmortizationClaim, effective_claims, effective_free_depreciation_claims
 from .....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from .....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
@@ -20,6 +20,7 @@ from .....domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
+from .....domain.renta.actividad_asset.schedule import AmortizationMethod
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..actividad_asset import ActividadAssetHistoryRepository
 
@@ -69,6 +70,20 @@ def _claim(revision: ActivityAssetRevision, **overrides: object) -> Amortization
         "authority_generation": "2025.1",
         "source_reference": "authority-no-plaintext-secret",
         "creating_operation": "record-amortization",
+    }
+    payload.update(overrides)
+    return AmortizationClaim.model_validate(payload)
+
+
+def _free_claim(revision: ActivityAssetRevision, **overrides: object) -> AmortizationClaim:
+    payload: dict[str, object] = {
+        **_claim(revision).model_dump(),
+        "amount": Decimal("300.00"),
+        "method": AmortizationMethod.LOW_VALUE_FREE,
+        "free_depreciation_election_reference": f"election-{revision.asset_id}",
+        "free_depreciation_new_material_evidence_reference": f"new-material-{revision.asset_id}",
+        "free_depreciation_unit_acquisition_value": Decimal("300.00"),
+        "free_depreciation_annual_cap": Decimal("500.00"),
     }
     payload.update(overrides)
     return AmortizationClaim.model_validate(payload)
@@ -137,3 +152,33 @@ def test_cas_retry_keeps_revisions_appended_by_independent_repositories(tmp_path
             "asset-cas-first",
             "asset-cas-second",
         }
+
+
+def test_cas_rechecks_effective_free_depreciation_cap_after_an_independent_write(tmp_path: Path) -> None:
+    """A forecast cannot bypass the taxpayer-period cap by racing another claim."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="70dc4d0b-56b5-4fd5-aaee-23d307738b06"):
+        repository = ActividadAssetHistoryRepository()
+        interloper = ActividadAssetHistoryRepository()
+        first_revision = _revision(asset_id="free-cap-first")
+        second_revision = _revision(asset_id="free-cap-second")
+        repository.append_revision(first_revision)
+        repository.append_revision(second_revision)
+        first = _free_claim(first_revision)
+        second = _free_claim(second_revision)
+        original_mutate = repository._storage.mutate
+        interloper_written = False
+
+        def mutate_after_interloper(callback):
+            nonlocal interloper_written
+            if not interloper_written:
+                interloper_written = True
+                interloper.record_claim(second)
+            return original_mutate(callback)
+
+        repository._storage.mutate = mutate_after_interloper
+
+        with pytest.raises(ActividadAssetClaimConflictError, match="annual cap"):
+            repository.record_claim(first)
+
+        reopened = repository.load()
+        assert effective_free_depreciation_claims(reopened.claims, tax_year=2025) == (second,)

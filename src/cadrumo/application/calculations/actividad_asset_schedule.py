@@ -23,6 +23,7 @@ def forecast_activity_asset_charge(
     covered_from: date,
     covered_until: date,
     accumulated_effective_claims: Decimal = Decimal("0"),
+    accumulated_effective_free_depreciation_claims: Decimal = Decimal("0"),
 ) -> ScheduledAmortizationCharge:
     """Forecast through published authority without creating a claim."""
     authority = resolve_activity_asset_schedule_authority(
@@ -37,6 +38,7 @@ def forecast_activity_asset_charge(
         covered_from=covered_from,
         covered_until=covered_until,
         accumulated_effective_claims=accumulated_effective_claims,
+        accumulated_effective_free_depreciation_claims=accumulated_effective_free_depreciation_claims,
     )
 
 

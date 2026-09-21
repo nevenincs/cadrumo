@@ -10,6 +10,7 @@ import pytest
 from cadrumo.application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
+    ActivityAssetAmortizationMethod,
     ActivityAssetAuthoritySelection,
     DirectEstimationRegime,
     resolve_activity_asset_schedule_authority,
@@ -26,6 +27,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
+from cadrumo.domain.renta.actividad_asset.schedule import AmortizationMethod, FreeDepreciationElection
 
 from ..compiler.loader import load_modelo_directory
 
@@ -111,6 +113,55 @@ def test_missing_regime_parameter_fails_before_class_lookup() -> None:
                 authority_class_key="mobiliario",
             ),
             authority_generation="candidate-source",
+        )
+
+
+def test_low_value_free_authority_resolves_published_threshold_and_cap_with_explicit_election() -> None:
+    authority = resolve_activity_asset_schedule_authority(
+        _revision(),
+        tax_year=2025,
+        selection=ActivityAssetAuthoritySelection(
+            regime=DirectEstimationRegime.NORMAL,
+            asset_kind=AssetKind.MATERIAL,
+            authority_class_key="mobiliario",
+            method=ActivityAssetAmortizationMethod.LOW_VALUE_FREE,
+            free_depreciation_election=FreeDepreciationElection(
+                election_reference="operator-low-value-election",
+                new_material_evidence_reference="canonical-invoice-new-item-attestation",
+                unit_acquisition_value=Decimal("300.00"),
+                requested_amount=Decimal("300.00"),
+            ),
+        ),
+        authority_generation="candidate-source",
+    )
+
+    assert authority.method is AmortizationMethod.LOW_VALUE_FREE
+    assert authority.free_depreciation_unit_threshold == Decimal("300")
+    assert authority.free_depreciation_annual_cap == Decimal("25000")
+    assert "libertad-amortizacion-umbral-unitario" in authority.source_reference
+    assert "libertad-amortizacion-limite-anual" in authority.source_reference
+
+
+def test_low_value_free_refuses_intangible_and_missing_explicit_election() -> None:
+    with pytest.raises(ValueError, match="material assets"):
+        ActivityAssetAuthoritySelection(
+            regime=DirectEstimationRegime.NORMAL,
+            asset_kind=AssetKind.INTANGIBLE,
+            authority_class_key="intangible-software",
+            method=ActivityAssetAmortizationMethod.LOW_VALUE_FREE,
+            free_depreciation_election=FreeDepreciationElection(
+                election_reference="bad-kind",
+                new_material_evidence_reference="evidence",
+                unit_acquisition_value=Decimal("300.00"),
+                requested_amount=Decimal("300.00"),
+            ),
+        )
+    with pytest.raises(ValueError, match="explicit election"):
+        ActivityAssetAuthoritySelection(
+            regime=DirectEstimationRegime.SIMPLIFIED,
+            asset_kind=AssetKind.MATERIAL,
+            authority_class_key="util-herramienta",
+            method=ActivityAssetAmortizationMethod.LOW_VALUE_FREE,
         )
 
 

@@ -91,6 +91,7 @@ def _runtime_cli(ctx: typer.Context) -> ActivityAssetCli:
         covered_from: date,
         covered_until: date,
         accumulated_effective_claims: Decimal,
+        accumulated_effective_free_depreciation_claims: Decimal,
     ) -> ScheduledAmortizationCharge:
         return forecast_activity_asset_charge(
             revision,
@@ -100,6 +101,7 @@ def _runtime_cli(ctx: typer.Context) -> ActivityAssetCli:
             covered_from=covered_from,
             covered_until=covered_until,
             accumulated_effective_claims=accumulated_effective_claims,
+            accumulated_effective_free_depreciation_claims=accumulated_effective_free_depreciation_claims,
         )
 
     return ActivityAssetCli(

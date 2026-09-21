@@ -18,6 +18,7 @@ from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     ClaimProjection,
     effective_claims,
+    effective_free_depreciation_claims,
     project_m100,
     project_m130,
 )
@@ -51,6 +52,7 @@ class ActivityAssetForecastOperation(Protocol):
         covered_from: date,
         covered_until: date,
         accumulated_effective_claims: Decimal,
+        accumulated_effective_free_depreciation_claims: Decimal,
     ) -> ScheduledAmortizationCharge:
         """Resolve authority and calculate one non-consuming forecast."""
         ...
@@ -110,12 +112,23 @@ class ActivityAssetOperations:
             (claim.amount for claim in effective_claims(history.claims) if claim.asset_id == asset_id),
             Decimal("0"),
         )
+        free_consumed = sum(
+            (
+                claim.amount
+                for claim in effective_free_depreciation_claims(
+                    history.claims,
+                    tax_year=covered_from.year,
+                )
+            ),
+            Decimal("0"),
+        )
         return self._forecast_operation(
             revision,
             selection=selection,
             covered_from=covered_from,
             covered_until=covered_until,
             accumulated_effective_claims=consumed,
+            accumulated_effective_free_depreciation_claims=free_consumed,
         )
 
     def forecast_selected(

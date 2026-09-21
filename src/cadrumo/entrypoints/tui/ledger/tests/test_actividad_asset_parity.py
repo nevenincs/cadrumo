@@ -97,7 +97,15 @@ def _selection() -> ActivityAssetAuthoritySelection:
     )
 
 
-def _forecast(revision, *, selection, covered_from, covered_until, accumulated_effective_claims):
+def _forecast(
+    revision,
+    *,
+    selection,
+    covered_from,
+    covered_until,
+    accumulated_effective_claims,
+    accumulated_effective_free_depreciation_claims,
+):
     assert selection == _selection()
     return schedule_charge(
         revision,
@@ -105,6 +113,7 @@ def _forecast(revision, *, selection, covered_from, covered_until, accumulated_e
         covered_from=covered_from,
         covered_until=covered_until,
         accumulated_effective_claims=accumulated_effective_claims,
+        accumulated_effective_free_depreciation_claims=accumulated_effective_free_depreciation_claims,
     )
 
 
