@@ -30,6 +30,8 @@ class AttachmentKind(StrEnum):
             against them, and its custody record is what later evidences what
             was served and when.
         METADATA_BLOB: Opaque metadata payload that supplements another record.
+        M303_EXONERADO_390_APPLICABILITY_ATTESTATION: Canonical operator
+            attestation of one Modelo 390 applicability coordinate.
         OTHER: Catch-all for documents that do not fit the above categories.
     """
 
@@ -41,6 +43,7 @@ class AttachmentKind(StrEnum):
     BANK_STATEMENT = "BANK_STATEMENT"
     AEAT_NOTIFICATION_PDF = "AEAT_NOTIFICATION_PDF"
     METADATA_BLOB = "METADATA_BLOB"
+    M303_EXONERADO_390_APPLICABILITY_ATTESTATION = "M303_EXONERADO_390_APPLICABILITY_ATTESTATION"
     OTHER = "OTHER"
 
 

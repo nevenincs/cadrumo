@@ -335,3 +335,17 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
 - Terra principal now owns only secure in-memory admission and exact resolver on
   the existing attachment store plus focused persistence/application tests. CLI
   wiring and ordinary envelope composition wait for that slice.
+- Secure attestation slice completed: a dedicated attachment kind carries one
+  canonical encrypted payload; admission creates bytes in memory and returns a
+  digest-bound `FilingEvidenceReference`; resolution verifies custody, bucket,
+  current profile witness, exact 2025 quarterly coordinate, timing and all
+  same-coordinate typed assertions. `applicable` refuses before mutation,
+  conflicts block, and legacy attachments remain valid but ineligible.
+- The attachment manifest remains V1 because its grammar and metadata fields did
+  not change; typed semantics live only in the encrypted blob. Independent
+  verification: 14 focused domain/attachment-store tests passed; targeted Ruff,
+  formatting, basedpyright and scoped diff checks passed. No broad lane or
+  import-linter was rerun.
+- Next bounded action: compose the ordinary filing envelope using the resolver,
+  then expose secure attestation collection and that transient authoring request
+  through the installed CLI without full-envelope plaintext input.
