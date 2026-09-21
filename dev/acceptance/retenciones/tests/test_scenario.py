@@ -6,7 +6,13 @@ from decimal import Decimal
 
 import pytest
 
-from ..scenario import Direction, EvidenceState, build_installed_periodic_cli_slices, build_scenario
+from ..scenario import (
+    Direction,
+    EvidenceState,
+    build_installed_annual_cli_slices,
+    build_installed_periodic_cli_slices,
+    build_scenario,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -99,9 +105,42 @@ def test_installed_cli_slices_close_each_invoice_without_a_rate_engine() -> None
     assert sum(item.allocated_withholding for item in professional.allocations) == Decimal("95.00")
     assert sum(item.allocated_settlement for item in professional.allocations) == professional.expected_settlement
     assert rent.property_reference == "1234567VK4713C0001XY"
-    assert rent.annual_detail_capture_supported is False
+    assert rent.annual_detail_capture_supported is True
+    assert rent.modelo_180_property is not None
+    assert professional.modelo_190_detail is not None
+
+
+def test_installed_annual_cli_slices_keep_allocations_and_no_activity_history_distinct() -> None:
+    """Annual rows consume the public payment evidence without inventing empty-quarter payments."""
+    rent, professional = build_installed_annual_cli_slices()
+
+    assert rent.modelo == "180"
+    assert rent.expected_capture_allocation_count == 3
+    assert tuple(
+        (period.period, period.evidence_state, period.expected_observation_count) for period in rent.source_periods
+    ) == (
+        ("1T", EvidenceState.AVAILABLE, 1),
+        ("2T", EvidenceState.AVAILABLE, 2),
+        ("3T", EvidenceState.NO_RELEVANT_PAYMENT, 0),
+        ("4T", EvidenceState.NO_RELEVANT_PAYMENT, 0),
+    )
+    assert len(rent.expected_type2_rows) == 2
+    assert professional.modelo == "190"
+    assert professional.expected_capture_allocation_count == 3
+    assert professional.source_periods[0].evidence_state is EvidenceState.NO_RELEVANT_PAYMENT
+    assert professional.source_periods[1].expected_casillas[1:] == (
+        ("08", Decimal("600.00")),
+        ("09", Decimal("110.00")),
+        ("28", Decimal("110.00")),
+        ("30", Decimal("110.00")),
+    )
 
 
 def test_installed_cli_slices_refuse_unreviewed_year_reuse() -> None:
     with pytest.raises(ValueError, match="grounded only for 2025"):
         build_installed_periodic_cli_slices(2026)
+
+
+def test_installed_annual_cli_slices_refuse_unreviewed_year_reuse() -> None:
+    with pytest.raises(ValueError, match="grounded only for 2025"):
+        build_installed_annual_cli_slices(2026)

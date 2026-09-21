@@ -12,12 +12,16 @@ from dev.acceptance.income_tax.cli_journey import CommandEvidence, InstalledCli
 
 from ..cli_journey import (
     RetencionesInstalledCliError,
+    _attest_annual_m111_no_retenciones_periods,
     _create_withholding_profile,
     _failure_evidence,
+    _is_full_annual_campaign,
     _is_full_campaign,
+    _materialize_annual_source_period,
+    _select_annual_slices,
     _select_slices,
 )
-from ..scenario import build_installed_periodic_cli_slices
+from ..scenario import build_installed_annual_cli_slices, build_installed_periodic_cli_slices
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -30,8 +34,19 @@ def test_named_slice_selection_retains_the_explicit_receipt_scope() -> None:
     )
 
     assert rent.modelo == "115"
-    assert rent.annual_detail_capture_supported is False
+    assert rent.annual_detail_capture_supported is True
     assert _is_full_campaign((rent,), available=build_installed_periodic_cli_slices()) is False
+
+
+def test_annual_slice_selection_keeps_m180_and_m190_completion_scope_explicit() -> None:
+    """A passed Modelo 180 slice is not relabelled as the complete annual campaign."""
+    (rent,) = _select_annual_slices(
+        build_installed_annual_cli_slices(),
+        requested_ids=("urban-rent-180-annual-properties",),
+    )
+
+    assert rent.modelo == "180"
+    assert _is_full_annual_campaign((rent,), available=build_installed_annual_cli_slices()) is False
 
 
 @pytest.mark.parametrize(
@@ -51,6 +66,25 @@ def test_slice_selection_refuses_ambiguous_or_unknown_scope(
         _select_slices(build_installed_periodic_cli_slices(), requested_ids=requested_ids)
 
     assert raised.value.stage == "preflight"
+    assert raised.value.diagnostic_code == code
+
+
+@pytest.mark.parametrize(
+    ("requested_ids", "code"),
+    [
+        ((), "invalid_annual_slice_selection"),
+        (("professional-190-annual-detail", "professional-190-annual-detail"), "invalid_annual_slice_selection"),
+        (("unknown",), "unknown_annual_slice_selection"),
+    ],
+)
+def test_annual_slice_selection_refuses_ambiguous_or_unknown_scope(
+    requested_ids: tuple[str, ...],
+    code: str,
+) -> None:
+    with pytest.raises(RetencionesInstalledCliError) as raised:
+        _select_annual_slices(build_installed_annual_cli_slices(), requested_ids=requested_ids)
+
+    assert raised.value.stage == "annual_preflight"
     assert raised.value.diagnostic_code == code
 
 
@@ -92,6 +126,53 @@ def test_synthetic_withholding_profile_explicitly_attests_not_a_colegio_concerta
 
     assert cli.created_year == 2025
     assert "--no-colegio-concertado" in cli.calls[0]
+
+
+def test_m190_no_activity_uses_the_public_profile_attestation_not_zero_filings() -> None:
+    """The annual M190 chain labels and sends the supported no-duty evidence."""
+    _rent, professional = build_installed_annual_cli_slices()
+    cli = _ProfileCli()
+
+    tokens = _attest_annual_m111_no_retenciones_periods(
+        cli=cast(InstalledCli, cli),
+        slice_=professional,
+        captures_by_period={"2T": professional.captures},
+        year=2025,
+    )
+
+    assert tokens == frozenset({"2025:1T", "2025:3T", "2025:4T"})
+    assert cli.calls == [
+        (
+            "config",
+            "profile",
+            "edit",
+            "income-2025",
+            "--quiet",
+            "--modelo-111-no-retenciones-periods",
+            "2025:1T,2025:3T,2025:4T",
+        )
+    ]
+
+
+def test_m180_no_activity_refuses_before_any_blank_source_work_unit_is_created() -> None:
+    """There is no Modelo 115 analogue of Modelo 111's no-duty attestation."""
+    rent, _professional = build_installed_annual_cli_slices()
+    cli = _ProfileCli()
+
+    with pytest.raises(RetencionesInstalledCliError) as raised:
+        _materialize_annual_source_period(
+            cli=cast(InstalledCli, cli),
+            source_modelo=rent.source_modelo,
+            source_revision=rent.captures[0].revision,
+            source_period=rent.source_periods[2],
+            captures=(),
+            year=2025,
+            m111_no_retenciones_attestations=frozenset(),
+        )
+
+    assert raised.value.stage == "115:3T:annual_source:preflight"
+    assert raised.value.diagnostic_code == "annual_source_no_activity_workflow_unsupported"
+    assert cli.calls == []
 
 
 class _ProfileCli:
