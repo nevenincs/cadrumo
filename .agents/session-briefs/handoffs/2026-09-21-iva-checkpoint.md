@@ -391,3 +391,23 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   domain/application/spec selection 18 passed. Targeted Ruff, formatting,
   basedpyright and scoped diff checks passed. No broad lane/import-linter ran;
   unrelated M111/M115 work was excluded.
+- Installed all-public 2025/1T acceptance now passes in
+  `dev/acceptance/iva/cli_journey.py`: profile create/complete, secure purchase
+  artifact admission, sale and purchase transactions, canonical issued/received
+  invoices and links, purchase deduction classification, fresh-process list
+  readback, zero wallet seed, secure applicability attestation, authority work
+  create and calculation. No repository seeding or test filing-evidence builder
+  participates.
+- Independent oracle is `21.00 output IVA - 10.50 deductible input IVA = 10.50`;
+  the public calculation projection returned `iva.resultado=10.50`. Focused real
+  installed test: 1 passed in 119.92s, log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T185312.046484Z-pytest-58272-ea70c990/run.log`.
+  The sanitized receipt captures executable digest, package/source identity,
+  authority generation/descriptor digest and opaque record IDs while replacing
+  the private artifact path and retaining no bytes or passphrase.
+- Post-run runtime inspection: workspace `.venv/Scripts/aeat.exe`, package
+  `cadrumo==0.5.1`, authority generation
+  `065049eb22e4a46f70281b940b5ce9ffeb2564adce39e050665d6fa370f21a98`,
+  descriptor SHA-256
+  `fe73492dbafb69e899833b88f2f70d1c25438115bde87d0ad867d4dac516c022`.
+  Verify/export remain the next bounded acceptance action.
