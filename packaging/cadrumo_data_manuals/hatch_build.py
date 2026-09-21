@@ -43,7 +43,7 @@ See Also:
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, TypeGuard, override
+from typing import TYPE_CHECKING, Any, TypeGuard, cast, override
 
 from hatchling.builders.config import BuilderConfig
 from hatchling.builders.hooks.plugin.interface import BuildHookInterface
@@ -83,7 +83,38 @@ def _corpus_root(hook_root: Path) -> Path | None:
     return None
 
 
-class CustomBuildHook(BuildHookInterface[BuilderConfig[PluginManager], PluginManager]):
+def _runtime_build_hook_base() -> Any:
+    """Specialize Hatchling's hook base across its supported type API revisions.
+
+    Hatchling 1.32.3 exposes ``BuildHookInterface[BuilderConfig[PluginManager],
+    PluginManager]``. Hatchling 1.32.4 reduces the interface to
+    ``BuildHookInterface[BuilderConfig]``. The admitted build requirement covers
+    both, so select the matching runtime base before the hook class is defined.
+    Unknown shapes fail closed before the hook changes build data.
+    """
+    hook_parameter_count = len(getattr(BuildHookInterface, "__parameters__", ()))
+    config_parameter_count = len(getattr(BuilderConfig, "__parameters__", ()))
+    runtime_hook_interface = cast(Any, BuildHookInterface)
+    runtime_builder_config = cast(Any, BuilderConfig)
+    if (hook_parameter_count, config_parameter_count) == (1, 0):
+        return runtime_hook_interface[runtime_builder_config]
+    if (hook_parameter_count, config_parameter_count) == (2, 1):
+        return runtime_hook_interface[runtime_builder_config[PluginManager], PluginManager]
+    raise TypeError(
+        "unsupported Hatchling BuildHookInterface/BuilderConfig generic contract: "
+        f"{hook_parameter_count}/{config_parameter_count} parameters"
+    )
+
+
+if TYPE_CHECKING:
+
+    class _CustomBuildHookBase(BuildHookInterface[BuilderConfig[PluginManager], PluginManager]):
+        """Static view of the Hatchling 1.32.3 hook protocol."""
+else:
+    _CustomBuildHookBase = _runtime_build_hook_base()
+
+
+class CustomBuildHook(_CustomBuildHookBase):
     """Force-include this companion's corpus source binaries under the mirrored tree."""
 
     PLUGIN_NAME = "cadrumo-data-manuals-corpus"
