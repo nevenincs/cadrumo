@@ -1009,7 +1009,12 @@ def _entries_and_suppressed_from_schedules(
     for schedule in schedules:
         for obligation in schedule.obligations:
             intersects_range = _entry_intersects_range(obligation, calendar_range)
-            applicability = _derive_modelo_applicability(profile, obligation.modelo, operation=operation)
+            applicability = _derive_modelo_applicability(
+                profile,
+                obligation.modelo,
+                today=today,
+                operation=operation,
+            )
             if applicability.verdict is not _ApplicabilityVerdict.APPLICABLE:
                 if show_suppressed and intersects_range:
                     suppressed.append(

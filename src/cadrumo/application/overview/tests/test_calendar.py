@@ -16,7 +16,13 @@ from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnve
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.engine import DeadlineEngine
-from ....domain.deadlines.models import IVARegime, ModeloDeadline, ObligationStatus, TaxpayerProfile
+from ....domain.deadlines.models import (
+    IrpfSpecialRegime,
+    IVARegime,
+    ModeloDeadline,
+    ObligationStatus,
+    TaxpayerProfile,
+)
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...live.expedientes import PersistedExpedientesSnapshot
@@ -949,6 +955,28 @@ def test_build_user_state_matches_engine_status_per_entry(
     )
     for entry in calendar.entries:
         assert entry.user_state is user_state_for(entry.status)
+
+
+def test_build_uses_evaluation_date_for_historical_special_regime_route(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    profile = _profile().model_copy(
+        update={
+            "irpf_special_regime": IrpfSpecialRegime.from_registry("impatriado"),
+            "special_regime_start_date": date(2020, 1, 15),
+        },
+    )
+    rng = OverviewCalendarRange(from_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
+
+    active = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2025, 6, 1))
+    expired = build_overview_calendar(profile, rng, operation=authority_operation, today=date(2026, 6, 1))
+
+    active_modelos = {entry.modelo for entry in active.entries}
+    expired_modelos = {entry.modelo for entry in expired.entries}
+    assert "151" in active_modelos
+    assert "100" not in active_modelos
+    assert "100" in expired_modelos
+    assert "151" not in expired_modelos
 
 
 def test_build_empty_range_when_window_covers_no_obligations(

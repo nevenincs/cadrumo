@@ -6,8 +6,9 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:257f7bdfdd9751f7d619787bb949eccb4337131842ef4bf59bd8c5f6a5e6e6f9'
+body_hash: 'sha256:29636b8d1dc0deea532657a0a09681081db7fe4c121ff1b031584ff7dada4152'
 related:
+  - '[[2026-09-21-calendar-obligations-ledger]]'
   - '[[2026-09-21-calendar-obligations-plan]]'
 ---
 
@@ -16,6 +17,10 @@ related:
 Auto-generated index of all documents tagged with `#calendar-obligations`.
 
 ## Documents
+
+### exec
+
+- `2026-09-21-calendar-obligations-ledger` - `calendar-obligations` ledger
 
 ### plan
 
