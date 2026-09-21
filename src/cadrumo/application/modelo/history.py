@@ -58,7 +58,7 @@ from ...domain.buckets.event import (
     BucketEventType,
     bucket_event_order_key,
 )
-from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.filing_record import ModeloRecord
@@ -169,6 +169,7 @@ def assemble_work_unit_history(
     work_unit_id: str,
     *,
     ports: ModeloHistoryPorts,
+    operation: PinnedAuthorityOperation,
 ) -> WorkUnitHistory:
     """Return a :class:`WorkUnitHistory` covering every bucket event scoped to ``work_unit_id``.
 
@@ -232,8 +233,7 @@ def assemble_work_unit_history(
     calculation_events, revision_ids = _calculation_history_events(catalogue, revisions.values(), work_unit_id)
     collected.extend(calculation_events)
 
-    with bundled_indexed_authority().operation() as operation:
-        verifications = require_verification_report_coordinates_current(vr_repo.load(), operation=operation)
+    verifications = require_verification_report_coordinates_current(vr_repo.load(), operation=operation)
     collected.extend(_verification_history_events(catalogue, verifications.values(), revision_ids))
 
     filings = fr_repo.load()

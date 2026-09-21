@@ -441,7 +441,9 @@ def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
     filings = _Repository(ModeloRecordCatalogue())
 
     def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
-        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW)  # type: ignore[arg-type]
+        return OverviewCalendar(
+            range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date()
+        )  # type: ignore[arg-type]
 
     monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
@@ -585,7 +587,9 @@ def test_secure_profile_provider_refuses_a_ledger_written_during_capture(
     filings = _Repository(ModeloRecordCatalogue())
 
     def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
-        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW)  # type: ignore[arg-type]
+        return OverviewCalendar(
+            range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date()
+        )  # type: ignore[arg-type]
 
     monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
     written = TransactionCatalogue.model_validate([_synthetic_transaction()])
@@ -627,7 +631,9 @@ def test_a_quiet_ledger_publishes_its_generation(
     filings = _Repository(ModeloRecordCatalogue())
 
     def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
-        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW)  # type: ignore[arg-type]
+        return OverviewCalendar(
+            range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date()
+        )  # type: ignore[arg-type]
 
     monkeypatch.setattr(generation_module, "build_overview_calendar", empty_calendar)
     door = SecureProfileWorkbenchGenerationReadDoorV1(
@@ -662,6 +668,7 @@ def test_calendar_evidence_scope_preserves_available_empty_for_historical_filing
         range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
         entries=(),
         generated_at=_NOW,
+        evaluated_on=_NOW.date(),
     )
 
     scoped = generation_module._scope_filing_records((historical,), schedule)

@@ -584,7 +584,12 @@ def compose_installed_workbench_generation_provider(
             )
             if ledger_factory is not None:
                 factories["workbench.ledger"] = ledger_factory
-            declarations_factory = _declarations_generation_factory(current, dependencies)
+            declarations_factory = _declarations_generation_factory(
+                current,
+                dependencies,
+                operation_runtime,
+                refresh_generation=capture,
+            )
             if declarations_factory is not None:
                 factories["workbench.declarations"] = declarations_factory
             aeat_sync_factory = _aeat_sync_generation_factory(
@@ -801,6 +806,9 @@ def _ledger_generation_factory(
 def _declarations_generation_factory(
     current: list[WorkbenchGenerationV1],
     dependencies: InstalledWorkbenchFactoryDependenciesV1,
+    operation_runtime: TuiOperationCompositionV1,
+    *,
+    refresh_generation: Callable[[], WorkbenchGenerationV1],
 ) -> TuiScreenFactoryV1 | None:
     if current[0].declarations.projection is None:
         return None
@@ -815,6 +823,14 @@ def _declarations_generation_factory(
                 bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
                 declarations=_required_projection(current[0].declarations, "Declarations").declarations,
                 projections=_required_projection(modelo, "Modelo"),
+                lifecycle_projections=_required_projection(current[0].modelo_lifecycle, "Modelo lifecycle")
+                if current[0].modelo_lifecycle.projection is not None
+                else (),
+                lifecycle_actions_factory=lambda lifecycle: _modelo_lifecycle_door(
+                    operation_runtime.services,
+                    lifecycle,
+                    refresh_after_success=refresh_generation,
+                ),
             )
             if modelo.availability is WorkbenchGenerationAvailability.AVAILABLE and modelo.projection is not None
             else None
@@ -834,6 +850,27 @@ def _declarations_generation_factory(
         )(context)
 
     return create
+
+
+def _modelo_lifecycle_door(
+    services: OperationComposedServices,
+    lifecycle: object,
+    *,
+    refresh_after_success: Callable[[], object] | None = None,
+) -> object:
+    """Bind one lifecycle read to the session's operation services without repository access."""
+    from ...application.modelo.workspace_models import ModeloWorkspaceLifecycleProjectionV1
+    from .modelo.lifecycle import ModeloWorkspaceLifecycleDoor
+
+    if not isinstance(lifecycle, ModeloWorkspaceLifecycleProjectionV1) or lifecycle.target.work_unit_id is None:
+        raise ValueError("Modelo lifecycle actions require an admitted work-unit lifecycle projection")
+    return ModeloWorkspaceLifecycleDoor(
+        services=services,
+        work_unit_id=str(lifecycle.target.work_unit_id),
+        calculation_revision_id=lifecycle.calculation_revision_id,
+        verification_report_id=lifecycle.verification_report_id,
+        refresh_after_success=refresh_after_success,
+    )
 
 
 def _calendar_work_create_handoff(*, bucket_id: str, actor: str) -> CalendarRecoveryHandoffV1:

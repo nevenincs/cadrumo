@@ -94,7 +94,7 @@ from .modelo.declarations_workspace import (
     DeclarationsWorkspaceZoneObservationV1,
     project_declarations_workspace,
 )
-from .modelo.workspace_models import ModeloWorkspaceProjectionV1
+from .modelo.workspace_models import ModeloWorkspaceLifecycleProjectionV1, ModeloWorkspaceProjectionV1
 from .operations.registry import OperationPublicContractSetV1
 from .overview.agenda import OverviewAgenda, build_overview_agenda
 from .overview.calendar import build_overview_calendar
@@ -431,6 +431,9 @@ class WorkbenchGenerationInputsV1(BaseModel):
     declarations_calendar: WorkbenchGenerationSourceResultV1[DeclarationsCalendarProjectionV1]
     aeat_sync: WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1]
     modelo: WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]]
+    modelo_lifecycle: WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceLifecycleProjectionV1, ...]] = (
+        WorkbenchGenerationSourceResultV1.never_captured(refusal="workbench.modelo.lifecycle_not_captured")
+    )
     ledger_admission: WorkbenchDestinationAdmission
     declarations_admission: WorkbenchDestinationAdmission
     aeat_sync_admission: WorkbenchDestinationAdmission
@@ -471,6 +474,7 @@ class WorkbenchGenerationV1(BaseModel):
     declarations_calendar: WorkbenchGenerationProjectionResultV1[DeclarationsCalendarProjectionV1]
     aeat_sync: WorkbenchGenerationProjectionResultV1[AeatSyncWorkspaceProjectionV1]
     modelo: WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceProjectionV1, ...]]
+    modelo_lifecycle: WorkbenchGenerationProjectionResultV1[tuple[ModeloWorkspaceLifecycleProjectionV1, ...]]
     search: WorkbenchGenerationProjectionResultV1[InstalledWorkbenchSearchSnapshotV1]
     ledger_admission: WorkbenchDestinationAdmission
     declarations_admission: WorkbenchDestinationAdmission
@@ -554,11 +558,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         revisions, calculations_revision = self.calculation_repository.load_revisioned()
         filings, filings_revision = self.filing_repository.load_revisioned()
         verification = self._load_verification_reports()
+        bucket_events = None if self.bucket_event_repository is None else self.bucket_event_repository.load()
         lifecycle_facts = (
             None
-            if self.bucket_event_repository is None
+            if bucket_events is None
             else _declarations_lifecycle_facts(
-                self.bucket_event_repository.load(),
+                bucket_events,
                 work_units=work_units,
                 revisions=revisions,
                 verification=verification,
@@ -606,6 +611,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             else self._read_ledger(revisions.revisions, work_units, sources=ledger_sources, ports=ledger_ports)
         )
         modelo = self._read_modelo(work_units)
+        modelo_lifecycle = self._read_modelo_lifecycle(
+            modelo,
+            work_units=work_units,
+            verification=verification,
+            filings=filings,
+        )
         aeat_sync, aeat_sync_refusal = self._read_aeat_sync(
             _declared_tax_id(raw_values),
             observed_at=observed_at,
@@ -622,6 +633,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             ledger_revision=ledger_revision,
             ledger_sources=ledger_sources,
             verification=verification,
+            bucket_events=bucket_events,
             custody_count=custody_count,
         ):
             raise InternalInvariantError("secure workbench generation changed during capture")
@@ -634,6 +646,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             aeat_sync=aeat_sync,
             aeat_sync_refusal=aeat_sync_refusal,
             modelo=modelo,
+            modelo_lifecycle=modelo_lifecycle,
             work_units=work_units,
             verification=verification,
         )
@@ -648,6 +661,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         ledger_revision: tuple[str, str] | None,
         ledger_sources: tuple[TransactionCatalogue, InvoiceCatalogue] | None,
         verification: VerificationReportCatalogue | None,
+        bucket_events: BucketEventHistoryCatalogue | None,
         custody_count: int | None,
     ) -> bool:
         final_record = self.profile_repository.load(self.profile_id)
@@ -661,6 +675,7 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             and final_filings_revision == filings_revision
             and self._ledger_is_unchanged(ledger_revision, ledger_sources)
             and self._load_verification_reports() == verification
+            and (None if self.bucket_event_repository is None else self.bucket_event_repository.load()) == bucket_events
             and self._load_custody_count() == custody_count
         )
 
@@ -773,6 +788,65 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
             return tuple(reader(unit) for unit in work_units.values())
         except (ValueError, LookupError):
             return None
+
+    def _read_modelo_lifecycle(
+        self,
+        modelo: tuple[ModeloWorkspaceProjectionV1, ...] | None,
+        *,
+        work_units: WorkUnitCatalogue,
+        verification: VerificationReportCatalogue | None,
+        filings: ModeloRecordCatalogue,
+    ) -> tuple[ModeloWorkspaceLifecycleProjectionV1, ...] | None:
+        """Project lifecycle references from the same catalogues as this generation."""
+        if modelo is None or verification is None or self.bucket_event_repository is None:
+            return None
+        from .modelo.history import ModeloHistoryPorts, assemble_work_unit_history
+
+        ports = ModeloHistoryPorts(
+            work_unit_repository=self.work_unit_repository,
+            calculation_repository=self.calculation_repository,
+            filing_repository=self.filing_repository,
+            verification_repository=self.verification_repository,
+            bucket_event_repository=self.bucket_event_repository,
+        )
+        rows: list[ModeloWorkspaceLifecycleProjectionV1] = []
+        units_by_id = {str(item.work_unit_id): item for item in work_units.values()}
+        for projection in modelo:
+            target = projection.target
+            if target.work_unit_id is None:
+                return None
+            unit = units_by_id.get(str(target.work_unit_id))
+            if unit is None:
+                return None
+            calculation_revision_id = unit.current_calculation_revision_id
+            report_id = next(
+                (
+                    report.verification_report_id
+                    for report in sorted(verification.values(), key=lambda item: str(item.verification_report_id))
+                    if report.calculation_revision_id == calculation_revision_id
+                ),
+                None,
+            )
+            filing_id = next(
+                (
+                    record.filing_record_id
+                    for record in sorted(filings.values(), key=lambda item: str(item.filing_record_id))
+                    if record.work_unit_id == unit.work_unit_id
+                    and record.calculation_revision_id == calculation_revision_id
+                ),
+                None,
+            )
+            history = assemble_work_unit_history(str(unit.work_unit_id), ports=ports, operation=self.operation)
+            rows.append(
+                ModeloWorkspaceLifecycleProjectionV1(
+                    target=target,
+                    calculation_revision_id=calculation_revision_id,
+                    verification_report_id=report_id,
+                    local_filing_record_id=filing_id,
+                    events=history.events,
+                )
+            )
+        return tuple(rows)
 
     def _read_aeat_sync(
         self,
@@ -1033,6 +1107,7 @@ def _refused_declarations_calendar(
         range=_calendar_query_range(as_of),
         entries=(),
         generated_at=observed_at,
+        evaluated_on=as_of,
         taxpayer_model_declared=False,
     )
     return project_declarations_calendar(
@@ -1456,6 +1531,7 @@ def _build_workbench_generation_inputs(
     aeat_sync: AeatSyncWorkspaceProjectionV1 | None,
     aeat_sync_refusal: NamespacedId,
     modelo: tuple[ModeloWorkspaceProjectionV1, ...] | None,
+    modelo_lifecycle: tuple[ModeloWorkspaceLifecycleProjectionV1, ...] | None,
     work_units: WorkUnitCatalogue,
     verification: VerificationReportCatalogue | None,
 ) -> WorkbenchGenerationInputsV1:
@@ -1493,6 +1569,11 @@ def _build_workbench_generation_inputs(
             modelo,
             observed_at=observed_at,
             refusal="workbench.modelo.bulk_reader_unavailable",
+        ),
+        modelo_lifecycle=_source_result(
+            modelo_lifecycle,
+            observed_at=observed_at,
+            refusal="workbench.modelo.lifecycle_reader_unavailable",
         ),
         ledger_admission=_source_admission(
             "workbench.ledger",
@@ -1541,6 +1622,7 @@ def assemble_workbench_generation(inputs: WorkbenchGenerationInputsV1) -> Workbe
     declarations_calendar = _carry_projection(inputs.declarations_calendar)
     aeat_sync = _carry_projection(inputs.aeat_sync)
     modelo = _carry_projection(inputs.modelo)
+    modelo_lifecycle = _carry_projection(inputs.modelo_lifecycle)
     search = _assemble_search(
         ledger=ledger,
         declarations=declarations,
@@ -1558,6 +1640,7 @@ def assemble_workbench_generation(inputs: WorkbenchGenerationInputsV1) -> Workbe
         declarations_calendar=declarations_calendar,
         aeat_sync=aeat_sync,
         modelo=modelo,
+        modelo_lifecycle=modelo_lifecycle,
         search=search,
         ledger_admission=inputs.ledger_admission,
         declarations_admission=inputs.declarations_admission,

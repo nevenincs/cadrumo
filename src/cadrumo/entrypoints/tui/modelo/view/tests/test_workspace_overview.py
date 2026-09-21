@@ -9,14 +9,19 @@ STATED rather than shown as an empty list.
 from __future__ import annotations
 
 import pytest
-from textual.widgets import Static
+from textual.widgets import Button, Input, Static
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ......application.modelo.workspace_models import ModeloWorkspaceCapabilityName
+from ......application.modelo.workspace_models import (
+    ModeloWorkspaceCapabilityName,
+    ModeloWorkspaceLifecycleProjectionV1,
+)
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
+from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....components.widgets import ContentDataTable
+from ...lifecycle import ModeloLifecycleActionUnavailableError
 from ..controller import ModeloWorkspaceReadSession, open_workspace_read_session
 from ..overview import ModeloWorkspaceOverviewScreen
 from .conftest import resolve_real_result
@@ -26,6 +31,25 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 def _session(bucket_id: str, repository: WorkUnitCatalogueRepository) -> ModeloWorkspaceReadSession:
     return open_workspace_read_session(resolve_real_result(bucket_id, repository, OutputLanguage.ES).projection)
+
+
+class _UnavailableLifecycleActions:
+    """One typed refusal proves the view renders application errors without a generic fallback."""
+
+    async def calculate(self) -> object:
+        raise ModeloLifecycleActionUnavailableError(
+            translated_message="application.modelo.lifecycle.refusal.calculation_required"
+        )
+
+
+def _lifecycle_session(bucket_id: str, repository: WorkUnitCatalogueRepository) -> ModeloWorkspaceReadSession:
+    projection = resolve_real_result(bucket_id, repository, OutputLanguage.ES).projection
+    lifecycle = ModeloWorkspaceLifecycleProjectionV1(target=projection.target)
+    return open_workspace_read_session(
+        projection,
+        lifecycle=lifecycle,
+        lifecycle_actions=_UnavailableLifecycleActions(),
+    )
 
 
 @pytest.mark.asyncio
@@ -117,3 +141,42 @@ async def test_the_destination_offers_no_editing_affordance(
             assert not app.screen.query(editing_widget), (
                 f"the read destination mounted an editing widget: {editing_widget.__name__}"
             )
+
+
+@pytest.mark.asyncio
+async def test_lifecycle_controls_require_confirmation_or_a_typed_precondition(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """The installed actions have stable controls and never turn a refusal into success."""
+    bucket_id, repository = bucket_and_repository
+    app = ScreenHostApp(ModeloWorkspaceOverviewScreen(_lifecycle_session(bucket_id, repository)))
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        for identifier in (
+            "#modelo-lifecycle-calculate",
+            "#modelo-lifecycle-verify",
+            "#modelo-lifecycle-file",
+            "#modelo-lifecycle-export",
+        ):
+            assert app.screen.query_one(identifier, Button)
+        assert app.screen.query_one("#modelo-lifecycle-export-path", Input)
+
+        app.screen.query_one("#modelo-lifecycle-export", Button).press()
+        await pilot.pause()
+        assert str(app.screen.query_one("#modelo-lifecycle-notice", Static).content) == tr(
+            "application.modelo.lifecycle.refusal.export_destination_required"
+        )
+
+        app.screen.query_one("#modelo-lifecycle-file", Button).press()
+        await pilot.pause()
+        assert isinstance(app.screen, ConfirmScreen)
+        await pilot.press("escape")
+        await pilot.pause()
+
+        app.screen.query_one("#modelo-lifecycle-calculate", Button).press()
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+        assert str(app.screen.query_one("#modelo-lifecycle-notice", Static).content) == tr(
+            "application.modelo.lifecycle.refusal.calculation_required"
+        )

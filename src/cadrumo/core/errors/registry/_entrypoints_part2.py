@@ -58,6 +58,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.entrypoints.tui.modelo.lifecycle.ModeloLifecycleActionUnavailableError",
+        ErrorCode(
+            code="REFUSED_TUI_MODELO_LIFECYCLE_ACTION_UNAVAILABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.tui_modelo_lifecycle_action_unavailable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.entrypoints.tui.navigation.NavigationContractError",
         ErrorCode(
             code="REFUSED_TUI_NAVIGATION_CONTRACT",

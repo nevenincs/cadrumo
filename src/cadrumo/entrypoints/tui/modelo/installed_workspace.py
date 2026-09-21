@@ -7,12 +7,12 @@ facts without resolving persistence, registry, or network authority again.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 
 from textual.screen import Screen
 
 from ....application.modelo.declarations_workspace import DeclarationsWorkspaceDeclarationRefV1
-from ....application.modelo.workspace_models import ModeloWorkspaceProjectionV1
+from ....application.modelo.workspace_models import ModeloWorkspaceLifecycleProjectionV1, ModeloWorkspaceProjectionV1
 from ....core.errors.hierarchy import CadrumoError
 from ....core.identity.bucket import BucketId
 from ..declarations.models import ModeloWorkspaceScreenFactoryV1
@@ -29,6 +29,8 @@ def compose_installed_modelo_workspace_factory(
     bucket_id: BucketId,
     declarations: tuple[DeclarationsWorkspaceDeclarationRefV1, ...],
     projections: tuple[ModeloWorkspaceProjectionV1, ...],
+    lifecycle_projections: tuple[ModeloWorkspaceLifecycleProjectionV1, ...] = (),
+    lifecycle_actions_factory: Callable[[ModeloWorkspaceLifecycleProjectionV1], object] | None = None,
 ) -> ModeloWorkspaceScreenFactoryV1:
     """Bind one generation's admitted declarations to canonical read sessions.
 
@@ -43,6 +45,8 @@ def compose_installed_modelo_workspace_factory(
         bucket_id=bucket_id,
         declarations=declaration_by_work_unit,
         projections=projections,
+        lifecycle_projections=lifecycle_projections,
+        lifecycle_actions_factory=lifecycle_actions_factory,
     )
 
     def create(declaration: DeclarationsWorkspaceDeclarationRefV1, /) -> Screen[None]:
@@ -76,7 +80,16 @@ def _admitted_sessions(
     bucket_id: BucketId,
     declarations: Mapping[str, DeclarationsWorkspaceDeclarationRefV1],
     projections: tuple[ModeloWorkspaceProjectionV1, ...],
+    lifecycle_projections: tuple[ModeloWorkspaceLifecycleProjectionV1, ...],
+    lifecycle_actions_factory: Callable[[ModeloWorkspaceLifecycleProjectionV1], object] | None,
 ) -> Mapping[str, ModeloWorkspaceReadSession]:
+    lifecycle_by_work_unit = {
+        str(item.target.work_unit_id): item
+        for item in lifecycle_projections
+        if item.target.work_unit_id is not None
+    }
+    if len(lifecycle_by_work_unit) != len(lifecycle_projections):
+        raise ModeloWorkspaceDeclarationAdmissionError("the generation carries duplicate Modelo lifecycle targets")
     sessions: dict[str, ModeloWorkspaceReadSession] = {}
     for projection in projections:
         target = projection.target
@@ -102,7 +115,17 @@ def _admitted_sessions(
             )
         if work_unit_id in sessions:
             raise ModeloWorkspaceDeclarationAdmissionError("the generation carries duplicate Modelo workspace targets")
-        sessions[str(work_unit_id)] = open_workspace_read_session(projection)
+        lifecycle = lifecycle_by_work_unit.get(str(work_unit_id))
+        actions = (
+            None
+            if lifecycle is None or lifecycle_actions_factory is None
+            else lifecycle_actions_factory(lifecycle)
+        )
+        sessions[str(work_unit_id)] = open_workspace_read_session(
+            projection,
+            lifecycle=lifecycle,
+            lifecycle_actions=actions,
+        )
     return sessions
 
 

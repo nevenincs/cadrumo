@@ -240,6 +240,7 @@ def work_history(
     history = assemble_work_unit_history(
         unit.work_unit_id,
         ports=modelo_history_ports_factory(ctx)(bucket_id=unit.bucket_id),
+        operation=authority_operation(ctx),
     )
     from .common import emit_envelope, resolve_lifecycle_continuation_notice
     from .modelo_aux_payloads import WorkHistoryResult, WorkUnitHistoryEventPayload

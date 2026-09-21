@@ -188,12 +188,13 @@ def test_create_rejects_unknown_revision_with_helpful_list(
     assert "2019-y-siguientes" in message
 
 
-def test_history_for_missing_work_unit_raises(repos: _Repos) -> None:
+def test_history_for_missing_work_unit_raises(repos: _Repos, operation: PinnedAuthorityOperation) -> None:
     _wu_repo, _cr_repo, _fr_repo, _vr_repo, _bv_repo = repos
     with pytest.raises(WorkUnitNotFoundError) as exc_info:
         assemble_work_unit_history(
             "no-such-work-unit",
             ports=_history_ports(repos),
+            operation=operation,
         )
     assert exc_info.value.translated_message == "application.modelo.errors.work_unit_not_found"
     assert exc_info.value.context == {"work_unit_id": "no-such-work-unit"}
@@ -220,6 +221,7 @@ def test_history_records_creation_event(repos: _Repos, operation: PinnedAuthorit
     history = assemble_work_unit_history(
         work_unit.work_unit_id,
         ports=_history_ports(repos),
+        operation=operation,
     )
 
     assert history.bucket_id == _BUCKET_ID
@@ -275,6 +277,7 @@ def test_history_idempotent_create_does_not_duplicate_creation_event(
     history = assemble_work_unit_history(
         first.work_unit_id,
         ports=_history_ports(repos),
+        operation=operation,
     )
     assert len(history.events) == 1
     assert history.events[0].event_type is BucketEventType.MODELO_WORK_UNIT_CREATED
@@ -306,6 +309,7 @@ def test_history_records_discard_event(repos: _Repos, operation: PinnedAuthority
     history = assemble_work_unit_history(
         work_unit.work_unit_id,
         ports=_history_ports(repos),
+        operation=operation,
     )
 
     # Creation event first, then the discard event - the timeline is
@@ -356,6 +360,7 @@ def test_history_excludes_events_from_other_work_units(repos: _Repos, operation:
     history = assemble_work_unit_history(
         target.work_unit_id,
         ports=_history_ports(repos),
+        operation=operation,
     )
 
     # The target was never discarded -> only its own creation event is
@@ -392,6 +397,7 @@ def test_a_real_assembled_row_satisfies_the_tightened_identities(
     history = assemble_work_unit_history(
         work_unit.work_unit_id,
         ports=_history_ports(repos),
+        operation=operation,
     )
 
     event = history.events[0]

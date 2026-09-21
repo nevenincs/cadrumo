@@ -23,6 +23,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.revision_review import RevisionReviewStatus
 from ...core.schema_family_disposition import RegistrySchemaFamilyDisposition
+from ...domain.buckets.event import BucketEvent
 from ...domain.calculations.registry.ids import (
     ApplicabilityRuleId,
     BindingId,
@@ -1060,6 +1061,29 @@ class ModeloWorkspaceProjectionV1(_WorkspaceModel):
         return self
 
 
+class ModeloWorkspaceLifecycleProjectionV1(_WorkspaceModel):
+    """Persisted lifecycle facts beside, never inside, the immutable read projection."""
+
+    contract_version: Literal[1] = 1
+    target: ModeloWorkspaceResolvedTargetV1
+    calculation_revision_id: str | None = None
+    verification_report_id: str | None = None
+    local_filing_record_id: str | None = None
+    aeat_accepted: Literal[False] = False
+    events: tuple[BucketEvent, ...] = ()
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_lifecycle_identity(self) -> ModeloWorkspaceLifecycleProjectionV1:
+        if self.target.work_unit_id is None:
+            raise ValueError("lifecycle projection requires one persisted work unit")
+        if self.verification_report_id is not None and self.calculation_revision_id is None:
+            raise ValueError("verification lifecycle fact requires its calculation revision")
+        if self.local_filing_record_id is not None and self.calculation_revision_id is None:
+            raise ValueError("local filing lifecycle fact requires its calculation revision")
+        return self
+
+
 class ModeloWorkspaceStaticInspectionResultV1(_WorkspaceModel):
     """A successful static registry inspection with no runtime snapshot admission."""
 
@@ -1179,6 +1203,7 @@ __all__ = [
     "ModeloWorkspaceLedgerPeriodSubjectV1",
     "ModeloWorkspaceLedgerTransactionSubjectV1",
     "ModeloWorkspaceLegalEvidenceReferenceV1",
+    "ModeloWorkspaceLifecycleProjectionV1",
     "ModeloWorkspaceLocaleDisposition",
     "ModeloWorkspaceLocaleSummaryV1",
     "ModeloWorkspaceLocalizedTextV1",

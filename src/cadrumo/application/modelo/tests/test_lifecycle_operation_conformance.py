@@ -43,6 +43,7 @@ _FACTORY_ARGUMENTS: dict[str, Any] = {
 _KNOWN_AUTHORITIES = {
     "rename_work_unit",
     "discard_work_unit",
+    "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
     "verify_modelo_revision",
     "file_modelo_revision",
     "export_modelo_revision",

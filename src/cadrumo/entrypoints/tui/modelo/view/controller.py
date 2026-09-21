@@ -37,6 +37,7 @@ from typing import Final
 from .....application.modelo.workspace_models import (
     ModeloWorkspaceCursorV1,
     ModeloWorkspaceFacetName,
+    ModeloWorkspaceLifecycleProjectionV1,
     ModeloWorkspaceProjectionV1,
 )
 from .....core.errors.hierarchy import CadrumoError
@@ -96,6 +97,8 @@ class ModeloWorkspaceReadSession:
 
     projection: ModeloWorkspaceProjectionV1
     identity: ModeloWorkspaceSemanticIdentityV1
+    lifecycle: ModeloWorkspaceLifecycleProjectionV1 | None = None
+    lifecycle_actions: object | None = None
 
     @property
     def output_language(self) -> str:
@@ -153,7 +156,12 @@ class ModeloWorkspaceReadSession:
         return ModeloWorkspaceBoundedPageV1(shown=len(bounded.records), page_size=bounded.page_size)
 
 
-def open_workspace_read_session(projection: ModeloWorkspaceProjectionV1) -> ModeloWorkspaceReadSession:
+def open_workspace_read_session(
+    projection: ModeloWorkspaceProjectionV1,
+    *,
+    lifecycle: ModeloWorkspaceLifecycleProjectionV1 | None = None,
+    lifecycle_actions: object | None = None,
+) -> ModeloWorkspaceReadSession:
     """Open the canonical immutable session from an already-admitted projection.
 
     Installed composition receives projections from its one captured generation,
@@ -167,7 +175,16 @@ def open_workspace_read_session(projection: ModeloWorkspaceProjectionV1) -> Mode
             f"which this read cohort does not read; it reads exactly "
             f"{SUPPORTED_WORKSPACE_CONTRACT_VERSION}"
         )
-    return ModeloWorkspaceReadSession(projection=projection, identity=semantic_identity(projection))
+    if lifecycle is not None and lifecycle.target != projection.target:
+        raise ModeloWorkspaceSessionAdmissionError("lifecycle projection does not name this workspace target")
+    if lifecycle_actions is not None and lifecycle is None:
+        raise ModeloWorkspaceSessionAdmissionError("workspace lifecycle actions require a lifecycle projection")
+    return ModeloWorkspaceReadSession(
+        projection=projection,
+        identity=semantic_identity(projection),
+        lifecycle=lifecycle,
+        lifecycle_actions=lifecycle_actions,
+    )
 
 
 __all__ = [

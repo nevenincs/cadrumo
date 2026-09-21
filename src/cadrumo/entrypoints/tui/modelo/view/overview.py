@@ -34,15 +34,21 @@ actions in the system, and the screen must not convert one into the other.
 
 from __future__ import annotations
 
+import asyncio
+from collections.abc import Callable
 from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.widgets import DataTable, Static
+from textual.widgets import Button, DataTable, Input, Static
 
+from .....core.errors.error_codes import resolve_error_message
+from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
+from .....core.operations import OperationTerminalCondition
 from ...components.account_chrome import AccountChromeScreen
 from ...components.app_access import TypedAppAccess
+from ...components.dialogs import ConfirmScreen
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
 from .controller import ModeloWorkspaceReadSession
@@ -90,6 +96,16 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
             )
             yield ContentDataTable[str](id="workspace-overview-destinations", cursor_type="row", zebra_stripes=True)
             yield Static(id="workspace-overview-actions")
+            yield Static(id="modelo-lifecycle-notice")
+            if self._session.lifecycle_actions is not None:
+                yield Button(tr("application.modelo.lifecycle.calculate"), id="modelo-lifecycle-calculate")
+                yield Button(tr("application.modelo.lifecycle.verify"), id="modelo-lifecycle-verify")
+                yield Button(tr("application.modelo.lifecycle.file"), id="modelo-lifecycle-file")
+                yield Input(
+                    placeholder=tr("application.modelo.lifecycle.export_destination_placeholder"),
+                    id="modelo-lifecycle-export-path",
+                )
+                yield Button(tr("application.modelo.lifecycle.export"), id="modelo-lifecycle-export")
 
     def on_mount(self) -> None:
         """Populate the header, the destination list, the disclosure groups, and the action notice."""
@@ -125,6 +141,99 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
 
         destination = cast("ModeloWorkspaceDestinationIdV1", str(event.row_key.value))
         self.app.push_screen(resolve_destination(destination)(self._session))
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Run the selected lifecycle operation once through the shared modal."""
+        actions = self._session.lifecycle_actions
+        if actions is None:
+            return
+        method_name = {
+            "modelo-lifecycle-calculate": "calculate",
+            "modelo-lifecycle-verify": "verify",
+            "modelo-lifecycle-export": "export",
+        }.get(str(event.button.id))
+        if event.button.id == "modelo-lifecycle-file":
+            self._confirm_local_filing()
+            return
+        if method_name is None:
+            return
+        output_path = None
+        if method_name == "export":
+            output_path = self.query_one("#modelo-lifecycle-export-path", Input).value.strip()
+            if not output_path:
+                self._notice(tr("application.modelo.lifecycle.refusal.export_destination_required"))
+                return
+        submit = getattr(actions, method_name, None)
+        if submit is None:
+            return
+        self._start_lifecycle_action(submit, output_path=output_path)
+
+    def _confirm_local_filing(self) -> None:
+        """Require an explicit acknowledgement before recording a local filing."""
+        def closed(confirmed: bool) -> None:
+            if confirmed:
+                actions = self._session.lifecycle_actions
+                submit = None if actions is None else getattr(actions, "file", None)
+                if isinstance(submit, Callable):
+                    self._start_lifecycle_action(submit)
+            else:
+                self._notice(tr("application.modelo.lifecycle.file_cancelled"))
+
+        self.app.push_screen(
+            ConfirmScreen(
+                title=tr("application.modelo.lifecycle.file_confirm_title"),
+                message=tr("application.modelo.lifecycle.file_confirm_message"),
+                confirm_label=tr("application.modelo.lifecycle.file_confirm_accept"),
+                cancel_label=tr("application.modelo.lifecycle.file_confirm_cancel"),
+            ),
+            closed,
+        )
+
+    def _start_lifecycle_action(self, submit: Callable[..., object], *, output_path: str | None = None) -> None:
+        """Start one action in the exclusive lane so repeated activation cannot submit twice."""
+        self.run_worker(
+            self._open_lifecycle_modal(submit, output_path=output_path),
+            group="modelo-lifecycle-action",
+            exclusive=True,
+        )
+
+    async def _open_lifecycle_modal(self, submit: Callable[..., object], *, output_path: str | None = None) -> None:
+        """Submit one public action and expose its exact terminal result in the operation modal."""
+        from ...operations.modal import OperationModal
+
+        try:
+            controller = await submit() if output_path is None else await submit(output_path=output_path)
+        except CadrumoError as refusal:
+            self._notice(resolve_error_message(refusal))
+            return
+        self.app.push_screen(OperationModal(controller), self._on_lifecycle_operation_settled)
+
+    def _on_lifecycle_operation_settled(self, outcome: object) -> None:
+        """Refresh the captured generation only for a terminal success."""
+        from ...operations.modal import OperationModalSettledOutcomeV1
+
+        if not (
+            isinstance(outcome, OperationModalSettledOutcomeV1)
+            and outcome.view_model.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        ):
+            return
+        actions = self._session.lifecycle_actions
+        refresh = None if actions is None else getattr(actions, "refresh_after_success", None)
+        if isinstance(refresh, Callable):
+            self.run_worker(self._refresh_after_success(refresh), group="modelo-lifecycle-refresh", exclusive=True)
+
+    async def _refresh_after_success(self, refresh: Callable[[], object]) -> None:
+        """Capture one new generation, then return so reopening resolves its persisted state."""
+        try:
+            await asyncio.to_thread(refresh)
+        except CadrumoError as refusal:
+            self._notice(resolve_error_message(refusal))
+            return
+        self.dismiss(None)
+
+    def _notice(self, message: str) -> None:
+        """Retain a typed pre-submission refusal on the workspace surface."""
+        self.query_one("#modelo-lifecycle-notice", Static).update(message)
 
     def _mount_address(self) -> None:
         """Disclose the natural coordinate and the work state.

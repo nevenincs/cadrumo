@@ -138,6 +138,7 @@ if TYPE_CHECKING:
 
 MODELO_WORK_RENAME_OPERATION_DEFINITION_ID = "modelo.work.rename"
 MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID = "modelo.work.discard"
+MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID = "modelo.work.calculate"
 MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID = "modelo.work.verify"
 MODELO_WORK_FILE_OPERATION_DEFINITION_ID = "modelo.work.file"
 MODELO_EXPORT_OPERATION_DEFINITION_ID = "modelo.export"
@@ -314,6 +315,115 @@ class ModeloWorkDiscardPublicResultV1(BaseModel):
 
 class ModeloWorkDiscardApprovalStaleError(CadrumoError):
     """Raised when the approved unit is no longer the unit on disk."""
+
+
+class ModeloWorkCalculateRequest(CredentialFreeOperationRequest):
+    """Calculate the current ledger-backed revision for one work unit."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    work_unit_id: _WORK_UNIT_ID
+    actor: Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
+
+
+class ModeloWorkCalculatePublicResultV1(BaseModel):
+    """The one persisted revision created by a successful calculation."""
+
+    model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
+
+    result_version: int = 1
+    work_unit_id: _WORK_UNIT_ID
+    calculation_revision_id: Annotated[str, Field(min_length=1, max_length=128)]
+
+
+class ModeloWorkCalculateExecutor:
+    """Run the canonical ledger-backed calculation under the operation journal."""
+
+    def __init__(self, *, calculation_action_ports_factory: CalculationActionPortsFactory) -> None:
+        """Retain the composition-owned ports factory for the active bucket."""
+        self._calculation_action_ports_factory = calculation_action_ports_factory
+
+    async def execute(
+        self,
+        request: OperationRequest[ModeloWorkCalculateRequest],
+        context: OperationExecutorContext,
+    ) -> str | None:
+        """Delegate calculation without reinterpreting ledger or tax inputs."""
+        from ...core.bucket_pointer import require_active_bucket_id
+        from .calculation_actions import calculate_modelo_revision_from_bucket_aggregation_with_diagnostics
+
+        await context.events.phase("modelo.work.calculate.ledger")
+        await context.events.effect(OperationEffect.UNKNOWN)
+        payload = request.payload
+        ports = self._calculation_action_ports_factory(
+            bucket_id=require_active_bucket_id(), operation=context.authority_operation
+        )
+        result = await asyncio.to_thread(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+            payload.work_unit_id,
+            ports=ports,
+            actor=payload.actor,
+        )
+        await context.events.effect(OperationEffect.UPDATED)
+        return str(result.revision.calculation_revision_id)
+
+
+def build_modelo_work_calculate_definition(
+    *, calculation_action_ports_factory: CalculationActionPortsFactory
+) -> OperationDefinition:
+    """Bind the canonical calculation service to the shared operation platform."""
+
+    def build() -> ModeloWorkCalculateExecutor:
+        return ModeloWorkCalculateExecutor(calculation_action_ports_factory=calculation_action_ports_factory)
+
+    return OperationDefinition(
+        definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        request_type=ModeloWorkCalculateRequest,
+        result_type=ModeloWorkCalculatePublicResultV1,
+        executor_factory=OperationExecutorFactory(
+            request_type=ModeloWorkCalculateRequest,
+            executor_type=ModeloWorkCalculateExecutor,
+            build=build,
+        ),
+        phase_codes=("modelo.work.calculate.ledger",),
+        interaction_kinds=frozenset[OperationInteractionKind](),
+        capabilities=OperationCapabilities(
+            durability=OperationDurability.RECORDED,
+            cancellation=OperationCancellation.UNSUPPORTED,
+            deadline=OperationDeadline.ABSENT,
+            replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
+            baseline=OperationBaselinePolicy.REQUEST_BOUND,
+            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+            sensitive_input=OperationSensitiveInputPolicy.NONE,
+            conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
+            owned_resources=frozenset(),
+            permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
+            close_policy=OperationClosePolicy.DETACH_ALLOWED,
+        ),
+        reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
+    )
+
+
+def build_modelo_work_calculate_registration(
+    definition: OperationDefinition,
+) -> OperationPublicDefinitionRegistrationV1:
+    """Bind calculation to the exact refresh target carried by the receipt."""
+    return OperationPublicDefinitionRegistrationV1.compose(
+        definition=definition,
+        request_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.work.calculate.request",
+            schema_version=1,
+            model_type=definition.request_type,
+        ),
+        result_schema=OperationSchemaBindingV1.bind(
+            schema_id="modelo.work.calculate.result",
+            schema_version=1,
+            model_type=ModeloWorkCalculatePublicResultV1,
+        ),
+        workspace_refresh_target_schema=_modelo_workspace_refresh_target_binding(definition.definition_id),
+        workspace_refresh_adapter=resolve_modelo_work_unit_refresh_target,
+    )
 
 
 class ModeloWorkDiscardExecutor:
@@ -2072,6 +2182,7 @@ __all__ = [
     "MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID",
     "MODELO_EXPORT_OPERATION_DEFINITION_ID",
     "MODELO_WORK_AMEND_OPERATION_DEFINITION_ID",
+    "MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID",
     "MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID",
     "MODELO_WORK_FILE_OPERATION_DEFINITION_ID",
     "MODELO_WORK_RENAME_OPERATION_DEFINITION_ID",
@@ -2088,6 +2199,9 @@ __all__ = [
     "ModeloWorkAmendOverride",
     "ModeloWorkAmendPublicResultV1",
     "ModeloWorkAmendRequest",
+    "ModeloWorkCalculateExecutor",
+    "ModeloWorkCalculatePublicResultV1",
+    "ModeloWorkCalculateRequest",
     "ModeloWorkDiscardApprovalStaleError",
     "ModeloWorkDiscardBaseline",
     "ModeloWorkDiscardExecutor",
@@ -2111,6 +2225,8 @@ __all__ = [
     "build_modelo_lifecycle_operation_registrations",
     "build_modelo_work_amend_definition",
     "build_modelo_work_amend_registration",
+    "build_modelo_work_calculate_definition",
+    "build_modelo_work_calculate_registration",
     "build_modelo_work_discard_definition",
     "build_modelo_work_discard_registration",
     "build_modelo_work_file_definition",
@@ -2141,6 +2257,7 @@ def build_modelo_lifecycle_operation_definitions(
     shape this population exists to make impossible to ship.
     """
     return (
+        build_modelo_work_calculate_definition(calculation_action_ports_factory=calculation_action_ports_factory),
         build_modelo_edit_apply_definition(
             calculation_action_ports_factory=calculation_action_ports_factory,
             receipt_repository_factory=receipt_repository_factory,
@@ -2170,6 +2287,7 @@ def build_modelo_lifecycle_operation_registrations(
         MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID: build_modelo_edit_apply_registration,
         MODELO_EXPORT_OPERATION_DEFINITION_ID: build_modelo_export_registration,
         MODELO_WORK_AMEND_OPERATION_DEFINITION_ID: build_modelo_work_amend_registration,
+        MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID: build_modelo_work_calculate_registration,
         MODELO_WORK_DISCARD_OPERATION_DEFINITION_ID: build_modelo_work_discard_registration,
         MODELO_WORK_FILE_OPERATION_DEFINITION_ID: build_modelo_work_file_registration,
         MODELO_WORK_RENAME_OPERATION_DEFINITION_ID: build_modelo_work_rename_registration,
