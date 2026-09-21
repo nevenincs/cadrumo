@@ -211,6 +211,7 @@ class SetupAnswers(BaseModel):
     pays_rent_with_retencion: bool = False
     pays_capital_income_with_retencion: bool = False
     modelo_111_no_retenciones_periods: str = ""
+    modelo_115_no_relevant_payment_periods: str = ""
     irpf_estimation_regime: Any = ""
     irpf_activity_kind: Any = ""
     objective_estimation_modulos_iae_epigraph: str = ""

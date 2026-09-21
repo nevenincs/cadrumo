@@ -142,6 +142,7 @@ profile:
     withholding:
       has_employees: Tiene empleados y paga salarios con retención
       modelo_111_no_retenciones_periods: Periodos Modelo 111 sin retenciones
+      modelo_115_no_relevant_payment_periods: Periodos Modelo 115 sin pago relevante
       pays_capital_income_with_retencion: Paga rentas de capital con retención
       pays_professionals_with_retencion: Paga a profesionales con retención
       pays_rent_with_retencion: Paga alquiler de local con retención
@@ -518,6 +519,8 @@ profile:
           label: Tiene empleados
         modelo_111_no_retenciones_periods:
           label: Períodos sin retenciones del Modelo 111
+        modelo_115_no_relevant_payment_periods:
+          label: Períodos Modelo 115 sin pago relevante
         pays_capital_income_with_retencion:
           label: Paga rendimientos de capital con retención
         pays_professionals_with_retencion:

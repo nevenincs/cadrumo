@@ -372,6 +372,10 @@ wizard:
       modelo-111-no-retenciones-periods:
         help: Comma-separated Modelo 111 no-obligation periods, format YYYY:PERIOD
           (for example 2025:2T,2025:3T). Use only when no subject payments were made.
+      modelo-115-no-relevant-payment-periods:
+        help: Comma-separated Modelo 115 periods with no relevant urban-rent payment,
+          format YYYY:PERIOD (for example 2025:3T,2025:4T). This is explicit local
+          no-activity evidence, not AEAT submission evidence.
       monedas-virtuales-extranjero-above-threshold:
         help: Virtual currencies held abroad above Modelo 721 threshold
       name:
@@ -580,6 +584,10 @@ wizard:
         help: Comma-separated YYYY:PERIOD periods where no rentas subject to retención
           or ingreso a cuenta were paid, so no all-blank Modelo 111 is filed.
         prompt: Modelo 111 no-retenciones periods
+      modelo-115-no-relevant-payment-periods:
+        help: Comma-separated YYYY:PERIOD periods where no relevant urban-rent payment
+          subject to withholding occurred, permitting a local zero Modelo 115 calculation.
+        prompt: Modelo 115 no-relevant-payment periods
       monedas-virtuales-extranjero-above-threshold:
         prompt: Virtual currencies held abroad above Modelo 721 threshold
       objective-estimation-modulos-iae-epigraph:

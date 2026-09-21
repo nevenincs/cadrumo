@@ -142,6 +142,7 @@ profile:
     withholding:
       has_employees: Alkalmazottai vannak és forrásadóval terhelt béreket fizet
       modelo_111_no_retenciones_periods: 111-es nyomtatvány forrásadó nélküli időszakok
+      modelo_115_no_relevant_payment_periods: 115-ös nyomtatvány releváns kifizetés nélküli időszakai
       pays_capital_income_with_retencion: Forrásadóval terhelt tőkejövedelmet fizet
       pays_professionals_with_retencion: Forrásadóval terhelt díjazást fizet szakembereknek
       pays_rent_with_retencion: Forrásadóval terhelt helyi bérleti díjat fizet
@@ -518,6 +519,8 @@ profile:
           label: Van alkalmazottja
         modelo_111_no_retenciones_periods:
           label: 111-es nyomtatvány forrásadó nélküli időszakok
+        modelo_115_no_relevant_payment_periods:
+          label: 115-ös nyomtatvány releváns kifizetés nélküli időszakai
         pays_capital_income_with_retencion:
           label: Tőkejövedelmet forrásadóval fizet
         pays_professionals_with_retencion:

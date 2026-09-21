@@ -323,6 +323,7 @@ _WIZARD_FIELDS = (
     "pays-rent-with-retencion",
     "pays-capital-income-with-retencion",
     "modelo-111-no-retenciones-periods",
+    "modelo-115-no-relevant-payment-periods",
     "irpf-estimation-regime",
     "objective-estimation-modulos-iae-epigraph",
     "objective-estimation-modulos-module-1-units",

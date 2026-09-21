@@ -399,6 +399,10 @@ wizard:
         help: Vesszővel elválasztott 111-es nyomtatvány nem kötelezett időszakok,
           ÉÉÉÉ:IDŐSZAK formátumban (például 2025:2T,2025:3T). Csak akkor használja,
           ha nem történt forrásadó-köteles kifizetés.
+      modelo-115-no-relevant-payment-periods:
+        help: Vesszővel elválasztott 115-ös nyomtatvány releváns városi bérleti kifizetés
+          nélküli időszakai ÉÉÉÉ:IDŐSZAK formátumban (például 2025:3T,2025:4T).
+          Ez kifejezett helyi bizonyíték, nem AEAT-benyújtási bizonyíték.
       monedas-virtuales-extranjero-above-threshold:
         help: Külföldi virtuális valuták meghaladják a 721-es nyomtatvány küszöbértékét
       name:
@@ -612,6 +616,10 @@ wizard:
         help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt retención vagy ingreso a
           cuenta alá eső kifizetés, ezért nem nyújtandó be üres 111-es nyomtatvány.
         prompt: 111-es nyomtatvány forrásadó nélküli időszakok
+      modelo-115-no-relevant-payment-periods:
+        help: ÉÉÉÉ:IDŐSZAK időszakok, amikor nem történt releváns, forrásadó-köteles
+          városi bérleti kifizetés, ezért helyi nulla 115-ös számítás készíthető.
+        prompt: 115-ös nyomtatvány releváns kifizetés nélküli időszakai
       monedas-virtuales-extranjero-above-threshold:
         prompt: Külföldi virtuális valuták meghaladják a 721-es nyomtatvány küszöbértékét
       objective-estimation-modulos-iae-epigraph:

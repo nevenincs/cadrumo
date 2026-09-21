@@ -384,6 +384,10 @@ wizard:
         help: Períodes Model 111 sense obligació, separats per comes, format AAAA:Període
           (per exemple 2025:2T,2025:3T). Useu-ho només quan no es van pagar rendes
           subjectes.
+      modelo-115-no-relevant-payment-periods:
+        help: Períodes Model 115 sense pagament rellevant de lloguer urbà, separats per comes,
+          format AAAA:Període (per exemple 2025:3T,2025:4T). És evidència local explícita,
+          no evidència de presentació a l'AEAT.
       monedas-virtuales-extranjero-above-threshold:
         help: Monedes virtuals a l'estranger superen el llindar del Model 721
       name:
@@ -596,6 +600,10 @@ wizard:
         help: Períodes AAAA:Període en què no es van pagar rendes subjectes a retenció
           o ingrés a compte, de manera que no es presenta un Model 111 en blanc.
         prompt: Períodes Model 111 sense retencions
+      modelo-115-no-relevant-payment-periods:
+        help: Períodes AAAA:Període en què no hi va haver cap pagament rellevant de lloguer urbà
+          subjecte a retenció, que permeten un càlcul local a zero del Model 115.
+        prompt: Períodes Model 115 sense pagament rellevant
       monedas-virtuales-extranjero-above-threshold:
         prompt: Monedes virtuals a l'estranger superen el llindar del Model 721
       objective-estimation-modulos-iae-epigraph:

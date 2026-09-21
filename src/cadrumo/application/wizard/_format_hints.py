@@ -55,6 +55,7 @@ PAGE_FORMAT_HINTS: Mapping[str, str] = {
     "incn-prior-12-months": FORMAT_AMOUNT_LOCALE_KEY,
     "address-postcode": _FORMAT_POSTCODE_LOCALE_KEY,
     "modelo-111-no-retenciones-periods": FORMAT_UNITS_LOCALE_KEY,
+    "modelo-115-no-relevant-payment-periods": FORMAT_UNITS_LOCALE_KEY,
     "objective-estimation-modulos-module-1-units": FORMAT_UNITS_LOCALE_KEY,
     "objective-estimation-modulos-module-2-units": FORMAT_UNITS_LOCALE_KEY,
     "objective-estimation-modulos-module-3-units": FORMAT_UNITS_LOCALE_KEY,

@@ -140,6 +140,7 @@ profile:
     withholding:
       has_employees: Has employees and pays salaries subject to withholding
       modelo_111_no_retenciones_periods: Modelo 111 periods with no withholding
+      modelo_115_no_relevant_payment_periods: Modelo 115 periods with no relevant payment
       pays_capital_income_with_retencion: Pays capital income with withholding
       pays_professionals_with_retencion: Pays professionals with withholding
       pays_rent_with_retencion: Pays local rent with withholding
@@ -516,6 +517,8 @@ profile:
           label: Has employees
         modelo_111_no_retenciones_periods:
           label: Modelo 111 no-withholding periods
+        modelo_115_no_relevant_payment_periods:
+          label: Modelo 115 no-relevant-payment periods
         pays_capital_income_with_retencion:
           label: Pays capital income with withholding
         pays_professionals_with_retencion:

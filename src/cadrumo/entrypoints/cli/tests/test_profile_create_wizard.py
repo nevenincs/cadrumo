@@ -153,6 +153,7 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "ley-49-2002-renunciation-declared",
         "llm-vision",
         "modelo-111-no-retenciones-periods",
+        "modelo-115-no-relevant-payment-periods",
         "monedas-virtuales-extranjero-above-threshold",
         "name",
         "new-entity-first-two-profit-periods",

@@ -1374,6 +1374,16 @@ description = "Comma-separated YYYY:PERIOD Modelo 111 periods where no rentas su
 model_selectors = ["withholding.modelo_111_no_retenciones_periods"]
 legal_refs = ["rd-439-2007:art-108", "orden-eha-586-2011:art-1"]
 
+[[sections.fields]]
+key = "modelo_115_no_relevant_payment_periods"
+type = "string"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Comma-separated YYYY:PERIOD Modelo 115 quarters explicitly attested as having no relevant urban-rent payment subject to withholding; only these facts permit a local zero materialization."
+model_selectors = ["withholding.modelo_115_no_relevant_payment_periods"]
+legal_refs = ["ley-35-2006:art-99", "rd-439-2007:art-100", "orden-2000-11-20:apartado-primero", "rd-439-2007:art-108", "ley-35-2006:art-101"]
+
 [[sections]]
 key = "iva"
 title = "IVA profile"

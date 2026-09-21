@@ -112,8 +112,8 @@ def _create_303_work_unit() -> dict[str, str]:
     return _create_work_unit(modelo="303", year=2025, period="1T")
 
 
-def _create_115_work_unit() -> dict[str, str]:
-    return _create_work_unit(modelo="115", year=2026, period="1T")
+def _create_115_work_unit(*, year: int = 2026, period: str = "1T") -> dict[str, str]:
+    return _create_work_unit(modelo="115", year=year, period=period)
 
 
 def _create_111_work_unit() -> dict[str, str]:
@@ -558,6 +558,95 @@ def test_work_calculate_modelo_111_no_retenciones_quarter_names_profile_attestat
     shown = invoke_cached_cli(("config", "profile", "view", "operator"))
     assert shown.exit_code == 0, shown.output
     assert "withholding.modelo_111_no_retenciones_periods\t2025:2T,2025:3T,2025:4T" in shown.output
+
+
+def test_work_calculate_modelo_115_explicit_no_relevant_payment_attestation_materialises_zero(
+    tmp_path: Path,
+) -> None:
+    """Public Q3/Q4 profile evidence materialises local M115 zero history."""
+    _create_profile()
+    q3_work_unit = _create_115_work_unit(year=2025, period="3T")
+    q4_work_unit = _create_115_work_unit(year=2025, period="4T")
+
+    refused = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            str(q3_work_unit["work_unit_id"]),
+        ],
+    )
+    assert refused.exit_code != 0, refused.output
+    assert json.loads(refused.output)["error"]["context"]["period"] == "3T"
+
+    attested = invoke_cached_cli(
+        [
+            "config",
+            "profile",
+            "edit",
+            "operator",
+            "--quiet",
+            "--modelo-115-no-relevant-payment-periods",
+            "2025:3T,2025:4T",
+        ],
+    )
+    assert attested.exit_code == 0, attested.output
+    shown = invoke_cached_cli(("config", "profile", "view", "operator"))
+    assert shown.exit_code == 0, shown.output
+    assert "withholding.modelo_115_no_relevant_payment_periods\t2025:3T,2025:4T" in shown.output
+
+    for period, work_unit in (("3T", q3_work_unit), ("4T", q4_work_unit)):
+        calculated = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                str(work_unit["work_unit_id"]),
+            ],
+        )
+        assert calculated.exit_code == 0, calculated.output
+        payload = _payload(calculated.output)
+        assert Decimal(payload["casilla_values"]["01"]) == Decimal("0")
+        assert Decimal(payload["casilla_values"]["02"]) == Decimal("0")
+        assert Decimal(payload["casilla_values"]["03"]) == Decimal("0")
+        assert Decimal(payload["casilla_values"]["05"]) == Decimal("0")
+        assert any(
+            "explicit no-relevant-payment attestation" in notice["message"]
+            for notice in unwrap_envelope_notices(calculated.output)
+            if notice["code"] == "modelo.work.calculate.source_advisory"
+        )
+        calculation_revision_id = payload["calculation_revision_id"]
+        assert isinstance(calculation_revision_id, str)
+        verified = invoke_cached_cli(
+            ["--format", "json", "app", "modelo", "work", "verify", calculation_revision_id],
+        )
+        assert verified.exit_code == 0, verified.output
+        output = tmp_path / f"modelo-115-2025-{period}.boe"
+        exported = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "export",
+                "--revision",
+                calculation_revision_id,
+                "--output",
+                str(output),
+            ],
+        )
+        assert exported.exit_code == 0, exported.output
+        export_payload = _payload(exported.output)
+        assert export_payload["calculation_revision_id"] == calculation_revision_id
+        assert export_payload["modelo"] == "115"
+        assert output.exists()
+        assert output.stat().st_size > 0
 
 
 def test_work_calculate_modelo_115_classified_rent_row_requires_perceptor_evidence() -> None:

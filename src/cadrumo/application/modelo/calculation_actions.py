@@ -738,6 +738,7 @@ def resolve_bucket_source_mesh(
     from ..aggregation.source_resolution_operations import merge_source_resolutions
     from ..aggregation.withholding_source import WithholdingSourceResolver
     from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
+    from ..calculations.m115_no_relevant_payments import m115_no_relevant_payment_periods_for_bucket
     from ..calculations.m303_regimen_simplificado_annual_summary import (
         M303RegimenSimplificadoAnnualSummarySourceResolver,
     )
@@ -857,7 +858,15 @@ def resolve_bucket_source_mesh(
             # dedicated per-perceptor store for quarterly count/base, while M180/M193
             # read it for distinct perceptor-NIF counts. Empty store on a declaring
             # revision surfaces a no-silent advisory.
-            resolve_declared(RetencionesAggregationSourceResolver(ports=ports.retencion_observation_ports)),
+            resolve_declared(
+                RetencionesAggregationSourceResolver(
+                    ports=ports.retencion_observation_ports,
+                    m115_no_relevant_payment_periods=m115_no_relevant_payment_periods_for_bucket(
+                        work_unit.bucket_id,
+                        profile_path_values_reader=profile_read_ports.path_values,
+                    ),
+                ),
+            ),
             # M190 distinct percepción count (withholding): reads the dedicated
             # per-perceptor-clave withholding store and materialises scalar
             # withholding bindings. Empty store on a declaring revision surfaces

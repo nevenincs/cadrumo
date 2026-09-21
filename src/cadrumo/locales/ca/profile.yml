@@ -139,6 +139,7 @@ profile:
     withholding:
       has_employees: Té empleats i paga salaris amb retenció
       modelo_111_no_retenciones_periods: Períodes Model 111 sense retencions
+      modelo_115_no_relevant_payment_periods: Períodes Model 115 sense pagament rellevant
       pays_capital_income_with_retencion: Paga rendes de capital amb retenció
       pays_professionals_with_retencion: Paga a professionals amb retenció
       pays_rent_with_retencion: Paga lloguer de local amb retenció
@@ -515,6 +516,8 @@ profile:
           label: Té empleats
         modelo_111_no_retenciones_periods:
           label: Períodes sense retencions del Model 111
+        modelo_115_no_relevant_payment_periods:
+          label: Períodes Model 115 sense pagament rellevant
         pays_capital_income_with_retencion:
           label: Paga rendiments de capital amb retenció
         pays_professionals_with_retencion:

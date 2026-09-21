@@ -307,6 +307,35 @@ def test_resolver_empty_modelo_115_store_fails_before_silent_zero() -> None:
     assert verdict.evidence[0].values["modelo"] == "115"
 
 
+def test_resolver_materialises_empty_modelo_115_only_for_exact_no_relevant_payment_attestation() -> None:
+    """An explicit matching profile fact is the sole empty-window zero authority."""
+    snapshot = _authority_snapshot("115", 2026, "1T")
+    resolver = RetencionesAggregationSourceResolver(
+        ports=RetencionObservationPorts(repository=_InMemoryRetencionObservationRepository()),
+        m115_no_relevant_payment_periods=frozenset({(2026, "1T")}),
+    )
+
+    resolution = resolver.resolve(
+        _context_for(modelo="115", filing_year=2026, period="1T", revision=snapshot.revision),
+    )
+
+    assert resolution.binding_values == {
+        _M115_PERCEPTOR_BINDING_ID: Decimal("0"),
+        _M115_BASE_BINDING_ID: Decimal("0"),
+    }
+    assert len(resolution.diagnostics) == 1
+    assert "explicit no-relevant-payment attestation" in resolution.diagnostics[0].message
+    with pytest.raises(AggregationValidationError):
+        resolver.resolve(
+            _context_for(
+                modelo="115",
+                filing_year=2026,
+                period="2T",
+                revision=_authority_snapshot("115", 2026, "2T").revision,
+            ),
+        )
+
+
 def test_resolver_empty_store_fails_before_silent_zero() -> None:
     """An empty store on a declaring revision refuses calculation, never materialises 0."""
     with pytest.raises(AggregationValidationError) as exc_info:

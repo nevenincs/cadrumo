@@ -1094,6 +1094,15 @@ def build_setup_flow(operation: PinnedAuthorityOperation) -> WizardFlow:
                 answer_type=str,
             ),
             WizardQuestion(
+                id="modelo-115-no-relevant-payment-periods",
+                profile_key="withholding.modelo_115_no_relevant_payment_periods",
+                widget=WizardWidget.TEXT,
+                prompt=tr("wizard.setup.obligations.modelo-115-no-relevant-payment-periods.prompt"),
+                help=tr("wizard.setup.obligations.modelo-115-no-relevant-payment-periods.help"),
+                required=False,
+                answer_type=str,
+            ),
+            WizardQuestion(
                 id="irpf-estimation-regime",
                 profile_key="irpf.estimation_regime",
                 widget=WizardWidget.SELECT,
