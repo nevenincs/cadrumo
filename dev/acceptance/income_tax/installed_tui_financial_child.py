@@ -33,6 +33,7 @@ from .tui_journey import activate_tui_operation, installed_lifecycle_contract, w
 
 _SCHEMA_VERSION = "income-01-installed-tui-financial-v1"
 _N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
+_SYNTHETIC_COUNTERPARTY_NIF = "A58818501"
 
 
 @dataclass(frozen=True, slots=True)
@@ -78,7 +79,7 @@ def required_profile_facts(scenario: IncomeTaxScenario) -> tuple[ProfileFactEntr
         ProfileFactEntry("censo.activity_start_date", value=scenario.taxpayer.activity_start.isoformat()),
         ProfileFactEntry("taxpayer_type.entity_type", option_index=0),
         ProfileFactEntry("taxpayer_type.fiscal_residency", option_index=0),
-        ProfileFactEntry("taxpayer_type.irpf_income_categories", option_index=0),
+        ProfileFactEntry("taxpayer_type.irpf_income_categories", value="actividad_economica"),
         ProfileFactEntry("renta_taxpayer.sex", option_index=1),
         ProfileFactEntry("renta_taxpayer.marital_status", option_index=0),
         ProfileFactEntry("renta_taxpayer.birth_date", value=scenario.taxpayer.birth_date.isoformat()),
@@ -127,11 +128,30 @@ def _transaction_csv(*, scenario: IncomeTaxScenario, directory: Path) -> Path:
 
 async def _open_destination(pilot: Any, *, query: str, expected_selector: str) -> None:
     """Open a workbench destination with the normal command-palette keyboard path."""
+    from textual.widgets import Input, OptionList
+
     await pilot.press("ctrl+p")
     await pilot.pause()
-    await pilot.press(*tuple(query))
+    pilot.app.screen.query_one(Input).value = query
+    for _ in range(180):
+        results = pilot.app.screen.query_one(OptionList)
+        if results.option_count > 0:
+            results.highlighted = 0
+            break
+        await pilot.pause()
+    else:
+        raise InstalledTuiChildError(f"command palette returned no visible result for {query}")
     await pilot.press("enter")
     await wait_for_public_selector(pilot, expected_selector, polls=180)
+
+
+async def _activate_button(pilot: Any, selector: str) -> None:
+    """Activate a visible button by focus so compact terminals remain operable."""
+    from textual.widgets import Button
+
+    button = query_public_selector(pilot, selector, Button)
+    button.focus()
+    await pilot.press("enter")
 
 
 async def _configure_profile(pilot: Any, *, scenario: IncomeTaxScenario) -> None:
@@ -147,6 +167,7 @@ async def _configure_profile(pilot: Any, *, scenario: IncomeTaxScenario) -> None
         )
     await pilot.press("f8")
     await pilot.app.workers.wait_for_complete()
+    await pilot.press("escape")
     await wait_for_public_selector(pilot, "#home-agenda", polls=180)
 
 
@@ -160,10 +181,23 @@ async def _import_transactions(pilot: Any, *, csv_path: Path) -> None:
     query_public_selector(pilot, "#ledger-import-kind", Select).value = "bank_statement"
     query_public_selector(pilot, "#ledger-import-provider", Select).value = "csv"
     query_public_selector(pilot, "#ledger-import-path", Input).value = str(csv_path)
-    await pilot.click("#ledger-import-preview-button")
-    await wait_for_public_selector(pilot, "#ledger-import-confirm")
-    await pilot.click("#ledger-import-confirm")
+    await _activate_button(pilot, "#ledger-import-preview-button")
     await pilot.app.workers.wait_for_complete()
+    await wait_for_public_selector(pilot, "#ledger-import-confirm")
+    from textual.widgets import Button, Static
+
+    refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip()
+    confirm = query_public_selector(pilot, "#ledger-import-confirm", Button)
+    if refusal or confirm.disabled:
+        raise InstalledTuiChildError("installed transaction import preview did not reach confirmation")
+    await _activate_button(pilot, "#ledger-import-confirm")
+    await pilot.app.workers.wait_for_complete()
+    refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip()
+    if refusal:
+        raise InstalledTuiChildError("installed transaction import reported a visible persistence refusal")
+    await _activate_button(pilot, "#ledger-import-again")
+    await pilot.app.workers.wait_for_complete()
+    await wait_for_public_selector(pilot, "#ledger-import-preview-button")
 
 
 async def _open_invoice_form(pilot: Any) -> None:
@@ -171,7 +205,7 @@ async def _open_invoice_form(pilot: Any) -> None:
     await _open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="overview")
     await wait_for_public_selector(pilot, "#ledger-add-invoice")
-    await pilot.click("#ledger-add-invoice")
+    await _activate_button(pilot, "#ledger-add-invoice")
     await wait_for_public_selector(pilot, "#ledger-invoice-review")
 
 
@@ -185,48 +219,77 @@ async def _capture_invoice(pilot: Any, *, item: IssuedInvoice | ExpenseInvoice) 
     query_public_selector(pilot, "#ledger-invoice-class", Select).value = "ordinaria"
     values = {
         "#ledger-invoice-counterparty-name": item.transaction_id,
+        "#ledger-invoice-counterparty-nif": _SYNTHETIC_COUNTERPARTY_NIF,
         "#ledger-invoice-invoice-number": item.invoice_id,
         "#ledger-invoice-invoice-date": item.invoice_date.isoformat(),
         "#ledger-invoice-taxable-base": format(item.taxable_base, "f"),
-        "#ledger-invoice-iva-rate": format(item.iva_rate, "f"),
+        "#ledger-invoice-iva-rate": format(item.iva_rate * 100, "f"),
         "#ledger-invoice-currency": "EUR",
         "#ledger-invoice-retention-rate": format(item.withholding_rate, "f") if issued else "",
         "#ledger-invoice-retention-amount": format(item.withholding, "f") if issued else "",
     }
     for selector, value in values.items():
         query_public_selector(pilot, selector, Input).value = value
-    await pilot.click("#ledger-invoice-review")
+    await _activate_button(pilot, "#ledger-invoice-review")
     await wait_for_public_selector(pilot, "#ledger-invoice-confirm")
-    await pilot.click("#ledger-invoice-confirm")
+    await _activate_button(pilot, "#ledger-invoice-confirm")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#ledger-invoice-again")
+    from textual.widgets import Static
+
+    refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip()
+    if refusal:
+        raise InstalledTuiChildError("installed invoice form reported a visible persistence refusal")
+    await _activate_button(pilot, "#ledger-invoice-again")
+    await pilot.app.workers.wait_for_complete()
+    await wait_for_public_selector(pilot, "#ledger-invoice-review")
 
 
 async def _reconcile_invoice(pilot: Any, *, transaction_id: str, invoice_id: str) -> None:
-    """Create one persisted transaction/invoice link from its public semantic row."""
+    """Create one persisted link from the visible row naming the synthetic counterparty."""
+    from textual.widgets import DataTable
+
     await _open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
     await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="reconciliation")
-    await select_public_data_table_row(
-        pilot=pilot,
-        table_selector="#ledger-suggestions",
-        row_key=f"{transaction_id}:{invoice_id}",
-    )
+    await wait_for_public_selector(pilot, "#ledger-suggestions")
+    table = query_public_selector(pilot, "#ledger-suggestions", DataTable)
+    matching = [
+        row_key
+        for row_key in table.rows
+        if transaction_id in " ".join(str(cell) for cell in table.get_row(row_key))
+    ]
+    if len(matching) != 1:
+        raise InstalledTuiChildError(
+            "installed reconciliation did not expose exactly one visible match "
+            f"for {invoice_id} (visible rows: {table.row_count}, matches: {len(matching)})"
+        )
+    table.focus()
+    table.move_cursor(row=table.get_row_index(matching[0]))
+    await pilot.press("enter")
     await wait_for_public_selector(pilot, "#ledger-reconciliation-confirm")
-    await pilot.click("#ledger-reconciliation-confirm")
+    await _activate_button(pilot, "#ledger-reconciliation-confirm")
     await pilot.app.workers.wait_for_complete()
 
 
 async def _create_calendar_work(pilot: Any, *, year: int) -> None:
     """Create the baseline 1T M130 work unit through Calendar confirmation."""
-    await _open_destination(pilot, query="declarations", expected_selector="#declarations-calendar-agenda")
+    await _open_destination(pilot, query="declarations", expected_selector="#declarations-navigation")
+    await select_public_data_table_row(
+        pilot=pilot,
+        table_selector="#declarations-navigation",
+        row_key="declarations.calendar",
+    )
+    await wait_for_public_selector(pilot, "#declarations-calendar-agenda")
     await select_public_data_table_row(
         pilot=pilot,
         table_selector="#declarations-calendar-agenda",
         row_key=f"130|{year}|1T",
     )
     await wait_for_public_selector(pilot, "#btn-confirm-accept")
-    await pilot.click("#btn-confirm-accept")
+    await _activate_button(pilot, "#btn-confirm-accept")
     await pilot.app.workers.wait_for_complete()
+    await pilot.press("escape")
+    await wait_for_public_selector(pilot, "#home-agenda", polls=180)
 
 
 async def _open_work(pilot: Any, *, work_unit_id: str) -> None:

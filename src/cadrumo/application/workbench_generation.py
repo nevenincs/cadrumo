@@ -1123,9 +1123,16 @@ def _refused_declarations_calendar(
 
 
 def _calendar_query_range(as_of: date) -> OverviewCalendarRange:
-    """The calendar year the workbench schedules, containing ``as_of``."""
+    """Cover the latest completed filing year and the current calendar year.
+
+    Annual returns for the completed filing year can close in the current
+    calendar year, while its quarterly returns closed in the prior one.  A
+    current-year-only projection made those quarterly natural addresses
+    unreachable from the TUI even though the pinned authority still supports
+    them.
+    """
     return OverviewCalendarRange(
-        from_date=date(as_of.year, 1, 1),
+        from_date=date(as_of.year - 1, 1, 1),
         to_date=date(as_of.year, 12, 31),
     )
 

@@ -74,6 +74,14 @@ _NOW = datetime(2026, 9, 3, 10, 30, tzinfo=UTC)
 _PROFILE_ID = "11111111-1111-4111-8111-111111111111"
 
 
+def test_installed_calendar_reaches_latest_completed_filing_year() -> None:
+    """The TUI calendar can select quarterly work from the completed tax year."""
+    assert generation_module._calendar_query_range(date(2026, 9, 21)) == OverviewCalendarRange(
+        from_date=date(2025, 1, 1),
+        to_date=date(2026, 12, 31),
+    )
+
+
 @pytest.fixture
 def authority_operation() -> Iterator[PinnedAuthorityOperation]:
     """Pin one published generation for the production workbench door."""

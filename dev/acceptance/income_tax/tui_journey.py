@@ -316,10 +316,14 @@ async def activate_tui_operation(
     activation_id = binding.activation_id
     if activation_id is None:
         raise TuiJourneyError(f"{binding.operation_id} has no activation control")
-    await pilot.click(activation_id)
+    activation = _query_visible_tui_control(pilot, activation_id)
+    activation.focus()
+    await pilot.press("enter")
     await pilot.pause()
     if binding.confirmation_id is not None:
-        await pilot.click(binding.confirmation_id)
+        confirmation = _query_visible_tui_control(pilot, binding.confirmation_id)
+        confirmation.focus()
+        await pilot.press("enter")
         await pilot.pause()
     modal = await _wait_for_operation_modal_or_refusal(
         pilot,

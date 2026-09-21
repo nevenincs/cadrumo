@@ -339,16 +339,20 @@ async def set_profile_manager_field(
     editor = await wait_for_any_public_selector(pilot, ("#edit-input", "#edit-options"))
     if editor == "#edit-input":
         if not isinstance(value, str):
-            raise InstalledTuiChildError("text Profile Manager fields require a string value")
+            raise InstalledTuiChildError(f"text Profile Manager field {path} requires a string value")
         if option_index is not None:
-            raise InstalledTuiChildError("text Profile Manager fields do not accept an option index")
+            raise InstalledTuiChildError(f"text Profile Manager field {path} does not accept an option index")
         query_public_selector(pilot, editor, Input).value = value
     else:
         if isinstance(option_index, bool) or not isinstance(option_index, int) or option_index < 0:
-            raise InstalledTuiChildError("choice Profile Manager fields require a non-negative public option index")
+            raise InstalledTuiChildError(
+                f"choice Profile Manager field {path} requires a non-negative public option index"
+            )
         options = query_public_selector(pilot, editor, OptionList)
         if option_index >= options.option_count:
-            raise InstalledTuiChildError("choice Profile Manager option index is outside the visible option list")
+            raise InstalledTuiChildError(
+                f"choice Profile Manager field {path} option index is outside the visible option list"
+            )
         options.highlighted = option_index
     await pilot.click("#btn-edit-save")
     await pilot.app.workers.wait_for_complete()
@@ -491,6 +495,7 @@ def run_installed_tui_child_process(
     environment.update(
         {
             "CADRUMO_LOCAL_STORAGE_ROOT": str(store),
+            "CADRUMO_OUTPUT_LANGUAGE": "en",
             "PYTHONIOENCODING": "utf-8",
         }
     )
