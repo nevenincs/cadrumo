@@ -1,0 +1,1106 @@
+{
+  "authority_generation": "804b2c4f09b6c7d7292af3f77568f5c9772176dea5a49b2bd90c69615e4cd1fd",
+  "brief_revision": "0.6",
+  "cases": [
+    {
+      "acceptance_id": "A2",
+      "calculation": "proven",
+      "diagnostic_code": null,
+      "export_readiness": "not_exercised",
+      "observations": {
+        "baseline_q4_payment": "45.00",
+        "baseline_q4_withholding": "840.00",
+        "corrected_annual_m130_payments": "855.00",
+        "corrected_annual_withholding_oracle": "665.00",
+        "corrected_q4_payment": "220.00",
+        "corrected_q4_withholding": "665.00"
+      },
+      "outcome": "proven",
+      "verification": "proven"
+    },
+    {
+      "acceptance_id": "A4",
+      "calculation": "proven",
+      "diagnostic_code": null,
+      "export_readiness": "not_exercised",
+      "observations": {
+        "annual_expenses": "2499.00",
+        "annual_income": "12111.00",
+        "prior_year_excluded_invoice_count": "1",
+        "q1_income": "4000.00",
+        "q2_expenses": "1299.00",
+        "q2_income": "7611.00"
+      },
+      "outcome": "proven",
+      "verification": "proven"
+    },
+    {
+      "acceptance_id": "A5",
+      "calculation": "proven",
+      "diagnostic_code": "REFUSED_CLI_BOUNDARY",
+      "export_readiness": "not_exercised",
+      "observations": {
+        "first_period_history": "not_applicable",
+        "first_period_payment": "-100.00",
+        "missing_history": "refused",
+        "recorded_zero_history": "recorded_zero",
+        "recorded_zero_prior_result": "0.00"
+      },
+      "outcome": "proven",
+      "verification": "proven"
+    }
+  ],
+  "commands": [
+    {
+      "command": "config profile create",
+      "notice_codes": [
+        "PROFILE_LOGIN_REQUIRED",
+        "PROFILE_RECOVERY_NOT_ENROLLED"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile complete-setup",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link 56cf5979e51bc3dc356f558a091664f25bab10d011b8a4114590cabff0384807",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link e5a7a9c683ddfa206ae2c1ce8c266b7ffecb36ecef61193c27548507a3538895",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link 4dd2e406cb9a5f4e6ab6ea51c8877300b0a06556ccb0fa88fb5ae0d7c7b5596c",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link dbea4641a0ebc72c2a565a5458d6ca8a150b026435ffaf96ae6e8b6b49643fad",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link 26ab66a3ee419a3cb1713ab49405dbd23a117e821a378831dc353f151ea6ad3a",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link e62f193e967900576c3bb99da1e8d737a35b8f4e10df51ef0fe666bc351c6f46",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link e520bd98249406bd5a168989d74b15a62bd489e3313d422b99b490625a75b208",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link 61bc87e2e50f76d694980924248f31881f011abd446a770977919a4424519c16",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger list",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice update",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger update dbea4641a0ebc72c2a565a5458d6ca8a150b026435ffaf96ae6e8b6b49643fad",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile create",
+      "notice_codes": [
+        "PROFILE_LOGIN_REQUIRED",
+        "PROFILE_RECOVERY_NOT_ENROLLED"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile complete-setup",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link 7bf37eee09e627b820ea1c75bcef034e8b8f9437bb240ad9e59fd0ecdc11251b",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link 67d27126202137276456ecbc4470dd72c263f3ff7cffb75d66af38bba4b7bc26",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link 583ca97b2a29e22fbfee8b8ec9d73f98df7cdb924618b17e64bdd58ff9b935fd",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link 7cfbc77007d7f561cc4ea619610f7a9fe4fc490e300f1e2cb6ba8b75277cf48c",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link deebc3f5e5c12ce4ae679b9456d75951093ead6f0355505b5e9545a59c5d4798",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link 5a8aa3dcb442c4981c149a05ded442903ca852617e8564f5a5d9bf962820a6fe",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link ae2226e63040e5b94075f20e592dcd4a93e1a9e175cca123ec3ccf1c94326e06",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link aa3fe50c87a880d70cdde2e28b61a09056f52239326d4053eef8bf72fcad848b",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link a699ac1980b984b3524a41fd74e388f13eadbe8358167fbc1da6a0318e7c364b",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link 6cf510bc5546696d8ea00cbeda9a180cf83200c24454b1053143c8635855b3c3",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger add --date",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger link 49f15154f2ba6b9eddbfc3ad61c97258b3bfda0cf6ace80c4870b346dd691195",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger list",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile create",
+      "notice_codes": [
+        "PROFILE_LOGIN_REQUIRED",
+        "PROFILE_RECOVERY_NOT_ENROLLED"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile complete-setup",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile create",
+      "notice_codes": [
+        "PROFILE_LOGIN_REQUIRED",
+        "PROFILE_RECOVERY_NOT_ENROLLED"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile complete-setup",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 2,
+      "status": "error"
+    }
+  ],
+  "controls_root": "C:\\Users\\hello\\AppData\\Local\\Temp\\income-controls-final5-af38831729d146c8b70237d0b0e0dd3f\\stores",
+  "executable": "C:\\Users\\hello\\AppData\\Local\\Temp\\income-final5-install-87ac3464fa3246a6a32ca86c8d3f0fc9\\Scripts\\aeat.exe",
+  "scenario": "income-directa-normal-v1:2025:cli-controls",
+  "year": 2025
+}
