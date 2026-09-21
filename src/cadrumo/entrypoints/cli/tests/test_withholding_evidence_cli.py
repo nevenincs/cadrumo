@@ -113,3 +113,22 @@ def test_modelo_aggregate_module_no_longer_exposes_direct_retencion_persistence(
     from .. import _modelo_aggregate_cli
 
     assert not hasattr(_modelo_aggregate_cli, "_persist_retencion_observations")
+
+
+def test_rent_cli_evidence_refuses_missing_property_detail() -> None:
+    """Public rent capture cannot create periodic evidence that strands Modelo 180."""
+    invoice = _invoice()
+    request = _request(invoice).model_copy(
+        update={
+            "income_kind": WithholdingIncomeKind.URBAN_RENT,
+            "scheme": "arrendamiento_urbano",
+        }
+    )
+
+    with pytest.raises(ValidationError, match="urban rent requires Modelo 180 property detail"):
+        build_invoice_withholding_capture(
+            invoice,
+            catalogue_revision_id="a" * 64,
+            request=request,
+            applicable_year=2025,
+        )

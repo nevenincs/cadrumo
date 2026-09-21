@@ -11,13 +11,13 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import BindingSourceKind, RetencionScheme, counterpart_source_kind
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from .retenciones import RetencionObservation
+from .retenciones import Modelo180PropertyEvidence, RetencionObservation
 from .withholding_observation_service import (
     EconomicAllocation,
     SourceLiabilitySnapshot,
@@ -75,6 +75,18 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
     baseline: WithholdingWindowBaseline | None = None
     reason: str | None = Field(default=None, min_length=1, max_length=500)
     supersedes_generation_id: str | None = Field(default=None, min_length=64, max_length=64)
+    modelo_180_property: Modelo180PropertyEvidence | None = None
+
+    @model_validator(mode="after")
+    def _annual_detail_matches_income_kind(self) -> WithholdingEvidenceCaptureCommand:
+        is_rent = self.recognition_evidence.income_kind is WithholdingIncomeKind.URBAN_RENT
+        if is_rent != (self.modelo_180_property is not None):
+            raise ValueError("urban rent requires Modelo 180 property detail and other income forbids it")
+        if self.modelo_180_property is not None and (
+            self.modelo_180_property.accrual_year != self.recognition_evidence.applicable_year
+        ):
+            raise ValueError("Modelo 180 accrual year must match the recognition year")
+        return self
 
 
 class WithholdingEvidenceCaptureResult(BaseModel):
@@ -137,6 +149,7 @@ class WithholdingProducer:
                 taxable_base=command.taxable_base,
                 retencion_amount=command.retencion_amount,
                 accrued_on=recognition.recognized_on.isoformat(),
+                modelo_180_property=command.modelo_180_property,
             ),
         )
         entries = () if command.mode is WithholdingMutationMode.CLEAR else (entry,)

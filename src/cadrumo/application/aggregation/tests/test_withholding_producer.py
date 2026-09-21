@@ -14,6 +14,7 @@ from cadrumo.adapters.persistence.profile.withholding_observation_workflow impor
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
+from cadrumo.application.aggregation.retenciones import Modelo180PropertyEvidence, aggregate_retenciones_180
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.aggregation.withholding_observation_service import (
     ABSENT_WITHHOLDING_GENERATION_ID,
@@ -70,6 +71,7 @@ def _command(
     liability_base: str = "500.00",
     liability_withholding: str = "95.00",
     liability_settlement: str = "500.00",
+    property_detail: Modelo180PropertyEvidence | None = None,
 ) -> WithholdingEvidenceCaptureCommand:
     return WithholdingEvidenceCaptureCommand(
         # This source intentionally represents a March-issued payable invoice;
@@ -101,6 +103,18 @@ def _command(
             payment_or_satisfaction=WithholdingDatedEvent(event_id=payment_id, occurred_on=paid_on),
         ),
         idempotency_key=f"capture-{allocation_id}",
+        modelo_180_property=property_detail,
+    )
+
+
+def _rent_property(key: str, cadastral_reference: str) -> Modelo180PropertyEvidence:
+    return Modelo180PropertyEvidence(
+        property_key=key,
+        situation="1",
+        cadastral_reference=cadastral_reference,
+        recipient_province_code="28",
+        modality="1",
+        accrual_year=2025,
     )
 
 
@@ -260,3 +274,58 @@ def test_exact_liability_cap_and_replay_do_not_double_count(tmp_path: Path) -> N
         )
         assert replay is not None and replay.mutation.replayed
         assert len(service.read_window(replay.scope).entries) == 2
+
+
+def test_rent_allocations_reopen_as_two_annual_property_rows(tmp_path: Path) -> None:
+    """The annual materializer reads active 115 quarters, not a second annual store."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        producer, _service = _producer_for(profile.repository)
+        producer.capture(
+            _command(
+                allocation_id="rent-q1-a",
+                payment_id="rent-payment-q1-a",
+                paid_on=date(2025, 3, 20),
+                taxable_base="200.00",
+                retencion_amount="38.00",
+                settlement_amount="200.00",
+                income_kind=WithholdingIncomeKind.URBAN_RENT,
+                scheme=RetencionScheme("arrendamiento_urbano"),
+                property_detail=_rent_property("office-a", "1234567VK4713S0001AA"),
+            )
+        )
+        producer.capture(
+            _command(
+                allocation_id="rent-q2-a",
+                payment_id="rent-payment-q2-a",
+                paid_on=date(2025, 4, 20),
+                taxable_base="100.00",
+                retencion_amount="19.00",
+                settlement_amount="100.00",
+                income_kind=WithholdingIncomeKind.URBAN_RENT,
+                scheme=RetencionScheme("arrendamiento_urbano"),
+                property_detail=_rent_property("office-a", "1234567VK4713S0001AA"),
+            )
+        )
+        producer.capture(
+            _command(
+                allocation_id="rent-q2-b",
+                payment_id="rent-payment-q2-b",
+                paid_on=date(2025, 5, 20),
+                taxable_base="200.00",
+                retencion_amount="38.00",
+                settlement_amount="200.00",
+                income_kind=WithholdingIncomeKind.URBAN_RENT,
+                scheme=RetencionScheme("arrendamiento_urbano"),
+                property_detail=_rent_property("office-b", "1234567VK4713S0002BB"),
+            )
+        )
+
+        repository = RetencionObservationRepositoryAdapter(objects=profile.repository)
+        annual_source = repository.load_annual_source_observations("115", 2025)
+        assert len(annual_source) == 3
+        result = aggregate_retenciones_180(annual_source, period=Period.from_year_and_code(2025, "0A"))
+        assert result.type2_record_count == 2
+        assert result.total_perceptors == 1
+        assert result.total_taxable_base == Decimal("500.00")
+        assert result.total_retencion == Decimal("95.00")
+        assert sorted(row.observations_count for row in result.type2_rows) == [1, 2]

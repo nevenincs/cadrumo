@@ -30,7 +30,7 @@ from .._preconditions import AggregationPreconditionCondition
 from ..errors import AggregationValidationError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..retencion_observations_repository import RetencionObservationPorts
-from ..retenciones import RetencionObservation
+from ..retenciones import Modelo180PropertyEvidence, RetencionObservation
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -73,6 +73,14 @@ class _InMemoryRetencionObservationRepository:
     def load_observations(self, modelo: str, period: Period) -> tuple[RetencionObservation, ...]:
         return self._windows.get((modelo, period.filing_year, period.registry_token), ())
 
+    def load_annual_source_observations(self, source_modelo: str, filing_year: int) -> tuple[RetencionObservation, ...]:
+        return tuple(
+            observation
+            for (modelo, year, period), observations in self._windows.items()
+            if modelo == source_modelo and year == filing_year and period.endswith("T")
+            for observation in observations
+        )
+
 
 def _resolver(repository: _InMemoryRetencionObservationRepository) -> RetencionesAggregationSourceResolver:
     return RetencionesAggregationSourceResolver(ports=RetencionObservationPorts(repository=repository))
@@ -105,6 +113,14 @@ def _observation(nif: str) -> RetencionObservation:
         taxable_base=Decimal("1000.00"),
         retencion_amount=Decimal("190.00"),
         accrued_on="2024-03-15",
+        modelo_180_property=Modelo180PropertyEvidence(
+            property_key=f"property-{nif}",
+            situation="1",
+            cadastral_reference=f"{nif}PROPERTY",
+            recipient_province_code="28",
+            modality="1",
+            accrual_year=2024,
+        ),
     )
 
 
@@ -144,13 +160,13 @@ def _context_for(*, modelo: str, filing_year: int, period: str, revision: Modelo
 def test_resolver_materialises_distinct_perceptor_count() -> None:
     """Two perceptors across three rows materialise a DISTINCT count of 2, not 3."""
     repository = _InMemoryRetencionObservationRepository()
-    period = Period.from_year_and_code(2024, "0A")
+    period = Period.from_year_and_code(2024, "1T")
     # 11111111H appears twice (e.g. two payments) but is ONE perceptor; the
     # distinct-NIF count is 2. (Same NIF, same scheme → the second overwrites,
     # so seed via two NIFs plus a repeat to prove distinctness through the
     # aggregator, not the store.)
     repository.replace_observations(
-        modelo="180",
+        modelo="115",
         filing_year=2024,
         period=period,
         observations=[_observation("11111111H"), _observation("22222222J")],

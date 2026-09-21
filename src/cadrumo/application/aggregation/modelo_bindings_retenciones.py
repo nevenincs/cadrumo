@@ -107,7 +107,11 @@ class RetencionesAggregationSourceResolver:
             # retenciones aggregator. Resolve empty rather than guess values.
             return empty_source_resolution(self.resolver_id, self.owned_sources)
         try:
-            observations = self._ports.repository.load_observations(str(context.modelo), context.period)
+            observations = (
+                self._ports.repository.load_annual_source_observations("115", context.filing_year)
+                if str(context.modelo) == Modelo("180").value
+                else self._ports.repository.load_observations(str(context.modelo), context.period)
+            )
         except (RetencionObservationPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,

@@ -9,6 +9,7 @@ import pytest
 from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.period import Period
 from ..retenciones import (
+    Modelo180PropertyEvidence,
     RetencionesAggregation,
     RetencionObservation,
     aggregate_retenciones_111,
@@ -35,6 +36,7 @@ def _obs(
     source_kind: BindingSourceKind = BindingSourceKind.LEDGER_TRANSACTION,
     source_id: str = "tx-001",
     accrued: str = "2025-03-15",
+    property_detail: Modelo180PropertyEvidence | None = None,
 ) -> RetencionObservation:
     return RetencionObservation(
         source_kind=source_kind,
@@ -45,6 +47,18 @@ def _obs(
         taxable_base=Decimal(base),
         retencion_amount=Decimal(retencion),
         accrued_on=accrued,
+        modelo_180_property=property_detail,
+    )
+
+
+def _property(key: str, cadastral_reference: str) -> Modelo180PropertyEvidence:
+    return Modelo180PropertyEvidence(
+        property_key=key,
+        situation="1",
+        cadastral_reference=cadastral_reference,
+        recipient_province_code="28",
+        modality="1",
+        accrual_year=2025,
     )
 
 
@@ -251,10 +265,20 @@ class TestAggregate180190193:
     def test_180_widens_115_observations_to_annual_period(self) -> None:
         observations = (
             _obs(
-                nif="L1", scheme=RetencionScheme("arrendamiento_urbano"), base="2000", retencion="380", source_id="r1"
+                nif="L1",
+                scheme=RetencionScheme("arrendamiento_urbano"),
+                base="2000",
+                retencion="380",
+                source_id="r1",
+                property_detail=_property("office-a", "1234567VK4713S0001AA"),
             ),
             _obs(
-                nif="L1", scheme=RetencionScheme("arrendamiento_urbano"), base="2000", retencion="380", source_id="r2"
+                nif="L1",
+                scheme=RetencionScheme("arrendamiento_urbano"),
+                base="2000",
+                retencion="380",
+                source_id="r2",
+                property_detail=_property("office-b", "1234567VK4713S0002BB"),
             ),
         )
         result = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL)
@@ -262,6 +286,40 @@ class TestAggregate180190193:
         assert result.period == _P_2025_ANNUAL
         assert result.total_taxable_base == Decimal("4000")
         assert result.total_retencion == Decimal("760")
+        assert result.total_perceptors == 1
+        assert result.type2_record_count == 2
+        assert {row.property_detail.property_key for row in result.type2_rows} == {"office-a", "office-b"}
+
+    def test_180_groups_repeated_property_allocations_and_refuses_missing_detail(self) -> None:
+        detail = _property("office-a", "1234567VK4713S0001AA")
+        observations = (
+            _obs(
+                nif="L1",
+                scheme=RetencionScheme("arrendamiento_urbano"),
+                base="500",
+                retencion="95",
+                source_id="q1",
+                property_detail=detail,
+            ),
+            _obs(
+                nif="L1",
+                scheme=RetencionScheme("arrendamiento_urbano"),
+                base="700",
+                retencion="133",
+                source_id="q2",
+                property_detail=detail,
+            ),
+        )
+        result = aggregate_retenciones_180(observations, period=_P_2025_ANNUAL)
+        assert result.type2_record_count == 1
+        assert result.type2_rows[0].observations_count == 2
+        assert result.type2_rows[0].taxable_base == Decimal("1200")
+        assert result.type2_rows[0].retencion_amount == Decimal("228")
+
+        with pytest.raises(ValueError, match="annual detail is incomplete"):
+            aggregate_retenciones_180(
+                (observations[0].model_copy(update={"modelo_180_property": None}),), period=_P_2025_ANNUAL
+            )
 
     def test_190_widens_111_observations_to_annual_period(self) -> None:
         observations = (
