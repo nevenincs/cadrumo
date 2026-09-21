@@ -428,3 +428,66 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   targeted Ruff, formatting, basedpyright and diff checks passed. The preserved
   success branch will bind export receipt/digest/size, canonical parser verdict
   and exported `iva.resultado=10.50` once reviewed identity authority exists.
+- Phase 5 TUI discovery (Luna Max, read-only): ledger classification uses the
+  injected shared `ManualLedgerTransactionPatch` submitter; the former screen
+  offered business classification alone. Canonical invoice lines already belong
+  to `build_catalogue_invoice`, while TUI invoice DTO/form/door still carry only
+  scalar inputs. TUI M303 calculation request still lacks ordinary secure
+  attestation/options; its shared operation and lifecycle files are peer-dirty.
+- Bounded TUI classification candidate now exposes explicit IVA base/rate/tax,
+  category, deduction kind, business percentage, usage ratio and prorrata
+  reference through the existing patch/door, omitting blank fields and refusing
+  invalid entries before write. The shared worktree concurrently acquired an
+  `irpf_category` field in the same file from an unidentified peer; preserve it
+  and coordinate ownership before staging/committing the combined file.
+- Corrected focused integration selection `-m integration` passed 26 tests after
+  DTO/focus assertions were updated; log:
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T195030.624644Z-pytest-68912-5e1f4912/run.log`.
+  This predates the pending four-locale copy wiring; rerun focused tests and
+  targeted Ruff/basedpyright/diff after catalogue changes. No broad gate is
+  reserved or run for this slice.
+- Locale owner is preparing 11 canonical `tui.ledger.classification.*` keys in
+  en/es/ca/hu via `dev.locales set-batch`; no direct catalogue edits. Next
+  safe slice after classification is repeated invoice-line TUI capture through
+  the existing shared writer, with readback requiring coordinated shared
+  projection ownership. Export stays blocked by genuine product identity.
+- Locale authoring completed through `uv run --no-sync python -m dev.locales
+  set-batch` for all four `common.yml` catalogues; its canonical agenda
+  reflow/reordering retains the same values. The explicit temporary manifest
+  was removed. Screen copy now uses those keys; it no longer imports the
+  calculation registry. Deduction membership is checked by the shared patch
+  model, while category membership remains a downstream shared authority
+  concern, not a TUI-side calculation.
+- Final classification-owned gate: 26 focused integration tests passed, log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T195843.092958Z-pytest-37960-370ab757/run.log`;
+  targeted Ruff format/check, basedpyright (zero errors/warnings/notes) and
+  scoped diff check passed. No persistent process remains. The broader ledger
+  workspace sweep separately fails its no-calculation-import assertion because
+  peer-dirty `invoice_entry.py`, `actividad_asset.py`, and
+  `models_actividad_asset.py` import domain calculation registry modules;
+  this classification slice does not import them. Coordinate that failure
+  with their owners, do not weaken the boundary test.
+- Classification, its two focused tests and the four locale catalogues remain
+  uncommitted in the shared worktree. An unrelated concurrent `irpf_category`
+  addition landed in `classification.py` during verification; commit ownership
+  of that combined file is pending coordination. New peer invoice files are
+  also in flight; do not overlap them.
+- Decision-critical review caveat: screen-local `IvaCategory(category)` establishes
+  only nonempty token shape, not published-category membership. The prior
+  direct registry lookup broke the TUI no-calculation-import boundary. Before
+  treating the classification slice as fully accepted, coordinate a shared
+  application/domain validation owner and prove an unknown category cannot
+  persist into an apparently complete return; do not reintroduce calculation
+  imports into the screen. The concurrent invoice-entry edit likewise uses
+  `IvaCategory(...)`, so a common owner matters more than per-screen fixes.
+- Luna Max traced the gap: invoice builder validates category membership through
+  `Invoice` payload normalization, but the public manual-ledger transaction
+  patch persists an opaque nonempty `IvaCategory` without membership validation.
+  In-scope IVA aggregation later uses the registry's `.require()` and does not
+  produce a normal complete observation for an unknown token (outer refusal
+  projection NOT RUN). `application/ledger/actions_manual.py` with its existing
+  pinned `LedgerActionPorts` is the narrow shared, date-aware write seam;
+  coordinate income/assets owners before touching it. Regressions NOT RUN:
+  unknown add/classify refusing without catalogue/event mutation, valid dated
+  transaction/invoice tokens, legacy invalid in-scope calculation refusal, and
+  out-of-scope/excluded controls. No second registry or TUI-side check.
