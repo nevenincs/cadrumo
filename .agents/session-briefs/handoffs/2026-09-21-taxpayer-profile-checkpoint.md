@@ -135,3 +135,17 @@ The isolated authority publication was confined to the acceptance run root. The 
 | PR10 | proven | Typed CLI help/results, visible TUI controls, localized refusals, stable targets, save/no-op distinction, and fresh refresh behavior are covered. |
 | PR11 | proven | Four independent installed journeys prove CLI-only, TUI-only, and both sequential continuations after fresh-process reopen. |
 | PR12 | proven | The journeys use encrypted caller-owned stores, schema validation/refusal, stdin-only generated credentials, and sealed exports with no plaintext fallback or private-store shortcut. No migration redesign was touched. |
+
+## Target-branch delivery audit (2026-09-21)
+
+Target: `Y:\code\cadrumo-worktrees\tui-modelo`, actual branch `tui/modelo`. Bounded provenance inspection found no detached-only PROFILE-01 implementation and no dirty PROFILE-01 product or acceptance files in the registered detached worktrees. The retained detached snapshot at `C:\Users\hello\AppData\Local\Temp\assets-tui-installed-b08f1b79a8-20260921\source` is HEAD `06e5524ce2`; it is not the delivery destination and was not deleted.
+
+| Change/commit | Current location | Already present in target? | Required integration action |
+| --- | --- | --- | --- |
+| S01-S05 `009c059c1e`, `1326498730`, `c21bb7e830`, `2efd71ccb5`, `c8e97d92ea` plus reviews | `tui/modelo` history | yes | none |
+| S06-S08 `33bf13c174`, `0651476765`, `e8ec6f0558`, `742a912049` | `tui/modelo` history | yes | none |
+| S09-S11 `e18409a5da`, `5bb58620b0`, `06e5524ce2`, `a375bccb74`, `26ba3fd5b3`, `d298d2f544` | `tui/modelo` history | yes | none |
+| Delivered-tree CAS test typing `474f52f6b0` | `tui/modelo` history | yes | committed in target |
+| Journey9 receipt | ignored target `var/profile-acceptance` | yes; SHA-256 `2c9d3abe2f5f7dfa1f54684c4517cdd69b2ef77ea826fe1a9c4ac5ce835ab047` | retain in place; do not commit runtime artifacts |
+
+Target-tree verification at `474f52f6b0` and descendants: 27 selected profile/acceptance/TUI tests passed, 3 CLI integration tests passed, and 2 acquisition integration tests passed; targeted Ruff and ty passed. The single coordinated canonical `just check-import-boundaries` run `20260921T202726.929353Z-check-import-boundaries-33808-7c6f29ec` exited 7 with the established ten external findings and a changing governed source snapshot, so it is not a pass. The earlier stable detached canonical run `20260921T184352.815937Z-check-import-boundaries-38580-561c8013` isolates the same external findings and no PROFILE-01 path. S10/S11 remain open pending repository gate resolution. Other lanes' dirty files, including the active `launcher.py` edit, were untouched.

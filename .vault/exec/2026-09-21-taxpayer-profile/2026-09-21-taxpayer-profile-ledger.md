@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:6a3b305cbb39f033798d48518b8c713733608bae310758d0af916474ea9663ef'
+body_hash: 'sha256:d17f3ff57c50f09cfdd1e43e17fe9331e35b1a2605ea829bb9b53fa070ab28a7'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -86,6 +86,8 @@ related:
 - `S11` `M` `.vault/audit/2026-09-21-taxpayer-profile-audit.md`
 - `S11` `M` `.agents/session-briefs/handoffs/2026-09-21-taxpayer-profile-checkpoint.md`
 - `S11` `verify:` `integrated-profile-review-no-critical-high` -> `pass`
+- `S10` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_acquisition_launch_write_serialisation.py`
+- `S10` `verify:` `targeted-ruff-ty` -> `pass`
 
 ## Notes
 
@@ -101,4 +103,5 @@ related:
 - `S10` canonical import gate unavailable: governed tree changed concurrently; no PROFILE-01 occurrence
 - `S10` canonical import gate stable but failed on 10 external findings; no PROFILE-01 occurrence
 - `S11` plan handoff cannot close while required repository import gate remains red outside PROFILE-01
+- `S10` target canonical import gate exit 7: external findings and concurrent source drift; no PROFILE-01 finding
 
