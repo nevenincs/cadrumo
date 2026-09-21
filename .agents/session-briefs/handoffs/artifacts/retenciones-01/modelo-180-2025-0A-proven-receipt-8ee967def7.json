@@ -1,0 +1,485 @@
+{
+  "as_of": "2026-09-21",
+  "authority_generation": "db354561492ec6670dc775f9dd7fa24526098b74ab6b86dac0d5134df16430b4",
+  "brief_id": "RETENCIONES-01",
+  "brief_revision": "0.2",
+  "campaign_scope": "selected_annual_slices",
+  "commands": [
+    {
+      "command": "config profile create",
+      "notice_codes": [
+        "PROFILE_LOGIN_REQUIRED",
+        "PROFILE_RECOVERY_NOT_ENROLLED"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile complete-setup",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile edit income-2025",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile complete-setup",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile edit income-2025",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview",
+        "modelo.work.calculate.source_advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo export 06aff78fc073dd70f2d781e0100515112d4ce259e127b623ac3ebcedb43420c3",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.export.local_export_not_official_evidence"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    }
+  ],
+  "executable": "C:\\Users\\hello\\AppData\\Local\\Temp\\cadrumo-retenciones-annual-proven-0e13f037a1c2479b85dc2f8eea16be6d\\venv\\Scripts\\aeat.exe",
+  "executable_sha256": "dd3169efd092f2f97bc0ed7401935f84cc45f72d77c13ffaa1e53f8c46df818c",
+  "executed_slice_ids": [
+    "urban-rent-180-annual-properties"
+  ],
+  "package_identity": "wheel_sha256:8055ce51a33f0bfd6596d12fce40b1da12af6b831481e35b63932a156981644f",
+  "pattern_id": "ACCEPTANCE-01",
+  "pattern_revision": "1.6",
+  "retention": "caller_owned_encrypted_store_and_validated_synthetic_annual_artifacts",
+  "scenario": "retenciones-installed-annual-cli-v1",
+  "schema_version": "retenciones-01-installed-annual-cli-journey-v1",
+  "slices": [
+    {
+      "artifact": {
+        "modelo": "180",
+        "path": "C:\\Users\\hello\\AppData\\Local\\Temp\\cadrumo-retenciones-annual-proven-0e13f037a1c2479b85dc2f8eea16be6d\\outputs-180-oracle-normalized\\modelo-180-2025-0A.boe",
+        "period": "0A",
+        "sha256": "397d0a216bbb7fbd8d02e54a1ddfd26937a7b9464cdebef116d347a55544bfc4",
+        "size": 1500
+      },
+      "calculation_revision_id": "ab54b306ec90c0237657651e47d97ea33d33723f2959a1a863492c1ac1e5f686",
+      "captured_allocation_count": 3,
+      "export_validation": {
+        "expected_header_fields": {
+          "modelo-180-decl-base-total": "5000",
+          "modelo-180-decl-retenciones-total": "950",
+          "modelo-180-decl-total-perceptores": "2"
+        },
+        "expected_type2_rows": [
+          {
+            "modelo-180-perc-base": "3000",
+            "modelo-180-perc-ejercicio-devengo": "2025",
+            "modelo-180-perc-modalidad": "1",
+            "modelo-180-perc-nif": "B12345674",
+            "modelo-180-perc-nombre": "Synthetic Urban Landlord",
+            "modelo-180-perc-porcentaje-retencion": "19",
+            "modelo-180-perc-provincia": "28",
+            "modelo-180-perc-referencia-catastral": "1234567VK4713C0001XY",
+            "modelo-180-perc-retenciones": "570",
+            "modelo-180-perc-situacion-inmueble": "1"
+          },
+          {
+            "modelo-180-perc-base": "2000",
+            "modelo-180-perc-ejercicio-devengo": "2025",
+            "modelo-180-perc-modalidad": "1",
+            "modelo-180-perc-nif": "B12345674",
+            "modelo-180-perc-nombre": "Synthetic Urban Landlord",
+            "modelo-180-perc-porcentaje-retencion": "19",
+            "modelo-180-perc-provincia": "28",
+            "modelo-180-perc-referencia-catastral": "9872023VH5797S0001WX",
+            "modelo-180-perc-retenciones": "380",
+            "modelo-180-perc-situacion-inmueble": "1"
+          }
+        ],
+        "layout_id": "modelo-180-fichero-boe",
+        "parsed_header_fields": {
+          "modelo-180-decl-base-total": "5000",
+          "modelo-180-decl-retenciones-total": "950",
+          "modelo-180-decl-total-perceptores": "2"
+        },
+        "parsed_type2_rows": [
+          {
+            "modelo-180-perc-base": "3000",
+            "modelo-180-perc-ejercicio-devengo": "2025",
+            "modelo-180-perc-modalidad": "1",
+            "modelo-180-perc-nif": "B12345674",
+            "modelo-180-perc-nombre": "Synthetic Urban Landlord",
+            "modelo-180-perc-porcentaje-retencion": "19",
+            "modelo-180-perc-provincia": "28",
+            "modelo-180-perc-referencia-catastral": "1234567VK4713C0001XY",
+            "modelo-180-perc-retenciones": "570",
+            "modelo-180-perc-situacion-inmueble": "1"
+          },
+          {
+            "modelo-180-perc-base": "2000",
+            "modelo-180-perc-ejercicio-devengo": "2025",
+            "modelo-180-perc-modalidad": "1",
+            "modelo-180-perc-nif": "B12345674",
+            "modelo-180-perc-nombre": "Synthetic Urban Landlord",
+            "modelo-180-perc-porcentaje-retencion": "19",
+            "modelo-180-perc-provincia": "28",
+            "modelo-180-perc-referencia-catastral": "9872023VH5797S0001WX",
+            "modelo-180-perc-retenciones": "380",
+            "modelo-180-perc-situacion-inmueble": "1"
+          }
+        ]
+      },
+      "modelo": "180",
+      "period": "0A",
+      "reopened_observation_counts": {
+        "1T": 1,
+        "2T": 2,
+        "3T": 0,
+        "4T": 0
+      },
+      "revision": "2023-y-siguientes",
+      "slice_id": "urban-rent-180-annual-properties",
+      "source_modelo": "115",
+      "source_periods": [
+        {
+          "attestation_period": null,
+          "calculated_casillas": {
+            "01": "1",
+            "02": "1000",
+            "03": "190",
+            "05": "190"
+          },
+          "calculation_revision_id": "b02500b7f71375ffe95968a84208df6fbed3a9237504cfd7484bbf592b9b70ac",
+          "evidence_state": "available",
+          "filing_record_id": "c6fb7814362a568dceb75f6dafff3c481a6ad70a43901f076fbb8d20957d5a29",
+          "live_submission": false,
+          "modelo": "115",
+          "period": "1T",
+          "source_workflow": "local_filing_record",
+          "verification_granted": true,
+          "work_unit_id": "f2c66adbe281a61dc2f96f4ce30bd80b891d9fe40b44ea048a61034555b50123"
+        },
+        {
+          "attestation_period": null,
+          "calculated_casillas": {
+            "01": "1",
+            "02": "4000",
+            "03": "760",
+            "05": "760"
+          },
+          "calculation_revision_id": "125b7077138a854f63b6a37c724d11ff0868e66363374a4669f07c76727d1b4f",
+          "evidence_state": "available",
+          "filing_record_id": "a83cd06f5ff25c25191ebb721a2f131e6df24e55b73115f6c2454a95c24b86cd",
+          "live_submission": false,
+          "modelo": "115",
+          "period": "2T",
+          "source_workflow": "local_filing_record",
+          "verification_granted": true,
+          "work_unit_id": "6c6fa92c217b0ab21bd787c54c534a40e9b681fb02f2d7414edba61732174e3e"
+        },
+        {
+          "attestation_period": "2025:3T",
+          "calculated_casillas": {
+            "01": "0",
+            "02": "0",
+            "03": "0",
+            "05": "0"
+          },
+          "calculation_revision_id": "525deaa3257edebbe2093b5eb7e57bbed5f3a9770feb8b1a93c736d6ac22dbb8",
+          "evidence_state": "no_relevant_payment",
+          "filing_record_id": "7f07c086d75f3a94b2ccd32a19bce83db4fdf043c0fbcb163e6354bb1fe3f59f",
+          "live_submission": false,
+          "modelo": "115",
+          "period": "3T",
+          "source_workflow": "m115_no_relevant_payment_attested_local_filing_record",
+          "verification_granted": true,
+          "work_unit_id": "90ee6146ca3ef4eb28111e032dd8544643e0332905f5180b7a8304ae49088a93"
+        },
+        {
+          "attestation_period": "2025:4T",
+          "calculated_casillas": {
+            "01": "0",
+            "02": "0",
+            "03": "0",
+            "05": "0"
+          },
+          "calculation_revision_id": "3c1636decf02fa8bd3e8944cb079e9015756ea865499532ba93ec24bf2501654",
+          "evidence_state": "no_relevant_payment",
+          "filing_record_id": "5c842c4050a47cb2573018905a74c8f726627aac436a7fc2888ae3dff65fe35a",
+          "live_submission": false,
+          "modelo": "115",
+          "period": "4T",
+          "source_workflow": "m115_no_relevant_payment_attested_local_filing_record",
+          "verification_granted": true,
+          "work_unit_id": "4b11759feb00d9b277cef22de1e32d0a006fca7f47136586550ae29e71246ea7"
+        }
+      ],
+      "verification_granted": true
+    }
+  ],
+  "source_identity": "8ee967def77652d90f50e04eb562682a4e0c2b43+retenciones-annual-parser-oracle-dirty",
+  "status": "partial",
+  "storage_root": "C:\\Users\\hello\\AppData\\Local\\Temp\\cadrumo-retenciones-annual-proven-0e13f037a1c2479b85dc2f8eea16be6d\\storage-180-oracle-normalized",
+  "year": 2025
+}

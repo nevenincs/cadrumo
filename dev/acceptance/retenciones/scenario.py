@@ -600,8 +600,8 @@ def build_installed_annual_cli_slices(
         ),
         expected_header_fields=(
             ("modelo-180-decl-total-perceptores", "2"),
-            ("modelo-180-decl-base-total", "5000.00"),
-            ("modelo-180-decl-retenciones-total", "950.00"),
+            ("modelo-180-decl-base-total", "5000"),
+            ("modelo-180-decl-retenciones-total", "950"),
         ),
         expected_type2_rows=(
             AnnualExportRecordExpectation(
@@ -610,9 +610,9 @@ def build_installed_annual_cli_slices(
                     ("modelo-180-perc-nombre", "Synthetic Urban Landlord"),
                     ("modelo-180-perc-provincia", "28"),
                     ("modelo-180-perc-modalidad", "1"),
-                    ("modelo-180-perc-base", "3000.00"),
-                    ("modelo-180-perc-porcentaje-retencion", "19.00"),
-                    ("modelo-180-perc-retenciones", "570.00"),
+                    ("modelo-180-perc-base", "3000"),
+                    ("modelo-180-perc-porcentaje-retencion", "19"),
+                    ("modelo-180-perc-retenciones", "570"),
                     ("modelo-180-perc-ejercicio-devengo", str(year)),
                     ("modelo-180-perc-situacion-inmueble", "1"),
                     ("modelo-180-perc-referencia-catastral", property_a.cadastral_reference),
@@ -624,9 +624,9 @@ def build_installed_annual_cli_slices(
                     ("modelo-180-perc-nombre", "Synthetic Urban Landlord"),
                     ("modelo-180-perc-provincia", "28"),
                     ("modelo-180-perc-modalidad", "1"),
-                    ("modelo-180-perc-base", "2000.00"),
-                    ("modelo-180-perc-porcentaje-retencion", "19.00"),
-                    ("modelo-180-perc-retenciones", "380.00"),
+                    ("modelo-180-perc-base", "2000"),
+                    ("modelo-180-perc-porcentaje-retencion", "19"),
+                    ("modelo-180-perc-retenciones", "380"),
                     ("modelo-180-perc-ejercicio-devengo", str(year)),
                     ("modelo-180-perc-situacion-inmueble", "1"),
                     ("modelo-180-perc-referencia-catastral", property_b.cadastral_reference),
@@ -693,8 +693,8 @@ def build_installed_annual_cli_slices(
         ),
         expected_header_fields=(
             ("modelo-190-decl-total-percepciones", "2"),
-            ("modelo-190-decl-percepciones-total", "600.00"),
-            ("modelo-190-decl-retenciones-total", "110.00"),
+            ("modelo-190-decl-percepciones-total", "600"),
+            ("modelo-190-decl-retenciones-total", "110"),
         ),
         expected_type2_rows=(
             AnnualExportRecordExpectation(
@@ -705,8 +705,8 @@ def build_installed_annual_cli_slices(
                     ("modelo-190-perc-ceuta-melilla", "0"),
                     ("modelo-190-perc-clave", "G"),
                     ("modelo-190-perc-subclave", "01"),
-                    ("modelo-190-perc-percepcion-dineraria", "500.00"),
-                    ("modelo-190-perc-retenciones-practicadas", "95.00"),
+                    ("modelo-190-perc-percepcion-dineraria", "500"),
+                    ("modelo-190-perc-retenciones-practicadas", "95"),
                 )
             ),
             AnnualExportRecordExpectation(
@@ -717,8 +717,8 @@ def build_installed_annual_cli_slices(
                     ("modelo-190-perc-ceuta-melilla", "0"),
                     ("modelo-190-perc-clave", "G"),
                     ("modelo-190-perc-subclave", "02"),
-                    ("modelo-190-perc-percepcion-dineraria", "100.00"),
-                    ("modelo-190-perc-retenciones-practicadas", "15.00"),
+                    ("modelo-190-perc-percepcion-dineraria", "100"),
+                    ("modelo-190-perc-retenciones-practicadas", "15"),
                 )
             ),
         ),
