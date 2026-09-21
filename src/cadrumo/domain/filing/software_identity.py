@@ -38,11 +38,12 @@ def aeat_aux_version() -> str:
         )
     return aux_version
 
+
 type AeatProgramIdentifier = Annotated[
     str,
     StringConstraints(min_length=4, max_length=4, pattern=r"^[A-Z0-9]{4}$"),
 ]
-"""Exact four-byte AEAT-assigned program identifier for one export header."""
+"""Exact four-byte developer-authored software-version identifier for an AEAT header."""
 
 
 class AeatProductSoftwareEvidence(BaseModel):
