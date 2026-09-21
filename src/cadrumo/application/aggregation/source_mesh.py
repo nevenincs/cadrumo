@@ -96,6 +96,7 @@ CalculationSourceDiagnosticReason = Literal[
     "duplicate_bound_casilla_owner",
     "duplicate_relation_owner",
     "source_issue",
+    "iva_selected_scope_evidence_failure",
     "unresolved_binding",
     "storage_degraded",
     "source_domain_not_ready",

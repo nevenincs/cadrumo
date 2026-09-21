@@ -497,6 +497,11 @@ def _iva_wallet_decision_export_provenance(
 
 def _raise_if_ledger_export_evidence_missing(revision: CalculationRevision) -> None:
     """Refuse ledger-derived exports that lack bundled evidence or a reference."""
+    if any(issue.reason == "iva_selected_scope_evidence_failure" for issue in revision.source_issues):
+        raise ModeloExportEvidenceMissingError(
+            translated_message="application.modelo.errors.export_ledger_evidence_missing",
+            context={"calculation_revision_id": revision.calculation_revision_id},
+        )
     if not revision.source_transaction_ids:
         return
     if revision.ledger_filing_evidence is not None:

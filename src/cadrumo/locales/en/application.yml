@@ -1099,6 +1099,10 @@ application:
         asset %{position_key} in group %{group_code} rose from %{prior_value_eur}
         EUR to %{current_value_eur} EUR, an increase of %{delta_value_eur} EUR above
         the %{redeclaration_increase_threshold_eur} EUR redeclaration threshold.'
+      iva_selected_scope_evidence_failure: 'Selected-scope IVA evidence is incomplete
+        (%{source_ref_count} source references; %{unidentified_source_count} unidentified),
+        so verification is blocked. Source-reference identifiers, not financial values:
+        %{source_ref_ids}.'
       iva_wallet_precondition_failed: The IVA compensation wallet precondition %{condition_id}
         failed for this revision (scenario %{scenario_id}).
       ledger_snapshot_drift: 'Modelo %{modelo} %{filing_year} %{period} drifted from

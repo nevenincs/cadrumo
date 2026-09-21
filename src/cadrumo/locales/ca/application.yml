@@ -1209,6 +1209,10 @@ application:
         %{position_key} del grup %{group_code} va passar de %{prior_value_eur} EUR
         a %{current_value_eur} EUR, un increment de %{delta_value_eur} EUR per sobre
         del llindar de redeclaració de %{redeclaration_increase_threshold_eur} EUR.'
+      iva_selected_scope_evidence_failure: 'L''evidència d''IVA de l''àmbit seleccionat
+        és incompleta (%{source_ref_count} referències d''origen; %{unidentified_source_count}
+        sense identificar), per tant la verificació queda bloquejada. Identificadors
+        de referències d''origen, no valors financers: %{source_ref_ids}.'
       iva_wallet_precondition_failed: No es compleix la condició prèvia %{condition_id}
         de la cartera de compensació d'IVA per a aquesta revisió (escenari %{scenario_id}).
       ledger_snapshot_drift: 'El model %{modelo} %{filing_year} %{period} s''ha desviat

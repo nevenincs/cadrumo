@@ -112,6 +112,7 @@ from .invoice_devengo import (
 )
 from .irnr_income_ledger import IrnrIncomeObservation, aggregate_irnr_income_ledger_from_repositories
 from .iva_ledger import (
+    IvaLedgerAggregationIssue,
     IvaLedgerAggregationIssueReason,
     IvaLedgerProrrataApportionment,
     aggregate_iva_ledger_observations_from_repositories,
@@ -154,6 +155,44 @@ _IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS = frozenset(
         IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
     },
 )
+
+_IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS = frozenset(
+    {
+        IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
+        IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT,
+        IvaLedgerAggregationIssueReason.MISSING_IVA_RATE,
+        IvaLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+        IvaLedgerAggregationIssueReason.MISSING_EUR_TAX_SUBSTRATE,
+        IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
+        IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION,
+        IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW,
+        IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY,
+        IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE,
+        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE,
+        IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_ESTABLISHMENT_ON_EXPORT,
+        IvaLedgerAggregationIssueReason.DOMESTIC_IDENTIFICATION_ON_INTRA_COMMUNITY_TRANSACTION,
+        IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
+    }
+)
+
+
+def _selected_scope_iva_evidence_diagnostics(
+    issues: Sequence[IvaLedgerAggregationIssue],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Return sanitized durable markers for selected-scope IVA evidence failures."""
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="iva_selected_scope_evidence_failure",
+            source_kind="ledger_iva_aggregation",
+            resolver_id=resolver_id,
+            source_ref=f"transaction:{issue.transaction_id}",
+            message=f"selected-scope IVA evidence failure: {issue.reason.value}",
+        )
+        for issue in issues
+        if issue.reason in _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS
+    )
 
 
 def _residue_categories(observations: Sequence[IvaLedgerObservation]) -> str:
@@ -390,10 +429,18 @@ class LedgerIvaAggregationSourceResolver:
                 resolver_id=self.resolver_id,
             )
             + source_issue_diagnostics(
-                aggregation.issues,
+                tuple(
+                    issue
+                    for issue in aggregation.issues
+                    if issue.reason not in _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS
+                ),
                 source_kind="ledger_iva_aggregation",
                 resolver_id=self.resolver_id,
                 suppressed_reasons=_IVA_SOURCE_DIAGNOSTIC_SUPPRESSED_REASONS,
+            )
+            + _selected_scope_iva_evidence_diagnostics(
+                aggregation.issues,
+                resolver_id=self.resolver_id,
             )
             + _diagnostics_for(
                 unconsumed,

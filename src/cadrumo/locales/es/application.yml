@@ -1212,6 +1212,10 @@ application:
         EUR a %{current_value_eur} EUR, un incremento de %{delta_value_eur} EUR por
         encima del umbral de redeclaración de %{redeclaration_increase_threshold_eur}
         EUR.'
+      iva_selected_scope_evidence_failure: 'La evidencia de IVA del ámbito seleccionado
+        está incompleta (%{source_ref_count} referencias de origen; %{unidentified_source_count}
+        sin identificar), por lo que la verificación queda bloqueada. Identificadores
+        de referencias de origen, no valores financieros: %{source_ref_ids}.'
       iva_wallet_precondition_failed: No se cumple la condición previa %{condition_id}
         de la cartera de compensación de IVA para esta revisión (escenario %{scenario_id}).
       ledger_snapshot_drift: 'El modelo %{modelo} %{filing_year} %{period} se ha desviado

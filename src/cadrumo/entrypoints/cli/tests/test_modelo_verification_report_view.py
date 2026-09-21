@@ -59,6 +59,45 @@ def test_verification_finding_message_resolves_from_each_supported_locale_catalo
         assert predicate_id in message
 
 
+def test_iva_selected_scope_evidence_finding_resolves_from_each_supported_locale_catalogue() -> None:
+    """The CLI renders selected-scope IVA blocking evidence in every locale."""
+    from ....core.config import override_settings
+    from ....domain.modelos.verification_report import (
+        ModeloVerificationFinding,
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+    )
+    from .._modelo_rendering import _render_verification_finding_message
+
+    locale_key = "application.modelo.findings.iva_selected_scope_evidence_failure"
+    source_ref_count = 2
+    unidentified_source_count = 1
+    source_ref_ids = "transaction:synthetic-a|transaction:synthetic-b"
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key=locale_key,
+        message_facts={
+            "source_ref_count": source_ref_count,
+            "unidentified_source_count": unidentified_source_count,
+            "source_ref_ids": source_ref_ids,
+        },
+        legal_refs=_TEST_FINDING_LEGAL_REFS,
+    )
+    rendered: dict[str, str] = {}
+    for locale in ("en", "es", "ca", "hu"):
+        with override_settings(cadrumo_output_language=locale):
+            rendered[locale] = _render_verification_finding_message(finding)
+
+    assert len(set(rendered.values())) == len(rendered)
+    for message in rendered.values():
+        assert locale_key not in message
+        assert "%{" not in message
+        assert str(source_ref_count) in message
+        assert str(unidentified_source_count) in message
+        assert source_ref_ids in message
+
+
 def test_verification_report_lines_preserve_persisted_findings_without_recovery_reconstruction() -> None:
     """Report history renders factual findings and never invents a recovery command."""
     from datetime import UTC, datetime

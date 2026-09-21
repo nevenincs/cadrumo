@@ -405,18 +405,24 @@ class CalculationSourceIssue(BaseModel):
     binding, without misrepresenting it as source provenance for a computed
     output.
 
-    Two conditions qualify, and both must survive to the persisted revision
-    because both describe a value absent from the filing.
+    Three conditions qualify, and all must survive to the persisted revision
+    because each describes a condition the filing cannot treat as complete.
     ``unrouted_observation`` is a row no binding consumes at all.
     ``unrouted_declarable_quantity`` is an independent quantity that consumed
     rows carry and no binding drawing that quantity reaches â€” the row-keyed
     screens are silent on it by construction, so a verify or export gate that
     saw only the row condition would read their silence as confirmation.
+    ``iva_selected_scope_evidence_failure`` is a ledger IVA row whose selected
+    filing scope cannot be completed from its recorded tax evidence.
     """
 
     model_config = STRICT_FROZEN_CONFIG
 
-    reason: Literal["unrouted_observation", "unrouted_declarable_quantity"]
+    reason: Literal[
+        "unrouted_observation",
+        "unrouted_declarable_quantity",
+        "iva_selected_scope_evidence_failure",
+    ]
     binding_source: BindingSourceKind
     message: str = Field(min_length=1, max_length=512)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)

@@ -93,3 +93,78 @@ def test_a_diagnostic_with_no_binding_source_is_not_persisted() -> None:
 
     assert orphan.binding_source is None
     assert _unrouted_source_issues((orphan,)) == ()
+
+
+@pytest.mark.parametrize(
+    "reason",
+    (
+        "missing_taxable_base",
+        "missing_iva_amount",
+        "missing_iva_rate",
+        "unsupported_currency",
+        "missing_eur_tax_substrate",
+        "unsupported_iva_rate",
+        "missing_deduction_classification",
+        "cuota_on_zero_rated_row",
+        "non_zero_rate_on_zero_cuota_category",
+        "non_arising_category_for_invoice_side",
+        "missing_counterparty_identification_state",
+        "missing_counterparty_establishment_on_export",
+        "domestic_identification_on_intra_community_transaction",
+        "eu_member_state_on_export_transaction",
+    ),
+)
+def test_selected_scope_iva_evidence_failures_are_durable_and_sanitized(reason: str) -> None:
+    transaction_id = "a" * 64
+    issues = _unrouted_source_issues(
+        (
+            CalculationSourceDiagnostic(
+                reason="iva_selected_scope_evidence_failure",
+                source_kind="ledger_iva_aggregation",
+                resolver_id="ledger_iva_aggregation",
+                source_ref=f"transaction:{transaction_id}",
+                message=f"selected-scope IVA evidence failure: {reason}",
+            ),
+        )
+    )
+
+    assert len(issues) == 1
+    assert issues[0].reason == "iva_selected_scope_evidence_failure"
+    assert issues[0].source_ref == f"transaction:{transaction_id}"
+    assert issues[0].message == "selected-scope IVA evidence failure"
+
+
+@pytest.mark.parametrize(
+    "reason",
+    ("outside_period", "reviewed_excluded", "unsupported_iva_category"),
+)
+def test_nonblocking_iva_diagnostics_do_not_become_durable_completeness_issues(reason: str) -> None:
+    issues = _unrouted_source_issues(
+        (
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind="ledger_iva_aggregation",
+                resolver_id="ledger_iva_aggregation",
+                source_ref=f"transaction:{'a' * 64}",
+                message=f"selected-scope IVA evidence failure: {reason}",
+            ),
+        )
+    )
+
+    assert issues == ()
+
+
+def test_generic_source_issue_cannot_spoof_a_durable_iva_completeness_failure() -> None:
+    issues = _unrouted_source_issues(
+        (
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind="ledger_iva_aggregation",
+                resolver_id="ledger_iva_aggregation",
+                source_ref=f"transaction:{'a' * 64}",
+                message="selected-scope IVA evidence failure: missing_iva_rate",
+            ),
+        )
+    )
+
+    assert issues == ()

@@ -1167,6 +1167,10 @@ application:
         %{prior_value_eur} EUR összegről %{current_value_eur} EUR összegre nőtt, ami
         %{delta_value_eur} EUR növekedés a(z) %{redeclaration_increase_threshold_eur}
         EUR újrabevallási küszöb felett.'
+      iva_selected_scope_evidence_failure: 'A kiválasztott hatókör áfabizonyítéka
+        hiányos (%{source_ref_count} forráshivatkozás; %{unidentified_source_count}
+        azonosítatlan), ezért az ellenőrzés blokkolva van. Forráshivatkozás-azonosítók,
+        nem pénzügyi értékek: %{source_ref_ids}.'
       iva_wallet_precondition_failed: 'Az áfa-kompenzációs tárca %{condition_id} előfeltétele
         nem teljesült ehhez a revízióhoz (forgatókönyv: %{scenario_id}).'
       ledger_snapshot_drift: 'A(z) %{modelo} %{filing_year} %{period} nyomtatvány

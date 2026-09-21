@@ -13,6 +13,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -21,12 +22,14 @@ from cadrumo.domain.calculations.registry.schema_references import RegistrySnaps
 from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionState,
+    CalculationSourceIssue,
     derive_calculation_revision_id,
 )
 from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 
 from ..export import ModeloExportEvidenceMissingError, _raise_if_ledger_export_evidence_missing
+from ..verification_actions import _iva_selected_scope_evidence_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -40,6 +43,7 @@ def _revision(
     *,
     source_transaction_ids: tuple[str, ...],
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
+    source_issues: tuple[CalculationSourceIssue, ...] = (),
     operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
@@ -59,6 +63,7 @@ def _revision(
         casilla_values={_CUOTA_CASILLA: Decimal("21.00")},
         source_transaction_ids=source_transaction_ids,
         filing_instance_evidence=filing_instance_evidence,
+        source_issues=source_issues,
         source_provenance=(),
     )
     return CalculationRevision(
@@ -88,6 +93,7 @@ def _revision(
         verified_at=_NOW,
         verified_by="operator",
         filing_instance_evidence=filing_instance_evidence,
+        source_issues=source_issues,
         source_provenance=(),
     )
 
@@ -118,3 +124,48 @@ def test_export_allows_ledger_revision_with_snapshot_reference(*, operation: Pin
     )
 
     _raise_if_ledger_export_evidence_missing(revision)
+
+
+def test_export_refuses_a_revision_with_unresolved_selected_scope_iva_evidence(
+    *, operation: PinnedAuthorityOperation
+) -> None:
+    revision = _revision(
+        source_transaction_ids=(),
+        source_issues=(
+            CalculationSourceIssue(
+                reason="iva_selected_scope_evidence_failure",
+                binding_source=BindingSourceKind.LEDGER_IVA_AGGREGATION,
+                message="selected-scope IVA evidence failure",
+                resolver_id="ledger_iva_aggregation",
+                source_ref=f"transaction:{_TX_ID}",
+            ),
+        ),
+        operation=operation,
+    )
+
+    with pytest.raises(ModeloExportEvidenceMissingError):
+        _raise_if_ledger_export_evidence_missing(revision)
+
+    reopened = CalculationRevision.model_validate_json(revision.model_dump_json())
+    assert reopened.source_issues == revision.source_issues
+    finding = _iva_selected_scope_evidence_finding(revision)
+    assert finding is not None
+    assert finding.severity.value == "blocking"
+    assert finding.message_facts["source_ref_ids"] == f"transaction:{_TX_ID}"
+
+
+def test_export_allows_a_revision_with_an_unrouted_non_iva_source_issue(*, operation: PinnedAuthorityOperation) -> None:
+    revision = _revision(
+        source_transaction_ids=(),
+        source_issues=(
+            CalculationSourceIssue(
+                reason="unrouted_observation",
+                binding_source=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+                message="OSS source was not routed",
+            ),
+        ),
+        operation=operation,
+    )
+
+    _raise_if_ledger_export_evidence_missing(revision)
+    assert _iva_selected_scope_evidence_finding(revision) is None

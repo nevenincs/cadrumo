@@ -175,7 +175,6 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation.foreign_assets import ForeignAssetIngestObservation
     from ..aggregation.source_mesh import (
-        CalculationSourceDiagnosticReason,
         CalculationSourceResolution,
     )
 
@@ -1524,10 +1523,13 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
 
 
 #: The reason a persisted :class:`CalculationSourceIssue` may carry.
-_DurableUnroutedReason = Literal["unrouted_observation", "unrouted_declarable_quantity"]
+_DurableSourceIssueReason = Literal[
+    "unrouted_observation",
+    "unrouted_declarable_quantity",
+    "iva_selected_scope_evidence_failure",
+]
 
-
-def _durable_unrouted_reason(reason: CalculationSourceDiagnosticReason) -> _DurableUnroutedReason | None:
+def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
     """Narrow a diagnostic reason to the durable subset, or ``None``.
 
     Both durable reasons describe a value ABSENT from the filing, which is what
@@ -1538,10 +1540,12 @@ def _durable_unrouted_reason(reason: CalculationSourceDiagnosticReason) -> _Dura
     durable set and the persisted model's own ``Literal`` then fails to compile
     instead of at the first calculation that raises the new reason.
     """
-    if reason == "unrouted_observation":
+    if diagnostic.reason == "unrouted_observation":
         return "unrouted_observation"
-    if reason == "unrouted_declarable_quantity":
+    if diagnostic.reason == "unrouted_declarable_quantity":
         return "unrouted_declarable_quantity"
+    if diagnostic.reason == "iva_selected_scope_evidence_failure":
+        return "iva_selected_scope_evidence_failure"
     return None
 
 
@@ -1563,14 +1567,18 @@ def _unrouted_source_issues(
     """
     issues: list[CalculationSourceIssue] = []
     for diagnostic in source_diagnostics:
-        reason = _durable_unrouted_reason(diagnostic.reason)
+        reason = _durable_source_issue_reason(diagnostic)
         if reason is None or diagnostic.binding_source is None:
             continue
         issues.append(
             CalculationSourceIssue(
                 reason=reason,
                 binding_source=diagnostic.binding_source,
-                message=diagnostic.message,
+                message=(
+                    "selected-scope IVA evidence failure"
+                    if reason == "iva_selected_scope_evidence_failure"
+                    else diagnostic.message
+                ),
                 resolver_id=diagnostic.resolver_id,
                 source_ref=diagnostic.source_ref,
             ),

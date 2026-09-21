@@ -1019,8 +1019,9 @@ def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic() -> N
         ),
     )
 
-    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["source_issue"]
-    assert "transaction has no iva_rate fact" in resolution.diagnostics[0].message
+    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["iva_selected_scope_evidence_failure"]
+    assert resolution.diagnostics[0].source_ref == f"transaction:{missing_rate.transaction_id}"
+    assert resolution.diagnostics[0].message == "selected-scope IVA evidence failure: missing_iva_rate"
 
 
 def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenance() -> None:
