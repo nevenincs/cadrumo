@@ -86,9 +86,20 @@ related:
 - `S11` `A` `dev/acceptance/assets/tests/test_evidence.py`
 - `S11` `verify:` `wheel build and installed site-packages origin` -> `pass`
 - `S11` `verify:` `installed TUI child over isolated encrypted storage` -> `blocked: no terminal child result`
+- `S11` `A` `dev/acceptance/assets/installed_tui_child.py`
+- `S11` `A` `dev/acceptance/assets/installed_journey.py`
+- `S11` `A` `dev/acceptance/assets/tests/test_installed_journey.py`
+- `S11` `verify:` `staged installed TUI supervisor and evidence pytest (4 tests)` -> `pass`
+- `S11` `verify:` `installed wheel probe and Home journey` -> `pass: clean exit 0`
+- `S11` `verify:` `installed Ledger journey` -> `blocked: clean exit 2 at required profile FieldEditScreen`
+- `S11` `verify:` `IVA lifecycle reserved unit evidence (11 tests)` -> `pass`
+- `S11` `verify:` `IVA live source-mesh integration` -> `fail: taxpayer-profile readiness fixture incomplete`
+- `S11` `verify:` `free-depreciation affected suite (34 tests)` -> `pass`
 
 ## Notes
 
 - `S04` Global namespace-order tripwire reaches an unrelated concurrent income-lane omission: withholding_workflow is enrolled but absent from that lane's expected tuple. Assets expected-order entry is present.
 - `S08` Blocked on concurrent uncommitted IVA-settlement ownership in src/cadrumo/domain/modelos/filing_record.py and the shared verification/export chain; calculation and provenance are proven, validated export is not claimed.
-- `S11` Acceptance status is conservative: AS3, AS4, AS5, AS6, AS8, and AS10 are proven; AS1, AS2, AS7, AS9, AS11, and AS12 remain blocked. Reciprocal IVA linkage is not treated as proof of the complete IVA lifecycle, and an installed wheel import is not treated as a completed frontend journey.
+- `S11` Acceptance status is conservative: AS3-AS8 and AS10 are proven; AS1, AS2, AS9, AS11, and AS12 remain blocked. The installed runner disproved the assumed hang and identified the required-profile admission modal, but no asset journey is claimed.
+- `S11` Commit `5b0d03887a` owns the AS7 implementation. A concurrent amend incident folded its final resolver-to-claim test into `79ace90cb5`; the implementation commit remained intact and no history rewrite was attempted.
+- `S08` AS12 is blocked before serialization by the absent public typed `FilingInstanceEvidence` authoring/resolution operation, including grounded exonerado-390 applicability metadata. Exporter production files are currently clean.

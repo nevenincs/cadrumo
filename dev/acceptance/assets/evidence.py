@@ -61,9 +61,11 @@ ASSET_ACCEPTANCE_EVIDENCE: tuple[AssetAcceptanceEvidence, ...] = (
     ),
     AssetAcceptanceEvidence(
         "AS7",
-        AcceptanceStatus.BLOCKED,
-        ("fully depreciated assets remain in immutable history",),
-        "low-value free-depreciation authority and annual-cap capability are not enrolled",
+        AcceptanceStatus.PROVEN,
+        (
+            "published 2025 low-value authority enforces the EUR 300 unit threshold and EUR 25,000 cap",
+            "explicit elections, effective-claim replay/correction, and CAS-time concurrent cap checks are tested",
+        ),
     ),
     AssetAcceptanceEvidence(
         "AS8",
@@ -73,8 +75,11 @@ ASSET_ACCEPTANCE_EVIDENCE: tuple[AssetAcceptanceEvidence, ...] = (
     AssetAcceptanceEvidence(
         "AS9",
         AcceptanceStatus.BLOCKED,
-        ("optional reciprocal linkage preserves the independent IVA investment register",),
-        "complete IVA deduction, prorrata, annual regularization, and disposal acceptance was not exercised",
+        (
+            "reciprocal linkage and the independent initial-deduction, regularization, disposal, "
+            "and missing-facts rules are tested",
+        ),
+        "the live source-mesh integration fixture does not satisfy the required taxpayer-profile readiness contract",
     ),
     AssetAcceptanceEvidence(
         "AS10",

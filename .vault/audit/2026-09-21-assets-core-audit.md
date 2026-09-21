@@ -79,8 +79,44 @@ isolated TUI child did not produce a terminal result. The shared exporter is
 also still under another lane's active ownership.
 
 Result: PASS for P04.S07, P05.S09, and P05.S10. P04.S08, P05.S11, and P05.S12
-remain open. AS3, AS4, AS5, AS6, AS8, and AS10 are proven; AS1, AS2, AS7, AS9,
-AS11, and AS12 are blocked. No installed journey or official export is claimed.
+remain open. This review point preceded the AS7 implementation recorded below.
+No installed asset journey or official export is claimed.
+
+### phase-05-as7 | low | free-depreciation authority and cap are adopted
+
+The existing published 2025 authority now resolves an explicit low-value
+election for eligible new material assets, enforces the EUR 300 unit threshold
+and taxpayer-period EUR 25,000 cap, and rechecks profile-wide effective claims
+inside the encrypted CAS mutation. Forecasts do not consume the cap, retries do
+not consume it twice, corrections replace effective consumption, and competing
+concurrent claims cannot oversubscribe it.
+
+Result: PASS. AS7 is proven through the real registry resolver, application
+operation, encrypted claim history, and idempotent claim path.
+
+### phase-05-installed | medium | staged runner exposes a profile-admission dependency
+
+The earlier no-output child did not retain enough evidence to establish a
+product hang. The replacement supervisor records command identity, PID,
+installed origin, isolation roots, stage receipts, timeout status, and cleanup.
+Installed probe and Home journeys exit successfully. Ledger admission exits 2
+after mounting the public `FieldEditScreen`; no asset interaction occurs.
+
+Result: P05.S11 remains open. AS1, AS2, and AS11 remain blocked. The required
+bounded Luna route trace could not be dispatched because the agent thread limit
+was exhausted; no substitute model or private-screen automation was used.
+
+### phase-04-export | medium | IVA evidence is substantial but public filing evidence is missing
+
+Reserved evidence passes for initial IVA deduction, reciprocal acquisition,
+regularization, missing facts, disposal, and bucket-bound export behavior. The
+live source-mesh integration currently fails because its fixture does not meet
+the newly required taxpayer-profile readiness contract. A complete installed
+M303 export is additionally blocked before serialization by the missing public
+typed `FilingInstanceEvidence` authoring/resolution operation.
+
+Result: AS9 and AS12 remain blocked on these exact owner contracts. No exporter
+repair is inferred and no official filing artifact is claimed.
 
 ## Recommendations
 

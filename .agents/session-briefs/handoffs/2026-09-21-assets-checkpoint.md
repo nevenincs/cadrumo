@@ -20,6 +20,7 @@ Status: implementation active; P01-P03, P04.S07, and P05.S09-S10 complete and re
 - P03 live resolver commit: `44bafa1c15`
 - P04 reciprocal IVA linkage commit: `55a2db2be2`
 - P05 shared CLI/TUI operations commit: `d155360719`
+- AS7 free-depreciation implementation commit: `5b0d03887a`
 - Brief source anchor: `b5920969129a85b22c448fc8cdd6ae6c8d468a11`
 
 ## Goal and acceptance state
@@ -34,8 +35,8 @@ expenses, separates material/intangible destinations, and refuses the matching
 full-cost ledger deduction. P04 adds reciprocal canonical IVA linkage without
 coupling the stores. P05 exposes shared create, inspect, correct, forecast, claim,
 and filing-handoff operations through CLI and TUI without frontend arithmetic.
-The conservative matrix is: AS3, AS4, AS5, AS6, AS8, and AS10 proven; AS1, AS2,
-AS7, AS9, AS11, and AS12 blocked. No completed installed-process journey or
+The conservative matrix is: AS3, AS4, AS5, AS6, AS7, AS8, and AS10 proven; AS1, AS2,
+AS9, AS11, and AS12 blocked. No completed installed asset journey or
 validated official export is claimed.
 
 ## Discovery and decision coverage
