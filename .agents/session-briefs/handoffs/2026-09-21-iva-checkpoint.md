@@ -361,3 +361,33 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   ordinary transient authoring must feed the existing calculate action directly;
   the full-envelope plaintext file remains internal/legacy and is not production
   authority.
+- Installed CLI hard-cut implemented pending independent integration: new
+  `app modelo work attest-m303-exonerado-390` admits the fixed non-applicable
+  assertion and emits separate safe `attachment_id`/`sha256` fields. Global
+  object-key redaction remains unchanged; the composite reference stays internal.
+- M303 calculate and quickfile now accept explicit positive/negative choices for
+  joint-return and annual-volume facts plus separate attachment ID/digest. The
+  application owner validates and constructs the internal reference. Public
+  `--m303-filing-evidence` and its plaintext loader/contract test are removed;
+  non-M303 behavior remains unchanged. One preloaded authenticated profile is
+  reused through authoring/resolution.
+- A new real 2025 1T CLI integration passes: secure attestation, authority work
+  creation, canonical linked sale/purchase evidence, wallet/source mesh,
+  calculation save and encrypted revision reopen. It proves persisted ordinary
+  filing evidence and exactly one profile decrypt during calculate. Verify/export
+  and successful quickfile remain outside that test.
+- No-legacy test migration completed. Ordinary CLI tests now reuse one secure
+  2025 attestation/options helper; simplified and mixed regime CLI cases assert
+  truthful unsupported refusal while their application coverage remains. The
+  plaintext test helper is deleted. Production CLI has no old option occurrence;
+  tests retain only one intentional absence assertion.
+- Wallet guidance correction: a nonzero caller-supplied prior balance with
+  missing required prior-period authority now uses the existing typed
+  `no_usable_authority` no-action refusal, instead of leaking generic
+  `iva-wallet seed --amount 0` prose. Genuine zero/no-input first-profile cases
+  retain seed guidance.
+- Independent final checks: migrated integration files 11 passed; discovery
+  nodes 2 passed; source-mesh nodes 3 passed; local-path 8 passed; focused
+  domain/application/spec selection 18 passed. Targeted Ruff, formatting,
+  basedpyright and scoped diff checks passed. No broad lane/import-linter ran;
+  unrelated M111/M115 work was excluded.

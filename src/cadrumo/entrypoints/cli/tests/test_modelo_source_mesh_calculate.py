@@ -36,7 +36,7 @@ from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ._m303_filing_evidence_support import write_m303_filing_evidence
+from ._m303_ordinary_cli_support import admit_ordinary_m303_secure_evidence
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -45,7 +45,7 @@ __all__ = ["_isolated_cli_backend"]
 # body holds the same authority lease a CLI invocation holds.
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
-_IVA_WALLET_DECIDED_AT = datetime(2026, 5, 28, 16, 10, tzinfo=UTC)
+_IVA_WALLET_DECIDED_AT = datetime(2025, 4, 1, 16, 10, tzinfo=UTC)
 
 
 def _create_profile(**extra_facts: str) -> None:
@@ -61,6 +61,14 @@ def _create_profile(**extra_facts: str) -> None:
         "identity.surnames": "Operator",
         "activities.description": "design",
         "taxpayer_type.irpf_income_categories": "actividad_economica",
+        "censo.activity_start_date": "2025-01-01",
+        "tax_residence.jurisdiction_scope": "common_regime",
+        "iva.regime": "GENERAL",
+        "iva.m303_regime_composition": "general",
+        "iva.redeme_enrolled": "false",
+        "iva.cash_accounting_regime_enrolled": "false",
+        "iva.voluntary_sii_enrolled": "false",
+        "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
     }
     facts.update(extra_facts)
     register_cli_profile(label="operator", facts=facts, log_in=False)
@@ -101,7 +109,7 @@ def _create_work_unit(*, modelo: str, year: int, period: str) -> dict[str, str]:
 
 
 def _create_303_work_unit() -> dict[str, str]:
-    return _create_work_unit(modelo="303", year=2026, period="1T")
+    return _create_work_unit(modelo="303", year=2025, period="1T")
 
 
 def _create_115_work_unit() -> dict[str, str]:
@@ -119,7 +127,7 @@ def _create_180_work_unit() -> dict[str, str]:
 def _raw_transaction(
     provider_id: str,
     *,
-    booked_date: date = date(2026, 2, 10),
+    booked_date: date = date(2025, 2, 10),
     amount: Decimal,
 ) -> RawTransaction:
     return RawTransaction(
@@ -135,7 +143,7 @@ def _raw_transaction(
             source_sha256="f" * 64,
             source_row_index=1,
             source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
+            ingested_at=datetime(2025, 2, 11, 12, 0, tzinfo=UTC),
             provider_name="manual-ledger",
         ),
         raw_fields={"source_kind": "ledger_transaction"},
@@ -173,7 +181,7 @@ def _transaction(
         "taxable_base": taxable_base,
         "iva_rate": iva_rate,
         "iva_amount": iva_amount,
-        "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
+        "classified_at": datetime(2025, 2, 11, 13, 0, tzinfo=UTC),
         "classified_by": "manual",
     }
     if iva_category is not None:
@@ -626,17 +634,12 @@ def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations(
-    tmp_path: Path, capsys: pytest.CaptureFixture[str], *, operation: PinnedAuthorityOperation
+    capsys: pytest.CaptureFixture[str], *, operation: PinnedAuthorityOperation
 ) -> None:
     from ....core.bucket_pointer import resolve_active_bucket_id
 
     _create_profile()
     work_unit = _create_303_work_unit()
-    evidence_path = write_m303_filing_evidence(
-        tmp_path / "m303-filing-evidence.json",
-        Period.from_year_and_code(2026, "1T"),
-        operation=operation,
-    )
     # The CLI JSON output redacts ``bucket_id`` to the literal placeholder
     # ``"<bucket-id>"``; that placeholder is not a valid filesystem path
     # segment on Windows (``<`` / ``>`` are reserved). Resolve the real
@@ -659,7 +662,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         taxable_base=Decimal("50.00"),
         iva_amount=Decimal("10.50"),
         deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-        deduction_locator="invoice:purchase-general-2026-1T",
+        deduction_locator="invoice:purchase-general-2025-1T",
     )
 
     # Seed ledger data and a zero-amount IVA wallet decision via a live
@@ -683,10 +686,10 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         )
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
-            target_year=2026,
-            target_period=Period.from_year_and_code(2026, "1T"),
-            target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
-            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
+            target_year=2025,
+            target_period=Period.from_year_and_code(2025, "1T"),
+            target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
+            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
             selected_authority="local_recurrence",
             selected_amount=Decimal("0"),
             wallet_amount=None,
@@ -695,11 +698,11 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
                 IvaCompensationAuthoritySource(
                     source_kind="local_recurrence",
                     amount=Decimal("0"),
-                    source_locator="test:local-recurrence:2026:1T",
+                    source_locator="test:local-recurrence:2025:1T",
                     source_modelo="303",
-                    source_filing_year=2026,
-                    source_periods=(Period.from_year_and_code(2026, "1T"),),
-                    registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
+                    source_filing_year=2025,
+                    source_periods=(Period.from_year_and_code(2025, "1T"),),
+                    registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
                 ),
             ),
             override_amount=None,
@@ -711,6 +714,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         )
         IvaWalletDecisionRepository().save_decision(decision)
 
+    evidence = admit_ordinary_m303_secure_evidence()
     result = invoke_cached_cli(
         [
             "--format",
@@ -720,8 +724,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            "--m303-filing-evidence",
-            str(evidence_path),
+            *evidence.calculate_options(),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -843,10 +846,10 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
     with open_test_profile_session(bucket_id):
         decision = IvaCompensationReconciliationDecision(
             taxpayer_nif="12345678Z",
-            target_year=2026,
-            target_period=Period.from_year_and_code(2026, "1T"),
-            target_registry_snapshot_ref=published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,
-            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
+            target_year=2025,
+            target_period=Period.from_year_and_code(2025, "1T"),
+            target_registry_snapshot_ref=published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,
+            source_registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
             selected_authority="local_recurrence",
             selected_amount=Decimal("0"),
             wallet_amount=None,
@@ -855,11 +858,11 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
                 IvaCompensationAuthoritySource(
                     source_kind="local_recurrence",
                     amount=Decimal("0"),
-                    source_locator="test:local-recurrence:2026:1T",
+                    source_locator="test:local-recurrence:2025:1T",
                     source_modelo="303",
-                    source_filing_year=2026,
-                    source_periods=(Period.from_year_and_code(2026, "1T"),),
-                    registry_snapshot_refs=(published_snapshot("303", filing_year=2026, period="1T").snapshot_ref,),
+                    source_filing_year=2025,
+                    source_periods=(Period.from_year_and_code(2025, "1T"),),
+                    registry_snapshot_refs=(published_snapshot("303", filing_year=2025, period="1T").snapshot_ref,),
                 ),
             ),
             override_amount=None,
@@ -872,9 +875,7 @@ def _seed_zero_iva_wallet_decision(bucket_id: str) -> None:
         IvaWalletDecisionRepository().save_decision(decision)
 
 
-def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
+def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_supply() -> None:
     """An INTRA_COMMUNITY_SUPPLY observation is cuota-less, so it raises NO advisory.
 
     Per the ``aeat-ledger-contract`` rule, an
@@ -890,11 +891,6 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
 
     _create_profile()
     work_unit = _create_303_work_unit()
-    evidence_path = write_m303_filing_evidence(
-        tmp_path / "m303-filing-evidence.json",
-        Period.from_year_and_code(2026, "1T"),
-        operation=operation,
-    )
     resolved = resolve_active_bucket_id()
     assert resolved is not None, "profile create must install an active-profile pointer"
     bucket_id = resolved
@@ -936,6 +932,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
         )
     _seed_zero_iva_wallet_decision(bucket_id)
 
+    evidence = admit_ordinary_m303_secure_evidence()
     result = invoke_cached_cli(
         [
             "--format",
@@ -945,8 +942,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            "--m303-filing-evidence",
-            str(evidence_path),
+            *evidence.calculate_options(),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -970,8 +966,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            "--m303-filing-evidence",
-            str(evidence_path),
+            *evidence.calculate_options(),
         ],
     )
     assert text_result.exit_code == 0, text_result.output
@@ -982,9 +977,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
     assert "ADVISORY:" not in text_result.output
 
 
-def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
+def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
     """#64 converse: an all-consumed IVA observation set surfaces ZERO advisories.
 
     Anti-tautology guard for the advisory test above: only observations no
@@ -996,11 +989,6 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
 
     _create_profile()
     work_unit = _create_303_work_unit()
-    evidence_path = write_m303_filing_evidence(
-        tmp_path / "m303-filing-evidence.json",
-        Period.from_year_and_code(2026, "1T"),
-        operation=operation,
-    )
     resolved = resolve_active_bucket_id()
     assert resolved is not None, "profile create must install an active-profile pointer"
     bucket_id = resolved
@@ -1018,6 +1006,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
         )
     _seed_zero_iva_wallet_decision(bucket_id)
 
+    evidence = admit_ordinary_m303_secure_evidence()
     result = invoke_cached_cli(
         [
             "--format",
@@ -1027,8 +1016,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            "--m303-filing-evidence",
-            str(evidence_path),
+            *evidence.calculate_options(),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -1047,8 +1035,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed(
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            "--m303-filing-evidence",
-            str(evidence_path),
+            *evidence.calculate_options(),
         ],
     )
     assert text_result.exit_code == 0, text_result.output

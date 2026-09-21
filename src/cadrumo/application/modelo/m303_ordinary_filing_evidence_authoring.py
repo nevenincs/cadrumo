@@ -63,6 +63,7 @@ def author_ordinary_m303_filing_instance_evidence(
     request: OrdinaryM303FilingEvidenceRequest,
     operation: PinnedAuthorityOperation,
     attachment_store: AttachmentStoreProtocol,
+    profile: ModeloWorkProfile | None = None,
 ) -> FilingInstanceEvidence:
     """Construct validated ordinary evidence ready for ``calculate_modelo_revision``.
 
@@ -74,7 +75,7 @@ def author_ordinary_m303_filing_instance_evidence(
     registry_snapshot = operation.snapshot("303", filing_year=request.filing_year, period=request.period.registry_token)
     if registry_snapshot.revision.id != work_unit.revision_id:
         raise M303FilingEvidenceError("ordinary M303 evidence authority revision is stale for this work unit")
-    profile = _require_current_profile(work_unit=work_unit, operation=operation)
+    profile = _require_current_profile(work_unit=work_unit, operation=operation, profile=profile)
     scope = m303_regimen_simplificado_scope_for_profile(taxpayer_profile_for_work(profile))
     if not scope.is_not_claimed:
         raise M303FilingEvidenceError("simplified-regime profile requires its unsupported evidence branch")
@@ -85,6 +86,7 @@ def author_ordinary_m303_filing_instance_evidence(
         evidence_reference=request.exonerado_390_applicability_reference,
         operation=operation,
         store=attachment_store,
+        profile=profile,
     )
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
@@ -148,12 +150,15 @@ def _require_ordinary_work_coordinate(*, work_unit: WorkUnit, request: OrdinaryM
         )
 
 
-def _require_current_profile(*, work_unit: WorkUnit, operation: PinnedAuthorityOperation) -> ModeloWorkProfile:
-    profile = load_modelo_work_profile(
-        bucket_id=work_unit.bucket_id,
-        profile_decode_context=operation.profile_decode_context(),
-    )
+def _require_current_profile(
+    *, work_unit: WorkUnit, operation: PinnedAuthorityOperation, profile: ModeloWorkProfile | None
+) -> ModeloWorkProfile:
     if profile is None:
+        profile = load_modelo_work_profile(
+            bucket_id=work_unit.bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+    if profile is None or str(profile.record.profile_id) != str(work_unit.bucket_id):
         raise ModeloProfileReadinessError("ordinary M303 evidence requires an authenticated current profile")
     return profile
 

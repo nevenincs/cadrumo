@@ -10,6 +10,7 @@ import pytest
 from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationRequest,
     admit_m303_exonerado_390_applicability_attestation,
+    m303_exonerado_390_filing_evidence_reference,
     resolve_m303_exonerado_390_not_applicable_attestation,
 )
 from cadrumo.domain.attachments.enums import AttachmentKind, AttachmentSource
@@ -54,7 +55,7 @@ def test_admission_and_resolution_are_profile_witnessed_and_custody_verified(
         seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID):
             store = AttachmentStore()
-            reference = admit_m303_exonerado_390_applicability_attestation(
+            admission = admit_m303_exonerado_390_applicability_attestation(
                 bucket_id=_BUCKET_ID,
                 request=_request(),
                 actor="operator:test",
@@ -63,6 +64,7 @@ def test_admission_and_resolution_are_profile_witnessed_and_custody_verified(
                 clock=lambda: _CAPTURED_AT,
             )
 
+            reference = admission.filing_evidence_reference()
             resolved = resolve_m303_exonerado_390_not_applicable_attestation(
                 bucket_id=_BUCKET_ID,
                 filing_year=2025,
@@ -73,9 +75,9 @@ def test_admission_and_resolution_are_profile_witnessed_and_custody_verified(
                 clock=lambda: _CAPTURED_AT,
             )
 
-            attachment_id = reference.reference.split(":")[1]
-            attachment = store.load_manifest(attachment_id)
+            attachment = store.load_manifest(admission.attachment_id)
             assert resolved == reference
+            assert admission.attachment_id == admission.sha256
             assert attachment.kind is AttachmentKind.M303_EXONERADO_390_APPLICABILITY_ATTESTATION
             assert attachment.metadata == {}
             assert attachment.bucket_id == _BUCKET_ID
@@ -100,6 +102,13 @@ def test_applicable_assertion_refuses_before_custody_mutation(tmp_path: Path, op
             assert tuple(store.iter_manifests()) == ()
 
 
+def test_split_attachment_identifiers_refuse_malformed_or_conflicting_values() -> None:
+    with pytest.raises(AttachmentValidationError):
+        m303_exonerado_390_filing_evidence_reference(attachment_id="not-a-digest", sha256="a" * 64)
+    with pytest.raises(AttachmentValidationError):
+        m303_exonerado_390_filing_evidence_reference(attachment_id="a" * 64, sha256="b" * 64)
+
+
 def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate(
     tmp_path: Path,
     operation,
@@ -108,7 +117,7 @@ def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate
         seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID) as profiles:
             store = AttachmentStore()
-            reference = admit_m303_exonerado_390_applicability_attestation(
+            admission = admit_m303_exonerado_390_applicability_attestation(
                 bucket_id=_BUCKET_ID,
                 request=_request(),
                 actor="operator:test",
@@ -116,6 +125,7 @@ def test_resolution_refuses_a_conflicting_typed_assertion_in_the_same_coordinate
                 store=store,
                 clock=lambda: _CAPTURED_AT,
             )
+            reference = admission.filing_evidence_reference()
             conflicting = M303Exonerado390ApplicabilityAttestation(
                 schema_version=1,
                 role="m303_exonerado_390_applicability",
@@ -162,7 +172,7 @@ def test_resolution_refuses_an_attestation_stale_against_the_current_profile_wit
         seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CAPTURED_AT)
         with bound_test_profile_record(_BUCKET_ID) as profiles:
             store = AttachmentStore()
-            reference = admit_m303_exonerado_390_applicability_attestation(
+            admission = admit_m303_exonerado_390_applicability_attestation(
                 bucket_id=_BUCKET_ID,
                 request=_request(),
                 actor="operator:test",
@@ -170,6 +180,7 @@ def test_resolution_refuses_an_attestation_stale_against_the_current_profile_wit
                 store=store,
                 clock=lambda: _CAPTURED_AT,
             )
+            reference = admission.filing_evidence_reference()
             current = profiles.load(_BUCKET_ID)
             updated_at = current.updated_at + timedelta(minutes=1)
             profiles.apply_fact_changes(

@@ -119,6 +119,7 @@ if TYPE_CHECKING:
     from ..application.user_profile.profile_read_ports import ProfileReadPorts, ProfileReadPortsFactory
     from ..core.config import Settings
     from ..core.tabular import NormalizedTable
+    from ..domain.attachments.protocols import AttachmentStoreProtocol
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.calculations.registry.tax_id_format import SubjectTaxId
     from ..domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
@@ -193,6 +194,11 @@ class ProfileAdapterComposition:
     def calculation_action_ports_factory(self) -> CalculationActionPortsFactory:
         """Resolve the calculation action ports factory on first read."""
         return build_calculation_action_ports
+
+    @property
+    def attachment_store_factory(self) -> Callable[[str], AttachmentStoreProtocol]:
+        """Resolve the encrypted attachment custody store factory."""
+        return build_attachment_store
 
     @property
     def amendment_action_ports_factory(self) -> AmendmentActionPortsFactory:
@@ -948,6 +954,15 @@ def build_withholding_observation_service(*, bucket_id: str):
             percepciones=PercepcionObservationRepositoryAdapter(objects=objects),
         ),
     )
+
+
+def build_attachment_store(bucket_id: str) -> AttachmentStoreProtocol:
+    """Bind encrypted attachment custody to the profile bucket's secure repository."""
+    from ..adapters.persistence.storage.attachment import AttachmentStore
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+
+    normalized_bucket_id = bucket_id.strip()
+    return AttachmentStore(objects=secure_object_repository_for_bucket(normalized_bucket_id))
 
 
 def build_calculation_action_ports(

@@ -658,6 +658,16 @@ class WorkCalculateResult(CalculationRevisionProjectionFields):
     deadline: WorkDeadlinePosturePayload | None = None
 
 
+class M303Exonerado390AttestationResult(OutputSchema):
+    """Sanitized secure-reference result of ordinary M303 applicability admission."""
+
+    operation: str = "modelo.work.attest-m303-exonerado-390"
+    filing_year: int
+    period: Period
+    attachment_id: str
+    sha256: str
+
+
 class CalculationRevisionSummaryPayload(OutputSchema):
     """Compact calculation-revision row returned by ``modelo.work.revisions``."""
 
@@ -1574,6 +1584,7 @@ __all__ = [
     "LedgerIssuePayload",
     "M100ProjectionPayload",
     "M130AccumulatedPayload",
+    "M303Exonerado390AttestationResult",
     "ModeloAggregateResult",
     "ModeloAuditCheckResult",
     "ModeloAuditExportResult",

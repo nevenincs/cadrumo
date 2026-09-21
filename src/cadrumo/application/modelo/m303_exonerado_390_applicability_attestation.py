@@ -7,8 +7,9 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, ValidationError, model_validator
 
+from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now as _utc_now
@@ -53,6 +54,25 @@ class M303Exonerado390ApplicabilityAttestationRequest(BaseModel):
         return self
 
 
+class M303Exonerado390ApplicabilityAttestationAdmission(BaseModel):
+    """Safe attachment identity returned after encrypted attestation admission."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    attachment_id: Hex64Str
+    sha256: Hex64Str
+
+    @model_validator(mode="after")
+    def _attachment_id_matches_digest(self) -> M303Exonerado390ApplicabilityAttestationAdmission:
+        if self.attachment_id != self.sha256:
+            raise AttachmentValidationError("Modelo 390 applicability attachment identity does not match its digest")
+        return self
+
+    def filing_evidence_reference(self) -> FilingEvidenceReference:
+        """Construct the internal nominal reference without exposing its grammar to a frontend."""
+        return _filing_evidence_reference(self.attachment_id, self.sha256)
+
+
 def admit_m303_exonerado_390_applicability_attestation(
     *,
     bucket_id: str,
@@ -60,11 +80,12 @@ def admit_m303_exonerado_390_applicability_attestation(
     actor: str,
     operation: PinnedAuthorityOperation,
     store: AttachmentStoreProtocol,
+    profile: ModeloWorkProfile | None = None,
     clock: Callable[[], datetime] = _utc_now,
-) -> FilingEvidenceReference:
+) -> M303Exonerado390ApplicabilityAttestationAdmission:
     """Admit one canonical ordinary-M303 assertion into encrypted attachment custody."""
     _require_ordinary_not_applicable_request(request)
-    profile = _current_profile(bucket_id=bucket_id, operation=operation)
+    profile = _current_profile(bucket_id=bucket_id, operation=operation, profile=profile)
     captured_at = validate_utc_aware(clock())
     _require_observation_timing(
         observed_at=request.observed_at,
@@ -96,7 +117,10 @@ def admit_m303_exonerado_390_applicability_attestation(
             source_command=_ATTESTATION_SOURCE_COMMAND,
         ),
     )
-    return _filing_evidence_reference(attachment.attachment_id, attachment.sha256)
+    return M303Exonerado390ApplicabilityAttestationAdmission(
+        attachment_id=attachment.attachment_id,
+        sha256=attachment.sha256,
+    )
 
 
 def resolve_m303_exonerado_390_not_applicable_attestation(
@@ -107,11 +131,12 @@ def resolve_m303_exonerado_390_not_applicable_attestation(
     evidence_reference: FilingEvidenceReference,
     operation: PinnedAuthorityOperation,
     store: AttachmentStoreProtocol,
+    profile: ModeloWorkProfile | None = None,
     clock: Callable[[], datetime] = _utc_now,
 ) -> FilingEvidenceReference:
     """Resolve one current, custody-verified ordinary M303 non-applicability reference."""
     _require_ordinary_coordinate(filing_year=filing_year, period=period)
-    profile = _current_profile(bucket_id=bucket_id, operation=operation)
+    profile = _current_profile(bucket_id=bucket_id, operation=operation, profile=profile)
     attachment_id, sha256 = _parse_filing_evidence_reference(evidence_reference)
     attachment = store.load_manifest(attachment_id)
     if attachment.sha256 != sha256 or attachment.bucket_id != bucket_id:
@@ -145,12 +170,29 @@ def resolve_m303_exonerado_390_not_applicable_attestation(
     return _filing_evidence_reference(attachment.attachment_id, attachment.sha256)
 
 
-def _current_profile(*, bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloWorkProfile:
-    profile_decode_context = operation.profile_decode_context()
-    profile = load_modelo_work_profile(
-        bucket_id=bucket_id,
-        profile_decode_context=profile_decode_context,
-    )
+def m303_exonerado_390_filing_evidence_reference(*, attachment_id: str, sha256: str) -> FilingEvidenceReference:
+    """Validate split CLI-safe identifiers and construct the internal reference."""
+    try:
+        admission = M303Exonerado390ApplicabilityAttestationAdmission(
+            attachment_id=attachment_id,
+            sha256=sha256,
+        )
+    except ValidationError as exc:
+        raise AttachmentValidationError("Modelo 390 applicability attachment identity is invalid") from exc
+    return admission.filing_evidence_reference()
+
+
+def _current_profile(
+    *,
+    bucket_id: str,
+    operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
+) -> ModeloWorkProfile:
+    if profile is None:
+        profile = load_modelo_work_profile(
+            bucket_id=bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
     try:
         bucket_identity = UUID(bucket_id)
     except ValueError as exc:
@@ -255,7 +297,9 @@ def _require_no_conflicting_attestation(
 
 
 __all__ = [
+    "M303Exonerado390ApplicabilityAttestationAdmission",
     "M303Exonerado390ApplicabilityAttestationRequest",
     "admit_m303_exonerado_390_applicability_attestation",
+    "m303_exonerado_390_filing_evidence_reference",
     "resolve_m303_exonerado_390_not_applicable_attestation",
 ]

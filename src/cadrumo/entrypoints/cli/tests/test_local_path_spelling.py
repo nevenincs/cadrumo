@@ -30,7 +30,7 @@ none           --          --       free; outside this contract
 
 An auxiliary is NOT a lesser input. It is a different question, and its name is
 the only place the job it does is written down: ``--verify-source``,
-``--receipt``, ``--scenario`` and ``--m303-filing-evidence`` all say what they
+``--receipt``, ``--scenario`` and ``--m303-exonerado-390-attachment-id`` all say what they
 are for, which ``--file2`` never would. The gate therefore refuses an auxiliary
 that takes the PRIMARY's spelling, and otherwise leaves the name to the author.
 """

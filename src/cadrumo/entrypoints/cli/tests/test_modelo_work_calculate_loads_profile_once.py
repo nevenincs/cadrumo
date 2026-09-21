@@ -129,6 +129,43 @@ def test_m100_calculate_decrypts_the_profile_once(seed_profile: ProfileSeeder, p
     assert len(profile_decrypts) == 1, (profile_decrypts, output)
 
 
+def test_m303_attestation_cli_admits_only_a_sanitized_secure_reference_once(
+    seed_profile: ProfileSeeder, profile_decrypts: list[str]
+) -> None:
+    seed_profile(label="operator", facts=operator_profile_facts())
+
+    profile_decrypts.clear()
+    result = invoke_cached_cli(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "work",
+            "attest-m303-exonerado-390",
+            "--year",
+            "2025",
+            "--period",
+            "1T",
+            "--observed-at",
+            "2025-03-31T12:00:00+00:00",
+        ]
+    )
+
+    assert result.exit_code == 0, result.output
+    payload = unwrap_schema_envelope(result.output)
+    attachment_id = payload["attachment_id"]
+    sha256 = payload["sha256"]
+    assert isinstance(attachment_id, str) and len(attachment_id) == 64
+    assert attachment_id == sha256
+    assert payload["filing_year"] == 2025
+    assert payload["period"] == {"filing_year": 2025, "code": "1T"}
+    assert "profile_witness" not in result.output
+    assert "attachment:" not in result.output
+    assert "filing_evidence_reference" not in result.output
+    assert len(profile_decrypts) == 1, profile_decrypts
+
+
 def test_the_readiness_gate_hands_back_the_profile_it_checked(seed_profile: ProfileSeeder) -> None:
     """Consumers downstream of the gate read the very record the gate refused or admitted."""
     seed_profile(label="operator", facts=operator_profile_facts())

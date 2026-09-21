@@ -18,9 +18,19 @@ local export the human files themselves through the AEAT sede
 from __future__ import annotations
 
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import typer
 
+from ...application.modelo.action_errors import M303FilingEvidenceError
+from ...application.modelo.m303_exonerado_390_applicability_attestation import (
+    m303_exonerado_390_filing_evidence_reference,
+)
+from ...application.modelo.m303_ordinary_filing_evidence_authoring import (
+    OrdinaryM303FilingEvidenceRequest,
+    author_ordinary_m303_filing_instance_evidence,
+)
+from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
 from ...application.modelo.quickfile import QuickfileCommand, QuickfileResult, run_modelo_quickfile
 from ...application.workflow.persistence import workflow_state_repository
 from ...core.external_constants import OutputLanguage
@@ -31,7 +41,6 @@ from ...core.period import Period, PeriodError
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ._app_quickfile_payloads import QuickfileResultPayload
-from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_cli_support import unsupported_local_work_period_refusal, work_calculate_input_bundle_from_cli
 from ._modelo_rendering import advisory_notice, verification_report_notices
 from .common import (
@@ -41,6 +50,7 @@ from .common import (
     no_active_profile_refusal,
 )
 from .state_projection_support import (
+    attachment_store,
     authority_operation,
     calculation_action_ports_factory,
     certificate_secret_backend_factory,
@@ -50,6 +60,12 @@ from .state_projection_support import (
     state_projection_read_ports,
     verification_repository_bundle_factory,
 )
+
+if TYPE_CHECKING:
+    from ...application.modelo.work_profile import ModeloWorkProfile
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
+    from ...domain.modelos.work_unit import WorkUnit
 
 
 def _require_active_profile() -> str:
@@ -87,7 +103,10 @@ def quickfile(
     refund_election: RefundElection = RefundElection.COMPENSAR,
     payment_election: PaymentElection = PaymentElection.INGRESO,
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
-    m303_filing_evidence: Path | None = None,
+    joint_return_elected: bool | None = None,
+    annual_volume_nonzero: bool | None = None,
+    m303_exonerado_390_attachment_id: str | None = None,
+    m303_exonerado_390_sha256: str | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Run readiness -> create -> calculate -> verify -> export for one modelo target."""
@@ -104,17 +123,32 @@ def quickfile(
     resolved_year = resolved_period.filing_year
     resolved_actor = actor or "operator"
     workflow_profile = filing_taxpayer_or_refuse(workflow_state_repository().load())
-    filing_instance_evidence = m303_filing_instance_evidence_from_cli(
-        modelo=modelo,
-        period=resolved_period,
-        evidence_file=m303_filing_evidence,
+    operation = authority_operation(ctx)
+    profile = load_modelo_work_profile(
+        bucket_id=resolved_bucket,
+        profile_decode_context=operation.profile_decode_context(),
     )
     calculation_ports = calculation_action_ports_factory(ctx)(
         bucket_id=resolved_bucket,
-        operation=authority_operation(ctx),
+        operation=operation,
+        profile_record=profile.record if profile is not None else None,
     )
 
     def _build_inputs(work_unit_id: str):
+        work_unit = calculation_ports.work_unit_repository.load().get(work_unit_id)
+        if work_unit is None:
+            raise RuntimeError("quickfile created work unit is unavailable")
+        filing_instance_evidence = _m303_filing_instance_evidence(
+            modelo=modelo,
+            work_unit=work_unit,
+            joint_return_elected=joint_return_elected,
+            annual_volume_nonzero=annual_volume_nonzero,
+            attachment_id=m303_exonerado_390_attachment_id,
+            sha256=m303_exonerado_390_sha256,
+            operation=operation,
+            profile=profile,
+            ctx=ctx,
+        )
         return work_calculate_input_bundle_from_cli(
             work_unit_id=work_unit_id,
             ports=calculation_ports,
@@ -132,6 +166,7 @@ def quickfile(
             sal_reserva_dotada=None,
             sal_capital_social=None,
             autoconsumo_promotor_base=None,
+            profile=profile,
         )
 
     result = run_modelo_quickfile(
@@ -146,12 +181,11 @@ def quickfile(
             refund_election=refund_election,
             payment_election=payment_election,
             prior_domiciliation_election=prior_domiciliation_election,
-            filing_instance_evidence=filing_instance_evidence,
         ),
         certificate_secret_backend_factory=certificate_secret_backend_factory(ctx),
         operator_probe_ports=operator_probe_ports(ctx),
         operator_scope_ports=operator_scope_ports(ctx),
-        operation=authority_operation(ctx),
+        operation=operation,
         verification_repositories=verification_repository_bundle_factory(ctx)(resolved_bucket),
         calculation_action_ports=calculation_ports,
         modelo_export_ports=modelo_export_ports_factory(ctx)(
@@ -161,8 +195,8 @@ def quickfile(
         read_ports=state_projection_read_ports(ctx),
         workflow_profile=workflow_profile,
         build_calculation_inputs=_build_inputs,
+        profile=profile,
     )
-
     payload = QuickfileResultPayload.from_result(result)
     emit_envelope(
         ctx,
@@ -173,6 +207,44 @@ def quickfile(
     )
     if not result.completed:
         raise typer.Exit(code=1)
+
+
+def _m303_filing_instance_evidence(
+    *,
+    modelo: str,
+    work_unit: WorkUnit,
+    joint_return_elected: bool | None,
+    annual_volume_nonzero: bool | None,
+    attachment_id: str | None,
+    sha256: str | None,
+    operation: PinnedAuthorityOperation,
+    profile: ModeloWorkProfile | None,
+    ctx: typer.Context,
+) -> FilingInstanceEvidence | None:
+    """Build ordinary M303 evidence from explicit elections and secure custody only."""
+    if modelo != "303":
+        return None
+    if joint_return_elected is None or annual_volume_nonzero is None or attachment_id is None or sha256 is None:
+        raise M303FilingEvidenceError(
+            "Modelo 303 requires --joint-return-elected, --annual-volume-nonzero, "
+            "--m303-exonerado-390-attachment-id, and --m303-exonerado-390-sha256"
+        )
+    return author_ordinary_m303_filing_instance_evidence(
+        work_unit=work_unit,
+        request=OrdinaryM303FilingEvidenceRequest(
+            filing_year=work_unit.filing_year,
+            period=work_unit.period,
+            joint_return_elected=joint_return_elected,
+            annual_volume_nonzero=annual_volume_nonzero,
+            exonerado_390_applicability_reference=m303_exonerado_390_filing_evidence_reference(
+                attachment_id=attachment_id,
+                sha256=sha256,
+            ),
+        ),
+        operation=operation,
+        attachment_store=attachment_store(ctx, bucket_id=work_unit.bucket_id),
+        profile=profile,
+    )
 
 
 def _quickfile_lines(result: QuickfileResult) -> list[str]:

@@ -48,6 +48,7 @@ if TYPE_CHECKING:
     from ...application.state_projection_ports import StateProjectionReadPorts
     from ...application.user_profile.custody_ports import ProfileBucketStoragePort
     from ...application.user_profile.profile_read_ports import ProfileReadPortsFactory
+    from ...domain.attachments.protocols import AttachmentStoreProtocol
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 _ADAPTER_COMPOSITION_KEY = "adapter_composition"
@@ -119,6 +120,11 @@ def profile_read_ports_factory(ctx: typer.Context) -> ProfileReadPortsFactory:
 def calculation_action_ports_factory(ctx: typer.Context) -> CalculationActionPortsFactory:
     """Return the required calculation bundle factory from the CLI root."""
     return _adapter_composition(ctx).calculation_action_ports_factory
+
+
+def attachment_store(ctx: typer.Context, *, bucket_id: str) -> AttachmentStoreProtocol:
+    """Return the root-composed encrypted attachment store for one profile bucket."""
+    return _adapter_composition(ctx).attachment_store_factory(bucket_id)
 
 
 def amendment_action_ports_factory(ctx: typer.Context) -> AmendmentActionPortsFactory:
@@ -273,6 +279,7 @@ def apoderado_config_repository_factory(ctx: typer.Context) -> ApoderadoConfigur
 __all__ = [
     "amendment_action_ports_factory",
     "apoderado_config_repository_factory",
+    "attachment_store",
     "bienes_inversion_repository_factory",
     "borrador_100_snapshot_repository_factory",
     "bucket_storage",

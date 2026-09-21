@@ -78,6 +78,7 @@ if TYPE_CHECKING:
     from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
     from ..auth.operator_scope_ports import OperatorScopePorts
     from ..state_projection import ProjectionModeloReadiness
+    from .work_profile import ModeloWorkProfile
 
 _log = get_logger(__name__)
 
@@ -236,6 +237,7 @@ def run_modelo_quickfile(
     read_ports: StateProjectionReadPorts,
     workflow_profile: TaxpayerProfile,
     build_calculation_inputs: Callable[[str], WorkCalculateInputBundle],
+    profile: ModeloWorkProfile | None = None,
 ) -> QuickfileResult:
     """Run readiness → create → calculate → verify → export for one modelo target.
 
@@ -269,6 +271,7 @@ def run_modelo_quickfile(
         workflow_profile: The active :class:`TaxpayerProfile` the readiness and
             calculate stages are evaluated against.
         build_calculation_inputs: Factory producing the calculate-stage inputs.
+        profile: Already-authenticated work profile reused by calculate when supplied.
 
     Returns:
         A :class:`QuickfileResult` whose ``completed`` flag is ``True`` only when
@@ -351,15 +354,15 @@ def run_modelo_quickfile(
 
     # ── Stage 3: calculate ────────────────────────────────────────────────
     try:
-        calculation_inputs = replace(
-            build_calculation_inputs(work_unit.work_unit_id),
-            filing_instance_evidence=command.filing_instance_evidence,
-        )
+        calculation_inputs = build_calculation_inputs(work_unit.work_unit_id)
+        filing_instance_evidence = command.filing_instance_evidence or calculation_inputs.filing_instance_evidence
+        calculation_inputs = replace(calculation_inputs, filing_instance_evidence=filing_instance_evidence)
         calculation = calculate_modelo_work_revision(
             work_unit_id=work_unit.work_unit_id,
             actor=command.actor,
             inputs=calculation_inputs,
             ports=calculation_action_ports,
+            profile=profile,
         )
     except CadrumoError as exc:
         return _halted(

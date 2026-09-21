@@ -73,7 +73,7 @@ def _attestation_reference(*, operation: PinnedAuthorityOperation) -> FilingEvid
         operation=operation,
         store=AttachmentStore(),
         clock=lambda: _CLOCK,
-    )
+    ).filing_evidence_reference()
 
 
 def test_authors_general_scope_evidence_from_current_profile_and_authority(

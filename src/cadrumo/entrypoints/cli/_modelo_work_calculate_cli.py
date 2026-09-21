@@ -21,7 +21,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import typer
@@ -29,12 +28,20 @@ from pydantic import ValidationError
 
 from ...application.modelo.action_errors import (
     CalculationRegistryUnavailableError,
+    M303FilingEvidenceError,
     WorkUnitMutationRefusedError,
     WorkUnitNotFoundError,
 )
 from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
 from ...application.modelo.calculate_input import calculate_modelo_work_revision
 from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
+from ...application.modelo.m303_exonerado_390_applicability_attestation import (
+    m303_exonerado_390_filing_evidence_reference,
+)
+from ...application.modelo.m303_ordinary_filing_evidence_authoring import (
+    OrdinaryM303FilingEvidenceRequest,
+    author_ordinary_m303_filing_instance_evidence,
+)
 from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
@@ -43,7 +50,6 @@ from ...core.json_contract import Notice
 from ...core.rescate_type import RescateType
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ._m303_filing_evidence_input import m303_filing_instance_evidence_from_cli
 from ._modelo_behavior_support import require_active_profile, resolve_work_unit_for_cli
 from ._modelo_cli_support import (
     bad_parameter_from_error,
@@ -119,7 +125,10 @@ def _run_work_calculate(
     sal_reserva_dotada: str | None,
     sal_capital_social: str | None,
     autoconsumo_promotor_base: str | None,
-    m303_filing_evidence: Path | None,
+    joint_return_elected: bool | None,
+    annual_volume_nonzero: bool | None,
+    m303_exonerado_390_attachment_id: str | None,
+    m303_exonerado_390_sha256: str | None,
     output_language: OutputLanguage | None,
 ) -> None:
     deps.activate_output_language(ctx, output_language)
@@ -127,7 +136,7 @@ def _run_work_calculate(
     unit = deps.resolve_work_unit_for_cli(
         work_unit_id=work_unit_id, modelo=modelo, year=year, period=period, revision=revision, bucket_id=bucket_id
     )
-    from .state_projection_support import authority_operation, calculation_action_ports_factory
+    from .state_projection_support import attachment_store, authority_operation, calculation_action_ports_factory
 
     # One decrypted record serves every gate, resolver and advisory this command runs.
     operation = authority_operation(ctx)
@@ -141,8 +150,15 @@ def _run_work_calculate(
         profile_record=profile.record if profile is not None else None,
     )
     resolved_work_unit_id = unit.work_unit_id
-    filing_instance_evidence = m303_filing_instance_evidence_from_cli(
-        modelo=str(unit.modelo), period=unit.period, evidence_file=m303_filing_evidence
+    filing_instance_evidence = _m303_filing_instance_evidence(
+        unit=unit,
+        joint_return_elected=joint_return_elected,
+        annual_volume_nonzero=annual_volume_nonzero,
+        attachment_id=m303_exonerado_390_attachment_id,
+        sha256=m303_exonerado_390_sha256,
+        operation=operation,
+        profile=profile,
+        store=attachment_store(ctx, bucket_id=unit.bucket_id),
     )
     calculation_inputs = deps.calculate_input_bundle_from_cli(
         work_unit_id=resolved_work_unit_id,
@@ -246,6 +262,43 @@ def _work_calculate_saved_confirmation(revision: CalculationRevision) -> str:
     )
 
 
+def _m303_filing_instance_evidence(
+    *,
+    unit: Any,
+    joint_return_elected: bool | None,
+    annual_volume_nonzero: bool | None,
+    attachment_id: str | None,
+    sha256: str | None,
+    operation: Any,
+    profile: Any,
+    store: Any,
+) -> Any:
+    """Author ordinary M303 evidence only from explicit typed CLI facts."""
+    if str(unit.modelo) != "303":
+        return None
+    if joint_return_elected is None or annual_volume_nonzero is None or attachment_id is None or sha256 is None:
+        raise M303FilingEvidenceError(
+            "Modelo 303 requires --joint-return-elected, --annual-volume-nonzero, "
+            "--m303-exonerado-390-attachment-id, and --m303-exonerado-390-sha256"
+        )
+    return author_ordinary_m303_filing_instance_evidence(
+        work_unit=unit,
+        request=OrdinaryM303FilingEvidenceRequest(
+            filing_year=unit.filing_year,
+            period=unit.period,
+            joint_return_elected=joint_return_elected,
+            annual_volume_nonzero=annual_volume_nonzero,
+            exonerado_390_applicability_reference=m303_exonerado_390_filing_evidence_reference(
+                attachment_id=attachment_id,
+                sha256=sha256,
+            ),
+        ),
+        operation=operation,
+        attachment_store=store,
+        profile=profile,
+    )
+
+
 def _work_calculate_modality_output(
     calculation_result: ModeloWorkCalculationServiceResult,
 ) -> tuple[dict[str, object], list[str]]:
@@ -329,7 +382,10 @@ def work_calculate(
     sal_reserva_dotada: str | None = None,
     sal_capital_social: str | None = None,
     autoconsumo_promotor_base: str | None = None,
-    m303_filing_evidence: Path | None = None,
+    joint_return_elected: bool | None = None,
+    annual_volume_nonzero: bool | None = None,
+    m303_exonerado_390_attachment_id: str | None = None,
+    m303_exonerado_390_sha256: str | None = None,
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Persist a new draft :class:`CalculationRevision` for the resolved work unit."""
@@ -360,6 +416,9 @@ def work_calculate(
         sal_reserva_dotada=sal_reserva_dotada,
         sal_capital_social=sal_capital_social,
         autoconsumo_promotor_base=autoconsumo_promotor_base,
-        m303_filing_evidence=m303_filing_evidence,
+        joint_return_elected=joint_return_elected,
+        annual_volume_nonzero=annual_volume_nonzero,
+        m303_exonerado_390_attachment_id=m303_exonerado_390_attachment_id,
+        m303_exonerado_390_sha256=m303_exonerado_390_sha256,
         output_language=output_language,
     )

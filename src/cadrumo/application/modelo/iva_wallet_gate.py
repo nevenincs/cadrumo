@@ -308,7 +308,22 @@ def _resolve_caller_supplied_prior_compensation(
         persist=False,
         profile_values=profile_values,
     )
-    if decision is None or _decision_is_missing_local_authority(decision):
+    if decision is None:
+        return None
+    if _decision_is_missing_local_authority(decision):
+        if any(amount != Decimal("0") for amount in supplied_amounts):
+            blocked_reason, blocked_message = _blocked_refusal(decision)
+            _raise_iva_wallet_precondition(
+                subject_leaf_key="modelo.work.calculate",
+                reason_code=blocked_reason,
+                translated_message=blocked_message,
+                evidence_values={
+                    "binding_id": _M303_PRIOR_COMPENSATION_BINDING_ID,
+                    "nonzero_amount_count": sum(amount != Decimal("0") for amount in supplied_amounts),
+                    "wallet_blocked": True,
+                },
+                context={"divergence": str(decision.divergence), "reason": blocked_reason},
+            )
         return None
     if _decision_has_concrete_zero_authority(decision):
         if any(amount != Decimal("0") for amount in supplied_amounts):
@@ -358,10 +373,12 @@ def resolve_iva_compensation_decision_for_calculation(
     exists. A supplied decision must match the persisted
     :class:`~cadrumo.domain.iva_compensation.reconciliation.IvaCompensationReconciliationDecision`.
     If the caller supplied a prior-compensation binding or casilla without a
-    decision, the function tries only the local-authority zero path and otherwise
-    returns ``None`` so calculation surfaces the seed/reconcile guidance instead
-    of silently trusting the value. ``profile_values`` is the path projection of
-    the profile the calculation already loaded, or ``None`` when it has none.
+    decision, the function tries only the local-authority zero path. A nonzero
+    supplied value with no usable required authority is a terminal no-action
+    refusal; an otherwise ungrounded zero still returns ``None`` for the
+    first-profile seed/reconcile guidance. ``profile_values`` is the path
+    projection of the profile the calculation already loaded, or ``None`` when
+    it has none.
     """
     if supplied_decision is not None:
         return require_persisted_iva_compensation_decision_for_work_unit(

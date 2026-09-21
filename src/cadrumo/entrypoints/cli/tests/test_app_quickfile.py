@@ -404,16 +404,10 @@ def test_quickfile_runs_full_chain_to_exported_fichero(
     assert out.stat().st_size > 0, "the exported fichero is empty"
 
 
-def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_identity_refusal(
-    tmp_path: Path, *, operation: PinnedAuthorityOperation
-) -> None:
-    """A fully taxable M303 reaches verify, then requires reviewed export identity."""
+def test_quickfile_m303_2026_refuses_the_retired_plaintext_evidence_authority(tmp_path: Path) -> None:
+    """Only the supported ordinary 2025 authoring path may reach M303 calculate."""
 
     _create_profile()
-    bucket_id = _active_bucket_id()
-    _seed_m303_ledger_and_wallet(bucket_id)
-    evidence_path = tmp_path / "m303-filing-evidence.json"
-    _write_m303_filing_evidence(evidence_path, operation=operation)
     out = tmp_path / "modelo-303-2026-1T.boe"
 
     result = _invoke(
@@ -421,8 +415,10 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_ident
             "--format", "json",
             "app", "quickfile",
             "--modelo", "303", "--year", "2026", "--period", "1T",
-            "--m303-filing-evidence", str(evidence_path),
-            "--payment-election", "ingreso",
+            "--joint-return-elected",
+            "--annual-volume-nonzero",
+            "--m303-exonerado-390-attachment-id", "a" * 64,
+            "--m303-exonerado-390-sha256", "a" * 64,
             "--output", str(out),
         ],
     )  # fmt: skip
@@ -431,17 +427,13 @@ def test_quickfile_m303_fully_taxable_ledger_reaches_granted_verify_before_ident
     assert "Traceback" not in result.output
     payload = _payload(result.output)
     assert payload["completed"] is False, result.output
-    assert payload["stopped_at_stage"] == "export", json.dumps(payload, sort_keys=True)
-    assert payload["granted_verificado_completo"] is True
+    assert payload["stopped_at_stage"] == "calculate", json.dumps(payload, sort_keys=True)
+    assert payload["granted_verificado_completo"] is None
 
     statuses = _stage_status(payload)
-    assert statuses["calculate"] == "ok"
-    assert statuses["verify"] == "ok"
-    assert statuses["export"] == "refused"
-
-    notice_text = json.dumps(_notices(result.output), sort_keys=True)
-    assert "prorrata" not in notice_text.lower()
-    assert "product/software identity authority" in notice_text.lower()
+    assert statuses["calculate"] == "refused"
+    assert statuses["verify"] == "skipped"
+    assert statuses["export"] == "skipped"
     assert payload["export"] is None
     assert not out.exists()
 
