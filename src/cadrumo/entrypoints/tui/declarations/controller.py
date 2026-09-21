@@ -438,8 +438,12 @@ def _calendar_search_text(row: DeclarationsCalendarEntryRefV1) -> str:
         calendar_local_label(row.local_filing_state),
         calendar_aeat_label(row.aeat_submission_state),
         calendar_date_label(row.opens_on),
+        calendar_date_label(row.closes_on),
         calendar_date_label(row.adjusted_closes_on),
         calendar_date_label(row.payment_cutoff_on),
+        calendar_date_label(row.evaluated_on),
+        str(row.days_overdue) if row.days_overdue is not None else "",
+        row.shift_reason,
     )
     return _fold(" ".join(values))
 

@@ -219,7 +219,13 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                 "tui.declarations.calendar.detail.dates",
                 opening=calendar_date_label(row.opens_on),
                 payment=calendar_date_label(row.payment_cutoff_on),
-                closing=calendar_date_label(row.adjusted_closes_on),
+                original=calendar_date_label(row.closes_on),
+                effective=calendar_date_label(row.adjusted_closes_on),
+                evaluated=calendar_date_label(row.evaluated_on),
+                overdue=row.days_overdue if row.days_overdue is not None else declarations_copy(
+                    "tui.declarations.calendar.none"
+                ),
+                shift=row.shift_reason,
             ),
             declarations_copy(
                 "tui.declarations.calendar.detail.axes",
@@ -234,6 +240,11 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                         if row.justificante_verified
                         else "tui.declarations.calendar.justificante.not_verified"
                     )
+                ),
+                conflict=declarations_copy(
+                    "tui.declarations.calendar.evidence.conflicted"
+                    if row.evidence_conflicted
+                    else "tui.declarations.calendar.evidence.clear"
                 ),
             ),
         ]

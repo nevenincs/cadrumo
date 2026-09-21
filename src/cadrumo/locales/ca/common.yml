@@ -1199,9 +1199,12 @@ tui:
         local: Estat local
       detail:
         action: 'Acció en prémer Retorn: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant: {receipt}'
-        dates: 'Obertura: {opening} · Pagament: {payment} · Tancament ajustat: {closing}'
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificant: {receipt} · Coherència de l''evidència: {conflict}'
+        dates: 'Obertura: {opening} · Pagament: {payment} · Tancament original: {original} · Tancament efectiu: {effective} · Avaluat: {evaluated} · Dies de retard: {overdue} · Ajust: {shift}'
         source: '{source}: {availability} · Observat: {observed}'
+      evidence:
+        clear: No s'ha observat cap conflicte
+        conflicted: S'ha observat evidència AEAT contradictòria
       empty:
         known: No hi ha obligacions en aquest interval.
         search: Cap obligació coincideix amb la cerca i l'àmbit.

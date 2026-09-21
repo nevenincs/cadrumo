@@ -12,7 +12,7 @@ related:
   - '[[2026-09-17-filing-chain-reconciliation-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:ea5af10f24c98e88fda8999ba9a324d50fec963830a6c76ac533b2d6d8bbfa39'
+body_hash: 'sha256:2c4728d42f33f7f30091e2c2cc0bf28a599dc34bc069a1edcdbca9735f028041'
 ---
 
 # `calendar-obligations` plan
@@ -50,7 +50,7 @@ Expose existing evidence strength, query coverage, reconciliation and safe recov
 Project the settled calendar and evidence contracts into independent CLI and TUI surfaces, then prove parity with synthetic acceptance journeys.
 
 - [x] `P03.S07` - Render typed scope, as-of context, payment cutoff, overdue age, evidence notices and recovery actions in CLI output; `src/cadrumo/entrypoints/cli/_overview_payloads.py, src/cadrumo/entrypoints/cli/_overview_rendering.py and owning tests`.
-- [ ] `P03.S08` - Render the shared calendar context, age, evidence and drilldown actions in the declarations TUI without duplicating business logic; `src/cadrumo/entrypoints/tui/declarations/calendar.py, src/cadrumo/entrypoints/tui/declarations/controller.py, src/cadrumo/entrypoints/tui/declarations/models.py and owning tests`.
+- [x] `P03.S08` - Render the shared calendar context, age, evidence and drilldown actions in the declarations TUI without duplicating business logic; `src/cadrumo/entrypoints/tui/declarations/calendar.py, src/cadrumo/entrypoints/tui/declarations/controller.py, src/cadrumo/entrypoints/tui/declarations/models.py and owning tests`.
 - [ ] `P03.S09` - Prove CLI and TUI calendar parity with isolated synthetic stores and record live paths as not exercised; `dev/acceptance/calendar and owning tests`.
 
 ## Parallelization

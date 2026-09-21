@@ -1210,9 +1210,12 @@ tui:
         local: Estado local
       detail:
         action: 'Acción al pulsar Intro: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificante: {receipt}'
-        dates: 'Apertura: {opening} · Pago: {payment} · Cierre ajustado: {closing}'
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Justificante: {receipt} · Coherencia de evidencia: {conflict}'
+        dates: 'Apertura: {opening} · Pago: {payment} · Cierre original: {original} · Cierre efectivo: {effective} · Evaluado: {evaluated} · Días de retraso: {overdue} · Ajuste: {shift}'
         source: '{source}: {availability} · Observado: {observed}'
+      evidence:
+        clear: Sin conflicto observado
+        conflicted: Evidencia AEAT contradictoria observada
       empty:
         known: No hay obligaciones en este intervalo.
         search: Ninguna obligación coincide con la búsqueda y el ámbito.

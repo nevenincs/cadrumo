@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:6e387abb76befe5cf35dfb5cb19eb9205d9fde58e9553ce4581b4c38fae8c84c'
+body_hash: 'sha256:9c0990f95c9873bae60d69c11a04b864af3ae78a93f44cf5a003cd8fcce15a75'
 related:
   - "[[2026-09-21-calendar-obligations-plan]]"
 ---
@@ -58,4 +58,12 @@ related:
 - `S07` `M` `src/cadrumo/entrypoints/cli/_overview_rendering.py`
 - `S07` `M` `src/cadrumo/entrypoints/cli/tests/test_overview_calendar_verb.py`
 - `S07` `verify:` `uv run ruff check src/cadrumo/entrypoints/cli/_overview_payloads.py src/cadrumo/entrypoints/cli/_overview_rendering.py src/cadrumo/entrypoints/cli/tests/test_overview_calendar_verb.py` -> `pass`
+- `S08` `M` `src/cadrumo/entrypoints/tui/declarations/calendar.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/declarations/controller.py`
+- `S08` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py`
+- `S08` `M` `src/cadrumo/locales/en/common.yml`
+- `S08` `M` `src/cadrumo/locales/es/common.yml`
+- `S08` `M` `src/cadrumo/locales/ca/common.yml`
+- `S08` `M` `src/cadrumo/locales/hu/common.yml`
+- `S08` `verify:` `uv run ruff check src/cadrumo/entrypoints/tui/declarations/calendar.py src/cadrumo/entrypoints/tui/declarations/controller.py src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py` -> `pass`
 

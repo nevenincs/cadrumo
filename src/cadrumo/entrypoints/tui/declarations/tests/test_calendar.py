@@ -28,10 +28,22 @@ from .calendar_fixtures import calendar_controller, calendar_projection
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _EXPECTED = {
-    OutputLanguage.ES: ("Agenda de declaraciones", "Vencida", "Legal:", "Abrir esta declaración"),
-    OutputLanguage.EN: ("Declarations agenda", "Overdue", "Legal:", "Open this declaration"),
-    OutputLanguage.CA: ("Agenda de declaracions", "Vençuda", "Legal:", "Obre aquesta declaració"),
-    OutputLanguage.HU: ("Bevallási napirend", "Lejárt", "Jogi:", "Bevallás megnyitása"),
+    OutputLanguage.ES: (
+        "Agenda de declaraciones", "Vencida", "Legal:", "Días de retraso:", "Coherencia de evidencia:",
+        "Abrir esta declaración",
+    ),
+    OutputLanguage.EN: (
+        "Declarations agenda", "Overdue", "Legal:", "Days overdue:", "Evidence consistency:",
+        "Open this declaration",
+    ),
+    OutputLanguage.CA: (
+        "Agenda de declaracions", "Vençuda", "Legal:", "Dies de retard:", "Coherència de l'evidència:",
+        "Obre aquesta declaració",
+    ),
+    OutputLanguage.HU: (
+        "Bevallási napirend", "Lejárt", "Jogi:", "Késedelmes napok:", "Bizonyíték konzisztenciája:",
+        "Bevallás megnyitása",
+    ),
 }
 
 

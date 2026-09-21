@@ -1168,9 +1168,12 @@ tui:
         local: Local status
       detail:
         action: 'Enter action: {action}'
-        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Receipt: {receipt}'
-        dates: 'Opens: {opening} · Payment: {payment} · Adjusted close: {closing}'
+        axes: 'Legal: {legal} · Local: {local} · AEAT: {aeat} · Receipt: {receipt} · Evidence consistency: {conflict}'
+        dates: 'Opens: {opening} · Payment: {payment} · Original close: {original} · Effective close: {effective} · Evaluated: {evaluated} · Days overdue: {overdue} · Shift: {shift}'
         source: '{source}: {availability} · Observed: {observed}'
+      evidence:
+        clear: No conflict observed
+        conflicted: Conflicting AEAT evidence observed
       empty:
         known: There are no obligations in this range.
         search: No obligation matches the search and scope.

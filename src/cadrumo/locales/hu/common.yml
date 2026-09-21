@@ -1190,9 +1190,12 @@ tui:
         local: Helyi állapot
       detail:
         action: 'Enter művelete: {action}'
-        axes: 'Jogi: {legal} · Helyi: {local} · AEAT: {aeat} · Igazolás: {receipt}'
-        dates: 'Nyitás: {opening} · Fizetés: {payment} · Módosított zárás: {closing}'
+        axes: 'Jogi: {legal} · Helyi: {local} · AEAT: {aeat} · Igazolás: {receipt} · Bizonyíték konzisztenciája: {conflict}'
+        dates: 'Nyitás: {opening} · Fizetés: {payment} · Eredeti zárás: {original} · Tényleges zárás: {effective} · Értékelés: {evaluated} · Késedelmes napok: {overdue} · Eltolás: {shift}'
         source: '{source}: {availability} · Megfigyelve: {observed}'
+      evidence:
+        clear: Nem figyelhető meg ellentmondás
+        conflicted: Ellentmondó AEAT-bizonyíték figyelhető meg
       empty:
         known: Ebben az időszakban nincs kötelezettség.
         search: Nincs a keresésnek és szűrőnek megfelelő kötelezettség.
