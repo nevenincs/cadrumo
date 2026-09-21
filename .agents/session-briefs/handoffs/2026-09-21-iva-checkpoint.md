@@ -643,3 +643,42 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   Do not stage the failing refund test as accepted, infer a refund request, or
   mutate profile-owned code without coordination. Installed package remains
   `cadrumo==0.5.1`, authority generation `db354561492ec6670dc775f9dd7fa24526098b74ab6b86dac0d5134df16430b4`.
+- An isolated unchanged `devolver` rerun failed even earlier at profile
+  creation: empty child stdout caused `JSONDecodeError` after about 30s, with
+  no persisted profile bucket. Log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T223622.485473Z-pytest-54860-c3e6a521/run.log`.
+  Luna Max found `.venv/Lib/site-packages/_editable_impl_cadrumo.pth` points
+  to live `src` twice and distribution `direct_url.json` says editable. Thus
+  the prior `.venv/Scripts/aeat.exe` is an installed console script but imports
+  mutable checkout code; `cadrumo==0.5.1` alone did not pin product bytes.
+  Source churn could explain the SyntaxError/FileNotFoundError and unstable
+  early failures, but causation is NOT PROVEN. No timeout, OS termination,
+  path collision, or inherited CADRUMO_* contamination was evidenced.
+- Root CLI composition source already binds custody through
+  `profile_adapter_composition()` and `composed_profile_persistence_ports()`;
+  current invoice factory does not itself call the profile-summary edge in the
+  failed trace. The fix at `072b643fd44` is present; do not patch invoice or
+  custody code from that ambiguous editable-runtime exception.
+- The supported real-wheel client fixture is already owned in
+  `dev/packaging/release_cohort_support.py::client_venv_template` and used by
+  IVA TUI. A bounded worker is changing only IVA CLI acceptance test binding
+  (new test fixture + three test modules) to that wheel console script,
+  preserving the unstaged refund diff and fresh stores. Ruff/format/ty/diff
+  pass. The exact serial four-node real-wheel check ran under PID 76512; log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T224625.672911Z-pytest-76512-eacd426b/run.log`:
+  ordinary M303 PASS, 2025/4T compensar PASS, 2025/4T local devolver PASS;
+  multirate FAIL at `app modelo work calculate` with
+  `ERROR_FINANCIAL_AGGREGATION_VALIDATION` (bucket-derived bindings conflict
+  with supplied input). Luna Max is tracing only that multirate conflict.
+  The worker's first 30-second tool yield was not process completion; final
+  exit was 1 at 22:52:56 UTC. Wheel payload digest was computed/validated by
+  the shared fixture but not retained in a sanitized receipt, so do not invent
+  a digest or relabel old editable receipts as wheel receipts. Fixture/test
+  edits are not yet committed while the red multirate case is resolved.
+- Annual 390 read-only candidate: existing `docs/_sequences/how-to/modelo-390/
+  modelo-390-annual-2025.json` frames 25-27 have a 2025/0A ordinary-regime
+  chain over four locally filed 303 periods. Independent oracle accrued
+  1,470.00, deductible 105.00, result 1,365.00; local-chain advisory is not
+  official filing evidence. Installed wheel replay through calculate/verify is
+  NOT RUN and should wait for runtime binding stability; no export identity is
+  needed for calculation/verification.
