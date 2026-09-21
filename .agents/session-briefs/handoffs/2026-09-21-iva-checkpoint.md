@@ -563,6 +563,32 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   M303 export accepted. Retain the exact installed export refusal. An
   independently valid non-EEDD path would require new official evidence and
   an accepted authority decision.
-- TUI-only installed capture/reopen worker still owns its exclusive lane under
-  `dev/acceptance/iva/`; no result yet. A new Luna Max is selecting one
-  distinct identity-independent IVA acceptance case beyond the €10.50 path.
+- Luna Max selected an independent installed 2025/1T multi-rate case. The
+  accepted runner/test were committed as `848c1a3a1b` in
+  `dev/acceptance/iva/multirate_cli_journey.py` and its focused test. One
+  reserved installed check passed (synchronous process exit 0, 30.3 s; pytest
+  emitted no log/retained receipt). Fresh-process readback preserved an issued
+  invoice's RATE_21 and RATE_10 lines and both transaction links. Independent
+  oracle observations were 21.00 + 5.00 - 10.50 = 15.50; verification granted.
+  Export was explicitly not attempted because product identity is unavailable.
+  Source identity `b8c3da0383f4d58cc649d29bf2c3b35b63b09ee3`, package
+  `cadrumo==0.5.1`, authority generation
+  `db354561492ec6670dc775f9dd7fa24526098b74ab6b86dac0d5134df16430b4`,
+  descriptor SHA `a4c77146a93ba2c2ad1e293a3330e420dcba999113da924fda122dbff9dc571b`.
+- TUI installed capture/classification child was proven through site-packages:
+  synthetic statement import and both combined classification forms completed;
+  no invoice/link/M303 action was taken. Fresh-process Ledger readback remains
+  unproven. Two reserved tests failed only at reopen; latest log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T214230.004555Z-pytest-49220-cf668ca0/run.log`
+  (handle 99824, exit 1). A final diagnostic rerun at
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T214652.536966Z-pytest-32152-6bbab707/run.log`
+  (handle 18988, exit 1) preserved `stage=launcher_not_entered` in the
+  sanitized reopen receipt. The second installed `launcher.main()` returned
+  before `admitted_session_autopilot` invoked `drive_after_home`; it never
+  reached Ledger/Entries. This is not evidence of a product persistence defect.
+  The shared installed-session helper boundary is
+  `dev/acceptance/income_tax/installed_tui_child.py`; income/launcher owner
+  coordination is needed for a narrow second-session admission check. The IVA
+  harness files remain untracked and failing, owned by the bounded TUI worker;
+  do not stage them as passing acceptance or assert TUI persistence or
+  cross-frontend continuation from capture-only evidence.
