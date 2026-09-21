@@ -2205,7 +2205,8 @@
         "cadrumo.entrypoints.tui.secret.passphrase",
         "cadrumo.entrypoints.tui.secret.registration",
         "cadrumo.entrypoints.tui.withholding",
-        "cadrumo.entrypoints.tui.withholding.door"
+        "cadrumo.entrypoints.tui.withholding.door",
+        "cadrumo.entrypoints.tui.withholding.screen"
       ]
     },
     "cadrumo_harness": {
@@ -2299,6 +2300,8 @@
         "dev.acceptance.iva.cli_journey",
         "dev.acceptance.iva.installed_tui_capture_reopen",
         "dev.acceptance.iva.multirate_cli_journey",
+        "dev.acceptance.ledger",
+        "dev.acceptance.ledger.scenario",
         "dev.acceptance.profile",
         "dev.acceptance.profile.cli_journey",
         "dev.acceptance.profile.installed_tui_child",
