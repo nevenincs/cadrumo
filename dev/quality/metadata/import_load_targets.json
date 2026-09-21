@@ -2280,6 +2280,7 @@
         "dev",
         "dev._paths",
         "dev.acceptance",
+        "dev.acceptance.assets",
         "dev.acceptance.assets.evidence",
         "dev.acceptance.assets.export_journey",
         "dev.acceptance.assets.installed_journey",
