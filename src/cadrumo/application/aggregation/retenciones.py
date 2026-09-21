@@ -84,7 +84,14 @@ class Modelo180StructuredAddress(BaseModel):
 
 
 class Modelo180PropertyEvidence(BaseModel):
-    """One allocation's explicit property and annual-recipient evidence."""
+    """One allocation's explicit property and annual-recipient evidence.
+
+    ``withholding_percentage`` is supplied evidence, not a quotient inferred
+    from rounded base and withholding amounts.  The Modelo 180 record design
+    requires the last percentage applied in the year when a property row has
+    more than one percentage; :func:`aggregate_retenciones_180` selects that
+    value from the latest accrued observation.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -95,6 +102,7 @@ class Modelo180PropertyEvidence(BaseModel):
     recipient_province_code: str = Field(pattern=r"^\d{2}$")
     modality: Literal["1", "2"]
     accrual_year: int = Field(ge=1900, le=9999)
+    withholding_percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("99.99"), decimal_places=2)
     representative_nif: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=16)
 
     @model_validator(mode="after")
@@ -190,6 +198,7 @@ class Modelo180Type2Row(BaseModel):
     observations_count: NonNegativeInt
     taxable_base: Decimal
     retencion_amount: Decimal = Field(ge=Decimal("0"))
+    withholding_percentage: Decimal = Field(ge=Decimal("0"), le=Decimal("99.99"), decimal_places=2)
 
     @property
     def sign(self) -> Literal["positive", "reimbursement"]:
@@ -525,11 +534,29 @@ def aggregate_retenciones_180(
         detail = members[0].modelo_180_property
         if detail is None:
             raise AssertionError("complete Modelo 180 detail must be present")
-        if any(member.modelo_180_property != detail for member in members[1:]):
+        # Percentage is evidence for the individual observation, not part of
+        # the official emitted-row identity.  The design directs us to show
+        # the last percentage applied in the year, so different earlier rates
+        # do not fragment the row.  Every other property-detail value must
+        # still agree rather than being guessed or silently selected.
+        detail_without_percentage = detail.model_dump(exclude={"withholding_percentage"})
+        if any(
+            member.modelo_180_property is None
+            or member.modelo_180_property.model_dump(exclude={"withholding_percentage"}) != detail_without_percentage
+            for member in members[1:]
+        ):
             raise ValueError("Modelo 180 property detail conflicts within one emitted row")
         names = {member.perceptor_name for member in members if member.perceptor_name}
         if len(names) > 1:
             raise ValueError("Modelo 180 recipient detail conflicts within one emitted row")
+        latest_accrued_on = max(member.accrued_on for member in members)
+        latest_percentages = {
+            member.modelo_180_property.withholding_percentage
+            for member in members
+            if member.accrued_on == latest_accrued_on and member.modelo_180_property is not None
+        }
+        if len(latest_percentages) != 1:
+            raise ValueError("Modelo 180 last-applied withholding percentage is ambiguous")
         type2_rows.append(
             Modelo180Type2Row(
                 filing_year=period.filing_year,
@@ -539,6 +566,7 @@ def aggregate_retenciones_180(
                 observations_count=len(members),
                 taxable_base=sum((member.taxable_base for member in members), Decimal("0")),
                 retencion_amount=sum((member.retencion_amount for member in members), Decimal("0")),
+                withholding_percentage=next(iter(latest_percentages)),
             )
         )
     return RetencionesAggregation(

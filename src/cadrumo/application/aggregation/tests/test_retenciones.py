@@ -59,6 +59,7 @@ def _property(key: str, cadastral_reference: str) -> Modelo180PropertyEvidence:
         recipient_province_code="28",
         modality="1",
         accrual_year=2025,
+        withholding_percentage=Decimal("19.00"),
     )
 
 

@@ -9,7 +9,10 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
-from ...domain.calculations.registry.retenciones_bindings import resolve_retenciones_aggregation_binding_values
+from ...domain.calculations.registry.retenciones_bindings import (
+    resolve_retenciones_aggregation_binding_row_values,
+    resolve_retenciones_aggregation_binding_values,
+)
 from ._modelo_bindings_support import (
     STORAGE_DEGRADATION_ERRORS,
     empty_source_resolution,
@@ -159,6 +162,7 @@ class RetencionesAggregationSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=resolve_retenciones_aggregation_binding_values(context.revision, aggregation),
+            row_binding_values=resolve_retenciones_aggregation_binding_row_values(context.revision, aggregation),
             diagnostics=administrador_retencion_rate_advisory_observations(
                 observations, effective_date=context.period.end_date
             ),

@@ -1,0 +1,220 @@
+# Modelo 180 record type 2 fields are emitted from the one canonical annual
+# property materialization.  The selected 2023-y-siguientes design remains the
+# authority for slot shape; these bindings only connect its existing template
+# casillas to one repeated, provider-native type-2 row.
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-nif"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.nif", fact = "row_field", row_field = "perceptor_nif", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-representative-nif"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.nif-representante-legal", fact = "row_field", row_field = "representative_nif", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-name"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.nombre", fact = "row_field", row_field = "perceptor_name", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-recipient-province"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.provincia", fact = "row_field", row_field = "recipient_province_code", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-modality"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.modalidad", fact = "row_field", row_field = "modality", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-base"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.base", fact = "row_field", row_field = "taxable_base", grouping = "per_type2_record", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-withholding-percentage"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.porcentaje-retencion", fact = "row_field", row_field = "withholding_percentage", grouping = "per_type2_record", record = "perceptor", data_type = "decimal" }
+value = { data_type = "decimal", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-retenciones"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.retenciones", fact = "row_field", row_field = "retencion_amount", grouping = "per_type2_record", record = "perceptor", data_type = "money" }
+value = { data_type = "money", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-accrual-year"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.ejercicio-devengo", fact = "row_field", row_field = "accrual_year", grouping = "per_type2_record", record = "perceptor", data_type = "integer" }
+value = { data_type = "integer", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-property-situation"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.situacion-inmueble", fact = "row_field", row_field = "situation", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-cadastral-reference"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.referencia-catastral", fact = "row_field", row_field = "cadastral_reference", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-street-type"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-tipo-via", fact = "row_field", row_field = "street_type", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-street-name"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-nombre-via", fact = "row_field", row_field = "street_name", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-number-type"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-tipo-numeracion", fact = "row_field", row_field = "number_type", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-house-number"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-numero-casa", fact = "row_field", row_field = "house_number", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-number-qualifier"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-calificador-numero", fact = "row_field", row_field = "number_qualifier", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-block"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-bloque", fact = "row_field", row_field = "block", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-portal"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-portal", fact = "row_field", row_field = "portal", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-staircase"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-escalera", fact = "row_field", row_field = "staircase", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-floor"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-planta", fact = "row_field", row_field = "floor", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-door"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-puerta", fact = "row_field", row_field = "door", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-complement"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-complemento", fact = "row_field", row_field = "complement", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-locality"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-localidad", fact = "row_field", row_field = "locality", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-municipality"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-municipio", fact = "row_field", row_field = "municipality", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-municipality-code"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-codigo-municipio", fact = "row_field", row_field = "municipality_code", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-property-province"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-provincia", fact = "row_field", row_field = "province_code", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]
+
+[[revisions.2023-y-siguientes.bindings]]
+id = "modelo-180-perceptor-row-postal-code"
+provider = { kind = "retenciones_aggregation", target_casilla_id = "perc.inmueble-codigo-postal", fact = "row_field", row_field = "postal_code", grouping = "per_type2_record", record = "perceptor", data_type = "text" }
+value = { data_type = "text", channel = "row_set" }
+aggregation = { op = "rows" }
+legal_refs = ["ley-35-2006:art-99", "orden-hap-1732-2014:art-2", "orden-hfp-1284-2023:art-7", "rd-439-2007:art-108", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-180-2023"]

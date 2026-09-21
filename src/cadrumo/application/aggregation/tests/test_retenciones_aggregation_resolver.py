@@ -120,6 +120,7 @@ def _observation(nif: str) -> RetencionObservation:
             recipient_province_code="28",
             modality="1",
             accrual_year=2024,
+            withholding_percentage=Decimal("19.00"),
         ),
     )
 

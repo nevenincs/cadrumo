@@ -374,6 +374,7 @@ sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
 [[revisions.2023-y-siguientes.family_overrides]]
 family = "bindings"
 selector = {revision = "2019-2022", id = "modelo-180-115-perceptores-anual"}
+fields = { provider = { fact = "type2_record_count" } }
 sequence_additions = {legal_refs = ["orden-hfp-1284-2023:art-7"], source_refs = ["boe-modelo-180-2023-form"]}
 sequence_order = {legal_refs = [0, 1, 2, 6, 3, 4, 5]}
 
