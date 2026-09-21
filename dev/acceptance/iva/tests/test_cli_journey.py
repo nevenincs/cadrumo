@@ -13,8 +13,8 @@ from ..cli_journey import run_iva_m303_cli_journey
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-def test_installed_cli_captures_reopens_and_calculates_ordinary_2025_m303(tmp_path: Path) -> None:
-    """Only public installed commands may produce the saved 10.50 EUR draft."""
+def test_installed_cli_records_product_identity_block_after_verifying_ordinary_2025_m303(tmp_path: Path) -> None:
+    """The public path records its known export-authority blocker without claiming an export."""
     repository_root = Path(__file__).resolve().parents[4]
     executable = Path(sys.executable).with_name("aeat.exe")
     authority_root = repository_root / ".authority"
@@ -33,11 +33,28 @@ def test_installed_cli_captures_reopens_and_calculates_ordinary_2025_m303(tmp_pa
     assert len(receipt.invoice_ids) == 2
     assert receipt.attestation_attachment_id == receipt.attestation_sha256
     assert receipt.calculation_revision_id
+    assert receipt.verification_report_id
+    assert receipt.verification_granted is True
+    assert receipt.verification_status
+    assert receipt.export_status == "verified_export_blocked"
+    assert receipt.export_failure_code == "FAIL_MODELO_EXPORT"
+    assert (
+        receipt.export_failure_diagnostic == "Modelo 303 export requires explicit product/software identity authority"
+    )
+    assert receipt.export_artifact is None
+    assert receipt.export_size is None
+    assert receipt.export_sha256 is None
+    assert receipt.export_layout_id is None
+    assert receipt.export_parser_verdict == "not_run_product_software_identity_pending"
+    assert receipt.exported_iva_resultado is None
+    assert receipt.local_export_only is None
     assert receipt.authority_generation
     assert receipt.executable_sha256
     assert receipt.purchase_artifact == "<synthetic-purchase-artifact>"
     rendered = str(receipt.to_dict())
     assert "synthetic-purchase.pdf" not in rendered
+    assert "m303-2025-1t.fichero-boe" not in rendered
     assert "profile_passphrase" not in rendered
     assert "attachment:" not in rendered
-    assert all(command.returncode == 0 for command in receipt.commands)
+    assert receipt.commands[-1].returncode != 0
+    assert all(command.returncode == 0 for command in receipt.commands[:-1])

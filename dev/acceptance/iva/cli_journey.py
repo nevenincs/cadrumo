@@ -12,11 +12,14 @@ import json
 import secrets
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
 from typing import Final, cast
 
+from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
+from cadrumo.domain.calculations.registry.export import resolve_export_layout
+from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
 from dev.acceptance.income_tax import cli_journey as income_tax_cli_journey
 from dev.acceptance.income_tax.cli_journey import CommandEvidence, InstalledCli, JourneyError
 
@@ -26,6 +29,11 @@ _SALE_IVA: Final = Decimal("21.00")
 _PURCHASE_IVA: Final = Decimal("10.50")
 _EXPECTED_RESULT: Final = _SALE_IVA - _PURCHASE_IVA
 _PRIVATE_ARTIFACT_PLACEHOLDER: Final = "<synthetic-purchase-artifact>"
+_EXPORT_ARTIFACT_PLACEHOLDER: Final = "<local-m303-export-artifact>"
+_PRODUCT_IDENTITY_EXPORT_REFUSAL_CODE: Final = "FAIL_MODELO_EXPORT"
+_PRODUCT_IDENTITY_EXPORT_REFUSAL_DIAGNOSTIC: Final = (
+    "Modelo 303 export requires explicit product/software identity authority"
+)
 _PROFILE_CREATE_ARGS: Final = getattr(income_tax_cli_journey, "_profile_create_args")  # noqa: B009
 _AUTHORITY_GENERATION: Final = getattr(income_tax_cli_journey, "_authority_generation")  # noqa: B009
 
@@ -41,6 +49,7 @@ class SanitizedCommandReceipt:
     argv: tuple[str, ...]
     returncode: int
     status: str
+    notice_codes: tuple[str, ...]
     result_ids: tuple[str, ...]
 
 
@@ -65,6 +74,19 @@ class IvaM303CliJourneyReceipt:
     work_unit_id: str
     calculation_revision_id: str
     iva_resultado: str
+    verification_report_id: str
+    verification_status: str
+    verification_granted: bool
+    export_status: str
+    export_failure_code: str | None
+    export_failure_diagnostic: str | None
+    export_artifact: str | None
+    export_size: int | None
+    export_sha256: str | None
+    export_layout_id: str | None
+    export_parser_verdict: str
+    exported_iva_resultado: str | None
+    local_export_only: bool | None
     commands: tuple[SanitizedCommandReceipt, ...]
 
     def to_dict(self) -> dict[str, object]:
@@ -382,6 +404,84 @@ def run_iva_m303_cli_journey(
             f"independent IVA oracle mismatch: expected {_EXPECTED_RESULT:.2f}, got {iva_resultado:.2f}"
         )
 
+    export_cli = InstalledCli(
+        cli.executable,
+        storage_root=storage_root,
+        authority_root=authority_root,
+        passphrase=cli.passphrase,
+    )
+    verification = _result(
+        _run(
+            export_cli,
+            receipts,
+            artifact,
+            ("app", "modelo", "work", "verify", revision_id),
+            result_keys=("verification_report_id", "calculation_revision_id"),
+        )
+    )
+    verification_report_id = _required_id(verification, "verification_report_id")
+    verification_status = _required_text(verification, "completeness_status")
+    if verification.get("calculation_revision_id") != revision_id:
+        raise IvaCliJourneyError("Modelo 303 verify returned a different calculation revision")
+    if verification.get("granted_verificado_completo") is not True:
+        raise IvaCliJourneyError(
+            "Modelo 303 verify did not grant complete verification: "
+            f"status={verification_status}; findings={verification.get('finding_count')}"
+        )
+
+    export_artifact = artifact_root / "m303-2025-1t.fichero-boe"
+    export_document = _run(
+        export_cli,
+        receipts,
+        artifact,
+        ("app", "modelo", "export", work_unit_id, "--output", str(export_artifact)),
+        result_keys=("work_unit_id", "calculation_revision_id", "file_sha256"),
+        redacted_paths={export_artifact: _EXPORT_ARTIFACT_PLACEHOLDER},
+        accepted_refusal=(_PRODUCT_IDENTITY_EXPORT_REFUSAL_CODE, _PRODUCT_IDENTITY_EXPORT_REFUSAL_DIAGNOSTIC),
+    )
+    export_error = _object_mapping(export_document.get("error"))
+    if export_error:
+        if export_artifact.exists():
+            raise IvaCliJourneyError("refused Modelo 303 export wrote an artifact")
+        export_status = "verified_export_blocked"
+        export_failure_code = _PRODUCT_IDENTITY_EXPORT_REFUSAL_CODE
+        export_failure_diagnostic = _PRODUCT_IDENTITY_EXPORT_REFUSAL_DIAGNOSTIC
+        receipt_export_artifact: str | None = None
+        export_size: int | None = None
+        export_sha256: str | None = None
+        export_layout_id: str | None = None
+        export_parser_verdict = "not_run_product_software_identity_pending"
+        exported_iva_resultado: str | None = None
+        local_export_only: bool | None = None
+    else:
+        exported = _result(export_document)
+        _require_export_receipt(
+            exported=exported,
+            work_unit_id=work_unit_id,
+            calculation_revision_id=revision_id,
+            artifact=export_artifact,
+        )
+        payload = export_artifact.read_bytes()
+        if not payload:
+            raise IvaCliJourneyError("Modelo 303 export wrote an empty artifact")
+        export_layout_id, parsed_resultado = _parse_exported_iva_resultado(
+            authority_root=authority_root,
+            payload=payload,
+        )
+        if parsed_resultado != _EXPECTED_RESULT:
+            raise IvaCliJourneyError(
+                f"canonical export IVA result mismatch: expected {_EXPECTED_RESULT:.2f}, got {parsed_resultado:.2f}"
+            )
+        export_status = "verified_exported"
+        export_failure_code = None
+        export_failure_diagnostic = None
+        receipt_export_artifact = _EXPORT_ARTIFACT_PLACEHOLDER
+        export_size = len(payload)
+        export_sha256 = _sha256_bytes(payload)
+        export_parser_verdict = "canonical_export_parser_verified"
+        exported_iva_resultado = f"{parsed_resultado:.2f}"
+        local_export_only = True
+
     descriptor = authority_root.resolve(strict=True) / "authority.current.json"
     return IvaM303CliJourneyReceipt(
         schema_version="iva-01-installed-cli-journey-v1",
@@ -401,6 +501,19 @@ def run_iva_m303_cli_journey(
         work_unit_id=work_unit_id,
         calculation_revision_id=revision_id,
         iva_resultado=f"{iva_resultado:.2f}",
+        verification_report_id=verification_report_id,
+        verification_status=verification_status,
+        verification_granted=True,
+        export_status=export_status,
+        export_failure_code=export_failure_code,
+        export_failure_diagnostic=export_failure_diagnostic,
+        export_artifact=receipt_export_artifact,
+        export_size=export_size,
+        export_sha256=export_sha256,
+        export_layout_id=export_layout_id,
+        export_parser_verdict=export_parser_verdict,
+        exported_iva_resultado=exported_iva_resultado,
+        local_export_only=local_export_only,
         commands=tuple(receipts),
     )
 
@@ -495,6 +608,8 @@ def _run(
     args: tuple[str, ...],
     *,
     result_keys: tuple[str, ...],
+    redacted_paths: Mapping[Path, str] | None = None,
+    accepted_refusal: tuple[str, str] | None = None,
 ) -> dict[str, object]:
     """Run one public command and retain a strict, sanitized receipt only."""
     document = cli.run(args, allow_error=True)
@@ -502,32 +617,55 @@ def _run(
     result = cast(object, document.get("result"))
     result_mapping = _object_mapping(result)
     result_ids = tuple(str(value) for key in result_keys if isinstance((value := result_mapping.get(key)), str))
-    receipts.append(_command_receipt(args=args, evidence=evidence, artifact=artifact, result_ids=result_ids))
+    receipts.append(
+        _command_receipt(
+            args=args,
+            evidence=evidence,
+            artifact=artifact,
+            result_ids=result_ids,
+            redacted_paths=redacted_paths,
+        )
+    )
     if evidence.returncode != 0:
         error = cast(object, document.get("error"))
         error_mapping = _object_mapping(error)
         code = error_mapping.get("code")
         message = error_mapping.get("message")
+        if accepted_refusal == (code, message):
+            return cast(dict[str, object], document)
         raise IvaCliJourneyError(
-            f"public command refused: {' '.join(_sanitize_argv(args, artifact))}; code={code}; message={message}"
+            "public command refused: "
+            f"{' '.join(_sanitize_argv(args, artifact, redacted_paths))}; code={code}; message={message}"
         )
     return cast(dict[str, object], document)
 
 
 def _command_receipt(
-    *, args: tuple[str, ...], evidence: CommandEvidence, artifact: Path, result_ids: tuple[str, ...]
+    *,
+    args: tuple[str, ...],
+    evidence: CommandEvidence,
+    artifact: Path,
+    result_ids: tuple[str, ...],
+    redacted_paths: Mapping[Path, str] | None = None,
 ) -> SanitizedCommandReceipt:
     return SanitizedCommandReceipt(
-        argv=("--format", "json", *_sanitize_argv(args, artifact)),
+        argv=("--format", "json", *_sanitize_argv(args, artifact, redacted_paths)),
         returncode=int(evidence.returncode),
         status=str(evidence.status),
+        notice_codes=tuple(evidence.notice_codes),
         result_ids=result_ids,
     )
 
 
-def _sanitize_argv(args: tuple[str, ...], artifact: Path) -> tuple[str, ...]:
-    artifact_text = str(artifact.resolve())
-    return tuple(_PRIVATE_ARTIFACT_PLACEHOLDER if value == artifact_text else value for value in args)
+def _sanitize_argv(
+    args: tuple[str, ...],
+    artifact: Path,
+    redacted_paths: Mapping[Path, str] | None = None,
+) -> tuple[str, ...]:
+    replacements = {str(artifact.resolve()): _PRIVATE_ARTIFACT_PLACEHOLDER}
+    if redacted_paths is not None:
+        replacements.update({str(path.resolve()): placeholder for path, placeholder in redacted_paths.items()})
+    return tuple(replacements.get(value, value) for value in args)
 
 
 def _result(document: dict[str, object]) -> dict[str, object]:
@@ -535,6 +673,52 @@ def _result(document: dict[str, object]) -> dict[str, object]:
     if not isinstance(result, dict):
         raise IvaCliJourneyError("public command returned no object result")
     return cast(dict[str, object], result)
+
+
+def _require_export_receipt(
+    *,
+    exported: Mapping[str, object],
+    work_unit_id: str,
+    calculation_revision_id: str,
+    artifact: Path,
+) -> None:
+    """Bind the command receipt to the local artifact before parsing its bytes."""
+    if exported.get("work_unit_id") != work_unit_id:
+        raise IvaCliJourneyError("Modelo 303 export returned a different work unit")
+    if exported.get("calculation_revision_id") != calculation_revision_id:
+        raise IvaCliJourneyError("Modelo 303 export returned a different calculation revision")
+    if not artifact.is_file():
+        raise IvaCliJourneyError("Modelo 303 export reported success without an artifact")
+    size = exported.get("byte_size")
+    if not isinstance(size, int) or size != artifact.stat().st_size:
+        raise IvaCliJourneyError("Modelo 303 export byte-size receipt does not match its artifact")
+    sha256 = exported.get("file_sha256")
+    if not isinstance(sha256, str) or sha256 != _sha256_path(artifact):
+        raise IvaCliJourneyError("Modelo 303 export digest receipt does not match its artifact")
+
+
+def _parse_exported_iva_resultado(*, authority_root: Path, payload: bytes) -> tuple[str, Decimal]:
+    """Read the selected official M303 layout and its semantic IVA result field."""
+    descriptor = authority_root.resolve(strict=True) / "authority.current.json"
+    try:
+        authority = IndexedRegistryAuthority(descriptor)
+        with authority.operation() as operation:
+            snapshot = operation.snapshot("303", filing_year=_YEAR, period=_PERIOD)
+            layout = resolve_export_layout(snapshot).layout
+        parsed = parse_export_payload(layout, payload)
+    except Exception as exc:
+        raise IvaCliJourneyError(f"canonical Modelo 303 export parser refused: {type(exc).__name__}") from exc
+    values: set[Decimal] = set()
+    for field in parsed.casillas:
+        if str(field.casilla_id) != "iva.resultado":
+            continue
+        try:
+            values.add(Decimal(str(field.value)).quantize(Decimal("0.01")))
+        except (InvalidOperation, TypeError, ValueError) as exc:
+            raise IvaCliJourneyError("canonical export iva.resultado is not decimal") from exc
+    if len(values) != 1:
+        raise IvaCliJourneyError("canonical export has no unambiguous iva.resultado field")
+    return str(parsed.layout_id), values.pop()
 
 
 def _object_mapping(value: object) -> Mapping[str, object]:
@@ -550,8 +734,19 @@ def _required_id(payload: dict[str, object], key: str) -> str:
     return value
 
 
+def _required_text(payload: Mapping[str, object], key: str) -> str:
+    value = payload.get(key)
+    if not isinstance(value, str) or not value:
+        raise IvaCliJourneyError(f"public command returned no {key}")
+    return value
+
+
 def _sha256_path(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
+    return _sha256_bytes(path.read_bytes())
+
+
+def _sha256_bytes(payload: bytes) -> str:
+    return hashlib.sha256(payload).hexdigest()
 
 
 def _checkout_source_identity() -> str:

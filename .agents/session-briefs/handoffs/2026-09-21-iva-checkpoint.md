@@ -411,3 +411,20 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   descriptor SHA-256
   `fe73492dbafb69e899833b88f2f70d1c25438115bde87d0ad867d4dac516c022`.
   Verify/export remain the next bounded acceptance action.
+- Fresh-process verification now grants `verificado_completo`. Export is executed
+  once and refuses exactly with `FAIL_MODELO_EXPORT`: Modelo 303 requires explicit
+  AEAT product/software identity authority. The passing acceptance receipt is
+  explicitly `verified_export_blocked`; it records no artifact, digest, parser
+  success or exported result and marks canonical parsing
+  `not_run_product_software_identity_pending`.
+- The required authority is an AEAT-assigned four-byte program identifier,
+  validated nine-byte developer tax ID and reviewed evidence reference/digest.
+  No public writer/CLI seam currently supplies it. Test literals `C303` and
+  `Y0000001S`, taxpayer/presenter identity, provider cc and session UUID are not
+  valid substitutes and were not used. Provider/cc/UUID remain pending exactly
+  as the session brief records.
+- Blocker-aware installed acceptance: 1 passed in 118.66s, log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T191207.311466Z-pytest-19012-9c03b850/run.log`;
+  targeted Ruff, formatting, basedpyright and diff checks passed. The preserved
+  success branch will bind export receipt/digest/size, canonical parser verdict
+  and exported `iva.resultado=10.50` once reviewed identity authority exists.
