@@ -35,6 +35,7 @@ from ..overview.calendar_models import (
 )
 from ..overview.evidence import CalendarEvidenceProjection
 from ..overview.home import HomeAvailability, HomeZoneState
+from .work_plazo import ModeloWorkConditionalRecargoPreview, conditional_recargo_preview_from_recovery
 
 DECLARATIONS_CALENDAR_CONTRACT_VERSION: Final[int] = 1
 
@@ -124,6 +125,7 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     justificante_verified: bool | None
     evidence_conflicted: bool
     source: OverviewCalendarEntrySource
+    conditional_recargo_preview: ModeloWorkConditionalRecargoPreview | None = None
     recovery_action: DeclaredNextAction | None = Field(default=None, exclude=True, repr=False)
 
     @model_validator(mode="after")
@@ -357,6 +359,10 @@ def _project_calendar_row(
         aeat_submission_state=aeat_submission_state,
         justificante_verified=justificante_verified,
         evidence_conflicted=bool(authority.aeat_evidence_conflict_reference_ids),
+        conditional_recargo_preview=conditional_recargo_preview_from_recovery(
+            entry.recovery,
+            rate_reference_on=entry.evaluated_on,
+        ),
         source=entry.source,
         recovery_action=entry.recovery_action,
     )
