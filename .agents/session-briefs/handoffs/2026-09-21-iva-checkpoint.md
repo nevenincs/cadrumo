@@ -240,6 +240,6 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   non-zero on five pre-existing/cross-session contracts, including the concurrent
   `dev.acceptance` exhaustive-lane addition and unrelated test-layer imports.
 - Phase-2 implementation was prepared on moving shared branch base
-  `5f70f630e84881b76790958caff6008feddffda1`; final commit identity is recorded
-  after integration. Other sessions' income, assets, withholding, calendar and TUI
-  changes remain unstaged.
+  `5f70f630e84881b76790958caff6008feddffda1` and integrated as
+  `c635e2cc3096bfa603f6be39140388420506374f`. Other sessions' income, assets,
+  withholding, calendar and TUI changes remained unstaged.
