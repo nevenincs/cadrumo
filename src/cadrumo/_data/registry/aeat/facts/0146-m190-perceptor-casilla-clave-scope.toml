@@ -133,4 +133,12 @@ entries = [
     { key = "casilla:perc.incapacidad-especie-ingresos-a-cuenta", value = "A" },
     { key = "casilla:perc.incapacidad-especie-repercutidos", value = "A" },
     { key = "casilla:perc.excesos-acciones-emergentes", value = "A" },
+    # Campos 390--394: el diseño 2025 los delimita expresamente a B.01.
+    # Fuera de B.01 se conservan como posiciones en blanco/cero, no como
+    # evidencia anual pendiente de una percepción profesional G.
+    { key = "casilla:perc.prestacion-jubilacion", value = "B.01" },
+    { key = "casilla:perc.prestacion-viudedad", value = "B.01" },
+    { key = "casilla:perc.prestacion-incapacidad", value = "B.01" },
+    { key = "casilla:perc.prestacion-no-contributiva", value = "B.01" },
+    { key = "casilla:perc.prestacion-resto", value = "B.01" },
 ]
