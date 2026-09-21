@@ -439,6 +439,16 @@ WITHHOLDING_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+WITHHOLDING_WORKFLOW_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="withholding_workflow",
+    namespace="cadrumo.withholding.workflow",
+    owner="cadrumo.application.aggregation",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{window|generation|idempotency}:{sha256(scope)}[:{sha256(value)}]",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 IVA_WALLET_RECONCILIATION_DECISIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     key="iva_wallet_reconciliation_decisions",
     namespace="cadrumo.calculations.iva_wallet.reconciliation_decisions",

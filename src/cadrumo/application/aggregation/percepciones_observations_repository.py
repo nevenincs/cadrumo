@@ -62,6 +62,7 @@ def percepcion_observation_key(
     perceptor_tax_id: str,
     clave: str,
     subclave: str,
+    projection_identity: str | None = None,
 ) -> str:
     """Build the opaque per-perceptor-clave observation key.
 
@@ -84,7 +85,11 @@ def percepcion_observation_key(
     _validate_key_component(clave, context="clave")
     subclave_token = subclave or "-"
     _validate_key_component(subclave_token, context="subclave")
-    return f"{modelo}:{filing_year}:{period_token}:{_hashed_tax_id_token(perceptor_tax_id)}:{clave}:{subclave_token}"
+    prefix = f"{modelo}:{filing_year}:{period_token}:{_hashed_tax_id_token(perceptor_tax_id)}:{clave}:{subclave_token}"
+    if projection_identity is None:
+        return prefix
+    _validate_key_component(projection_identity, context="projection_identity")
+    return f"{prefix}:{projection_identity}"
 
 
 class PercepcionObservationPersistenceError(CadrumoError):

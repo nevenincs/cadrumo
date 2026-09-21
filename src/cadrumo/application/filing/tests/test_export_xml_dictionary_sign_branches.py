@@ -89,17 +89,16 @@ def _xsd_element(name: str) -> Element[str]:
     pytest.fail(f"bundled Modelo 100 XSD declares no element named {name!r}")
 
 
-def test_both_branches_are_mandatory_so_the_idle_one_is_zeroed_not_omitted() -> None:
-    """AEAT's schema is why the non-applicable branch carries zero.
+def test_each_branch_is_mandatory_only_inside_its_exclusive_choice() -> None:
+    """AEAT requires the selected branch and makes the alternatives exclusive.
 
-    Omitting it would render a ``CompensacionConyugesRes`` the schema rejects,
-    so "write only the matching branch" is not available however sensible it
-    sounds.
+    Each leaf has the default ``minOccurs=1``, while the parent result block is
+    optional. The surrounding XSD ``choice`` permits only one branch sequence.
     """
     for name in (_NON_NEGATIVE_BRANCH, _NEGATIVE_BRANCH):
-        assert _xsd_element(name).attrib.get("minOccurs", "1") == "1", f"{name} is optional; zeroing is unnecessary"
+        assert _xsd_element(name).attrib.get("minOccurs", "1") == "1"
     assert _xsd_element("CompensacionConyugesRes").attrib.get("minOccurs") == "0", (
-        "the parent block is mandatory, so the branches cannot be skipped by omitting it"
+        "the parent block stopped being optional"
     )
 
 
@@ -112,30 +111,23 @@ def test_a_positive_amount_reaches_only_the_amount_to_pay_branch(_declarations: 
     ) == Decimal("1234.56")
     assert _modelo_100_sign_branch_value(
         entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations
-    ) == Decimal("0")
+    ) is None
 
 
-def test_verifier_matches_0695s_required_zero_sibling_and_detects_real_branch_drift(
+def test_verifier_matches_the_selected_0695_branch(
     _declarations: Mapping[str, str],
 ) -> None:
-    """A valid paired 0695 value matches; a nonzero idle branch still drifts."""
+    """A selected 0695 branch renders the value the verifier expects."""
     entries = _branch_entries()
-    expected = {
-        field_id: _xml_dictionary_expected_wire_value(
-            entry,
-            Decimal("1234.56"),
-            modelo="100",
-            modelo_100_declarations=dict(_declarations),
-        )
-        for field_id, entry in entries.items()
-    }
-
-    assert expected == {_NON_NEGATIVE_BRANCH: "1234.56", _NEGATIVE_BRANCH: "0.00"}
-    rendered = {_NON_NEGATIVE_BRANCH: "1234.56", _NEGATIVE_BRANCH: "0.00"}
-    assert rendered == expected
-    tampered = {_NON_NEGATIVE_BRANCH: "1234.56", _NEGATIVE_BRANCH: "12.00"}
-
-    assert [field_id for field_id, value in tampered.items() if value != expected[field_id]] == [_NEGATIVE_BRANCH]
+    assert _xml_dictionary_expected_wire_value(
+        entries[_NON_NEGATIVE_BRANCH],
+        Decimal("1234.56"),
+        modelo="100",
+        modelo_100_declarations=dict(_declarations),
+    ) == "1234.56"
+    assert _modelo_100_sign_branch_value(
+        entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations
+    ) is None
 
 
 def test_a_negative_amount_reaches_only_the_refund_branch(_declarations: Mapping[str, str]) -> None:
@@ -147,11 +139,11 @@ def test_a_negative_amount_reaches_only_the_refund_branch(_declarations: Mapping
     ) == Decimal("-987.65")
     assert _modelo_100_sign_branch_value(
         entries[_NON_NEGATIVE_BRANCH], Decimal("-987.65"), declarations=_declarations
-    ) == Decimal("0")
+    ) is None
 
 
-def test_zero_needs_no_tie_break_because_both_branches_agree_on_it(_declarations: Mapping[str, str]) -> None:
-    """Both labels admit zero, and both rules yield zero, so the ambiguity is moot."""
+def test_zero_uses_the_non_negative_branch(_declarations: Mapping[str, str]) -> None:
+    """Zero selects the non-negative alternative of the XSD choice."""
     entries = _branch_entries()
 
     assert _modelo_100_sign_branch_value(
@@ -159,7 +151,7 @@ def test_zero_needs_no_tie_break_because_both_branches_agree_on_it(_declarations
     ) == Decimal("0")
     assert _modelo_100_sign_branch_value(
         entries[_NEGATIVE_BRANCH], Decimal("0"), declarations=_declarations
-    ) == Decimal("0")
+    ) is None
 
 
 @pytest.mark.parametrize("uncoercible", ["abc", "", "1.234,56", True, None])
@@ -180,9 +172,9 @@ def test_a_value_that_will_not_coerce_selects_a_branch_instead_of_raising(
         _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], uncoercible, declarations=_declarations)
         is uncoercible
     )
-    assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], uncoercible, declarations=_declarations) == Decimal(
-        "0"
-    )
+    assert _modelo_100_sign_branch_value(
+        entries[_NEGATIVE_BRANCH], uncoercible, declarations=_declarations
+    ) is None
 
 
 def test_the_carry_class_is_left_alone(_declarations: Mapping[str, str]) -> None:
@@ -213,8 +205,8 @@ def test_restoring_all_write_fails_every_branch_assertion() -> None:
 
     caught: list[str] = []
     for label, entry_id, amount, expected in (
-        ("positive leaks into refund branch", _NEGATIVE_BRANCH, Decimal("1234.56"), Decimal("0")),
-        ("negative leaks into pay branch", _NON_NEGATIVE_BRANCH, Decimal("-987.65"), Decimal("0")),
+        ("positive leaks into refund branch", _NEGATIVE_BRANCH, Decimal("1234.56"), None),
+        ("negative leaks into pay branch", _NON_NEGATIVE_BRANCH, Decimal("-987.65"), None),
     ):
         if all_write(entries[entry_id], amount) != expected:
             caught.append(label)

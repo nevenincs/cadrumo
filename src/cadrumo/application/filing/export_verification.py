@@ -512,6 +512,8 @@ def _xml_dictionary_expected_wire_value(
             value,
             declarations=modelo_100_declarations,
         )
+        if value is None:
+            return ""
     return format_xml_dictionary_value(entry.data_type, value)
 
 

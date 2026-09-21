@@ -926,6 +926,24 @@ def build_percepcion_observation_ports(*, bucket_id: str) -> PercepcionObservati
     )
 
 
+def build_withholding_observation_service(*, bucket_id: str):
+    """Compose the one atomic withholding-window mutation service for a bucket."""
+    from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
+    from ..adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+    from ..adapters.persistence.profile.withholding_observation_workflow import WithholdingObservationWorkflowAdapter
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..application.aggregation.withholding_observation_service import WithholdingObservationService
+
+    objects = secure_object_repository_for_bucket(bucket_id.strip())
+    return WithholdingObservationService(
+        WithholdingObservationWorkflowAdapter(
+            objects=objects,
+            retenciones=RetencionObservationRepositoryAdapter(objects=objects),
+            percepciones=PercepcionObservationRepositoryAdapter(objects=objects),
+        ),
+    )
+
+
 def build_calculation_action_ports(
     *,
     bucket_id: str,

@@ -553,6 +553,8 @@ def _xml_dictionary_rendered_value(
         if declarations is None:
             raise FilingExportValidationError("Modelo 100 XML declarations were not resolved")
         raw = _modelo_100_sign_branch_value(entry, raw, declarations=declarations)
+        if raw is None:
+            return None
     rendered = format_xml_dictionary_value(entry.data_type, raw)
     if draft.modelo == Modelo("100") and entry.field_id in {"DP_APENOM_D", "DP_APENOM_C"}:
         rendered = rendered.upper()
@@ -738,8 +740,8 @@ def _modelo_100_sign_branch_value(
     raw: object,
     *,
     declarations: Mapping[str, str],
-) -> object:
-    """Return ``raw`` for the sign branch it belongs to, and zero for the other.
+) -> object | None:
+    """Return ``raw`` for the sign branch it belongs to and omit the other.
 
     Args:
         entry: Dictionary row being rendered.
@@ -747,8 +749,8 @@ def _modelo_100_sign_branch_value(
         declarations: Generation-pinned XML sign-branch declarations.
 
     Returns:
-        ``raw`` when the row's branch matches its sign, ``Decimal("0")`` when the
-        row is the opposite branch, and ``raw`` unchanged for every other row.
+        ``raw`` when the row's branch matches its sign, ``None`` when the row is
+        the opposite branch, and ``raw`` unchanged for every other row.
 
         A value that will not coerce carries no sign to route on, so it is read
         as zero for the purpose of choosing a branch. This selects a branch
@@ -766,7 +768,7 @@ def _modelo_100_sign_branch_value(
     if not negative_branch and entry.field_id != non_negative_field:
         return raw
     amount = coerce_decimal(raw, default=Decimal("0"))
-    return raw if (amount < 0) is negative_branch else Decimal("0")
+    return raw if (amount < 0) is negative_branch else None
 
 
 def _xml_dictionary_non_casilla_value(

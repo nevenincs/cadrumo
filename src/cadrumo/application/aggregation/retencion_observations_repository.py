@@ -41,6 +41,7 @@ def retencion_observation_key(
     period: Period,
     perceptor_nif: str,
     scheme: RetencionScheme,
+    projection_identity: str | None = None,
 ) -> str:
     """Opaque per-perceptor object key — the NIF is hashed, never cleartext.
 
@@ -64,7 +65,10 @@ def retencion_observation_key(
     _validate_key_component(period_token, context="period")
     _validate_key_component(str(scheme.value), context="scheme")
     hashed_token = hashed_tax_id_token(perceptor_nif, field_name="perceptor_nif")
-    return f"{modelo}:{filing_year}:{period_token}:{hashed_token}:{scheme.value}"
+    if projection_identity is None:
+        return f"{modelo}:{filing_year}:{period_token}:{hashed_token}:{scheme.value}"
+    _validate_key_component(projection_identity, context="projection_identity")
+    return f"{modelo}:{filing_year}:{period_token}:{hashed_token}:{scheme.value}:{projection_identity}"
 
 
 def _validate_key_component(token: str, *, context: str) -> str:
