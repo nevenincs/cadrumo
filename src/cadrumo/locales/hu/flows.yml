@@ -57,15 +57,19 @@ flows:
       clear: Törlés
       masked_kept: Ez az érték rejtett, ezért a mező üresen indul. Hagyd üresen a
         megőrzéshez, vagy írj be egy újat a cseréhez.
+      no_change: Nem volt szükség módosításra.
       required_blank: A(z) {field} kötelező, ezért nem maradhat üresen. Adj meg egy
         értéket, vagy a mégse gombbal hagyd változatlanul.
       save: Mentés
+      saved: Mentve.
       shape:
         date: 'Formátum: ÉÉÉÉ-HH-NN - például 1978-03-15.'
         decimal: Szám, tizedesponttal - például 1234.56.
         email: Egy e-mail-cím - például nev@pelda.hu.
         integer: Egész szám, ezreselválasztó nélkül.
         money: Összeg euróban, tizedesponttal - például 1234.56.
+      stale_result: A mentés befejeződött, de már egy újabb profilverzió látható.
+        A régebbi eredmény nem jelent meg.
       write_failed: A mezőt nem sikerült menteni. Próbáld újra.
       write_in_flight: Az előző mező mentése folyamatban. Várd meg, amíg befejeződik,
         majd próbáld újra.
@@ -73,10 +77,12 @@ flows:
     language:
       unavailable: Ez a profil nem kínál nyelvi beállítást.
     namespace_detail: '{number}. részlet'
+    profile_missing_fields: 'A profilból %{count} kötelező mező hiányzik: %{fields}'
     required_field_unavailable: Kötelező profilmező
     rows:
       add: Sor hozzáadása
       remove: Sor eltávolítása
+      remove_confirm: Eltávolítja a(z) %{row} sort a(z) %{section} szakaszból?
     section_title: '{title} - {present}/{total}'
     title: 'Profil: {profile}'
   modelo_review:

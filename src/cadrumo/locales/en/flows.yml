@@ -57,15 +57,19 @@ flows:
       clear: Clear
       masked_kept: This value is hidden, so the box starts empty. Leave it empty to
         keep the value on record, or type a new one to replace it.
+      no_change: No changes were needed.
       required_blank: '{field} is required, so it cannot be left blank. Enter a value,
         or cancel to leave it unchanged.'
       save: Save
+      saved: Saved.
       shape:
         date: 'Format: YYYY-MM-DD - for example 1978-03-15.'
         decimal: A number, using a point for decimals - for example 1234.56.
         email: An email address - for example nombre@ejemplo.es.
         integer: A whole number, with no thousands separator.
         money: An amount in euros, using a point for decimals - for example 1234.56.
+      stale_result: The save completed, but a newer profile version is already visible.
+        The older result was not displayed.
       write_failed: The field could not be saved. Try again.
       write_in_flight: Saving the previous field. Wait for it to finish, then try
         again.
@@ -73,10 +77,12 @@ flows:
     language:
       unavailable: This profile does not offer a language setting.
     namespace_detail: detail {number}
+    profile_missing_fields: 'Profile is missing %{count} required field(s): %{fields}'
     required_field_unavailable: Required profile field
     rows:
       add: Add row
       remove: Remove row
+      remove_confirm: Remove row %{row} from section %{section}?
     section_title: '{title} - {present}/{total}'
     title: 'Profile: {profile}'
   modelo_review:

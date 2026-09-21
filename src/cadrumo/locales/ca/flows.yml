@@ -58,15 +58,19 @@ flows:
       clear: Esborra
       masked_kept: Aquest valor està ocult, per això el camp comença buit. Deixa'l
         buit per conservar el valor desat o escriu-ne un de nou per substituir-lo.
+      no_change: No ha calgut fer cap canvi.
       required_blank: '{field} és obligatori, així que no pot quedar en blanc. Introdueix
         un valor o cancel·la per deixar-lo sense canvis.'
       save: Desa
+      saved: Desat.
       shape:
         date: 'Format: AAAA-MM-DD - per exemple 1978-03-15.'
         decimal: Un nombre, amb punt per als decimals - per exemple 1234.56.
         email: Una adreça de correu electrònic - per exemple nom@exemple.cat.
         integer: Un nombre enter, sense separador de milers.
         money: Un import en euros, amb punt per als decimals - per exemple 1234.56.
+      stale_result: El desament ha acabat, però ja es mostra una versió més recent
+        del perfil. No s'ha mostrat el resultat anterior.
       write_failed: No s'ha pogut desar el camp. Torna-ho a provar.
       write_in_flight: S'està desant el camp anterior. Espera que acabi i torna-ho
         a provar.
@@ -74,10 +78,12 @@ flows:
     language:
       unavailable: Aquest perfil no ofereix cap configuració d'idioma.
     namespace_detail: detall {number}
+    profile_missing_fields: 'Al perfil li falten %{count} camp(s) obligatori(s): %{fields}'
     required_field_unavailable: Camp obligatori del perfil
     rows:
       add: Afegir fila
       remove: Eliminar fila
+      remove_confirm: Voleu eliminar la fila %{row} de la secció %{section}?
     section_title: '{title} - {present}/{total}'
     title: 'Perfil: {profile}'
   modelo_review:

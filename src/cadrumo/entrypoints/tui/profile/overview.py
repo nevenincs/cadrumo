@@ -291,24 +291,41 @@ class RepeatableRowAddScreen(ModalScreen[dict[str, str] | None]):
             yield Label(tr("flows.manager.rows.add"), id="edit-label")
             for index, field in enumerate(self._fields):
                 yield Label(f"{field.label}{_REQUIRED_MARK if field.required else ''}")
-                yield Input(placeholder=profile_field_shape_hint(field.field_type) or "", id=f"row-input-{index}")
+                if field.choices:
+                    yield OptionList(*(choice.label for choice in field.choices), id=f"row-option-{index}")
+                else:
+                    yield Input(
+                        placeholder=profile_field_shape_hint(field.field_type) or "",
+                        id=f"row-input-{index}",
+                    )
             with Horizontal(id="edit-actions"):
                 yield Button(tr("flows.manager.edit.cancel"), id="btn-row-cancel")
                 yield Button(tr("flows.manager.edit.save"), id="btn-row-save", classes="-primary")
 
     def on_mount(self) -> None:
         if self._fields:
-            self.query_one("#row-input-0", Input).focus()
+            first = self._fields[0]
+            self.query_one("#row-option-0", OptionList).focus() if first.choices else self.query_one(
+                "#row-input-0", Input
+            ).focus()
+
+    def _submitted_values(self) -> dict[str, str]:
+        values: dict[str, str] = {}
+        for index, field in enumerate(self._fields):
+            field_key = field.path.rsplit(".", 1)[-1]
+            if field.choices:
+                highlighted = self.query_one(f"#row-option-{index}", OptionList).highlighted
+                if highlighted is not None:
+                    values[field_key] = field.choices[highlighted].value
+                continue
+            value = self.query_one(f"#row-input-{index}", Input).value
+            if value.strip():
+                values[field_key] = value
+        return values
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         if event.button.id == "btn-row-save":
-            self.dismiss(
-                {
-                    field.path.rsplit(".", 1)[-1]: self.query_one(f"#row-input-{index}", Input).value
-                    for index, field in enumerate(self._fields)
-                    if self.query_one(f"#row-input-{index}", Input).value.strip()
-                }
-            )
+            self.dismiss(self._submitted_values())
             return
         self.dismiss(None)
 
@@ -322,10 +339,18 @@ class RepeatableRowRemoveScreen(ModalScreen[bool]):
     DEFAULT_CSS = _EDIT_DIALOG_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
+    def __init__(self, section_key: str, row_key: str) -> None:
+        super().__init__()
+        self._section_key = section_key
+        self._row_key = row_key or "base"
+
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="edit-dialog"):
-            yield Label(tr("flows.manager.rows.remove"), id="edit-label")
+            yield Label(
+                tr("flows.manager.rows.remove_confirm", section=self._section_key, row=self._row_key),
+                id="edit-label",
+            )
             with Horizontal(id="edit-actions"):
                 yield Button(tr("flows.manager.edit.cancel"), id="btn-row-cancel")
                 yield Button(tr("flows.confirm.yes"), id="btn-row-remove", classes="-error")
@@ -695,7 +720,7 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         baseline_revision = self.overview.record_revision
         baseline_digest = self.overview.content_digest
         self.app.push_screen(
-            RepeatableRowRemoveScreen(),
+            RepeatableRowRemoveScreen(section.key, row_key),
             lambda confirmed: self._remove_repeatable_row(
                 section.key, row_key, baseline_revision, baseline_digest, confirmed
             ),
@@ -849,7 +874,7 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
         )
         requirements = (
             tr(
-                "cli.diagnostics.summary.profile_missing_fields",
+                "flows.manager.profile_missing_fields",
                 count=len(self.overview.missing_required),
                 fields=", ".join(missing_labels),
             )
@@ -1278,6 +1303,13 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
                 # guard makes a broken host a refusal rather than a redirect.
                 self._refuse(tr("flows.manager.edit.write_failed"))
                 return
+            if worker.result.record_revision < self.overview.record_revision or (
+                worker.result.record_revision == self.overview.record_revision
+                and worker.result.content_digest != self.overview.content_digest
+            ):
+                self._refuse(tr("flows.manager.edit.stale_result"))
+                return
+            changed = worker.result.record_revision > self.overview.record_revision
             if written_path == PROFILE_OUTPUT_LANGUAGE_PATH:
                 # The page is now written in a different language, and the
                 # incremental path cannot express that: it repaints the
@@ -1287,8 +1319,14 @@ class ProfileManagerScreen(TypedAppAccess, AccountChromeScreen):
                 # that reaches all of it.
                 self.overview = worker.result
                 await self._redraw()
+                self.query_one("#manager-status", PinnedStatusBar).show_success(
+                    tr("flows.manager.edit.saved" if changed else "flows.manager.edit.no_change")
+                )
                 return
             await self._apply_overview(worker.result)
+            self.query_one("#manager-status", PinnedStatusBar).show_success(
+                tr("flows.manager.edit.saved" if changed else "flows.manager.edit.no_change")
+            )
             return
         # A refusal reaches the operator as itself. A cancelled or
         # result-less worker would otherwise leave the page looking as

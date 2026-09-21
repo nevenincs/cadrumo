@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:ea522ca33f874a66bd0a8270c44bc62ccfd0097071b3bae718409a78dc8c624b'
+body_hash: 'sha256:3d27002ee72174dd8529bbe34187efb72dc7e4b743ce8557ea65083d9a452082'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -61,6 +61,8 @@ related:
 - `S08` `M` `src/cadrumo/locales/ca/flows.yml`
 - `S08` `M` `src/cadrumo/locales/hu/flows.yml`
 - `S08` `verify:` `profile application flows and tui locale domains complete` -> `pass`
+- `S07` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_repeatable_row_race_safety.py`
+- `S08` `verify:` `TUI copy keys resolve in four locales` -> `pass`
 
 ## Notes
 
@@ -70,4 +72,6 @@ related:
 - `S05` Verification-only Step; no persistence namespace or Modelo source edit was required. Production filing snapshot pinning remains blocked.
 - `S07` Installed-generation aggregate currently fails before profile composition because concurrent calendar fixture omits required OverviewCalendar.evaluated_on.
 - `S08` Repository-wide locale status remains open for 48 concurrent assets/modelo CLI cells and 8 unrelated inventory declarations.
+- `S07` Reopened after high review: fixed same-profile stale result and typed add/remove coverage.
+- `S08` Removed final CLI-owned key from TUI profile manager.
 
