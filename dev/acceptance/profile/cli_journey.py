@@ -37,7 +37,7 @@ class ProfileCliAcceptanceError(RuntimeError):
 class ProfileArchiveConsumerEvidence:
     """Proof that the current encrypted profile remains exportable by its public consumer."""
 
-    archive_schema_version: str
+    archive_schema_version: int
     size: int
     sha256: str
 
@@ -203,7 +203,7 @@ class ProfileInstalledCli:
         if not target.is_file():
             raise ProfileCliAcceptanceError(stage="archive_export", diagnostic_code="archive_missing")
         archive_schema_version = export.get("archive_schema_version")
-        if not isinstance(archive_schema_version, str) or not archive_schema_version:
+        if not isinstance(archive_schema_version, int) or archive_schema_version < 1:
             raise ProfileCliAcceptanceError(stage="archive_export", diagnostic_code="archive_schema_missing")
         inspection = self._result(
             ("config", "profile", "archive", "inspect", "--file", str(target)),

@@ -83,9 +83,9 @@ class _PublicCliFixture:
         if operation == "archive" and tokens[3] == "export":
             target = Path(tokens[-1])
             target.write_bytes(b"synthetic-sealed-profile")
-            return self._record(command, 0, "success", {"archive_schema_version": "fixture-v1"})
+            return self._record(command, 0, "success", {"archive_schema_version": 4})
         if operation == "archive" and tokens[3] == "inspect":
-            return self._record(command, 0, "success", {"archive_schema_version": "fixture-v1"})
+            return self._record(command, 0, "success", {"archive_schema_version": 4})
         raise AssertionError(f"unexpected public command shape {tokens[:4]!r}")
 
     def _record(self, command: str, returncode: int, status: str, result: dict[str, object]) -> dict[str, Any]:

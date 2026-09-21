@@ -81,6 +81,12 @@ def run_profile_tui_operation(
     product = installed_product_evidence(workspace_root=workspace_root)
     if operation == "create-add":
         _register_profile_through_visible_tui(profile_label=profile_label, passphrase=passphrase)
+    else:
+        from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+        from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
+
+        with live_exchange_rate_composition(), profile_adapter_composition():
+            asyncio.run(_admit_existing_profile_session(passphrase=passphrase))
 
     observed_row: list[str | None] = [row_key]
     clear_absent: list[bool] = [False]
@@ -180,11 +186,50 @@ def _register_profile_through_visible_tui(*, profile_label: str, passphrase: str
         asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))
 
 
+async def _admit_existing_profile_session(*, passphrase: str) -> None:
+    """Unlock an existing profile through the shipped visible Login screen."""
+    from textual.widgets import Input
+
+    from cadrumo.application.user_profile.login_interaction import (
+        ProfileLoginInventoryState,
+        attempt_profile_login,
+        observe_profile_login_inventory,
+    )
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+    from cadrumo.entrypoints.tui.secret.login import LoginScreen
+
+    inventory = observe_profile_login_inventory()
+    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
+        raise ProfileTuiChildAcceptanceError("existing_profile_not_recognized")
+    with bundled_indexed_authority().operation() as operation:
+        screen = LoginScreen(
+            choices=inventory.choices,
+            authenticate=lambda candidate_profile_id, candidate_passphrase: attempt_profile_login(
+                candidate_profile_id,
+                candidate_passphrase,
+                profile_decode_context=operation.profile_decode_context(),
+            ),
+            preselected=inventory.preselected_profile_id,
+        )
+        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
+            await wait_for_public_selector(pilot, "#field-passphrase")
+            field = query_public_selector(pilot, "#field-passphrase", Input)
+            if not isinstance(field, Input):
+                raise ProfileTuiChildAcceptanceError("login_passphrase_control_invalid")
+            field.value = passphrase
+            await pilot.click("#btn-unlock")
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+    if screen.outcome is None:
+        raise ProfileTuiChildAcceptanceError("login_not_admitted")
+
+
 async def _add_activity_row(*, pilot: Any, scenario: ProfileRowLifecycleScenario) -> str:
     """Add all scenario facts through the visible generic repeatable-row form."""
     from textual.widgets import Input
 
-    await pilot.click(f"#manager-add-row-{scenario.section}")
+    await _click_visible(pilot, f"#manager-add-row-{scenario.section}")
     await wait_for_public_selector(pilot, "#row-input-0")
     for index, (_field, value) in enumerate(scenario.add_values()):
         input_widget = cast("Input", query_public_selector(pilot, f"#row-input-{index}", Input))
@@ -232,11 +277,21 @@ async def _remove_activity_row(*, pilot: Any, row_key: str, scenario: ProfileRow
         pilot=pilot,
         path=scenario.path(row_key, scenario.required_field),
     )
-    await pilot.click(f"#manager-remove-row-{scenario.section}")
+    await _click_visible(pilot, f"#manager-remove-row-{scenario.section}")
     await wait_for_public_selector(pilot, "#btn-row-remove")
     await pilot.click("#btn-row-remove")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#manager-status")
+
+
+async def _click_visible(pilot: Any, selector: str) -> None:
+    """Focus one public control and activate it through the keyboard surface."""
+    from textual.widget import Widget
+
+    widget = cast("Widget", query_public_selector(pilot, selector, Widget))
+    widget.focus()
+    await pilot.pause()
+    await pilot.press("enter")
 
 
 async def _focus_visible_profile_field(*, pilot: Any, path: str) -> None:
@@ -354,6 +409,17 @@ def main(argv: Sequence[str] | None = None) -> int:
                 "status": "failed",
                 "failure_class": type(exc).__name__,
                 "failure_code": code,
+            },
+        )
+        return 2
+    except Exception as exc:
+        _write_receipt(
+            args.receipt,
+            {
+                "schema_version": _SCHEMA_VERSION,
+                "status": "failed",
+                "failure_class": type(exc).__name__,
+                "failure_code": f"unexpected_{type(exc).__name__}",
             },
         )
         return 2

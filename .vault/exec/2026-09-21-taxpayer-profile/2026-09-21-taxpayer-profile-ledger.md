@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:a0280e1f3f05b3329e3c1880b9f5ff8699c5d97d44bfb51397973e670a402367'
+body_hash: 'sha256:e8769b40c3e06540c07af1094feabeff2b564e65d57888edf6e9aa8e3e85b997'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -73,6 +73,11 @@ related:
 - `S09` `A` `dev/acceptance/profile/tests/test_cli_journey.py`
 - `S09` `A` `dev/acceptance/profile/tests/test_tui_journey.py`
 - `S09` `verify:` `acceptance harness ruff format and ty` -> `pass`
+- `S10` `M` `dev/acceptance/profile/cli_journey.py`
+- `S10` `M` `dev/acceptance/profile/installed_tui_child.py`
+- `S10` `M` `dev/acceptance/profile/tests/test_cli_journey.py`
+- `S10` `M` `.agents/session-briefs/handoffs/2026-09-21-taxpayer-profile-checkpoint.md`
+- `S10` `verify:` `targeted-ruff-format-ty` -> `pass`
 
 ## Notes
 
@@ -85,4 +90,5 @@ related:
 - `S07` Reopened after high review: fixed same-profile stale result and typed add/remove coverage.
 - `S08` Removed final CLI-owned key from TUI profile manager.
 - `S09` Installed wheel execution intentionally remains S10.
+- `S10` canonical import gate unavailable: governed tree changed concurrently; no PROFILE-01 occurrence
 
