@@ -379,7 +379,7 @@ async def wait_for_tui_refresh(
         raise TuiJourneyError(f"{binding.operation_id} has no installed refresh target")
     for _ in range(maximum_polls):
         try:
-            _query_visible_tui_control(pilot, binding.refresh_result_id)
+            pilot.app.screen.query_one(binding.refresh_result_id)
         except NoMatches:
             await pilot.pause()
         else:

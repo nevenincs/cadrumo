@@ -77,23 +77,20 @@ def test_installed_lifecycle_contract_uses_the_real_actions_without_claiming_ent
     assert "calculate.activation" not in contract.missing_controls()
 
 
-def test_refresh_destination_can_remain_at_the_installed_app_root() -> None:
+def test_refresh_destination_must_be_the_current_installed_screen() -> None:
     class Screen:
-        def query_one(self, selector: str) -> object:
-            raise AssertionError(f"screen fallback should not be needed for {selector}")
-
-    class App:
-        screen = Screen()
-
         def query_one(self, selector: str) -> object:
             assert selector == "#declarations-list"
             return object()
+
+    class App:
+        screen = Screen()
 
     class Pilot:
         app = App()
 
         async def pause(self) -> None:
-            raise AssertionError("root refresh target should already be visible")
+            raise AssertionError("current-screen refresh target should already be visible")
 
     asyncio.run(
         wait_for_tui_refresh(

@@ -29,8 +29,13 @@ from .installed_tui_child import (
     wait_for_public_selector,
     write_installed_tui_failure_receipt,
 )
-from .scenario import ExpenseInvoice, IncomeTaxScenario, IssuedInvoice, build_scenario
-from .tui_journey import activate_tui_operation, installed_lifecycle_contract, wait_for_tui_refresh
+from .scenario import ExpenseInvoice, IncomeTaxScenario, IssuedInvoice, QuarterlyOracle, build_scenario
+from .tui_journey import (
+    activate_tui_operation,
+    canonical_financial_value_fingerprint,
+    installed_lifecycle_contract,
+    wait_for_tui_refresh,
+)
 
 _SCHEMA_VERSION = "income-01-installed-tui-financial-v1"
 _N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
@@ -58,8 +63,10 @@ class FinancialChildReceipt:
     transaction_imports: int
     invoice_forms: int
     reconciliation_links: int
-    calendar_work: str
+    calendar_work: tuple[str, ...]
     lifecycle_operations: tuple[str, ...]
+    canonical_value_fingerprint: str
+    artifact_sha256s: tuple[str, ...]
     fresh_session_readback: str
 
     def to_dict(self) -> dict[str, object]:
@@ -300,8 +307,8 @@ async def _reconcile_invoice(pilot: Any, *, transaction_id: str, invoice_id: str
     await pilot.app.workers.wait_for_complete()
 
 
-async def _create_calendar_work(pilot: Any, *, year: int) -> None:
-    """Create the baseline 1T M130 work unit through Calendar confirmation."""
+async def _create_calendar_work(pilot: Any, *, modelo: str, year: int, period: str) -> None:
+    """Create one filing-period work unit through Calendar confirmation."""
     from textual.widgets import Static
 
     await _open_destination(pilot, query="declarations", expected_selector="#declarations-navigation")
@@ -314,7 +321,7 @@ async def _create_calendar_work(pilot: Any, *, year: int) -> None:
     await select_public_data_table_row(
         pilot=pilot,
         table_selector="#declarations-calendar-agenda",
-        row_key=f"130|{year}|1T",
+        row_key=f"{modelo}|{year}|{period}",
     )
     await wait_for_public_selector(pilot, "#btn-confirm-accept")
     await _activate_button(pilot, "#btn-confirm-accept")
@@ -339,8 +346,64 @@ async def _open_work(pilot: Any, *, work_unit_id: str) -> None:
     await wait_for_public_selector(pilot, "#modelo-lifecycle-calculate")
 
 
-async def _run_lifecycle(pilot: Any, *, export_path: Path, work_unit_id: str) -> tuple[str, ...]:
-    """Run calculate, verify, local filing and export with a fresh work open each time."""
+def _m130_expected(oracle: QuarterlyOracle) -> dict[str, str]:
+    """Return independently computed M130 casillas in rendered money form."""
+    return {
+        "01": f"{oracle.cumulative_income:.2f}",
+        "02": f"{oracle.cumulative_expenses:.2f}",
+        "03": f"{oracle.cumulative_net:.2f}",
+        "04": f"{oracle.twenty_percent:.2f}",
+        "05": f"{oracle.prior_positive_results:.2f}",
+        "06": f"{oracle.cumulative_withholding:.2f}",
+        "07": f"{oracle.partial_result:.2f}",
+        "13": f"{oracle.low_income_reduction:.2f}",
+        "19": f"{oracle.payment:.2f}",
+    }
+
+
+async def _read_calculated_values(
+    pilot: Any,
+    *,
+    work_unit_id: str,
+    expected: dict[str, str],
+) -> dict[str, str]:
+    """Read computed values from the installed Results destination and check the oracle."""
+    from decimal import Decimal
+
+    from textual.widgets import DataTable
+
+    await _open_work(pilot, work_unit_id=work_unit_id)
+    await select_public_data_table_row(
+        pilot=pilot,
+        table_selector="#workspace-overview-destinations",
+        row_key="modelo.workspace.results",
+    )
+    await wait_for_public_selector(pilot, "#workspace-results-table", polls=360)
+    table = query_public_selector(pilot, "#workspace-results-table", DataTable)
+    actual: dict[str, str] = {}
+    for casilla in expected:
+        row_key = next((candidate for candidate in table.rows if str(candidate.value) == casilla), None)
+        if row_key is None:
+            raise InstalledTuiChildError(f"installed Results did not expose expected casilla {casilla}")
+        row = table.get_row(row_key)
+        if len(row) < 2:
+            raise InstalledTuiChildError(f"installed Results row {casilla} did not expose a value column")
+        actual[casilla] = f"{Decimal(str(row[1])):.2f}"
+    if actual != expected:
+        raise InstalledTuiChildError("installed Results did not match the independent M130 oracle")
+    await pilot.press("escape")
+    await pilot.press("escape")
+    return actual
+
+
+async def _run_lifecycle(
+    pilot: Any,
+    *,
+    export_path: Path,
+    work_unit_id: str,
+    expected: dict[str, str],
+) -> tuple[tuple[str, ...], dict[str, str]]:
+    """Run calculate, inspect, verify, local filing and export through the TUI."""
     contract = installed_lifecycle_contract(
         profile_selection_id="#manager-status",
         ledger_capture_id="#ledger-import-confirm",
@@ -348,7 +411,14 @@ async def _run_lifecycle(pilot: Any, *, export_path: Path, work_unit_id: str) ->
         work_create_id="#declarations-calendar-agenda",
     )
     completed: list[str] = []
-    for binding in (contract.calculate, contract.verify, contract.local_file):
+    await _open_work(pilot, work_unit_id=work_unit_id)
+    terminal = await activate_tui_operation(pilot, binding=contract.calculate)
+    if terminal.outcome.value != "proven":
+        raise InstalledTuiChildError("modelo.work.calculate did not reach a succeeded terminal")
+    await wait_for_tui_refresh(pilot, binding=contract.calculate)
+    completed.append(contract.calculate.operation_id)
+    observed = await _read_calculated_values(pilot, work_unit_id=work_unit_id, expected=expected)
+    for binding in (contract.verify, contract.local_file):
         await _open_work(pilot, work_unit_id=work_unit_id)
         terminal = await activate_tui_operation(pilot, binding=binding)
         if terminal.outcome.value != "proven":
@@ -363,7 +433,23 @@ async def _run_lifecycle(pilot: Any, *, export_path: Path, work_unit_id: str) ->
     if terminal.outcome.value != "proven":
         raise InstalledTuiChildError("modelo.export did not reach a succeeded terminal")
     completed.append(contract.export.operation_id)
-    return tuple(completed)
+    return tuple(completed), observed
+
+
+async def _work_ids_by_period(pilot: Any, *, year: int) -> dict[str, str]:
+    """Resolve opaque work ids from the visible natural-address rows."""
+    from textual.widgets import DataTable
+
+    await _open_destination(pilot, query="declarations", expected_selector="#declarations-list")
+    table = query_public_selector(pilot, "#declarations-list", DataTable)
+    found: dict[str, str] = {}
+    for row_key in table.rows:
+        rendered = " ".join(str(cell) for cell in table.get_row(row_key))
+        for period in ("1T", "2T", "3T", "4T", "0A"):
+            modelo = "100" if period == "0A" else "130"
+            if modelo in rendered and str(year) in rendered and period in rendered:
+                found[period] = str(row_key.value)
+    return found
 
 
 def run_financial_child(
@@ -378,9 +464,10 @@ def run_financial_child(
     scenario = build_scenario(year)
     product = installed_product_evidence(workspace_root=workspace_root)
     csv_path = _transaction_csv(scenario=scenario, directory=scratch)
-    export_path = scratch / "modelo-130-export.txt"
-    work_unit_ids: list[str] = []
+    work_unit_ids: dict[str, str] = {}
     operations: list[str] = []
+    financial_values: dict[str, str] = {}
+    artifact_hashes: list[str] = []
 
     from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
     from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
@@ -391,27 +478,27 @@ def run_financial_child(
 
     async def drive(pilot: Any) -> None:
         await _configure_profile(pilot, scenario=scenario)
-        await _create_calendar_work(pilot, year=year)
+        for period in ("1T", "2T", "3T", "4T"):
+            await _create_calendar_work(pilot, modelo="130", year=year, period=period)
         await _import_transactions(pilot, csv_path=csv_path)
         for item in (*scenario.income, *scenario.expenses):
             await _capture_invoice(pilot, item=item)
         for item in (*scenario.income, *scenario.expenses):
             await _reconcile_invoice(pilot, transaction_id=item.transaction_id, invoice_id=item.invoice_id)
-        # Calendar creates the work through its public confirmation.  The next
-        # declaration list exposes its opaque work-unit key, which is retained
-        # only in process memory and never written to the durable receipt.
-        await _open_destination(pilot, query="declarations", expected_selector="#declarations-list")
-        from textual.widgets import DataTable
-
-        table = query_public_selector(pilot, "#declarations-list", DataTable)
-        if table.row_count != 1:
-            raise InstalledTuiChildError(
-                "baseline calendar creation did not expose exactly one declaration work row "
-                f"(visible count: {table.row_count})"
+        work_unit_ids.update(await _work_ids_by_period(pilot, year=year))
+        if set(work_unit_ids) != {"1T", "2T", "3T", "4T"}:
+            raise InstalledTuiChildError("calendar creation did not expose all four quarterly declaration rows")
+        for oracle in scenario.quarter_oracle:
+            export_path = scratch / f"modelo-130-{year}-{oracle.period}.boe"
+            completed, observed = await _run_lifecycle(
+                pilot,
+                export_path=export_path,
+                work_unit_id=work_unit_ids[oracle.period],
+                expected=_m130_expected(oracle),
             )
-        work_unit_id = str(next(iter(table.rows)).value)
-        work_unit_ids.append(work_unit_id)
-        operations.extend(await _run_lifecycle(pilot, export_path=export_path, work_unit_id=work_unit_id))
+            operations.extend(completed)
+            financial_values.update({f"130.{oracle.period}.{key}": value for key, value in observed.items()})
+            artifact_hashes.append(hashlib.sha256(export_path.read_bytes()).hexdigest())
         pilot.app.exit()
 
     exit_code = main(
@@ -420,14 +507,18 @@ def run_financial_child(
     )
     if exit_code != 0:
         raise InstalledTuiChildError(f"installed financial launcher returned {exit_code}")
-    if len(work_unit_ids) != 1:
-        raise InstalledTuiChildError("installed financial run did not retain its created work identity")
+    if set(work_unit_ids) != {"1T", "2T", "3T", "4T"}:
+        raise InstalledTuiChildError("installed financial run did not retain all quarterly work identities")
 
     observed: list[str] = []
 
     async def readback(pilot: Any) -> None:
         await _open_destination(pilot, query="declarations", expected_selector="#declarations-list")
-        await select_public_data_table_row(pilot=pilot, table_selector="#declarations-list", row_key=work_unit_ids[0])
+        await select_public_data_table_row(
+            pilot=pilot,
+            table_selector="#declarations-list",
+            row_key=work_unit_ids["4T"],
+        )
         await wait_for_public_selector(pilot, "#modelo-lifecycle-export")
         observed.append("modelo-workspace-reopened")
         pilot.app.exit()
@@ -447,8 +538,10 @@ def run_financial_child(
         transaction_imports=1,
         invoice_forms=len(scenario.income) + len(scenario.expenses),
         reconciliation_links=len(scenario.income) + len(scenario.expenses),
-        calendar_work="m130-1t",
+        calendar_work=("m130-1t", "m130-2t", "m130-3t", "m130-4t"),
         lifecycle_operations=tuple(operations),
+        canonical_value_fingerprint=canonical_financial_value_fingerprint(values=financial_values),
+        artifact_sha256s=tuple(artifact_hashes),
         fresh_session_readback=hashlib.sha256("|".join(observed).encode("utf-8")).hexdigest(),
     )
 
