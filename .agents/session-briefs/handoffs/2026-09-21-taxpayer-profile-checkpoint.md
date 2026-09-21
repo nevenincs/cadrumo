@@ -60,3 +60,21 @@ PR1-PR12 are not exercised. Source evidence supports existing shared writers, en
 - First reserved command selected three unit nodes and deselected the three integration nodes under the repository default marker expression: 3 passed, 3 deselected, exit 0, metadata `20260921T152912.909723Z-pytest-17540-4811be5e/run.json`. The explicit `-m integration` follow-up ran the three previously deselected exact nodes: 3 passed, exit 0, metadata `20260921T152929.219311Z-pytest-56856-ee8dfe50/run.json`.
 
 Reservations above are released. No aggregate gate or shared external resource was used.
+
+## P01.S03 historical-context decision packet
+
+Status: **blocked for implementation; audit complete**.
+
+Conflicting contract: profile facts carry `valid_from`/`valid_to`, immutable COMPLETE-only `UserProfileSnapshot` values exist, and an encrypted `ProfileSnapshotPersistencePort` exists. However, targeted production-source search found no caller of `create_user_profile_snapshot`, `UserProfileSnapshot.from_profile`, or `profile_snapshot_persistence` outside their definitions/adapters. `application/modelo/profile_binding.py:1580-1601` loads the authenticated current `ProfileRecordRepository` whenever no test override is supplied. Its subsequent derived-family work uses the filing year but still starts from today's selected record. `record_to_path_values` and `profile_fact_index` have no `as_of` parameter and deliberately ignore `valid_to`.
+
+Calendar plan P01.S02 now owns explicit evaluation-date threading through historical applicability. That work does not establish historical profile resolution or filing-time profile pinning. PROFILE-01 cannot change the same meaning independently, and a new profile snapshot store is explicitly forbidden because the existing snapshot type and persistence authority already exist.
+
+Bounded options requiring coordinator/adviser decision:
+
+1. Pin the existing immutable profile snapshot when a filing/declaration context is created and require later calculation/export/review to resolve that snapshot. This best protects persisted filing meaning but changes declaration persistence and lifecycle contracts across tax lanes.
+2. Add an explicit `as_of` resolver over effective-dated facts for prospective calculations, while separately pinning the resulting snapshot once a filing context exists. This covers both historical previews and durable filings but threads a new temporal parameter across many callers.
+3. Continue current-only profile resolution and expose historical profile context as unsupported. This is the smallest safe near-term behavior but PR6 remains blocked and earlier-period work must refuse rather than silently use current facts.
+
+Impact: options 1 and 2 require an accepted decision and coordinated ownership with calendar plus tax workflow plans. Option 3 requires an explicit capability/refusal surface in later PROFILE-01 Steps but no new temporal architecture. Until decided, no current projection will be relabelled historical, and persisted filings will not be rewritten.
+
+Evidence checks NOT RUN: no filing creation or installed frontend journey was executed for this audit. Existing snapshot unit tests prove canonical construction/refusal only, not production pinning.
