@@ -1,0 +1,240 @@
+{
+  "brief_id": "RETENCIONES-01",
+  "brief_revision": "0.2",
+  "commands": [
+    {
+      "command": "config profile create",
+      "notice_codes": [
+        "PROFILE_LOGIN_REQUIRED",
+        "PROFILE_RECOVERY_NOT_ENROLLED"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile complete-setup",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile edit income-2025",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile complete-setup",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app ledger invoice add",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo aggregate --modelo",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "config profile edit income-2025",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work file",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work create",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work calculate",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.calculate.plazo_vencido_unassessed_preview"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo work verify",
+      "notice_codes": [
+        "config.login.session_not_persisted",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory",
+        "modelo.work.verify.finding.advisory"
+      ],
+      "returncode": 0,
+      "status": "warning"
+    },
+    {
+      "command": "app modelo export f0e9ce157185ab5c780384c58096084c0a91772649b128e12790605206c1dc50",
+      "notice_codes": [
+        "config.login.session_not_persisted"
+      ],
+      "returncode": 5,
+      "status": "error"
+    }
+  ],
+  "diagnostic_code": "FAIL_MODELO_EXPORT",
+  "executable": "C:\\Users\\hello\\AppData\\Local\\Temp\\cadrumo-retenciones-annual-final-3c2f92cf2ae5428e8e5aa2b09361800f\\venv\\Scripts\\aeat.exe",
+  "executable_sha256": "26db18eb5353d6dfb4678a2481c8b71b4de3fc5b1c25a4913e7fbd54678b5c03",
+  "output_dir": "C:\\Users\\hello\\AppData\\Local\\Temp\\cadrumo-retenciones-annual-final-3c2f92cf2ae5428e8e5aa2b09361800f\\outputs-190",
+  "package_identity": "wheel_sha256:80d08532db38c4626bc9b0bdab18b49c5c51f62848727f59a17cdf57b242d0c3",
+  "pattern_id": "ACCEPTANCE-01",
+  "pattern_revision": "1.6",
+  "retention": "caller_owned_failure_artifacts_only; no stdout_or_stderr_retained",
+  "scenario": "retenciones-installed-annual-cli-v1",
+  "schema_version": "retenciones-01-installed-annual-cli-journey-v1",
+  "source_identity": "8e1141639edacb2c8feafa3a79be93abff9a6b94+retenciones-annual-attestation-harness-dirty",
+  "stage": "professional-190-annual-detail:export",
+  "status": "failed",
+  "storage_root": "C:\\Users\\hello\\AppData\\Local\\Temp\\cadrumo-retenciones-annual-final-3c2f92cf2ae5428e8e5aa2b09361800f\\storage-190",
+  "year": 2025
+}

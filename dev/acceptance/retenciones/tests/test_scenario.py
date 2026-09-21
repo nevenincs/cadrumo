@@ -127,6 +127,11 @@ def test_installed_annual_cli_slices_keep_allocations_and_no_activity_history_di
     assert len(rent.expected_type2_rows) == 2
     assert professional.modelo == "190"
     assert professional.expected_capture_allocation_count == 3
+    assert {
+        capture.modelo_190_detail.territorial_deduction_clave
+        for capture in professional.captures
+        if capture.modelo_190_detail is not None
+    } == {0}
     assert professional.source_periods[0].evidence_state is EvidenceState.NO_RELEVANT_PAYMENT
     assert professional.source_periods[1].expected_casillas[1:] == (
         ("08", Decimal("600.00")),

@@ -120,11 +120,17 @@ class Modelo180PropertyInput:
 
 @dataclass(frozen=True, slots=True)
 class Modelo190AnnualDetailInput:
-    """Explicit annual recipient detail carried with professional evidence."""
+    """Explicit annual recipient detail carried with professional evidence.
+
+    ``territorial_deduction_clave`` is a supplied payer fact: 0 means that no
+    Ceuta/Melilla or La Palma territorial deduction was applied.  It is not
+    inferred from the recipient's province or the withholding amount.
+    """
 
     clave: str
     subclave: str
     province_code: str
+    territorial_deduction_clave: int
 
 
 @dataclass(frozen=True, slots=True)
@@ -291,7 +297,12 @@ def build_installed_periodic_cli_slices(
             ("28", Decimal("95.00")),
             ("30", Decimal("95.00")),
         ),
-        modelo_190_detail=Modelo190AnnualDetailInput(clave="G", subclave="01", province_code="28"),
+        modelo_190_detail=Modelo190AnnualDetailInput(
+            clave="G",
+            subclave="01",
+            province_code="28",
+            territorial_deduction_clave=0,
+        ),
     )
     rent = InstalledPeriodicCliSlice(
         slice_id="urban-rent-115-q2-invoice",
@@ -390,7 +401,12 @@ def build_installed_annual_cli_slices(
             ("28", Decimal("15.00")),
             ("30", Decimal("15.00")),
         ),
-        modelo_190_detail=Modelo190AnnualDetailInput(clave="G", subclave="02", province_code="28"),
+        modelo_190_detail=Modelo190AnnualDetailInput(
+            clave="G",
+            subclave="02",
+            province_code="28",
+            territorial_deduction_clave=0,
+        ),
     )
     property_a = Modelo180PropertyInput(
         property_key="urban-rent-property-a",
@@ -678,6 +694,7 @@ def build_installed_annual_cli_slices(
                     ("modelo-190-perc-nif", "B12345674"),
                     ("modelo-190-perc-nombre", "Synthetic Professional"),
                     ("modelo-190-perc-codigo-provincia", "28"),
+                    ("modelo-190-perc-ceuta-melilla", "0"),
                     ("modelo-190-perc-clave", "G"),
                     ("modelo-190-perc-subclave", "01"),
                     ("modelo-190-perc-percepcion-dineraria", "500.00"),
@@ -689,6 +706,7 @@ def build_installed_annual_cli_slices(
                     ("modelo-190-perc-nif", "B12345674"),
                     ("modelo-190-perc-nombre", "Synthetic Professional"),
                     ("modelo-190-perc-codigo-provincia", "28"),
+                    ("modelo-190-perc-ceuta-melilla", "0"),
                     ("modelo-190-perc-clave", "G"),
                     ("modelo-190-perc-subclave", "02"),
                     ("modelo-190-perc-percepcion-dineraria", "100.00"),

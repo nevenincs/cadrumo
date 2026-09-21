@@ -12,7 +12,7 @@ from dev.acceptance.income_tax.cli_journey import CommandEvidence, InstalledCli
 
 from ..cli_journey import (
     RetencionesInstalledCliError,
-    _attest_annual_m111_no_retenciones_periods,
+    _attest_annual_no_activity_periods,
     _create_withholding_profile,
     _failure_evidence,
     _is_full_annual_campaign,
@@ -133,7 +133,7 @@ def test_m190_no_activity_uses_the_public_profile_attestation_not_zero_filings()
     _rent, professional = build_installed_annual_cli_slices()
     cli = _ProfileCli()
 
-    tokens = _attest_annual_m111_no_retenciones_periods(
+    tokens = _attest_annual_no_activity_periods(
         cli=cast(InstalledCli, cli),
         slice_=professional,
         captures_by_period={"2T": professional.captures},
@@ -154,8 +154,34 @@ def test_m190_no_activity_uses_the_public_profile_attestation_not_zero_filings()
     ]
 
 
-def test_m180_no_activity_refuses_before_any_blank_source_work_unit_is_created() -> None:
-    """There is no Modelo 115 analogue of Modelo 111's no-duty attestation."""
+def test_m180_no_activity_uses_its_public_no_relevant_payment_attestation() -> None:
+    """The annual M180 chain sends supported public zero-history evidence."""
+    rent, _professional = build_installed_annual_cli_slices()
+    cli = _ProfileCli()
+
+    tokens = _attest_annual_no_activity_periods(
+        cli=cast(InstalledCli, cli),
+        slice_=rent,
+        captures_by_period={"1T": (rent.captures[0],), "2T": rent.captures[1:]},
+        year=2025,
+    )
+
+    assert tokens == frozenset({"2025:3T", "2025:4T"})
+    assert cli.calls == [
+        (
+            "config",
+            "profile",
+            "edit",
+            "income-2025",
+            "--quiet",
+            "--modelo-115-no-relevant-payment-periods",
+            "2025:3T,2025:4T",
+        )
+    ]
+
+
+def test_m180_no_activity_refuses_without_the_public_attestation_before_work_creation() -> None:
+    """An empty 115 quarter cannot materialize merely because it is zero-valued."""
     rent, _professional = build_installed_annual_cli_slices()
     cli = _ProfileCli()
 
@@ -167,11 +193,11 @@ def test_m180_no_activity_refuses_before_any_blank_source_work_unit_is_created()
             source_period=rent.source_periods[2],
             captures=(),
             year=2025,
-            m111_no_retenciones_attestations=frozenset(),
+            no_activity_attestations=frozenset(),
         )
 
     assert raised.value.stage == "115:3T:annual_source:preflight"
-    assert raised.value.diagnostic_code == "annual_source_no_activity_workflow_unsupported"
+    assert raised.value.diagnostic_code == "annual_source_m115_no_relevant_payment_attestation_missing"
     assert cli.calls == []
 
 

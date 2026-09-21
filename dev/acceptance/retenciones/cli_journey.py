@@ -115,15 +115,20 @@ class AnnualExportValidationEvidence:
 class AnnualSourcePeriodEvidence:
     """One labelled annual-source state used by the annual local chain.
 
-    A filed local source record and an explicit Modelo 111 no-retenciones
-    attestation are intentionally different evidence forms.  In particular,
-    the latter must not be rendered as a zero filing or a synthetic payment.
+    A filed local source record and an explicit no-activity attestation are
+    intentionally different evidence forms.  Modelo 111 retains its profile
+    fact alone; Modelo 115 uses its profile fact to authorise an otherwise
+    valid local zero source record.  Neither is a synthetic payment.
     """
 
     modelo: str
     period: str
     evidence_state: str
-    source_workflow: Literal["local_filing_record", "m111_no_retenciones_attestation"]
+    source_workflow: Literal[
+        "local_filing_record",
+        "m111_no_retenciones_attestation",
+        "m115_no_relevant_payment_attested_local_filing_record",
+    ]
     work_unit_id: str | None
     calculation_revision_id: str | None
     calculated_casillas: dict[str, str] | None
@@ -677,7 +682,7 @@ def _run_annual_slice(
         )
         reopened_counts[period] = observed_count
 
-    m111_no_retenciones_attestations = _attest_annual_m111_no_retenciones_periods(
+    no_activity_attestations = _attest_annual_no_activity_periods(
         cli=cli,
         slice_=slice_,
         captures_by_period=captures_by_period,
@@ -691,7 +696,7 @@ def _run_annual_slice(
             source_period=source_period,
             captures=tuple(captures_by_period.get(source_period.period, ())),
             year=year,
-            m111_no_retenciones_attestations=m111_no_retenciones_attestations,
+            no_activity_attestations=no_activity_attestations,
         )
         for source_period in slice_.source_periods
     )
@@ -780,22 +785,26 @@ def _run_annual_slice(
     )
 
 
-def _attest_annual_m111_no_retenciones_periods(
+def _attest_annual_no_activity_periods(
     *,
     cli: InstalledCli,
     slice_: InstalledAnnualCliSlice,
     captures_by_period: Mapping[str, Sequence[InstalledPeriodicCliSlice]],
     year: int,
 ) -> frozenset[str]:
-    """Record the only supported no-activity source workflow for annual M190.
+    """Record the source modelo's explicit public no-activity facts.
 
-    Modelo 111 has an explicit public profile fact for a quarter in which no
-    subject rentas were paid.  It suppresses the *annual cross-period*
-    requirement; it is not a zero Modelo 111 filing, nor does it make an
-    all-blank quarterly calculation valid.  Modelo 115 deliberately has no
-    corresponding contract, so this helper cannot be used to hide its gap.
+    Modelo 111 retains its no-retenciones profile fact rather than creating a
+    zero local filing.  Modelo 115's distinct no-relevant-payment fact instead
+    authorises its local zero calculation and source filing.  Both are public
+    operator evidence and neither invents a payment allocation.
     """
-    if slice_.source_modelo != "111":
+    option_by_modelo = {
+        "111": "--modelo-111-no-retenciones-periods",
+        "115": "--modelo-115-no-relevant-payment-periods",
+    }
+    option = option_by_modelo.get(slice_.source_modelo)
+    if option is None:
         return frozenset()
     tokens: list[str] = []
     for source_period in slice_.source_periods:
@@ -803,7 +812,7 @@ def _attest_annual_m111_no_retenciones_periods(
         _assert_source_period_evidence(
             source_period=source_period,
             captures=captures,
-            stage=f"{slice_.slice_id}:m111_no_retenciones_preflight:{source_period.period}",
+            stage=f"{slice_.slice_id}:{slice_.source_modelo}_no_activity_preflight:{source_period.period}",
         )
         if not captures:
             tokens.append(f"{year}:{source_period.period}")
@@ -817,10 +826,10 @@ def _attest_annual_m111_no_retenciones_periods(
             "edit",
             f"income-{year}",
             "--quiet",
-            "--modelo-111-no-retenciones-periods",
+            option,
             ",".join(tokens),
         ),
-        stage=f"{slice_.slice_id}:m111_no_retenciones_attestation",
+        stage=f"{slice_.slice_id}:{slice_.source_modelo}_no_activity_attestation",
     )
     return frozenset(tokens)
 
@@ -833,7 +842,7 @@ def _materialize_annual_source_period(
     source_period: AnnualSourcePeriodInput,
     captures: tuple[InstalledPeriodicCliSlice, ...],
     year: int,
-    m111_no_retenciones_attestations: frozenset[str],
+    no_activity_attestations: frozenset[str],
 ) -> AnnualSourcePeriodEvidence:
     """Materialize a local source record or retain a supported no-duty state.
 
@@ -841,7 +850,10 @@ def _materialize_annual_source_period(
     is the canonical producer of the ``app_filing`` carry observation; it does
     not contact AEAT or establish external filing evidence.  A no-activity
     Modelo 111 period is represented instead by its profile attestation, with
-    no work unit, calculation revision, or local filing record.
+    no work unit, calculation revision, or local filing record.  Modelo 115's
+    public no-relevant-payment attestation authorises a local zero source
+    record, which supplies the annual cross-period relation without claiming
+    AEAT submission.
     """
     stage = f"{source_modelo}:{source_period.period}:annual_source"
     if any(
@@ -860,7 +872,7 @@ def _materialize_annual_source_period(
     if not captures:
         attestation_period = f"{year}:{source_period.period}"
         if source_modelo == "111":
-            if attestation_period not in m111_no_retenciones_attestations:
+            if attestation_period not in no_activity_attestations:
                 raise RetencionesInstalledCliError(
                     stage=f"{stage}:preflight",
                     diagnostic_code="annual_source_m111_no_retenciones_attestation_missing",
@@ -878,13 +890,16 @@ def _materialize_annual_source_period(
                 live_submission=False,
                 attestation_period=attestation_period,
             )
-        # Do not retry an all-blank source calculation or manufacture a zero
-        # observation.  Current Modelo 115 has no approved no-activity
-        # workflow, which is the explicit M180 installed-journey blocker.
-        raise RetencionesInstalledCliError(
-            stage=f"{stage}:preflight",
-            diagnostic_code="annual_source_no_activity_workflow_unsupported",
-        )
+        if source_modelo != "115":
+            raise RetencionesInstalledCliError(
+                stage=f"{stage}:preflight",
+                diagnostic_code="annual_source_no_activity_workflow_unsupported",
+            )
+        if attestation_period not in no_activity_attestations:
+            raise RetencionesInstalledCliError(
+                stage=f"{stage}:preflight",
+                diagnostic_code="annual_source_m115_no_relevant_payment_attestation_missing",
+            )
     work = _require_result(
         cli,
         (
@@ -942,18 +957,23 @@ def _materialize_annual_source_period(
             diagnostic_code="annual_source_filing_not_local",
         )
     filing_id = _required_text(filing, key="filing_record_id", stage=f"{stage}:work_file")
+    m115_no_relevant_payment_attestation = not captures and source_modelo == "115"
     return AnnualSourcePeriodEvidence(
         modelo=source_modelo,
         period=source_period.period,
         evidence_state=source_period.evidence_state.value,
-        source_workflow="local_filing_record",
+        source_workflow=(
+            "m115_no_relevant_payment_attested_local_filing_record"
+            if m115_no_relevant_payment_attestation
+            else "local_filing_record"
+        ),
         work_unit_id=work_id,
         calculation_revision_id=revision_id,
         calculated_casillas=calculated_casillas,
         verification_granted=True,
         filing_record_id=filing_id,
         live_submission=False,
-        attestation_period=None,
+        attestation_period=(f"{year}:{source_period.period}" if m115_no_relevant_payment_attestation else None),
     )
 
 
@@ -1101,6 +1121,7 @@ def _modelo_190_detail_payload(
         "clave": detail.clave,
         "subclave": detail.subclave,
         "province_code": detail.province_code,
+        "territorial_deduction_clave": detail.territorial_deduction_clave,
         "percibido_dinerario": _money_text(allocation.allocated_base),
         "retencion_practicada": _money_text(allocation.allocated_withholding),
         "incapacity_cash_perception": zero,

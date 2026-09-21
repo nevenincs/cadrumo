@@ -1,0 +1,77 @@
+{
+  "artifact_schema_version": "retenciones-01-annual-final-authority-run-v1",
+  "brief": {
+    "id": "RETENCIONES-01",
+    "revision": "0.2"
+  },
+  "acceptance_pattern": {
+    "id": "ACCEPTANCE-01",
+    "revision": "1.6"
+  },
+  "authority": {
+    "logical_generation": "db354561492ec6670dc775f9dd7fa24526098b74ab6b86dac0d5134df16430b4",
+    "database": "authority-42e5e11abb0fe17de0fbd5aebb2b3d9e425c2c6aa3b07d772ff575bd6b8f03b6.sqlite3"
+  },
+  "installed_product": {
+    "source_commits": [
+      "2f3dc79fd45eeab9dc8346a7b77c70c486ef1010",
+      "8e1141639edacb2c8feafa3a79be93abff9a6b94"
+    ],
+    "source_identity": "8e1141639edacb2c8feafa3a79be93abff9a6b94+retenciones-annual-attestation-harness-dirty",
+    "wheel_sha256": "80d08532db38c4626bc9b0bdab18b49c5c51f62848727f59a17cdf57b242d0c3",
+    "executable_sha256": "26db18eb5353d6dfb4678a2481c8b71b4de3fc5b1c25a4913e7fbd54678b5c03",
+    "python": "CPython 3.13.15",
+    "installation_origin": "fresh virtual environment site-packages wheel installation"
+  },
+  "run_root_retained_for_diagnosis": "C:\\Users\\hello\\AppData\\Local\\Temp\\cadrumo-retenciones-annual-final-3c2f92cf2ae5428e8e5aa2b09361800f",
+  "outcome": {
+    "live_submission_attempted": false,
+    "financial_exports_retained": false,
+    "modelo_180": "capture_history_calculation_and_verification_proven_export_blocked",
+    "modelo_190": "capture_history_calculation_and_verification_proven_export_blocked",
+    "shared_export_diagnostic": "FAIL_MODELO_EXPORT"
+  },
+  "receipts": [
+    {
+      "path": "modelo-180-2025-0A-final-authority-export-failure-receipt.json",
+      "sha256": "9347103306b729f1942345ceb0ee620a858b5b3cb9cc5b17be3311f94510b313",
+      "bytes": 8601,
+      "stage": "urban-rent-180-annual-properties:export",
+      "diagnostic_code": "FAIL_MODELO_EXPORT",
+      "successful_public_commands_before_export": 34,
+      "proven_workflow": [
+        "public property-attributed rent capture",
+        "fresh-process reopening",
+        "Q1/Q2 local source filing records",
+        "public M115 Q3/Q4 no-relevant-payment attestation",
+        "Q3/Q4 attested local zero source calculate/verify/file",
+        "annual calculation and verification"
+      ]
+    },
+    {
+      "path": "modelo-190-2025-0A-final-authority-export-failure-receipt.json",
+      "sha256": "74940cddd53ffc1a0ef3979c5dd46f62c5aa81633d9817c8263d218d470eb668",
+      "bytes": 7425,
+      "stage": "professional-190-annual-detail:export",
+      "diagnostic_code": "FAIL_MODELO_EXPORT",
+      "successful_public_commands_before_export": 21,
+      "proven_workflow": [
+        "public professional capture with territorial_deduction_clave=0 only",
+        "fresh-process reopening",
+        "public M111 no-retenciones attestations",
+        "Q2 local source filing record",
+        "annual calculation and verification under corrected scope"
+      ]
+    }
+  ],
+  "prior_receipts_preserved": [
+    "modelo-180-2025-0A-no-activity-blocker-receipt.json",
+    "modelo-190-2025-0A-required-detail-blocker-receipt.json"
+  ],
+  "sanitization": {
+    "credentials_retained": false,
+    "encrypted_store_retained_in_handoff": false,
+    "raw_process_log_retained": false,
+    "cleartext_financial_export_retained": false
+  }
+}
