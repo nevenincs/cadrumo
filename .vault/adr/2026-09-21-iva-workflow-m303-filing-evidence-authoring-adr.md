@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:48be7296cca94c574488e21df89461596b710cd7071e20d2545ee20af1b149ad'
+body_hash: 'sha256:b25d6596a45ab8ce662c5e9c39d9fc48f7c97bc6e18cdcb8fcdf77f33535135e'
 related:
   - "[[2026-09-21-iva-workflow-m303-filing-evidence-authoring-reference]]"
   - "[[2026-09-21-iva-workflow-adr]]"
@@ -100,3 +100,44 @@ reference resolution adds explicit failure states, but incomplete or
 contradictory evidence can no longer look filing-ready. Existing full-envelope
 JSON remains a compatibility-free internal/testing input until removed; it is
 not an accepted production authoring source.
+## Amendment 1 — Secure operator applicability attestation
+
+Accepted 2026-09-21 under the same IVA implementation authorization. The
+initial decision required secure reference resolution but did not identify an
+existing owner capable of grounding the mandatory Modelo 390 applicability fact.
+The encrypted attachment store is that owner; purchase-invoice evidence and
+evidence bundles keep their narrower existing purposes.
+
+The application may admit the operator's typed applicability attestation as
+evidence. Admission constructs canonical structured bytes in memory and writes
+them directly through the existing encrypted attachment custody path, without a
+plaintext staging file. The payload contains a schema version, the closed role
+`m303_exonerado_390_applicability`, the asserted value, filing year and period,
+a timezone-aware observation instant, and the existing current profile witness:
+profile identity, record revision, canonical content digest, schema identity and
+schema version. Attachment bucket, identity, digest, capture time and custody
+metadata remain owned by the attachment record. Search metadata may repeat only
+values derived from the canonical payload.
+
+For the ordinary path, the only admitted value is `not_applicable`. Absence never
+implies that value. `applicable` selects the optional exemption branch and must
+refuse as unsupported until its activity, endpoint and Modelo 347 evidence
+contract is complete.
+
+Resolution loads the referenced attachment from the expected bucket, verifies
+custody and digest, strictly parses the canonical payload, and requires the exact
+role, asserted value, year, period and current profile witness. The observation
+instant may not be future-dated, after capture, or before the covered filing
+period closes. Exact-coordinate attestations do not expire merely with elapsed
+wall time, but any current profile revision or digest mismatch makes them stale.
+Legacy attachments without the typed payload are ineligible and are never
+backfilled from filenames, MIME types, notes or free text.
+
+All typed applicability attestations in the same bucket and filing coordinate
+participate in conflict detection. Identical-value artifacts may coexist as
+separate custody evidence; conflicting values block composition, with no
+latest-wins rule. The attachment proves the operator's recorded assertion, not
+AEAT acceptance or independent truth. The public CLI may collect the typed
+attestation only through the shared application admission operation and returns
+a sanitized secure reference; it never manufactures metadata or writes an
+intermediate JSON file.

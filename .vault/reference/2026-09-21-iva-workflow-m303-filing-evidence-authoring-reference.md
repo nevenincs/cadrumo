@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:271e427c3c406cf5bf897ce42a0131a10bea3fe6463695abd4db611b1e284742'
+body_hash: 'sha256:b6dac7c92c8c40e3f8f21aff9fec7f15f3339d46c553c13efa9b97d6b574cda7'
 related:
   - "[[2026-09-21-iva-workflow-reference]]"
 ---
@@ -96,3 +96,41 @@ resolution where an assertion requires evidence, and direct handoff of the
 validated envelope to existing calculation-revision persistence. Optional
 insolvency, exemption and simplified-regime branches must refuse until each
 branch's full grounding contract is available.
+## Existing secure custody fit
+
+The closest reusable production owner is the encrypted attachment store. An
+`Attachment` already records immutable digest and identity, kind, source,
+capture time, bucket, links and custody actor/command
+(`src/cadrumo/domain/attachments/models.py:136`). The attachment adapter verifies
+the encrypted manifest, digest, content and bucket when loading
+(`src/cadrumo/adapters/persistence/storage/attachment.py:410`).
+
+Purchase-invoice evidence adds invoice metadata but has no filing semantic role
+(`src/cadrumo/application/ledger/evidence.py:112`). `EvidenceBundle` packages
+audit records after the fact and likewise has no applicability role
+(`src/cadrumo/application/evidence/models.py:141`). Neither is the correct owner
+for a Modelo 390 non-applicability assertion.
+
+The attachment record lacks the dimensions required for filing-evidence
+resolution: a closed semantic role, filing year and period, and observation
+validity. Its bucket is the existing secure profile scope; the resolver must
+match that bucket rather than duplicate taxpayer identity in another store.
+`captured_at` remains custody time and cannot substitute for observation
+validity. New metadata requires the attachment manifest's normal schema-version
+migration; an arbitrary `METADATA_BLOB` kind or purchase-evidence identifier does
+not establish the missing semantics.
+## Profile freshness witness
+
+M303 scope uses the authenticated current `UserProfileRecord`
+(`src/cadrumo/application/modelo/m303_regimen_simplificado_scope.py:40`). The
+existing stable witness is its `profile_id`, monotonic `record_revision`,
+canonical `content_digest`, `schema_id` and `schema_version`
+(`src/cadrumo/domain/user_profile/values.py:319`). The secure row provenance
+cross-binds those values to the profile UUID and custody envelope
+(`src/cadrumo/application/user_profile/capsule_record.py:198`).
+
+No IVA-only persisted digest exists. A filing attestation can therefore bind to
+that existing tuple without creating another identity. This is conservative:
+any profile revision makes the prior attestation stale, even when unrelated to
+IVA, and requires a new attestation. The current M303 scope resolver remains the
+only interpreter of the profile facts.

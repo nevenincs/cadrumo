@@ -304,3 +304,34 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   M303 capture/reopen/calculate/verify/export journey before expanding to the
   four-period and Modelo 390 acceptance scenarios. Do not use test helpers or
   fabricate evidence for acceptance.
+- Settlement implementation and its checkpoint were committed as `52cbf47ed5`.
+- Production authoring evidence and the accepted boundary are now durable in
+  `.vault/reference/2026-09-21-iva-workflow-m303-filing-evidence-authoring-reference.md`
+  and `.vault/adr/2026-09-21-iva-workflow-m303-filing-evidence-authoring-adr.md`,
+  committed as `99a1102b8e`. A transient shared application operation must own
+  composition; callers may supply only genuine assertions and secure references,
+  never authority/profile/calculated fields. Optional branches refuse until fully
+  grounded.
+- Application implementation stopped without edits on one tighter blocker: even
+  the ordinary path requires an exonerado-390 non-applicability reference, while
+  `FilingEvidenceReference` is only nominal. Current calculation ports cannot
+  resolve its role, profile/taxpayer scope, period or freshness. Inventing a
+  reference would violate the accepted decision.
+- Active Luna audit is limited to the existing secure evidence bundle/attachment
+  owner: determine whether its stored metadata can ground that non-applicability
+  assertion and, if not, the smallest typed metadata/resolver extension that
+  preserves the existing store.
+- Secure-owner audit completed: encrypted `AttachmentStore` is the reusable
+  custody owner; purchase-invoice evidence and `EvidenceBundle` lack filing-role
+  semantics. Attachment already owns bucket scope, ID/digest, encrypted bytes,
+  capture time and custody, but needs a canonical typed applicability payload.
+- Authoring ADR Amendment 1 accepts an operator `not_applicable` attestation as
+  evidence of that assertion (not AEAT acceptance). The payload binds the closed
+  role, year/period, observation instant and the existing authenticated profile
+  witness `(profile_id, record_revision, content_digest, schema_id,
+  schema_version)`. Any profile revision makes it stale. Conflicting assertions
+  block; absence never implies non-applicability; `applicable` stays unsupported
+  until the optional branch is fully grounded.
+- Terra principal now owns only secure in-memory admission and exact resolver on
+  the existing attachment store plus focused persistence/application tests. CLI
+  wiring and ordinary envelope composition wait for that slice.
