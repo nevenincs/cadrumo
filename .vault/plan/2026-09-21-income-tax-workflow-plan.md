@@ -10,9 +10,22 @@ related:
   - '[[2026-09-07-tuimodelo-reconcile-verify-adr]]'
   - '[[2026-09-07-tuimodelo-work-creator-adr]]'
   - '[[2026-09-07-tuimodelo-export-destinations-adr]]'
+  - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
+  - '[[2026-06-30-deterministic-output-replay-substrate-adr]]'
+  - '[[2026-08-14-test-harness-sanity-successor-adr]]'
+  - '[[2026-07-25-test-harness-honesty-adr]]'
+  - '[[2026-08-06-invoice-canonical-structure-adr]]'
+  - '[[2026-06-10-period-revision-resolution-adr]]'
+  - '[[2026-06-10-modelo-130-100-continuity-adr]]'
+  - '[[2026-06-05-cross-period-calculation-guards-adr]]'
+  - '[[2026-06-05-cross-period-filing-clean-state-adr]]'
+  - '[[2026-06-30-obligation-coverage-completeness-adr]]'
+  - '[[2026-07-01-fichero-boe-parity-gate-adr]]'
+  - '[[2026-08-11-tui-architecture-adr]]'
+  - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:39a6110ef08513cfcfad668df011db9c81e09c9f8567fb6b94a143fe8ceb3b25'
+body_hash: 'sha256:bd2b1db5fa32ef4cca9fd94a349097af99cad3121635fc54dd1fc3101815a293'
 ---
 
 # `income-tax-workflow` plan
@@ -48,7 +61,7 @@ Define one year-parameterized synthetic taxpayer, invoice and transaction fixtur
 
 Use the shared scenario through installed TUI ledger and declaration actions, complete in-scope bindings under accepted contracts, and prove both sequential continuation directions.
 
-- [ ] `P03.S04` - Bind the installed TUI ledger and declaration actions needed by the shared income-tax journey through existing application contracts; `src/cadrumo/entrypoints/tui/ledger/**, declarations/**, modelo/**, aeat_sync/** and launcher composition`.
+- [ ] `P03.S04` - Complete and verify the canonical tuimodelo plan dependencies that make the installed ledger-to-export journey reachable without creating a second rollout authority; `.vault/plan/2026-09-07-tuimodelo-plan.md and its TUI-owned implementation Steps`.
 - [ ] `P03.S05` - Exercise TUI-only, CLI-to-TUI, and TUI-to-CLI journeys against isolated secure stores and compare canonical persisted and calculated meaning; `src/cadrumo/entrypoints/tui/** acceptance tests and dev/acceptance/income_tax/** drivers`.
 
 ### Phase `P04` - Validate exports and publish acceptance evidence
@@ -59,7 +72,7 @@ Run isolated CLI, TUI, and continuation scenarios, validate official artifact me
 
 ## Parallelization
 
-P01.S01 is a hard prerequisite for every other Step. P02.S02 pins the shared scenario and oracle before either frontend implementation begins. After P02.S02, P02.S03 and read-only P03 inventory may run concurrently. Shared application, domain, persistence, fixture, and oracle files remain owned by the income-cli session; the income-tui session owns only `src/cadrumo/entrypoints/tui/**` and its tests. Any shared fix discovered by TUI routes to income-cli and lands before affected TUI evidence is rerun. P03.S05 follows P02.S03 and P03.S04. P04.S06 follows both frontend phases and has exclusive ownership of final aggregate gates and acceptance receipts.
+P01.S01 is a hard prerequisite for every other Step. P02.S02 pins the shared scenario and oracle before either frontend implementation begins. After P02.S02, P02.S03 and read-only P03 inventory may run concurrently. Shared application, domain, persistence, fixture, and oracle files remain owned by the income-cli session. The income-tui session executes missing product capabilities only through their existing Steps in `2026-09-07-tuimodelo-plan`, preserving that plan as the sole TUI rollout authority, then owns P03.S05 acceptance tests. Any shared fix discovered by TUI routes to income-cli and lands before affected TUI evidence is rerun. P03.S05 follows P02.S03 and P03.S04. P04.S06 follows both frontend phases and has exclusive ownership of final aggregate gates and acceptance receipts.
 
 ## Verification
 
