@@ -64,6 +64,16 @@ The TUI row actions and missing-field summary now use TUI-owned flow keys. The a
 
 Phase P03 result after correction: PASS. Both high findings were fixed and the focused race suite passes 13 tests; no critical or high finding blocks installed acceptance.
 
+### installed-no-op-evidence | high | Initial installed receipt did not audit the claimed no-op
+
+The first P04 review rejected journey7 because its receipt did not retain typed no-op evidence and the TUI paths had no explicit no-op operation. S10 was reopened. The visible TUI child now saves the already-visible value unchanged, requires the localized successful no-change outcome, and emits only `no_op_observed`; TUI-only and CLI-to-TUI both execute it. Journey8 aggregates that evidence with the CLI `changed=false` result and records `no_op_observed=true`. The high finding is resolved.
+
+### repository-import-gate | medium | Stable canonical gate remains red outside PROFILE-01
+
+Two shared-worktree runs were invalidated by concurrent source changes. A clean detached worktree at commit `06e5524ce2` then produced a stable source snapshot with the canonical `just check-import-boundaries` command. It still reports ten unapproved findings in assets, calendar, income-tax, M303, workbench, quality, and ledger-test files, plus the shared `dev.acceptance` package declaration gap; no PROFILE-01 file occurs. This is an external integration dependency. S10 must remain open until the repository owner restores the gate; PROFILE-01 does not suppress, baseline, or absorb those findings.
+
+P04 code/acceptance review result: PASS for PROFILE-01 behavior after the no-op correction. No unresolved critical or high product/acceptance finding remains. Plan close remains blocked solely by the required repository-wide import-boundary gate.
+
 ## Recommendations
 
 - Fix clear projection at the shared projection boundary and add an anti-resurfacing regression before touching consumers.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:e8769b40c3e06540c07af1094feabeff2b564e65d57888edf6e9aa8e3e85b997'
+body_hash: 'sha256:2d2352d6beecf651b59cbf058db3ef4163a6cbcef19a80c95f4af5ed486290f9'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -78,6 +78,9 @@ related:
 - `S10` `M` `dev/acceptance/profile/tests/test_cli_journey.py`
 - `S10` `M` `.agents/session-briefs/handoffs/2026-09-21-taxpayer-profile-checkpoint.md`
 - `S10` `verify:` `targeted-ruff-format-ty` -> `pass`
+- `S10` `M` `dev/acceptance/profile/tui_journey.py`
+- `S10` `M` `dev/acceptance/profile/tests/test_tui_journey.py`
+- `S10` `M` `.vault/audit/2026-09-21-taxpayer-profile-audit.md`
 
 ## Notes
 
@@ -91,4 +94,5 @@ related:
 - `S08` Removed final CLI-owned key from TUI profile manager.
 - `S09` Installed wheel execution intentionally remains S10.
 - `S10` canonical import gate unavailable: governed tree changed concurrently; no PROFILE-01 occurrence
+- `S10` canonical import gate stable but failed on 10 external findings; no PROFILE-01 occurrence
 
