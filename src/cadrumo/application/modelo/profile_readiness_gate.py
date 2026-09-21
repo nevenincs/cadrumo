@@ -46,7 +46,7 @@ from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.contribuyente.entity_type import entity_type_natural_person_token
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.user_profile.errors import ProfileNotFoundError
-from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord
+from ...domain.user_profile.values import ProfileSetupState, UserProfileRecord, section_field_key
 from ..user_profile.commands import ProfilePreflightReport, ProfilePreflightRequirement, ProfileValidationIssue
 from ..user_profile.completeness import missing_required_field_paths
 from ..user_profile.preflight import (
@@ -162,9 +162,14 @@ def modelo_work_profile_baseline_missing_paths(
             requirements.
     """
     values = record_to_path_values(record)
-    return tuple(
-        path for path in _modelo_work_baseline_paths(record, modelo=modelo) if not values.get(path, "").strip()
-    )
+
+    def has_value(path: str) -> bool:
+        return any(
+            section_field_key(candidate) == path and value is not None and bool(str(value).strip())
+            for candidate, value in values.items()
+        )
+
+    return tuple(path for path in _modelo_work_baseline_paths(record, modelo=modelo) if not has_value(path))
 
 
 def modelo_work_profile_baseline_validation_issues(record: UserProfileRecord) -> tuple[ProfileValidationIssue, ...]:

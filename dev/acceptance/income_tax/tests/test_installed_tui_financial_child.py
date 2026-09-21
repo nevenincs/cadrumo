@@ -15,7 +15,7 @@ def test_profile_configuration_uses_canonical_manager_row_paths() -> None:
     facts = required_profile_facts(build_scenario(2025))
     paths = {fact.path for fact in facts}
     assert "identity.tax_id" in paths
-    assert "activities.description" in paths
+    assert "activities.description" not in paths
     assert "taxpayer_type.irpf_income_categories" in paths
     assert "irpf.estimation_regime" in paths
     assert "renta_taxpayer.birth_date" in paths

@@ -20,6 +20,7 @@ from .installed_tui_child import (
     InstalledTuiChildError,
     admitted_session_autopilot,
     installed_product_evidence,
+    public_surface_diagnostic,
     query_public_selector,
     read_passphrase_from_stdin,
     register_profile_through_installed_tui,
@@ -75,7 +76,6 @@ def required_profile_facts(scenario: IncomeTaxScenario) -> tuple[ProfileFactEntr
         ProfileFactEntry("contact.postcode", value="28001"),
         ProfileFactEntry("tax_residence.ccaa", option_index=13),
         ProfileFactEntry("tax_residence.jurisdiction_scope", option_index=0),
-        ProfileFactEntry("activities.description", value="income-tax acceptance activity"),
         ProfileFactEntry("censo.activity_start_date", value=scenario.taxpayer.activity_start.isoformat()),
         ProfileFactEntry("taxpayer_type.entity_type", option_index=0),
         ProfileFactEntry("taxpayer_type.fiscal_residency", option_index=0),
@@ -154,9 +154,38 @@ async def _activate_button(pilot: Any, selector: str) -> None:
     await pilot.press("enter")
 
 
+async def _wait_for_refreshed_home(pilot: Any, *, polls: int = 360) -> None:
+    """Wait until child dismissal has rebuilt the public workbench generation."""
+    from textual.css.query import NoMatches
+    from textual.widgets import Static
+
+    for _ in range(polls):
+        updating = query_public_selector(pilot, "#root-updating", Static)
+        try:
+            pilot.app.screen.query_one("#home-agenda")
+        except NoMatches:
+            pass
+        else:
+            if not updating.display:
+                return
+        await pilot.pause()
+    raise InstalledTuiChildError(
+        "installed TUI did not complete its public Home refresh",
+        diagnostic=public_surface_diagnostic(pilot),
+    )
+
+
 async def _configure_profile(pilot: Any, *, scenario: IncomeTaxScenario) -> None:
     """Set the required income facts through Profile Manager row-key edits."""
+    from textual.widgets import Input
+
     await pilot.press("f4")
+    await wait_for_public_selector(pilot, "#manager-status", polls=180)
+    await _activate_button(pilot, "#manager-add-row-activities")
+    await wait_for_public_selector(pilot, "#row-input-0")
+    query_public_selector(pilot, "#row-input-0", Input).value = "income-tax acceptance activity"
+    await _activate_button(pilot, "#btn-row-save")
+    await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#manager-status", polls=180)
     for fact in required_profile_facts(scenario):
         await set_profile_manager_field(
@@ -168,7 +197,7 @@ async def _configure_profile(pilot: Any, *, scenario: IncomeTaxScenario) -> None
     await pilot.press("f8")
     await pilot.app.workers.wait_for_complete()
     await pilot.press("escape")
-    await wait_for_public_selector(pilot, "#home-agenda", polls=180)
+    await _wait_for_refreshed_home(pilot)
 
 
 async def _import_transactions(pilot: Any, *, csv_path: Path) -> None:
@@ -273,6 +302,8 @@ async def _reconcile_invoice(pilot: Any, *, transaction_id: str, invoice_id: str
 
 async def _create_calendar_work(pilot: Any, *, year: int) -> None:
     """Create the baseline 1T M130 work unit through Calendar confirmation."""
+    from textual.widgets import Static
+
     await _open_destination(pilot, query="declarations", expected_selector="#declarations-navigation")
     await select_public_data_table_row(
         pilot=pilot,
@@ -288,8 +319,17 @@ async def _create_calendar_work(pilot: Any, *, year: int) -> None:
     await wait_for_public_selector(pilot, "#btn-confirm-accept")
     await _activate_button(pilot, "#btn-confirm-accept")
     await pilot.app.workers.wait_for_complete()
+    notice = str(query_public_selector(pilot, "#declarations-calendar-notice", Static).render()).strip()
+    if notice.startswith("Created ") is False:
+        if "setup complete" in notice:
+            outcome = "setup-incomplete"
+        elif "could not be completed" in notice:
+            outcome = "recovery-failed"
+        else:
+            outcome = "unexpected-notice"
+        raise InstalledTuiChildError(f"calendar creation did not report success ({outcome})")
     await pilot.press("escape")
-    await wait_for_public_selector(pilot, "#home-agenda", polls=180)
+    await _wait_for_refreshed_home(pilot)
 
 
 async def _open_work(pilot: Any, *, work_unit_id: str) -> None:
@@ -351,12 +391,12 @@ def run_financial_child(
 
     async def drive(pilot: Any) -> None:
         await _configure_profile(pilot, scenario=scenario)
+        await _create_calendar_work(pilot, year=year)
         await _import_transactions(pilot, csv_path=csv_path)
         for item in (*scenario.income, *scenario.expenses):
             await _capture_invoice(pilot, item=item)
         for item in (*scenario.income, *scenario.expenses):
             await _reconcile_invoice(pilot, transaction_id=item.transaction_id, invoice_id=item.invoice_id)
-        await _create_calendar_work(pilot, year=year)
         # Calendar creates the work through its public confirmation.  The next
         # declaration list exposes its opaque work-unit key, which is retained
         # only in process memory and never written to the durable receipt.
@@ -365,7 +405,10 @@ def run_financial_child(
 
         table = query_public_selector(pilot, "#declarations-list", DataTable)
         if table.row_count != 1:
-            raise InstalledTuiChildError("baseline calendar creation did not expose exactly one declaration work row")
+            raise InstalledTuiChildError(
+                "baseline calendar creation did not expose exactly one declaration work row "
+                f"(visible count: {table.row_count})"
+            )
         work_unit_id = str(next(iter(table.rows)).value)
         work_unit_ids.append(work_unit_id)
         operations.extend(await _run_lifecycle(pilot, export_path=export_path, work_unit_id=work_unit_id))

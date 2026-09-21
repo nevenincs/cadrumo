@@ -27,6 +27,7 @@ from cadrumo.application.modelo.calculation_actions import (
 )
 from cadrumo.application.modelo.profile_readiness_gate import (
     modelo_applicability_refusal,
+    modelo_work_profile_baseline_missing_paths,
     pre_activity_period_refusal,
     profile_activity_start_date,
 )
@@ -71,6 +72,23 @@ _M303_2026_REVISION = "2026-y-siguientes"
 _DEFAULT_MODELO = Modelo("303")
 _OPERATOR_PROFILE_ID = "30300000-0000-4000-8000-000000000001"
 _NONRESIDENT_PROFILE_ID = "20000000-0000-4000-8000-000000000002"
+
+
+def test_modelo_baseline_accepts_canonical_repeatable_activity_row() -> None:
+    """The TUI's indexed activity row satisfies the shared filing baseline."""
+    record = _create_profile_record_for_test(
+        setup_state=ProfileSetupState.COMPLETE,
+        profile_id=_OPERATOR_PROFILE_ID,
+        facts=(
+            UserProfileFact(path="identity.tax_id", value="12345678Z"),
+            UserProfileFact(path="activities.0.description", value="design"),
+        ),
+        created_at=_NOW,
+        updated_at=_NOW,
+        context=_profile_creation_context_for_test(),
+    )
+
+    assert modelo_work_profile_baseline_missing_paths(record, modelo="130") == ()
 
 
 def _seed_profile_record(record: UserProfileRecord) -> None:
