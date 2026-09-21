@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:48e9f9c2a20a12ca24bd304d66199c7ec556359cd5ce0b041936e5f209b426ad'
+body_hash: 'sha256:618b7e406252e3db8fcd2cb98bd03bd4e8dc01d36324760ee29a1a9ecd67bb1c'
 related:
   - "[[2026-09-21-calendar-obligations-plan]]"
 ---
@@ -13,7 +13,7 @@ related:
 
 ## Scope
 
-Reviewed P01.S01 through P01.S03 as one effective-date and lifecycle workflow against CALENDAR-01 CA2, CA3 and CA4 and the accepted calendar semantics decisions. Evidence comprised the three Step commits, their focused tests and the current integrated source.
+Reviewed P01.S01 through P01.S03 as one effective-date and lifecycle workflow against CALENDAR-01 CA2, CA3 and CA4 and the accepted calendar semantics decisions. Evidence comprised the Step commits, focused tests and the current integrated source. Later passes reviewed P02 evidence/recovery behavior and the completed P03 CLI/TUI/acceptance workflow.
 
 ## Findings
 
@@ -29,6 +29,10 @@ The reopened P01.S03 resolves legal-entity identity through the pinned authority
 
 P02 preserves local filing, official AEAT evidence and receipt verification as separate axes. Notification rows remain additive message observations even when their prose resembles a filing, and replay deduplicates without creating filing coordinates or evidence. The shared declarations projection carries the registry-derived Article 27 band only as an `unassessed` conditional rate preview; it has no amount or liability field. Focused application tests pass and the phase review result is PASS.
 
+### plan-close | low | CLI and TUI preserve one explicit calendar meaning offline
+
+CLI and TUI expose the same evaluation date, original and effective closes, payment cutoff, overdue age, local filing state, AEAT evidence state and receipt certainty from shared application contracts. The acceptance fixture uses independently seeded immutable stores for each frontend and compares their typed meanings. The bounded integrated run passed 97 application/CLI/acceptance tests and 18 TUI tests. No network or notification-content path was invoked. Final review result: PASS.
+
 ## Recommendations
 
 Reopen P01.S03. Preserve the existing activity-period behavior for natural persons and attribution entities, but do not treat a legal entity's activity cessation as proof of extinction. Surface the missing extinction distinction explicitly and add a focused legal-entity regression before closing the Step and repeating this phase review.
@@ -36,3 +40,5 @@ Reopen P01.S03. Preserve the existing activity-period behavior for natural perso
 The high finding is resolved by the reopened Step. Continue to P02 without introducing an extinction schema; a future explicit extinction capability would require its own grounded contract.
 
 P02 requires no revision. Persistent notification-to-filing association remains a deferred capability and is not a dependency of the negative unlinked-notification contract.
+
+The completed plan requires no further revision. Live AEAT reconciliation, authentication, notification content, acknowledgement, response and filing submission remain NOT EXERCISED.
