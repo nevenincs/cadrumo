@@ -9,10 +9,12 @@ from typing import Final, override
 from textual.app import ComposeResult
 from textual.widgets import DataTable, Static
 
+from ....application.actividad_asset.operations import ActivityAssetOperations
 from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.ledger.workspace import LedgerWorkspaceArea, LedgerWorkspaceProjectionV1
 from ....application.operator_actions.models import ActionReference
 from ..navigation import TuiScreenContextV1, TuiScreenFactoryV1
+from .actividad_asset import ActivityAssetTuiActionsV1
 from .classification import LedgerClassificationScreen
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
 from .entries import LedgerEntriesScreen
@@ -38,6 +40,11 @@ from .workspace_injection import LedgerWorkspaceInjection, LedgerWorkspaceRefres
 from .workspace_presentation import ledger_workspace_page
 
 type LedgerInternalScreenFactoryV1 = Callable[[LedgerWorkspaceController], LedgerWorkspaceScreen]
+
+
+def actividad_asset_tui_actions(*, operations: ActivityAssetOperations) -> ActivityAssetTuiActionsV1:
+    """Compose the activity-asset TUI door from the same application operations as CLI."""
+    return ActivityAssetTuiActionsV1(operations=operations)
 
 
 class LedgerUnavailableScreen(LedgerWorkspaceScreen):
@@ -151,6 +158,7 @@ def ledger_screen_factory(
     exclusion_submitter: LedgerExclusionSubmitterV1 | None = None,
     evidence_door: LedgerEvidenceDoorV1 | None = None,
     refresh: LedgerWorkspaceRefreshDoorV1 | None = None,
+    activity_asset_actions: ActivityAssetTuiActionsV1 | None = None,
 ) -> TuiScreenFactoryV1:
     """Bind an injected immutable projection to the outer navigation factory contract."""
     injection = LedgerWorkspaceInjection(
@@ -166,6 +174,7 @@ def ledger_screen_factory(
         exclusion_submitter=exclusion_submitter,
         evidence_door=evidence_door,
         refresh=refresh,
+        activity_asset_actions=activity_asset_actions,
     )
 
     # Which area performs each injected action. Classification needs an entry
@@ -196,6 +205,7 @@ __all__ = [
     "LedgerInternalScreenFactoryV1",
     "LedgerRouteV1",
     "LedgerUnavailableScreen",
+    "actividad_asset_tui_actions",
     "ledger_screen_factory",
     "resolve_ledger_screen",
 ]

@@ -131,4 +131,3 @@ preserving the accepted home-allocation refusal boundaries.
 - Import and UI operations must ask for the basis stage rather than guessing it.
 - Changing the stage or its evidence creates a superseding asset revision and
   invalidates dependent unfiled forecasts or claims.
-

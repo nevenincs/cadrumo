@@ -29,6 +29,10 @@ Reviewed Phase P03 across exact-key authority resolution, mandatory encrypted
 history wiring, the live Modelo 100 and Modelo 130 source mesh, scoped
 acquisition-cost collisions, and claim provenance.
 
+Reviewed P04 reciprocal IVA linkage and the completed P05 shared application,
+CLI, and TUI adapters. The installed-process and validated-export acceptance
+work remains open and is not included in the passing scope.
+
 ## Findings
 
 ### phase-01 | low | unsafe full-cost routing remains intentionally pinned
@@ -65,6 +69,19 @@ Result: PASS. No critical or high findings. Live regression evidence proves the
 scheduled EUR 500 charge, additive M130 ownership, distinct M100 destinations,
 and refusal of the competing EUR 2,000 acquisition-cost route.
 
+### phase-04-05 | medium | frontend parity is implemented but installed acceptance is incomplete
+
+CLI and TUI delegate creation, inspection, correction, forecast, and explicit
+claim recording to the same application operations. Registry selection is
+pinned outside the frontends and neither adapter performs depreciation
+arithmetic. The installed wheel built and imported from site-packages, but the
+isolated TUI child did not produce a terminal result. The shared exporter is
+also still under another lane's active ownership.
+
+Result: PASS for P04.S07, P05.S09, and P05.S10. P04.S08, P05.S11, and P05.S12
+remain open. AS3, AS4, AS5, AS6, AS8, and AS10 are proven; AS1, AS2, AS7, AS9,
+AS11, and AS12 are blocked. No installed journey or official export is claimed.
+
 ## Recommendations
 
 Retain the regression unchanged through P02. In P03, add the positive scheduled
@@ -75,4 +92,3 @@ For P03, resolve authority rows through the registry-backed provider rather
 than accepting a caller-invented rate, preserve the single M130 casilla-02
 owner, and displace the proven unsafe transaction-ledger 0208 route only within
 the scoped acquisition/depreciation collision.
-

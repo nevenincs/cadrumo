@@ -158,6 +158,7 @@ class LedgerWorkspaceController:
         self.evidence_items = injection.evidence_items
         self.link_action = injection.link_action
         self.link_submitter = injection.link_submitter
+        self.activity_asset_actions = injection.activity_asset_actions
         self._states = {row.area: row for row in projection.areas}
 
     def classification_target_coordinate(self) -> tuple[int, int, str]:
@@ -169,6 +170,10 @@ class LedgerWorkspaceController:
             index for index, row in enumerate(self.projection.entries, start=1) if row.transaction_id == target
         )
         return position, len(self.projection.entries), str(target)[:12]
+
+    def can_manage_activity_assets(self) -> bool:
+        """Return whether the installed composition supplied the shared asset door."""
+        return self.activity_asset_actions is not None
 
     def entry_label(self, transaction_id: TransactionId) -> str:
         """Name one entry the way the operator recorded it: its date and description.

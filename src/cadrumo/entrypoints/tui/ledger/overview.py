@@ -4,11 +4,12 @@ from __future__ import annotations
 
 from typing import ClassVar, cast, override
 
-from textual.app import ComposeResult
+from textual.app import App, ComposeResult
 from textual.widgets import Button, DataTable, Static
 
 from ....application.ledger.workspace import LedgerWorkspaceArea
 from ..components.widgets import ContentDataTable, ContentScroll
+from .actividad_asset import ActivityAssetScreen
 from .controller import (
     LedgerInvoiceEntryRequested,
     LedgerWorkspaceController,
@@ -43,6 +44,8 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
             yield ContentDataTable[str](id="ledger-quality", cursor_type="row", zebra_stripes=True)
             if self.controller.can_add_invoices():
                 yield Button(ledger_copy("tui.ledger.invoice.open"), id="ledger-add-invoice")
+            if self.controller.can_manage_activity_assets():
+                yield Button("Activos amortizables", id="ledger-activity-assets")
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
     def on_mount(self) -> None:
@@ -78,6 +81,8 @@ class LedgerOverviewScreen(LedgerWorkspaceScreen):
         """Open the invoice entry form."""
         if event.button.id == "ledger-add-invoice":
             self.post_message(LedgerInvoiceEntryRequested())
+        elif event.button.id == "ledger-activity-assets":
+            cast("App[None]", self.app).push_screen(ActivityAssetScreen(self.controller))
 
 
 __all__ = ["LedgerOverviewScreen"]

@@ -759,6 +759,16 @@ def _ledger_generation_factory(
     from .ledger.routes import ledger_screen_factory
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
+        from datetime import date
+        from decimal import Decimal
+
+        from ...adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
+        from ...application.actividad_asset.operations import ActivityAssetOperations
+        from ...application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
+        from ...domain.calculations.registry.actividad_asset_bindings import ActivityAssetAuthoritySelection
+        from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+        from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+        from .ledger.actividad_asset import ActivityAssetTuiActionsV1
         from .ledger_doors import (
             LedgerEvidenceDoor,
             LedgerImportDoor,
@@ -767,6 +777,31 @@ def _ledger_generation_factory(
         )
 
         profile_id = dependencies.account.profile_id
+
+        def forecast_asset(
+            revision: ActivityAssetRevision,
+            *,
+            selection: ActivityAssetAuthoritySelection,
+            covered_from: date,
+            covered_until: date,
+            accumulated_effective_claims: Decimal,
+        ) -> ScheduledAmortizationCharge:
+            return forecast_activity_asset_charge(
+                revision,
+                modelo_100_revision=operation.revision("100", "2025"),
+                selection=selection,
+                authority_generation=operation.pin().logical_generation,
+                covered_from=covered_from,
+                covered_until=covered_until,
+                accumulated_effective_claims=accumulated_effective_claims,
+            )
+
+        activity_asset_actions = ActivityAssetTuiActionsV1(
+            operations=ActivityAssetOperations(
+                repository=ActividadAssetHistoryRepository(bucket_id=profile_id),
+                forecast_operation=forecast_asset,
+            ),
+        )
         return ledger_screen_factory(
             _required_projection(current[0].ledger, "Ledger"),
             review_action=dependencies.ledger_review_action,
@@ -798,6 +833,7 @@ def _ledger_generation_factory(
             invoice_add_door=ledger_invoice_add_door(profile_id, operation),
             evidence_door=LedgerEvidenceDoor(profile_id=profile_id, operation=operation),
             refresh=ledger_workspace_refresh(profile_id, capture_ledger),
+            activity_asset_actions=activity_asset_actions,
         )(context)
 
     return create
