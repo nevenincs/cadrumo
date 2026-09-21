@@ -6,7 +6,7 @@ from decimal import Decimal
 
 import pytest
 
-from ..scenario import Direction, EvidenceState, build_scenario
+from ..scenario import Direction, EvidenceState, build_installed_periodic_cli_slices, build_scenario
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -88,3 +88,20 @@ def test_nonresident_boundary_is_not_forced_into_resident_models() -> None:
 def test_scenario_refuses_unreviewed_year_reuse() -> None:
     with pytest.raises(ValueError, match="grounded only for 2025"):
         build_scenario(2026)
+
+
+def test_installed_cli_slices_close_each_invoice_without_a_rate_engine() -> None:
+    """The periodic public inputs are supplied evidence, not computed rates."""
+    professional, rent = build_installed_periodic_cli_slices()
+
+    assert professional.invoice_date.isoformat() == "2025-03-31"
+    assert tuple(item.paid_on.isoformat() for item in professional.allocations) == ("2025-04-02", "2025-06-30")
+    assert sum(item.allocated_withholding for item in professional.allocations) == Decimal("95.00")
+    assert sum(item.allocated_settlement for item in professional.allocations) == professional.expected_settlement
+    assert rent.property_reference == "1234567VK4713C0001XY"
+    assert rent.annual_detail_capture_supported is False
+
+
+def test_installed_cli_slices_refuse_unreviewed_year_reuse() -> None:
+    with pytest.raises(ValueError, match="grounded only for 2025"):
+        build_installed_periodic_cli_slices(2026)
