@@ -319,16 +319,37 @@ async def select_public_data_table_row(*, pilot: Any, table_selector: str, row_k
     )
 
 
-async def set_profile_manager_field(*, pilot: Any, path: str, value: str) -> None:
-    """Persist one text or enum profile value through the normal editor UI."""
-    from textual.widgets import Input, Select
+async def set_profile_manager_field(
+    *,
+    pilot: Any,
+    path: str,
+    value: str | None = None,
+    option_index: int | None = None,
+) -> None:
+    """Persist one text value or a visible OptionList choice through the editor UI.
+
+    ``FieldEditScreen`` intentionally renders choices as labels, not canonical
+    storage tokens.  A caller therefore supplies the public option index for a
+    choice field; the screen itself translates that selected option to its
+    canonical value when its ordinary Save button is pressed.
+    """
+    from textual.widgets import Input, OptionList
 
     await open_profile_manager_field(pilot=pilot, path=path)
     editor = await wait_for_any_public_selector(pilot, ("#edit-input", "#edit-options"))
     if editor == "#edit-input":
+        if not isinstance(value, str):
+            raise InstalledTuiChildError("text Profile Manager fields require a string value")
+        if option_index is not None:
+            raise InstalledTuiChildError("text Profile Manager fields do not accept an option index")
         query_public_selector(pilot, editor, Input).value = value
     else:
-        query_public_selector(pilot, editor, Select).value = value
+        if isinstance(option_index, bool) or not isinstance(option_index, int) or option_index < 0:
+            raise InstalledTuiChildError("choice Profile Manager fields require a non-negative public option index")
+        options = query_public_selector(pilot, editor, OptionList)
+        if option_index >= options.option_count:
+            raise InstalledTuiChildError("choice Profile Manager option index is outside the visible option list")
+        options.highlighted = option_index
     await pilot.click("#btn-edit-save")
     await pilot.app.workers.wait_for_complete()
     await wait_for_public_selector(pilot, "#manager-status")

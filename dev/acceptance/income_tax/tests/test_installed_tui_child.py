@@ -8,6 +8,7 @@ from pathlib import Path
 from types import SimpleNamespace
 
 import pytest
+from textual.widgets import OptionList
 
 from .. import installed_tui_child as installed_child_module
 from ..installed_tui_child import (
@@ -19,6 +20,7 @@ from ..installed_tui_child import (
     public_surface_diagnostic,
     run_installed_tui_child_process,
     select_public_data_table_row,
+    set_profile_manager_field,
     wait_for_public_selector,
     write_installed_tui_failure_receipt,
 )
@@ -257,3 +259,58 @@ def test_public_table_row_selection_uses_semantic_key_not_position() -> None:
     assert table.focused is True
     assert table.cursor_row == 1
     assert pilot.keys == ["enter"]
+
+
+def test_profile_manager_choice_uses_visible_option_list_highlight_and_save(monkeypatch) -> None:
+    class Options:
+        option_count = 3
+
+        def __init__(self) -> None:
+            self.highlighted: int | None = None
+
+    class Workers:
+        async def wait_for_complete(self) -> None:
+            return None
+
+    class Pilot:
+        app = SimpleNamespace(workers=Workers())
+
+        def __init__(self) -> None:
+            self.clicks: list[str] = []
+
+        async def click(self, selector: str) -> None:
+            self.clicks.append(selector)
+
+    async def open_field(*, pilot: object, path: str) -> None:
+        assert path == "tax_residence.ccaa"
+
+    async def wait_for_any(pilot: object, selectors: tuple[str, ...], *, polls: int = 80) -> str:
+        assert selectors == ("#edit-input", "#edit-options")
+        return "#edit-options"
+
+    async def wait_for_selector(pilot: object, selector: str, *, polls: int = 80) -> None:
+        assert selector == "#manager-status"
+
+    options = Options()
+
+    def query(pilot: object, selector: str, expected_type: type[object] | None = None) -> object:
+        assert selector == "#edit-options"
+        assert expected_type is OptionList
+        return options
+
+    monkeypatch.setattr(installed_child_module, "open_profile_manager_field", open_field)
+    monkeypatch.setattr(installed_child_module, "wait_for_any_public_selector", wait_for_any)
+    monkeypatch.setattr(installed_child_module, "wait_for_public_selector", wait_for_selector)
+    monkeypatch.setattr(installed_child_module, "query_public_selector", query)
+
+    pilot = Pilot()
+    asyncio.run(
+        set_profile_manager_field(
+            pilot=pilot,
+            path="tax_residence.ccaa",
+            option_index=1,
+        )
+    )
+
+    assert options.highlighted == 1
+    assert pilot.clicks == ["#btn-edit-save"]
