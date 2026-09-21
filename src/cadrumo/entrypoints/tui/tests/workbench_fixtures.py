@@ -554,6 +554,7 @@ def _calendar_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsCale
                 closes_on=date(2026, 4, 30),
                 adjusted_closes_on=date(2026, 4, 30),
                 shift_reason="fixture",
+                evaluated_on=date(2026, 2, 1),
                 status=ObligationStatus.UPCOMING,
                 user_state=OverviewPeriodState.DUE,
                 filing_evidence=OverviewCalendarFilingEvidence(modelo="130", filing_year=2026, period=period),
@@ -561,6 +562,7 @@ def _calendar_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsCale
         )
     calendar = OverviewCalendar(
         range=OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 12, 31)),
+        evaluated_on=date(2026, 2, 1),
         entries=entries,
         generated_at=_AT,
     )

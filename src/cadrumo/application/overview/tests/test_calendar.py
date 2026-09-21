@@ -16,7 +16,7 @@ from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnve
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.engine import DeadlineEngine
-from ....domain.deadlines.models import IVARegime, ObligationStatus, TaxpayerProfile
+from ....domain.deadlines.models import IVARegime, ModeloDeadline, ObligationStatus, TaxpayerProfile
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ...live.expedientes import PersistedExpedientesSnapshot
@@ -24,6 +24,7 @@ from ...live.expedientes_ports import ExpedientesDeclaration
 from ...live.notification_ports import RemoteNotification
 from ...live.notifications import PersistedNotificationsSnapshot
 from ..calendar import (
+    _calendar_entry_from_obligation,
     _registry_window_for_work_unit,
     build_overview_calendar,
     build_overview_calendar_events,
@@ -502,6 +503,7 @@ def _entry(**overrides: object) -> OverviewCalendarEntry:
         "holiday_refs": (),
         "jurisdictions": (),
         "payment_cutoff_on": date(2026, 4, 15),
+        "evaluated_on": date(2026, 4, 1),
         "status": ObligationStatus.UPCOMING,
         "user_state": OverviewPeriodState.DUE,
     }
@@ -987,6 +989,45 @@ def test_build_threads_shift_metadata_onto_every_entry(
     for entry in cal.entries:
         assert entry.adjusted_closes_on >= entry.closes_on
         assert entry.shift_reason in accepted_reasons
+
+
+def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    obligation = ModeloDeadline(
+        modelo="303",
+        period=Period.from_year_and_code(2025, "1T"),
+        opens_on=date(2025, 4, 1),
+        closes_on=date(2025, 4, 20),
+        payment_cutoff_on=date(2025, 4, 15),
+        status=ObligationStatus.OVERDUE,
+        applies_because="synthetic shifted-boundary obligation",
+        boe_references=(),
+        recovery=None,
+    )
+    on_effective_close = _calendar_entry_from_obligation(
+        obligation,
+        filing_evidence=(),
+        live_censo_verified_profile_keys=None,
+        today=date(2025, 4, 21),
+        due_soon_days=14,
+        operation=authority_operation,
+    )
+    assert on_effective_close.adjusted_closes_on == date(2025, 4, 21)
+    assert on_effective_close.status is ObligationStatus.DUE_TODAY
+    assert on_effective_close.days_overdue is None
+    assert on_effective_close.recovery is None
+
+    after_effective_close = _calendar_entry_from_obligation(
+        obligation,
+        filing_evidence=(),
+        live_censo_verified_profile_keys=None,
+        today=date(2025, 4, 22),
+        due_soon_days=14,
+        operation=authority_operation,
+    )
+    assert after_effective_close.status is ObligationStatus.OVERDUE
+    assert after_effective_close.days_overdue == 1
 
 
 def test_build_marks_modelo_369_as_modelo_exception(

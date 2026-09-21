@@ -66,6 +66,8 @@ from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
 from ...domain.deadlines.models import Schedule as _Schedule
 from ...domain.deadlines.models import TaxpayerProfile as _TaxpayerProfile
 from ...domain.deadlines.plazo import resolve_filing_window as _resolve_filing_window
+from ...domain.deadlines.recargo import build_recovery_for_overdue as _build_recovery_for_overdue
+from ...domain.deadlines.recargo import load_recargo_bands as _load_recargo_bands
 from ...domain.modelos.work_unit import WorkUnit as _WorkUnit
 from ...domain.modelos.work_unit import WorkUnitState as _WorkUnitState
 from ._calendar_evidence_sources import (
@@ -334,12 +336,13 @@ def _annotate_entry_with_work_unit(
     today: date,
     due_soon_days: int,
 ) -> _OverviewCalendarEntry:
-    status = _local_work_unit_status(unit, entry.closes_on, today, due_soon_days)
+    status = _local_work_unit_status(unit, entry.adjusted_closes_on, today, due_soon_days)
     effective_filing_evidence = _filing_evidence_with_work_unit_pointers(unit, (entry.filing_evidence,))
     return entry.model_copy(
         update={
             "status": status,
             "user_state": _user_state_for(status),
+            "days_overdue": (today - entry.adjusted_closes_on).days if status is _ObligationStatus.OVERDUE else None,
             "filing_evidence": effective_filing_evidence[-1],
             "local_work_unit_id": unit.work_unit_id,
             "local_work_unit_name": unit.name,
@@ -374,6 +377,8 @@ def _calendar_entry_from_work_unit(
         obligation,
         filing_evidence=effective_filing_evidence,
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+        today=today,
+        due_soon_days=due_soon_days,
         operation=operation,
     ).model_copy(
         update={
@@ -837,6 +842,8 @@ def _calendar_entry_from_obligation(
     *,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
+    today: date,
+    due_soon_days: int,
     operation: PinnedAuthorityOperation,
 ) -> _OverviewCalendarEntry:
     try:
@@ -870,6 +877,27 @@ def _calendar_entry_from_obligation(
         holiday_refs = ()
         jurisdictions = ()
     period = obligation.period
+    status = _classify_obligation_status(adjusted, today, due_soon_days)
+    recovery = None
+    if status is _ObligationStatus.OVERDUE:
+        try:
+            recovery = _build_recovery_for_overdue(
+                closes_on=adjusted,
+                reference_today=today,
+                modelo=str(obligation.modelo),
+                period=period,
+                bands=_load_recargo_bands(operation=operation),
+                operation=operation,
+            )
+        except (FileNotFoundError, ValueError) as exc:
+            _log.debug(
+                "overview calendar has no recovery registry entry",
+                extra={
+                    "modelo": str(obligation.modelo),
+                    "period": str(period),
+                    "error_type": type(exc).__name__,
+                },
+            )
     return _OverviewCalendarEntry(
         modelo=obligation.modelo,
         period=period,
@@ -880,9 +908,11 @@ def _calendar_entry_from_obligation(
         holiday_refs=holiday_refs,
         jurisdictions=jurisdictions,
         payment_cutoff_on=obligation.payment_cutoff_on,
-        status=obligation.status,
-        user_state=_user_state_for(obligation.status),
-        recovery=obligation.recovery,
+        evaluated_on=today,
+        days_overdue=(today - adjusted).days if status is _ObligationStatus.OVERDUE else None,
+        status=status,
+        user_state=_user_state_for(status),
+        recovery=recovery,
         recovery_action=(
             _declare_next_action(
                 "operator.modelo.work.create",
@@ -890,7 +920,7 @@ def _calendar_entry_from_obligation(
                 year=period.filing_year,
                 period=period.registry_token,
             )
-            if obligation.recovery is not None
+            if recovery is not None
             else None
         ),
         filing_year=period.filing_year,
@@ -955,6 +985,8 @@ def _entries_and_suppressed_from_schedules(
     show_suppressed: bool,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
+    today: date,
+    due_soon_days: int,
     operation: PinnedAuthorityOperation,
 ) -> tuple[list[_OverviewCalendarEntry], list[_SuppressedCalendarEntry], set[str]]:
     """Project every schedule's obligations into applicable calendar entries.
@@ -997,6 +1029,8 @@ def _entries_and_suppressed_from_schedules(
                     obligation,
                     filing_evidence=filing_evidence,
                     live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+                    today=today,
+                    due_soon_days=due_soon_days,
                     operation=operation,
                 ),
             )
@@ -1084,6 +1118,7 @@ def build_overview_calendar(
         # "nothing to file".
         return _OverviewCalendar(
             range=calendar_range,
+            evaluated_on=today,
             entries=(),
             generated_at=now(),
             warnings=(),
@@ -1101,6 +1136,7 @@ def build_overview_calendar(
         engine=engine,
         operation=operation,
     )
+    due_soon_days = deadline_engine.due_soon_days
     entries, suppressed, coverage_surface_modelos = _entries_and_suppressed_from_schedules(
         schedules,
         profile=profile,
@@ -1108,6 +1144,8 @@ def build_overview_calendar(
         show_suppressed=show_suppressed,
         filing_evidence=filing_evidence,
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
+        today=today,
+        due_soon_days=due_soon_days,
         operation=operation,
     )
     entries.sort(
@@ -1118,7 +1156,6 @@ def build_overview_calendar(
             entry.period.registry_token,
         ),
     )
-    due_soon_days = getattr(deadline_engine, "due_soon_days", _DEFAULT_LOCAL_WORK_UNIT_DUE_SOON_DAYS)
     suppressed.sort(key=lambda s: (s.modelo, s.period.filing_year, s.period.registry_token))
     entries_tuple = _merge_work_units_into_entries(
         tuple(entries),
@@ -1154,6 +1191,7 @@ def build_overview_calendar(
     )
     return _OverviewCalendar(
         range=calendar_range,
+        evaluated_on=today,
         entries=entries_tuple,
         generated_at=now(),
         warnings=(

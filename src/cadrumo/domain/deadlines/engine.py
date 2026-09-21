@@ -616,6 +616,8 @@ class ScheduleProducer(Protocol):
     can both feed the same single-producer function.
     """
 
+    due_soon_days: int
+
     def compute(
         self,
         profile: TaxpayerProfile,

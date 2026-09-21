@@ -60,6 +60,7 @@ def _calendar_entry(modelo: str, due_on: date, period_code: str) -> OverviewCale
         closes_on=due_on,
         adjusted_closes_on=due_on,
         shift_reason="none",
+        evaluated_on=date(2026, 1, 1),
         status=ObligationStatus.DUE_SOON,
         user_state=OverviewPeriodState.DUE,
         filing_year=2026,

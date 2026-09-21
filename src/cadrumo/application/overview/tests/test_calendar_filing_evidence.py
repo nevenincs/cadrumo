@@ -294,6 +294,7 @@ def test_period_bearing_calendar_models_roundtrip_through_json() -> None:
         closes_on=date(2025, 4, 20),
         adjusted_closes_on=date(2025, 4, 21),
         shift_reason="weekend",
+        evaluated_on=date(2025, 4, 1),
         status=ObligationStatus.UPCOMING,
         user_state=OverviewPeriodState.DUE,
         filing_year=2025,

@@ -282,6 +282,8 @@ class OverviewCalendarEntry(BaseModel):
     holiday_refs: tuple[str, ...] = Field(default_factory=tuple)
     jurisdictions: tuple[_HolidayJurisdiction, ...] = Field(default_factory=tuple)
     payment_cutoff_on: date | None = None
+    evaluated_on: date
+    days_overdue: NonNegativeInt | None = None
     status: _ObligationStatus
     user_state: OverviewPeriodState
     recovery: _Recovery | None = None
@@ -319,6 +321,16 @@ class OverviewCalendarEntry(BaseModel):
                 f"OverviewCalendarEntry.user_state ({self.user_state}) "
                 f"disagrees with engine status mapping ({expected})",
             )
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_overdue_age_consistency(self) -> OverviewCalendarEntry:
+        expected = max(0, (self.evaluated_on - self.adjusted_closes_on).days)
+        if self.status is _ObligationStatus.OVERDUE:
+            if self.days_overdue != expected or expected == 0:
+                raise ValueError("OverviewCalendarEntry.days_overdue must measure the effective overdue deadline")
+        elif self.days_overdue is not None:
+            raise ValueError("OverviewCalendarEntry.days_overdue is only valid for an overdue obligation")
         return self
 
     @model_validator(mode="after")
@@ -468,6 +480,7 @@ class OverviewCalendar(BaseModel):
     model_config = _STRICT_FROZEN
 
     range: OverviewCalendarRange
+    evaluated_on: date
     entries: tuple[OverviewCalendarEntry, ...]
     generated_at: datetime
     warnings: tuple[CalendarWarning, ...] = Field(default=())

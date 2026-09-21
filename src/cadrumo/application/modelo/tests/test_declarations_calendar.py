@@ -110,6 +110,7 @@ def _entry(
         closes_on=close,
         adjusted_closes_on=close,
         shift_reason="none",
+        evaluated_on=date(2026, 1, 1),
         status=ObligationStatus.UPCOMING,
         user_state=OverviewPeriodState.DUE,
         filing_year=resolved_period.filing_year,
@@ -124,6 +125,7 @@ def _entry(
 def _calendar(*entries: OverviewCalendarEntry) -> OverviewCalendar:
     return OverviewCalendar(
         range=_RANGE,
+        evaluated_on=date(2026, 1, 1),
         entries=entries,
         generated_at=_NOW,
         events=(
