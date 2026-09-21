@@ -25,7 +25,7 @@ related:
   - '[[2026-08-24-tui-modelo-workspace-interface-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:517d81761751fc4544d19f280e97b8be60ceb8f85f125071c2b040504d084cfc'
+body_hash: 'sha256:34e9e3e03c0778f6bf96251a07b638244ab9b521e544498cee0f8a6cd20ab6a5'
 ---
 
 # `income-tax-workflow` plan
@@ -54,7 +54,7 @@ Pin the latest completed year, compatible Modelo 130 and Modelo 100 revisions, a
 
 Define one year-parameterized synthetic taxpayer, invoice and transaction fixture, independent oracle, required history, and machine-readable receipt contract, then exercise the real CLI journey.
 
-- [ ] `P02.S02` - Define the year-parameterized synthetic taxpayer, invoice and bank transactions, independent expected values, history states, scenario identities, and receipt schema once; `dev/acceptance/income_tax/** and focused shared-contract tests`.
+- [x] `P02.S02` - Define the year-parameterized synthetic taxpayer, invoice and bank transactions, independent expected values, history states, scenario identities, and receipt schema once; `dev/acceptance/income_tax/** and focused shared-contract tests`.
 - [ ] `P02.S03` - Drive CLI ingestion, restart persistence, quarterly and annual calculations, missing-history refusals, verification, controlled invoice mutation, and export from the shared scenario; `src/cadrumo/entrypoints/cli/** plus explicitly required shared application or persistence fixes`.
 
 ### Phase `P03` - Wire and prove installed TUI

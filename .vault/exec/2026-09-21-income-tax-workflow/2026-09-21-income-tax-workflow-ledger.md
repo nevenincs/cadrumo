@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:26bdb1d8455ca44970f999103d2ff1e132bafc63a576951f8db7bce32c77c711'
+body_hash: 'sha256:8215d31e44cd69d1cddae205fad43b54d2ea3fc7676231de106a06a667f4e9be'
 related:
   - "[[2026-09-21-income-tax-workflow-plan]]"
 ---
@@ -47,6 +47,10 @@ related:
 - `S01` `verify:` `python -m dev.acceptance.income_tax.authority --latest-supported --as-of 2026-09-21` -> `pass`
 - `S01` `verify:` `python -m pytest -q dev/acceptance/income_tax/tests/test_authority.py` -> `pass`
 - `S01` `verify:` `ruff check dev/acceptance/income_tax` -> `pass`
+- `S02` `A` `dev/acceptance/income_tax/scenario.py`
+- `S02` `A` `dev/acceptance/income_tax/tests/test_scenario.py`
+- `S02` `verify:` `uv run --no-sync ruff check dev/acceptance/income_tax/scenario.py dev/acceptance/income_tax/tests/test_scenario.py` -> `pass`
+- `S02` `by:` `root`
 
 ## Notes
 
