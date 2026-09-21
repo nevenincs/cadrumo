@@ -13,6 +13,7 @@ def main() -> int:
     parser.add_argument("--workspace-root")
     parser.add_argument("--profile-label")
     parser.add_argument("--journey")
+    parser.add_argument("--profile-bootstrap")
     args = parser.parse_args()
     args.receipt.write_text(
         json.dumps({"status": "running", "stage": "fixture_running"}) + "\n",

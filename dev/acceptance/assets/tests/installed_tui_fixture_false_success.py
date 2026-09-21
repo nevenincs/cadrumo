@@ -1,10 +1,9 @@
-"""Controlled child that proves the supervisor cleans up only its timed-out child."""
+"""Controlled child that must not turn an early zero exit into journey proof."""
 
 from __future__ import annotations
 
 import argparse
 import json
-import time
 from pathlib import Path
 
 
@@ -17,10 +16,16 @@ def main() -> int:
     parser.add_argument("--profile-bootstrap")
     args = parser.parse_args()
     args.receipt.write_text(
-        json.dumps({"status": "running", "stage": "fixture_sleep"}) + "\n",
+        json.dumps(
+            {
+                "status": "proven",
+                "stage": "completed",
+                "completed_stages": ["installed_origin", "registration", "launcher_exit"],
+            }
+        )
+        + "\n",
         encoding="utf-8",
     )
-    time.sleep(30.0)
     return 0
 
 

@@ -14,7 +14,18 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, cast
 
-_SCHEMA_VERSION = "assets-01-installed-tui-supervisor-v1"
+_SCHEMA_VERSION = "assets-01-installed-tui-supervisor-v2"
+type InstalledAssetTuiJourney = Literal[
+    "probe",
+    "home",
+    "profile",
+    "profile_ready",
+    "ledger",
+    "asset_screen",
+    "asset_linear_lifecycle",
+    "asset_readback",
+    "asset_cli_readback",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -32,6 +43,7 @@ class InstalledTuiProcessReceipt:
     stdout_sha256: str
     stderr_sha256: str
     child_status: str | None
+    required_stage_missing: str | None
     failure_class: str | None
     failure_identity: str | None
 
@@ -49,6 +61,7 @@ class InstalledTuiProcessReceipt:
             "stdout_sha256": self.stdout_sha256,
             "stderr_sha256": self.stderr_sha256,
             "child_status": self.child_status,
+            "required_stage_missing": self.required_stage_missing,
             "failure_class": self.failure_class,
             "failure_identity": self.failure_identity,
         }
@@ -63,7 +76,7 @@ class InstalledTuiProcessError(RuntimeError):
         self.receipt = receipt
 
 
-def _safe_child_environment(*, storage_root: Path) -> dict[str, str]:
+def build_assets_installed_environment(*, storage_root: Path) -> dict[str, str]:
     """Keep host launch prerequisites but remove ambient product configuration."""
     environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
     # The harness module is found from its working directory.  A source-tree
@@ -78,18 +91,101 @@ def _safe_child_environment(*, storage_root: Path) -> dict[str, str]:
     return environment
 
 
-def _receipt_stage(path: Path) -> tuple[str | None, str | None]:
-    """Read only the controlled stage/status fields from a child receipt."""
+def _receipt_progress(path: Path) -> tuple[str | None, str | None, tuple[str, ...]]:
+    """Read only the controlled progress fields from a child receipt."""
     try:
         raw: object = json.loads(path.read_text(encoding="utf-8"))
     except (FileNotFoundError, json.JSONDecodeError):
-        return None, None
+        return None, None, ()
     if not isinstance(raw, dict):
-        return None, None
+        return None, None, ()
     payload = cast("dict[str, object]", raw)
     stage = payload.get("stage")
     status = payload.get("status")
-    return (stage if isinstance(stage, str) else None, status if isinstance(status, str) else None)
+    raw_stages = payload.get("completed_stages")
+    stages = (
+        tuple(item for item in raw_stages if isinstance(item, str))
+        if isinstance(raw_stages, list)
+        else ()
+    )
+    return (stage if isinstance(stage, str) else None, status if isinstance(status, str) else None, stages)
+
+
+def required_installed_tui_stages(
+    *,
+    journey: InstalledAssetTuiJourney,
+    profile_bootstrap: Literal["register", "existing"],
+) -> tuple[str, ...]:
+    """Return the non-negotiable public stages for one declared journey.
+
+    A clean launcher exit is not evidence that its injected autopilot ever ran.
+    The supervisor checks this same contract independently from the child so a
+    future child regression cannot turn early launcher completion into proof.
+    """
+    required = ["installed_origin"]
+    if profile_bootstrap == "register":
+        required.append("registration")
+    else:
+        required.extend(("existing_profile", "session_admitted"))
+    required.append("launcher_autopilot")
+    if journey in {
+        "home",
+        "profile",
+        "profile_ready",
+        "ledger",
+        "asset_screen",
+        "asset_linear_lifecycle",
+        "asset_readback",
+        "asset_cli_readback",
+    }:
+        required.append("home_ready")
+    if journey in {"profile", "profile_ready"}:
+        required.append("profile_ready")
+    if journey == "profile_ready":
+        required.append("profile_completed")
+    if journey in {"ledger", "asset_screen", "asset_linear_lifecycle", "asset_readback", "asset_cli_readback"}:
+        required.append("ledger_ready")
+    if journey in {"asset_screen", "asset_linear_lifecycle", "asset_readback", "asset_cli_readback"}:
+        required.append("asset_screen_ready")
+    if journey == "asset_linear_lifecycle":
+        required.extend(
+            (
+                "asset_created",
+                "asset_inspected",
+                "asset_corrected",
+                "asset_forecast",
+                "asset_claim",
+                "asset_claim_replay",
+                "asset_filing_handoff",
+            )
+        )
+    if journey == "asset_readback":
+        required.append("asset_readback")
+    if journey == "asset_cli_readback":
+        required.append("asset_cli_readback")
+    required.append("launcher_exit")
+    return tuple(required)
+
+
+def _first_missing_required_stage(
+    completed_stages: tuple[str, ...],
+    *,
+    journey: InstalledAssetTuiJourney,
+    profile_bootstrap: Literal["register", "existing"],
+) -> str | None:
+    """Identify the first required stage absent from a terminal receipt."""
+    completed = set(completed_stages)
+    return next(
+        (
+            stage
+            for stage in required_installed_tui_stages(
+                journey=journey,
+                profile_bootstrap=profile_bootstrap,
+            )
+            if stage not in completed
+        ),
+        None,
+    )
 
 
 def _digest(output: bytes | None) -> str:
@@ -141,7 +237,8 @@ def run_installed_tui_probe(
     receipt_path: Path,
     profile_label: str,
     passphrase: str,
-    journey: Literal["probe", "home", "ledger"] = "probe",
+    journey: InstalledAssetTuiJourney = "probe",
+    profile_bootstrap: Literal["register", "existing"] = "register",
     timeout_seconds: float = 75.0,
     child_module: str = "dev.acceptance.assets.installed_tui_child",
 ) -> InstalledTuiProcessReceipt:
@@ -153,9 +250,12 @@ def run_installed_tui_probe(
     """
     if not python_executable.is_file():
         raise ValueError("installed TUI probe requires an existing Python executable")
-    if storage_root.exists() and any(storage_root.iterdir()):
-        raise ValueError("installed TUI probe requires an empty scenario storage root")
-    storage_root.mkdir(parents=True, exist_ok=True)
+    if profile_bootstrap == "register":
+        if storage_root.exists() and any(storage_root.iterdir()):
+            raise ValueError("installed TUI registration probe requires an empty scenario storage root")
+        storage_root.mkdir(parents=True, exist_ok=True)
+    elif not storage_root.is_dir() or not any(storage_root.iterdir()):
+        raise ValueError("installed TUI existing-profile probe requires a populated scenario storage root")
     receipt_path.parent.mkdir(parents=True, exist_ok=True)
     argv = (
         str(python_executable.resolve()),
@@ -172,12 +272,14 @@ def run_installed_tui_probe(
         profile_label,
         "--journey",
         journey,
+        "--profile-bootstrap",
+        profile_bootstrap,
     )
     command_sha = hashlib.sha256("\0".join(argv).encode("utf-8")).hexdigest()
     process = subprocess.Popen(  # noqa: S603 - argv is fixed by this scenario-owned supervisor
         argv,
         cwd=workspace_root,
-        env=_safe_child_environment(storage_root=storage_root),
+        env=build_assets_installed_environment(storage_root=storage_root),
         stdin=subprocess.PIPE,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
@@ -192,15 +294,16 @@ def run_installed_tui_probe(
     stdin.close()
     last_stage: str | None = None
     child_status: str | None = None
+    completed_stages: tuple[str, ...] = ()
     timed_out = False
     cleanup: Literal["not_needed", "terminated", "failed"] = "not_needed"
     deadline = time.monotonic() + timeout_seconds
     while process.poll() is None and time.monotonic() < deadline:
-        last_stage, child_status = _receipt_stage(receipt_path)
+        last_stage, child_status, completed_stages = _receipt_progress(receipt_path)
         time.sleep(0.1)
     if process.poll() is None:
         timed_out = True
-        last_stage, child_status = _receipt_stage(receipt_path)
+        last_stage, child_status, completed_stages = _receipt_progress(receipt_path)
         try:
             process.terminate()
             process.wait(timeout=10.0)
@@ -215,10 +318,27 @@ def run_installed_tui_probe(
         else:
             cleanup = "terminated"
     stdout, stderr = process.communicate(timeout=10.0)
-    last_stage, child_status = _receipt_stage(receipt_path)
+    last_stage, child_status, completed_stages = _receipt_progress(receipt_path)
+    required_stage_missing = _first_missing_required_stage(
+        completed_stages,
+        journey=journey,
+        profile_bootstrap=profile_bootstrap,
+    )
+    failure_identity = (
+        f"missing_required_stage:{required_stage_missing}"
+        if process.returncode == 0 and child_status == "proven" and required_stage_missing is not None
+        else _failure_identity(stderr)
+    )
     receipt = InstalledTuiProcessReceipt(
         schema_version=_SCHEMA_VERSION,
-        status="proven" if process.returncode == 0 and child_status == "proven" and not timed_out else "failed",
+        status=(
+            "proven"
+            if process.returncode == 0
+            and child_status == "proven"
+            and required_stage_missing is None
+            and not timed_out
+            else "failed"
+        ),
         command_sha256=command_sha,
         process_id=process.pid,
         return_code=process.returncode,
@@ -228,8 +348,9 @@ def run_installed_tui_probe(
         stdout_sha256=_digest(stdout),
         stderr_sha256=_digest(stderr),
         child_status=child_status,
+        required_stage_missing=required_stage_missing,
         failure_class=_failure_class(stderr),
-        failure_identity=_failure_identity(stderr),
+        failure_identity=failure_identity,
     )
     receipt_path.with_name("supervisor-receipt.json").write_text(
         json.dumps(receipt.to_dict(), indent=2, sort_keys=True) + "\n",
@@ -263,7 +384,22 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--storage-root", required=True, type=Path)
     parser.add_argument("--receipt", required=True, type=Path)
     parser.add_argument("--profile-label", required=True)
-    parser.add_argument("--journey", choices=("probe", "home", "ledger"), default="probe")
+    parser.add_argument(
+        "--journey",
+        choices=(
+            "probe",
+            "home",
+            "profile",
+            "profile_ready",
+            "ledger",
+            "asset_screen",
+            "asset_linear_lifecycle",
+            "asset_readback",
+            "asset_cli_readback",
+        ),
+        default="probe",
+    )
+    parser.add_argument("--profile-bootstrap", choices=("register", "existing"), default="register")
     parser.add_argument("--timeout-seconds", default=75.0, type=float)
     return parser
 
@@ -280,6 +416,7 @@ def main(argv: list[str] | None = None) -> int:
             profile_label=args.profile_label,
             passphrase=_read_passphrase_from_stdin(),
             journey=args.journey,
+            profile_bootstrap=args.profile_bootstrap,
             timeout_seconds=args.timeout_seconds,
         )
     except (InstalledTuiProcessError, ValueError) as exc:
@@ -299,6 +436,8 @@ if __name__ == "__main__":  # pragma: no cover - executable module boundary
 __all__ = [
     "InstalledTuiProcessError",
     "InstalledTuiProcessReceipt",
+    "build_assets_installed_environment",
     "main",
+    "required_installed_tui_stages",
     "run_installed_tui_probe",
 ]
