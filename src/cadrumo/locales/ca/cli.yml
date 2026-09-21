@@ -2468,6 +2468,8 @@ cli:
       accept_defaults_help: Omple amb els valors per defecte del descriptor tots els
         flags no indicats, sense preguntar. Usa'l amb --quiet, o per si sol per a
         una creació amb tot per defecte.
+      colegio_concertado_help: Declara expressament si el retenidor és un col·legi concertat
+        per a la capçalera del Model 111.
       help: Configuració inicial guiada del perfil tributari
       profile_name_help: Nom del perfil on s'escriuen les respostes
       quiet_help: Executa sense interacció usant només els valors dels flags indicats;

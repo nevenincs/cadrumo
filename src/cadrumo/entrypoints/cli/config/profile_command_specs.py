@@ -405,6 +405,18 @@ _WIZARD_BASE_PARAMETERS: tuple[ArgumentSpec | OptionSpec, ...] = (
         default=False,
         flag=True,
     ),
+    # Modelo 111 requires an explicit declaration, but this is deliberately
+    # not a wizard question: a wizard confirm has to choose a default and
+    # cannot honestly distinguish an unasked question from an explicit no.
+    # Keep the narrow attestation on the same scripted create/edit boundary,
+    # with both spellings carrying an actual boolean rather than an absence.
+    _option(
+        "colegio_concertado",
+        ("--colegio-concertado", "--no-colegio-concertado"),
+        FLAG_VALUE,
+        "cli.config.setup.colegio_concertado_help",
+        flag=True,
+    ),
     *(_wizard_option(token) for token in _WIZARD_FIELDS),
 )
 _WIZARD_CREATE_PARAMETERS = (

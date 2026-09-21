@@ -154,6 +154,71 @@ def test_scripted_create_persists_the_field_flags_it_was_given(tmp_path: Path) -
     assert "12345678Z" not in shown.stdout
 
 
+def test_scripted_create_records_an_explicit_false_modelo_111_attestation_and_fresh_readiness_sees_it(
+    tmp_path: Path,
+) -> None:
+    """The public false flag is evidence, not the absence of a default.
+
+    The profile is created through its credential door and read through a new
+    authenticated CLI process.  Modelo readiness is then the real consumer:
+    it may still report source gaps, but it must not report the specific M111
+    header fact as missing.
+    """
+    with override_settings(**_storage_overrides(tmp_path, passphrase=_CREDENTIAL_INPUT)):
+        created = invoke_cached_cli(
+            (
+                "--format",
+                "json",
+                "config",
+                "profile",
+                "create",
+                "M111 attestation",
+                "--quiet",
+                "--secrets-stdin",
+                "--no-colegio-concertado",
+            ),
+            input=_creation_payload(),
+        )
+        assert created.exit_code == 0, created.output
+
+        # The registration process has a live session; close it so both reads
+        # below must reopen the encrypted record through the public boundary.
+        close_active_bucket_session()
+        shown = invoke_cached_cli(
+            ("--format", "json", "--profile-secrets-stdin", "config", "profile", "view"),
+            input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
+        )
+        assert shown.exit_code in {0, 2}, shown.output
+        assert _fact_values(json.loads(shown.stdout))["withholding.colegio_concertado"] == "false"
+        close_active_bucket_session()
+
+        readiness = invoke_cached_cli(
+            (
+                "--format",
+                "json",
+                "--profile-secrets-stdin",
+                "app",
+                "modelo",
+                "readiness",
+                "--modelo",
+                "111",
+                "--year",
+                "2025",
+                "--period",
+                "2T",
+            ),
+            input=json.dumps({"profile_passphrase": _CREDENTIAL_INPUT}),
+        )
+
+    # Other evidence can make the complete target non-ready; this assertion
+    # isolates the real Modelo 111 preflight consequence of the attestation.
+    document = json.loads(readiness.stdout)
+    missing = document["result"]["missing"]
+    assert not any(
+        item["section_key"] == "withholding" and item["field_key"] == "colegio_concertado" for item in missing
+    )
+
+
 def test_scripted_create_refuses_a_foral_ccaa_flag_without_creating_a_profile(tmp_path: Path) -> None:
     """A refused flag costs the operator no profile, so there is nothing to undo.
 

@@ -2496,6 +2496,8 @@ cli:
       accept_defaults_help: Rellena con los valores por defecto del descriptor todos
         los flags no indicados, sin preguntar. Úsalo junto a --quiet, o por sí solo
         para una creación con todo por defecto.
+      colegio_concertado_help: Declara expresamente si el retenedor es un colegio concertado
+        para la cabecera del Modelo 111.
       help: Configuración inicial guiada del perfil tributario
       profile_name_help: Nombre del perfil donde guardar las respuestas
       quiet_help: Ejecuta sin interacción usando solo los valores de los flags indicados;

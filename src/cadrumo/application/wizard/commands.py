@@ -987,6 +987,26 @@ def _collect_flag_values(
     return canonical
 
 
+_COLEGIO_CONCERTADO_PROFILE_PATH = "withholding.colegio_concertado"
+
+
+def _colegio_concertado_profile_value(kwargs: Mapping[str, object]) -> dict[str, str]:
+    """Project the explicit Modelo 111 header attestation, if supplied.
+
+    This scalar deliberately sits outside the setup flow.  A flow confirm
+    requires a default and would turn an unasked legal header declaration into
+    a guessed yes or no.  The public profile create/edit verbs still need a
+    typed way to record it, so this is a single named mapping rather than a
+    generic profile-fact writer.
+    """
+    supplied = kwargs.get("colegio_concertado")
+    if supplied is None:
+        return {}
+    if not isinstance(supplied, bool):
+        raise TypeError("colegio_concertado must be a parsed boolean")
+    return {_COLEGIO_CONCERTADO_PROFILE_PATH: "true" if supplied else "false"}
+
+
 def scripted_profile_facts(
     flow: WizardFlow,
     kwargs: Mapping[str, object],
@@ -1033,17 +1053,18 @@ def scripted_profile_facts(
 
     canonical = _collect_flag_values(flow, dict(kwargs))
     _refuse_foral_ccaa(canonical, canonical, operation=operation)
-    if not canonical:
+    profile_values = profile_values_from_patch(flow, canonical)
+    profile_values.update(_colegio_concertado_profile_value(kwargs))
+    if not profile_values:
         return ()
-    return tuple(
-        UserProfileFact(path=path, value=value) for path, value in profile_values_from_patch(flow, canonical).items()
-    )
+    return tuple(UserProfileFact(path=path, value=value) for path, value in profile_values.items())
 
 
 def _run_patch_edit(
     flow: WizardFlow,
     explicit_flags: dict[str, str],
     *,
+    scalar_profile_values: Mapping[str, str],
     profile_id: str,
     operation: PinnedAuthorityOperation,
 ) -> tuple[dict[str, str], bool]:
@@ -1066,6 +1087,7 @@ def _run_patch_edit(
     # blank supplied for a REQUIRED question, so the clear path below can only
     # ever see optional ones.
     patched_values = profile_values_from_patch(flow, explicit_flags)
+    patched_values.update(scalar_profile_values)
     cleared_paths = _cleared_profile_paths(flow, explicit_flags)
     profile_decode_context = operation.profile_decode_context()
     record = ProfileRecordRepository.for_current_session(
@@ -1569,6 +1591,7 @@ def _run_wizard_persistence_path(
     canonical: dict[str, str],
     explicit_flags: dict[str, str],
     *,
+    scalar_profile_values: Mapping[str, str],
     quiet: bool,
     accept_defaults: bool,
     profile_name: str,
@@ -1580,9 +1603,18 @@ def _run_wizard_persistence_path(
     Returns the resulting values and whether a record revision was published.
     The full-flow path always writes; only the patch path can be a no-op.
     """
-    non_interactive = quiet or accept_defaults
+    # The one explicit non-wizard scalar is a complete patch on its own.  It
+    # must not be swallowed by the interactive flow, whose catalogue correctly
+    # has no defaultable question for this legal declaration.
+    non_interactive = quiet or accept_defaults or bool(scalar_profile_values)
     if mode == "edit" and non_interactive:
-        return _run_patch_edit(flow, explicit_flags, profile_id=profile_id, operation=operation)
+        return _run_patch_edit(
+            flow,
+            explicit_flags,
+            scalar_profile_values=scalar_profile_values,
+            profile_id=profile_id,
+            operation=operation,
+        )
 
     return _run_full_flow(
         flow,
@@ -1999,6 +2031,7 @@ def _execute_wizard_command(
     accept_defaults = bool(kwargs.pop("accept_defaults", False))
     canonical = _collect_flag_values(flow, kwargs)
     explicit_flags: dict[str, str] = dict(canonical)
+    scalar_profile_values = _colegio_concertado_profile_value(kwargs)
 
     _seed_output_language_from_environment(canonical)
     # Freeze the final-envelope disclosure notices in the command-level output
@@ -2016,6 +2049,7 @@ def _execute_wizard_command(
             mode,
             canonical,
             explicit_flags,
+            scalar_profile_values=scalar_profile_values,
             quiet=quiet,
             accept_defaults=accept_defaults,
             profile_name=profile_name,
@@ -2029,7 +2063,7 @@ def _execute_wizard_command(
     # interrupted modify discards its staged edits. Non-interactive patch
     # edits (`--quiet` / `--accept-defaults`) stage nothing, so the notice is
     # scoped to the interactive walk.
-    interactive_modify = mode == "edit" and not (quiet or accept_defaults)
+    interactive_modify = mode == "edit" and not (quiet or accept_defaults or scalar_profile_values)
     default_ccaa_value = next(
         (
             question.default

@@ -2466,6 +2466,8 @@ cli:
       accept_defaults_help: Minden megadatlan kapcsolót az leíró alapértékeiből tölt
         ki kérdés nélkül. Kombinálja a --quiet kapcsolóval, vagy önállóan az összes-alapértékes
         létrehozáshoz.
+      colegio_concertado_help: Kifejezetten nyilatkozik arról, hogy a visszatartó
+        colegio concertado-e a Modelo 111 fejlécéhez.
       help: Az aktív adóprofil inicializálása.
       profile_name_help: Az adat írásának profilneve.
       quiet_help: Csak a megadott kapcsolóértékek alapján fut interakció nélkül; a

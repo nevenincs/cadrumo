@@ -2297,6 +2297,8 @@ cli:
       accept_defaults_help: Fill every unsupplied flag from the descriptor defaults,
         without prompting. Use alongside --quiet, or on its own for an all-defaults
         create.
+      colegio_concertado_help: Explicitly declare whether the withholder is a colegio
+        concertado for the Modelo 111 header.
       help: Initialize the active tax profile
       profile_name_help: Profile name to write the answers into
       quiet_help: Run non-interactively using only the supplied flag values; required

@@ -93,6 +93,17 @@ def test_an_edit_that_changes_nothing_writes_nothing() -> None:
     assert profile_event_count(_VALUES_UPDATED) == before
 
 
+def test_an_edit_records_an_explicit_false_modelo_111_attestation() -> None:
+    """The dedicated toggle writes false as a fact, not as a cleared answer."""
+    assert _status(_edit("--no-colegio-concertado")) == "updated"
+    assert profile_facts()["withholding.colegio_concertado"] == "false"
+
+    # A positive correction is equally explicit and remains on the same
+    # scalar patch path; no arbitrary fact-edit surface is opened.
+    assert _status(_edit("--colegio-concertado")) == "updated"
+    assert profile_facts()["withholding.colegio_concertado"] == "true"
+
+
 def test_a_complete_profile_still_refuses_to_lose_a_required_answer() -> None:
     """Clearing is for optional answers; a required one stays guarded.
 
