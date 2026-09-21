@@ -22,7 +22,7 @@ See Also:
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -37,13 +37,16 @@ from cadrumo.adapters.persistence.profile.retencion_observations import Retencio
 from cadrumo.adapters.persistence.profile.tests._relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
+from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError
 from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
 from cadrumo.application.modelo.calculation_actions import resolve_bucket_source_mesh
+from cadrumo.application.user_profile.tests.profile_values import complete_profile_facts
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -53,6 +56,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition import build_calculation_action_ports
 
 from .published_authority_support import published_authority_operation
@@ -110,7 +114,7 @@ def _source_mesh_ports(
         ),
         filing_repository=ports.filing_repository,
         invoice_source_ports=InvoiceSourceResolverPorts(catalogue_reader=invoice_repository),
-        prorrata_register_repository=ProrrataRegisterRepository(objects=objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=bucket_id, objects=objects),
         bienes_inversion_repository=bienes_repository,
         inventory_repository=ports.inventory_repository,
         observation_repository=CalculationObservationRepository(objects=objects),
@@ -159,6 +163,34 @@ def _record() -> BienInversionIvaRecord:
     )
 
 
+def _seed_taxpayer_profile(*, setup_state: ProfileSetupState) -> None:
+    """Publish a canonical profile with explicit facts relevant to Modelo 303."""
+    authority = published_authority_operation()
+    context = authority.profile_create_context()
+    explicit_facts = (
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="identity.name", value="Asset IVA Test"),
+        UserProfileFact(path="identity.surnames", value="Operator"),
+        UserProfileFact(path="activities.description", value="investment-goods source-mesh acceptance"),
+        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
+        UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
+        UserProfileFact(path="iva.regime", value="GENERAL"),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+    )
+    seed_test_profile_record(
+        create_user_profile_record(
+            context=context,
+            setup_state=setup_state,
+            profile_id=_BUCKET_ID,
+            facts=complete_profile_facts(context.schema, explicit_facts),
+            created_at=_CREATED_AT,
+            updated_at=_CREATED_AT,
+        ),
+    )
+
+
 def test_source_mesh_resolves_bienes_inversion_regularizacion_binding(tmp_path: Path) -> None:
     """The live mesh projects the register value into Modelo 303 casilla 43."""
     authority = published_authority_operation()
@@ -167,7 +199,8 @@ def test_source_mesh_resolves_bienes_inversion_regularizacion_binding(tmp_path: 
     work_unit = _work_unit(revision_id=snapshot.revision.id)
 
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        bienes_repository = BienesInversionIvaRegisterRepository(objects=profile.repository)
+        _seed_taxpayer_profile(setup_state=ProfileSetupState.COMPLETE)
+        bienes_repository = BienesInversionIvaRegisterRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         bienes_repository.add(_record())
 
         with bundled_indexed_authority().operation() as operation:
@@ -199,3 +232,35 @@ def test_source_mesh_resolves_bienes_inversion_regularizacion_binding(tmp_path: 
     assert resolution.bound_inputs_by_casilla_id[_CASILLA_43_ID] == Decimal("200.00")
     assert _BINDING_ID not in resolution.unresolved_binding_ids
     assert bienes_diagnostics == ()
+
+
+def test_source_mesh_refuses_incomplete_taxpayer_profile(tmp_path: Path) -> None:
+    """The real M303 resolver refuses setup-incomplete profile state."""
+    authority = published_authority_operation()
+    snapshot = authority.snapshot("303", filing_year=_FILING_YEAR, period="4T")
+    assert snapshot.filing_period is not None
+    work_unit = _work_unit(revision_id=snapshot.revision.id)
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        _seed_taxpayer_profile(setup_state=ProfileSetupState.INCOMPLETE)
+        bienes_repository = BienesInversionIvaRegisterRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
+        bienes_repository.add(_record())
+
+        with bundled_indexed_authority().operation() as operation, pytest.raises(ModeloProfileReadinessError):
+            resolve_bucket_source_mesh(
+                snapshot,
+                work_unit,
+                ports=_source_mesh_ports(
+                    bucket_id=_BUCKET_ID,
+                    objects=profile.repository,
+                    bienes_repository=bienes_repository,
+                    operation=operation,
+                ),
+                foreign_asset_observations=(),
+                foreign_asset_row_observations=(),
+                casilla_inputs={
+                    _VOLUMEN_CON_DERECHO_ID: Decimal("60000.00"),
+                    _VOLUMEN_TOTAL_ID: Decimal("100000.00"),
+                },
+                filing_period_date=snapshot.filing_period.end_date,
+            )
