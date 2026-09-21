@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:8215d31e44cd69d1cddae205fad43b54d2ea3fc7676231de106a06a667f4e9be'
+body_hash: 'sha256:cee9875b8ff1dc023780ed0a79a8c7a8a70fe34a736540617d6ca73e2df3da87'
 related:
   - "[[2026-09-21-income-tax-workflow-plan]]"
 ---
@@ -51,7 +51,14 @@ related:
 - `S02` `A` `dev/acceptance/income_tax/tests/test_scenario.py`
 - `S02` `verify:` `uv run --no-sync ruff check dev/acceptance/income_tax/scenario.py dev/acceptance/income_tax/tests/test_scenario.py` -> `pass`
 - `S02` `by:` `root`
+- `S03` `M` `dev/acceptance/income_tax/scenario.py`
+- `S03` `M` `dev/acceptance/income_tax/tests/test_scenario.py`
+- `S03` `A` `dev/acceptance/income_tax/cli_journey.py`
+- `S03` `A` `dev/acceptance/income_tax/tests/test_cli_journey.py`
+- `S03` `verify:` `python -m dev.acceptance.income_tax.cli_journey --year 2025 [isolated installed CLI]` -> `pass`
+- `S03` `by:` `coordinator`
 
 ## Notes
 
 - `S01` M100/2025 XML export is deliberately blocked: application.filing.export_parity.errors.aux_block_undeclared (aux_version); no value was invented.
+- `S03` Partial evidence: installed CLI proves A1, quarterly A3/A4, annual A6 calculation/verification, and four M130 exports; M100 export is blocked by undeclared aux_version. Controlled mutation and isolated missing-history variant remain unexercised, so P02.S03 stays open.

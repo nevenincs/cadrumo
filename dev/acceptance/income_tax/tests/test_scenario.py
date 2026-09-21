@@ -30,11 +30,15 @@ def test_quarterly_oracle_is_cumulative_and_distinct() -> None:
         (Decimal("12000"), Decimal("2400")),
     ]
     assert [row.payment for row in scenario.quarter_oracle] == [
+        Decimal("320.00"), Decimal("215.00"), Decimal("100.00"), Decimal("45.00")
+    ]
+    assert [row.partial_result for row in scenario.quarter_oracle] == [
         Decimal("420.00"), Decimal("315.00"), Decimal("200.00"), Decimal("145.00")
     ]
+    assert {row.low_income_reduction for row in scenario.quarter_oracle} == {Decimal("100.00")}
     assert scenario.annual_oracle.activity_net_income == Decimal("9600")
     assert scenario.annual_oracle.activity_withholding == Decimal("840.00")
-    assert scenario.annual_oracle.m130_payments == Decimal("1080.00")
+    assert scenario.annual_oracle.m130_payments == Decimal("680.00")
 
 
 def test_year_parameterization_moves_every_control_date() -> None:
@@ -58,7 +62,7 @@ def test_history_states_distinguish_first_period_missing_and_available() -> None
 
 def test_receipt_is_machine_readable_and_keeps_blocked_distinct() -> None:
     receipt = AcceptanceReceipt(
-        brief_revision="0.3",
+        brief_revision="0.4",
         scenario_id="income-directa-normal-v1:2025:cli",
         frontend_path="cli",
         year=2025,

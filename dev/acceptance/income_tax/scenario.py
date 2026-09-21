@@ -9,11 +9,12 @@ from enum import StrEnum
 from typing import Literal
 
 BRIEF_ID = "INCOME-01"
-BRIEF_REVISION = "0.3"
+BRIEF_REVISION = "0.4"
 SCENARIO_VERSION = "income-directa-normal-v1"
 PERIODS = ("1T", "2T", "3T", "4T")
 CENT = Decimal("0.01")
 M130_RATE = Decimal("0.20")
+M130_LOW_INCOME_REDUCTION = Decimal("100.00")
 
 
 class AcceptanceOutcome(StrEnum):
@@ -110,7 +111,9 @@ class QuarterlyOracle:
     cumulative_net: Decimal
     twenty_percent: Decimal
     cumulative_withholding: Decimal
-    prior_payments: Decimal
+    prior_positive_results: Decimal
+    partial_result: Decimal
+    low_income_reduction: Decimal
     payment: Decimal
 
 
@@ -179,7 +182,7 @@ def build_scenario(year: int) -> IncomeTaxScenario:
     bases = (Decimal("4000"), Decimal("3500"), Decimal("2000"), Decimal("2500"))
     expenses = (Decimal("500"), Decimal("700"), Decimal("300"), Decimal("900"))
     months = (2, 5, 8, 11)
-    expense_categories = ("material_oficina", "software_suscripcion", "telefonia_movil", "asesoria_fiscal")
+    expense_categories = ("material_oficina", "software_suscripcion", "formacion_profesional", "asesoria_fiscal")
     issued = tuple(
         IssuedInvoice(
             period=period,
@@ -270,14 +273,15 @@ def _quarterly_oracle(
     income: tuple[IssuedInvoice, ...], expenses: tuple[ExpenseInvoice, ...]
 ) -> tuple[QuarterlyOracle, ...]:
     rows: list[QuarterlyOracle] = []
-    paid = Decimal()
+    prior_positive_results = Decimal()
     for index, period in enumerate(PERIODS, start=1):
         cumulative_income = sum((item.taxable_base for item in income[:index]), Decimal())
         cumulative_expenses = sum((item.taxable_base for item in expenses[:index]), Decimal())
         net = cumulative_income - cumulative_expenses
         twenty_percent = money(net * M130_RATE)
         withholding = sum((item.withholding for item in income[:index]), Decimal())
-        payment = max(money(twenty_percent - withholding - paid), Decimal())
+        partial_result = max(money(twenty_percent - withholding - prior_positive_results), Decimal())
+        payment = max(money(partial_result - M130_LOW_INCOME_REDUCTION), Decimal())
         rows.append(
             QuarterlyOracle(
                 period=period,
@@ -285,12 +289,14 @@ def _quarterly_oracle(
                 cumulative_expenses=cumulative_expenses,
                 cumulative_net=net,
                 twenty_percent=twenty_percent,
-                cumulative_withholding=withholding,
-                prior_payments=paid,
-                payment=payment,
+            cumulative_withholding=withholding,
+            prior_positive_results=prior_positive_results,
+            partial_result=partial_result,
+            low_income_reduction=M130_LOW_INCOME_REDUCTION,
+            payment=payment,
             )
         )
-        paid += payment
+        prior_positive_results += partial_result
     return tuple(rows)
 
 
