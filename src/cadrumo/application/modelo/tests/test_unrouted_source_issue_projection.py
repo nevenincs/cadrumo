@@ -134,6 +134,25 @@ def test_selected_scope_iva_evidence_failures_are_durable_and_sanitized(reason: 
     assert issues[0].message == "selected-scope IVA evidence failure"
 
 
+def test_required_m390_annual_partition_evidence_failure_is_durable() -> None:
+    """A missing, stale, or contradictory filed-303 source reaches later gates."""
+    issues = _unrouted_source_issues(
+        (
+            CalculationSourceDiagnostic(
+                reason="iva_compensation_annual_source_evidence_failure",
+                source_kind="iva_compensation_annual_partition",
+                resolver_id="iva_compensation_annual_partition",
+                message="required Modelo 303 annual partition evidence is unresolved",
+            ),
+        )
+    )
+
+    assert len(issues) == 1
+    assert issues[0].reason == "iva_compensation_annual_source_evidence_failure"
+    assert issues[0].binding_source is BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
+    assert issues[0].message == "required Modelo 303 annual partition evidence is unresolved"
+
+
 @pytest.mark.parametrize(
     "reason",
     ("outside_period", "reviewed_excluded", "unsupported_iva_category"),

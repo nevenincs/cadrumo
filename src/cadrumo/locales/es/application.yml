@@ -828,6 +828,21 @@ application:
           activos con `aeat app live borrador 100 list`.
         unsupported_modelo: El binding de borrador no está soportado para el modelo
           %{modelo}; el manifiesto del registro debe declarar la capacidad de borrador.
+    lifecycle:
+      calculate: Calcular
+      verify: Verificar
+      file: Registrar presentación local
+      export: Exportar
+      export_destination_placeholder: Ruta de destino de la exportación
+      file_confirm_title: ¿Registrar una presentación local?
+      file_confirm_message: Esto registra la declaración verificada en el historial local de esta aplicación. No presenta nada ante la AEAT.
+      file_confirm_accept: Registrar presentación local
+      file_confirm_cancel: Cancelar
+      file_cancelled: Se ha cancelado la presentación local; no se ha registrado nada.
+      refusal:
+        calculation_required: Calcula esta declaración antes de continuar.
+        verification_required: Verifica este cálculo antes de registrar una presentación local.
+        export_destination_required: Introduce una ruta de destino para la exportación.
     errors:
       amendment_complementaria_liability_decrease: Una complementaria para el modelo
         {modelo}, ejercicio {filing_year}, período {period} rebajaría el resultado
@@ -1212,6 +1227,9 @@ application:
         EUR a %{current_value_eur} EUR, un incremento de %{delta_value_eur} EUR por
         encima del umbral de redeclaración de %{redeclaration_increase_threshold_eur}
         EUR.'
+      iva_compensation_annual_source_evidence_failure: 'La evidencia de origen anual
+        obligatoria del Modelo 303 para el Modelo 390 sigue sin resolverse (%{source_issue_count}
+        incidencia(s)); la finalización está bloqueada.'
       iva_selected_scope_evidence_failure: 'La evidencia de IVA del ámbito seleccionado
         está incompleta (%{source_ref_count} referencias de origen; %{unidentified_source_count}
         sin identificar), por lo que la verificación queda bloqueada. Identificadores

@@ -1527,6 +1527,7 @@ _DurableSourceIssueReason = Literal[
     "unrouted_observation",
     "unrouted_declarable_quantity",
     "iva_selected_scope_evidence_failure",
+    "iva_compensation_annual_source_evidence_failure",
 ]
 
 def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
@@ -1546,6 +1547,8 @@ def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
         return "unrouted_declarable_quantity"
     if diagnostic.reason == "iva_selected_scope_evidence_failure":
         return "iva_selected_scope_evidence_failure"
+    if diagnostic.reason == "iva_compensation_annual_source_evidence_failure":
+        return "iva_compensation_annual_source_evidence_failure"
     return None
 
 

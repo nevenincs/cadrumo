@@ -29,7 +29,10 @@ from cadrumo.domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from cadrumo.domain.modelos.work_unit import derive_work_unit_id
 
 from ..export import ModeloExportEvidenceMissingError, _raise_if_ledger_export_evidence_missing
-from ..verification_actions import _iva_selected_scope_evidence_finding
+from ..verification_actions import (
+    _iva_compensation_annual_source_evidence_finding,
+    _iva_selected_scope_evidence_finding,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -44,13 +47,15 @@ def _revision(
     source_transaction_ids: tuple[str, ...],
     ledger_filing_snapshot: LedgerFilingSnapshot | None = None,
     source_issues: tuple[CalculationSourceIssue, ...] = (),
+    modelo: str = "303",
+    period: str = "1T",
     operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     work_unit_id = derive_work_unit_id(
         bucket_id="bucket-operator",
-        modelo="303",
+        modelo=modelo,
         filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        period=Period.from_year_and_code(2026, period),
         revision_id="gate",
     )
     filing_instance_evidence = general_m303_filing_evidence(
@@ -70,10 +75,10 @@ def _revision(
         calculation_revision_id=revision_id,
         work_unit_id=work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="303",
+            modelo=modelo,
             revision_id="gate",
             modelo_year=2026,
-            period="1T",
+            period=period,
         ),
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         input_values_by_casilla_id={_BASE_CASILLA: "100.00"},
@@ -169,3 +174,31 @@ def test_export_allows_a_revision_with_an_unrouted_non_iva_source_issue(*, opera
 
     _raise_if_ledger_export_evidence_missing(revision)
     assert _iva_selected_scope_evidence_finding(revision) is None
+
+
+def test_export_refuses_m390_when_required_annual_partition_evidence_is_unresolved(
+    *, operation: PinnedAuthorityOperation
+) -> None:
+    revision = _revision(
+        source_transaction_ids=(),
+        modelo="390",
+        period="0A",
+        source_issues=(
+            CalculationSourceIssue(
+                reason="iva_compensation_annual_source_evidence_failure",
+                binding_source=BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION,
+                message="required Modelo 303 annual partition evidence is unresolved",
+                resolver_id="iva_compensation_annual_partition",
+            ),
+        ),
+        operation=operation,
+    )
+
+    with pytest.raises(ModeloExportEvidenceMissingError):
+        _raise_if_ledger_export_evidence_missing(revision)
+
+    finding = _iva_compensation_annual_source_evidence_finding(revision)
+    assert finding is not None
+    assert finding.severity.value == "blocking"
+    assert finding.message_locale_key == "application.modelo.findings.iva_compensation_annual_source_evidence_failure"
+    assert finding.message_facts == {"source_issue_count": 1}

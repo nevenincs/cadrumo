@@ -97,6 +97,7 @@ CalculationSourceDiagnosticReason = Literal[
     "duplicate_relation_owner",
     "source_issue",
     "iva_selected_scope_evidence_failure",
+    "iva_compensation_annual_source_evidence_failure",
     "unresolved_binding",
     "storage_degraded",
     "source_domain_not_ready",

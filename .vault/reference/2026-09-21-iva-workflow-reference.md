@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:ad4308fd046e371cc949b4462d78bd0c761bdba934306c4ce3667d23e4c6175d'
+body_hash: 'sha256:b50145d6d3f5e502c9578949f51a5b161e44d4a7bb35cb1cbfe48008fbeac0c1'
 related: []
 ---
 
@@ -175,6 +175,23 @@ not model payment evidenced/unknown or refund requested/approved/paid lifecycle
 states. Its period projection is latest-state keyed and amendment-aware
 selection remains open; missing intermediate filings also have no explicit
 missing-period state.
+
+The generic filing catalogue already owns origin, AEAT confirmation,
+supersession and amendment links at
+`src/cadrumo/domain/modelos/filing_record.py:136`. It preserves superseded
+records and exposes current and latest-confirmed selection independently. The
+IVA compensation history remains the latest secure period-keyed carry source at
+`src/cadrumo/application/calculations/iva_compensation_history.py:66`, while
+`src/cadrumo/domain/iva_compensation/carry_forward.py:171` owns generated,
+applied and remaining credit arithmetic. Payment/refund elections in
+`src/cadrumo/application/modelo/filing_actions.py:186` are intent, not evidence
+of settlement.
+
+No existing durable value records declared liability separately from evidenced
+payment, or refund requested/approved/paid with evidence references. Those
+states must attach to the existing immutable filing chain without becoming a
+second carry history. Calculation or export cannot imply any confirmation,
+payment, approval or refund outcome.
 
 ### Authority and export coverage
 

@@ -414,6 +414,10 @@ class CalculationSourceIssue(BaseModel):
     saw only the row condition would read their silence as confirmation.
     ``iva_selected_scope_evidence_failure`` is a ledger IVA row whose selected
     filing scope cannot be completed from its recorded tax evidence.
+    ``iva_compensation_annual_source_evidence_failure`` is a required Modelo
+    390 annual partition whose filed Modelo 303 source set is incomplete or
+    stale. A contradictory source is refused during calculation before a
+    revision can be persisted.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -422,6 +426,7 @@ class CalculationSourceIssue(BaseModel):
         "unrouted_observation",
         "unrouted_declarable_quantity",
         "iva_selected_scope_evidence_failure",
+        "iva_compensation_annual_source_evidence_failure",
     ]
     binding_source: BindingSourceKind
     message: str = Field(min_length=1, max_length=512)

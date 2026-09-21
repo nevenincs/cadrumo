@@ -248,6 +248,24 @@ def _unresolved_diagnostics(
     )
 
 
+def _annual_source_evidence_diagnostics(
+    *,
+    binding_ids: tuple[BindingId, ...],
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Project incomplete required 303 annual evidence as a typed durable condition."""
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="iva_compensation_annual_source_evidence_failure",
+            source_kind=_SOURCE_KIND.value,
+            resolver_id=resolver_id,
+            binding_id=binding_id,
+            message="required Modelo 303 annual partition evidence is unresolved",
+        )
+        for binding_id in binding_ids
+    )
+
+
 def _select_partition_revision(
     registry_snapshot: RegistrySnapshot | None,
     context: CalculationSourceContext,
@@ -394,6 +412,10 @@ class IvaCompensationAnnualPartitionSourceResolver:
             diagnostics=_unresolved_diagnostics(
                 binding_ids=unresolved,
                 source_periods=requirement.source_periods,
+                resolver_id=self.resolver_id,
+            )
+            + _annual_source_evidence_diagnostics(
+                binding_ids=unresolved,
                 resolver_id=self.resolver_id,
             ),
             provenance=_partition_provenance(envelopes, requirement, resolver_id=self.resolver_id),

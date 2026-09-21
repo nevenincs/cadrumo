@@ -827,6 +827,21 @@ application:
           actius amb `aeat app live borrador 100 list`.
         unsupported_modelo: El binding d'esborrany no està suportat per al model %{modelo};
           el manifest del registre ha de declarar la capacitat d'esborrany.
+    lifecycle:
+      calculate: Calcula
+      verify: Verifica
+      file: Registra la presentació local
+      export: Exporta
+      export_destination_placeholder: Camí de destinació de l'exportació
+      file_confirm_title: Voleu registrar una presentació local?
+      file_confirm_message: Això registra la declaració verificada a l'historial local d'aquesta aplicació. No presenta res a l'AEAT.
+      file_confirm_accept: Registra la presentació local
+      file_confirm_cancel: Cancel·la
+      file_cancelled: La presentació local s'ha cancel·lat; no s'ha registrat res.
+      refusal:
+        calculation_required: Calculeu aquesta declaració abans de continuar.
+        verification_required: Verifiqueu aquest càlcul abans de registrar una presentació local.
+        export_destination_required: Introduïu un camí de destinació per a l'exportació.
     errors:
       amendment_complementaria_liability_decrease: Una complementària per al model
         {modelo}, exercici {filing_year}, període {period} rebaixaria el resultat
@@ -1209,6 +1224,9 @@ application:
         %{position_key} del grup %{group_code} va passar de %{prior_value_eur} EUR
         a %{current_value_eur} EUR, un increment de %{delta_value_eur} EUR per sobre
         del llindar de redeclaració de %{redeclaration_increase_threshold_eur} EUR.'
+      iva_compensation_annual_source_evidence_failure: 'L''evidència d''origen anual
+        obligatòria del Model 303 per al Model 390 no està resolta (%{source_issue_count}
+        incidència(es)); la finalització queda bloquejada.'
       iva_selected_scope_evidence_failure: 'L''evidència d''IVA de l''àmbit seleccionat
         és incompleta (%{source_ref_count} referències d''origen; %{unidentified_source_count}
         sense identificar), per tant la verificació queda bloquejada. Identificadors

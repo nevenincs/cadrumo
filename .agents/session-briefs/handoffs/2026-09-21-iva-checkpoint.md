@@ -243,3 +243,35 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   `5f70f630e84881b76790958caff6008feddffda1` and integrated as
   `c635e2cc3096bfa603f6be39140388420506374f`. Other sessions' income, assets,
   withholding, calendar and TUI changes remained unstaged.
+
+## Active Phase-3 temporal and settlement work
+
+- Luna mapped the existing carry, annual partition, secure period history,
+  filing-chain supersession and wallet reconciliation owners at HEAD
+  `f72ef01f760f87bbe36e83016ed6393921335090`. Dirty shared history, operation,
+  CLI and TUI lifecycle surfaces remain out of IVA ownership.
+- Annual completeness root cause: the Modelo 390 IVA compensation partition
+  emitted generic unresolved diagnostics that were not persisted, so export
+  could not see missing or stale required Modelo 303 evidence.
+- Existing owners now emit the typed durable reason
+  `iva_compensation_annual_source_evidence_failure` only for actual unresolved
+  annual bindings. It persists on the calculation revision, produces a distinct
+  localized blocking verification finding and refuses export. Contradictory
+  evidence continues to refuse upstream before revision persistence.
+- Annual focused partition/projection/verification/export selection: 35 passed;
+  targeted Ruff and basedpyright passed. Four-locale parity/inventory: 5 passed;
+  explicit verification rendering: 11 passed.
+- Existing replay/amendment behavior is now pinned: saving the same period state
+  twice yields one period and one compensation lot; an amended current filing
+  preserves the superseded original's AEAT register and external evidence.
+  Focused replay/filing-chain selection: 28 passed.
+- Accepted settlement decision:
+  `.vault/adr/2026-09-21-iva-workflow-settlement-lifecycle-adr.md` extends the
+  existing immutable filing record with an IVA settlement evidence snapshot.
+  Filing-chain identity/supersession stays authoritative; compensation history
+  remains the only active credit arithmetic owner. Calculation/export cannot
+  imply payment, approval or refund payment.
+- Settlement implementation is not yet assigned. The smallest clean slice is
+  domain invariants, encrypted filing-catalogue roundtrip and same-identity
+  application mutation. CLI/history/TUI public surfaces are currently blocked
+  by active peer ownership and must be coordinated rather than overwritten.

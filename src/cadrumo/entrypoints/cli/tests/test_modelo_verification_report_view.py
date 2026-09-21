@@ -98,6 +98,37 @@ def test_iva_selected_scope_evidence_finding_resolves_from_each_supported_locale
         assert source_ref_ids in message
 
 
+def test_iva_compensation_annual_source_evidence_finding_resolves_from_each_supported_locale_catalogue() -> None:
+    """The CLI renders blocked annual Modelo 390 source evidence in every locale."""
+    from ....core.config import override_settings
+    from ....domain.modelos.verification_report import (
+        ModeloVerificationFinding,
+        ModeloVerificationFindingKind,
+        ModeloVerificationFindingSeverity,
+    )
+    from .._modelo_rendering import _render_verification_finding_message
+
+    locale_key = "application.modelo.findings.iva_compensation_annual_source_evidence_failure"
+    source_issue_count = 7
+    finding = ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key=locale_key,
+        message_facts={"source_issue_count": source_issue_count},
+        legal_refs=_TEST_FINDING_LEGAL_REFS,
+    )
+    rendered: dict[str, str] = {}
+    for locale in ("en", "es", "ca", "hu"):
+        with override_settings(cadrumo_output_language=locale):
+            rendered[locale] = _render_verification_finding_message(finding)
+
+    assert len(set(rendered.values())) == len(rendered)
+    for message in rendered.values():
+        assert locale_key not in message
+        assert "%{" not in message
+        assert str(source_issue_count) in message
+
+
 def test_verification_report_lines_preserve_persisted_findings_without_recovery_reconstruction() -> None:
     """Report history renders factual findings and never invents a recovery command."""
     from datetime import UTC, datetime

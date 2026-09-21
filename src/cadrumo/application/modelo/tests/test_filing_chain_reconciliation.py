@@ -327,6 +327,10 @@ def test_declared_correction_after_confirmed_entry_amends_it(
     assert old.status is ModeloRecordStatus.SUPERSEDIDO
     assert old.superseded_by_filing_record_id == new.filing_record_id
     assert old.confirmation is AeatConfirmationState.CONFIRMADA
+    assert old.aeat_register is not None and old.aeat_register.expediente_id == "EXP-1"
+    assert old.external_evidence is not None and old.external_evidence.reference_id == "EXP-1"
+    assert catalogue.current_for(bucket_id=_BUCKET_ID, modelo="130", filing_year=2026, period=_PERIOD) == new
+    assert catalogue.latest_confirmed_for(bucket_id=_BUCKET_ID, modelo="130", filing_year=2026, period=_PERIOD) == new
     old_revision = profile.revisions.load().get(old.calculation_revision_id)
     assert old_revision is not None and old_revision.state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
 

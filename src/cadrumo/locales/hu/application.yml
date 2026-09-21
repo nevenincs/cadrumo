@@ -791,6 +791,21 @@ application:
           listájához futtassa a `aeat app live borrador 100 list` parancsot.
         unsupported_modelo: A tervezetkötés nem támogatott a(z) %{modelo} modellhez;
           a regiszter manifesztjének deklarálnia kell a tervezet képességét.
+    lifecycle:
+      calculate: Számítás
+      verify: Ellenőrzés
+      file: Helyi bevallás rögzítése
+      export: Exportálás
+      export_destination_placeholder: Export célútvonala
+      file_confirm_title: Rögzíti a helyi bevallást?
+      file_confirm_message: Ez a hitelesített bevallást az alkalmazás helyi bevallási előzményeiben rögzíti. Semmit sem küld az AEAT-nak.
+      file_confirm_accept: Helyi bevallás rögzítése
+      file_confirm_cancel: Mégse
+      file_cancelled: A helyi bevallás rögzítése megszakadt; semmi sem került rögzítésre.
+      refusal:
+        calculation_required: A folytatás előtt számítsa ki ezt a bevallást.
+        verification_required: A helyi bevallás rögzítése előtt ellenőrizze ezt a számítást.
+        export_destination_required: Adjon meg export célútvonalat.
     errors:
       amendment_complementaria_liability_decrease: A(z) {modelo} nyomtatvány {filing_year}
         adóévi {period} időszakára vonatkozó kiegészítő bevallás (complementaria)
@@ -1167,6 +1182,9 @@ application:
         %{prior_value_eur} EUR összegről %{current_value_eur} EUR összegre nőtt, ami
         %{delta_value_eur} EUR növekedés a(z) %{redeclaration_increase_threshold_eur}
         EUR újrabevallási küszöb felett.'
+      iva_compensation_annual_source_evidence_failure: 'A 390-es modellhez szükséges
+        303-as modell éves forrásbizonyítéka rendezetlen (%{source_issue_count} probléma);
+        a befejezés blokkolva van.'
       iva_selected_scope_evidence_failure: 'A kiválasztott hatókör áfabizonyítéka
         hiányos (%{source_ref_count} forráshivatkozás; %{unidentified_source_count}
         azonosítatlan), ezért az ellenőrzés blokkolva van. Forráshivatkozás-azonosítók,

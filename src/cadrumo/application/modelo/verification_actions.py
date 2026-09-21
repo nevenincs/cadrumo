@@ -1339,6 +1339,7 @@ def _append_revision_advisory_findings(
 
 _OSS_AGGREGATION_SOURCE = BindingSourceKind.LEDGER_OSS_AGGREGATION
 _IVA_AGGREGATION_SOURCE = BindingSourceKind.LEDGER_IVA_AGGREGATION
+_IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE = BindingSourceKind.IVA_COMPENSATION_ANNUAL_PARTITION
 
 
 def _iva_selected_scope_evidence_finding(target: CalculationRevision) -> ModeloVerificationFinding | None:
@@ -1393,6 +1394,49 @@ def _append_iva_selected_scope_evidence_finding(
                 )
             ),
         },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+    )
+
+
+def _iva_compensation_annual_source_evidence_finding(
+    target: CalculationRevision,
+) -> ModeloVerificationFinding | None:
+    """Return the blocking finding for missing or stale required M390 partition evidence."""
+    issues = tuple(
+        issue
+        for issue in target.source_issues
+        if issue.binding_source is _IVA_COMPENSATION_ANNUAL_PARTITION_SOURCE
+        and issue.reason == "iva_compensation_annual_source_evidence_failure"
+    )
+    if not issues:
+        return None
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.iva_compensation_annual_source_evidence_failure",
+        message_facts={"source_issue_count": len(issues)},
+        legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+    )
+
+
+def _append_iva_compensation_annual_source_evidence_finding(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    finding = _iva_compensation_annual_source_evidence_finding(target)
+    if finding is None:
+        return
+    findings.append(finding)
+    failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+        calculation_revision_id=target.calculation_revision_id,
+        work_unit_id=work_unit.work_unit_id,
+        condition_id="modelo.work.verify.iva_compensation_annual_source_evidence.complete",
+        scenario_id="modelo.work.verify.iva_compensation_annual_source_evidence.unresolved",
+        evidence_id="modelo.work.verify.iva_compensation_annual_source_evidence",
+        evidence_values={"modelo": str(work_unit.modelo)},
         provenance=ActionEvidenceProvenance.PERSISTED_STATE,
     )
 
@@ -1835,6 +1879,12 @@ def _collect_revision_verification_findings(
         clave_scope=_perceptor_clave_scope(work_unit, operation=operation),
     )
     _append_iva_selected_scope_evidence_finding(
+        work_unit=work_unit,
+        target=target,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    _append_iva_compensation_annual_source_evidence_finding(
         work_unit=work_unit,
         target=target,
         findings=findings,
