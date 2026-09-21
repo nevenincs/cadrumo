@@ -45,13 +45,13 @@ the *wiring*, leaving the rate's legal currency to the registry grounding gate.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import Any
 
 import pytest
+from defusedxml import ElementTree as DefusedElementTree
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -96,10 +96,8 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
-from cadrumo.domain.filing.errors import FilingExportError
 from cadrumo.domain.invoices.models import InvoiceCatalogue
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
-from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
@@ -814,44 +812,30 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     assert report.granted_verificado_completo is True, report.findings
     assert not [finding for finding in report.findings if finding.severity.value == "blocking"]
 
-    # The operator reaches a verified revision and then cannot export it. Modelo
-    # 100's XML layouts leave the declaration's mandatory Aux/VERSION undeclared,
-    # because AEAT publishes no authoritative value for it, and the export refuses
-    # rather than writing a document that fails at its own first element. The
-    # calculation and verification above are unaffected -- which is the point of
-    # keeping this replay end-to-end: it shows exactly how far the operator gets.
+    # ``Aux/VERSION`` names this product build, not the selected authority.
+    # The export boundary derives it from PACKAGE_VERSION and writes a complete
+    # mandatory Aux block before dictionary-addressed financial meaning.
     output = tmp_path / "modelo-100-2024-0A.xml"
-    with pytest.raises(ModeloExportError) as refusal:
-        _export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=annual.calculation_revision_id,
-                output_path=output,
-                actor="autonoma-cli-rerun",
-            ),
-            workflow_profile=_autonomaworkflow_profile(),
-            export_ports=modelo_export_ports_for_test(
-                bucket_id=_BUCKET_ID,
-                taxpayer_tax_id=_TAX_ID,
-                secure_objects=secure_objects,
-            ),
-        )
-
-    # The operator-facing wrapper carries a translated key, so the structural
-    # cause is what names the undeclared field. Reading it here also proves the
-    # wrapper preserves that cause rather than flattening it to a write failure.
-    assert isinstance(refusal.value.__cause__, FilingExportError)
-    # The cause is localized too, so its rendered text no longer spells the
-    # field. Read the structured context it carries instead -- that is where the
-    # refusal names which aux fields were undeclared, and asserting it is
-    # stronger than the substring match this replaced.
-    cause_context = refusal.value.__cause__.context or {}
-    assert refusal.value.__cause__.translated_message == (
-        "application.filing.export_parity.errors.aux_block_undeclared"
+    receipt = _export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=annual.calculation_revision_id,
+            output_path=output,
+            actor="autonoma-cli-rerun",
+        ),
+        workflow_profile=_autonomaworkflow_profile(),
+        export_ports=modelo_export_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            taxpayer_tax_id=_TAX_ID,
+            secure_objects=secure_objects,
+        ),
     )
-    undeclared_fields = cause_context.get("undeclared_fields", ())
-    assert isinstance(undeclared_fields, Sequence)
-    assert "aux_version" in undeclared_fields
-    assert not output.exists()
+
+    payload = output.read_bytes()
+    root = DefusedElementTree.fromstring(payload)
+    assert receipt.output_path == output
+    assert receipt.byte_size == len(payload)
+    assert root.findtext("./Aux/Idioma") == "E"
+    assert root.findtext("./Aux/VERSION") == "051"
 
 
 def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(

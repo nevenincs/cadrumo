@@ -21,6 +21,7 @@ from cadrumo.application.filing.export import export_layout_renderability_reason
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.errors import RegistryError
 from cadrumo.domain.filing.errors import FilingExportError
+from cadrumo.domain.filing.software_identity import aeat_aux_version
 
 _M130_PERIODS = ("1T", "4T")
 _M100_PERIOD = "0A"
@@ -166,7 +167,10 @@ def _admit_layout(layout: object) -> ExportAdmission:
             undeclared_fields=(),
         )
     try:
-        assert_xml_declaration_aux_declared(layout)
+        # ``Aux/VERSION`` is producer identity, not selected-authority data.
+        # The canonical domain contract owns normalization and fails closed for
+        # package versions that cannot occupy AEAT's four-character field.
+        assert_xml_declaration_aux_declared(layout, aux_version=aeat_aux_version())
     except FilingExportError as exc:
         context = exc.context or {}
         raw_fields = context.get("undeclared_fields", ())

@@ -34,6 +34,7 @@ from ....domain.calculations.registry.export_parse import XmlDictionaryEntry, xm
 from ....domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
 from .._export_xml_dictionary import _modelo_100_sign_branch_value, _registry_modelo_100_xml_declarations
+from ..export_verification import _xml_dictionary_expected_wire_value
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -112,6 +113,29 @@ def test_a_positive_amount_reaches_only_the_amount_to_pay_branch(_declarations: 
     assert _modelo_100_sign_branch_value(
         entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations
     ) == Decimal("0")
+
+
+def test_verifier_matches_0695s_required_zero_sibling_and_detects_real_branch_drift(
+    _declarations: Mapping[str, str],
+) -> None:
+    """A valid paired 0695 value matches; a nonzero idle branch still drifts."""
+    entries = _branch_entries()
+    expected = {
+        field_id: _xml_dictionary_expected_wire_value(
+            entry,
+            Decimal("1234.56"),
+            modelo="100",
+            modelo_100_declarations=dict(_declarations),
+        )
+        for field_id, entry in entries.items()
+    }
+
+    assert expected == {_NON_NEGATIVE_BRANCH: "1234.56", _NEGATIVE_BRANCH: "0.00"}
+    rendered = {_NON_NEGATIVE_BRANCH: "1234.56", _NEGATIVE_BRANCH: "0.00"}
+    assert rendered == expected
+    tampered = {_NON_NEGATIVE_BRANCH: "1234.56", _NEGATIVE_BRANCH: "12.00"}
+
+    assert [field_id for field_id, value in tampered.items() if value != expected[field_id]] == [_NEGATIVE_BRANCH]
 
 
 def test_a_negative_amount_reaches_only_the_refund_branch(_declarations: Mapping[str, str]) -> None:

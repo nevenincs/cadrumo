@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from datetime import date
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import Literal
 
 BRIEF_ID = "INCOME-01"
-BRIEF_REVISION = "0.4"
+BRIEF_REVISION = "0.6"
 SCENARIO_VERSION = "income-directa-normal-v1"
 PERIODS = ("1T", "2T", "3T", "4T")
 CENT = Decimal("0.01")
@@ -126,6 +126,31 @@ class AnnualOracle:
     activity_net_income: Decimal
     activity_withholding: Decimal
     m130_payments: Decimal
+
+
+@dataclass(frozen=True, slots=True)
+class RetentionMutationOracle:
+    """Independent before/after values for one persisted issued-invoice correction."""
+
+    target_invoice: IssuedInvoice
+    corrected_invoice: IssuedInvoice
+    baseline_quarter: QuarterlyOracle
+    corrected_quarter: QuarterlyOracle
+    baseline_annual: AnnualOracle
+    corrected_annual: AnnualOracle
+
+
+@dataclass(frozen=True, slots=True)
+class BoundaryControlScenario:
+    """An isolated filing-date control variant for the selected income year."""
+
+    year: int
+    ingested_income: tuple[IssuedInvoice, ...]
+    ingested_expenses: tuple[ExpenseInvoice, ...]
+    selected_income_ids: tuple[str, ...]
+    excluded_income_ids: tuple[str, ...]
+    quarter_oracle: tuple[QuarterlyOracle, ...]
+    annual_oracle: AnnualOracle
 
 
 @dataclass(frozen=True, slots=True)
@@ -261,11 +286,79 @@ def build_scenario(year: int) -> IncomeTaxScenario:
     )
 
 
-def expected_history_state(*, year: int, period: str, available_periods: frozenset[str]) -> HistoryState:
+def build_retention_mutation_oracle(year: int) -> RetentionMutationOracle:
+    """Return the Q4 retention correction and its hand-derived consequences.
+
+    The correction removes the issued invoice's 7% retention and raises its
+    linked incoming transaction by exactly that retained amount.  It is a
+    persisted correction, not an additional invoice or transaction.
+    """
+    scenario = build_scenario(year)
+    target = scenario.income[-1]
+    corrected = replace(target, withholding_rate=Decimal("0"))
+    corrected_income = (*scenario.income[:-1], corrected)
+    corrected_quarters = _quarterly_oracle(corrected_income, scenario.expenses)
+    return RetentionMutationOracle(
+        target_invoice=target,
+        corrected_invoice=corrected,
+        baseline_quarter=scenario.quarter_oracle[-1],
+        corrected_quarter=corrected_quarters[-1],
+        baseline_annual=scenario.annual_oracle,
+        corrected_annual=AnnualOracle(
+            activity_income=sum((item.taxable_base for item in corrected_income), Decimal()),
+            deductible_expenses=sum((item.taxable_base for item in scenario.expenses), Decimal()),
+            activity_net_income=sum((item.taxable_base for item in corrected_income), Decimal())
+            - sum((item.taxable_base for item in scenario.expenses), Decimal()),
+            activity_withholding=sum((item.withholding for item in corrected_income), Decimal()),
+            m130_payments=sum((item.payment for item in corrected_quarters), Decimal()),
+        ),
+    )
+
+
+def build_boundary_control_scenario(year: int) -> BoundaryControlScenario:
+    """Build an isolated variant that selects facts by transaction filing date.
+
+    The prior-year pair remains persisted evidence but must be excluded from the
+    selected year.  The March invoice / April transaction pair belongs to Q2,
+    because the filing-date contract follows the transaction date.
+    """
+    scenario = build_scenario(year)
+    income = (*scenario.income, scenario.out_of_year_income, scenario.income_date_boundary)
+    expenses = (*scenario.expenses, scenario.expense_date_boundary)
+    selected_income = tuple(item for item in income if item.transaction_date.year == year)
+    selected_expenses = tuple(item for item in expenses if item.transaction_date.year == year)
+    quarterly = _quarterly_oracle_by_transaction_date(year=year, income=income, expenses=expenses)
+    return BoundaryControlScenario(
+        year=year,
+        ingested_income=income,
+        ingested_expenses=expenses,
+        selected_income_ids=tuple(item.invoice_id for item in selected_income),
+        excluded_income_ids=tuple(item.invoice_id for item in income if item.transaction_date.year != year),
+        quarter_oracle=quarterly,
+        annual_oracle=AnnualOracle(
+            activity_income=sum((item.taxable_base for item in selected_income), Decimal()),
+            deductible_expenses=sum((item.taxable_base for item in selected_expenses), Decimal()),
+            activity_net_income=sum((item.taxable_base for item in selected_income), Decimal())
+            - sum((item.taxable_base for item in selected_expenses), Decimal()),
+            activity_withholding=sum((item.withholding for item in selected_income), Decimal()),
+            m130_payments=sum((item.payment for item in quarterly), Decimal()),
+        ),
+    )
+
+
+def expected_history_state(
+    *,
+    year: int,
+    period: str,
+    available_periods: frozenset[str],
+    recorded_zero_periods: frozenset[str] = frozenset(),
+) -> HistoryState:
     """Classify required M130 history without coercing absence to zero."""
     if period == "1T":
         return HistoryState.NOT_APPLICABLE
     prior = PERIODS[PERIODS.index(period) - 1]
+    if prior in recorded_zero_periods:
+        return HistoryState.RECORDED_ZERO
     return HistoryState.AVAILABLE if prior in available_periods else HistoryState.MISSING
 
 
@@ -300,6 +393,45 @@ def _quarterly_oracle(
     return tuple(rows)
 
 
+def _quarterly_oracle_by_transaction_date(
+    *, year: int, income: tuple[IssuedInvoice, ...], expenses: tuple[ExpenseInvoice, ...]
+) -> tuple[QuarterlyOracle, ...]:
+    """Calculate M130 cumulative windows from the transaction filing date."""
+    rows: list[QuarterlyOracle] = []
+    prior_positive_results = Decimal()
+    for index, period in enumerate(PERIODS, start=1):
+        cutoff = date(year, index * 3, (31, 30, 30, 31)[index - 1])
+        selected_income = tuple(
+            item for item in income if item.transaction_date.year == year and item.transaction_date <= cutoff
+        )
+        selected_expenses = tuple(
+            item for item in expenses if item.transaction_date.year == year and item.transaction_date <= cutoff
+        )
+        cumulative_income = sum((item.taxable_base for item in selected_income), Decimal())
+        cumulative_expenses = sum((item.taxable_base for item in selected_expenses), Decimal())
+        net = cumulative_income - cumulative_expenses
+        twenty_percent = money(net * M130_RATE)
+        withholding = sum((item.withholding for item in selected_income), Decimal())
+        partial_result = max(money(twenty_percent - withholding - prior_positive_results), Decimal())
+        payment = max(money(partial_result - M130_LOW_INCOME_REDUCTION), Decimal())
+        rows.append(
+            QuarterlyOracle(
+                period=period,
+                cumulative_income=cumulative_income,
+                cumulative_expenses=cumulative_expenses,
+                cumulative_net=net,
+                twenty_percent=twenty_percent,
+                cumulative_withholding=withholding,
+                prior_positive_results=prior_positive_results,
+                partial_result=partial_result,
+                low_income_reduction=M130_LOW_INCOME_REDUCTION,
+                payment=payment,
+            )
+        )
+        prior_positive_results += partial_result
+    return tuple(rows)
+
+
 __all__ = [
     "BRIEF_ID",
     "BRIEF_REVISION",
@@ -307,8 +439,12 @@ __all__ = [
     "AcceptanceOutcome",
     "AcceptanceReceipt",
     "AnnualOracle",
+    "BoundaryControlScenario",
     "HistoryState",
     "IncomeTaxScenario",
+    "RetentionMutationOracle",
+    "build_boundary_control_scenario",
+    "build_retention_mutation_oracle",
     "build_scenario",
     "expected_history_state",
 ]

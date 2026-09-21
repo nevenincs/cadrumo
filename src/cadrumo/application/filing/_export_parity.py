@@ -710,23 +710,22 @@ def _assert_casilla_metadata_fidelity(
 did_page_suppressed = _did_page_suppressed
 
 
-def assert_xml_declaration_aux_declared(layout: ExportLayoutDefinition) -> None:
+def assert_xml_declaration_aux_declared(layout: ExportLayoutDefinition, *, aux_version: str) -> None:
     """Panic if an ``xml_dictionary`` export cannot write its mandatory ``Aux``.
 
     Every AEAT Modelo 100 XSD opens ``Declaracion`` with ``Aux``, ``minOccurs=1``,
     whose ``Idioma`` and ``VERSION`` children are each ``minOccurs=1`` too. No
     bundled dictionary declares a single ``Aux`` row in any revision, so the
-    dictionary-driven writer cannot reach the block and the values are declared on
-    the layout instead. When one is undeclared the block cannot be written at all:
-    a partial ``Aux`` is invalid, and omitting it makes the document fail at its
-    very first element.
+    dictionary-driven writer cannot reach the block. ``Idioma`` belongs to the
+    selected layout; ``VERSION`` is the canonical installed product version.
+    When either is unavailable the block cannot be written at all: a partial
+    ``Aux`` is invalid, and omitting it makes the document fail at its very first
+    element.
 
     The refusal exists because the alternative is worse than an error. AEAT types
     ``VERSION`` as ``tipo_String4L`` — four characters, permissive pattern, no
-    enumeration — so an invented token would VALIDATE, the document would start
-    passing every check made of it, and the gap would stop being reported while an
-    unverified value rode to the tax authority. Refusing keeps the gap visible; the
-    export resumes the moment the layout declares a real value, with no code change.
+    enumeration — therefore an invented token would validate. The product derives
+    it from its canonical version and refuses malformed or overlong releases.
 
     This runs at the write door rather than inside the renderer because the property
     it defends is that no unfileable artefact reaches the operator, and because an
@@ -734,6 +733,7 @@ def assert_xml_declaration_aux_declared(layout: ExportLayoutDefinition) -> None:
 
     Args:
         layout: The export layout about to be written.
+        aux_version: Canonical product-derived version token to write.
 
     Raises:
         FilingExportError: The layout is ``xml_dictionary`` and cannot supply the
@@ -743,8 +743,8 @@ def assert_xml_declaration_aux_declared(layout: ExportLayoutDefinition) -> None:
         return
     undeclared = [
         name
-        for name, value in (("aux_idioma", layout.aux_idioma), ("aux_version", layout.aux_version))
-        if value is None
+        for name, value in (("aux_idioma", layout.aux_idioma), ("aux_version", aux_version))
+        if not value
     ]
     if not undeclared:
         return

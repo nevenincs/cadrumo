@@ -67,7 +67,7 @@ from ...domain.calculations.registry.schema_exports import (
 )
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
-from ...domain.filing.software_identity import AeatProductSoftwareIdentity
+from ...domain.filing.software_identity import AeatProductSoftwareIdentity, aeat_aux_version
 from ...domain.submission.models import ModeloDraftStatus
 from ._envelope_modelo_policy import filing_envelope_modelo_policy
 from ._export_parity import (
@@ -139,6 +139,7 @@ class _PreparedExportDraft:
     producer_values: Mapping[FilingProducerKey, object]
     prior_domiciliation_election: PriorDomiciliationElection
     renders_filing_envelope: bool
+    xml_aux_version: str | None
 
 
 def _require_current_export_schema(draft: ModeloDraft, subview: RegistryModeloSubview) -> None:
@@ -257,6 +258,7 @@ def _prepare_export_draft(
         producer_values=_filing_producer_values(producer_snapshot),
         prior_domiciliation_election=resolvedprior_domiciliation_election,
         renders_filing_envelope=renders_filing_envelope,
+        xml_aux_version=aeat_aux_version() if layout.format is ExportLayoutFormat.XML_DICTIONARY else None,
     )
 
 
@@ -293,6 +295,7 @@ def _render_prepared_export(
         dictionary_values=dictionary_values,
         prior_domiciliation_election=prepared.prior_domiciliation_election,
         product_software_identity=product_software_identity,
+        xml_aux_version=prepared.xml_aux_version,
         schema_provider=prepared.provider,
         registry_snapshot=prepared.registry_snapshot,
     )
@@ -318,7 +321,10 @@ def _validate_prepared_export(
         draft=draft,
         schema_provider=prepared.provider,
     )
-    assert_xml_declaration_aux_declared(prepared.layout)
+    if prepared.layout.format is ExportLayoutFormat.XML_DICTIONARY:
+        if prepared.xml_aux_version is None:
+            raise FilingExportError("XML dictionary export did not resolve its mandatory Aux/VERSION token")
+        assert_xml_declaration_aux_declared(prepared.layout, aux_version=prepared.xml_aux_version)
     assert_rate_boxes_account_for_total(prepared.subview.rate_box_partitions, draft=draft)
     if prepared.subview.completeness_manifest is not None:
         assert_export_mirrors_manifest(
@@ -606,14 +612,18 @@ def _render_export_layout(
     dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection,
     product_software_identity: AeatProductSoftwareIdentity | None,
+    xml_aux_version: str | None,
     schema_provider: RegistrySchemaAccessor,
     registry_snapshot: RegistrySnapshot,
 ) -> bytes:
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
+        if xml_aux_version is None:
+            raise FilingExportValidationError("XML dictionary export requires a canonical Aux/VERSION token")
         return render_xml_dictionary_layout(
             layout,
             draft=draft,
             headers=dict(headers),
+            aux_version=xml_aux_version,
             dictionary_values=dictionary_values,
             schema_provider=schema_provider,
         )

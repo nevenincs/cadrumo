@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+import pytest
+
 from ..cli_journey import _decode_cli_document
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
 def test_cli_document_decoder_recovers_error_envelope_after_stderr_diagnostic() -> None:

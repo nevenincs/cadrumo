@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from typing import Annotated
 
 from pydantic import BaseModel, Field, StringConstraints, model_validator
@@ -11,6 +12,31 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.package_version import PACKAGE_VERSION
+from .errors import FilingExportValidationError
+
+_PACKAGE_VERSION_AEAT_AUX_PATTERN = re.compile(r"^[0-9]+\.[0-9]+\.[0-9]+$", re.ASCII)
+
+
+def aeat_aux_version() -> str:
+    """Return the AEAT ``Aux/VERSION`` token for this installed product build.
+
+    AEAT permits at most four characters in the slot.  The product version is
+    the software identity it names, so the three decimal package components are
+    concatenated without inventing a registry-owned override, padding, hash, or
+    truncation.  Non-release package versions fail closed because their suffixes
+    do not have an AEAT wire representation under this contract.
+    """
+    if _PACKAGE_VERSION_AEAT_AUX_PATTERN.fullmatch(PACKAGE_VERSION) is None:
+        raise FilingExportValidationError(
+            "PACKAGE_VERSION must contain exactly three ASCII decimal components for AEAT Aux/VERSION",
+        )
+    aux_version = PACKAGE_VERSION.replace(".", "")
+    if len(aux_version) > 4:
+        raise FilingExportValidationError(
+            "PACKAGE_VERSION exceeds AEAT Aux/VERSION's four-character limit after removing dots",
+        )
+    return aux_version
 
 type AeatProgramIdentifier = Annotated[
     str,
@@ -65,4 +91,5 @@ __all__ = [
     "AeatProductSoftwareEvidence",
     "AeatProductSoftwareIdentity",
     "AeatProgramIdentifier",
+    "aeat_aux_version",
 ]

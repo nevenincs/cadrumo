@@ -4,7 +4,19 @@ from __future__ import annotations
 
 from decimal import Decimal
 
-from ..scenario import AcceptanceOutcome, AcceptanceReceipt, HistoryState, build_scenario, expected_history_state
+import pytest
+
+from ..scenario import (
+    AcceptanceOutcome,
+    AcceptanceReceipt,
+    HistoryState,
+    build_boundary_control_scenario,
+    build_retention_mutation_oracle,
+    build_scenario,
+    expected_history_state,
+)
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_invoice_decomposition_and_bank_amounts_are_coherent() -> None:
@@ -57,12 +69,57 @@ def test_history_states_distinguish_first_period_missing_and_available() -> None
     assert expected_history_state(year=2025, period="1T", available_periods=frozenset()) is HistoryState.NOT_APPLICABLE
     assert expected_history_state(year=2025, period="2T", available_periods=frozenset()) is HistoryState.MISSING
     assert expected_history_state(year=2025, period="2T", available_periods=frozenset({"1T"})) is HistoryState.AVAILABLE
+    assert (
+        expected_history_state(
+            year=2025,
+            period="2T",
+            available_periods=frozenset({"1T"}),
+            recorded_zero_periods=frozenset({"1T"}),
+        )
+        is HistoryState.RECORDED_ZERO
+    )
     assert HistoryState.RECORDED_ZERO.value != HistoryState.MISSING.value
+
+
+def test_retention_mutation_oracle_changes_the_persisted_q4_pair_without_additive_income() -> None:
+    mutation = build_retention_mutation_oracle(2025)
+
+    assert mutation.target_invoice.invoice_id == mutation.corrected_invoice.invoice_id == "income-2025-4T"
+    assert mutation.target_invoice.withholding == Decimal("175.00")
+    assert mutation.corrected_invoice.withholding == Decimal("0.00")
+    assert mutation.target_invoice.net_receipt == Decimal("2850.00")
+    assert mutation.corrected_invoice.net_receipt == Decimal("3025.00")
+    assert mutation.corrected_quarter.cumulative_income == mutation.baseline_quarter.cumulative_income
+    withholding_delta = (
+        mutation.corrected_quarter.cumulative_withholding - mutation.baseline_quarter.cumulative_withholding
+    )
+    assert withholding_delta == Decimal("-175.00")
+    assert mutation.corrected_quarter.payment - mutation.baseline_quarter.payment == Decimal("175.00")
+    assert mutation.corrected_annual.activity_withholding == Decimal("665.00")
+    assert mutation.corrected_annual.m130_payments == Decimal("855.00")
+
+
+def test_boundary_control_oracle_uses_transaction_filing_dates_without_changing_baseline() -> None:
+    baseline = build_scenario(2025)
+    controls = build_boundary_control_scenario(2025)
+
+    assert controls.excluded_income_ids == ("income-2024-control",)
+    assert "income-2025-boundary" in controls.selected_income_ids
+    assert controls.quarter_oracle[0] == baseline.quarter_oracle[0]
+    assert controls.quarter_oracle[1].cumulative_income == Decimal("7611")
+    assert controls.quarter_oracle[1].cumulative_expenses == Decimal("1299")
+    assert controls.quarter_oracle[1].payment == Decimal("209.63")
+    assert controls.annual_oracle.activity_income == Decimal("12111")
+    assert controls.annual_oracle.deductible_expenses == Decimal("2499")
+    assert controls.annual_oracle.activity_net_income == Decimal("9612")
+    assert controls.annual_oracle.m130_payments == Decimal("674.63")
+    assert baseline.annual_oracle.activity_income == Decimal("12000")
+    assert baseline.annual_oracle.deductible_expenses == Decimal("2400")
 
 
 def test_receipt_is_machine_readable_and_keeps_blocked_distinct() -> None:
     receipt = AcceptanceReceipt(
-        brief_revision="0.4",
+        brief_revision="0.6",
         scenario_id="income-directa-normal-v1:2025:cli",
         frontend_path="cli",
         year=2025,

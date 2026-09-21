@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from enum import StrEnum
 from pathlib import Path
@@ -17,17 +17,24 @@ from ...core.hashing import SHA256_HEX_LENGTH as _SHA256_HEX_LENGTH
 from ...core.hashing import hash_file, sha256_file, sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.logging import get_logger
+from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...core.time.clock import now
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.export_parse import parse_export_payload, xml_dictionary_entries
+from ...domain.calculations.registry.export_parse import (
+    XmlDictionaryEntry,
+    parse_export_payload,
+    xml_dictionary_entries,
+)
 from ...domain.calculations.registry.fixed_width_codec import render_fixed_width_export_field
 from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
 from ...domain.filing.errors import FilingExportError, FilingExportValidationError
 from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ._export_xml_dictionary import (
+    _modelo_100_sign_branch_value,
+    _registry_modelo_100_xml_declarations,
     expected_xml_dictionary_root_identity,
     format_xml_dictionary_value,
     read_xml_dictionary_root_identity,
@@ -447,6 +454,7 @@ def _mismatched_xml_dictionary_casilla_ids(
         )
     }
     values = {value.casilla_id: value.value for value in draft.values}
+    modelo_100_declarations = _registry_modelo_100_xml_declarations() if draft.modelo == Modelo("100") else None
     mismatched: list[CasillaId] = []
     checked: list[CasillaId] = []
     parsed_payload = parse_export_payload(
@@ -467,7 +475,12 @@ def _mismatched_xml_dictionary_casilla_ids(
                 f"XML dictionary field {parsed.field_id!r} could not resolve its signed entry for verification"
             )
         try:
-            expected_wire = format_xml_dictionary_value(entry.data_type, expected)
+            expected_wire = _xml_dictionary_expected_wire_value(
+                entry,
+                expected,
+                modelo=draft.modelo,
+                modelo_100_declarations=modelo_100_declarations,
+            )
         except FilingExportValidationError as exc:
             raise FilingExportValidationError(
                 f"XML dictionary field {parsed.field_id!r} could not render its expected verification value"
@@ -475,6 +488,31 @@ def _mismatched_xml_dictionary_casilla_ids(
         if expected_wire != parsed.raw:
             mismatched.append(casilla_id)
     return tuple(dict.fromkeys(mismatched)), tuple(dict.fromkeys(checked))
+
+
+def _xml_dictionary_expected_wire_value(
+    entry: XmlDictionaryEntry,
+    value: object,
+    *,
+    modelo: str,
+    modelo_100_declarations: Mapping[str, str] | None,
+) -> str:
+    """Render one verifier expectation through the same Modelo 100 branch rule.
+
+    The signed dictionary can map one casilla to paired XML fields.  Modelo 100
+    casilla 0695 uses that shape for its amount-to-pay and refund branches, so
+    verification must project the raw draft value before comparing either wire
+    token.  The renderer owns the projection; this reader reuses it.
+    """
+    if modelo == Modelo("100"):
+        if modelo_100_declarations is None:
+            raise FilingExportValidationError("Modelo 100 XML verification declarations were not resolved")
+        value = _modelo_100_sign_branch_value(
+            entry,
+            value,
+            declarations=modelo_100_declarations,
+        )
+    return format_xml_dictionary_value(entry.data_type, value)
 
 
 def _mismatched_root_fields(

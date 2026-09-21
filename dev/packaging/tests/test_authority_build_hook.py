@@ -5,6 +5,7 @@ from __future__ import annotations
 import importlib.util
 from pathlib import Path
 from types import ModuleType
+from typing import Generic, TypeVar
 
 import pytest
 
@@ -68,3 +69,26 @@ def test_explicit_missing_override_does_not_fall_back_to_repo_root(
 
     with pytest.raises(FileNotFoundError, match=r"configured \$CADRUMO_AUTHORITY_ROOT directory is unavailable"):
         hook._authority_root(tmp_path)
+
+
+def test_hook_module_loads_with_one_parameter_nongeneric_hatchling_contract(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The current isolated backend may not expose the former two-parameter API."""
+    import hatchling.builders.config as builder_config_module
+    import hatchling.builders.hooks.plugin.interface as hook_interface_module
+
+    class CurrentBuilderConfig:
+        """Model Hatchling's concrete current configuration type."""
+
+    CurrentBuilderConfigType = TypeVar("CurrentBuilderConfigType")
+
+    class CurrentBuildHookInterface(Generic[CurrentBuilderConfigType]):
+        """Model Hatchling's one-parameter current build-hook interface."""
+
+    monkeypatch.setattr(builder_config_module, "BuilderConfig", CurrentBuilderConfig)
+    monkeypatch.setattr(hook_interface_module, "BuildHookInterface", CurrentBuildHookInterface)
+
+    hook = _hook_module()
+
+    assert hook.CustomBuildHook.__orig_bases__ == (CurrentBuildHookInterface[CurrentBuilderConfig],)

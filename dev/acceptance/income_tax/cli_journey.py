@@ -20,7 +20,18 @@ from decimal import Decimal
 from pathlib import Path
 from typing import Any, Final
 
-from .scenario import BRIEF_REVISION, SCENARIO_VERSION, build_scenario
+from .scenario import (
+    BRIEF_REVISION,
+    SCENARIO_VERSION,
+    AcceptanceOutcome,
+    AnnualOracle,
+    ExpenseInvoice,
+    IssuedInvoice,
+    QuarterlyOracle,
+    build_boundary_control_scenario,
+    build_retention_mutation_oracle,
+    build_scenario,
+)
 
 _CLIENT_NIF: Final[str] = "A58818501"
 
@@ -67,6 +78,55 @@ class CliJourneyEvidence:
     quarterly_casillas: dict[str, dict[str, str]]
     artifacts: tuple[ArtifactEvidence, ...]
     modelo_100: dict[str, object]
+    commands: tuple[CommandEvidence, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        """Return a JSON-safe representation."""
+        return asdict(self)
+
+
+@dataclass(frozen=True, slots=True)
+class LinkedLedgerPair:
+    """Persisted public identifiers for one invoice and its linked transaction."""
+
+    fixture_invoice_id: str
+    transaction_id: str
+    invoice_id: str
+
+
+@dataclass(frozen=True, slots=True)
+class IngestedLedgerEvidence:
+    """The stable identities produced by an isolated CLI ingestion."""
+
+    transaction_ids: tuple[str, ...]
+    invoice_ids: tuple[str, ...]
+    issued_pairs: tuple[LinkedLedgerPair, ...]
+
+
+@dataclass(frozen=True, slots=True)
+class AcceptanceControlEvidence:
+    """One A2/A4/A5 result with calculation and export status kept separate."""
+
+    acceptance_id: str
+    outcome: AcceptanceOutcome
+    calculation: AcceptanceOutcome
+    verification: AcceptanceOutcome
+    export_readiness: AcceptanceOutcome
+    diagnostic_code: str | None
+    observations: dict[str, str]
+
+
+@dataclass(frozen=True, slots=True)
+class CliControlsEvidence:
+    """Compact receipt for the isolated installed-CLI control cases."""
+
+    brief_revision: str
+    scenario: str
+    year: int
+    authority_generation: str
+    executable: str
+    controls_root: str
+    cases: tuple[AcceptanceControlEvidence, ...]
     commands: tuple[CommandEvidence, ...]
 
     def to_dict(self) -> dict[str, object]:
@@ -268,11 +328,21 @@ def _money(value: Decimal) -> str:
     return f"{value:.2f}"
 
 
-def _ingest(cli: InstalledCli, *, year: int) -> tuple[list[str], list[str]]:
+def _ingest(
+    cli: InstalledCli,
+    *,
+    year: int,
+    income: tuple[IssuedInvoice, ...] | None = None,
+    expenses: tuple[ExpenseInvoice, ...] | None = None,
+) -> IngestedLedgerEvidence:
+    """Persist matched ledger facts through public CLI commands only."""
     scenario = build_scenario(year)
+    income_items = scenario.income if income is None else income
+    expense_items = scenario.expenses if expenses is None else expenses
     transaction_ids: list[str] = []
     invoice_ids: list[str] = []
-    for income, expense in zip(scenario.income, scenario.expenses, strict=True):
+    issued_pairs: list[LinkedLedgerPair] = []
+    for income in income_items:
         income_tx = _result(
             cli.run(
                 (
@@ -301,7 +371,17 @@ def _ingest(cli: InstalledCli, *, year: int) -> tuple[list[str], list[str]]:
         income_tx_id = str(income_tx["transaction_id"])
         income_invoice_id = str(income_invoice["invoice_id"])
         cli.run(("app", "ledger", "link", income_tx_id, "--invoice-id", income_invoice_id))
+        transaction_ids.append(income_tx_id)
+        invoice_ids.append(income_invoice_id)
+        issued_pairs.append(
+            LinkedLedgerPair(
+                fixture_invoice_id=income.invoice_id,
+                transaction_id=income_tx_id,
+                invoice_id=income_invoice_id,
+            )
+        )
 
+    for expense in expense_items:
         expense_tx = _result(
             cli.run(
                 (
@@ -329,9 +409,84 @@ def _ingest(cli: InstalledCli, *, year: int) -> tuple[list[str], list[str]]:
         expense_tx_id = str(expense_tx["transaction_id"])
         expense_invoice_id = str(expense_invoice["invoice_id"])
         cli.run(("app", "ledger", "link", expense_tx_id, "--invoice-id", expense_invoice_id))
-        transaction_ids.extend((income_tx_id, expense_tx_id))
-        invoice_ids.extend((income_invoice_id, expense_invoice_id))
-    return transaction_ids, invoice_ids
+        transaction_ids.append(expense_tx_id)
+        invoice_ids.append(expense_invoice_id)
+    return IngestedLedgerEvidence(
+        transaction_ids=tuple(transaction_ids),
+        invoice_ids=tuple(invoice_ids),
+        issued_pairs=tuple(issued_pairs),
+    )
+
+
+def _m130_expected(oracle: QuarterlyOracle) -> dict[str, str]:
+    return {
+        "01": _money(oracle.cumulative_income),
+        "02": _money(oracle.cumulative_expenses),
+        "03": _money(oracle.cumulative_net),
+        "04": _money(oracle.twenty_percent),
+        "05": _money(oracle.prior_positive_results),
+        "06": _money(oracle.cumulative_withholding),
+        "07": _money(oracle.partial_result),
+        "13": _money(oracle.low_income_reduction),
+        "19": _money(oracle.payment),
+    }
+
+
+def _create_m130_work(cli: InstalledCli, *, year: int, period: str) -> str:
+    create = _result(
+        cli.run(
+            (
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "130",
+                "--year",
+                str(year),
+                "--period",
+                period,
+                "--revision",
+                "2019-y-siguientes",
+                "--by",
+                "income-acceptance",
+            )
+        )
+    )
+    return str(create["work_unit_id"])
+
+
+def _calculate_m130_work(
+    cli: InstalledCli, *, work_id: str, oracle: QuarterlyOracle
+) -> tuple[dict[str, str], str]:
+    calculation = _result(cli.run(("app", "modelo", "work", "calculate", work_id, "--by", "income-acceptance")))
+    values = calculation.get("casilla_values")
+    if not isinstance(values, dict):
+        raise JourneyError(f"Modelo 130 {oracle.period} returned no casilla map")
+    expected = _m130_expected(oracle)
+    actual = {casilla: _money(Decimal(str(values.get(casilla)))) for casilla in expected}
+    if actual != expected:
+        raise JourneyError(f"Modelo 130 {oracle.period} oracle mismatch")
+    return actual, str(calculation["calculation_revision_id"])
+
+
+def _verify_and_file_m130(cli: InstalledCli, *, revision_id: str, period: str) -> None:
+    verification = _result(cli.run(("app", "modelo", "work", "verify", revision_id, "--by", "income-acceptance")))
+    if verification.get("granted_verificado_completo") is not True:
+        raise JourneyError(f"Modelo 130 {period} did not verify complete")
+    cli.run(
+        (
+            "app",
+            "modelo",
+            "work",
+            "file",
+            revision_id,
+            "--by",
+            "income-acceptance",
+            "--notes",
+            "Synthetic local pending filing only; not sent to AEAT",
+        )
+    )
 
 
 def _calculate_quarters(
@@ -341,44 +496,10 @@ def _calculate_quarters(
     observed: dict[str, dict[str, str]] = {}
     artifacts: list[ArtifactEvidence] = []
     for oracle in scenario.quarter_oracle:
-        create = _result(
-            cli.run(
-                (
-                    "app", "modelo", "work", "create", "--modelo", "130", "--year", str(year),
-                    "--period", oracle.period, "--revision", "2019-y-siguientes", "--by", "income-acceptance",
-                )
-            )
-        )
-        work_id = str(create["work_unit_id"])
-        calculation = _result(
-            cli.run(("app", "modelo", "work", "calculate", work_id, "--by", "income-acceptance"))
-        )
-        values = calculation.get("casilla_values")
-        if not isinstance(values, dict):
-            raise JourneyError(f"Modelo 130 {oracle.period} returned no casilla map")
-        expected = {
-            "01": _money(oracle.cumulative_income), "02": _money(oracle.cumulative_expenses),
-            "03": _money(oracle.cumulative_net), "04": _money(oracle.twenty_percent),
-            "05": _money(oracle.prior_positive_results), "06": _money(oracle.cumulative_withholding),
-            "07": _money(oracle.partial_result), "13": _money(oracle.low_income_reduction),
-            "19": _money(oracle.payment),
-        }
-        actual = {casilla: _money(Decimal(str(values.get(casilla)))) for casilla in expected}
-        if actual != expected:
-            raise JourneyError(f"Modelo 130 {oracle.period} oracle mismatch: expected {expected}, got {actual}")
+        work_id = _create_m130_work(cli, year=year, period=oracle.period)
+        actual, revision_id = _calculate_m130_work(cli, work_id=work_id, oracle=oracle)
         observed[oracle.period] = actual
-        revision_id = str(calculation["calculation_revision_id"])
-        verification = _result(
-            cli.run(("app", "modelo", "work", "verify", revision_id, "--by", "income-acceptance"))
-        )
-        if verification.get("granted_verificado_completo") is not True:
-            raise JourneyError(f"Modelo 130 {oracle.period} did not verify complete")
-        cli.run(
-            (
-                "app", "modelo", "work", "file", revision_id, "--by", "income-acceptance",
-                "--notes", "Synthetic local filing only; not sent to AEAT",
-            )
-        )
+        _verify_and_file_m130(cli, revision_id=revision_id, period=oracle.period)
         target = output_dir / f"modelo-130-{year}-{oracle.period}.boe"
         cli.run(("app", "modelo", "export", work_id, "--output", str(target), "--by", "income-acceptance"))
         payload = target.read_bytes()
@@ -391,7 +512,14 @@ def _calculate_quarters(
     return observed, tuple(artifacts)
 
 
-def _calculate_m100(cli: InstalledCli, *, year: int, output_dir: Path) -> dict[str, object]:
+def _calculate_m100(
+    cli: InstalledCli,
+    *,
+    year: int,
+    output_dir: Path,
+    annual_oracle: AnnualOracle | None = None,
+    attempt_export: bool = True,
+) -> dict[str, object]:
     create = _result(
         cli.run(
             (
@@ -404,6 +532,9 @@ def _calculate_m100(cli: InstalledCli, *, year: int, output_dir: Path) -> dict[s
     calculated = cli.run(
         (
             "app", "modelo", "work", "calculate", work_id,
+            "--casilla", "0001=declarante",
+            "--casilla", "0165=declarante",
+            "--casilla", "0166=A05",
             "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
             "--binding", "renta-certificado-trabajo-retenciones=0",
             "--by", "income-acceptance",
@@ -414,14 +545,16 @@ def _calculate_m100(cli: InstalledCli, *, year: int, output_dir: Path) -> dict[s
         error = calculated.get("error", {})
         return {
             "calculation": "blocked",
+            "verification": "not_exercised",
+            "export_execution": "not_exercised",
+            "export_readiness": "not_exercised",
             "diagnostic_code": error.get("code") if isinstance(error, dict) else None,
-            "message": error.get("message") if isinstance(error, dict) else None,
         }
     calculation = _result(calculated)
     values = calculation.get("casilla_values")
     if not isinstance(values, dict):
         raise JourneyError("Modelo 100 returned no casilla map")
-    annual = build_scenario(year).annual_oracle
+    annual = annual_oracle or build_scenario(year).annual_oracle
     expected = {
         "0171": _money(annual.activity_income),
         "0218": _money(annual.deductible_expenses),
@@ -440,8 +573,20 @@ def _calculate_m100(cli: InstalledCli, *, year: int, output_dir: Path) -> dict[s
     if verification.get("status") == "error":
         error = verification.get("error", {})
         return {
-            "calculation": "proven", "casillas": actual, "verification": "blocked",
+            "calculation": "proven",
+            "casillas": actual,
+            "verification": "blocked",
+            "export_execution": "not_exercised",
+            "export_readiness": "not_exercised",
             "diagnostic_code": error.get("code") if isinstance(error, dict) else None,
+        }
+    if not attempt_export:
+        return {
+            "calculation": "proven",
+            "casillas": actual,
+            "verification": "proven",
+            "export_execution": "not_exercised",
+            "export_readiness": "not_exercised",
         }
     target = output_dir / f"modelo-100-{year}-0A.xml"
     exported = cli.run(
@@ -452,15 +597,383 @@ def _calculate_m100(cli: InstalledCli, *, year: int, output_dir: Path) -> dict[s
         error = exported.get("error", {})
         context = error.get("context", {}) if isinstance(error, dict) else {}
         return {
-            "calculation": "proven", "casillas": actual, "verification": "proven", "export": "blocked",
+            "calculation": "proven",
+            "casillas": actual,
+            "verification": "proven",
+            "export_execution": "blocked",
+            "export_readiness": "blocked",
             "diagnostic_code": error.get("code") if isinstance(error, dict) else None,
             "cause": context.get("cause") if isinstance(context, dict) else None,
             "artifact_exists": target.exists(),
         }
     return {
-        "calculation": "proven", "casillas": actual, "verification": "proven",
-        "export": "proven", "artifact_exists": target.exists(),
+        "calculation": "proven",
+        "casillas": actual,
+        "verification": "proven",
+        "export_execution": "proven",
+        # A successful write is not an independent official-structure check.
+        "export_readiness": "not_exercised",
+        "artifact_exists": target.exists(),
     }
+
+
+def _fresh_directory(path: Path, *, label: str) -> Path:
+    """Create one owned empty run directory without touching any other state."""
+    if path.exists() and any(path.iterdir()):
+        raise JourneyError(f"{label} must be fresh and empty")
+    path.mkdir(parents=True, exist_ok=True)
+    return path.resolve()
+
+
+def _authority_generation(authority_root: Path) -> str:
+    descriptor = json.loads((authority_root / "authority.current.json").read_text(encoding="utf-8"))
+    generation = descriptor.get("logical_generation")
+    if not isinstance(generation, str):
+        raise JourneyError("authority descriptor has no logical generation")
+    return generation
+
+
+def _control_cli(*, executable: Path, authority_root: Path, storage_root: Path, year: int) -> InstalledCli:
+    _fresh_directory(storage_root, label="control storage root")
+    cli = InstalledCli(
+        executable,
+        storage_root=storage_root,
+        authority_root=authority_root,
+        passphrase=secrets.token_urlsafe(32),
+    )
+    cli.create_profile(year=year)
+    return cli
+
+
+def _assert_reopened_ledger(cli: InstalledCli, ingested: IngestedLedgerEvidence) -> int:
+    """Prove the next process can read every persisted transaction identity."""
+    listed = _result(cli.run(("app", "ledger", "list")))
+    rows = listed.get("rows")
+    if not isinstance(rows, list):
+        raise JourneyError("ledger list returned no transaction collection")
+    actual_ids = {str(row.get("transaction_id")) for row in rows if isinstance(row, dict)}
+    if actual_ids != set(ingested.transaction_ids):
+        raise JourneyError("fresh-process ledger read did not reproduce ingested transaction identities")
+    return len(rows)
+
+
+def _m100_control_outcome(result: dict[str, object]) -> tuple[AcceptanceOutcome, AcceptanceOutcome, str | None]:
+    calculation = AcceptanceOutcome(str(result.get("calculation", AcceptanceOutcome.FAILED.value)))
+    verification = AcceptanceOutcome(str(result.get("verification", AcceptanceOutcome.NOT_EXERCISED.value)))
+    diagnostic_code = result.get("diagnostic_code")
+    return calculation, verification, diagnostic_code if isinstance(diagnostic_code, str) else None
+
+
+def _a2_retention_mutation_case(
+    *, executable: Path, authority_root: Path, storage_root: Path, output_dir: Path, year: int
+) -> tuple[AcceptanceControlEvidence, tuple[CommandEvidence, ...]]:
+    """Correct a persisted Q4 retention pair and prove the downstream deltas."""
+    cli = _control_cli(executable=executable, authority_root=authority_root, storage_root=storage_root, year=year)
+    scenario = build_scenario(year)
+    mutation = build_retention_mutation_oracle(year)
+    ingested = _ingest(cli, year=year)
+    _assert_reopened_ledger(cli, ingested)
+
+    for oracle in scenario.quarter_oracle[:3]:
+        work_id = _create_m130_work(cli, year=year, period=oracle.period)
+        _actual, revision_id = _calculate_m130_work(cli, work_id=work_id, oracle=oracle)
+        _verify_and_file_m130(cli, revision_id=revision_id, period=oracle.period)
+
+    q4_work_id = _create_m130_work(cli, year=year, period=mutation.baseline_quarter.period)
+    before, _before_revision = _calculate_m130_work(
+        cli, work_id=q4_work_id, oracle=mutation.baseline_quarter
+    )
+    pair = next(
+        (item for item in ingested.issued_pairs if item.fixture_invoice_id == mutation.target_invoice.invoice_id),
+        None,
+    )
+    if pair is None:
+        raise JourneyError("A2 target issued invoice was not persisted")
+    cli.run(
+        (
+            "app",
+            "ledger",
+            "invoice",
+            "update",
+            pair.invoice_id,
+            "--retention-rate",
+            str(mutation.corrected_invoice.withholding_rate),
+            "--retention-amount",
+            _money(mutation.corrected_invoice.withholding),
+        )
+    )
+    cli.run(
+        (
+            "app",
+            "ledger",
+            "update",
+            pair.transaction_id,
+            "--amount",
+            _money(mutation.corrected_invoice.net_receipt),
+        )
+    )
+    after, corrected_revision = _calculate_m130_work(cli, work_id=q4_work_id, oracle=mutation.corrected_quarter)
+    _verify_and_file_m130(cli, revision_id=corrected_revision, period=mutation.corrected_quarter.period)
+    annual = _calculate_m100(
+        cli,
+        year=year,
+        output_dir=output_dir,
+        annual_oracle=mutation.corrected_annual,
+        attempt_export=False,
+    )
+    calculation, verification, diagnostic_code = _m100_control_outcome(annual)
+    outcome = AcceptanceOutcome.PROVEN
+    if calculation is not AcceptanceOutcome.PROVEN or verification is not AcceptanceOutcome.PROVEN:
+        outcome = AcceptanceOutcome.FAILED
+    observations = {
+        "baseline_q4_withholding": before["06"],
+        "corrected_q4_withholding": after["06"],
+        "baseline_q4_payment": before["19"],
+        "corrected_q4_payment": after["19"],
+        "corrected_annual_withholding_oracle": _money(mutation.corrected_annual.activity_withholding),
+        "corrected_annual_m130_payments": str(annual.get("casillas", {}).get("0604", "")),
+    }
+    return (
+        AcceptanceControlEvidence(
+            acceptance_id="A2",
+            outcome=outcome,
+            calculation=calculation,
+            verification=verification,
+            export_readiness=AcceptanceOutcome.NOT_EXERCISED,
+            diagnostic_code=diagnostic_code,
+            observations=observations,
+        ),
+        tuple(cli.commands),
+    )
+
+
+def _a4_boundary_case(
+    *, executable: Path, authority_root: Path, storage_root: Path, output_dir: Path, year: int
+) -> tuple[AcceptanceControlEvidence, tuple[CommandEvidence, ...]]:
+    """Exercise the year and quarter controls against their own persisted store."""
+    cli = _control_cli(executable=executable, authority_root=authority_root, storage_root=storage_root, year=year)
+    controls = build_boundary_control_scenario(year)
+    ingested = _ingest(
+        cli,
+        year=year,
+        income=controls.ingested_income,
+        expenses=controls.ingested_expenses,
+    )
+    _assert_reopened_ledger(cli, ingested)
+    observed: dict[str, dict[str, str]] = {}
+    for oracle in controls.quarter_oracle:
+        work_id = _create_m130_work(cli, year=year, period=oracle.period)
+        values, revision_id = _calculate_m130_work(cli, work_id=work_id, oracle=oracle)
+        _verify_and_file_m130(cli, revision_id=revision_id, period=oracle.period)
+        observed[oracle.period] = values
+    annual = _calculate_m100(
+        cli,
+        year=year,
+        output_dir=output_dir,
+        annual_oracle=controls.annual_oracle,
+        attempt_export=False,
+    )
+    calculation, verification, diagnostic_code = _m100_control_outcome(annual)
+    outcome = AcceptanceOutcome.PROVEN
+    if calculation is not AcceptanceOutcome.PROVEN or verification is not AcceptanceOutcome.PROVEN:
+        outcome = AcceptanceOutcome.FAILED
+    return (
+        AcceptanceControlEvidence(
+            acceptance_id="A4",
+            outcome=outcome,
+            calculation=calculation,
+            verification=verification,
+            export_readiness=AcceptanceOutcome.NOT_EXERCISED,
+            diagnostic_code=diagnostic_code,
+            observations={
+                "q1_income": observed["1T"]["01"],
+                "q2_income": observed["2T"]["01"],
+                "q2_expenses": observed["2T"]["02"],
+                "annual_income": str(annual.get("casillas", {}).get("0171", "")),
+                "annual_expenses": str(annual.get("casillas", {}).get("0218", "")),
+                "prior_year_excluded_invoice_count": str(len(controls.excluded_income_ids)),
+            },
+        ),
+        tuple(cli.commands),
+    )
+
+
+def _error_code(document: dict[str, Any]) -> str | None:
+    error = document.get("error")
+    if not isinstance(error, dict):
+        return None
+    code = error.get("code")
+    return code if isinstance(code, str) else None
+
+
+def _a5_history_case(
+    *, executable: Path, authority_root: Path, storage_root: Path, year: int
+) -> tuple[AcceptanceControlEvidence, tuple[CommandEvidence, ...]]:
+    """Keep first-period, missing-history, and recorded-zero states distinct."""
+    first_root = storage_root / "first-period-and-recorded-zero"
+    missing_root = storage_root / "missing-required-history"
+    first_cli = _control_cli(executable=executable, authority_root=authority_root, storage_root=first_root, year=year)
+    q1_work_id = _create_m130_work(first_cli, year=year, period="1T")
+    q1_zero = QuarterlyOracle(
+        period="1T",
+        cumulative_income=Decimal(),
+        cumulative_expenses=Decimal(),
+        cumulative_net=Decimal(),
+        twenty_percent=Decimal(),
+        cumulative_withholding=Decimal(),
+        prior_positive_results=Decimal(),
+        partial_result=Decimal(),
+        low_income_reduction=Decimal("100.00"),
+        payment=Decimal("-100.00"),
+    )
+    q1_values, q1_revision_id = _calculate_m130_work(first_cli, work_id=q1_work_id, oracle=q1_zero)
+    _verify_and_file_m130(first_cli, revision_id=q1_revision_id, period="1T")
+    q2_work_id = _create_m130_work(first_cli, year=year, period="2T")
+    recorded_zero = first_cli.run(
+        ("app", "modelo", "work", "calculate", q2_work_id, "--by", "income-acceptance"), allow_error=True
+    )
+
+    missing_cli = _control_cli(
+        executable=executable,
+        authority_root=authority_root,
+        storage_root=missing_root,
+        year=year,
+    )
+    missing_q2_work_id = _create_m130_work(missing_cli, year=year, period="2T")
+    missing = missing_cli.run(
+        ("app", "modelo", "work", "calculate", missing_q2_work_id, "--by", "income-acceptance"), allow_error=True
+    )
+    commands = (*first_cli.commands, *missing_cli.commands)
+    missing_code = _error_code(missing)
+    if missing.get("status") != "error":
+        return (
+            AcceptanceControlEvidence(
+                acceptance_id="A5",
+                outcome=AcceptanceOutcome.FAILED,
+                calculation=AcceptanceOutcome.FAILED,
+                verification=AcceptanceOutcome.NOT_EXERCISED,
+                export_readiness=AcceptanceOutcome.NOT_EXERCISED,
+                diagnostic_code="acceptance.a5.missing_history_not_refused",
+                observations={"first_period_history": "not_applicable", "missing_history": "silently_accepted"},
+            ),
+            commands,
+        )
+    if recorded_zero.get("status") == "error":
+        return (
+            AcceptanceControlEvidence(
+                acceptance_id="A5",
+                outcome=AcceptanceOutcome.BLOCKED,
+                calculation=AcceptanceOutcome.PROVEN,
+                verification=AcceptanceOutcome.PROVEN,
+                export_readiness=AcceptanceOutcome.NOT_EXERCISED,
+                diagnostic_code=_error_code(recorded_zero),
+                observations={
+                    "first_period_history": "not_applicable",
+                    "first_period_payment": q1_values["19"],
+                    "missing_history": "refused",
+                    "missing_history_diagnostic": missing_code or "",
+                    "recorded_zero_capability": "public_cli_local_zero_history_unavailable",
+                },
+            ),
+            commands,
+        )
+    recorded_result = _result(recorded_zero)
+    values = recorded_result.get("casilla_values")
+    if not isinstance(values, dict) or _money(Decimal(str(values.get("05")))) != "0.00":
+        return (
+            AcceptanceControlEvidence(
+                acceptance_id="A5",
+                outcome=AcceptanceOutcome.FAILED,
+                calculation=AcceptanceOutcome.FAILED,
+                verification=AcceptanceOutcome.NOT_EXERCISED,
+                export_readiness=AcceptanceOutcome.NOT_EXERCISED,
+                diagnostic_code="acceptance.a5.recorded_zero_not_preserved",
+                observations={"first_period_history": "not_applicable", "missing_history": "refused"},
+            ),
+            commands,
+        )
+    return (
+        AcceptanceControlEvidence(
+            acceptance_id="A5",
+            outcome=AcceptanceOutcome.PROVEN,
+            calculation=AcceptanceOutcome.PROVEN,
+            verification=AcceptanceOutcome.PROVEN,
+            export_readiness=AcceptanceOutcome.NOT_EXERCISED,
+            diagnostic_code=missing_code,
+            observations={
+                "first_period_history": "not_applicable",
+                "first_period_payment": q1_values["19"],
+                "missing_history": "refused",
+                "recorded_zero_history": "recorded_zero",
+                "recorded_zero_prior_result": _money(Decimal(str(values.get("05")))),
+            },
+        ),
+        commands,
+    )
+
+
+def _failed_control_case(acceptance_id: str, error: Exception) -> AcceptanceControlEvidence:
+    """Persist a sanitized failure rather than presenting a partial control as green."""
+    return AcceptanceControlEvidence(
+        acceptance_id=acceptance_id,
+        outcome=AcceptanceOutcome.FAILED,
+        calculation=AcceptanceOutcome.FAILED,
+        verification=AcceptanceOutcome.NOT_EXERCISED,
+        export_readiness=AcceptanceOutcome.NOT_EXERCISED,
+        diagnostic_code=f"acceptance.{acceptance_id.lower()}.journey_error",
+        observations={"failure_type": type(error).__name__},
+    )
+
+
+def run_cli_controls(
+    *, executable: Path, authority_root: Path, controls_root: Path, output_dir: Path, year: int
+) -> CliControlsEvidence:
+    """Run the A2/A4/A5 controls in separately owned installed-CLI stores."""
+    controls_root = _fresh_directory(controls_root, label="controls root")
+    output_dir = _fresh_directory(output_dir, label="controls output directory")
+    generation = _authority_generation(authority_root)
+    cases: list[AcceptanceControlEvidence] = []
+    commands: list[CommandEvidence] = []
+    control_calls = (
+        ("A2", _a2_retention_mutation_case, controls_root / "a2", output_dir / "a2"),
+        ("A4", _a4_boundary_case, controls_root / "a4", output_dir / "a4"),
+    )
+    for acceptance_id, runner, storage_root, case_output_dir in control_calls:
+        try:
+            evidence, case_commands = runner(
+                executable=executable,
+                authority_root=authority_root,
+                storage_root=storage_root,
+                output_dir=_fresh_directory(case_output_dir, label=f"{acceptance_id} output directory"),
+                year=year,
+            )
+        except JourneyError as exc:
+            cases.append(_failed_control_case(acceptance_id, exc))
+        else:
+            cases.append(evidence)
+            commands.extend(case_commands)
+    try:
+        history, history_commands = _a5_history_case(
+            executable=executable,
+            authority_root=authority_root,
+            storage_root=_fresh_directory(controls_root / "a5", label="A5 controls root"),
+            year=year,
+        )
+    except JourneyError as exc:
+        cases.append(_failed_control_case("A5", exc))
+    else:
+        cases.append(history)
+        commands.extend(history_commands)
+    return CliControlsEvidence(
+        brief_revision=BRIEF_REVISION,
+        scenario=f"{SCENARIO_VERSION}:{year}:cli-controls",
+        year=year,
+        authority_generation=generation,
+        executable=str(executable.resolve(strict=True)),
+        controls_root=str(controls_root),
+        cases=tuple(cases),
+        commands=tuple(commands),
+    )
 
 
 def run_cli_journey(
@@ -471,20 +984,19 @@ def run_cli_journey(
         raise JourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
-    descriptor = json.loads((authority_root / "authority.current.json").read_text(encoding="utf-8"))
-    generation = str(descriptor["logical_generation"])
+    generation = _authority_generation(authority_root)
     cli = InstalledCli(
         executable, storage_root=storage_root, authority_root=authority_root, passphrase=secrets.token_urlsafe(32)
     )
     cli.create_profile(year=year)
-    transaction_ids, invoice_ids = _ingest(cli, year=year)
+    ingested = _ingest(cli, year=year)
     # A new child process reads the store after all ingestion; no in-memory
     # object crosses this boundary.
     listed = _result(cli.run(("app", "ledger", "list")))
     rows = listed.get("rows")
     if not isinstance(rows, list):
         raise JourneyError("ledger list returned no transaction collection")
-    if {str(row.get("transaction_id")) for row in rows if isinstance(row, dict)} != set(transaction_ids):
+    if {str(row.get("transaction_id")) for row in rows if isinstance(row, dict)} != set(ingested.transaction_ids):
         raise JourneyError("fresh-process ledger read did not reproduce the ingested transaction identities")
     quarterly, artifacts = _calculate_quarters(cli, year=year, output_dir=output_dir)
     modelo_100 = _calculate_m100(cli, year=year, output_dir=output_dir)
@@ -495,9 +1007,9 @@ def run_cli_journey(
         authority_generation=generation,
         executable=str(cli.executable),
         storage_root=str(cli.storage_root),
-        transactions=len(transaction_ids),
-        invoices=len(invoice_ids),
-        links=len(invoice_ids),
+        transactions=len(ingested.transaction_ids),
+        invoices=len(ingested.invoice_ids),
+        links=len(ingested.invoice_ids),
         reopened_transaction_count=len(rows),
         quarterly_casillas=quarterly,
         artifacts=artifacts,
@@ -514,23 +1026,42 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--year", required=True, type=int)
     parser.add_argument("--receipt", required=True, type=Path)
+    parser.add_argument(
+        "--mode",
+        choices=("journey", "controls"),
+        default="journey",
+        help="Run the baseline journey or the isolated A2/A4/A5 controls.",
+    )
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Write one CLI evidence receipt and mirror it to stdout."""
     args = _parser().parse_args(argv)
-    evidence = run_cli_journey(
-        executable=args.cli,
-        authority_root=args.authority_root,
-        storage_root=args.storage_root,
-        output_dir=args.output_dir,
-        year=args.year,
-    )
+    if args.mode == "controls":
+        evidence = run_cli_controls(
+            executable=args.cli,
+            authority_root=args.authority_root,
+            controls_root=args.storage_root,
+            output_dir=args.output_dir,
+            year=args.year,
+        )
+    else:
+        evidence = run_cli_journey(
+            executable=args.cli,
+            authority_root=args.authority_root,
+            storage_root=args.storage_root,
+            output_dir=args.output_dir,
+            year=args.year,
+        )
     rendered = json.dumps(evidence.to_dict(), indent=2, sort_keys=True)
     args.receipt.parent.mkdir(parents=True, exist_ok=True)
     args.receipt.write_text(f"{rendered}\n", encoding="utf-8", newline="\n")
     print(rendered)
+    if isinstance(evidence, CliControlsEvidence) and any(
+        case.outcome is not AcceptanceOutcome.PROVEN for case in evidence.cases
+    ):
+        return 2
     return 0
 
 

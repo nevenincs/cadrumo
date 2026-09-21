@@ -181,7 +181,6 @@ _LAYOUT_KEYS: Final[frozenset[str]] = frozenset(
         "auxiliary_envelope_header",
         "dictionary_path_overrides",
         "aux_idioma",
-        "aux_version",
     },
 )
 _RECORD_KEYS: Final[frozenset[str]] = frozenset(
@@ -562,7 +561,6 @@ def normalised_loader_semantics(loaded_layout: ExportLayoutDefinition) -> dict[s
         "filing_envelope": payload["filing_envelope"],
         "dictionary_path_overrides": overrides,
         "aux_idioma": payload["aux_idioma"],
-        "aux_version": payload["aux_version"],
     }
     # Projected only when declared, so a layout without the member attests
     # byte-identical semantics to the projection that preceded it.
