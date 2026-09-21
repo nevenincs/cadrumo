@@ -113,6 +113,11 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Dispatch every mutation through the injected shared operations."""
+        # A visible neutral state prevents a following public action from being
+        # mistaken for the previous result while its shared operation is still
+        # running on the worker thread.  It has no accounting meaning and is
+        # always replaced by either the operation result or a refusal below.
+        self.query_one("#asset-result", Static).update(f"pending\t{event.button.id or 'unknown'}")
         try:
             result = await asyncio.to_thread(self._dispatch, event.button.id)
         except (ValueError, RuntimeError) as exc:

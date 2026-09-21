@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import re
 from datetime import date
 from decimal import Decimal
+from threading import Event
 
 import pytest
 from textual.widgets import Button, Input, Static
@@ -141,7 +143,7 @@ async def _wait_for_current_revision_id(*, pilot, screen: ActivityAssetScreen) -
         rendered = str(screen.query_one("#asset-current-revision-id", Static).render())
         match = re.fullmatch(r"current_revision_id\t([0-9a-f]{64})", rendered)
         if match is not None:
-            return match.group(1)
+            return str(match.group(1))
         await pilot.pause()
     raise AssertionError("activity-asset TUI did not expose the current immutable revision identity")
 
@@ -292,3 +294,50 @@ async def test_interactive_tui_exposes_correction_claim_replay_and_filing_throug
                 expected_prefix="filing_handoff\t",
             )
         ) == "filing_handoff\tm100_material=468.00\tm100_intangible=0.00\tm130_material=468.00\tm130_intangible=0.00"
+
+
+@pytest.mark.asyncio
+async def test_activity_asset_screen_clears_a_stale_public_result_before_worker_dispatch(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A repeated public action cannot be observed as the prior claim result."""
+    repository = _MemoryRepository()
+    actions = ActivityAssetTuiActionsV1(
+        operations=ActivityAssetOperations(repository=repository, forecast_operation=_forecast),
+    )
+    controller = LedgerWorkspaceController(
+        ledger_context(),
+        ledger_projection(),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), activity_asset_actions=actions),
+    )
+    screen = ActivityAssetScreen(controller)
+    revision = _revision("pending-public-result")
+    original_create = actions.create
+    worker_entered = Event()
+    release_worker = Event()
+
+    def delayed_create(request: ActivityAssetCreationRequestV1):
+        worker_entered.set()
+        if not release_worker.wait(timeout=2.0):
+            raise RuntimeError("test worker was not released")
+        return original_create(request)
+
+    monkeypatch.setattr(actions, "create", delayed_create)
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(100, 35)) as pilot:
+        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        # This represents the prior first-claim result that used to remain
+        # visible while the next worker action began.
+        screen.query_one("#asset-result", Static).update("claim\tfixture\treused=false")
+        button = screen.query_one("#asset-create", Button)
+        handler = asyncio.create_task(screen.on_button_pressed(Button.Pressed(button)))
+        try:
+            assert await asyncio.to_thread(worker_entered.wait, 1.0)
+            await pilot.pause()
+            assert str(screen.query_one("#asset-result", Static).render()).strip() == "pending\tasset-create"
+        finally:
+            release_worker.set()
+        await handler
+        assert str(screen.query_one("#asset-result", Static).render()).strip() == (
+            "created\tpending-public-result\trevisions=1"
+        )
