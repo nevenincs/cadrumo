@@ -30,13 +30,21 @@ from cadrumo.domain.calculations.registry.withholding_bindings import Withholdin
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 
-def _entry(*, suffix: str, retencion: bool) -> WithholdingProjectionEntry:
+def _entry(
+    *,
+    suffix: str,
+    retencion: bool,
+    recognition_event_id: str | None = None,
+    settlement_event_id: str | None = None,
+    allocation_id: str | None = None,
+) -> WithholdingProjectionEntry:
     identity = WithholdingProjectionIdentity(
         source_kind="manual",
         source_object_id="source-1",
         source_revision_id="revision-1",
-        payment_event_id=f"payment-{suffix}",
-        allocation_id=f"allocation-{suffix}",
+        recognition_event_id=recognition_event_id or f"recognition-{suffix}",
+        settlement_event_id=settlement_event_id or f"payment-{suffix}",
+        allocation_id=allocation_id or f"allocation-{suffix}",
         projection_role=WithholdingProjectionRole.RETENCION if retencion else WithholdingProjectionRole.PERCEPCION,
     )
     if retencion:
@@ -128,6 +136,48 @@ def test_append_commits_both_projections_and_exact_replay_is_a_noop(tmp_path: Pa
             )
             == 1
         )
+
+
+def test_later_settlement_cannot_create_a_second_recognized_liability(tmp_path: Path) -> None:
+    """Settlement metadata is not part of the projection identity."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        service, _workflow = _service_for(profile.repository)
+        scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "3T"))
+        recognized = _entry(
+            suffix="due",
+            retencion=True,
+            recognition_event_id="exigibility-1",
+            allocation_id="allocation-1",
+        )
+        recognized = recognized.model_copy(
+            update={"identity": recognized.identity.model_copy(update={"settlement_event_id": None})}
+        )
+        settled = _entry(
+            suffix="settled",
+            retencion=True,
+            recognition_event_id="exigibility-1",
+            settlement_event_id="payment-in-later-year",
+            allocation_id="allocation-1",
+        )
+        service.apply(
+            WithholdingMutationEnvelope(
+                scope=scope,
+                mode=WithholdingMutationMode.APPEND,
+                idempotency_key="recognized-capital-1",
+                entries=(recognized,),
+            )
+        )
+
+        with pytest.raises(WithholdingObservationMutationError, match="projection_identity_conflict"):
+            service.apply(
+                WithholdingMutationEnvelope(
+                    scope=scope,
+                    mode=WithholdingMutationMode.APPEND,
+                    idempotency_key="settled-capital-1",
+                    entries=(settled,),
+                )
+            )
+        assert service.read_window(scope).entries == (recognized,)
 
 
 def test_stale_replace_refuses_without_partial_projection_change(tmp_path: Path) -> None:

@@ -79,14 +79,16 @@ class WithholdingProjectionIdentity(BaseModel):
     source_kind: str = Field(min_length=1, max_length=64)
     source_object_id: str = Field(min_length=1, max_length=128)
     source_revision_id: str = Field(min_length=1, max_length=128)
-    payment_event_id: str = Field(min_length=1, max_length=128)
+    recognition_event_id: str = Field(min_length=1, max_length=128)
+    settlement_event_id: str | None = Field(default=None, min_length=1, max_length=128)
     allocation_id: str = Field(min_length=1, max_length=128)
     projection_role: WithholdingProjectionRole
 
     @property
     def token(self) -> str:
-        """Return the opaque identity token used by projection storage."""
-        return sha256_hex(_canonical_json(self.model_dump(mode="json")).encode("utf-8"))
+        """Return the stable liability identity, independent of later settlement."""
+        identity = self.model_dump(mode="json", exclude={"settlement_event_id"})
+        return sha256_hex(_canonical_json(identity).encode("utf-8"))
 
 
 class WithholdingProjectionEntry(BaseModel):
@@ -102,12 +104,16 @@ class WithholdingProjectionEntry(BaseModel):
     def _has_exactly_one_projection(self) -> WithholdingProjectionEntry:
         if (self.retencion is None) == (self.percepcion is None):
             raise ValueError("one and only one withholding projection is required")
-        expected_role = (
-            WithholdingProjectionRole.RETENCION if self.retencion is not None else WithholdingProjectionRole.PERCEPCION
-        )
+        if self.retencion is not None:
+            expected_role = WithholdingProjectionRole.RETENCION
+            source_object_id = self.retencion.source_object_id
+        else:
+            if self.percepcion is None:
+                raise ValueError("one and only one withholding projection is required")
+            expected_role = WithholdingProjectionRole.PERCEPCION
+            source_object_id = self.percepcion.source_id
         if self.identity.projection_role is not expected_role:
             raise ValueError("projection role must match its payload")
-        source_object_id = self.retencion.source_object_id if self.retencion is not None else self.percepcion.source_id
         if source_object_id != self.identity.source_object_id:
             raise ValueError("projection source must match its composite identity")
         return self
