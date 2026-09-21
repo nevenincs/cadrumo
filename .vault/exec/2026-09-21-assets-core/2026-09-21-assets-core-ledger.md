@@ -43,4 +43,3 @@ related:
 - `S02` `M` `src/cadrumo/application/aggregation/tests/test_inventory_source.py`
 - `S02` `verify:` `uv run ruff check two P01.S02 test files` -> `pass`
 - `S02` `by:` `assets-stage1-regression`
-
