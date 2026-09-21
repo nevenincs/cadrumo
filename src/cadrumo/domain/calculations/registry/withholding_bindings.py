@@ -50,6 +50,40 @@ __all__ = [
 _WithholdingRowField = str
 WithholdingGrouping = Literal["per_perceptor", "per_perceptor_clave"]
 
+# These fields carry an economic amount for a repeated payment.  A Modelo 190
+# type-2 record is annual and keyed by the recipient/clave/subclave, so every
+# active payment in that record contributes its own amount.  The remaining
+# fields are identity, classification, or annual-detail facts: choosing one
+# observation's value for those would hide contradictory evidence.
+_WITHHOLDING_ADDITIVE_ROW_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "percibido_dinerario",
+        "percibido_especie",
+        "retencion_practicada",
+        "ingreso_a_cuenta",
+        "ingreso_a_cuenta_repercutido",
+        "reducciones_aplicables",
+        "gastos_deducibles",
+        "pension_compensatoria",
+        "anualidades_alimentos",
+        "incapacity_cash_perception",
+        "incapacity_cash_withholding",
+        "incapacity_kind_value",
+        "incapacity_kind_ingreso_a_cuenta",
+        "incapacity_kind_repercutido",
+        "foral_retention_estatal",
+        "foral_retention_navarra",
+        "foral_retention_araba",
+        "foral_retention_gipuzkoa",
+        "foral_retention_bizkaia",
+        "reducciones",
+        "base_retenciones",
+        "penalizaciones",
+        "compensaciones",
+        "garantias",
+    },
+)
+
 
 class _WithholdingFactKind(StrEnum):
     """Which fact a withholding selector reads from a resolved row set."""
@@ -740,50 +774,138 @@ def resolve_withholding_binding_values(
     return resolved
 
 
+def _withholding_row_cohorts(
+    revision: ModeloRevision,
+) -> dict[tuple[WithholdingGrouping, tuple[str, ...]], list[tuple[BindingDefinition, WithholdingProvider]]]:
+    """Collect row bindings that must share the same physical record indexes."""
+    cohorts: dict[
+        tuple[WithholdingGrouping, tuple[str, ...]],
+        list[tuple[BindingDefinition, WithholdingProvider]],
+    ] = {}
+    for binding in revision.bindings:
+        if binding.source != BindingSourceKind.WITHHOLDING:
+            continue
+        selector = _validated_withholding_selector(binding)
+        if selector.fact != "row_field":
+            continue
+        grouping = selector.grouping
+        if grouping is None:  # pragma: no cover - protected by selector validation
+            raise RegistryValidationError(f"binding {binding.id!r} row field is missing its grouping")
+        cohorts.setdefault((grouping, tuple(sorted(selector.claves))), []).append((binding, selector))
+    return cohorts
+
+
+def _withholding_row_group_key(
+    grouping: WithholdingGrouping,
+    observation: WithholdingObservation,
+) -> tuple[str, ...]:
+    """Return the registry-declared annual record identity for one observation."""
+    if grouping == "per_perceptor":
+        return (str(observation.perceptor_tax_id),)
+    if grouping == "per_perceptor_clave":
+        # Keep this exactly aligned with ``distinct_percepcion_keys``.  The
+        # Modelo 190 header counts its emitted type-2 records, so adding source
+        # or payment identity here would split a record the header does not
+        # count; omitting subclave would merge records the header does count.
+        return (
+            str(observation.perceptor_tax_id),
+            str(observation.clave),
+            observation.subclave,
+        )
+    raise RegistryValidationError(f"unsupported withholding row grouping {grouping!r}")
+
+
+def _group_withholding_observations(
+    grouping: WithholdingGrouping,
+    observations: Iterable[WithholdingObservation],
+) -> tuple[tuple[WithholdingObservation, ...], ...]:
+    """Group active observations into deterministic annual record cohorts."""
+    grouped: dict[tuple[str, ...], list[WithholdingObservation]] = {}
+    for observation in observations:
+        grouped.setdefault(_withholding_row_group_key(grouping, observation), []).append(observation)
+    return tuple(
+        tuple(
+            sorted(
+                grouped[key],
+                key=lambda observation: (
+                    observation.source_id,
+                    observation.source_allocation_id,
+                    observation.transaction_date.isoformat(),
+                ),
+            ),
+        )
+        for key in sorted(grouped)
+    )
+
+
+def _withholding_row_value_is_absent(value: object) -> bool:
+    """Whether a source fact supplies no annual row value."""
+    return value is None or (isinstance(value, str) and not value.strip())
+
+
+def _resolve_withholding_row_field(
+    observations: tuple[WithholdingObservation, ...],
+    *,
+    row_field: str,
+) -> Decimal | str | int | bool | None:
+    """Project one row field without silently choosing contradictory detail."""
+    values = tuple(getattr(observation, row_field) for observation in observations)
+    if row_field in _WITHHOLDING_ADDITIVE_ROW_FIELDS:
+        if not all(isinstance(value, Decimal) for value in values):
+            raise RegistryValidationError(f"withholding row amount field {row_field!r} is not monetary evidence")
+        return sum(values, Decimal("0"))
+
+    supplied = tuple(value for value in values if not _withholding_row_value_is_absent(value))
+    if not supplied:
+        return None
+    first = supplied[0]
+    if any(value != first for value in supplied[1:]):
+        raise RegistryValidationError(
+            f"withholding annual row has conflicting non-additive detail for {row_field!r}; "
+            "correct the source evidence before materialising the return",
+        )
+    if isinstance(first, str):
+        return str(first)
+    if isinstance(first, (Decimal, int, bool)):
+        return first
+    raise RegistryValidationError(f"withholding row field {row_field!r} has an unsupported value type")
+
+
 def resolve_withholding_binding_row_values(
     revision: ModeloRevision,
     observations: Iterable[WithholdingObservation],
 ) -> dict[tuple[BindingId, int], Decimal | str | int | bool]:
-    """Resolve row-producer withholding bindings into per-row indexed values.
+    """Resolve withholding row bindings through their declared annual grouping.
 
-    One row per observation, ordered by perceptor, clave, subclave and source so
-    the row index is stable across reads. An unset field (``None`` or blank
-    text) is left out of the row rather than filled, so a required value stays
-    visibly absent.
+    A Modelo 190 type-2 record represents the annual ``(recipient, clave,
+    subclave)`` identity, rather than a payment.  Each active payment therefore
+    contributes its monetary amounts to that one record while identity and
+    annual-detail facts must agree.  This uses the exact key of
+    :func:`distinct_percepcion_keys`, keeping the header count and emitted
+    record count in lockstep.
 
-    Args:
-        revision: The :class:`ModeloRevision` declaring the row-producer
-            withholding bindings to resolve.
-        observations: The withholding observations one row is built from.
+    Unset facts remain absent.  Conflicting non-additive facts refuse before an
+    export can choose a first or last observation arbitrarily.
     """
-    row_bindings = [
-        (binding, selector)
-        for binding in revision.bindings
-        if binding.source == BindingSourceKind.WITHHOLDING
-        and (selector := _validated_withholding_selector(binding)).fact == "row_field"
-    ]
-    if not row_bindings:
-        return {}
-    rows = sorted(
-        observations,
-        key=lambda obs: (obs.perceptor_tax_id, str(obs.clave), obs.subclave, obs.source_id),
-    )
+    available = tuple(observations)
     resolved: dict[tuple[BindingId, int], Decimal | str | int | bool] = {}
-    for binding, selector in row_bindings:
-        row_field = str(selector.row_field)
-        if row_field not in WithholdingObservation.model_fields:
-            raise RegistryValidationError(
-                f"binding {binding.id!r} row_field {row_field!r} not produced for withholding rows",
-            )
-        for row_index, observation in enumerate(rows, start=1):
-            value = getattr(observation, row_field)
-            if value is None:
-                continue
-            if isinstance(value, str):
-                if not value.strip():
+    for (grouping, _claves), members in _withholding_row_cohorts(revision).items():
+        _sample_binding, sample_selector = members[0]
+        scoped = tuple(_filter_withholding_observations(available, sample_selector))
+        rows = _group_withholding_observations(grouping, scoped)
+        for binding, selector in members:
+            row_field = selector.row_field
+            if row_field is None:  # pragma: no cover - protected by selector validation
+                raise RegistryValidationError(f"binding {binding.id!r} row field is missing its source field")
+            if row_field not in WithholdingObservation.model_fields:
+                raise RegistryValidationError(
+                    f"binding {binding.id!r} row_field {row_field!r} not produced for withholding rows",
+                )
+            for row_index, row_observations in enumerate(rows, start=1):
+                value = _resolve_withholding_row_field(row_observations, row_field=row_field)
+                if value is None or _withholding_row_value_is_absent(value):
                     continue
-                value = str(value)
-            resolved[(binding.id, row_index)] = value
+                resolved[(binding.id, row_index)] = value
     return resolved
 
 
