@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Literal
 
 import pytest
+
 from dev.acceptance.assets.installed_journey import (
     InstalledTuiProcessError,
     required_installed_tui_stages,

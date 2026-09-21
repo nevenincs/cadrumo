@@ -8,6 +8,7 @@ import sys
 from pathlib import Path
 
 import pytest
+
 from dev.acceptance.assets.installed_profile_setup import _run_command
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]

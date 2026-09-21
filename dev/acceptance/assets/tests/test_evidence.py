@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+
 from dev.acceptance.assets.evidence import (
     ASSET_ACCEPTANCE_EVIDENCE,
     AcceptanceStatus,

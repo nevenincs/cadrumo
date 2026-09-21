@@ -5,6 +5,7 @@ from __future__ import annotations
 from decimal import Decimal
 
 import pytest
+
 from dev.acceptance.assets.export_journey import _asset_overlay_oracle
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
