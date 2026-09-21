@@ -24,6 +24,8 @@ from __future__ import annotations
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.hashing import sha256_hex
+from ...core.modelo import Modelo
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.withholding_bindings import (
@@ -59,12 +61,26 @@ def _provenance(observations: tuple[WithholdingObservation, ...]) -> tuple[Calcu
             contributor_source_kind=_WITHHOLDING_SOURCE,
             contributor_binding_source=BindingSourceKind.WITHHOLDING,
             lineage_role=CalculationSourceLineageRole.PRIMARY,
-            source_ref=f"percepcion:{observation.perceptor_tax_id}:{observation.clave}:{observation.subclave or '-'}",
+            source_ref=f"percepcion:{_provenance_token(observation)}",
             parent_source_ref=None,
             terminal_origin=TerminalOriginClass.PERCEPTOR_OBSERVATION,
         )
         for observation in observations
     )
+
+
+def _provenance_token(observation: WithholdingObservation) -> str:
+    """Return a stable opaque per-allocation provenance reference."""
+    value = ":".join(
+        (
+            observation.perceptor_tax_id,
+            observation.clave,
+            observation.subclave or "-",
+            observation.source_id,
+            observation.source_allocation_id or observation.transaction_date.isoformat(),
+        )
+    )
+    return sha256_hex(value.encode("utf-8"))
 
 
 class WithholdingSourceResolver:
@@ -91,7 +107,11 @@ class WithholdingSourceResolver:
             return CalculationSourceResolution(resolver_id=self.resolver_id, owned_sources=self.owned_sources)
         repository = self._ports.repository
         try:
-            observations = repository.load_observations(str(context.modelo), context.period)
+            observations = (
+                repository.load_annual_source_observations(Modelo("111").value, context.filing_year)
+                if str(context.modelo) == Modelo("190").value
+                else repository.load_observations(str(context.modelo), context.period)
+            )
         except PercepcionObservationPersistenceError as exc:
             return storage_degradation_resolution(
                 resolver_id=self.resolver_id,

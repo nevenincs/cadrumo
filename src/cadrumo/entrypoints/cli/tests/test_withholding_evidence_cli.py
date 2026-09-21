@@ -17,6 +17,8 @@ from ....application.aggregation.withholding_recognition import (
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
 )
+from ....core.aggregation import RetencionClave
+from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
@@ -74,7 +76,32 @@ def _request(invoice: Invoice) -> InvoiceWithholdingEvidenceRequest:
             "allocated_withholding": Decimal("95.00"),
             "allocated_settlement": Decimal("510.00"),
             "idempotency_key": "cli-payment-q2",
+            "modelo_190_detail": _annual_detail(invoice),
         }
+    )
+
+
+def _annual_detail(invoice: Invoice) -> WithholdingObservation:
+    return WithholdingObservation(
+        source_id=invoice.invoice_id,
+        perceptor_tax_id=invoice.counterparty_tax_id or "",
+        perceptor_legal_name=invoice.counterparty_name,
+        transaction_date=date(2025, 4, 2),
+        clave=RetencionClave.from_registry("G"),
+        percibido_dinerario=Decimal("500.00"),
+        retencion_practicada=Decimal("95.00"),
+        incapacity_cash_perception=Decimal("0"),
+        incapacity_cash_withholding=Decimal("0"),
+        incapacity_kind_value=Decimal("0"),
+        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
+        incapacity_kind_repercutido=Decimal("0"),
+        foral_retention_estatal=Decimal("0"),
+        foral_retention_navarra=Decimal("0"),
+        foral_retention_araba=Decimal("0"),
+        foral_retention_gipuzkoa=Decimal("0"),
+        foral_retention_bizkaia=Decimal("0"),
+        base_retenciones=Decimal("500.00"),
+        porcentaje_retencion=Decimal("19"),
     )
 
 
@@ -113,6 +140,7 @@ def test_modelo_aggregate_module_no_longer_exposes_direct_retencion_persistence(
     from .. import _modelo_aggregate_cli
 
     assert not hasattr(_modelo_aggregate_cli, "_persist_retencion_observations")
+    assert not hasattr(_modelo_aggregate_cli, "_persist_cli_owned_observations")
 
 
 def test_rent_cli_evidence_refuses_missing_property_detail() -> None:
@@ -126,6 +154,20 @@ def test_rent_cli_evidence_refuses_missing_property_detail() -> None:
     )
 
     with pytest.raises(ValidationError, match="urban rent requires Modelo 180 property detail"):
+        build_invoice_withholding_capture(
+            invoice,
+            catalogue_revision_id="a" * 64,
+            request=request,
+            applicable_year=2025,
+        )
+
+
+def test_professional_cli_evidence_refuses_missing_modelo_190_detail() -> None:
+    """Public 111 evidence cannot leave a totals-only annual Modelo 190 row."""
+    invoice = _invoice()
+    request = _request(invoice).model_copy(update={"modelo_190_detail": None})
+
+    with pytest.raises(ValidationError, match="Modelo 190 annual detail"):
         build_invoice_withholding_capture(
             invoice,
             catalogue_revision_id="a" * 64,

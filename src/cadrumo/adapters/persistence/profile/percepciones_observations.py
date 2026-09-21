@@ -191,6 +191,22 @@ class PercepcionObservationRepositoryAdapter(
             and payload.period.registry_token == period.registry_token
         )
 
+    @override
+    def load_annual_source_observations(
+        self,
+        source_modelo: str,
+        filing_year: int,
+    ) -> tuple[WithholdingObservation, ...]:
+        """Read each active quarterly row for an annual withholding return."""
+        return _translate_storage_failure(
+            "percepcion_load_annual_source_observations",
+            lambda: tuple(
+                payload.observation
+                for payload in self.iter_modelo(source_modelo)
+                if payload.filing_year == filing_year and payload.period.registry_token.endswith("T")
+            ),
+        )
+
     def iter_modelo(self, modelo: str) -> Iterator[_PercepcionObservationEnvelopePayload]:
         """Yield encrypted per-perceptor-clave payloads for one modelo."""
         safe_repository_id(modelo, context="modelo")

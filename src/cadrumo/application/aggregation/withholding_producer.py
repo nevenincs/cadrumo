@@ -17,6 +17,7 @@ from ...core.aggregation import BindingSourceKind, RetencionScheme, counterpart_
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .retenciones import Modelo180PropertyEvidence, RetencionObservation
 from .withholding_observation_service import (
     EconomicAllocation,
@@ -76,6 +77,7 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
     reason: str | None = Field(default=None, min_length=1, max_length=500)
     supersedes_generation_id: str | None = Field(default=None, min_length=64, max_length=64)
     modelo_180_property: Modelo180PropertyEvidence | None = None
+    modelo_190_detail: WithholdingObservation | None = None
 
     @model_validator(mode="after")
     def _annual_detail_matches_income_kind(self) -> WithholdingEvidenceCaptureCommand:
@@ -86,6 +88,14 @@ class WithholdingEvidenceCaptureCommand(BaseModel):
             self.modelo_180_property.accrual_year != self.recognition_evidence.applicable_year
         ):
             raise ValueError("Modelo 180 accrual year must match the recognition year")
+        requires_modelo_190_detail = self.recognition_evidence.income_kind in {
+            WithholdingIncomeKind.WORK,
+            WithholdingIncomeKind.PROFESSIONAL,
+        }
+        if requires_modelo_190_detail != (self.modelo_190_detail is not None):
+            raise ValueError(
+                "work and professional income require Modelo 190 annual detail and other income forbids it"
+            )
         return self
 
 
@@ -122,7 +132,7 @@ class WithholdingProducer:
             modelo=modelo,
             period=_quarter_for(recognition.recognized_on),
         )
-        entry = WithholdingProjectionEntry(
+        retencion_entry = WithholdingProjectionEntry(
             identity=WithholdingProjectionIdentity(
                 source_kind=command.source_kind.value,
                 source_object_id=command.source_object_id,
@@ -152,7 +162,32 @@ class WithholdingProducer:
                 modelo_180_property=command.modelo_180_property,
             ),
         )
-        entries = () if command.mode is WithholdingMutationMode.CLEAR else (entry,)
+        entries: tuple[WithholdingProjectionEntry, ...]
+        if command.mode is WithholdingMutationMode.CLEAR:
+            entries = ()
+        elif command.modelo_190_detail is None:
+            entries = (retencion_entry,)
+        else:
+            entries = (
+                retencion_entry,
+                WithholdingProjectionEntry(
+                    identity=WithholdingProjectionIdentity(
+                        source_kind=command.source_kind.value,
+                        source_object_id=command.source_object_id,
+                        source_revision_id=command.source_revision_id,
+                        recognition_event_id=recognition.recognition_event_id,
+                        settlement_event_id=recognition.settlement_event_id,
+                        allocation_id=command.allocation_id,
+                        projection_role=WithholdingProjectionRole.PERCEPCION,
+                    ),
+                    allocation=retencion_entry.allocation,
+                    percepcion=_annual_percepcion(
+                        detail=command.modelo_190_detail,
+                        command=command,
+                        recognition=recognition,
+                    ),
+                ),
+            )
         mutation = self._service.apply(
             WithholdingMutationEnvelope(
                 scope=scope,
@@ -204,6 +239,37 @@ def _quarter_for(recognized_on: date) -> Period:
     year = recognized_on.year
     quarter = ((recognized_on.month - 1) // 3) + 1
     return Period.from_year_and_code(year, f"{quarter}T")
+
+
+def _annual_percepcion(
+    *,
+    detail: WithholdingObservation,
+    command: WithholdingEvidenceCaptureCommand,
+    recognition: WithholdingRecognition,
+) -> WithholdingObservation:
+    """Validate annual detail against its source evidence without inventing it.
+
+    The annual row is deliberately supplied through the existing typed Modelo
+    190 contract.  Its identity, recognition date, recipient and quarterly
+    economic amounts are the shared producer's derived facts; any conflicting
+    caller declaration is refused rather than becoming a second authority.
+    All other annual fields remain explicitly supplied by the caller's typed
+    annual-detail record and retain that record's own absence semantics.
+    """
+    expected = {
+        "source_id": command.source_object_id,
+        "perceptor_tax_id": command.perceptor_nif,
+        "perceptor_legal_name": command.perceptor_name,
+        "transaction_date": recognition.recognized_on,
+        "percibido_dinerario": command.taxable_base,
+        "retencion_practicada": command.retencion_amount,
+    }
+    for field, value in expected.items():
+        if getattr(detail, field) != value:
+            raise WithholdingProducerError(f"modelo_190_detail_{field}_mismatch")
+    if detail.source_allocation_id and detail.source_allocation_id != command.allocation_id:
+        raise WithholdingProducerError("modelo_190_detail_source_allocation_id_mismatch")
+    return detail.model_copy(update={"source_allocation_id": command.allocation_id})
 
 
 __all__ = [

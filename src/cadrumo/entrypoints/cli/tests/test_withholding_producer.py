@@ -1,30 +1,11 @@
-"""Producer wire-up: the M190 aggregate path persists withholding observations (#28 P03).
-
-The CLI ``aggregate`` path parses ``--withholding-observation`` JSON into typed
-:class:`WithholdingObservation` rows, and for Modelo 190 persists them to the
-dedicated encrypted store the percepciones-count resolver later reads — so the
-pull and calculate surfaces read ONE source
-(``aeat-calculation-aggregation``). Mirrors the RET-1
-``--retencion-observation`` producer.
-"""
+"""Retired raw Modelo 190 transport stays outside the public capture path."""
 
 from __future__ import annotations
-
-from pathlib import Path
 
 import pytest
 import typer
 from pydantic import ValidationError
 
-from ....adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.aggregation.percepciones_observations_repository import (
-    PercepcionObservationPorts,
-    persist_percepcion_observations,
-)
-from ....application.aggregation.service import PerModeloAggregationCommand
-from ....core.modelo import Modelo
-from ....core.period import Period
 from ....domain.calculations.registry.withholding_bindings import (
     WithholdingObservation,
 )
@@ -68,31 +49,3 @@ def test_parse_withholding_observation_without_clave_is_refused() -> None:
         _parse_typed_cli_observations([raw], model=WithholdingObservation, flag="--withholding-observation")
 
     assert isinstance(exc_info.value.__cause__, ValidationError)
-
-
-def test_command_carries_withholding_observations() -> None:
-    """PerModeloAggregationCommand carries the parsed withholding observations."""
-    parsed = _parse_typed_cli_observations([_RAW], model=WithholdingObservation, flag="--withholding-observation")
-    command = PerModeloAggregationCommand(
-        modelo=Modelo("190").value,
-        period=Period.from_year_and_code(2024, "0A"),
-        withholding_observations=parsed,
-    )
-    assert command.withholding_observations == parsed
-
-
-def test_persisted_withholding_set_is_readable_by_the_store(tmp_path: Path) -> None:
-    """The producer's persist writes the SAME set the resolver's store later reads (one source)."""
-    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
-        parsed = _parse_typed_cli_observations([_RAW], model=WithholdingObservation, flag="--withholding-observation")
-        period = Period.from_year_and_code(2024, "0A")
-        repository = PercepcionObservationRepositoryAdapter(objects=profile.repository)
-        persist_percepcion_observations(
-            ports=PercepcionObservationPorts(repository=repository),
-            modelo=Modelo("190").value,
-            filing_year=2024,
-            period=period,
-            observations=parsed,
-        )
-        loaded = repository.load_observations(Modelo("190").value, period)
-        assert set(loaded) == set(parsed)

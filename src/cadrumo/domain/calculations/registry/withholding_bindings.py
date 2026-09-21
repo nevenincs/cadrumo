@@ -177,6 +177,13 @@ class WithholdingObservation(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     source_id: str = Field(min_length=1, max_length=128)
+    source_allocation_id: str = Field(default="", max_length=128)
+    """Stable allocation provenance when one source produces several annual rows.
+
+    The annual type-2 grouping remains per recipient/clave/subclave; this
+    identity is deliberately separate so multiple payments from the same source
+    remain traceable without becoming duplicate type-2 records.
+    """
     perceptor_tax_id: TaxIdIdentityToken = Field(min_length=1, max_length=64)
     perceptor_legal_name: str = Field(default="", max_length=200)
     country_code: CountryCodeAlpha2 | None = None

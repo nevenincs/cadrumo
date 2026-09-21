@@ -122,6 +122,14 @@ class PercepcionObservationRepository(Protocol):
         """Return observations for one modelo and filing period."""
         ...
 
+    def load_annual_source_observations(
+        self,
+        source_modelo: str,
+        filing_year: int,
+    ) -> tuple[WithholdingObservation, ...]:
+        """Return all active periodic projections feeding one annual family."""
+        ...
+
 
 @dataclass(frozen=True, slots=True)
 class PercepcionObservationPorts:

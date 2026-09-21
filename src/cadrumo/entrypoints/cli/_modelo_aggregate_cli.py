@@ -14,10 +14,6 @@ from ...application.aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceRequest,
     build_invoice_withholding_capture,
 )
-from ...application.aggregation.percepciones_observations_repository import (
-    PercepcionObservationPorts,
-    persist_percepcion_observations,
-)
 from ...application.aggregation.retenciones import RetencionObservation
 from ...application.aggregation.service import (
     PerModeloAggregationCommand,
@@ -38,7 +34,6 @@ from ._modelo_payloads import ModeloAggregateResult
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .state_projection_support import (
     authority_operation,
-    percepcion_observation_ports_factory,
     retencion_observation_ports_factory,
     withholding_observation_service,
 )
@@ -106,22 +101,6 @@ def _capture_invoice_withholding_into_command(
     return command.model_copy(
         update={"retencion_observations": ports.repository.load_observations(command.modelo, command.period)}
     )
-
-
-def _persist_cli_owned_observations(
-    command: PerModeloAggregationCommand,
-    *,
-    ports: PercepcionObservationPorts,
-) -> None:
-    """Write the observation sets this entrypoint owns before the pure aggregation runs."""
-    if command.modelo == Modelo("190").value:
-        persist_percepcion_observations(
-            ports=ports,
-            modelo=command.modelo,
-            filing_year=command.period.filing_year,
-            period=command.period,
-            observations=command.withholding_observations,
-        )
 
 
 def _clave_breakdown(command: PerModeloAggregationCommand) -> tuple[WithholdingClaveBreakdown, ...]:
@@ -198,6 +177,11 @@ def aggregate_modelo(
     """Delegate per-modelo aggregation execution to the backend service."""
     operation = authority_operation(ctx)
     with validating_governed_facts(operation):
+        if modelo == Modelo("190").value and withholding_observation:
+            raise typer.BadParameter(
+                "--withholding-observation is not accepted for Modelo 190; "
+                "capture annual detail with invoice evidence on Modelo 111"
+            )
         command = PerModeloAggregationCommand(
             modelo=modelo,
             period=resolve_year_period(year, period, modelo=modelo),
@@ -223,17 +207,11 @@ def aggregate_modelo(
             model=InvoiceWithholdingEvidenceRequest,
             flag="--received-invoice-retencion",
         )
-    command = _capture_invoice_withholding_into_command(
-        ctx,
-        command,
-        invoice_withholding_requests,
-        has_caller_authored_retenciones=bool(retencion_observation),
-    )
-    if command.modelo == Modelo("190").value:
-        bucket_id = active_bucket_id_or_refuse()
-        _persist_cli_owned_observations(
+        command = _capture_invoice_withholding_into_command(
+            ctx,
             command,
-            ports=percepcion_observation_ports_factory(ctx)(bucket_id=bucket_id),
+            invoice_withholding_requests,
+            has_caller_authored_retenciones=bool(retencion_observation),
         )
     result = aggregate_per_modelo(command, operation=operation)
     clave_breakdown = _clave_breakdown(command)

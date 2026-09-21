@@ -1,7 +1,7 @@
 """End-to-end: M190 "número total de percepciones" resolves via the live withholding source (#28 P05).
 
-Drives the REAL chain (no mocks): persist per-perceptor-clave WithholdingObservation
-rows into the encrypted store → the enrolled WithholdingSourceResolver materialises
+Drives the REAL chain (no mocks): persist active quarterly Modelo 111
+per-perceptor-clave WithholdingObservation rows into the encrypted store → the enrolled WithholdingSourceResolver materialises
 the DISTINCT (perceptor, clave, subclave) count → the registry engine binds it onto
 ``decl.total-percepciones`` (now ``input_kind = "bound"`` after the P04 re-point,
 replacing the nine op=sum quarterly relations). Proves percepciones > perceptores:
@@ -62,14 +62,15 @@ def _obs(nif: str, clave: RetencionClave) -> WithholdingObservation:
 def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(tmp_path: Path) -> None:
     """3 percepciones (one perceptor under 2 claves + a second) -> decl.total-percepciones == 3."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        period = Period.from_year_and_code(2024, "0A")
+        annual_period = Period.from_year_and_code(2024, "0A")
+        source_period = Period.from_year_and_code(2024, "2T")
         repository = PercepcionObservationRepositoryAdapter(objects=profile.repository)
         ports = PercepcionObservationPorts(repository=repository)
         persist_percepcion_observations(
             ports=ports,
-            modelo="190",
+            modelo="111",
             filing_year=2024,
-            period=period,
+            period=source_period,
             observations=[
                 _obs("11111111H", RetencionClave.from_registry("A")),
                 _obs("11111111H", RetencionClave.from_registry("G")),
@@ -82,7 +83,7 @@ def test_m190_percepciones_count_resolves_distinct_from_store_to_bound_casilla(t
                 bucket_id=_BUCKET_ID,
                 modelo="190",
                 filing_year=2024,
-                period=period,
+                period=annual_period,
                 revision=snapshot.revision,
             ),
         )

@@ -73,6 +73,18 @@ class _InMemoryPercepcionObservationRepository:
     def load_observations(self, modelo: str, period: Period) -> tuple[WithholdingObservation, ...]:
         return self._windows.get((modelo, period.filing_year, period.registry_token), ())
 
+    def load_annual_source_observations(
+        self,
+        source_modelo: str,
+        filing_year: int,
+    ) -> tuple[WithholdingObservation, ...]:
+        return tuple(
+            observation
+            for (modelo, year, period), observations in self._windows.items()
+            if modelo == source_modelo and year == filing_year and period.endswith("T")
+            for observation in observations
+        )
+
 
 def _revision_with(*bindings: BindingDefinition) -> ModeloRevision:
     return ModeloRevision(
@@ -143,10 +155,10 @@ def _obs(nif: str, clave: RetencionClave) -> WithholdingObservation:
 def test_resolver_materialises_distinct_percepcion_count() -> None:
     """One perceptor under two claves -> percepciones count of 2 from the store."""
     binding = _percepcion_binding()
-    period = Period.from_year_and_code(2024, "0A")
+    period = Period.from_year_and_code(2024, "1T")
     repository = _InMemoryPercepcionObservationRepository()
     repository.replace_observations(
-        modelo="190",
+        modelo="111",
         filing_year=2024,
         period=period,
         observations=[
@@ -162,6 +174,38 @@ def test_resolver_materialises_distinct_percepcion_count() -> None:
 
     assert resolution.binding_values == {binding.id: Decimal(3)}
     assert resolution.diagnostics == ()
+
+
+def test_m190_resolver_folds_active_quarterly_m111_detail() -> None:
+    """Annual Modelo 190 reads its own detail from the active 111 projections."""
+    binding = _percepcion_binding()
+    repository = _InMemoryPercepcionObservationRepository()
+    repository.replace_observations(
+        modelo="111",
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "1T"),
+        observations=[_obs("11111111H", RetencionClave.from_registry("A"))],
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
+    repository.replace_observations(
+        modelo="111",
+        filing_year=2024,
+        period=Period.from_year_and_code(2024, "2T"),
+        observations=[
+            _obs("11111111H", RetencionClave.from_registry("A")).model_copy(
+                update={"transaction_date": date(2024, 4, 2)}
+            ),
+            _obs("22222222J", RetencionClave.from_registry("G")),
+        ],
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
+
+    resolution = WithholdingSourceResolver(ports=PercepcionObservationPorts(repository=repository)).resolve(
+        _context(_revision_with(binding))
+    )
+
+    assert resolution.binding_values == {binding.id: Decimal(2)}
+    assert len(resolution.provenance) == 3
 
 
 def test_resolver_materialises_zero_with_advisory_on_empty_store() -> None:
