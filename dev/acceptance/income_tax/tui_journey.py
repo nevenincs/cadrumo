@@ -331,6 +331,26 @@ async def activate_tui_operation(
         maximum_polls=maximum_polls,
     )
     if modal is None:
+        from cadrumo.core.i18n.render import tr
+
+        notice = _rendered_text(_query_visible_tui_control(pilot, binding.refusal_notice_id or ""))
+        terminal_notices = {
+            tr("operation.modal.terminal.succeeded"): ("succeeded", AcceptanceOutcome.PROVEN),
+            tr("operation.modal.terminal.succeeded_partial"): ("succeeded_partial", AcceptanceOutcome.FAILED),
+            tr("operation.modal.terminal.refused"): ("refused", AcceptanceOutcome.BLOCKED),
+            tr("operation.modal.terminal.failed"): ("failed", AcceptanceOutcome.FAILED),
+            tr("operation.modal.terminal.cancelled"): ("cancelled", AcceptanceOutcome.FAILED),
+        }
+        settled = terminal_notices.get(notice)
+        if settled is not None:
+            condition, outcome = settled
+            return TuiTerminalEvidence(
+                operation_id=binding.operation_id,
+                terminal_condition=condition,
+                outcome=outcome,
+                receipt_present=False,
+                diagnostic_present=False,
+            )
         return TuiTerminalEvidence(
             operation_id=binding.operation_id,
             terminal_condition="refused",
@@ -715,6 +735,22 @@ async def _observe_operation_terminal(
             receipt = _rendered_text(modal.query_one("#operation-modal-receipt"))
             diagnostic = _rendered_text(modal.query_one("#operation-modal-diagnostic"))
         except NoMatches:
+            refusal_notice_id = binding.refusal_notice_id
+            if refusal_notice_id is not None:
+                try:
+                    settled_notice = _rendered_text(_query_visible_tui_control(pilot, refusal_notice_id))
+                except NoMatches:
+                    settled_notice = ""
+                terminal = expected.get(settled_notice)
+                if terminal is not None:
+                    condition, outcome = terminal
+                    return TuiTerminalEvidence(
+                        operation_id=binding.operation_id,
+                        terminal_condition=condition,
+                        outcome=outcome,
+                        receipt_present=False,
+                        diagnostic_present=False,
+                    )
             await pilot.pause()
             continue
         terminal = expected.get(status)
@@ -759,13 +795,16 @@ async def _observe_operation_terminal(
                 await pilot.press("enter")
                 review_applied = True
         await pilot.pause()
-    apply = modal.query_one("#btn-operation-apply")
-    phase = _rendered_text(modal.query_one("#operation-modal-phase"))
-    raise TuiJourneyError(
-        f"{binding.operation_id} did not expose a terminal operation status "
-        f"(status={status!r}, phase={phase!r}, apply_disabled={getattr(apply, 'disabled', None)!r}, "
-        f"apply_attempted={review_applied!r})"
-    )
+    try:
+        apply = modal.query_one("#btn-operation-apply")
+        phase = _rendered_text(modal.query_one("#operation-modal-phase"))
+        detail = (
+            f"status={status!r}, phase={phase!r}, apply_disabled={getattr(apply, 'disabled', None)!r}, "
+            f"apply_attempted={review_applied!r}"
+        )
+    except NoMatches:
+        detail = f"modal_unmounted=True, apply_attempted={review_applied!r}"
+    raise TuiJourneyError(f"{binding.operation_id} did not expose a terminal operation status ({detail})")
 
 
 def _rendered_text(widget: object) -> str:
