@@ -53,6 +53,14 @@ _NOT_AGGREGATED: Final[frozenset[str]] = frozenset(
         "check-registry-oracles",
         "check-registry-runtime-load",
         "check-registry-target-current",
+        # The registry family's CI aggregate, and the one the list above
+        # missed while naming all six of its siblings. It is NOT unverified:
+        # merge-gate.yml runs it as its own step. It is unaggregated, which is
+        # correct -- `check-code` is the LOCAL portable static-check aggregate,
+        # and putting a registry conformance sweep into every local run to
+        # duplicate what the required gate already does would buy no new
+        # failure mode for the time it costs.
+        "check-registry-gate",
         "check-identity",
         "check-locales",
         "check-docs-api",

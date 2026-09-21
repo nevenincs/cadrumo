@@ -47,7 +47,6 @@ TOOLING_TREES: Final[tuple[str, ...]] = (
     "dev/ci",
     "dev/deploy",
     "dev/release",
-    "dev/containers",
 )
 
 #: Control bytes a source file may legitimately carry: tab, newline, carriage return.

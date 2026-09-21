@@ -24,7 +24,8 @@ loudly.
 Placement: ``perf`` + ``integration`` + ``serial`` (the taxonomy hook demands
 an execution marker; ``serial`` keeps it out of every ``integration and not
 serial`` selector, and the serial passes that WOULD collect it carry
-``not perf``), enrolled explicitly in the dispatch-only ci-full lane
+``not perf``), enrolled explicitly in a selection only a dispatch-triggered
+release run reaches
 (test_perf_gate_policy.py pins the placement).
 """
 

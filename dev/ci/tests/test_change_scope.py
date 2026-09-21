@@ -184,7 +184,15 @@ def test_broad_change_class_is_too_broad(tmp_path: Path, path: str) -> None:
     assert scope.targets == CONTRACT_TARGETS
 
 
-@pytest.mark.parametrize("path", [".github/workflows/ci.yml", "dev/ci/change_scope.py", "dev/registry/bindings.py"])
+# The workflow path is a LIVE one on purpose. The rule it exercises is the
+# glob `.github/**` (change_scope.py:140), so the classification does not read
+# the file and the case passed just as well while naming `ci.yml`, deleted in
+# the workflow consolidation. That is not vacuous -- the rule really is
+# exercised -- but an example naming a file nobody can open invites the next
+# reader to conclude the subject is gone, which is what happened here.
+@pytest.mark.parametrize(
+    "path", [".github/workflows/merge-gate.yml", "dev/ci/change_scope.py", "dev/registry/bindings.py"]
+)
 def test_ci_and_dev_changes_flag_contracts_without_src_targets(tmp_path: Path, path: str) -> None:
     scope = compute_change_scope([path], root=tmp_path)
 

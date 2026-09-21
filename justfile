@@ -286,11 +286,17 @@ check-docs-synonyms:
 check-registry:
     @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-registry --signal registry-health -- uv run --no-sync python -m dev.registry.analysis.registry_status --check --json
 
+# `--strict` is not decoration: without it the screen returns 0 whatever it
+# finds, so the recipe passed unless the tool itself crashed. The flag is
+# reachable -- nine call sites raise an actionable error finding, and the
+# gate at bindings.py:1157 fails on any of them. Measured before adding it:
+# the live corpus reports 0 errors and 18 warnings, so this changes no
+# verdict today and changes the one that matters on the day an error lands.
 [doc('Measure binding declarations, consumers, provider enrollment, temporal coherence, and advisory resolution routes.')]
 [group('check')]
 [no-exit-message]
 check-bindings:
-    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-bindings --signal binding-signal -- uv run --no-sync python -m dev.registry.bindings
+    @uv run --no-sync python -m dev.test_runs.command --family test-runs --label check-bindings --signal binding-signal -- uv run --no-sync python -m dev.registry.bindings --strict
 
 [doc('Prove one named generated registry target is current without publishing it.')]
 [group('check')]
@@ -571,61 +577,6 @@ test-packaging-artifacts: test-installed-oracles test-packaging-serial test-pyth
 
 # ── Devcontainer ─────────────────────────────────────────────────────────────
 
-# Build the reproducible dev image (.devcontainer/devcontainer.json + Dockerfile).
-# `--target dev` matches devcontainer.json's `build.target`, so the recipe and
-# the editor build the same stage of the one shared Dockerfile.
-[doc('Build the reproducible dev image (.devcontainer/devcontainer.json + Dockerfile, `dev` stage).')]
-[group('build')]
-build-devcontainer:
-    docker build --target dev -t cadrumo-devcontainer -f Dockerfile .
-
-# Verify the dev image installs cleanly and its pre-baked toolchain works.
-# The checks live in `dev/containers/devcontainer_smoke.py`, not inline here:
-# `just` runs plain recipes through PowerShell on Windows, which parses `<` as
-# a reserved operator, so an inline probe containing HTML failed at PARSE time
-# before docker was invoked — reporting a recipe error that said nothing about
-# the image. `bash -lc` is deliberate: it reproduces the LOGIN shell the VS Code
-# integrated terminal uses, which is where the venv once fell off PATH.
-[doc('Verify the dev image installs cleanly and its pre-baked toolchain (imports, unit collection, just, headless Chromium launch) works.')]
-[group('test')]
-test-devcontainer: build-devcontainer
-    docker run --rm cadrumo-devcontainer bash -lc "python dev/containers/devcontainer_smoke.py"
-    @uv run --no-sync pytest -v -n0 -m unit --ignore=dev/containers/tests/test_runner_capabilities.py dev/containers/tests
-
-# ── Self-hosted runner image ─────────────────────────────────────────────────
-
-# Build the Linux self-hosted runner image (`runner` stage of the same
-# Dockerfile). Declarative replacement for the hand-provisioned stock
-# container described in dev/runners/README.md.
-[doc('Build the self-hosted Linux runner image (`runner` stage of the shared Dockerfile).')]
-[group('build')]
-build-runner-image:
-    docker build --target runner -t cadrumo-runner-linux -f Dockerfile .
-
-[doc('Build the explicit infrastructure images: devcontainer and runner image.')]
-[group('build')]
-build-infrastructure: build-devcontainer build-runner-image
-
-# Verify the runner image carries every capability the fleet assumes present.
-# Each check below maps to a documented outage: `gh` absent broke a release
-# mid-cohort-seal, `brew` absent broke the acquisition lane's first step, and a
-# `brew` reached through a symlinked prefix breaks `brew link` only at the very
-# end of an install.
-[doc('Verify the runner image carries gh, just, a canonical-prefix brew, and a runnable entrypoint.')]
-[group('test')]
-test-runner-image: build-runner-image
-    # SINGLE-quoted payload: a double-quoted one lets the HOST shell expand
-    # `$(command -v brew)` before docker ever runs, so the canonical-prefix
-    # check silently compared two empty strings on the host instead of
-    # resolving brew in the container.
-    docker run --rm --entrypoint bash cadrumo-runner-linux -c 'set -e; gh --version | head -1; just --version; brew --version | head -1; resolved=$(readlink -f "$(command -v brew)"); case "$resolved" in /home/linuxbrew/.linuxbrew/*) echo "brew canonical prefix OK (no symlink indirection): $resolved" ;; *) echo "FAIL: brew resolves outside the canonical prefix: $resolved" >&2; exit 1 ;; esac; case "$(brew --cache)" in /home/runner/*) echo "FAIL: HOMEBREW_CACHE is inside the volume-shadowed /home/runner" >&2; exit 1 ;; *) echo "brew cache outside the volume: $(brew --cache)" ;; esac; test -d /home/linuxbrew/.linuxbrew/Homebrew/Library/Homebrew/vendor/portable-ruby && echo "portable-ruby pre-warmed (first job does not download it)"; test -x /usr/local/bin/cadrumo-runner-entry.sh && echo "entrypoint present outside the volume-shadowed /home/runner"; test -x /usr/local/bin/cadrumo-cleanup-linux.sh && echo "disk-hygiene hook present outside the volume-shadowed /home/runner"; test -x /home/runner/run.sh && echo "runner agent present"'
-
-    # The volume-shadowing guarantee is the load-bearing design claim, so prove
-    # it rather than assert it: tmpfs (unlike a named volume) does NOT seed from
-    # the image, so this is the worst case a real state volume can present.
-    docker run --rm --mount type=tmpfs,destination=/home/runner --entrypoint bash cadrumo-runner-linux -c 'set -e; test "$(ls -A /home/runner | wc -l)" = "0"; gh --version > /dev/null; just --version > /dev/null; brew --version > /dev/null; test -x /usr/local/bin/cadrumo-runner-entry.sh; test -x /usr/local/bin/cadrumo-cleanup-linux.sh; echo "tools, entrypoint and hygiene hook survive a volume mounted over /home/runner"'
-    @uv run --no-sync pytest -v -n0 -m unit --ignore=dev/containers/tests/test_devcontainer_smoke.py dev/containers/tests
-
 # Two questions about the same artifacts. actionlint asks whether the YAML is
 # well-formed and its expressions resolve; the CI contract asks whether a `run:`
 # step is calling a recipe or re-implementing one. A workflow can be perfectly
@@ -712,6 +663,15 @@ locales-remove-batch MANIFEST:
 [group('maintenance')]
 registry-publish-authority:
     @uv run --no-sync python -m dev.registry.pipeline publish-authority
+
+# The currency question is a content read with no compilation, so asking it
+# costs seconds where republishing costs minutes. That is what makes this safe
+# to run unconditionally after a registry edit: a current artifact is left
+# byte-for-byte alone and the step reports `published=skipped-current`.
+[doc('Publish the runtime registry authority only when the published artifact is stale.')]
+[group('maintenance')]
+registry-publish-authority-if-authority-stale:
+    @uv run --no-sync python -m dev.registry.pipeline publish-authority --if-stale
 
 [doc('Publish only one named static generated registry target tree.')]
 [group('maintenance')]
@@ -960,18 +920,69 @@ test-test-policy:
 test-repository-contracts:
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/agent_eval/tests dev/audit/tests dev/corpus/tests dev/docs dev/env/tests dev/identity/tests dev/ingest_harness/tests dev/locales/tests dev/quality/tests dev/readme/tests dev/sanitizer/tests dev/smoke/tests dev/tui/tests dev/tui/harness/tests --ignore=dev/docs/terminology/tests/test_sweep_live_service.py --ignore=dev/quality/tests/test_fixes.py --ignore=dev/quality/tests/test_ty_fix_boundary.py
 
-[doc('Run the packaging and runner-image tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
+[doc('Run the packaging and container tooling contracts, parallel then serial; the serial pass includes the installed-artifact oracles.')]
 [group('test')]
 test-release-tooling:
-    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests dev/containers/tests --ignore=dev/packaging/tests/test_installed_oracles.py
-    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests dev/containers/tests
+    @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests --ignore=dev/packaging/tests/test_installed_oracles.py
+    @uv run --no-sync pytest -v -n0 -m "(unit or integration) and serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/packaging/tests
 
+# Split into a deterministic half and a `perf` half because the two have
+# different host requirements, not because they are separate subjects. The
+# `perf` leg asserts thresholds over measured CPU-time, and
+# `.github/ci-control-plane.md` records that the one self-hosted Linux X64
+# runner is shared with other tenants and other repositories -- so a threshold
+# asserted there reports co-residency, not cost. `test-gate` therefore invokes
+# only `test-ci-contracts-gate`, while this aggregate keeps both legs for the
+# release proof, which owns the machine. Each leg is called with an explicit
+# `just`, never a recipe dependency: `dev.ci.lane_reachability` follows recipe
+# bodies, so a dependency-list edge would make these tests read as reachable by
+# no CI lane.
 [doc('Run CI, repair-safety, deployment, release, and benchmark contracts with independent scheduler verdicts.')]
 [group('test')]
 test-ci-contracts:
+    @just test-ci-contracts-gate
+    @just test-ci-perf
+
+[doc('Run the deterministic CI, deployment, and release contracts, holding the CPU-budget gates out.')]
+[group('test')]
+test-ci-contracts-gate:
     @uv run --no-sync python -m dev.docs.build --single-page docs/index.md
     @uv run --no-sync pytest -v -n {{pytest_workers}} -m "(unit or integration) and not serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_fixes.py dev/quality/tests/test_ty_fix_boundary.py
-    @uv run --no-sync pytest -v -n0 -m "serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service" dev/ci/tests dev/deploy/tests dev/release/tests
+    @just test-ci-contracts-serial
+
+# Its own recipe purely to tolerate pytest's exit 5, the way the merge gate's
+# serial leg already does. Every serial test these paths held was a CPU budget
+# and moved to `test-ci-perf`, so the selection is empty today and a bare
+# pytest would fail the lane on an empty collection. The leg stays rather than
+# being deleted because the next serial-but-not-perf test to land here would
+# otherwise be selected by no lane at all, which
+# `dev/tests/test_lane_reachability.py` refuses.
+[doc('Run the serial CI, deployment, and release contracts, tolerating an empty selection.')]
+[group('test')]
+[unix]
+test-ci-contracts-serial:
+    #!/usr/bin/env bash
+    set -uo pipefail
+    uv run --no-sync pytest -v -n0 -m 'serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' dev/ci/tests dev/deploy/tests dev/release/tests
+    status=$?
+    # Exit 5 means these paths hold no serial test outside the perf lane.
+    if [ "$status" -ne 0 ] && [ "$status" -ne 5 ]; then
+        exit "$status"
+    fi
+
+[doc('Run the serial CI, deployment, and release contracts, tolerating an empty selection.')]
+[group('test')]
+[windows]
+test-ci-contracts-serial:
+    #!pwsh
+    $ErrorActionPreference = 'Continue'
+    uv run --no-sync pytest -v -n0 -m 'serial and not perf and not external_tool and not os_keychain and not windows_only and not tui_render and not resident_service' dev/ci/tests dev/deploy/tests dev/release/tests
+    # Exit 5 means these paths hold no serial test outside the perf lane.
+    if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 5) { exit $LASTEXITCODE }
+
+[doc('Run the CPU-budget performance gates for the CI, deployment, and release populations.')]
+[group('test')]
+test-ci-perf:
     @uv run --no-sync pytest -v -n0 -m "perf" dev/ci/tests dev/deploy/tests dev/release/tests dev/quality/tests/test_ty_fix_boundary.py
 
 # Change-scoped merge gate: `dev.ci.change_scope` selects the pytest targets a
@@ -979,7 +990,10 @@ test-ci-contracts:
 # `too_broad`, with `targets` already collapsed to the fixed contract set --
 # this recipe prints that as a visible advisory rather than silently narrowing
 # further. `ci_contracts` additionally gates the tooling/workflow contract
-# population, and the harness verdict `pr.yml` uses always runs.
+# population, and this recipe's own last line runs the harness verdict
+# unconditionally, on every path through it. That sentence used to cite
+# `pr.yml`, which no longer exists; the behaviour outlived the workflow, and
+# a reader tracing the dead citation concluded the harness ran nowhere.
 [doc('Run the change-scoped merge gate: targeted or contract-only tests, optional CI contracts, and the harness verdict.')]
 [group('test')]
 [unix]
@@ -1018,7 +1032,7 @@ test-gate base="origin/main":
         exit "$serial_status"
     fi
     if [ "$ci_contracts" = "true" ]; then
-        just test-ci-contracts
+        just test-ci-contracts-gate
     fi
     just test-pytest-harness
 
@@ -1044,7 +1058,7 @@ test-gate base="origin/main":
     # Exit 5 means the scoped targets hold no serial tests.
     if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne 5) { exit $LASTEXITCODE }
     if ($scope.ci_contracts) {
-        just test-ci-contracts
+        just test-ci-contracts-gate
         if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
     }
     just test-pytest-harness
@@ -1456,6 +1470,16 @@ release-preview:
 [group('release')]
 release-rollback-plan VERSION:
     @uv run --no-sync python -m dev.release rollback {{VERSION}}
+
+# Deliberately unwrapped: no `dev.quality.quiet`, no redirection. The release
+# workflow pipes this recipe's stdout into `jq` and into `$GITHUB_OUTPUT`, so
+# anything that buffers, prefixes or reformats the document breaks the step
+# silently. An unknown phase is refused by argparse with a non-zero exit, which
+# is the behaviour the workflow wants; there is no second whitelist here.
+[doc('Print the GitHub runtime matrix document for a release PHASE (all, next, or smoke).')]
+[group('release')]
+release-runtime-matrix PHASE:
+    @uv run --no-sync python -m dev.ci.python_runtime_matrix --phase {{PHASE}}
 
 # ===========================================================================
 #  meta

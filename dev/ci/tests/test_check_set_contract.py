@@ -15,7 +15,8 @@ from cadrumo.core.toml import parse_toml
 from dev._paths import REPO_ROOT
 
 from ..lane_reachability import _recipe_bodies, _recipes_invoked_by
-from ..workflow_runner_targets import calls_local_workflow
+from ..workflow_delegation import calls_local_workflow
+from ..workflow_run_text import executed_lines
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -151,16 +152,85 @@ def test_every_default_branch_push_reaches_a_verdict() -> None:
     assert violations == [], "default-branch verdict violations:\n" + "\n".join(violations)
 
 
-def _commands(job: dict[str, Any], recipes: dict[str, str]) -> list[str]:
+#: One recipe header, capturing the name and everything before the colon: the
+#: parameter list, with defaults still attached.
+_RECIPE_SIGNATURE: Final = re.compile(r"^(?P<name>[a-z][\w-]*)(?P<parameters>[^:\n]*):(?![=])")
+
+#: One `just <recipe> <arguments...>` call, argument text included. The lane
+#: transport's own calls are read by `_recipes_invoked_by` and carry no
+#: arguments, so they are left to it.
+_JUST_CALL_WITH_ARGUMENTS: Final = re.compile(r"\bjust\s+(?P<recipe>_?[a-z][\w-]*)(?P<arguments>[^|;&\n]*)")
+
+
+def _recipe_parameters(text: str) -> dict[str, tuple[tuple[str, str | None], ...]]:
+    """Return each recipe's declared parameters, with defaults where given."""
+    signatures: dict[str, tuple[tuple[str, str | None], ...]] = {}
+    for line in text.splitlines():
+        match = _RECIPE_SIGNATURE.match(line)
+        if match is None:
+            continue
+        parameters: list[tuple[str, str | None]] = []
+        for token in match.group("parameters").split():
+            name, separator, default = token.partition("=")
+            parameters.append((name.lstrip("*+"), default.strip("\"'") if separator else None))
+        signatures[match.group("name")] = tuple(parameters)
+    return signatures
+
+
+def _substitute(body: str, parameters: tuple[tuple[str, str | None], ...], arguments: tuple[str, ...]) -> str:
+    """Return ``body`` with its `{{PARAM}}` placeholders replaced by ``arguments``.
+
+    Without this, one parameterised recipe invoked twice with different
+    arguments expands to the same text twice and reads as a command scheduled
+    twice. That is not a hypothetical: it fired on two `release-runtime-matrix`
+    invocations that request different phases, and it would fire on every
+    future conversion to a parameterised recipe -- a standing tax on exactly
+    the refactor this repository wants.
+
+    A parameter with neither an argument nor a default keeps its placeholder,
+    because inventing a value would make two genuinely identical invocations
+    look different, which is the failure this check exists to catch.
+    """
+    substituted = body
+    for index, (name, default) in enumerate(parameters):
+        value = arguments[index] if index < len(arguments) else default
+        if value is None:
+            continue
+        substituted = re.sub(r"\{\{\s*" + re.escape(name) + r"\s*\}\}", value, substituted)
+    return substituted
+
+
+def _invocation_arguments(text: str) -> dict[str, tuple[tuple[str, ...], ...]]:
+    """Return the argument lists each recipe is invoked with in ``text``."""
+    calls: dict[str, list[tuple[str, ...]]] = {}
+    for line in executed_lines(text):
+        for match in _JUST_CALL_WITH_ARGUMENTS.finditer(line):
+            calls.setdefault(match.group("recipe"), []).append(tuple(match.group("arguments").split()))
+    return {recipe: tuple(argument_lists) for recipe, argument_lists in calls.items()}
+
+
+def _commands(
+    job: dict[str, Any],
+    recipes: dict[str, str],
+    parameters: dict[str, tuple[tuple[str, str | None], ...]] | None = None,
+) -> list[str]:
     """Expand recipe calls to the final command lines executed by one job."""
     commands: list[str] = []
+    signatures = {} if parameters is None else parameters
 
     def expand(text: str, stack: frozenset[str] = frozenset(), *, recipe_body: bool = False) -> None:
         invoked = _recipes_invoked_by(text)
         if invoked:
+            arguments_by_recipe = _invocation_arguments(text)
             for recipe in sorted(invoked - {"setup"}):
                 if recipe in recipes and recipe not in stack:
-                    expand(recipes[recipe], stack | {recipe}, recipe_body=True)
+                    body = recipes[recipe]
+                    for arguments in arguments_by_recipe.get(recipe, ((),)):
+                        expand(
+                            _substitute(body, signatures.get(recipe, ()), arguments),
+                            stack | {recipe},
+                            recipe_body=True,
+                        )
             return
         if not recipe_body:
             commands.append(re.sub(r"\s+", " ", text).strip())
@@ -225,14 +295,75 @@ def test_platform_variant_recipes_are_read_once_per_platform() -> None:
     assert Counter(_commands({"steps": [{"run": "just twice"}]}, unix))["uv run check"] == 2
 
 
+def test_one_parameterised_recipe_with_two_arguments_is_not_a_duplicate() -> None:
+    """Teeth for the substitution: different arguments are different commands.
+
+    The expander reads a recipe BODY, so before arguments were substituted one
+    parameterised recipe invoked twice expanded to identical text twice and was
+    reported as a command scheduled twice. It fired on two real
+    `release-runtime-matrix` invocations requesting different phases, and it
+    would have fired on every future conversion to a parameterised recipe --
+    a standing tax on exactly the refactor this repository wants.
+    """
+    justfile = "emit PHASE:\n    uv run matrix --phase {{PHASE}}\n"
+    bodies = _platform_recipe_bodies(justfile, "unix")
+    parameters = _recipe_parameters(justfile)
+    job = {"steps": [{"run": "just emit next"}, {"run": "just emit smoke"}]}
+
+    counts = Counter(_commands(job, bodies, parameters))
+
+    assert counts == Counter({"uv run matrix --phase next": 1, "uv run matrix --phase smoke": 1})
+
+
+def test_one_parameterised_recipe_with_the_same_argument_twice_is_a_duplicate() -> None:
+    """The half that must not be lost: substitution cannot buy silence.
+
+    A fix that made every invocation look distinct would pass the case above
+    while reporting no duplicate ever again, which is the check degrading into
+    nothing. The same argument twice is still the same command twice.
+    """
+    justfile = "emit PHASE:\n    uv run matrix --phase {{PHASE}}\n"
+    bodies = _platform_recipe_bodies(justfile, "unix")
+    parameters = _recipe_parameters(justfile)
+    job = {"steps": [{"run": "just emit smoke"}, {"run": "just emit smoke"}]}
+
+    counts = Counter(_commands(job, bodies, parameters))
+
+    assert counts["uv run matrix --phase smoke"] == 2
+
+
+def test_a_declared_default_is_substituted_when_no_argument_is_given() -> None:
+    """A recipe invoked bare runs its default, and the expansion must say so."""
+    justfile = 'check base="origin/main":\n    uv run diff --base {{base}}\n'
+    bodies = _platform_recipe_bodies(justfile, "unix")
+    parameters = _recipe_parameters(justfile)
+
+    commands = _commands({"steps": [{"run": "just check"}]}, bodies, parameters)
+
+    assert commands == ["uv run diff --base origin/main"]
+
+
+def test_a_parameter_with_no_argument_and_no_default_keeps_its_placeholder() -> None:
+    """Inventing a value would make two identical invocations look different."""
+    justfile = "emit PHASE:\n    uv run matrix --phase {{PHASE}}\n"
+    bodies = _platform_recipe_bodies(justfile, "unix")
+    parameters = _recipe_parameters(justfile)
+    job = {"steps": [{"run": "just emit"}, {"run": "just emit"}]}
+
+    counts = Counter(_commands(job, bodies, parameters))
+
+    assert counts["uv run matrix --phase {{PHASE}}"] == 2
+
+
 def test_no_command_runs_twice_in_one_workflow_run() -> None:
     """A workflow never schedules the same explicit command twice for one event."""
     duplicates: list[str] = []
     justfile = (REPO_ROOT / "justfile").read_text(encoding="utf-8")
     bodies = {platform: _platform_recipe_bodies(justfile, platform) for platform in ("unix", "windows")}
+    parameters = _recipe_parameters(justfile)
     for path, document in _documents():
         for key, job in (document.get("jobs") or {}).items():
-            counts = Counter(_commands(job, bodies[_job_platform(job)]))
+            counts = Counter(_commands(job, bodies[_job_platform(job)], parameters))
             duplicates.extend(
                 f"{path.name}:{key}: {command!r} x{count}" for command, count in counts.items() if count > 1
             )

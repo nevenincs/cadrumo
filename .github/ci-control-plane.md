@@ -12,10 +12,9 @@ reads a measurement rather than re-deriving one.
   two Linux jobs, lint then gate (security scan, registry gate, import
   boundaries, scoped tests); the required check is
   `Check: Merge gate (Linux)`.
-- **Release** (`release.yml`) is dispatched only by release-please, via a
-  GitHub App token (`RELEASE_APP_ID` variable, `RELEASE_APP_PRIVATE_KEY`
-  secret). `phase=prove` runs against the release pull request's head: the
-  merge gate's full scan, the full test suites, conformance checks, the
+- **Release** (`release.yml`) is dispatched only by release-please, using the
+  default `GITHUB_TOKEN`. `phase=prove` runs against the release pull request's
+  head: the merge gate's full scan, the full test suites, conformance checks, the
   sealed release cohort build, and smoke tests across Linux, Windows, and
   macOS plus Homebrew and Scoop acquisition — macOS is mandatory, not
   optional. `phase=publish` runs against the tag: PyPI via trusted
@@ -25,7 +24,11 @@ reads a measurement rather than re-deriving one.
 - **Release-please** (`release-please.yml`) is the only workflow that runs on
   a push to main (plus manual dispatch for recovery). It opens or updates the
   release pull request and dispatches `release.yml`'s prove and publish
-  phases.
+  phases. It also dispatches the merge gate itself, as its last release-branch
+  step: refs and pull requests written with the default token start no workflow
+  runs, so the release pull request would otherwise never report the one check
+  main requires. A dispatch is exempt from that rule, and running it last means
+  it validates the lockfile commit pushed above it.
 
 ## The runners are shared, not a cloud
 
@@ -50,24 +53,8 @@ The macOS runner is power-gated by policy, so its absence is not a fault.
 | packaging lane pool, Linux | 3 | The lanes are venv- and disk-bound rather than CPU-wide, so more parallelism buys little and costs disk contention. |
 | packaging lane pool, Windows | 2 | Same reasoning, lower because Windows venv installs are slower and the box carries co-resident jobs. |
 | homebrew acquisition matrix | `max-parallel: 2` | Two of its three legs share one host. |
-| `MAX_WATCH_SECONDS` | 480 | Derived, unlike the others. See below. |
 
 `-n auto` is never correct here and no workflow should reintroduce it.
-
-## The one derived number
-
-The queue watchdog's window is the only pin with an argument rather than a
-working guess. A verdict requires `waited > THRESHOLD_SECONDS` (300) and must
-then hold across `UNSCHEDULABLE_CONFIRMATIONS` (2) consecutive polls of
-`POLL_SECONDS` (15), so nothing can fire before 330 seconds, and the verdict
-path runs before the window check. 480 leaves ten polls of headroom.
-
-It was 900 while a watched job could be created after the window closed.
-`test_the_watchdog_is_created_no_later_than_the_lanes_it_watches` now forces
-the watchdog to share the `needs:` of every off-lane job it watches, so they
-are co-created and the long tail bought nothing — while the watchdog held the
-single Linux runner for the difference. Two were measured burning 15m32 and
-15m23 on one push.
 
 ## Before changing a pin
 

@@ -197,8 +197,9 @@ _PACKAGING_TESTS: Final[str] = "dev/packaging/tests"
 #: installs a closed-world cohort of its own and must not be paid for twice.
 _INSTALLED_ORACLES_TESTS: Final[str] = f"{_PACKAGING_TESTS}/test_installed_oracles.py"
 #: The one marker-grounded holdout. ``perf``'s registered policy excludes it
-#: from every per-push lane and enrols it in the dispatch-only ``ci-full``
-#: lane, where a quiet machine makes its CPU-time asserts and advisory wall
+#: from every per-push lane and enrols it in a selection only a
+#: dispatch-triggered release run reaches, where a quiet machine makes its
+#: CPU-time asserts and advisory wall
 #: numbers meaningful; this driver fans flavor lanes across a runner shared by
 #: co-resident jobs, which is the condition that policy names.
 _PERF_HOLDOUT: Final[str] = "not perf"

@@ -29,6 +29,7 @@ never silently lost.
 
 from __future__ import annotations
 
+import json
 import re
 import shutil
 import subprocess
@@ -196,11 +197,148 @@ def test_wheel_archive_contains_every_runtime_data_file(built_wheel: Path) -> No
             for info in archive.infolist()
             if not info.is_dir() and info.filename.startswith(f"{_WHEEL_DATA_PREFIX}/")
         }
+    # The published authority is GENERATED, not authored: the packaging hook
+    # stages it at build time rather than reading it from the checkout, so it
+    # has no source counterpart and this source-versus-wheel comparison has
+    # nothing to match it against. It is not unchecked -- it carries its own
+    # positive invariant in
+    # `test_wheel_carries_exactly_one_published_authority_generation`, which is
+    # stricter than the subtraction here could be.
+    actual = {name for name in actual if not name.startswith(f"{_AUTHORITY_PREFIX}/")}
     missing = sorted(expected - actual)
     unexpected = sorted(actual - expected)
     assert not missing and not unexpected, (
         f"wheel data payload differs from source runtime data: missing={missing[:10]!r}, unexpected={unexpected[:10]!r}"
     )
+
+
+#: The published authority's home inside the wheel. Its two members are
+#: GENERATED rather than authored, so they are the only build-staged payload
+#: with no source counterpart: the packaging hook stages them at build time
+#: instead of reading them from the checkout, which is why a source-versus-wheel
+#: comparison counts them as surplus. Every companion hook stages from its own
+#: SOURCE tree, so nothing else force-included reaches this gate.
+_AUTHORITY_PREFIX = f"{_WHEEL_DATA_PREFIX}/registry/authority"
+
+#: The descriptor naming the one database generation the wheel carries.
+_AUTHORITY_DESCRIPTOR = f"{_AUTHORITY_PREFIX}/authority.current.json"
+
+#: A content-addressed authority database. The name IS the SHA-256 of the file,
+#: so it changes on every registry edit by construction and may never be pinned
+#: as a literal. `_selected_pair` in packaging/authority/hatch_build.py admits
+#: exactly this shape, verifies the digest against the bytes, and has never
+#: admitted a third file under this prefix.
+_AUTHORITY_DATABASE = re.compile(rf"^{re.escape(_AUTHORITY_PREFIX)}/authority-[0-9a-f]{{64}}\.sqlite3$")
+
+
+def _authority_members(archive: zipfile.ZipFile) -> set[str]:
+    """Return every wheel member under the published-authority prefix."""
+    return {
+        info.filename
+        for info in archive.infolist()
+        if not info.is_dir() and info.filename.startswith(f"{_AUTHORITY_PREFIX}/")
+    }
+
+
+def authority_findings(members: set[str], descriptor: object) -> list[str]:
+    """Return every way this member set violates the one-generation invariant.
+
+    Separated from the live case so the cases below can drive it with a member
+    set they construct. A positive assertion that has only ever seen a correct
+    wheel is indistinguishable from one that cannot fail.
+    """
+    findings: list[str] = []
+    databases = sorted(name for name in members if _AUTHORITY_DATABASE.match(name))
+    if len(databases) != 1:
+        findings.append(f"expected exactly one content-addressed authority database, got {databases!r}")
+    if _AUTHORITY_DESCRIPTOR not in members:
+        findings.append(f"the authority descriptor is missing: {sorted(members)!r}")
+    strays = sorted(members - {*databases, _AUTHORITY_DESCRIPTOR})
+    if strays:
+        findings.append(f"unexpected members under the published-authority prefix: {strays!r}")
+    if not isinstance(descriptor, dict):
+        findings.append(f"the descriptor is not an object: {descriptor!r}")
+        return findings
+    named = descriptor.get("database")
+    if not isinstance(named, str) or not named:
+        findings.append(f"the descriptor names no database: {descriptor!r}")
+    elif len(databases) == 1 and not databases[0].endswith(f"/{Path(named).name}"):
+        findings.append(f"the descriptor names {named!r} but the wheel carries {databases[0]!r}")
+    return findings
+
+
+def test_wheel_carries_exactly_one_published_authority_generation(built_wheel: Path) -> None:
+    """The wheel ships one descriptor and the one database it names.
+
+    A POSITIVE assertion rather than an exemption, and the distinction is the
+    whole point. Subtracting this subtree from the source comparison would make
+    the gate green -- and blind to whatever else landed here. A superseded
+    generation shipped alongside a current one is roughly 80MB of dead payload
+    that an exemption waves through and this case refuses.
+
+    The on-disk count and the wheel count are different numbers on purpose.
+    ``.authority/`` may legitimately hold two databases: on Windows a superseded
+    generation stays leased while a reader holds it open, and retirement returns
+    it rather than failing. The build hook never includes the DIRECTORY -- it
+    includes the one file the descriptor names -- so the on-disk count varies
+    and this one does not.
+    """
+    with zipfile.ZipFile(built_wheel) as archive:
+        members = _authority_members(archive)
+        descriptor = json.loads(archive.read(_AUTHORITY_DESCRIPTOR).decode("utf-8"))
+
+    assert members, "the wheel carries no published authority at all"
+    assert authority_findings(members, descriptor) == []
+
+
+def _member_set(*names: str) -> set[str]:
+    """Return a member set under the authority prefix, from bare file names."""
+    return {f"{_AUTHORITY_PREFIX}/{name}" for name in names}
+
+
+_A_DIGEST = "a" * 64
+_B_DIGEST = "b" * 64
+
+
+def test_a_second_generation_in_the_wheel_is_reported() -> None:
+    """Teeth, and the case an exemption would have waved through.
+
+    Two databases is ~80MB of superseded authority shipped to every user. The
+    subtraction form of this fix could not have seen it.
+    """
+    members = _member_set(f"authority-{_A_DIGEST}.sqlite3", f"authority-{_B_DIGEST}.sqlite3", "authority.current.json")
+
+    findings = authority_findings(members, {"database": f"authority-{_A_DIGEST}.sqlite3"})
+
+    assert len(findings) == 1
+    assert "exactly one content-addressed authority database" in findings[0]
+
+
+def test_a_stray_file_under_the_prefix_is_reported() -> None:
+    """Teeth: the invariant is the whole subtree, not just the pair's presence."""
+    members = _member_set(f"authority-{_A_DIGEST}.sqlite3", "authority.current.json", "authority.backup.json")
+
+    findings = authority_findings(members, {"database": f"authority-{_A_DIGEST}.sqlite3"})
+
+    assert len(findings) == 1
+    assert "unexpected members" in findings[0]
+
+
+def test_a_descriptor_naming_another_generation_is_reported() -> None:
+    """Teeth: shipping a current database beside a stale descriptor."""
+    members = _member_set(f"authority-{_A_DIGEST}.sqlite3", "authority.current.json")
+
+    findings = authority_findings(members, {"database": f"authority-{_B_DIGEST}.sqlite3"})
+
+    assert len(findings) == 1
+    assert "but the wheel carries" in findings[0]
+
+
+def test_the_correct_pair_is_accepted() -> None:
+    """The positive control: the shape the build actually produces passes."""
+    members = _member_set(f"authority-{_A_DIGEST}.sqlite3", "authority.current.json")
+
+    assert authority_findings(members, {"database": f"authority-{_A_DIGEST}.sqlite3"}) == []
 
 
 def test_wheel_excludes_renta_source_pdfs(built_wheel: Path) -> None:

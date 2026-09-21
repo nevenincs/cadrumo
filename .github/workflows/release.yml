@@ -339,29 +339,6 @@ jobs:
           if-no-files-found: error
           retention-days: 30
 
-  runner-queue-watchdog:
-    name: "Check: Runner queue (Linux)"
-    needs: [check-prove-ref, build-cohort, runtime-inventory]
-    if: inputs.phase == 'prove'
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
-    permissions:
-      actions: write
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ github.sha }}
-          persist-credentials: false
-
-      - name: Fail fast on a lane no online runner can serve
-        env:
-          GH_TOKEN: ${{ github.token }}
-          THRESHOLD_SECONDS: "300"
-          MAX_WATCH_SECONDS: "480"
-        run: python3 -m dev.ci.runner_queue_watchdog
-
   test-installed-oracles:
     name: "Test: Installed transports (${{ matrix.os }})"
     needs: build-cohort
@@ -877,7 +854,6 @@ jobs:
       - test-full
       - check-conformance
       - build-cohort
-      - runner-queue-watchdog
       - test-installed-oracles
       - test-installer-campaign
       - test-homebrew
@@ -1012,10 +988,14 @@ jobs:
       contents: read
       id-token: write
     steps:
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1102,10 +1082,14 @@ jobs:
             exit 1
           fi
 
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1198,10 +1182,14 @@ jobs:
             exit 1
           fi
 
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1283,10 +1271,14 @@ jobs:
       actions: read
       contents: read
     steps:
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1333,10 +1325,14 @@ jobs:
             runner: [self-hosted, macOS, ARM64]
             brew: /opt/homebrew/bin/brew
     steps:
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1376,10 +1372,14 @@ jobs:
       actions: read
       contents: read
     steps:
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -1408,32 +1408,12 @@ jobs:
             -BucketSource "https://github.com/$env:BUCKET_REPOSITORY" `
             -EvidenceDir var/acquisition/scoop
 
-  runner-queue-watchdog-publish:
-    name: "Check: Publication runner queue (Linux)"
-    needs: [locate-cohort, publish-homebrew, publish-scoop]
-    if: inputs.phase == 'publish'
-    runs-on: [self-hosted, Linux, X64]
-    timeout-minutes: 20
-    permissions:
-      actions: write
-      contents: read
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          ref: ${{ inputs.ref }}
-          persist-credentials: false
-
-      - name: Fail fast on a lane no online runner can serve
-        env:
-          GH_TOKEN: ${{ github.token }}
-          THRESHOLD_SECONDS: "300"
-          MAX_WATCH_SECONDS: "480"
-        run: python3 -m dev.ci.runner_queue_watchdog
-
   publish-docs:
     name: "Build: Documentation site (Linux)"
-    needs: [publish-pypi, acquire-pypi, acquire-homebrew, acquire-scoop]
+    # locate-cohort is already a transitive ancestor through all four of the
+    # others, so this edge adds no ordering. It is here because reading
+    # `needs.locate-cohort.outputs.*` requires a direct edge.
+    needs: [locate-cohort, publish-pypi, acquire-pypi, acquire-homebrew, acquire-scoop]
     if: ${{ !cancelled() && inputs.phase == 'publish' && needs.publish-pypi.result == 'success' && needs.acquire-pypi.result == 'success' && needs.acquire-homebrew.result == 'success' && needs.acquire-scoop.result == 'success' }}
     runs-on: [self-hosted, Linux, X64]
     timeout-minutes: 45
@@ -1458,10 +1438,15 @@ jobs:
           fi
           echo "Docs deploy role configured; proceeding."
 
+      # The commit locate-cohort proved, not the tag name it proved it through.
+      # A tag is mutable by anyone who can dispatch this workflow, so resolving
+      # the name again here would re-resolve whatever it points at NOW rather
+      # than what carried a passing prove run. The published site is built from
+      # this tree, so a drifted tag would document a version nobody released.
       - name: Checkout the release tag
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref }}
+          ref: ${{ needs.locate-cohort.outputs.tag-commit }}
           persist-credentials: false
 
       - name: Set up toolchain

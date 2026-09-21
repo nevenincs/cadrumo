@@ -41,7 +41,11 @@ from ._tree_publication import (
     publish_validated_generated_export_tree,
 )
 from ._tree_validation import GeneratedExportTreeValidationContext, validate_generated_export_tree
-from .authority_publication import authority_publication_destination, publish_sqlite_authority_candidate
+from .authority_publication import (
+    authority_database_currency,
+    authority_publication_destination,
+    publish_sqlite_authority_candidate,
+)
 from .candidate_staging import (
     GeneratedExportBootstrapTarget,
     drop_cross_edition_evolutions,
@@ -105,11 +109,24 @@ def publish_authority(
             help="Write the development benchmark baseline from the same validated artifact.",
         ),
     ] = None,
+    if_stale: Annotated[
+        bool,
+        typer.Option(
+            "--if-stale",
+            help="Publish only when the existing artifact no longer records the live sources.",
+        ),
+    ] = False,
 ) -> None:
     """Validate the registry candidate and atomically republish the runtime authority artifact.
 
     A refused validation, or a candidate that changes while it is validated,
     leaves the previous artifact byte-for-byte in place.
+
+    ``--if-stale`` asks the currency reader first and returns without
+    publishing when the recorded generation still matches a fresh receipt over
+    the same trees. That question is a content read with no compilation, so it
+    costs seconds against a publication's minutes, and it makes repeated
+    invocation cheap enough for a lifecycle step to run unconditionally.
     """
     if profile_schema is None and (registry_root is not None or source_root is not None):
         raise typer.BadParameter(
@@ -117,11 +134,29 @@ def publish_authority(
             param_hint="--profile-schema",
         )
     destination_path = destination or authority_publication_destination()
+    resolved_registry_root = registry_root or bundled_path("registry", "aeat")
+    resolved_source_root = source_root or bundled_path()
+    resolved_profile_schema = profile_schema or bundled_path("registry", "cadrumo", "user_profile", "schema.toml")
+    if if_stale:
+        currency = authority_database_currency(
+            destination_path / "authority.current.json",
+            registry_root=resolved_registry_root,
+            source_root=resolved_source_root,
+            profile_schema_path=resolved_profile_schema,
+        )
+        if currency.is_current:
+            typer.echo(
+                "publish-authority"
+                f"	descriptor={currency.descriptor_path}"
+                f"	identity_digest={currency.recorded_identity_digest}"
+                "	published=skipped-current",
+            )
+            return
     descriptor = publish_sqlite_authority_candidate(
-        registry_root=registry_root or bundled_path("registry", "aeat"),
-        source_root=source_root or bundled_path(),
+        registry_root=resolved_registry_root,
+        source_root=resolved_source_root,
         destination=destination_path,
-        profile_schema_path=profile_schema or bundled_path("registry", "cadrumo", "user_profile", "schema.toml"),
+        profile_schema_path=resolved_profile_schema,
         eager_baseline_path=eager_baseline,
     )
     typer.echo(
@@ -130,7 +165,11 @@ def publish_authority(
         f"\tidentity_digest={descriptor.logical_generation}"
         f"\tdatabase={descriptor.database}",
     )
-    typer.echo("next\tcurrentness=report-registry-status\tpublication=registry-publish-target-if-targets-stale")
+    # Named recipes, not prose: an operator is expected to run these verbatim.
+    # Target publication stays explicit and per-target because the guidance for a
+    # drifted target is to investigate the record bytes rather than republish, so
+    # there is deliberately no publish-every-stale-target verb to point at.
+    typer.echo("next\tcurrentness=check-registry\tpublication=registry-publish-target")
 
 
 @dataclass(frozen=True, slots=True)

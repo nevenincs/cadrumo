@@ -14,8 +14,14 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: read
-  pull-requests: read
+  # What the default token needs to do the App token's former work:
+  # release commits, tags and releases (contents), the release pull
+  # request and its labels (pull-requests, issues), and dispatching
+  # merge-gate.yml and release.yml (actions).
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
 
 concurrency:
   group: release-please-${{ github.ref }}${{ github.ref == 'refs/heads/main' && format('-{0}', github.sha) || '' }}
@@ -27,28 +33,10 @@ jobs:
     name: "Build: Release proposal (Linux)"
     runs-on: [self-hosted, Linux, X64]
     steps:
-      # Refs, releases and pull requests created with the default token start
-      # no workflow runs, so the release pull request would never report the
-      # merge gate. An App token makes release-please's writes trigger CI.
-      - name: Mint the release App token
-        id: app-token
-        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
-        with:
-          app-id: ${{ vars.RELEASE_APP_ID }}
-          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
-          # Only what this job does with the token: release commits, tags and
-          # releases (contents), the release pull request and its labels
-          # (pull-requests, issues), and dispatching release.yml (actions).
-          permission-actions: write
-          permission-contents: write
-          permission-issues: write
-          permission-pull-requests: write
-
       - name: Run release-please
         id: release
         uses: googleapis/release-please-action@5c625bfb5d1ff62eadeeb3772007f7f66fdcf071 # v4.4.1
         with:
-          token: ${{ steps.app-token.outputs.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
@@ -56,7 +44,7 @@ jobs:
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          ref: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
           persist-credentials: false
 
       - name: Set up uv for the release branch
@@ -83,7 +71,7 @@ jobs:
       - name: Push the regenerated uv.lock onto the release branch
         if: steps.branch-lock.outputs.changed == 'true'
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           auth="$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)"
@@ -132,7 +120,7 @@ jobs:
       - name: Open a reconciling pull request when the lockfile drifted
         if: steps.main-lock.outputs.drifted == 'true'
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.release.outputs.tag_name }}
         run: |
           set -euo pipefail
@@ -152,11 +140,29 @@ jobs:
             --title "chore(deps): reconcile uv.lock with ${TAG}" \
             --body "Main carries the previous version's \`uv.lock\`. Every job installing with \`--frozen\` fails until this merges."
 
+      # The default token's pushes and pull requests start no workflow runs,
+      # so the release pull request would never report the required merge
+      # gate. A dispatch is exempt from that rule, and its check run lands on
+      # the branch head the pull request is waiting on. Last of the release-
+      # branch steps, so it validates the lockfile commit pushed above.
+      - name: Dispatch the merge gate for the release pull request
+        if: steps.release.outputs.pr && !steps.release.outputs.release_created
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Guarded, because a step's `env` is prepared before its `if` is
+          # weighed: on the run that CREATES the release there is no pull
+          # request, `pr` is empty, and a bare `fromJSON('')` fails the step
+          # that the condition was about to skip. Upstream, that failure then
+          # skipped the release dispatch below and a version was tagged with
+          # nothing built or published behind it.
+          HEAD_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
+        run: gh workflow run merge-gate.yml --repo "${GITHUB_REPOSITORY}" --ref "${HEAD_BRANCH}" -f "ref=${HEAD_BRANCH}"
+
       - name: Dispatch release proof for the release pull request
         if: steps.release.outputs.pr && !steps.release.outputs.release_created
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
-          HEAD_BRANCH: ${{ fromJSON(steps.release.outputs.pr).headBranchName }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
         run: |
           version="$(jq -r '."."' .release-please-manifest.json)"
           if [ -z "${version}" ] || [ "${version}" = "null" ]; then
@@ -170,7 +176,7 @@ jobs:
       - name: Dispatch release publication
         if: steps.release.outputs.release_created == 'true'
         env:
-          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.release.outputs.tag_name }}
           VERSION: ${{ steps.release.outputs.version }}
         run: |

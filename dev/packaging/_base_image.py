@@ -1,9 +1,10 @@
 """Resolve the Linux base image the Cadrumo Python container stages derive from.
 
 The ``base`` and ``dev`` stages of the repository-root ``Dockerfile`` derive
-from it. The ``runner`` stage does not: the self-hosted runner image is a
-different family, declared by that Dockerfile's own ``RUNNER_BASE_IMAGE``
-build argument, and is deliberately out of this module's scope.
+from it, and they are now the only stages there. A ``runner`` stage on a
+different image family once sat beside them and was explicitly out of this
+module's scope; it has been removed, along with everything else in this
+repository whose subject was the machines CI runs on.
 
 The base is declared EXACTLY ONCE, as the ``PYTHON_BASE_IMAGE`` build
 argument's default in the repository-root ``Dockerfile``. A Dockerfile ``ARG``

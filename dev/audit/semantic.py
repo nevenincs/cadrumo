@@ -45,8 +45,22 @@ def check_health() -> bool:
         return False
 
 
+class SemanticSearchUnavailableError(RuntimeError):
+    """Raised when a query did not run at all.
+
+    Distinct from a query that ran and matched nothing, because the audit's
+    verdict is "no leak was found" and a search that never happened cannot
+    support it. Collapsing the two lets an offline daemon, a timeout or a
+    malformed response print a clean bill of health.
+    """
+
+
 def run_search(query: str) -> list[dict[str, object]]:
-    """Run search query via RAG service with --port 8766 --json."""
+    """Run search query via RAG service with --port 8766 --json.
+
+    An empty list means the query ran and matched nothing. Anything that stops
+    the query producing results raises instead of returning empty.
+    """
     cmd = [
         "uv",
         "run",
@@ -64,15 +78,20 @@ def run_search(query: str) -> list[dict[str, object]]:
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=False)
-        if result.returncode != 0:
-            return []
+    except OSError as error:
+        raise SemanticSearchUnavailableError(f"{query!r}: the search could not be started: {error}") from error
+    if result.returncode != 0:
+        raise SemanticSearchUnavailableError(
+            f"{query!r}: the search exited {result.returncode}: {result.stderr.strip() or '<no stderr>'}",
+        )
+    try:
         data = _json_object(json.loads(result.stdout))
-        if data is None or data.get("ok") is not True:
-            return []
-        response_data = _json_object(data.get("data"))
-        return _rag_results(response_data.get("results") if response_data is not None else None)
-    except Exception:
-        return []
+    except ValueError as error:
+        raise SemanticSearchUnavailableError(f"{query!r}: the search returned unreadable JSON: {error}") from error
+    if data is None or data.get("ok") is not True:
+        raise SemanticSearchUnavailableError(f"{query!r}: the search reported failure: {result.stdout.strip()!r}")
+    response_data = _json_object(data.get("data"))
+    return _rag_results(response_data.get("results") if response_data is not None else None)
 
 
 # No adapter owns or is allowlisted for filing-value coercion. Fixed-width
@@ -278,15 +297,22 @@ def semantic_leak_violations(
 def main() -> None:
     """Execute programmatic semantic leak audits and assert clean state."""
     if not check_health():
-        print("RAG service on port 8766 is offline or not ready. Skipping semantic audit.")
-        sys.exit(0)
+        # Exit 2, not 0: the audit did not run, and a caller that cannot tell
+        # that apart from a clean result will read an offline daemon as a pass.
+        print("RAG service on port 8766 is offline or not ready; the semantic audit did not run.", file=sys.stderr)
+        sys.exit(2)
 
     # Core concepts queries to check leaks
     queries = (
         "currency rounding",
         "calculate tax base",
     )
-    violations = semantic_leak_violations({query: run_search(query) for query in queries})
+    try:
+        results = {query: run_search(query) for query in queries}
+    except SemanticSearchUnavailableError as error:
+        print(f"the semantic audit did not run: {error}", file=sys.stderr)
+        sys.exit(2)
+    violations = semantic_leak_violations(results)
 
     if violations:
         print("=== Semantic Leak Violations ===")

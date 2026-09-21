@@ -37,14 +37,8 @@ and pre-bakes the Playwright browser; later reopens reuse the cached image.
 Without VS Code, build and run the image directly:
 
 ```bash
-just build-devcontainer
+docker build --target dev -t cadrumo-devcontainer -f Dockerfile .
 docker run --rm -it -v "$(pwd)":/workspace cadrumo-devcontainer bash
-```
-
-Verify the image installs cleanly and its toolchain works end to end:
-
-```bash
-just test-devcontainer
 ```
 
 The container has no interactive display, so live AEAT browser reads run

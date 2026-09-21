@@ -31,6 +31,7 @@ from ..types import (
     _PLATFORMS,
     Diagnostic,
     TargetPlatform,
+    _describe_stream,
     _ExternalGap,
     _is_irreducible_external_gap,
     collect_all,
@@ -53,8 +54,57 @@ def _completed(stdout: str = "", stderr: str = "", returncode: int = 0) -> subpr
 
 def test_an_empty_stream_is_refused_rather_than_read_as_clean() -> None:
     """The defect: a checker that never ran answered exactly like a clean tree."""
-    with pytest.raises(RuntimeError, match=r"produced no report.*return code -9"):
+    with pytest.raises(RuntimeError, match=r"produced no report.*exit code -9"):
         require_report("", _completed(stderr="ty: command not found", returncode=-9), "ty")
+
+
+def test_the_refusal_carries_the_stderr_rather_than_pointing_at_it() -> None:
+    """A message that says "see the captured stderr above" is worth what is above it.
+
+    Measured, not hypothetical: a CI run failed with ``ty[darwin] produced no
+    report; see the captured stderr above`` and the whole step held nothing
+    between the setup group and the traceback. The text it referred the reader
+    to did not exist, and the diagnosis needed a second run to correlate
+    against. The evidence has to travel inside the exception.
+    """
+    with pytest.raises(RuntimeError) as raised:
+        require_report("", _completed(stderr="ty: unknown platform darwin", returncode=2), "ty[darwin]")
+
+    message = str(raised.value)
+    assert "ty: unknown platform darwin" in message
+    assert "exit code 2" in message
+    assert "above" not in message, "the message must carry its evidence, not point out of itself"
+
+
+def test_an_absent_stream_is_named_as_empty_rather_than_omitted() -> None:
+    """Silence and a lost capture are different failures and must read differently.
+
+    This is the case that actually happened: the checker exited having written
+    nothing to either stream. A message that simply omits an empty stream lets
+    a reader assume the harness dropped it, which sends the diagnosis at the
+    harness instead of at the checker.
+    """
+    with pytest.raises(RuntimeError) as raised:
+        require_report("", _completed(returncode=1), "ty[darwin]")
+
+    message = str(raised.value)
+    assert "stdout empty" in message
+    assert "stderr empty" in message
+
+
+def test_a_long_stream_is_excerpted_with_its_full_length_stated() -> None:
+    """A checker dying mid-dump must not bury the rest of the message."""
+    described = _describe_stream("x" * 5000, "stderr")
+
+    assert described.startswith("stderr (5000 chars, first 2000): ")
+    assert len(described) < 5000
+
+
+def test_a_stream_python_never_captured_is_distinguished_from_an_empty_one() -> None:
+    """``TimeoutExpired`` can carry ``None`` streams, which is a third state."""
+    assert _describe_stream(None, "stdout") == "stdout not captured"
+    assert _describe_stream("", "stdout") == "stdout empty"
+    assert _describe_stream(b"bytes arrive from a timed-out child", "stderr").endswith("child")
 
 
 def test_the_refusal_names_the_checker_that_went_silent() -> None:
