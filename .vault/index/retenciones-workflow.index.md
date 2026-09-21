@@ -6,7 +6,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:6c6239663856c910e5c88785165441a26a09c3cf16727a5bd0915fef60e3d5fa'
+body_hash: 'sha256:4a669e068b9f03f4f102ed851b51ced0b2e2ca9307a9082fe9f93fbb71b97870'
 related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-reference]]'
@@ -20,7 +20,7 @@ Auto-generated index of all documents tagged with `#retenciones-workflow`.
 
 ### adr
 
-- `2026-09-21-retenciones-workflow-observation-payment-contract-adr` - `retenciones-workflow` adr: `observation payment contract` | (**status:** `proposed`)
+- `2026-09-21-retenciones-workflow-observation-payment-contract-adr` - `retenciones-workflow` adr: `observation payment contract` | (**status:** `accepted`)
 
 ### reference
 

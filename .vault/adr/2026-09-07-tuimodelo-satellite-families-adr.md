@@ -3,13 +3,14 @@ tags:
   - '#adr'
   - '#tuimodelo'
 date: '2026-09-07'
-modified: '2026-09-07'
+modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:1e711363327d6291498541d3cb415c6f1bf1ff4361f656792f26217a250584c0'
+body_hash: 'sha256:c591e2186cf1d7cc1a7ef8e7ff5665bbafeb4ad7b1d22d0de48c44e1439c777e'
 related:
   - "[[2026-09-07-tuimodelo-reference]]"
   - "[[2026-08-24-tui-modelo-workspace-interface-adr]]"
   - "[[2026-09-07-tuimodelo-export-destinations-adr]]"
+  - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
 ---
 
 # `tuimodelo` adr: `satellite command family dispositions` | (**status:** `accepted`)
@@ -43,8 +44,9 @@ honestly command-line work.
   explicit taxpayer override, and the override verb is the only remedy
   (`2026-09-07-tuimodelo-reference`).
 - The aggregate verb is not a read. It is the sole operator write path for retención and
-  percepción observations feeding calculation bindings for modelos 111, 115, 123 and 190, with
-  replace-the-set semantics (`2026-09-07-tuimodelo-reference`).
+  percepción observations feeding calculation bindings for modelos 111, 115, 123 and 190. Its
+  editor uses the shared application-owned append, baseline-guarded replace and explicit clear
+  mutation contract (`2026-09-21-retenciones-workflow-observation-payment-contract-adr`).
 - The review-package exchange cannot be completed with the verbs that ship: the function that
   publishes a recipient's encryption key has no caller anywhere, so a recipient cannot obtain
   the key material the address-book command requires. There is also no package catalogue; every
@@ -119,7 +121,8 @@ by surfacing one of them, and an operator who can override but not correct is le
 blunter instrument. The override is presented from within the modelo 303 workspace where the gate actually blocks, because
 an override offered anywhere else asks the operator to leave the problem to solve it. Aggregate
 becomes a proper observation-entry surface for the four withholding modelos, replacing
-command-line JSON with a typed editor over the same replace-the-set semantics. The withholding
+command-line JSON with a typed editor over the shared application-owned append,
+baseline-guarded replace and explicit clear mutation contract. The withholding
 communication gains a small lifecycle surface plus the listing verb it is missing. The review
 exchange gains a package catalogue and a guided sequence, but only after its key publication is
 fixed.

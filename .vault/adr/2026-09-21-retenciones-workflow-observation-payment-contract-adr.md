@@ -5,12 +5,12 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:0fdc676b793275e6c4fc929e64d365234144bfdfab7e74a8cd19f33a6b9d8c41'
+body_hash: 'sha256:fb171b5796bd95618d6fa03d455ab012721ce90ca15a3f19890a1ff667caeafc'
 related:
   - "[[2026-09-21-retenciones-workflow-observation-payment-contract-reference]]"
 ---
 
-# `retenciones-workflow` adr: `observation payment contract` | (**status:** `proposed`)
+# `retenciones-workflow` adr: `observation payment contract` | (**status:** `accepted`)
 
 ## Problem Statement
 
