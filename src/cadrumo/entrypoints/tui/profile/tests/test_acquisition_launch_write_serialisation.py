@@ -55,7 +55,7 @@ class _LaunchRecord:
         self.launched.append(source)
 
 
-def _persist_not_exercised(path: str, value: str) -> ProfileOverview:
+def _persist_not_exercised(path: str, value: str, revision: int, digest: str) -> ProfileOverview:
     raise AssertionError("no field edit is exercised by this test")
 
 
