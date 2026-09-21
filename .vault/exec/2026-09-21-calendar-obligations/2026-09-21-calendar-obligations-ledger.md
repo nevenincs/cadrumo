@@ -5,40 +5,15 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:841ff81249a8ee0267195a9c8e563de435b6ab9c86bd35d6de386df99ea47b43'
+body_hash: 'sha256:ba5d59f40ad0f5cc4f0cfb487bc3fdd9e29a483fdd9ba41da62a7c0f1e5d5e10'
 related:
   - "[[2026-09-21-calendar-obligations-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `calendar-obligations` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S01` `M` `src/cadrumo/domain/deadlines/engine.py`
 - `S01` `M` `src/cadrumo/application/overview/calendar_models.py`
 - `S01` `M` `src/cadrumo/application/overview/calendar.py`
@@ -64,4 +39,5 @@ related:
 - `S03` `verify:` `uv run pytest -n 0 deadline engine lifecycle tests` -> `pass`
 - `S03` `verify:` `uv run ruff check deadline lifecycle files` -> `pass`
 - `S03` `verify:` `uv run ty check deadline engine` -> `pass`
-
+- `S03` `verify:` `uv run pytest -n 0 deadline engine lifecycle rereview` -> `pass`
+- `S03` `A` `.vault/audit/2026-09-21-calendar-obligations-audit.md`

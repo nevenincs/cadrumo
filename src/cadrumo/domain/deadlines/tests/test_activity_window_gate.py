@@ -13,6 +13,7 @@ from datetime import date
 import pytest
 
 from ....core.period import Period
+from ...contribuyente.entity_type import EntityType
 from ..engine import _window_outside_activity_period
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -24,6 +25,7 @@ def test_pre_start_window_is_filtered_out() -> None:
     assert (
         _window_outside_activity_period(
             period=Period.from_year_and_code(2023, "1T"),
+            entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2023, 1, 1),
             closes_on=date(2023, 4, 20),
             activity_start_date=date(2023, 6, 1),
@@ -39,6 +41,7 @@ def test_post_baja_window_is_filtered_out() -> None:
     assert (
         _window_outside_activity_period(
             period=Period.from_year_and_code(2025, "3T"),
+            entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2025, 7, 1),
             closes_on=date(2025, 7, 20),
             activity_start_date=None,
@@ -55,6 +58,7 @@ def test_window_straddling_alta_is_retained() -> None:
     assert (
         _window_outside_activity_period(
             period=Period.from_year_and_code(2024, "2T"),
+            entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 4, 1),
             closes_on=date(2024, 4, 20),
             activity_start_date=date(2024, 4, 15),
@@ -71,6 +75,7 @@ def test_window_straddling_baja_is_retained() -> None:
     assert (
         _window_outside_activity_period(
             period=Period.from_year_and_code(2024, "2T"),
+            entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 4, 1),
             closes_on=date(2024, 4, 20),
             activity_start_date=None,
@@ -88,6 +93,7 @@ def test_no_censo_dates_means_no_filtering() -> None:
     assert (
         _window_outside_activity_period(
             period=Period.from_year_and_code(2024, "2T"),
+            entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 4, 1),
             closes_on=date(2024, 4, 20),
             activity_start_date=None,
@@ -103,10 +109,12 @@ def test_window_inside_active_period_is_retained() -> None:
     assert (
         _window_outside_activity_period(
             period=Period.from_year_and_code(2024, "3T"),
+            entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 7, 1),
             closes_on=date(2024, 7, 20),
             activity_start_date=date(2020, 1, 1),
             activity_end_date=date(2025, 12, 31),
+            legal_entity_token=EntityType.from_registry("legal_entity"),
         )
         is False
     )
@@ -118,6 +126,7 @@ def test_period_ending_on_alta_date_is_retained() -> None:
     assert (
         _window_outside_activity_period(
             period=Period.from_year_and_code(2024, "03"),
+            entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 4, 1),
             closes_on=date(2024, 4, 22),
             activity_start_date=date(2024, 3, 31),
@@ -133,6 +142,7 @@ def test_period_opening_on_baja_date_is_retained() -> None:
     assert (
         _window_outside_activity_period(
             period=Period.from_year_and_code(2024, "2T"),
+            entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2024, 7, 1),
             closes_on=date(2024, 7, 22),
             activity_start_date=None,
@@ -149,6 +159,7 @@ def test_residual_obligation_after_cessation_is_retained(period_code: str) -> No
     assert (
         _window_outside_activity_period(
             period=Period.from_year_and_code(2025, period_code),
+            entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2026, 1, 1),
             closes_on=date(2026, 1, 30),
             activity_start_date=date(2020, 1, 1),
@@ -162,10 +173,26 @@ def test_period_entirely_after_cessation_is_filtered() -> None:
     assert (
         _window_outside_activity_period(
             period=Period.from_year_and_code(2026, "1T"),
+            entity_type=EntityType.from_registry("natural_person"),
             opens_on=date(2026, 4, 1),
             closes_on=date(2026, 4, 20),
             activity_start_date=None,
             activity_end_date=date(2025, 12, 31),
         )
         is True
+    )
+
+
+def test_legal_entity_activity_end_does_not_impersonate_extinction() -> None:
+    assert (
+        _window_outside_activity_period(
+            period=Period.from_year_and_code(2026, "0A"),
+            entity_type=EntityType.from_registry("legal_entity"),
+            opens_on=date(2027, 7, 1),
+            closes_on=date(2027, 7, 25),
+            activity_start_date=date(2020, 1, 1),
+            activity_end_date=date(2025, 12, 31),
+            legal_entity_token=EntityType.from_registry("legal_entity"),
+        )
+        is False
     )

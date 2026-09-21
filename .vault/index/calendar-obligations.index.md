@@ -6,8 +6,9 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:29636b8d1dc0deea532657a0a09681081db7fe4c121ff1b031584ff7dada4152'
+body_hash: 'sha256:9193a24022a68a4842f2f64c781fba581623ef9f75e8b56d9b47bf8cf43e6c61'
 related:
+  - '[[2026-09-21-calendar-obligations-audit]]'
   - '[[2026-09-21-calendar-obligations-ledger]]'
   - '[[2026-09-21-calendar-obligations-plan]]'
 ---
@@ -17,6 +18,10 @@ related:
 Auto-generated index of all documents tagged with `#calendar-obligations`.
 
 ## Documents
+
+### audit
+
+- `2026-09-21-calendar-obligations-audit` - `calendar-obligations` audit: phase reviews
 
 ### exec
 

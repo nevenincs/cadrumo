@@ -20,6 +20,7 @@ from ...core.logging import get_logger
 from ...core.modelo import Modelo
 from ...core.period import Period
 from ...core.time.clock import now, today_madrid
+from ..contribuyente.entity_type import EntityType, entity_type_legal_entity_token
 
 # Type-only registry references. Runtime callers below import the
 # concrete symbols lazily inside the helpers that use them so importing
@@ -92,10 +93,12 @@ def classify_obligation_status(closes_on: date, today: date, due_soon_days: int)
 def _window_outside_activity_period(
     *,
     period: Period,
+    entity_type: EntityType | None,
     opens_on: date,
     closes_on: date,
     activity_start_date: date | None,
     activity_end_date: date | None,
+    legal_entity_token: EntityType | None = None,
 ) -> bool:
     """Return whether an obligation's tax period is outside the activity period.
 
@@ -111,6 +114,8 @@ def _window_outside_activity_period(
     ends_on = period.end_date if period.has_date_span() else closes_on
     if activity_start_date is not None and ends_on < activity_start_date:
         return True
+    if legal_entity_token is not None and entity_type == legal_entity_token:
+        return False
     return activity_end_date is not None and starts_on > activity_end_date
 
 
@@ -344,10 +349,14 @@ class DeadlineEngine:
             return None
         if _window_outside_activity_period(
             period=window.period,
+            entity_type=profile.entity_type,
             opens_on=window.opens_on,
             closes_on=window.closes_on,
             activity_start_date=profile.activity_start_date,
             activity_end_date=profile.activity_end_date,
+            legal_entity_token=entity_type_legal_entity_token(
+                effective_date=window.period.end_date if window.period.has_date_span() else window.closes_on,
+            ),
         ):
             return None
         obligation_status = classify_obligation_status(window.closes_on, reference_today, self.due_soon_days)
