@@ -8,9 +8,10 @@ related:
   - '[[2026-08-23-amortization-casilla-mapping-adr]]'
   - '[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]'
   - '[[2026-09-21-assets-core-lifecycle-contract-adr]]'
+  - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:d00c83bde59004a2e638fd23e5b69151bdec2a94822cc8625b87e1d77c3a2a8f'
+body_hash: 'sha256:cd9315d08a7326bdef0f6f1e95b91ef1a7023ebf5b999d5887f01e4a866290cd'
 ---
 
 # `assets-core` plan
@@ -50,8 +51,8 @@ Ground uncovered contracts and reproduce current acquisition-cost routing withou
 
 Implement the legally governed schedule, lifecycle model, and encrypted replayable history as one backend slice.
 
-- [ ] `P02.S03` - Implement legally grounded asset facts and deterministic schedule boundaries; `src/cadrumo/domain/renta/actividad_asset/, src/cadrumo/_data/registry/aeat/facts/2025/`.
-- [ ] `P02.S04` - Implement encrypted asset history, reopening, correction, and lifecycle persistence; `src/cadrumo/application/renta/actividad_asset/, src/cadrumo/adapters/persistence/profile/actividad_asset.py, src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py, src/cadrumo/adapters/persistence/storage/namespace_registry.py`.
+- [x] `P02.S03` - Implement legally grounded asset facts and deterministic schedule boundaries; `src/cadrumo/domain/renta/actividad_asset/, src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0002-activity-asset-amortization.toml, dev/registry/tests/test_modelo_100_activity_asset_amortization_parameters.py`.
+- [x] `P02.S04` - Implement encrypted asset history, reopening, correction, and lifecycle persistence; `src/cadrumo/application/actividad_asset/, src/cadrumo/adapters/persistence/profile/actividad_asset.py, src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py, src/cadrumo/adapters/persistence/storage/namespace_registry.py`.
 
 ### Phase `P03` - Resolver and deduction safety
 

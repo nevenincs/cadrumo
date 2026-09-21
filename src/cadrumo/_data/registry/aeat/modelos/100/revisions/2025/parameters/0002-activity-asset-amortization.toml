@@ -1,0 +1,189 @@
+# 2025 IRPF activity-asset linear-amortization authority. The coefficient and
+# maximum-period tables are parallel exact-key catalogues: an absent regime,
+# method, or class is unsupported and must never fall back to a nearby row.
+
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-normal-coeficiente-lineal-maximo"
+data_type = "keyed_bracket_table"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
+keyed_brackets = [
+  { key = "obra-civil-general", value = "2", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-pavimentos", value = "6", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-infraestructuras-mineras", value = "7", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-hidraulica", value = "2", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-nuclear", value = "3", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-carbon", value = "4", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-renovable", value = "7", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-otra", value = "5", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-industrial", value = "3", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "terreno-escombrera", value = "4", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "almacen-deposito", value = "7", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "2", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-subestacion-red", value = "5", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-cables", value = "7", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-resto", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "maquinaria", value = "12", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-medico", value = "15", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-locomotora-vagon-traccion", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-buque-aeronave", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-interno", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-externo", value = "16", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-autocamion", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "mobiliario", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "lenceria", value = "25", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "cristaleria", value = "50", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "util-herramienta", value = "25", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "molde-matriz-modelo", value = "33", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "enseres-otros", value = "15", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-electronico", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-proceso-informacion", value = "25", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible-software", value = "33", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible-audiovisual", value = "33", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "otro-elemento", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+]
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos"]
+
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-normal-periodo-maximo-anos"
+data_type = "keyed_bracket_table"
+unit = "years"
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
+keyed_brackets = [
+  { key = "obra-civil-general", value = "100", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-pavimentos", value = "34", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-infraestructuras-mineras", value = "30", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-hidraulica", value = "100", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-nuclear", value = "60", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-carbon", value = "50", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-renovable", value = "30", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-otra", value = "40", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-industrial", value = "68", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "terreno-escombrera", value = "50", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "almacen-deposito", value = "30", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "100", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-subestacion-red", value = "40", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-cables", value = "30", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-resto", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "maquinaria", value = "18", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-medico", value = "14", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-locomotora-vagon-traccion", value = "25", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-buque-aeronave", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-interno", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-externo", value = "14", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-autocamion", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "mobiliario", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "lenceria", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "cristaleria", value = "4", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "util-herramienta", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "molde-matriz-modelo", value = "6", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "enseres-otros", value = "14", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-electronico", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-proceso-informacion", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible-software", value = "6", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible-audiovisual", value = "6", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "otro-elemento", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+]
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos"]
+
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-simplificada-coeficiente-lineal-maximo"
+data_type = "keyed_bracket_table"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-28", "rd-439-2007:art-30"]
+keyed_brackets = [
+  { key = "edificio-otra-construccion", value = "3", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "maquinaria", value = "12", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte", value = "16", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-informacion-software", value = "26", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "util-herramienta", value = "30", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "16", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "ganado-equino-frutal-no-citrico", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "frutal-citrico-vinedo", value = "4", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "olivar", value = "2", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+]
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Tabla de amortizaciones simplificada", "Edificios y otras construcciones"]
+
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-simplificada-periodo-maximo-anos"
+data_type = "keyed_bracket_table"
+unit = "years"
+legal_refs = ["ley-35-2006:art-28", "rd-439-2007:art-30"]
+keyed_brackets = [
+  { key = "edificio-otra-construccion", value = "68", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "20", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "maquinaria", value = "18", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte", value = "14", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-informacion-software", value = "10", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "util-herramienta", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "14", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "ganado-equino-frutal-no-citrico", value = "25", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "frutal-citrico-vinedo", value = "50", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "olivar", value = "100", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+]
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Tabla de amortizaciones simplificada", "Edificios y otras construcciones"]
+
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-intangible-vida-util-no-estimable-limite-anual"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
+[[revisions."2025".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["no pueda estimarse de manera fiable", "veinteava parte de su importe"]
+
+[[revisions."2025".parameters]]
+id = "renta-actividad-fondo-comercio-amortizacion-limite-anual"
+data_type = "ratio"
+unit = "percent"
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12"]
+[[revisions."2025".parameters.values]]
+value = "5"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["fondo de comercio", "veinteava parte de su importe"]
+
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-umbral-unitario"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-28"]
+[[revisions."2025".parameters.values]]
+value = "300"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["valor unitario no exceda de", "25.000 euros referido al período impositivo"]
+
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-limite-anual"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-35-2006:art-28"]
+[[revisions."2025".parameters.values]]
+value = "25000"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["valor unitario no exceda de", "25.000 euros referido al período impositivo"]

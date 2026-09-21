@@ -80,6 +80,7 @@ _EXPECTED_NAMESPACE_KEYS_IN_ORDER = (
     "operation_secure_references",
     "user_profile_value",
     "user_profile_snapshot",
+    "profile_actividad_asset_history",
     "profile_inventory_ledger",
     "profile_bienes_inversion_iva_register",
     "profile_prorrata_register",

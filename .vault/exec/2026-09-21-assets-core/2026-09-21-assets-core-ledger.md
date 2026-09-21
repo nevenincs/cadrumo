@@ -5,40 +5,15 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:e7656b60d8e4866f5584e48bb6c2c892b1ea4ccd4b4ca8a2b52e7a99d9ebb7c0'
+body_hash: 'sha256:3c720094dd4d1c12db9726fa08ef738884f45591dc03f8198f3af0a4bb7df9a2'
 related:
   - "[[2026-09-21-assets-core-plan]]"
 ---
-
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `assets-core` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 - `S02` `M` `src/cadrumo/application/aggregation/tests/test_renta_ledger.py`
 - `S02` `M` `src/cadrumo/application/aggregation/tests/test_inventory_source.py`
 - `S02` `verify:` `uv run ruff check two P01.S02 test files` -> `pass`
@@ -48,3 +23,25 @@ related:
 - `S01` `M` `.vault/adr/2026-09-21-assets-core-lifecycle-contract-adr.md`
 - `S01` `verify:` `vaultspec assets-core focused checks` -> `pass`
 - `S01` `by:` `root`
+- `S03` `A` `src/cadrumo/domain/renta/actividad_asset/`
+- `S03` `A` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0002-activity-asset-amortization.toml`
+- `S03` `A` `dev/registry/tests/test_modelo_100_activity_asset_amortization_parameters.py`
+- `S03` `A` `.vault/adr/2026-09-21-assets-core-cost-basis-stages-adr.md`
+- `S03` `verify:` `Ruff ty basedpyright` -> `pass`
+- `S03` `by:` `OpenAI GPT-5 lead; Terra High domain worker; Terra Max authority audit`
+- `S04` `A` `src/cadrumo/application/actividad_asset/`
+- `S04` `A` `src/cadrumo/adapters/persistence/profile/actividad_asset.py`
+- `S04` `A` `src/cadrumo/adapters/persistence/profile/tests/test_actividad_asset_history.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S04` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S04` `verify:` `global namespace order test` -> `fail`
+- `S04` `by:` `OpenAI GPT-5 lead; Terra High persistence worker`
+- `S03` `verify:` `uv run pytest -n 0 -m integration dev/registry/tests/test_authoring_candidate_inspection.py` -> `pass`
+- `S03` `verify:` `focused asset domain and authority pytest (13 tests)` -> `pass`
+- `S04` `verify:` `focused combined P02 pytest (20 tests)` -> `pass`
+- `S04` `verify:` `Ruff ty basedpyright git diff --check` -> `pass`
+
+## Notes
+
+- `S04` Global namespace-order tripwire reaches an unrelated concurrent income-lane omission: withholding_workflow is enrolled but absent from that lane's expected tuple. Assets expected-order entry is present.
