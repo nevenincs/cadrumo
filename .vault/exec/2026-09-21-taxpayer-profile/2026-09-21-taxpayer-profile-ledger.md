@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:2682e42fb1cfe8cdb75c5f3f27f5df5b6489a4bc7e0d17e49b8af58373a62a4e'
+body_hash: 'sha256:3ea4f81723da6ee993e09d36ca7107b7865ceca178f960d5628cfbe9cc956b50'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -94,6 +94,9 @@ related:
 - `S10` `M` `src/cadrumo/entrypoints/tui/profile/overview.py`
 - `S10` `M` `src/cadrumo/entrypoints/tui/tests/test_installed_generation_composition.py`
 - `S10` `M` `src/cadrumo/entrypoints/tui/tests/test_manager_screen.py`
+- `S10` `M` `dev/quality/metadata/application_entrypoint_modules.json`
+- `S10` `M` `dev/quality/metadata/import_load_targets.json`
+- `S10` `verify:` `snapshot-test-gate-origin-main` -> `pass`
 
 ## Notes
 
@@ -111,4 +114,5 @@ related:
 - `S11` plan handoff cannot close while required repository import gate remains red outside PROFILE-01
 - `S10` target canonical import gate exit 7: external findings and concurrent source drift; no PROFILE-01 finding
 - `S10` stable repository gates at snapshot 1f0761810f remain red; classified external findings pending owners
+- `S10` stable snapshot at 1f0761810f: repository style/format/types/import remain red under assigned owner packets
 
