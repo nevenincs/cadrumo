@@ -84,3 +84,9 @@ Evidence checks NOT RUN: no filing creation or installed frontend journey was ex
 - Owner `taxpayer-profile` / root; reserved 2026-09-21; status complete/released: exact projection regression plus the owning effective-window file and relation-prefill activity-start consumer passed 8 tests, exit 0, metadata `20260921T153550.328112Z-pytest-46628-1d698dde/run.json`. Explicit integration selection for CLI clear and census clear precedence passed 2 tests, exit 0, metadata `20260921T153607.685354Z-pytest-50184-efcd11a7/run.json`. `ruff check` and `ty check` passed both touched files. No aggregate lane or shared external resource was used.
 
 P02.S04 outcome: **fixed**. The canonical effective-fact map now resolves the latest dated fact including an explicit clear before value projections omit nulls. Path values, selector values, and the typed Modelo profile-binding index can no longer resurrect an older value; the provenance projection continues to expose the clear itself.
+
+## P02.S05 verification reservation
+
+- Owner `taxpayer-profile` / root; reserved 2026-09-21; status complete/released: exact snapshot canonicality, required profile event emission, real-path scalar profile binding, absent-fact anti-tautology, and profile export identity nodes passed 5 tests, exit 0, metadata `20260921T153757.875818Z-pytest-8680-a35e2a3a/run.json`. No persistence namespace edit, aggregate lane, or external resource was needed.
+
+P02.S05 outcome: **proven for the changed projection boundary**. Canonical snapshot construction/refusal, required event-emitter coverage, typed real-path Modelo bindings, absent-fact handling, and profile-derived export identity remain green. This does not promote dormant production snapshot pinning to supported; PR6 remains blocked as recorded above.

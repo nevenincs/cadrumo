@@ -12,7 +12,7 @@ related:
   - '[[2026-08-19-profile-setup-completion-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:52cdc2ed8fcbd362a2be5371c9d280fef2c123362cb1ee0ea58bcb6902d6ae7b'
+body_hash: 'sha256:6941512d07eb506677ec6c7197144914f0a92f1b5832c4055ce8ba8fc7b2a158'
 ---
 
 # `taxpayer-profile` plan
@@ -42,7 +42,7 @@ Establish current source ownership, frontend writer coverage, one filing-critica
 Fix only reproduced backend validation, persistence, selection, provenance, readiness, or temporal-boundary defects through existing owners.
 
 - [x] `P02.S04` - Repair reproduced canonical profile mutation, projection, selection, and readiness defects; `application and domain user_profile packages`.
-- [ ] `P02.S05` - Preserve encrypted persistence, provenance, and filing consumer boundaries under profile changes; `profile storage and modelo profile binding modules`.
+- [x] `P02.S05` - Preserve encrypted persistence, provenance, and filing consumer boundaries under profile changes; `profile storage and modelo profile binding modules`.
 
 ### Phase `P03` - close CLI and TUI usability parity
 
