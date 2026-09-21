@@ -12,7 +12,7 @@ related:
   - '[[2026-09-17-filing-chain-reconciliation-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:7cbe2756935e59bb23102988a5b16a3fd0142d341b167e7077ee6900e4b66989'
+body_hash: 'sha256:f3295e9a7fa86dfa667c10872569da3d3de88092a9e7a6c323820f83e9298f25'
 ---
 
 # `calendar-obligations` plan
@@ -35,7 +35,7 @@ Prove and correct one effective deadline, evaluation date, authority provenance 
 
 - [x] `P01.S01` - Align effective-deadline status, recovery and overdue duration across calendar and agenda with explicit shift uncertainty; `src/cadrumo/domain/deadlines/engine.py, src/cadrumo/application/overview/calendar_models.py, src/cadrumo/application/overview/calendar.py, src/cadrumo/application/overview/agenda.py and owning tests`.
 - [x] `P01.S02` - Thread the evaluation date through historical applicability and special-regime resolution; `src/cadrumo/application/overview/calendar.py, src/cadrumo/domain/calculations/registry/applicability.py and owning tests`.
-- [ ] `P01.S03` - Preserve final-period and annual residual obligations across cessation boundaries; `src/cadrumo/domain/deadlines/engine.py and src/cadrumo/domain/deadlines/tests`.
+- [x] `P01.S03` - Preserve final-period and annual residual obligations across cessation boundaries; `src/cadrumo/domain/deadlines/engine.py and src/cadrumo/domain/deadlines/tests`.
 
 ### Phase `P02` - filing evidence and recovery
 

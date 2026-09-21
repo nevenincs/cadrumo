@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
 
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
+from ...core.period import Period
 from ...core.time.clock import now, today_madrid
 
 # Type-only registry references. Runtime callers below import the
@@ -90,29 +91,27 @@ def classify_obligation_status(closes_on: date, today: date, due_soon_days: int)
 
 def _window_outside_activity_period(
     *,
+    period: Period,
     opens_on: date,
     closes_on: date,
     activity_start_date: date | None,
     activity_end_date: date | None,
 ) -> bool:
-    """Return True when an AEAT window falls entirely outside the operator's activity period.
+    """Return whether an obligation's tax period is outside the activity period.
 
-    Two gates, both grounded in RGAT Arts. 9 / 11 (censo activity
-    start / end dates published on G313):
+    Quarterly, monthly, and annual obligations compare the tax period rather
+    than the later filing window. This preserves final-period and annual
+    residual obligations after cessation. Event and instalment periods have no
+    calendar span, so they retain the filing-window fallback.
 
-    * Pre-start: ``closes_on < activity_start_date`` — the entire
-      window precedes the alta. AEAT does not expect a filing for
-      activity that did not occur.
-    * Post-baja: ``opens_on > activity_end_date`` — the entire window
-      follows the baja. AEAT does not expect a forward-period filing
-      after the operator has declared baja.
-
-    Windows that straddle either date stay on the schedule — the
-    operator may still owe a return covering the active fraction.
+    The inclusive boundaries are grounded in RGAT Arts. 9 and 11: a period
+    that overlaps either alta or baja remains potentially reportable.
     """
-    if activity_start_date is not None and closes_on < activity_start_date:
+    starts_on = period.start_date if period.has_date_span() else opens_on
+    ends_on = period.end_date if period.has_date_span() else closes_on
+    if activity_start_date is not None and ends_on < activity_start_date:
         return True
-    return activity_end_date is not None and opens_on > activity_end_date
+    return activity_end_date is not None and starts_on > activity_end_date
 
 
 #: One year's projection, keyed by the generation it was read from. An admitted
@@ -344,6 +343,7 @@ class DeadlineEngine:
         if condition_text is None:
             return None
         if _window_outside_activity_period(
+            period=window.period,
             opens_on=window.opens_on,
             closes_on=window.closes_on,
             activity_start_date=profile.activity_start_date,

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:a61f4267b0fba30785cad928b8543633a80dc5305fcf95eb941af7981d36a37b'
+body_hash: 'sha256:841ff81249a8ee0267195a9c8e563de435b6ab9c86bd35d6de386df99ea47b43'
 related:
   - "[[2026-09-21-calendar-obligations-plan]]"
 ---
@@ -57,4 +57,11 @@ related:
 - `S02` `verify:` `uv run ty check calendar.py` -> `pass`
 - `S02` `verify:` `uv run pytest -n 0 test_calendar.py` -> `pass`
 - `S02` `verify:` `uv run ruff check calendar files` -> `pass`
+- `S03` `M` `src/cadrumo/domain/deadlines/engine.py`
+- `S03` `M` `src/cadrumo/domain/deadlines/tests/test_activity_window_gate.py`
+- `S03` `M` `.vault/plan/2026-09-21-calendar-obligations-plan.md`
+- `S03` `M` `.vault/index/calendar-obligations.index.md`
+- `S03` `verify:` `uv run pytest -n 0 deadline engine lifecycle tests` -> `pass`
+- `S03` `verify:` `uv run ruff check deadline lifecycle files` -> `pass`
+- `S03` `verify:` `uv run ty check deadline engine` -> `pass`
 
