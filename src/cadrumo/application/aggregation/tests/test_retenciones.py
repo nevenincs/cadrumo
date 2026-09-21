@@ -10,6 +10,7 @@ from ....core.aggregation import BindingSourceKind, RetencionScheme
 from ....core.period import Period
 from ..retenciones import (
     Modelo180PropertyEvidence,
+    Modelo180StructuredAddress,
     RetencionesAggregation,
     RetencionObservation,
     aggregate_retenciones_111,
@@ -60,6 +61,17 @@ def _property(key: str, cadastral_reference: str) -> Modelo180PropertyEvidence:
         modality="1",
         accrual_year=2025,
         withholding_percentage=Decimal("19.00"),
+        address=Modelo180StructuredAddress(
+            province_code="28",
+            municipality_code="079",
+            municipality="Madrid",
+            locality="Madrid",
+            postal_code="28001",
+            street_type="CL",
+            street_name="Ejemplo",
+            number_type="NUM",
+            house_number="1",
+        ),
     )
 
 

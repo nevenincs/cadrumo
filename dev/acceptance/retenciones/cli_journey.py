@@ -1100,6 +1100,17 @@ def _modelo_180_property_payload(detail: Modelo180PropertyInput) -> dict[str, ob
         "modality": detail.modality,
         "accrual_year": detail.accrual_year,
         "withholding_percentage": _money_text(detail.withholding_percentage),
+        "address": {
+            "province_code": detail.province_code,
+            "municipality_code": "079",
+            "municipality": "Madrid",
+            "locality": "Madrid",
+            "postal_code": detail.postal_code,
+            "street_type": "CL",
+            "street_name": "Ejemplo",
+            "number_type": "NUM",
+            "house_number": "1",
+        },
     }
 
 

@@ -30,7 +30,7 @@ from .._preconditions import AggregationPreconditionCondition
 from ..errors import AggregationValidationError
 from ..modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..retencion_observations_repository import RetencionObservationPorts
-from ..retenciones import Modelo180PropertyEvidence, RetencionObservation
+from ..retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress, RetencionObservation
 from ..source_mesh import CalculationSourceContext
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -121,6 +121,17 @@ def _observation(nif: str) -> RetencionObservation:
             modality="1",
             accrual_year=2024,
             withholding_percentage=Decimal("19.00"),
+            address=Modelo180StructuredAddress(
+                province_code="28",
+                municipality_code="079",
+                municipality="Madrid",
+                locality="Madrid",
+                postal_code="28001",
+                street_type="CL",
+                street_name="Ejemplo",
+                number_type="NUM",
+                house_number="1",
+            ),
         ),
     )
 

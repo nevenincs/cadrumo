@@ -98,7 +98,7 @@ class Modelo180PropertyEvidence(BaseModel):
     property_key: str = Field(min_length=1, max_length=128)
     situation: Literal["1", "2", "3", "4"]
     cadastral_reference: str | None = Field(default=None, min_length=1, max_length=20)
-    address: Modelo180StructuredAddress | None = None
+    address: Modelo180StructuredAddress
     recipient_province_code: str = Field(pattern=r"^\d{2}$")
     modality: Literal["1", "2"]
     accrual_year: int = Field(ge=1900, le=9999)
@@ -110,7 +110,7 @@ class Modelo180PropertyEvidence(BaseModel):
         if self.situation in {"1", "2", "3"}:
             if self.cadastral_reference is None:
                 raise ValueError("situations 1-3 require a cadastral reference")
-        elif self.cadastral_reference is not None or self.address is None:
+        elif self.cadastral_reference is not None:
             raise ValueError("situation 4 requires no cadastral reference and a structured address")
         return self
 

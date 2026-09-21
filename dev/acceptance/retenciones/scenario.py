@@ -116,6 +116,8 @@ class Modelo180PropertyInput:
     modality: str
     accrual_year: int
     withholding_percentage: Decimal
+    province_code: str
+    postal_code: str
 
 
 @dataclass(frozen=True, slots=True)
@@ -346,6 +348,8 @@ def build_installed_periodic_cli_slices(
             modality="1",
             accrual_year=year,
             withholding_percentage=Decimal("19.00"),
+            province_code="28",
+            postal_code="28001",
         ),
     )
     _assert_slice_consistency(professional)
@@ -416,6 +420,8 @@ def build_installed_annual_cli_slices(
         modality="1",
         accrual_year=year,
         withholding_percentage=Decimal("19.00"),
+        province_code="28",
+        postal_code="28001",
     )
     property_b = Modelo180PropertyInput(
         property_key="urban-rent-property-b",
@@ -425,6 +431,8 @@ def build_installed_annual_cli_slices(
         modality="1",
         accrual_year=year,
         withholding_percentage=Decimal("19.00"),
+        province_code="28",
+        postal_code="28002",
     )
     rent_a_q1 = InstalledPeriodicCliSlice(
         slice_id="urban-rent-115-q1-property-a",

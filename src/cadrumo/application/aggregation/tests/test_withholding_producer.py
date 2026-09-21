@@ -14,7 +14,11 @@ from cadrumo.adapters.persistence.profile.withholding_observation_workflow impor
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
-from cadrumo.application.aggregation.retenciones import Modelo180PropertyEvidence, aggregate_retenciones_180
+from cadrumo.application.aggregation.retenciones import (
+    Modelo180PropertyEvidence,
+    Modelo180StructuredAddress,
+    aggregate_retenciones_180,
+)
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext
 from cadrumo.application.aggregation.withholding_observation_service import (
     ABSENT_WITHHOLDING_GENERATION_ID,
@@ -166,6 +170,17 @@ def _rent_property(key: str, cadastral_reference: str) -> Modelo180PropertyEvide
         modality="1",
         accrual_year=2025,
         withholding_percentage=Decimal("19.00"),
+        address=Modelo180StructuredAddress(
+            province_code="28",
+            municipality_code="079",
+            municipality="Madrid",
+            locality="Madrid",
+            postal_code="28001",
+            street_type="CL",
+            street_name="Ejemplo",
+            number_type="NUM",
+            house_number="1",
+        ),
     )
 
 
