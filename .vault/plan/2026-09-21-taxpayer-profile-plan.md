@@ -12,7 +12,7 @@ related:
   - '[[2026-08-19-profile-setup-completion-adr]]'
 modified: '2026-09-21'
 body_schema: body-v2
-body_hash: 'sha256:728fc743fc5f5763b3c461ee04899235e25f9c706213615e0dcb78aba248ec7c'
+body_hash: 'sha256:b1956cd0b8cfe18523c214bcb040f39560241516b39d51f634227b6fde30f571'
 ---
 
 # `taxpayer-profile` plan
@@ -56,7 +56,7 @@ Expose shared backend behavior through independent CLI and TUI adapters with hon
 
 Run focused gates and isolated installed frontend continuations, then complete integrated review and handoff by PROFILE-01 acceptance ID.
 
-- [ ] `P04.S09` - Implement isolated PROFILE-01 acceptance scenarios and sanitized receipts; `dev/acceptance profile scenario area`.
+- [x] `P04.S09` - Implement isolated PROFILE-01 acceptance scenarios and sanitized receipts; `dev/acceptance profile scenario area`.
 - [ ] `P04.S10` - Run reserved focused tests, affected quality gates, and installed CLI TUI continuations; `taxpayer profile affected source and acceptance areas`.
 - [ ] `P04.S11` - Complete integrated review and PROFILE-01 handoff; `.vault/audit and taxpayer profile checkpoint`.
 

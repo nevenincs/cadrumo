@@ -46,6 +46,24 @@ The implementation changes only `application/user_profile/projections.py` and it
 
 Phase P02 result: PASS. No critical or high finding blocks frontend work.
 
+### same-profile-stale-result | high | A delayed write result could repaint an older same-profile revision
+
+The first P03 review found that the TUI rejected a result for another profile but accepted an older result for the same profile after a newer projection became visible. S07 was reopened. The settling boundary now compares revision and digest before repainting and discards the stale result with copy that preserves the possibility that its write completed. A direct delayed-result regression passes.
+
+### repeatable-row-tui-usability | high | Add and remove were untyped and unexercised
+
+The first P03 review found raw text controls for closed-set repeatable fields, an unidentified removal confirmation, and no direct add/remove tests. S07 was reopened. Add now uses schema-projected choices, removal names section and stable row, and direct tests cover empty-section add, canonical choice tokens, nonordinal removal, validation refusal, persistence failure, and persisted refresh.
+
+### post-commit-refresh-outcome | medium | A projection failure after commit can still look like a failed write
+
+Installed TUI composition publishes before rebuilding the overview. If the post-commit projection unexpectedly fails, generic failure copy can imply nothing was saved even though storage may have committed. No critical/high defect remains, but final reporting must retain this ambiguity rather than recommending a blind retry.
+
+### profile-locale-boundary | low | One application projection still uses CLI-owned census leaf keys
+
+The TUI row actions and missing-field summary now use TUI-owned flow keys. The application overview projection still resolves census divergence leaf labels from `cli.config.profile.*`; this is retained as low boundary debt and does not alter mutation semantics.
+
+Phase P03 result after correction: PASS. Both high findings were fixed and the focused race suite passes 13 tests; no critical or high finding blocks installed acceptance.
+
 ## Recommendations
 
 - Fix clear projection at the shared projection boundary and add an anti-resurfacing regression before touching consumers.

@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:3d27002ee72174dd8529bbe34187efb72dc7e4b743ce8557ea65083d9a452082'
+body_hash: 'sha256:a0280e1f3f05b3329e3c1880b9f5ff8699c5d97d44bfb51397973e670a402367'
 related:
   - "[[2026-09-21-taxpayer-profile-plan]]"
 ---
@@ -63,6 +63,16 @@ related:
 - `S08` `verify:` `profile application flows and tui locale domains complete` -> `pass`
 - `S07` `M` `src/cadrumo/entrypoints/tui/profile/tests/test_repeatable_row_race_safety.py`
 - `S08` `verify:` `TUI copy keys resolve in four locales` -> `pass`
+- `S09` `A` `dev/acceptance/profile/__init__.py`
+- `S09` `A` `dev/acceptance/profile/scenario.py`
+- `S09` `A` `dev/acceptance/profile/cli_journey.py`
+- `S09` `A` `dev/acceptance/profile/installed_tui_child.py`
+- `S09` `A` `dev/acceptance/profile/tui_journey.py`
+- `S09` `A` `dev/acceptance/profile/tests/__init__.py`
+- `S09` `A` `dev/acceptance/profile/tests/test_scenario.py`
+- `S09` `A` `dev/acceptance/profile/tests/test_cli_journey.py`
+- `S09` `A` `dev/acceptance/profile/tests/test_tui_journey.py`
+- `S09` `verify:` `acceptance harness ruff format and ty` -> `pass`
 
 ## Notes
 
@@ -74,4 +84,5 @@ related:
 - `S08` Repository-wide locale status remains open for 48 concurrent assets/modelo CLI cells and 8 unrelated inventory declarations.
 - `S07` Reopened after high review: fixed same-profile stale result and typed add/remove coverage.
 - `S08` Removed final CLI-owned key from TUI profile manager.
+- `S09` Installed wheel execution intentionally remains S10.
 
