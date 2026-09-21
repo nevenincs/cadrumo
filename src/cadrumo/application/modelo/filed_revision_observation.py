@@ -58,6 +58,7 @@ from ...core.result_disposition import ResultDisposition
 from ...core.secure_object_write import SecureObjectWrite
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
+from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.iva_compensation_history import iva_compensation_state_from_observation_envelope
@@ -143,6 +144,7 @@ class PreparedFiledRevisionObservation:
     payload: ObservationEnvelopePayload
     key: str
     history_repository: IvaCompensationHistoryRepositoryProtocol | None
+    iva_compensation_state: IvaCompensationPeriodState | None
 
 
 def prepare_filed_revision_observation(
@@ -206,7 +208,23 @@ def prepare_filed_revision_observation(
         result_disposition=disposition_projection,
         prior_domiciliation_election=prior_domiciliation_election,
     )
-    return PreparedFiledRevisionObservation(payload=payload, key=key, history_repository=history_repo)
+    state = None
+    if history_repo is not None and taxpayer_nif is not None:
+        filing_ref = filing_record_id or key
+        with bundled_indexed_authority().operation() as operation:
+            state = iva_compensation_state_from_observation_envelope(
+                payload,
+                taxpayer_nif=taxpayer_nif.strip(),
+                provenance=IvaCompensationStateProvenance.APP_FILING,
+                source_observation_key=f"{key}:local:{filing_ref[:64]}",
+                operation=operation,
+            )
+    return PreparedFiledRevisionObservation(
+        payload=payload,
+        key=key,
+        history_repository=history_repo,
+        iva_compensation_state=state,
+    )
 
 
 def filed_revision_observation_writes(
@@ -225,17 +243,8 @@ def filed_revision_observation_writes(
     """
     writes = [repository.to_secure_object_write(prepared.payload)]
     history_repo = prepared.history_repository
-    if history_repo is not None and taxpayer_nif is not None:
-        filing_ref = filing_record_id or prepared.key
-        with bundled_indexed_authority().operation() as operation:
-            state = iva_compensation_state_from_observation_envelope(
-                prepared.payload,
-                taxpayer_nif=taxpayer_nif.strip(),
-                provenance=IvaCompensationStateProvenance.APP_FILING,
-                source_observation_key=f"{prepared.key}:local:{filing_ref[:64]}",
-                operation=operation,
-            )
-        writes.append(history_repo.to_secure_object_write(state))
+    if history_repo is not None and prepared.iva_compensation_state is not None:
+        writes.append(history_repo.to_secure_object_write(prepared.iva_compensation_state))
     return tuple(writes)
 
 

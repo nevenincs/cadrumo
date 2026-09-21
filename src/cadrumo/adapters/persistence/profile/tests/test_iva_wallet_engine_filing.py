@@ -54,7 +54,7 @@ from cadrumo.core.config import Settings
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
-from cadrumo.domain.modelos.filing_record import ModeloRecordStatus
+from cadrumo.domain.modelos.filing_record import IvaSettlementRefundState, ModeloRecordStatus
 from cadrumo.entrypoints.adapter_composition import build_filing_action_ports
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
@@ -271,6 +271,14 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
         assert history.provenance is IvaCompensationStateProvenance.APP_FILING
         assert history.generated_amount == generated_carry
         assert history.available_end_amount == generated_carry
+        assert filing.settlement is not None
+        assert filing.settlement.declared_liability == Decimal("0")
+        assert filing.settlement.credit_snapshot.opening_amount == history.prior_pending_amount
+        assert filing.settlement.credit_snapshot.generated_amount == history.generated_amount
+        assert filing.settlement.credit_snapshot.applied_amount == history.applied_amount
+        assert filing.settlement.credit_snapshot.remaining_amount == history.available_end_amount
+        assert filing.settlement.refund_election_intent is False
+        assert filing.settlement.refund_state is IvaSettlementRefundState.NOT_REQUESTED
         balance = query_iva_wallet_balance(as_of_year=2026, repository=IvaCompensationHistoryRepository())
         assert balance.total_balance == generated_carry
         assert balance.lot_count == 1

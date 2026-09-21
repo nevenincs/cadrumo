@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:8bf28f9a30091d2159fce4ad9b6d582ce34be16b847171785722279ddcb010a4'
+body_hash: 'sha256:fbecb4b2a2e77126364ee21d20eb12ba6a8ca15a206621488241b905d6ab1217'
 related:
   - "[[2026-09-21-iva-workflow-reference]]"
   - "[[2026-09-17-filing-chain-reconciliation-adr]]"
@@ -103,3 +103,42 @@ amendment keeps both historical settlement evidence and one effective chain.
 The cost is a filing-record schema extension and evidence-transition validation.
 Until external evidence is supplied, payment, approval and paid-refund states
 remain explicitly incomplete; this campaign does not discover them live.
+
+## Amendment 1 — Filing-time derivation and append-only payment evidence
+
+Accepted 2026-09-21 under the same IVA implementation authorization. The first
+accepted text chose the filing record as settlement owner but left evidence
+cardinality, pending refund intent and the source of financial snapshot values
+underspecified. This amendment narrows those points without changing the owner.
+
+Every newly persisted local Modelo 303 filing must receive its settlement
+snapshot in the same secure co-commit as the filing record, calculation revision
+and normalized filing observation. Declared liability is derived only by the
+core result-disposition owner from its canonical result casillas. The credit
+audit copy is derived only from the `IvaCompensationPeriodState` projected from
+that same normalized observation. Neither value is accepted from a frontend or
+settlement-evidence command. If either required source is absent, stale or
+contradictory, filing persistence refuses rather than writing an absent snapshot
+or inferred zero. Historical records that predate this amendment may load with
+no snapshot, but remain explicitly incomplete and are never backfilled silently.
+
+The snapshot carries refund-election intent separately from official refund
+state. A pending local filing may retain a refund election while its official
+state remains `not_requested`. `requested` requires the filing record's existing
+AEAT-confirmation evidence; `approved` and `paid` retain their own distinct
+evidence references and effective dates.
+
+Payment evidence is an append-only ordered tuple. Each entry carries one stable
+secure evidence reference, a positive evidenced amount and an effective date.
+Duplicate references with different facts are contradictions; identical entries
+collapse idempotently. Evidenced payment total and payment state are derived from
+the distinct entries: zero is awaiting evidence, a positive amount below the
+declared liability is partial, and equality is evidenced. A total above liability
+is blocking. No update may erase an earlier payment artifact or independently
+assert a payment state.
+
+Supersession preserves the predecessor's complete settlement snapshot and
+evidence tuple. Only the current effective filing contributes to the active
+compensation chain. External AEAT import may attach a snapshot only when it
+supplies the same canonical normalized facts; otherwise its settlement remains
+explicitly incomplete pending a separately grounded import mapping.

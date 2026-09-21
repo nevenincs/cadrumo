@@ -28,8 +28,10 @@ from __future__ import annotations
 import re
 import unicodedata
 from collections.abc import Iterator, Mapping
+from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Self, override
+from typing import Annotated, Self, cast, override
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator, model_validator
 
@@ -44,6 +46,7 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
+from ..filing_evidence import FilingEvidenceReference
 from .codes import ModeloCode
 from .errors import ModeloValidationError
 from .filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
@@ -168,6 +171,210 @@ class FilingDeclarationKind(StrEnum):
     RECTIFICATIVA = "rectificativa"
 
 
+class IvaSettlementPaymentState(StrEnum):
+    """Evidence state of the declared positive Modelo 303 liability."""
+
+    NOT_APPLICABLE = "not_applicable"
+    AWAITING_EVIDENCE = "awaiting_evidence"
+    PARTIALLY_EVIDENCED = "partially_evidenced"
+    EVIDENCED = "evidenced"
+
+
+class IvaSettlementRefundState(StrEnum):
+    """Independent refund-request, approval, and payment evidence state."""
+
+    NOT_REQUESTED = "not_requested"
+    REQUESTED = "requested"
+    APPROVED = "approved"
+    PAID = "paid"
+
+
+class IvaCreditSnapshot(BaseModel):
+    """Audit copy of the credit disposition for one filed Modelo 303.
+
+    This value validates the filing-time equation but never supplies the active
+    carry-forward balance; IVA compensation history remains that owner.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    opening_amount: Decimal = Field(ge=Decimal("0"))
+    generated_amount: Decimal = Field(ge=Decimal("0"))
+    applied_amount: Decimal = Field(ge=Decimal("0"))
+    remaining_amount: Decimal = Field(ge=Decimal("0"))
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_balanced_credit(self) -> IvaCreditSnapshot:
+        available = self.opening_amount + self.generated_amount
+        if self.applied_amount > available:
+            raise ModeloValidationError("credit snapshot applied_amount exceeds opening plus generated credit")
+        if self.remaining_amount != available - self.applied_amount:
+            raise ModeloValidationError(
+                "credit snapshot remaining_amount must equal opening plus generated minus applied"
+            )
+        return self
+
+
+class IvaSettlementPaymentEvidence(BaseModel):
+    """One immutable, securely referenced payment fact for a filed Modelo 303."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    reference: FilingEvidenceReference
+    amount: Decimal = Field(gt=Decimal("0"))
+    effective_at: UtcInstant
+
+    @field_validator("amount", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _restore_persisted_amount(cls, value: object) -> object:
+        """Restore Decimal values from the encrypted JSON envelope."""
+        return Decimal(value) if isinstance(value, str) else value
+
+    @field_validator("effective_at", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _restore_persisted_effective_at(cls, value: object) -> object:
+        """Restore UTC instants from the encrypted JSON envelope."""
+        return datetime.fromisoformat(value.replace("Z", "+00:00")) if isinstance(value, str) else value
+
+
+class IvaSettlementSnapshot(BaseModel):
+    """Immutable settlement evidence attached to one filed Modelo 303 revision.
+
+    It records declaration and evidence facts without inferring AEAT acceptance,
+    payment, refund approval, or refund payment. Evidence references name
+    material already held through the secure filing-evidence custody boundary;
+    raw evidence bytes never enter this value.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    calculation_revision_id: CalculationRevisionId
+    declared_liability: Decimal = Field(ge=Decimal("0"))
+    payment_evidence: tuple[IvaSettlementPaymentEvidence, ...] = ()
+    refund_election_intent: bool = False
+    refund_state: IvaSettlementRefundState
+    refund_requested_amount: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
+    refund_approved_amount: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
+    refund_paid_amount: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
+    refund_approval_evidence_reference: FilingEvidenceReference | None = None
+    refund_approval_effective_at: UtcInstant | None = None
+    refund_payment_evidence_reference: FilingEvidenceReference | None = None
+    refund_payment_effective_at: UtcInstant | None = None
+    credit_snapshot: IvaCreditSnapshot
+
+    @field_validator("payment_evidence", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _collapse_identical_payment_evidence(cls, value: object) -> tuple[IvaSettlementPaymentEvidence, ...]:
+        """Keep first-seen evidence order while collapsing only exact duplicates."""
+        if value is None:
+            return ()
+        if not isinstance(value, (list, tuple)):
+            raise ModeloValidationError("payment_evidence must be an ordered sequence")
+        ordered: list[IvaSettlementPaymentEvidence] = []
+        by_reference: dict[str, IvaSettlementPaymentEvidence] = {}
+        entries = cast(tuple[object, ...] | list[object], value)
+        for raw_entry in entries:
+            entry = (
+                raw_entry
+                if isinstance(raw_entry, IvaSettlementPaymentEvidence)
+                else IvaSettlementPaymentEvidence.model_validate(raw_entry)
+            )
+            reference = entry.reference.reference
+            existing = by_reference.get(reference)
+            if existing is None:
+                by_reference[reference] = entry
+                ordered.append(entry)
+            elif existing != entry:
+                raise ModeloValidationError("payment evidence reference carries conflicting facts")
+        return tuple(ordered)
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_settlement_evidence_invariants(self) -> IvaSettlementSnapshot:
+        _require_evidence_pair(
+            reference=self.refund_approval_evidence_reference,
+            effective_at=self.refund_approval_effective_at,
+            label="refund approval evidence",
+        )
+        _require_evidence_pair(
+            reference=self.refund_payment_evidence_reference,
+            effective_at=self.refund_payment_effective_at,
+            label="refund payment evidence",
+        )
+        _require_payment_evidence_total(self)
+        _require_refund_state(self)
+        return self
+
+    @property
+    def evidenced_payment_amount(self) -> Decimal:
+        """Return the total recorded by the append-only payment evidence tuple."""
+        return sum((entry.amount for entry in self.payment_evidence), Decimal("0"))
+
+    @property
+    def payment_state(self) -> IvaSettlementPaymentState:
+        """Derive payment state; callers cannot independently assert it."""
+        if self.declared_liability == Decimal("0"):
+            return IvaSettlementPaymentState.NOT_APPLICABLE
+        if self.evidenced_payment_amount == Decimal("0"):
+            return IvaSettlementPaymentState.AWAITING_EVIDENCE
+        if self.evidenced_payment_amount < self.declared_liability:
+            return IvaSettlementPaymentState.PARTIALLY_EVIDENCED
+        return IvaSettlementPaymentState.EVIDENCED
+
+
+def _require_evidence_pair(
+    *, reference: FilingEvidenceReference | None, effective_at: UtcInstant | None, label: str
+) -> None:
+    """Require a secure evidence locator and its effective date together."""
+    if (reference is None) != (effective_at is None):
+        raise ModeloValidationError(f"{label} requires both an evidence reference and an effective date")
+
+
+def _require_payment_evidence_total(snapshot: IvaSettlementSnapshot) -> None:
+    """Refuse payment evidence that exceeds the declared liability."""
+    if snapshot.evidenced_payment_amount > snapshot.declared_liability:
+        raise ModeloValidationError("evidenced payment amount must not exceed declared liability")
+
+
+def _require_refund_state(snapshot: IvaSettlementSnapshot) -> None:
+    """Require independent approval and payment evidence for a refund lifecycle."""
+    requested = snapshot.refund_requested_amount
+    approved = snapshot.refund_approved_amount
+    paid = snapshot.refund_paid_amount
+    approval_evidenced = snapshot.refund_approval_evidence_reference is not None
+    payment_evidenced = snapshot.refund_payment_evidence_reference is not None
+    if approved > requested or paid > approved:
+        raise ModeloValidationError("refund amounts must satisfy paid <= approved <= requested")
+    if snapshot.refund_state is IvaSettlementRefundState.NOT_REQUESTED:
+        if (
+            requested != Decimal("0")
+            or approved != Decimal("0")
+            or paid != Decimal("0")
+            or approval_evidenced
+            or payment_evidenced
+        ):
+            raise ModeloValidationError("not_requested refund must not carry amounts or evidence")
+        return
+    if requested <= Decimal("0"):
+        raise ModeloValidationError(f"{snapshot.refund_state.value} refund requires a positive requested amount")
+    if snapshot.refund_state is IvaSettlementRefundState.REQUESTED:
+        if approved != Decimal("0") or paid != Decimal("0") or approval_evidenced or payment_evidenced:
+            raise ModeloValidationError("requested refund must not carry approval or payment evidence")
+        return
+    if approved <= Decimal("0") or not approval_evidenced:
+        raise ModeloValidationError("approved refund requires positive approved amount and approval evidence")
+    if snapshot.refund_state is IvaSettlementRefundState.APPROVED:
+        if paid != Decimal("0") or payment_evidenced:
+            raise ModeloValidationError("approved refund must not carry payment evidence")
+        return
+    if paid <= Decimal("0") or not payment_evidenced:
+        raise ModeloValidationError("paid refund requires positive paid amount and payment evidence")
+
+
 _DECLARATION_KIND_BY_TIPO_SOLICITUD_WORD: Mapping[str, FilingDeclarationKind] = {
     "complementaria": FilingDeclarationKind.COMPLEMENTARIA,
     "sustitutiva": FilingDeclarationKind.SUSTITUTIVA,
@@ -290,6 +497,7 @@ class ModeloRecord(BaseModel):
     superseded_by_filing_record_id: FilingRecordId | None = None
     external_evidence: ExternalEvidence | None = None
     amends_filing_record_id: FilingRecordId | None = None
+    settlement: IvaSettlementSnapshot | None = None
     # Denormalised footprint of the filed revision's contributing ledger
     # transactions, so an external audit tool holding only a filing record
     # resolves its transaction set in one hop. Typed through the canonical
@@ -335,6 +543,7 @@ class ModeloRecord(BaseModel):
         _require_filing_record_identity(self)
         _require_external_evidence_state(self)
         _require_filing_record_status(self)
+        _require_settlement_modelo(self)
         return self
 
     @property
@@ -398,6 +607,22 @@ def _require_filing_record_status(record: ModeloRecord) -> None:
         _require_current_filing_record(record)
     else:
         _require_superseded_filing_record(record)
+
+
+def _require_settlement_modelo(record: ModeloRecord) -> None:
+    """Keep the optional IVA settlement snapshot on Modelo 303 records only."""
+    settlement = record.settlement
+    if settlement is None:
+        return
+    if str(record.modelo) != "303":
+        raise ModeloValidationError("an IVA settlement snapshot requires Modelo 303")
+    if settlement.calculation_revision_id != record.calculation_revision_id:
+        raise ModeloValidationError("IVA settlement calculation revision must match its filing record")
+    if (
+        record.confirmation is not AeatConfirmationState.CONFIRMADA
+        and settlement.refund_state is not IvaSettlementRefundState.NOT_REQUESTED
+    ):
+        raise ModeloValidationError("pending filing records may carry only not_requested IVA refund intent")
 
 
 def _require_current_filing_record(record: ModeloRecord) -> None:
@@ -658,6 +883,10 @@ __all__ = [
     "ExternalEvidenceKind",
     "FilingDeclarationKind",
     "FilingOrigin",
+    "IvaCreditSnapshot",
+    "IvaSettlementPaymentState",
+    "IvaSettlementRefundState",
+    "IvaSettlementSnapshot",
     "ModeloRecord",
     "ModeloRecordCatalogue",
     "ModeloRecordStatus",

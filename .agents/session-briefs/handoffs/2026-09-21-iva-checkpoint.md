@@ -271,7 +271,36 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   Filing-chain identity/supersession stays authoritative; compensation history
   remains the only active credit arithmetic owner. Calculation/export cannot
   imply payment, approval or refund payment.
-- Settlement implementation is not yet assigned. The smallest clean slice is
-  domain invariants, encrypted filing-catalogue roundtrip and same-identity
-  application mutation. CLI/history/TUI public surfaces are currently blocked
-  by active peer ownership and must be coordinated rather than overwritten.
+- Settlement Amendment 1 is accepted and re-attested. Every new local Modelo 303
+  filing derives its snapshot inside the existing filing co-commit from the core
+  canonical result casillas and the exact `IvaCompensationPeriodState` also
+  written to secure history. Missing required state refuses persistence; legacy
+  records may remain `settlement=None` and explicitly incomplete.
+- Payment evidence is an ordered immutable tuple. Identical entries collapse,
+  same-reference conflicts and totals above liability refuse, and payment amount
+  and state are derived. Local refund election intent remains separate from the
+  evidence-gated official refund state.
+- Focused independent verification: core/domain 17 passed; encrypted filing
+  persistence 1 passed; real local-M303 filing path 1 passed; targeted Ruff,
+  Ruff formatting, basedpyright and scoped diff checks passed. The real path
+  proves the filing snapshot credit copy equals the co-committed compensation
+  history. Supersession preservation remains covered by the earlier filing-chain
+  regression rather than a second full settlement filing scenario.
+
+## Active Phase-4 installed acceptance blocker
+
+- Installed CLI registration and export owners are mapped. Invoice linking is
+  identifier-only; it does not establish IVA amount, classification or deduction
+  facts. Semantic export validation already parses the written artifact and is
+  separate from receipt size/digest binding.
+- Smallest blocker: Modelo 303 calculation requires a pre-existing typed
+  `FilingInstanceEvidence` JSON through `--m303-filing-evidence`. The installed
+  public CLI reads and validates that file but exposes no public operation to
+  create it; creators found so far are test-only. A pure installed CLI journey
+  therefore cannot yet establish all required inputs through supported public
+  writes.
+- Next bounded action: define and implement only the missing M303 filing-evidence
+  creation seam through an existing shared owner, then run one installed 2025
+  M303 capture/reopen/calculate/verify/export journey before expanding to the
+  four-period and Modelo 390 acceptance scenarios. Do not use test helpers or
+  fabricate evidence for acceptance.
