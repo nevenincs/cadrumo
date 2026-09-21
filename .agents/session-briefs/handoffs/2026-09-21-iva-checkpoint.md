@@ -592,3 +592,38 @@ disposition is V1-V9 partial and V10-V11 failed. Durable source findings are in
   harness files remain untracked and failing, owned by the bounded TUI worker;
   do not stage them as passing acceptance or assert TUI persistence or
   cross-frontend continuation from capture-only evidence.
+- Luna Max traced the second-session admission branch: headless installed
+  sessions offer no credential journey (`entrypoints/tui/installed_session.py`
+  355-379), and a fresh process without a resumable session can exit locally
+  with `CREDENTIALS_REQUIRED` before the autopilot callback (application
+  `user_profile/session_admission.py` 166-194). This is a plausible cause,
+  not proven by the sanitized receipt; the exact admission outcome was not
+  retained. The shared helper is clean but the launcher is peer-dirty, so
+  coordinate the owner before changing it. The IVA harness was committed as
+  `316eb538c1` with its integration node explicitly skipped pending admission
+  (not xfail or passed). Exact narrow check yielded `1 skipped`, log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T215906.139149Z-pytest-42372-49112746/run.log`.
+- Luna Max identified an independent identity-free 2025/4T negative-result
+  case: one deductible purchase IVA 10.50, no sale, local
+  `work file --refund-election compensar`, followed by fresh-process
+  `app live iva-wallet history` for generated/available credit and carry lot.
+  Its `work file` is a local state transition with `aeat_accepted=False`,
+  not AEAT submission. The first reserved installed attempt refused at 4T
+  calculation with `ERROR_MODELO_IVA_WALLET_RECONCILIATION_BLOCKED` because
+  the fixture lacked the applicable 3T observation (handle 65708; log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T220659.132687Z-pytest-21008-b9dd60c6/run.log`).
+  Seeding a synthetic zero 3T recurrence satisfied that gate. The next run
+  reached fresh wallet readback but a test expecting only one row refused,
+  because the 3T seed correctly remained visible (handle 11833; log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T220904.896973Z-pytest-57112-ee5983fe/run.log`).
+  The final narrow assertion preserves both rows: 3T `operator_seed` zero and
+  4T `app_filing` generated/available 10.50, plus one 4T remaining lot 10.50.
+  Exact installed node passed 1/1 (handle 81093; log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T221237.280041Z-pytest-49096-1bad1831/run.log`), and Ruff,
+  format, ty, whitespace checks passed. The owned driver/test were committed
+  `ee52da4a2b`. Because a post-pass integer type guard entered that commit,
+  the exact installed node was reserved and rerun on committed source
+  `ee52da4a2b95d8debe767d88c2eae8c2f7c8c3e4`: 1 passed, exit 0, log
+  `C:/Users/hello/AppData/Local/Temp/.logs/test-runs/2026-09-21/20260921T221624.849106Z-pytest-21976-b35ac94f/run.log`.
+  This proves local pending compensation history, not external
+  confirmation, refund approval/payment, annual reconciliation, or export.
