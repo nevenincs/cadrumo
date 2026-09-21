@@ -5,7 +5,7 @@ tags:
 date: '2026-09-21'
 modified: '2026-09-21'
 body_schema: 'body-v2'
-body_hash: 'sha256:9c0990f95c9873bae60d69c11a04b864af3ae78a93f44cf5a003cd8fcce15a75'
+body_hash: 'sha256:152a20639e58be2c5b990274881328517d6021e3e6625c33266b1e1f6cabd941'
 related:
   - "[[2026-09-21-calendar-obligations-plan]]"
 ---
@@ -66,4 +66,11 @@ related:
 - `S08` `M` `src/cadrumo/locales/ca/common.yml`
 - `S08` `M` `src/cadrumo/locales/hu/common.yml`
 - `S08` `verify:` `uv run ruff check src/cadrumo/entrypoints/tui/declarations/calendar.py src/cadrumo/entrypoints/tui/declarations/controller.py src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py` -> `pass`
+- `S09` `A` `dev/acceptance/calendar/__init__.py`
+- `S09` `A` `dev/acceptance/calendar/tests/__init__.py`
+- `S09` `A` `dev/acceptance/calendar/tests/test_parity.py`
+- `S09` `verify:` `bounded declarations TUI suite (18 tests)` -> `pass`
 
+## Notes
+
+- `S09` Live AEAT and notification-content capabilities NOT EXERCISED
