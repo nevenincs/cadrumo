@@ -247,7 +247,7 @@ async def _add_activity_row(*, pilot: Any, scenario: ProfileRowLifecycleScenario
     await _click_visible(pilot, f"#manager-add-row-{scenario.section}")
     await wait_for_public_selector(pilot, "#row-input-0")
     for index, (_field, value) in enumerate(scenario.add_values()):
-        input_widget = cast("Input", query_public_selector(pilot, f"#row-input-{index}", Input))
+        input_widget = query_public_selector(pilot, f"#row-input-{index}", Input)
         input_widget.value = value
     await pilot.click("#btn-row-save")
     await pilot.app.workers.wait_for_complete()
@@ -265,7 +265,7 @@ async def _edit_clearable_field(*, pilot: Any, row_key: str, scenario: ProfileRo
     path = scenario.path(row_key, scenario.clearable_field)
     await open_profile_manager_field(pilot=pilot, path=path)
     await wait_for_public_selector(pilot, "#edit-input")
-    input_widget = cast("Input", query_public_selector(pilot, "#edit-input", Input))
+    input_widget = query_public_selector(pilot, "#edit-input", Input)
     input_widget.value = scenario.amended_cnae
     await pilot.click("#btn-edit-save")
     await pilot.app.workers.wait_for_complete()
@@ -280,7 +280,7 @@ async def _clear_clearable_field(*, pilot: Any, row_key: str, scenario: ProfileR
     path = scenario.path(row_key, scenario.clearable_field)
     await open_profile_manager_field(pilot=pilot, path=path)
     await wait_for_public_selector(pilot, "#edit-input")
-    input_widget = cast("Input", query_public_selector(pilot, "#edit-input", Input))
+    input_widget = query_public_selector(pilot, "#edit-input", Input)
     input_widget.value = ""
     await pilot.click("#btn-edit-save")
     await pilot.app.workers.wait_for_complete()
@@ -302,13 +302,13 @@ async def _submit_visible_no_op(*, pilot: Any, row_key: str, scenario: ProfileRo
     path = scenario.path(row_key, scenario.clearable_field)
     await open_profile_manager_field(pilot=pilot, path=path)
     await wait_for_public_selector(pilot, "#edit-input")
-    input_widget = cast("Input", query_public_selector(pilot, "#edit-input", Input))
+    input_widget = query_public_selector(pilot, "#edit-input", Input)
     if input_widget.value != scenario.amended_cnae:
         raise ProfileTuiChildAcceptanceError("visible_no_op_value_mismatch")
     await pilot.click("#btn-edit-save")
     await pilot.app.workers.wait_for_complete()
     await pilot.pause()
-    status = cast("PinnedStatusBar", query_public_selector(pilot, "#manager-status", PinnedStatusBar))
+    status = query_public_selector(pilot, "#manager-status", PinnedStatusBar)
     if not _is_exact_visible_no_op_outcome(
         status_tone=status.tone,
         status_message=status.message,
@@ -348,7 +348,7 @@ async def _click_visible(pilot: Any, selector: str) -> None:
     """Focus one public control and activate it through the keyboard surface."""
     from textual.widget import Widget
 
-    widget = cast("Widget", query_public_selector(pilot, selector, Widget))
+    widget = query_public_selector(pilot, selector, Widget)
     widget.focus()
     await pilot.pause()
     await pilot.press("enter")
