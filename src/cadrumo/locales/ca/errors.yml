@@ -1238,8 +1238,9 @@ errors:
       i aprova l'esborrany de nou.
     submission_preflight_error_findings: L'esborrany té {finding_count} incidència(es)
       de severitat ERROR; resol-les abans de presentar.
+    tui_modelo_lifecycle_action_unavailable: L'acció seleccionada del cicle de vida
+      del model no està disponible.
     unsupported_currency: El codi de moneda indicat no és compatible.
-    tui_modelo_lifecycle_action_unavailable: L'acció seleccionada del cicle de vida del model no està disponible.
   snapshot:
     ambiguous_revision_selection: 'Més d''una revisió del registre coincideix amb
       el model %{modelo_id}: %{candidate_ids}.'

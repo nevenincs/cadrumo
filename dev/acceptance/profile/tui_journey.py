@@ -18,11 +18,11 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Literal, cast
 
-from dev.acceptance.income_tax.cli_journey import CommandEvidence
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildProcessEvidence,
     run_installed_tui_child_process,
 )
+from dev.acceptance.installed_cli import CommandEvidence
 
 from .cli_journey import (
     ProfileArchiveConsumerEvidence,

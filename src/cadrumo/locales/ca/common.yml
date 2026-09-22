@@ -1374,6 +1374,12 @@ tui:
     home: Inici
     ledger: Llibre registre
     profile: Perfil
+    withholding: Retencions
+  filing_year_route:
+    prompt: Seleccioneu un exercici (AAAA)
+    open: Obre les retencions
+    invalid: Introduïu un exercici vàlid de quatre xifres.
+    unavailable: Els justificants de retencions no estan disponibles per a aquest perfil i exercici.
   home:
     account_fallback: Compte
     action:
@@ -1676,6 +1682,22 @@ tui:
         identity: Factura {kind} {number} amb data {date}
         retention: 'Retenció d''IRPF: tipus {rate} · import {amount}'
       title: Afegeix una factura
+    records:
+      failed: El canvi s'ha rebutjat o no s'ha pogut desar.
+      identity: ID del registre
+      invoice_detail: Detall de la factura
+      invoices: Factures registrades
+      links: Registres vinculats
+      loading: Llegint el registre…
+      no_change: Introduïu un valor diferent abans de revisar.
+      open_invoices: Veure factures
+      open_transaction: Veure o editar l'assentament seleccionat
+      reviewed: Reviseu el valor i després deseu-lo.
+      save: Desar el canvi
+      saved: Canvi desat.
+      saving: Desant el canvi…
+      source: Fitxer d'origen
+      transaction_detail: Detall de l'assentament
     overview:
       affected_declarations: Declaracions afectades
       areas: Àrees del llibre
@@ -1947,9 +1969,11 @@ tui:
       declarations: Obre les declaracions
       home: Obre inici
       ledger: Obre el llibre major
+      withholding: Obre els justificants de retencions
       profile: Obre el perfil
       unknown: Obre l'espai de treball
     destination_help:
+      withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
       aeat_sync: El que s'ha llegit de l'AEAT i el que es pot llegir a continuació
       declarations: Declaracions, revisions de càlcul, historial de presentacions
         i calendari

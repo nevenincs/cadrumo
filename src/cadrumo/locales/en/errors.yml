@@ -1146,8 +1146,9 @@ errors:
       the draft again.
     submission_preflight_error_findings: Draft has {finding_count} ERROR-severity
       finding(s); resolve them before submission.
+    tui_modelo_lifecycle_action_unavailable: The selected Modelo lifecycle action
+      is unavailable.
     unsupported_currency: The currency code provided is not supported.
-    tui_modelo_lifecycle_action_unavailable: The selected Modelo lifecycle action is unavailable.
   snapshot:
     ambiguous_revision_selection: 'More than one registry revision matches modelo
       %{modelo_id}: %{candidate_ids}.'

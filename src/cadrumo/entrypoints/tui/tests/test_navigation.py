@@ -108,6 +108,7 @@ def test_catalogue_is_closed_and_uses_only_locale_keys() -> None:
     assert declared_destination_ids() == {
         "workbench.home",
         "workbench.ledger",
+        "workbench.withholding",
         "workbench.declarations",
         "workbench.aeat_sync",
         "workbench.profile",

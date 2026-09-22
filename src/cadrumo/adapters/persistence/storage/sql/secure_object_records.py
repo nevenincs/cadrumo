@@ -68,6 +68,8 @@ class SecureObjectDeletion(BaseModel):
 
     namespace: str = Field(min_length=1)
     hashed_object_key: bytes = Field(min_length=32, max_length=32)
+    expected_revision_id: ContentDigest | None = None
+    """Optional opened-baseline guard for a record removed by an identity edit."""
 
 
 class SecureObjectUnreadable(BaseModel):

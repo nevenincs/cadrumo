@@ -119,6 +119,7 @@ def _confirm_the_foreign_document(
     catalogue_ports = CatalogueCreationPorts(
         invoice_repository=base_catalogue_ports.invoice_repository,
         event_repository=base_catalogue_ports.event_repository,
+        audit_commit=base_catalogue_ports.audit_commit,
         rate_provider=_AlwaysSilentRateProvider(),
     )
     return confirm_invoice_draft_from_evidence(

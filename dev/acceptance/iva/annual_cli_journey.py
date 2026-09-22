@@ -9,7 +9,7 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Final, cast
 
-from dev.acceptance.income_tax.cli_journey import InstalledCli, JourneyError
+from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
 from .cli_journey import (
     _AUTHORITY_GENERATION,
@@ -335,7 +335,7 @@ def run_iva_annual_foundation_cli_journey(
         executable_sha256=_sha256_path(cli.executable),
         source_identity=_checkout_source_identity(),
         package_identity=_installed_package_identity(),
-        authority_generation=cast(str, _AUTHORITY_GENERATION(authority_root)),
+        authority_generation=_AUTHORITY_GENERATION(authority_root),
         authority_descriptor_sha256=_sha256_path(descriptor),
         storage_root=str(storage_root.resolve()),
         purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
@@ -439,7 +439,7 @@ def run_iva_annual_m390_cli_journey(
         executable_sha256=_sha256_path(cli.executable),
         source_identity=_checkout_source_identity(),
         package_identity=_installed_package_identity(),
-        authority_generation=cast(str, _AUTHORITY_GENERATION(authority_root)),
+        authority_generation=_AUTHORITY_GENERATION(authority_root),
         authority_descriptor_sha256=_sha256_path(descriptor),
         storage_root=str(storage_root.resolve()),
         purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
@@ -472,7 +472,7 @@ def _start(
     receipts: list[SanitizedCommandReceipt] = []
     try:
         _create_profile(cli=cli, receipts=receipts, artifact=artifact)
-    except JourneyError as exc:
+    except InstalledCliError as exc:
         raise IvaCliJourneyError("config profile create refused") from exc
     return cli, receipts, artifact
 

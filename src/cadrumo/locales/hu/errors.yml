@@ -1168,8 +1168,9 @@ errors:
       hagyja jóvá újra a tervezetet.
     submission_preflight_error_findings: A tervezetben {finding_count} ERROR súlyosságú
       megállapítás van; javítsa ezeket benyújtás előtt.
+    tui_modelo_lifecycle_action_unavailable: A kiválasztott Modelo-életciklusművelet
+      nem érhető el.
     unsupported_currency: A megadott devizakód nem támogatott.
-    tui_modelo_lifecycle_action_unavailable: A kiválasztott Modelo-életciklusművelet nem érhető el.
   snapshot:
     ambiguous_revision_selection: 'Egynél több nyilvántartási revízió illeszkedik
       a(z) %{modelo_id} modellhez: %{candidate_ids}.'

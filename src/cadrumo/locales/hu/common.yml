@@ -1365,6 +1365,12 @@ tui:
     home: Kezdőlap
     ledger: Főkönyv
     profile: Profil
+    withholding: Levonások
+  filing_year_route:
+    prompt: Válasszon adóévet (ÉÉÉÉ)
+    open: Levonások megnyitása
+    invalid: Adjon meg érvényes négyjegyű adóévet.
+    unavailable: A levonási adatok nem érhetők el ehhez a profilhoz és évhez.
   home:
     account_fallback: Fiók
     action:
@@ -1667,6 +1673,22 @@ tui:
         identity: '{kind} számla: {number}, kelte {date}'
         retention: 'IRPF-visszatartás: kulcs {rate} · összeg {amount}'
       title: Számla hozzáadása
+    records:
+      failed: A módosítás elutasítva, vagy nem sikerült menteni.
+      identity: Rekordazonosító
+      invoice_detail: Számla részletei
+      invoices: Rögzített számlák
+      links: Kapcsolt rekordok
+      loading: Rekord olvasása…
+      no_change: Ellenőrzés előtt adjon meg eltérő értéket.
+      open_invoices: Számlák megtekintése
+      open_transaction: Kijelölt tétel megtekintése vagy szerkesztése
+      reviewed: Ellenőrizze az értéket, majd mentse.
+      save: Módosítás mentése
+      saved: Módosítás mentve.
+      saving: Módosítás mentése…
+      source: Forrásfájl
+      transaction_detail: Tétel részletei
     overview:
       affected_declarations: Érintett bevallások
       areas: Főkönyvi területek
@@ -1936,9 +1958,11 @@ tui:
       declarations: Bevallások megnyitása
       home: Főoldal megnyitása
       ledger: Főkönyv megnyitása
+      withholding: Levonási bizonylatok megnyitása
       profile: Profil megnyitása
       unknown: Munkafelület megnyitása
     destination_help:
+      withholding: Számla-levonások rögzítése és megtekintése a kiválasztott adóévben
       aeat_sync: Amit az AEAT-tól már beolvastunk, és amit legközelebb be lehet olvasni
       declarations: Bevallások, számítási változatok, benyújtási előzmények és naptár
       home: Következő teendők, bevallások és határidők egy pillantással

@@ -934,6 +934,7 @@ class LedgerExportRow(BaseModel):
     bucket_id: BucketId
     transaction_id: TransactionId
     lifecycle_state: NonEmptyStr
+    invoice_id: str = ""
     booked_date: IsoDateText
     value_date: str = ""
     effective_date: IsoDateText

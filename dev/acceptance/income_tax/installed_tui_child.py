@@ -22,7 +22,7 @@ import sys
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
+from typing import Any, cast, overload
 
 
 class InstalledTuiChildError(RuntimeError):
@@ -48,7 +48,7 @@ class InstalledTuiBootstrapEvidence:
 
     def to_dict(self) -> dict[str, object]:
         """Return a JSON-safe receipt that contains neither credentials nor facts."""
-        return asdict(self)
+        return cast("dict[str, object]", asdict(self))
 
 
 @dataclass(frozen=True, slots=True)
@@ -60,7 +60,7 @@ class InstalledProductEvidence:
 
     def to_dict(self) -> dict[str, object]:
         """Return the value-free installed-package receipt fragment."""
-        return asdict(self)
+        return cast("dict[str, object]", asdict(self))
 
 
 @dataclass(frozen=True, slots=True)
@@ -77,7 +77,7 @@ class InstalledTuiChildProcessEvidence:
 
     def to_dict(self) -> dict[str, object]:
         """Return an artifact-oriented receipt fragment with no child output."""
-        return asdict(self)
+        return cast("dict[str, object]", asdict(self))
 
 
 def is_installed_product_origin(*, product_init: Path, workspace_root: Path) -> bool:
@@ -171,7 +171,15 @@ def _public_surface_diagnostic(pilot: Any) -> dict[str, object]:
     }
 
 
-def _query_public_selector(pilot: Any, selector: str, expected_type: type[Any] | None = None) -> object:
+@overload
+def _query_public_selector[TWidget](pilot: Any, selector: str, expected_type: type[TWidget]) -> TWidget: ...
+
+
+@overload
+def _query_public_selector(pilot: Any, selector: str, expected_type: None = None) -> object: ...
+
+
+def _query_public_selector(pilot: Any, selector: str, expected_type: type[Any] | None = None) -> Any:
     """Resolve a public selector from the root, then the pushed public screen."""
     from textual.css.query import NoMatches
 
@@ -485,7 +493,7 @@ def run_installed_tui_child_process(
     store = storage_root.resolve()
     if receipt.exists():
         raise InstalledTuiChildError("installed TUI child receipt path must be fresh")
-    if not child_module or any(not isinstance(argument, str) for argument in child_args):
+    if not child_module:
         raise InstalledTuiChildError("installed TUI child module and arguments must be strings")
     environment = {
         key: value

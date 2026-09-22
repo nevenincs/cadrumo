@@ -797,7 +797,7 @@ def _readback_canonical_fields(
     This is intentionally a ``tui_to_cli`` continuation.  It is not claimed as
     part of the TUI-only capture/reopen path.
     """
-    from dev.acceptance.income_tax.cli_journey import InstalledCli, JourneyError
+    from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
     expected = tuple(
         (
@@ -841,7 +841,7 @@ def _readback_canonical_fields(
                     expected_fields["iva_category"],
                 )
             )
-    except JourneyError as exc:
+    except InstalledCliError as exc:
         raise IvaInstalledTuiError("installed read-only CLI continuation refused Ledger readback") from exc
     if len(cli.commands) != 2 or any(command.returncode != 0 for command in cli.commands):
         raise IvaInstalledTuiError(

@@ -26,6 +26,7 @@ from pydantic import Field, NonNegativeInt, model_validator
 from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
@@ -82,6 +83,9 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     currency: IsoCurrencyCode
     payment_status: PaymentStatus
     linked_transaction_ids: list[TransactionId] = Field(default_factory=list)
+    source_filename: NonEmptyStr | None = None
+    source_sha256: Hex64Str | None = None
+    source_row_index: PositiveCount | None = None
     notes: str = ""
     retention_rate: NonNegativeDecimal | None = None
     retention_amount: NonNegativeDecimal | None = None

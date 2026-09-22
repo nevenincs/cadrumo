@@ -11,14 +11,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import secrets
-import subprocess
 from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from pathlib import Path
 from typing import Any, Final
+
+from dev.acceptance.installed_cli import CommandEvidence, InstalledCli, InstalledCliError, authority_generation
 
 from .scenario import (
     BRIEF_REVISION,
@@ -38,16 +38,6 @@ _CLIENT_NIF: Final[str] = "A58818501"
 
 class JourneyError(RuntimeError):
     """A public CLI command or acceptance assertion failed."""
-
-
-@dataclass(frozen=True, slots=True)
-class CommandEvidence:
-    """Sanitized result of one fresh installed CLI process."""
-
-    command: str
-    returncode: int
-    status: str
-    notice_codes: tuple[str, ...]
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,189 +122,6 @@ class CliControlsEvidence:
     def to_dict(self) -> dict[str, object]:
         """Return a JSON-safe representation."""
         return asdict(self)
-
-
-class InstalledCli:
-    """Fresh-process adapter for the public installed CLI."""
-
-    def __init__(self, executable: Path, *, storage_root: Path, authority_root: Path, passphrase: str) -> None:
-        """Bind the executable to one isolated store and authority tree."""
-        self.executable = executable.resolve(strict=True)
-        self.storage_root = storage_root.resolve()
-        self.authority_root = authority_root.resolve(strict=True)
-        self.passphrase = passphrase
-        self.commands: list[CommandEvidence] = []
-
-    def run(self, args: Sequence[str], *, authenticated: bool = True, allow_error: bool = False) -> dict[str, Any]:
-        """Run one JSON command, recording only sanitized status evidence."""
-        argv = [str(self.executable), "--format", "json"]
-        input_text: str | None = None
-        if authenticated:
-            argv.append("--profile-secrets-stdin")
-            input_text = json.dumps({"profile_passphrase": self.passphrase}, separators=(",", ":"))
-        argv.extend(args)
-        environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
-        environment.update(
-            {
-                "CADRUMO_LOCAL_STORAGE_ROOT": str(self.storage_root),
-                "CADRUMO_AUTHORITY_ROOT": str(self.authority_root),
-                "CADRUMO_OUTPUT_LANGUAGE": "en",
-                "PYTHONIOENCODING": "utf-8",
-            }
-        )
-        completed = subprocess.run(  # noqa: S603 - executable is an explicit acceptance input
-            argv,
-            check=False,
-            capture_output=True,
-            cwd=self.storage_root,
-            env=environment,
-            input=input_text,
-            text=True,
-            timeout=180,
-            encoding="utf-8",
-        )
-        try:
-            document = _decode_cli_document(completed.stdout, completed.stderr)
-        except json.JSONDecodeError as exc:
-            if allow_error:
-                self.commands.append(
-                    CommandEvidence(
-                        command=" ".join(args[:4]),
-                        returncode=completed.returncode,
-                        status="non_json_failure",
-                        notice_codes=(),
-                    )
-                )
-                return {
-                    "status": "error",
-                    "error": {
-                        "code": "acceptance.installed_cli.non_json_failure",
-                        "context": {
-                            "returncode": completed.returncode,
-                            "stderr_length": len(completed.stderr),
-                            "stderr_sha256": hashlib.sha256(completed.stderr.encode("utf-8")).hexdigest(),
-                        },
-                    },
-                }
-            raise JourneyError(f"{args!r} did not emit one JSON document on stdout or stderr") from exc
-        if not isinstance(document, dict):
-            raise JourneyError(f"{args!r} emitted a non-object JSON document")
-        notices = document.get("notices", [])
-        codes = tuple(
-            sorted(
-                str(notice.get("code"))
-                for notice in notices
-                if isinstance(notice, dict) and notice.get("code") is not None
-            )
-        )
-        self.commands.append(
-            CommandEvidence(
-                command=" ".join(args[:4]),
-                returncode=completed.returncode,
-                status=str(document.get("status")),
-                notice_codes=codes,
-            )
-        )
-        if completed.returncode != 0 and not allow_error:
-            error = document.get("error", {})
-            raise JourneyError(f"{args!r} failed: {error}")
-        return document
-
-    def create_profile(self, *, year: int) -> None:
-        """Create and complete the synthetic natural-person profile."""
-        payload = json.dumps(
-            {"passphrase": self.passphrase, "passphrase_confirmation": self.passphrase},
-            separators=(",", ":"),
-        )
-        args = _profile_create_args(year)
-        argv = [str(self.executable), "--format", "json", *args]
-        environment = {key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_")}
-        environment.update(
-            {
-                "CADRUMO_LOCAL_STORAGE_ROOT": str(self.storage_root),
-                "CADRUMO_AUTHORITY_ROOT": str(self.authority_root),
-                "CADRUMO_OUTPUT_LANGUAGE": "en",
-                "PYTHONIOENCODING": "utf-8",
-            }
-        )
-        completed = subprocess.run(  # noqa: S603 - executable is an explicit acceptance input
-            argv,
-            check=False,
-            capture_output=True,
-            cwd=self.storage_root,
-            env=environment,
-            input=payload,
-            text=True,
-            timeout=180,
-            encoding="utf-8",
-        )
-        try:
-            document = json.loads(completed.stdout)
-        except json.JSONDecodeError as exc:
-            raise JourneyError(f"profile creation emitted invalid JSON: {completed.stdout!r}") from exc
-        notices = document.get("notices", [])
-        self.commands.append(
-            CommandEvidence(
-                command="config profile create",
-                returncode=completed.returncode,
-                status=str(document.get("status")),
-                notice_codes=tuple(
-                    sorted(str(item.get("code")) for item in notices if isinstance(item, dict) and item.get("code"))
-                ),
-            )
-        )
-        if completed.returncode != 0:
-            raise JourneyError(f"profile creation failed: {document.get('error')}")
-        self.run(("config", "profile", "complete-setup"))
-
-
-def _profile_create_args(year: int) -> tuple[str, ...]:
-    return (
-        "config", "profile", "create", f"income-{year}", "--quiet", "--accept-defaults",
-        "--entity-type", "natural_person", "--tax-id", "12345678Z", "--name", "Ada",
-        "--surnames", "Synthetic", "--fiscal-residency", "resident_irpf",
-        "--tax-residence-jurisdiction-scope", "common_regime", "--tax-residence-ccaa", "madrid",
-        "--address-postcode", "28001", "--irpf-income-categories", "actividad_economica",
-        "--activity", "software services", "--activity-start-date", f"{year}-01-01",
-        "--taxation-type", "1", "--taxpayer-sex", "M", "--taxpayer-marital-status", "1",
-        "--situacion-familiar", "soltero", "--taxpayer-birth-date", f"{year - 35}-06-15",
-        "--irpf-estimation-regime", "directa_normal", "--irpf-special-regime", "general",
-        "--iva-regime", "GENERAL", "--iva-m303-regime-composition", "general",
-        "--no-iva-redeme-enrolled", "--no-iva-cash-accounting-regime-enrolled",
-        "--no-iva-voluntary-sii-enrolled", "--no-iva-hydrocarbon-deposit-advance-payment-deduction-entitled",
-        "--no-has-employees", "--no-pays-professionals-with-retencion", "--no-pays-rent-with-retencion",
-        "--no-pays-capital-income-with-retencion", "--no-does-intracomunitario",
-        "--no-third-party-transactions-above-347-threshold", "--no-bienes-extranjero-above-threshold",
-        "--no-monedas-virtuales-extranjero-above-threshold", "--secrets-stdin",
-    )
-
-
-def _decode_cli_document(stdout: str, stderr: str) -> dict[str, Any]:
-    """Decode the CLI envelope even when diagnostics precede it on stderr."""
-    decoder = json.JSONDecoder()
-    for stream in (stdout, stderr):
-        text = stream.strip()
-        if not text:
-            continue
-        try:
-            document = json.loads(text)
-        except json.JSONDecodeError:
-            candidates: list[dict[str, Any]] = []
-            for offset, character in enumerate(text):
-                if character != "{":
-                    continue
-                try:
-                    candidate, _end = decoder.raw_decode(text, offset)
-                except json.JSONDecodeError:
-                    continue
-                if isinstance(candidate, dict) and "schema_version" in candidate and "status" in candidate:
-                    candidates.append(candidate)
-            if candidates:
-                return candidates[-1]
-        else:
-            if isinstance(document, dict):
-                return document
-    raise json.JSONDecodeError("no CLI JSON envelope", stdout or stderr, 0)
 
 
 def _result(document: dict[str, Any]) -> dict[str, Any]:
@@ -625,14 +432,6 @@ def _fresh_directory(path: Path, *, label: str) -> Path:
     return path.resolve()
 
 
-def _authority_generation(authority_root: Path) -> str:
-    descriptor = json.loads((authority_root / "authority.current.json").read_text(encoding="utf-8"))
-    generation = descriptor.get("logical_generation")
-    if not isinstance(generation, str):
-        raise JourneyError("authority descriptor has no logical generation")
-    return generation
-
-
 def _control_cli(*, executable: Path, authority_root: Path, storage_root: Path, year: int) -> InstalledCli:
     _fresh_directory(storage_root, label="control storage root")
     cli = InstalledCli(
@@ -931,7 +730,7 @@ def run_cli_controls(
     """Run the A2/A4/A5 controls in separately owned installed-CLI stores."""
     controls_root = _fresh_directory(controls_root, label="controls root")
     output_dir = _fresh_directory(output_dir, label="controls output directory")
-    generation = _authority_generation(authority_root)
+    generation = authority_generation(authority_root)
     cases: list[AcceptanceControlEvidence] = []
     commands: list[CommandEvidence] = []
     control_calls = (
@@ -947,7 +746,7 @@ def run_cli_controls(
                 output_dir=_fresh_directory(case_output_dir, label=f"{acceptance_id} output directory"),
                 year=year,
             )
-        except JourneyError as exc:
+        except (JourneyError, InstalledCliError) as exc:
             cases.append(_failed_control_case(acceptance_id, exc))
         else:
             cases.append(evidence)
@@ -959,7 +758,7 @@ def run_cli_controls(
             storage_root=_fresh_directory(controls_root / "a5", label="A5 controls root"),
             year=year,
         )
-    except JourneyError as exc:
+    except (JourneyError, InstalledCliError) as exc:
         cases.append(_failed_control_case("A5", exc))
     else:
         cases.append(history)
@@ -984,7 +783,7 @@ def run_cli_journey(
         raise JourneyError(f"storage root must be fresh and empty: {storage_root}")
     storage_root.mkdir(parents=True, exist_ok=True)
     output_dir.mkdir(parents=True, exist_ok=True)
-    generation = _authority_generation(authority_root)
+    generation = authority_generation(authority_root)
     cli = InstalledCli(
         executable, storage_root=storage_root, authority_root=authority_root, passphrase=secrets.token_urlsafe(32)
     )

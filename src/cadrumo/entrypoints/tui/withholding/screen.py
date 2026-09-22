@@ -78,7 +78,7 @@ class WithholdingEvidenceScreen(Screen[None]):
     def _form(self) -> ComposeResult:
         """Keep the deliberately complete evidence form reachable on small terminals."""
         yield Static("Withholding evidence", classes="cadrumo-banner")
-        yield Static("Invoice id", classes="withholding-label")
+        yield Static("Invoice id or exact number", classes="withholding-label")
         yield Input(id="withholding-invoice-id", classes="withholding-field")
         yield Static("Income family", classes="withholding-label")
         yield Select[str](

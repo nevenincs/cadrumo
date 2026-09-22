@@ -301,6 +301,43 @@ def test_a_correction_keeps_the_invoice_id_and_its_transaction_links(tmp_path: P
     assert result.bucket_event_ids != ()
 
 
+def test_explicit_clear_removes_optional_payment_id_but_omission_preserves_other_fields(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        original = _linked_invoice(_BUCKET_ID).model_copy(update={"payment_id": "b" * 64})
+        repo = InvoiceCatalogueRepository(objects=profile.repository)
+        repo.save(build_invoice_catalogue((original,)))
+
+        update_catalogue_invoice(
+            bucket_id=_BUCKET_ID,
+            invoice_id=original.invoice_id,
+            patch=CatalogueInvoicePatch(payment_id=None),
+            ports=build_catalogue_lifecycle_ports(bucket_id=_BUCKET_ID),
+        )
+        restored = repo.load().get(original.invoice_id)
+
+    assert restored is not None
+    assert restored.payment_id is None
+    assert restored.counterparty_name == original.counterparty_name
+    assert restored.linked_transaction_ids == original.linked_transaction_ids
+
+
+def test_explicit_clear_of_required_counterparty_refuses_before_mutation(tmp_path: Path) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
+        original = _linked_invoice(_BUCKET_ID)
+        repo = InvoiceCatalogueRepository(objects=profile.repository)
+        repo.save(build_invoice_catalogue((original,)))
+
+        with pytest.raises((InvoiceValidationError, ValidationError)):
+            update_catalogue_invoice(
+                bucket_id=_BUCKET_ID,
+                invoice_id=original.invoice_id,
+                patch=CatalogueInvoicePatch(counterparty_name=None),
+                ports=build_catalogue_lifecycle_ports(bucket_id=_BUCKET_ID),
+            )
+
+        assert repo.load().get(original.invoice_id) == original
+
+
 def test_a_correction_that_breaks_an_invariant_refuses(tmp_path: Path) -> None:
     """The corrected record is re-validated in full, not patched blindly.
 

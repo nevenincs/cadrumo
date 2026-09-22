@@ -8,7 +8,7 @@ from typing import Any, cast
 
 import pytest
 
-from dev.acceptance.income_tax.cli_journey import CommandEvidence, InstalledCli
+from dev.acceptance.installed_cli import CommandEvidence, InstalledCli
 
 from ..cli_journey import (
     RetencionesInstalledCliError,

@@ -15,7 +15,7 @@ from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, Literal, cast
 
-from dev.acceptance.income_tax.cli_journey import CommandEvidence, InstalledCli
+from dev.acceptance.installed_cli import CommandEvidence, InstalledCli
 
 from .scenario import ProfileRowLifecycleScenario
 

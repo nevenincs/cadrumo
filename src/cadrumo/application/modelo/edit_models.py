@@ -55,7 +55,8 @@ from .edit_contract import (
 
 _MAX_FINDINGS = 500
 _MAX_INTENTS = 500
-_MAX_SURFACE_ENTRIES = 2000
+MAX_MODELO_EDIT_SURFACE_ENTRIES = 4096
+"""Bound the edit surface above the published 2025 Modelo 100's 2,320 entries."""
 _MAX_MESSAGE_ARGUMENTS = 16
 _MAX_EVIDENCE_REFERENCES = 64
 _MAX_ROW_VALUES = 200
@@ -464,7 +465,9 @@ class ModeloEditBaselineV1(EditModel):
     law_selected_revision_id: RevisionId
     schema_identity: ModeloEditSchemaIdentityV1
     schema_version: Annotated[int, Field(ge=1)]
-    permitted_surface: Annotated[tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=_MAX_SURFACE_ENTRIES)]
+    permitted_surface: Annotated[
+        tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=MAX_MODELO_EDIT_SURFACE_ENTRIES)
+    ]
     permitted_surface_digest: ContentDigest
     mutation_family: _ModeloEditMutationFamily
     issued_at: datetime

@@ -80,6 +80,7 @@ def _admissions() -> dict[str, WorkbenchDestinationAdmission]:
         for destination in (
             "workbench.home",
             "workbench.ledger",
+            "workbench.withholding",
             "workbench.declarations",
             "workbench.aeat_sync",
             "workbench.profile",
@@ -110,6 +111,7 @@ def _root_inputs(
         admissions=admissions,
         account_factories=account_factories,
         ledger_factory=_screen_factory,
+        withholding_factory=_screen_factory,
         declarations_factory=_screen_factory,
         aeat_sync_factory=_screen_factory,
         search_inputs=search_inputs,

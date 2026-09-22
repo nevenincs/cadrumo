@@ -30,6 +30,7 @@ from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
 
 type LedgerDestinationIdV1 = Literal[
     "ledger.overview",
@@ -298,6 +299,7 @@ class LedgerInvoiceEntryV1(BaseModel):
     invoice_date: date
     taxable_base: Decimal
     iva_rate: Decimal | None
+    iva_category: IvaCategory | None = None
     currency: str
     retention_rate: Decimal | None = None
     retention_amount: Decimal | None = None

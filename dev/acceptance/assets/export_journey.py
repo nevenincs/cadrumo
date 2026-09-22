@@ -18,13 +18,13 @@ from pathlib import Path
 from typing import cast
 
 from dev.acceptance.income_tax.cli_journey import (
-    InstalledCli,
     JourneyError,
     _ingest,  # pyright: ignore[reportPrivateUsage] -- approved installed-ledger acceptance reuse
     _result,  # pyright: ignore[reportPrivateUsage] -- approved acceptance-runner reuse
 )
 from dev.acceptance.income_tax.scenario import IncomeTaxScenario, build_scenario
 from dev.acceptance.income_tax.tui_journey import LocalXsdValidationEvidence, validate_modelo_100_xsd
+from dev.acceptance.installed_cli import InstalledCli
 
 _YEAR = 2025
 _ASSET_AMOUNT = Decimal("300.00")

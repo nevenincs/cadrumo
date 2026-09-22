@@ -159,6 +159,7 @@ class LedgerWorkspaceController:
         self.link_action = injection.link_action
         self.link_submitter = injection.link_submitter
         self.activity_asset_actions = injection.activity_asset_actions
+        self.record_doors = injection.record_doors
         self._states = {row.area: row for row in projection.areas}
 
     def classification_target_coordinate(self) -> tuple[int, int, str]:
@@ -559,6 +560,19 @@ class LedgerInvoiceEntryRequested(Message):
     """Request the invoice entry form as the workspace body."""
 
 
+class LedgerInvoiceCatalogueRequested(Message):
+    """Request canonical invoice readback from the bucket-bound door."""
+
+
+class LedgerTransactionDetailRequested(Message):
+    """Request detail for one selected transaction identity."""
+
+    def __init__(self, transaction_id: TransactionId) -> None:
+        """Retain the selected transaction rather than a mutable table position."""
+        super().__init__()
+        self.transaction_id = transaction_id
+
+
 class LedgerWorkspaceScreen(AccountChromeScreen):
     """Shared one-scroll shell and semantic navigation behavior."""
 
@@ -710,6 +724,29 @@ class LedgerWorkspaceScreen(AccountChromeScreen):
             return
         replace_workspace_body(cast(App[object], self.app), LedgerInvoiceEntryScreen(self.controller))
 
+    def on_ledger_invoice_catalogue_requested(self, _: LedgerInvoiceCatalogueRequested) -> None:
+        """Open canonical invoice readback through the injected record door."""
+        from .record_views import LedgerInvoiceCatalogueScreen
+
+        doors = self.controller.record_doors
+        if doors is None:
+            self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
+            return
+        replace_workspace_body(cast(App[object], self.app), LedgerInvoiceCatalogueScreen(self.controller, doors))
+
+    def on_ledger_transaction_detail_requested(self, event: LedgerTransactionDetailRequested) -> None:
+        """Open the selected transaction without resolving a row position."""
+        from .record_views import LedgerTransactionDetailScreen
+
+        doors = self.controller.record_doors
+        if doors is None:
+            self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.submission_unavailable"))
+            return
+        replace_workspace_body(
+            cast(App[object], self.app),
+            LedgerTransactionDetailScreen(self.controller, doors, str(event.transaction_id)),
+        )
+
     def on_ledger_back_requested(self, _: LedgerBackRequested) -> None:
         """Return an area to the Ledger overview; leave the workspace only from the overview."""
         # An overview that cannot open would bounce Back straight back here.
@@ -742,9 +779,11 @@ __all__ = [
     "LedgerBackRequested",
     "LedgerEntrySelected",
     "LedgerEvidenceReviewRequested",
+    "LedgerInvoiceCatalogueRequested",
     "LedgerInvoiceEntryRequested",
     "LedgerReviewRequested",
     "LedgerRouteRequested",
+    "LedgerTransactionDetailRequested",
     "LedgerWorkspaceController",
     "LedgerWorkspaceScreen",
     "area_label",

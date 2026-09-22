@@ -246,6 +246,7 @@ def ledger_invoice_add_door(profile_id: str, operation: PinnedAuthorityOperation
     def record(entry: LedgerInvoiceEntryV1) -> LedgerInvoiceAddResultV1:
         from ...adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
         from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+        from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 
         ports = build_catalogue_creation_ports(bucket_id=profile_id)
         invoice = build_catalogue_invoice(
@@ -258,6 +259,11 @@ def ledger_invoice_add_door(profile_id: str, operation: PinnedAuthorityOperation
             issued_at=entry.invoice_date,
             taxable_base=entry.taxable_base,
             iva_rate=entry.iva_rate,
+            iva_category=(
+                require_iva_category(entry.iva_category, effective_date=entry.invoice_date, authority=operation)
+                if entry.iva_category is not None
+                else None
+            ),
             currency=entry.currency,
             notes=entry.notes,
             retention_rate=entry.retention_rate,

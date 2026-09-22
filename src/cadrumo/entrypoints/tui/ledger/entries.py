@@ -5,12 +5,13 @@ from __future__ import annotations
 from typing import ClassVar, cast, override
 
 from textual.app import App, ComposeResult
-from textual.widgets import DataTable, Static
+from textual.widgets import Button, DataTable, Static
 
 from ....core.identity.transaction_ids import TransactionId
 from ..components.widgets import ContentDataTable
 from .controller import (
     LedgerEntrySelected,
+    LedgerTransactionDetailRequested,
     LedgerWorkspaceController,
     LedgerWorkspaceScreen,
     ledger_copy,
@@ -110,6 +111,8 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         with ledger_workspace_page() as navigation:
             yield navigation
             yield ContentDataTable[str](id="ledger-entries", cursor_type="row", zebra_stripes=True)
+            if self.controller.record_doors is not None:
+                yield Button(ledger_copy("tui.ledger.records.open_transaction"), id="ledger-open-transaction")
             yield Static(id="ledger-empty", classes="ledger-empty", markup=False)
             yield Static(id="ledger-refusal", classes="ledger-refusal", markup=False)
 
@@ -191,6 +194,15 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
             return
         self.selected_transaction_id = transaction_id
         self.post_message(LedgerEntrySelected(transaction_id))
+
+    def on_button_pressed(self, event: Button.Pressed) -> None:
+        """Open the selected record through its stable transaction identity."""
+        if event.button.id == "ledger-open-transaction":
+            transaction_id = self.selected_transaction_id or self.controller.restored_transaction_id()
+            if transaction_id is None:
+                self.query_one("#ledger-refusal", Static).update(ledger_copy("tui.ledger.refusal.selection_required"))
+                return
+            self.post_message(LedgerTransactionDetailRequested(transaction_id))
 
 
 __all__ = ["LedgerEntriesScreen"]

@@ -97,6 +97,7 @@ from .amendment_actions import amend_modelo_revision
 from .calculation_action_ports import CalculationActionPortsFactory
 from .edit_contract import ModeloEditCompatibilityTupleV1, ModeloEditMutationFamily
 from .edit_models import (
+    MAX_MODELO_EDIT_SURFACE_ENTRIES,
     ModeloBindingEditIntentV1,
     ModeloDetailRowEditIntentV1,
     ModeloEditApplyRequestV1,
@@ -1357,7 +1358,9 @@ class ModeloEditApplyBaselineV1(BaseModel):
     law_selected_revision_id: RevisionId
     schema_identity: ModeloEditSchemaIdentityV1
     schema_version: Annotated[int, Field(ge=1)]
-    permitted_surface: Annotated[tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=2000)]
+    permitted_surface: Annotated[
+        tuple[ModeloEditPermittedSurfaceEntryV1, ...], Field(max_length=MAX_MODELO_EDIT_SURFACE_ENTRIES)
+    ]
     permitted_surface_digest: ContentDigest
     mutation_family: ModeloEditMutationFamily
     issued_at: datetime
@@ -1960,13 +1963,8 @@ class ModeloEditApplySubmissionV1(BaseModel):
         )
 
 
-class ModeloEditApplyOperationRequestV1(CredentialFreeOperationRequest):
-    """The admitted Edit Contract submission this operation is authorized to apply.
-
-    Credential-free by construction: every field is a pre-validated,
-    pre-admitted coordinate or typed value the Edit Contract admission
-    phase already produced, so nothing here is unsafe to journal.
-    """
+class ModeloEditApplyOperationRequestV1(BaseModel):
+    """The admitted value-bearing edit submission held by secure-reference custody."""
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
 
@@ -2085,8 +2083,8 @@ def build_modelo_edit_apply_definition(
             deadline=OperationDeadline.ABSENT,
             replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
             baseline=OperationBaselinePolicy.EXACT_APPROVAL,
-            request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-            sensitive_input=OperationSensitiveInputPolicy.NONE,
+            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+            sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE,
             conflict_scope=OperationConflictScope.DEFINITION_SUBJECT,
             owned_resources=frozenset(),
             permitted_effects=EFFECTS_WITHOUT_PARTIAL_COMMIT,
@@ -2094,7 +2092,6 @@ def build_modelo_edit_apply_definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         permitted_frontends=frozenset({OperationFrontendProjection.CLI, OperationFrontendProjection.TUI}),
-        transient_financial_operands=(_MODELO_EDIT_MANUAL_OVERRIDE_OPERAND,),
     )
 
 

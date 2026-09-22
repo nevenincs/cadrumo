@@ -163,6 +163,10 @@ def _catalogue_invoice_payload(invoice: Invoice) -> dict[str, object]:
     payload["operation_date_role"] = invoice.operation_date_role
     payload["iva_category"] = invoice.iva_category
     payload["rectifies_invoice_number"] = invoice.rectifies_invoice_number
+    provenance = invoice.provenance
+    payload["source_filename"] = provenance.source_path.name if provenance is not None else None
+    payload["source_sha256"] = provenance.source_sha256 if provenance is not None else None
+    payload["source_row_index"] = provenance.source_row_index if provenance is not None else None
     return payload
 
 
@@ -796,18 +800,21 @@ def invoice_update(
     """
     authority_operation(ctx)
     bucket_id = _business_invoice_bucket_id()
-    patch = CatalogueInvoicePatch(
-        counterparty_name=counterparty_name,
-        counterparty_country=counterparty_country,
-        notes=notes,
-        iva_category=iva_category,
-        operation_type=operation_type,
-        operation_date=(None if operation_date is None else _parse_iso_date(operation_date, label="operation-date")),
-        retention_rate=parse_optional_decimal_amount(retention_rate, label="retention-rate"),
-        retention_amount=parse_optional_decimal_amount(retention_amount, label="retention-amount"),
-        invoice_class=(None if invoice_class is None else require_invoice_class(invoice_class)),
-        series=series,
-        rectifies_invoice_number=rectifies_invoice_number,
+    patch_values = {
+        "counterparty_name": counterparty_name,
+        "counterparty_country": counterparty_country,
+        "notes": notes,
+        "iva_category": iva_category,
+        "operation_type": operation_type,
+        "operation_date": None if operation_date is None else _parse_iso_date(operation_date, label="operation-date"),
+        "retention_rate": parse_optional_decimal_amount(retention_rate, label="retention-rate"),
+        "retention_amount": parse_optional_decimal_amount(retention_amount, label="retention-amount"),
+        "invoice_class": None if invoice_class is None else require_invoice_class(invoice_class),
+        "series": series,
+        "rectifies_invoice_number": rectifies_invoice_number,
+    }
+    patch = CatalogueInvoicePatch.model_validate(
+        {key: value for key, value in patch_values.items() if value is not None}
     )
     lifecycle_ports = catalogue_lifecycle_ports_factory(ctx)(bucket_id=bucket_id)
     try:

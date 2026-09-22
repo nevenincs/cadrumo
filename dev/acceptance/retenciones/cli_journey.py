@@ -28,7 +28,8 @@ from cadrumo.domain.calculations.registry.export_parse import (
     parse_export_payload,
 )
 from cadrumo.domain.calculations.registry.schema_exports import ExportLayoutDefinition, ExportRecordDefinition
-from dev.acceptance.income_tax.cli_journey import ArtifactEvidence, CommandEvidence, InstalledCli
+from dev.acceptance.income_tax.cli_journey import ArtifactEvidence
+from dev.acceptance.installed_cli import CommandEvidence, InstalledCli
 
 from .scenario import (
     BRIEF_ID,

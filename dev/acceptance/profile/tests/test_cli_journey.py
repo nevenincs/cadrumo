@@ -9,7 +9,7 @@ from typing import Any
 
 import pytest
 
-from dev.acceptance.income_tax.cli_journey import CommandEvidence
+from dev.acceptance.installed_cli import CommandEvidence
 
 from .. import cli_journey as journey_module
 from ..cli_journey import ProfileCliAcceptanceError, run_cli_only_lifecycle

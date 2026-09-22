@@ -13,11 +13,25 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
+from ....application.modelo.edit_contract import ModeloEditMutationFamily
+from ....application.modelo.edit_models import (
+    ModeloBindingEditIntentV1,
+    ModeloEditBaselineV1,
+    ModeloEditBindingAddressV1,
+    ModeloEditBindingIntentKind,
+    ModeloEditScalarAddressV1,
+    ModeloEditScalarIntentKind,
+    ModeloEditSubmissionV1,
+    ModeloScalarEditIntentV1,
+)
 from ....application.modelo.operation_definitions import (
+    MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
     MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
     MODELO_WORK_FILE_OPERATION_DEFINITION_ID,
     MODELO_WORK_VERIFY_OPERATION_DEFINITION_ID,
+    ModeloEditApplyOperationRequestV1,
+    ModeloEditApplySubmissionV1,
     ModeloExportRequest,
     ModeloWorkCalculateRequest,
     ModeloWorkFileApproval,
@@ -45,6 +59,7 @@ class ModeloWorkspaceLifecycleDoor:
     calculation_revision_id: str | None = None
     verification_report_id: str | None = None
     refresh_after_success: Callable[[], object] | None = None
+    edit_baseline: ModeloEditBaselineV1 | None = None
 
     async def calculate(self) -> OperationController:
         """Calculate the selected work unit from its canonical persisted ledger."""
@@ -53,6 +68,48 @@ class ModeloWorkspaceLifecycleDoor:
                 definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
                 subject_ref=self.work_unit_id,
                 payload=ModeloWorkCalculateRequest(work_unit_id=self.work_unit_id, actor=_ACTOR_REF),
+            )
+        )
+
+    async def apply_edits(
+        self,
+        *,
+        scalar_values: dict[str, str],
+        binding_values: dict[str, str],
+    ) -> OperationController:
+        """Apply staged registry-addressed values through Modelo Edit Contract V1."""
+        baseline = self.edit_baseline
+        if baseline is None:
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message="application.modelo.lifecycle.refusal.edit_unavailable"
+            )
+        submission = ModeloEditSubmissionV1(
+            baseline=baseline,
+            mutation_family=ModeloEditMutationFamily.CALCULATE,
+            scalar_intents=tuple(
+                ModeloScalarEditIntentV1(
+                    address=ModeloEditScalarAddressV1(casilla_id=casilla_id),
+                    kind=ModeloEditScalarIntentKind.SET_TYPED_VALUE,
+                    value=value,
+                )
+                for casilla_id, value in scalar_values.items()
+            ),
+            binding_intents=tuple(
+                ModeloBindingEditIntentV1(
+                    address=ModeloEditBindingAddressV1(binding_id=binding_id),
+                    kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                    value=value,
+                )
+                for binding_id, value in binding_values.items()
+            ),
+        )
+        return await self._submit(
+            OperationRequest(
+                definition_id=MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
+                subject_ref=self.work_unit_id,
+                payload=ModeloEditApplyOperationRequestV1(
+                    submission=ModeloEditApplySubmissionV1.from_submission(submission)
+                ),
             )
         )
 

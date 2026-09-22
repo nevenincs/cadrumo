@@ -14,6 +14,7 @@ proved and which is exactly why this gap survived unnoticed.
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -31,24 +32,35 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_runtime_profile, isolated_runtime_profile
 from ....application.aggregation.errors import AggregationValidationError
+from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
+from ....application.aggregation.withholding_observation_service import WithholdingMutationMode
+from ....application.aggregation.withholding_recognition import (
+    WithholdingIncomeKind,
+    WithholdingRecipientTaxRegime,
+    WithholdingRecipientTaxStatus,
+)
 from ....application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
 from ....application.modelo.calculation_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.work_lifecycle import create_work_unit
+from ....core.aggregation import RetencionClave
 from ....core.period import Period
+from ....core.storage_taxonomy import StorageCategory
 from ....domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
+from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....entrypoints.adapter_composition import build_calculation_action_ports, build_retencion_observation_ports
-from .cli_runner import invoke_cached_cli
+from ....tests.storage_scope import storage_overrides
+from .cli_runner import invoke_cached_cli, invoke_uncached_typer_app
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -62,6 +74,7 @@ def _professional_services_invoice(
     bucket_id: str,
     kind: InvoiceKind = InvoiceKind.RECEIVED,
     number: str = "F-PROV-900",
+    issued_at: date = date(2026, 3, 15),
 ) -> Invoice:
     subtotal = Decimal("1000.00")
     rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
@@ -79,7 +92,7 @@ def _professional_services_invoice(
             "bucket_id": bucket_id,
             "kind": kind,
             "invoice_number": number,
-            "issued_at": date(2026, 3, 15),
+            "issued_at": issued_at,
             "counterparty_name": "Asesoría Profesional SL",
             "counterparty_tax_id": "B12345674",
             "counterparty_country": "ES",
@@ -94,6 +107,61 @@ def _professional_services_invoice(
             "retention_amount": Decimal("150.00"),
         },
     )
+
+
+def _withholding_evidence_payload(
+    invoice: Invoice,
+    *,
+    allocation_id: str,
+    payment_event_id: str,
+    idempotency_key: str,
+    mode: WithholdingMutationMode = WithholdingMutationMode.APPEND,
+    baseline: dict[str, str] | None = None,
+    reason: str | None = None,
+    supersedes_generation_id: str | None = None,
+) -> str:
+    """Build one public CLI capture payload, including mandatory annual detail."""
+    annual_detail = WithholdingObservation(
+        source_id=invoice.invoice_id,
+        perceptor_tax_id=invoice.counterparty_tax_id or "",
+        perceptor_legal_name=invoice.counterparty_name,
+        transaction_date=date(2025, 3, 31),
+        clave=RetencionClave.from_registry("G"),
+        percibido_dinerario=Decimal("1000.00"),
+        retencion_practicada=Decimal("150.00"),
+        incapacity_cash_perception=Decimal("0"),
+        incapacity_cash_withholding=Decimal("0"),
+        incapacity_kind_value=Decimal("0"),
+        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
+        incapacity_kind_repercutido=Decimal("0"),
+        foral_retention_estatal=Decimal("0"),
+        foral_retention_navarra=Decimal("0"),
+        foral_retention_araba=Decimal("0"),
+        foral_retention_gipuzkoa=Decimal("0"),
+        foral_retention_bizkaia=Decimal("0"),
+        base_retenciones=Decimal("1000.00"),
+        porcentaje_retencion=Decimal("15"),
+    )
+    request = InvoiceWithholdingEvidenceRequest(
+        invoice_id=invoice.invoice_id,
+        income_kind=WithholdingIncomeKind.PROFESSIONAL,
+        scheme="actividades_profesionales",
+        recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
+        recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
+        payment_event_id=payment_event_id,
+        payment_occurred_on=date(2025, 3, 31),
+        allocation_id=allocation_id,
+        allocated_base=Decimal("1000.00"),
+        allocated_withholding=Decimal("150.00"),
+        allocated_settlement=Decimal("1060.00"),
+        idempotency_key=idempotency_key,
+        mode=mode,
+        baseline=baseline,
+        reason=reason,
+        supersedes_generation_id=supersedes_generation_id,
+        modelo_190_detail=annual_detail,
+    )
+    return request.model_dump_json()
 
 
 def _seed_ready_profile(root: Path) -> None:
@@ -205,6 +273,190 @@ def test_received_invoice_routes_through_aggregate_cli_into_m111(tmp_path: Path)
     assert values["09"] == Decimal("150.00")
     assert values["28"] == Decimal("150.00")
     assert values["30"] == Decimal("150.00")
+
+
+def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(tmp_path: Path) -> None:
+    """A new CLI command tree reads the exact baseline needed for replacement.
+
+    The readback uses the public aggregate envelope, while the stored state is
+    consulted only to prove an omitted invocation did not mutate it.  The
+    replacement itself is another public aggregate capture guarded by the
+    previously returned baseline, so this exercises the real producer and CAS
+    boundary instead of reimplementing either in the test.
+    """
+    for directory in storage_overrides(
+        tmp_path,
+        StorageCategory.SECRETS,
+        StorageCategory.TOKENS,
+        StorageCategory.RUNS,
+        StorageCategory.DRAFTS,
+        StorageCategory.FINANCIAL_TRANSACTIONS,
+        StorageCategory.INVOICES,
+    ).values():
+        directory.mkdir(parents=True, exist_ok=True)
+
+    with isolated_cli_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID, label="M111 readback") as profile:
+        invoice = _professional_services_invoice(
+            bucket_id=_BUCKET_ID,
+            number="F-PROV-READBACK",
+            issued_at=date(2025, 3, 15),
+        )
+        InvoiceCatalogueRepository(objects=profile.repository).save(build_invoice_catalogue([invoice]))
+        first = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "aggregate",
+                "--modelo",
+                "111",
+                "--year",
+                "2025",
+                "--period",
+                "1T",
+                "--received-invoice-retencion",
+                _withholding_evidence_payload(
+                    invoice,
+                    allocation_id="readback-first",
+                    payment_event_id="readback-payment-first",
+                    idempotency_key="readback-first",
+                ),
+            ]
+        )
+        assert first.exit_code == 0, first.output
+        first_window = json.loads(first.output)["result"]["withholding_window"]
+        first_baseline = first_window["baseline"]
+        first_generation_id = first_baseline["generation_id"]
+        assert first_window["generation"] == 1
+        assert first_window["generation_audit"] == {
+            "parent_generation_id": "0" * 64,
+            "mode": "append",
+            "supersedes_generation_id": None,
+        }
+        assert "1000.00" not in json.dumps(first_window)
+        assert "150.00" not in json.dumps(first_window)
+
+        replay = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "aggregate",
+                "--modelo",
+                "111",
+                "--year",
+                "2025",
+                "--period",
+                "1T",
+                "--received-invoice-retencion",
+                _withholding_evidence_payload(
+                    invoice,
+                    allocation_id="readback-first",
+                    payment_event_id="readback-payment-first",
+                    idempotency_key="readback-first",
+                ),
+            ]
+        )
+        assert replay.exit_code == 0, replay.output
+        assert json.loads(replay.output)["result"]["withholding_window"] == first_window
+
+        # A freshly materialised command tree shares no Click command cache
+        # with the capture invocation. It omits all capture input and must
+        # therefore read the persisted token without creating a generation.
+        from ..main import app
+
+        omitted = invoke_uncached_typer_app(
+            app,
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "aggregate",
+                "--modelo",
+                "111",
+                "--year",
+                "2025",
+                "--period",
+                "1T",
+            ],
+        )
+        assert omitted.exit_code == 0, omitted.output
+        omitted_window = json.loads(omitted.output)["result"]["withholding_window"]
+        assert omitted_window == first_window
+
+        replaced = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "aggregate",
+                "--modelo",
+                "111",
+                "--year",
+                "2025",
+                "--period",
+                "1T",
+                "--received-invoice-retencion",
+                _withholding_evidence_payload(
+                    invoice,
+                    allocation_id="readback-replacement",
+                    payment_event_id="readback-payment-replacement",
+                    idempotency_key="readback-replacement",
+                    mode=WithholdingMutationMode.REPLACE,
+                    baseline=first_baseline,
+                    reason="corrected allocation",
+                    supersedes_generation_id=first_generation_id,
+                ),
+            ]
+        )
+        assert replaced.exit_code == 0, replaced.output
+        replacement_window = json.loads(replaced.output)["result"]["withholding_window"]
+
+        stale = invoke_cached_cli(
+            [
+                "--format",
+                "json",
+                "app",
+                "modelo",
+                "aggregate",
+                "--modelo",
+                "111",
+                "--year",
+                "2025",
+                "--period",
+                "1T",
+                "--received-invoice-retencion",
+                _withholding_evidence_payload(
+                    invoice,
+                    allocation_id="readback-stale",
+                    payment_event_id="readback-payment-stale",
+                    idempotency_key="readback-stale",
+                    mode=WithholdingMutationMode.REPLACE,
+                    baseline=first_baseline,
+                    reason="stale correction",
+                    supersedes_generation_id=first_generation_id,
+                ),
+            ]
+        )
+        assert stale.exit_code != 0
+        after_stale = invoke_uncached_typer_app(
+            app,
+            ["--format", "json", "app", "modelo", "aggregate", "--modelo", "111", "--year", "2025", "--period", "1T"],
+        )
+        assert after_stale.exit_code == 0, after_stale.output
+        assert json.loads(after_stale.output)["result"]["withholding_window"] == replacement_window
+
+    assert replacement_window["generation"] == 2
+    assert replacement_window["baseline"]["generation_id"] != first_generation_id
+    assert replacement_window["generation_audit"] == {
+        "parent_generation_id": first_generation_id,
+        "mode": "replace",
+        "supersedes_generation_id": first_generation_id,
+    }
 
 
 def test_excluded_invoice_retencion_is_not_routed_and_surfaces_a_notice(tmp_path: Path) -> None:

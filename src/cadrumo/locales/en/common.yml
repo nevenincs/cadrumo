@@ -1343,6 +1343,12 @@ tui:
     home: Home
     ledger: Ledger
     profile: Profile
+    withholding: Withholding
+  filing_year_route:
+    prompt: Select a filing year (YYYY)
+    open: Open withholding
+    invalid: Enter a valid four-digit filing year.
+    unavailable: Withholding evidence is unavailable for this profile and year.
   home:
     account_fallback: Account
     action:
@@ -1644,6 +1650,22 @@ tui:
         identity: '{kind} invoice {number} dated {date}'
         retention: 'IRPF retention: rate {rate} · amount {amount}'
       title: Add an invoice
+    records:
+      failed: The change was refused or could not be saved.
+      identity: Record ID
+      invoice_detail: Invoice detail
+      invoices: Recorded invoices
+      links: Linked records
+      loading: Reading the record…
+      no_change: Enter a different value before reviewing.
+      open_invoices: View invoices
+      open_transaction: View or edit selected entry
+      reviewed: Check the value, then save it.
+      save: Save change
+      saved: Change saved.
+      saving: Saving change…
+      source: Source file
+      transaction_detail: Entry detail
     overview:
       affected_declarations: Affected declarations
       areas: Ledger areas
@@ -1912,9 +1934,11 @@ tui:
       declarations: Open Declarations
       home: Open Home
       ledger: Open Ledger
+      withholding: Open withholding evidence
       profile: Open Profile
       unknown: Open workbench area
     destination_help:
+      withholding: Capture and inspect invoice withholding for a selected filing year
       aeat_sync: What has been read from the AEAT and what can be read next
       declarations: Declarations, calculation revisions, filing history and calendar
       home: Next actions, declarations and deadlines at a glance

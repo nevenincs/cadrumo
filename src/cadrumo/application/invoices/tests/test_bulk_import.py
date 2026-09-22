@@ -61,8 +61,11 @@ def test_bulk_invoice_row_model_requires_all_mandatory_fields() -> None:
         BulkInvoiceImportRow.model_validate({})
 
 
-def test_import_invoices_from_rows_refuses_malformed_row_names_field(tmp_path: Path) -> None:
+def test_import_invoices_from_rows_refuses_malformed_row_names_field(
+    tmp_path: Path, authority_operation: object
+) -> None:
     """A malformed row (bad date) is refused naming its row number and field; valid rows still import."""
+    del authority_operation
     with _in_memory_ports() as ports:
         rows = _csv_source(
             "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate\n"

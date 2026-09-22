@@ -12,6 +12,7 @@ from textual.widgets import Button, Input, Select, Static
 
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....domain.iva.classification import InvoiceKind
+from ....domain.iva.schema import IvaCategory
 from .controller import LedgerInvoiceEntryRequested, LedgerWorkspaceController, ledger_copy
 from .models import LedgerFlowState, LedgerInvoiceClassChoice, LedgerInvoiceEntryV1
 from .workspace_presentation import LedgerConfirmationFlowScreen, door_refusal_text, ledger_workspace_page
@@ -25,6 +26,7 @@ _TEXT_FIELDS: Final[tuple[tuple[str, bool], ...]] = (
     ("invoice_date", True),
     ("taxable_base", True),
     ("iva_rate", False),
+    ("iva_category", False),
     ("currency", True),
     ("retention_rate", False),
     ("retention_amount", False),
@@ -43,6 +45,7 @@ _FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
     "invoice_date": "tui.ledger.invoice.field.invoice_date",
     "taxable_base": "tui.ledger.invoice.field.taxable_base",
     "iva_rate": "tui.ledger.invoice.field.iva_rate",
+    "iva_category": "tui.ledger.invoice.field.iva_category",
     "currency": "tui.ledger.invoice.field.currency",
     "retention_rate": "tui.ledger.invoice.field.retention_rate",
     "retention_amount": "tui.ledger.invoice.field.retention_amount",
@@ -172,6 +175,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 invoice_date=issued,
                 taxable_base=base,
                 iva_rate=iva_rate,
+                iva_category=IvaCategory(values["iva_category"]) if values["iva_category"] else None,
                 currency=values["currency"].upper(),
                 retention_rate=retention_rate,
                 retention_amount=retention_amount,
@@ -179,7 +183,7 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
                 series=values["series"] or None,
                 notes=values["notes"],
             )
-        except ValidationError as error:
+        except (CadrumoError, ValidationError) as error:
             return None, (door_refusal_text(error),)
         return entry, ()
 

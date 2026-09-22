@@ -35,8 +35,8 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.time.clock import now
-from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.buckets.event_repository import emit_bucket_event
+from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
+from ...domain.buckets.event_repository import build_bucket_event
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -60,7 +60,6 @@ from ...domain.iva.schema import IvaCategory
 from ..aggregation.counterpart import counterpart_operation_catalogue_entries
 from .catalogue_creation_ports import (
     CatalogueCreationPorts,
-    CatalogueInvoiceEventRepositoryPort,
     CatalogueInvoiceRateProviderPort,
 )
 
@@ -103,16 +102,15 @@ _EVENT_TYPES_BY_KIND: dict[InvoiceKind, tuple[BucketEventType, BucketEventType, 
 _INVOICE_EVENT_PAYLOAD_VERSION = 1
 
 
-def emit_catalogue_invoice_event(
+def build_catalogue_invoice_event(
     *,
     invoice: Invoice,
     bucket_id: str,
     slot: int,
-    event_repository: CatalogueInvoiceEventRepositoryPort,
     occurred_at: datetime,
     actor: str,
-) -> tuple[str, ...]:
-    """Append the creation event for a canonically-written invoice.
+) -> BucketEvent:
+    """Build the durable audit entry for a canonically-written invoice.
 
     The canonical write paths emitted NO bucket event of any kind, while the
     slim store emitted six types and returned their ids to the operator. So
@@ -126,8 +124,7 @@ def emit_catalogue_invoice_event(
     """
     event_type = _EVENT_TYPES_BY_KIND[invoice.kind][slot]
     object_type = _EVENT_OBJECT_BY_KIND[invoice.kind]
-    event = emit_bucket_event(
-        repository=event_repository,
+    return build_bucket_event(
         bucket_id=bucket_id,
         event_type=event_type,
         occurred_at=occurred_at,
@@ -141,7 +138,6 @@ def emit_catalogue_invoice_event(
         },
         payload_version=_INVOICE_EVENT_PAYLOAD_VERSION,
     )
-    return (event.event_id,)
 
 
 def _registry_m349_operation_type_requirement(
@@ -547,9 +543,9 @@ def create_catalogue_invoice(
     """Persist one pre-built catalogue invoice and return the updated catalogue.
 
     :func:`build_catalogue_invoice` is the sole construction authority for
-    operator-supplied fields and line synthesis. This service owns only the
-    catalogue mutation and its post-save audit event, so the construction
-    contract cannot drift between an in-memory candidate and the written record.
+    operator-supplied fields and line synthesis. This service co-commits the
+    catalogue mutation and its durable audit entry, so the invoice cannot
+    survive an event-write failure without a traceable audit record.
     """
     bucket_id = invoice.bucket_id
     if bucket_id is None:
@@ -567,35 +563,27 @@ def create_catalogue_invoice(
         updated[invoice.invoice_id] = invoice
         return InvoiceCatalogue.model_validate({"invoices": updated})
 
-    # Guarded rather than load-then-save: the catalogue is one encrypted row, so
-    # two operators adding DIFFERENT invoices at once would both read the same
-    # catalogue and the later write would drop the earlier invoice. Nothing
-    # would report it -- the duplicate check above cannot see an invoice it
-    # never read -- and a dropped invoice under-declares. Re-running the
-    # duplicate check on each attempt is the point: it must be judged against
-    # the catalogue actually being written to, not the one first read.
-    new_catalogue = ports.invoice_repository.mutate(_add)
-    # Emitted AFTER the save, so the audit trail never records a creation that
-    # did not persist. The reverse order would leave an event pointing at an
-    # invoice that is not there, which is worse than a missing event: it reads
-    # as evidence.
-    event_ids = emit_catalogue_invoice_event(
+    event = build_catalogue_invoice_event(
         invoice=invoice,
         bucket_id=bucket_id,
         slot=0,
-        event_repository=ports.event_repository,
         occurred_at=occurred_at or now(),
         actor=actor,
     )
+    # Both singleton catalogues are rebuilt from their revisioned reads at each
+    # retry.  The batch consequently cannot discard a concurrent invoice or
+    # audit entry, and a failed batch persists neither half of this command.
+    new_catalogue = ports.audit_commit.mutate_with_event(_add, event)
     return CatalogueInvoiceCreateResult(
         invoice=invoice,
         catalogue=new_catalogue,
-        bucket_event_ids=event_ids,
+        bucket_event_ids=(event.event_id,),
     )
 
 
 __all__ = [
     "CatalogueInvoiceCreateResult",
     "build_catalogue_invoice",
+    "build_catalogue_invoice_event",
     "create_catalogue_invoice",
 ]

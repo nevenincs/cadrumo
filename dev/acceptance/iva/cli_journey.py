@@ -20,8 +20,13 @@ from typing import Final, cast
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 from cadrumo.domain.calculations.registry.export import resolve_export_layout
 from cadrumo.domain.calculations.registry.export_parse import parse_export_payload
-from dev.acceptance.income_tax import cli_journey as income_tax_cli_journey
-from dev.acceptance.income_tax.cli_journey import CommandEvidence, InstalledCli, JourneyError
+from dev.acceptance.installed_cli import (
+    CommandEvidence,
+    InstalledCli,
+    InstalledCliError,
+    authority_generation,
+    profile_create_args,
+)
 
 _YEAR: Final = 2025
 _PERIOD: Final = "1T"
@@ -34,8 +39,7 @@ _PRODUCT_IDENTITY_EXPORT_REFUSAL_CODE: Final = "FAIL_MODELO_EXPORT"
 _PRODUCT_IDENTITY_EXPORT_REFUSAL_DIAGNOSTIC: Final = (
     "Modelo 303 export requires explicit product/software identity authority"
 )
-_PROFILE_CREATE_ARGS: Final = getattr(income_tax_cli_journey, "_profile_create_args")  # noqa: B009
-_AUTHORITY_GENERATION: Final = getattr(income_tax_cli_journey, "_authority_generation")  # noqa: B009
+_AUTHORITY_GENERATION: Final = authority_generation
 
 
 class IvaCliJourneyError(RuntimeError):
@@ -119,7 +123,7 @@ def run_iva_m303_cli_journey(
     profile_start = len(cli.commands)
     try:
         cli.create_profile(year=_YEAR)
-    except JourneyError as exc:
+    except InstalledCliError as exc:
         raise IvaCliJourneyError("config profile create refused") from exc
     profile_commands = cli.commands[profile_start:]
     if len(profile_commands) != 2:
@@ -127,7 +131,7 @@ def run_iva_m303_cli_journey(
     receipts.extend(
         (
             _command_receipt(
-                args=_PROFILE_CREATE_ARGS(_YEAR),
+                args=profile_create_args(_YEAR),
                 evidence=profile_commands[0],
                 artifact=artifact,
                 result_ids=(),
@@ -489,7 +493,7 @@ def run_iva_m303_cli_journey(
         executable_sha256=_sha256_path(cli.executable),
         source_identity=_checkout_source_identity(),
         package_identity=_installed_package_identity(),
-        authority_generation=cast(str, _AUTHORITY_GENERATION(authority_root)),
+        authority_generation=_AUTHORITY_GENERATION(authority_root),
         authority_descriptor_sha256=_sha256_path(descriptor),
         storage_root=str(storage_root.resolve()),
         purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,

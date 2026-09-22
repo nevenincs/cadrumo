@@ -1232,8 +1232,9 @@ errors:
       y aprueba el borrador de nuevo.
     submission_preflight_error_findings: El borrador tiene {finding_count} incidencia(s)
       de severidad ERROR; resuélvelas antes de presentar.
+    tui_modelo_lifecycle_action_unavailable: La acción seleccionada del ciclo de vida
+      del modelo no está disponible.
     unsupported_currency: El código de moneda indicado no es compatible.
-    tui_modelo_lifecycle_action_unavailable: La acción seleccionada del ciclo de vida del modelo no está disponible.
   snapshot:
     ambiguous_revision_selection: 'Más de una revisión del registro coincide con el
       modelo %{modelo_id}: %{candidate_ids}.'

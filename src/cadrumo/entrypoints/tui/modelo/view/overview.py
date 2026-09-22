@@ -35,13 +35,17 @@ actions in the system, and the screen must not convert one into the other.
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
 from textual.widgets import Button, DataTable, Input, Static
 
+from .....application.modelo.edit_models import (
+    ModeloEditWritableBindingOverrideSurfaceEntryV1,
+    ModeloEditWritableScalarSurfaceEntryV1,
+)
 from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
@@ -51,6 +55,7 @@ from ...components.app_access import TypedAppAccess
 from ...components.dialogs import ConfirmScreen
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
+from ...operations.controller import OperationController
 from .controller import ModeloWorkspaceReadSession
 from .models import (
     assertion_label,
@@ -84,6 +89,7 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         """Store the already-admitted session this destination frames."""
         super().__init__(id=id)
         self._session = session
+        self._action_in_flight = False
 
     @override
     def compose(self) -> ComposeResult:
@@ -98,6 +104,22 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
             yield Static(id="workspace-overview-actions")
             yield Static(id="modelo-lifecycle-notice")
             if self._session.lifecycle_actions is not None:
+                edit_baseline = getattr(self._session.lifecycle_actions, "edit_baseline", None)
+                if edit_baseline is not None:
+                    for entry in edit_baseline.permitted_surface:
+                        if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
+                            yield Input(
+                                placeholder=tr("tui.modelo.edit.scalar", casilla=entry.casilla_id),
+                                id=f"modelo-edit-scalar-{entry.casilla_id}",
+                                classes="modelo-edit-value",
+                            )
+                        elif isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1):
+                            yield Input(
+                                placeholder=tr("tui.modelo.edit.binding", binding=entry.binding_id),
+                                id=f"modelo-edit-binding-{entry.binding_id}",
+                                classes="modelo-edit-value",
+                            )
+                    yield Button(tr("tui.modelo.edit.apply"), id="modelo-edit-apply")
                 yield Button(tr("application.modelo.lifecycle.calculate"), id="modelo-lifecycle-calculate")
                 yield Button(tr("application.modelo.lifecycle.verify"), id="modelo-lifecycle-verify")
                 yield Button(tr("application.modelo.lifecycle.file"), id="modelo-lifecycle-file")
@@ -148,6 +170,7 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         if actions is None:
             return
         method_name = {
+            "modelo-edit-apply": "apply_edits",
             "modelo-lifecycle-calculate": "calculate",
             "modelo-lifecycle-verify": "verify",
             "modelo-lifecycle-export": "export",
@@ -158,6 +181,23 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         if method_name is None:
             return
         output_path = None
+        keyword_arguments: dict[str, object] = {}
+        if method_name == "apply_edits":
+            baseline = getattr(actions, "edit_baseline", None)
+            if baseline is None:
+                return
+            scalar_values: dict[str, str] = {}
+            binding_values: dict[str, str] = {}
+            for entry in baseline.permitted_surface:
+                if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
+                    value = self.query_one(f"#modelo-edit-scalar-{entry.casilla_id}", Input).value.strip()
+                    if value:
+                        scalar_values[str(entry.casilla_id)] = value
+                elif isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1):
+                    value = self.query_one(f"#modelo-edit-binding-{entry.binding_id}", Input).value.strip()
+                    if value:
+                        binding_values[str(entry.binding_id)] = value
+            keyword_arguments = {"scalar_values": scalar_values, "binding_values": binding_values}
         if method_name == "export":
             output_path = self.query_one("#modelo-lifecycle-export-path", Input).value.strip()
             if not output_path:
@@ -166,16 +206,18 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         submit = getattr(actions, method_name, None)
         if submit is None:
             return
-        self._start_lifecycle_action(submit, output_path=output_path)
+        if output_path is not None:
+            keyword_arguments["output_path"] = output_path
+        self._start_lifecycle_action(submit, keyword_arguments=keyword_arguments)
 
     def _confirm_local_filing(self) -> None:
         """Require an explicit acknowledgement before recording a local filing."""
-        def closed(confirmed: bool) -> None:
+        def closed(confirmed: bool | None) -> None:
             if confirmed:
                 actions = self._session.lifecycle_actions
                 submit = None if actions is None else getattr(actions, "file", None)
                 if isinstance(submit, Callable):
-                    self._start_lifecycle_action(submit)
+                    self._start_lifecycle_action(cast("Callable[..., Awaitable[OperationController]]", submit))
             else:
                 self._notice(tr("application.modelo.lifecycle.file_cancelled"))
 
@@ -189,29 +231,47 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
             closed,
         )
 
-    def _start_lifecycle_action(self, submit: Callable[..., object], *, output_path: str | None = None) -> None:
+    def _start_lifecycle_action(
+        self,
+        submit: Callable[..., Awaitable[OperationController]],
+        *,
+        keyword_arguments: dict[str, object] | None = None,
+    ) -> None:
         """Start one action in the exclusive lane so repeated activation cannot submit twice."""
+        if self._action_in_flight:
+            return
+        self._action_in_flight = True
         self.run_worker(
-            self._open_lifecycle_modal(submit, output_path=output_path),
+            self._open_lifecycle_modal(submit, keyword_arguments=keyword_arguments or {}),
             group="modelo-lifecycle-action",
             exclusive=True,
         )
 
-    async def _open_lifecycle_modal(self, submit: Callable[..., object], *, output_path: str | None = None) -> None:
+    async def _open_lifecycle_modal(
+        self,
+        submit: Callable[..., Awaitable[OperationController]],
+        *,
+        keyword_arguments: dict[str, object],
+    ) -> None:
         """Submit one public action and expose its exact terminal result in the operation modal."""
         from ...operations.modal import OperationModal
 
         try:
-            controller = await submit() if output_path is None else await submit(output_path=output_path)
+            controller = await submit(**keyword_arguments)
         except CadrumoError as refusal:
+            self._action_in_flight = False
             self._notice(resolve_error_message(refusal))
             return
+        except Exception:
+            self._action_in_flight = False
+            raise
         self.app.push_screen(OperationModal(controller), self._on_lifecycle_operation_settled)
 
     def _on_lifecycle_operation_settled(self, outcome: object) -> None:
         """Publish the terminal result and refresh only after success."""
         from ...operations.modal import OperationModalSettledOutcomeV1
 
+        self._action_in_flight = False
         if not isinstance(outcome, OperationModalSettledOutcomeV1):
             return
         condition = outcome.view_model.projection.terminal_condition

@@ -20,17 +20,23 @@ import sys
 from pathlib import Path
 
 import pytest
+from textual.widgets import Input, Static
 
 from ....application.search.workbench import WorkbenchDestinationAdmissionState
+from ..components.filing_year_route import FilingYearRouteScreen
+from ..components.host import ScreenHostApp
 from ..launcher import main
 from ..ledger.controller import LedgerWorkspaceScreen
 from ..navigation import TUI_DESTINATION_CATALOGUE, TuiScreenContextV1
+from ..withholding.screen import WithholdingEvidenceScreen
 from .workbench_session import WORKBENCH_PROFILE_LABEL, installed_workbench_root
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CLI_PACKAGE = "cadrumo.entrypoints.cli"
-_PRIMARY_DESTINATIONS = ("workbench.home", "workbench.ledger", "workbench.declarations", "workbench.aeat_sync")
+_PRIMARY_DESTINATIONS = (
+    "workbench.home", "workbench.ledger", "workbench.withholding", "workbench.declarations", "workbench.aeat_sync"
+)
 
 
 @pytest.mark.asyncio
@@ -88,6 +94,28 @@ async def test_the_installed_ledger_route_admits_the_link_door(tmp_path: Path) -
 
         assert isinstance(ledger, LedgerWorkspaceScreen)
         assert ledger.controller.can_submit_links(), "the installed Ledger route composed no link door"
+
+
+@pytest.mark.asyncio
+async def test_withholding_route_uses_the_active_profile_and_selected_year(tmp_path: Path) -> None:
+    """The real installed route opens the existing shared-service evidence screen."""
+    async with installed_workbench_root(tmp_path) as root:
+        route = root.destination_catalogue.resolve("workbench.withholding")
+        assert route.factory is not None
+        selector = route.factory(TuiScreenContextV1(destination="workbench.withholding"))
+        assert isinstance(selector, FilingYearRouteScreen)
+        assert isinstance(selector._screen_factory(2025), WithholdingEvidenceScreen)
+        async with ScreenHostApp(selector).run_test() as pilot:
+            year_input = pilot.app.screen.query_one("#filing-year-route-year", Input)
+            year_input.value = "2025"
+            assert year_input.value == "2025"
+            await pilot.click("#filing-year-route-open")
+            await pilot.pause()
+            assert year_input.value == "2025"
+            assert isinstance(pilot.app.screen, WithholdingEvidenceScreen), str(
+                selector.query_one("#filing-year-route-error", Static).render()
+            )
+            assert pilot.app.screen._filing_year == 2025
 
 
 @pytest.mark.asyncio

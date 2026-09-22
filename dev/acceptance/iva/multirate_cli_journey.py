@@ -10,11 +10,10 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Final, cast
 
-from dev.acceptance.income_tax.cli_journey import InstalledCli, JourneyError
+from dev.acceptance.installed_cli import InstalledCli, InstalledCliError, profile_create_args
 
 from .cli_journey import (
     _AUTHORITY_GENERATION,
-    _PROFILE_CREATE_ARGS,
     IvaCliJourneyError,
     SanitizedCommandReceipt,
     _checkout_source_identity,
@@ -301,7 +300,7 @@ def run_iva_multirate_cli_journey(
         executable_sha256=_sha256_path(cli.executable),
         source_identity=_checkout_source_identity(),
         package_identity=_installed_package_identity(),
-        authority_generation=cast(str, _AUTHORITY_GENERATION(authority_root)),
+        authority_generation=_AUTHORITY_GENERATION(authority_root),
         authority_descriptor_sha256=_sha256_path(descriptor),
         storage_root=str(storage_root.resolve()),
         purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
@@ -327,14 +326,14 @@ def _create_profile(*, cli: InstalledCli, receipts: list[SanitizedCommandReceipt
     profile_start = len(cli.commands)
     try:
         cli.create_profile(year=_YEAR)
-    except JourneyError as exc:
+    except InstalledCliError as exc:
         raise IvaCliJourneyError("config profile create refused") from exc
     commands = cli.commands[profile_start:]
     if len(commands) != 2:
         raise IvaCliJourneyError("profile setup did not produce its two public command receipts")
     receipts.extend(
         (
-            _command_receipt(args=_PROFILE_CREATE_ARGS(_YEAR), evidence=commands[0], artifact=artifact, result_ids=()),
+            _command_receipt(args=profile_create_args(_YEAR), evidence=commands[0], artifact=artifact, result_ids=()),
             _command_receipt(
                 args=("config", "profile", "complete-setup"), evidence=commands[1], artifact=artifact, result_ids=()
             ),

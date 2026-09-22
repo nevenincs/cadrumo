@@ -29,6 +29,11 @@ from ...application.aggregation.service import (
     PerModeloAggregationContributor,
     PerModeloAggregationResult,
 )
+from ...application.aggregation.withholding_observation_service import (
+    WithholdingGenerationAudit,
+    WithholdingMutationMode,
+    WithholdingWindowState,
+)
 from ...application.calculations.observations_repository import (
     ObservationSourceKind,
     PriorDomiciliationElectionProjection,
@@ -1427,6 +1432,68 @@ class WorkResumeResult(OutputSchema):
     obligation: dict[str, object]
 
 
+class WithholdingWindowBaselinePayload(OutputSchema):
+    """An exact public optimistic-concurrency baseline for one withholding scope."""
+
+    scope_token: str = Field(min_length=1)
+    generation_id: str = Field(min_length=64, max_length=64)
+
+
+class WithholdingGenerationAuditPayload(OutputSchema):
+    """Payload-free immutable lineage facts for the current withholding generation."""
+
+    parent_generation_id: str = Field(min_length=64, max_length=64)
+    mode: WithholdingMutationMode
+    supersedes_generation_id: str | None = Field(default=None, min_length=64, max_length=64)
+
+    @field_validator("mode", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _coerce_mode(cls, value: object) -> object:
+        """Hydrate the closed mutation-mode token from JSON rendering."""
+        if isinstance(value, str) and not isinstance(value, WithholdingMutationMode):
+            return WithholdingMutationMode(value)
+        return value
+
+
+class WithholdingWindowReadbackPayload(OutputSchema):
+    """Current withholding-window baseline and auditable generation lineage.
+
+    This is deliberately metadata-only.  The active entries remain encrypted
+    persistence data and are never copied into an aggregate command result or
+    its human-readable logging projection.
+    """
+
+    baseline: WithholdingWindowBaselinePayload
+    generation: NonNegativeInt
+    generation_audit: WithholdingGenerationAuditPayload | None = None
+
+    @classmethod
+    def from_window_state(
+        cls,
+        state: WithholdingWindowState,
+        *,
+        generation_audit: WithholdingGenerationAudit | None,
+    ) -> WithholdingWindowReadbackPayload:
+        """Project an existing service read without interpreting its entries."""
+        return cls(
+            baseline=WithholdingWindowBaselinePayload(
+                scope_token=state.baseline.scope_token,
+                generation_id=state.baseline.generation_id,
+            ),
+            generation=state.generation,
+            generation_audit=(
+                None
+                if generation_audit is None
+                else WithholdingGenerationAuditPayload(
+                    parent_generation_id=generation_audit.parent_generation_id,
+                    mode=generation_audit.mode,
+                    supersedes_generation_id=generation_audit.supersedes_generation_id,
+                )
+            ),
+        )
+
+
 class ModeloAggregateResult(OutputSchema):
     """Per-modelo aggregation result, projected from the canonical service result.
 
@@ -1469,6 +1536,7 @@ class ModeloAggregateResult(OutputSchema):
     source_kinds: list[BindingSourceKind] = Field(default_factory=list)
     result_row_count: NonNegativeInt
     clave_breakdown: list[WithholdingClaveBreakdownPayload] = Field(default_factory=list)
+    withholding_window: WithholdingWindowReadbackPayload | None = None
 
     @field_validator("provider", mode="before")
     @classmethod
@@ -1511,6 +1579,7 @@ class ModeloAggregateResult(OutputSchema):
         result: PerModeloAggregationResult,
         *,
         clave_breakdown: Sequence[WithholdingClaveBreakdown] = (),
+        withholding_window: WithholdingWindowReadbackPayload | None = None,
     ) -> ModeloAggregateResult:
         """Project the canonical service result onto the CLI transport shape.
 
@@ -1523,6 +1592,8 @@ class ModeloAggregateResult(OutputSchema):
         Args:
             result: The canonical per-modelo aggregation result.
             clave_breakdown: Modelo 190 per-clave rows, empty elsewhere.
+            withholding_window: Current baseline and generation metadata for an
+                invoice-backed withholding scope, absent for other modelos.
         """
         return cls(
             modelo=result.modelo,
@@ -1531,6 +1602,7 @@ class ModeloAggregateResult(OutputSchema):
             observation_count=result.log_fields.observation_count,
             source_kinds=list(result.source_kinds),
             result_row_count=result.log_fields.result_row_count,
+            withholding_window=withholding_window,
             clave_breakdown=[
                 WithholdingClaveBreakdownPayload(
                     clave=row.clave,
@@ -1612,6 +1684,9 @@ __all__ = [
     "VerificationReportPayload",
     "VerificationReportShowResult",
     "WithholdingClaveBreakdownPayload",
+    "WithholdingGenerationAuditPayload",
+    "WithholdingWindowBaselinePayload",
+    "WithholdingWindowReadbackPayload",
     "WorkAmendResult",
     "WorkCalculateResult",
     "WorkCreateResult",

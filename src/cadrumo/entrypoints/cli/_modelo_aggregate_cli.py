@@ -20,6 +20,7 @@ from ...application.aggregation.service import (
     PerModeloAggregationResult,
     aggregate_per_modelo,
 )
+from ...application.aggregation.withholding_observation_service import WithholdingWindowScope
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice
 from ...core.modelo import Modelo
@@ -30,7 +31,7 @@ from ...domain.calculations.registry.withholding_bindings import (
     aggregate_withholding_by_clave,
 )
 from ._modelo_behavior_support import resolve_year_period
-from ._modelo_payloads import ModeloAggregateResult
+from ._modelo_payloads import ModeloAggregateResult, WithholdingWindowReadbackPayload
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .state_projection_support import (
     authority_operation,
@@ -114,6 +115,31 @@ def _clave_breakdown(command: PerModeloAggregationCommand) -> tuple[WithholdingC
     if command.modelo != Modelo("190").value:
         return ()
     return tuple(aggregate_withholding_by_clave(command.withholding_observations))
+
+
+def _withholding_window_readback(
+    ctx: typer.Context,
+    command: PerModeloAggregationCommand,
+) -> WithholdingWindowReadbackPayload | None:
+    """Read the current exact mutation baseline without exposing evidence rows.
+
+    Invoice-backed withholding capture and an omitted aggregate invocation
+    both arrive here after the shared producer has either committed or made no
+    change.  The read is intentionally separate from the aggregation result:
+    it preserves the service's optimistic-concurrency and immutable-generation
+    contracts instead of reconstructing a token from aggregation data.
+    """
+    if command.modelo not in _INVOICE_WITHHOLDING_MODELOS:
+        return None
+    scope = WithholdingWindowScope(modelo=command.modelo, period=command.period)
+    service = withholding_observation_service(ctx, bucket_id=active_bucket_id_or_refuse())
+    state = service.read_window(scope)
+    generation_audit = (
+        None
+        if state.generation == 0
+        else service.read_generation(scope, state.baseline.generation_id)
+    )
+    return WithholdingWindowReadbackPayload.from_window_state(state, generation_audit=generation_audit)
 
 
 def _aggregate_output_lines(
@@ -222,7 +248,11 @@ def aggregate_modelo(
         )
     result = aggregate_per_modelo(command, operation=operation)
     clave_breakdown = _clave_breakdown(command)
-    aggregate_result = ModeloAggregateResult.from_aggregation_result(result, clave_breakdown=clave_breakdown)
+    aggregate_result = ModeloAggregateResult.from_aggregation_result(
+        result,
+        clave_breakdown=clave_breakdown,
+        withholding_window=_withholding_window_readback(ctx, command),
+    )
     notices: list[Notice] = []
     lines = _aggregate_output_lines(result, clave_breakdown=clave_breakdown, notices=notices)
     emit_envelope(ctx, command="modelo.aggregate", result=aggregate_result, lines=lines, notices=notices)

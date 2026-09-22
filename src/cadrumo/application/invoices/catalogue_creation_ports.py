@@ -16,7 +16,7 @@ from decimal import Decimal
 from typing import Protocol
 
 from ...core.errors.hierarchy import CadrumoError
-from ...domain.buckets.event import BucketEventHistoryCatalogue
+from ...domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.invoices.models import InvoiceCatalogue
 
@@ -55,6 +55,26 @@ class CatalogueInvoiceRepositoryPort(Protocol):
         ...
 
 
+class CatalogueInvoiceAuditCommitPort(Protocol):
+    """Persist an invoice mutation and its durable audit entry as one commit.
+
+    The port owns the revisioned read/retry loop because the two encrypted
+    singleton catalogues must be derived again after either one changes.  An
+    application caller supplies only pure catalogue mutation and event values;
+    it never observes an invoice write without its audit record.
+    """
+
+    def mutate_with_event(
+        self,
+        mutation: Callable[[InvoiceCatalogue], InvoiceCatalogue],
+        event: BucketEvent,
+        *,
+        attempts: int = 4,
+    ) -> InvoiceCatalogue:
+        """Commit ``mutation`` and ``event`` atomically under both revisions."""
+        ...
+
+
 class CatalogueInvoiceEventRepositoryPort(BucketEventHistoryRepositoryProtocol, Protocol):
     """Guarded event-history capability for one bucket."""
 
@@ -87,6 +107,7 @@ class CatalogueCreationPorts:
 
     invoice_repository: CatalogueInvoiceRepositoryPort
     event_repository: CatalogueInvoiceEventRepositoryPort
+    audit_commit: CatalogueInvoiceAuditCommitPort
     rate_provider: CatalogueInvoiceRateProviderPort
 
 
@@ -101,6 +122,7 @@ class CatalogueCreationPortsFactory(Protocol):
 __all__ = [
     "CatalogueCreationPorts",
     "CatalogueCreationPortsFactory",
+    "CatalogueInvoiceAuditCommitPort",
     "CatalogueInvoiceEventRepositoryPort",
     "CatalogueInvoicePersistenceError",
     "CatalogueInvoiceRateError",

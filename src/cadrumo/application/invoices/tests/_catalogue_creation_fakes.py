@@ -7,7 +7,8 @@ from datetime import date
 from decimal import Decimal
 
 from ....core.secure_object_write import SecureObjectWrite
-from ....domain.buckets.event import BucketEventHistoryCatalogue
+from ....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
+from ....domain.buckets.event_repository import append_bucket_event
 from ....domain.invoices.models import InvoiceCatalogue
 from ..catalogue_creation_ports import CatalogueCreationPorts
 
@@ -64,6 +65,28 @@ class _InMemoryEventRepository:
         return self._catalogue
 
 
+class _InMemoryAuditCommit:
+    """Inward all-or-nothing invoice and audit seam for application tests."""
+
+    def __init__(self, invoices: _InMemoryInvoiceRepository, events: _InMemoryEventRepository) -> None:
+        self._invoices = invoices
+        self._events = events
+
+    def mutate_with_event(
+        self,
+        mutation: Callable[[InvoiceCatalogue], InvoiceCatalogue],
+        event: BucketEvent,
+        *,
+        attempts: int = 4,
+    ) -> InvoiceCatalogue:
+        del attempts
+        updated_invoices = mutation(self._invoices.load())
+        updated_events = append_bucket_event(self._events.load(), event)
+        self._invoices._catalogue = updated_invoices
+        self._events._catalogue = updated_events
+        return updated_invoices
+
+
 class _InMemoryRateProvider:
     """No-rate provider for EUR-only invoice policy cases."""
 
@@ -78,9 +101,12 @@ class _InMemoryRateProvider:
 
 def in_memory_catalogue_creation_ports() -> CatalogueCreationPorts:
     """Compose fresh inward fakes for one application test scenario."""
+    invoices = _InMemoryInvoiceRepository()
+    events = _InMemoryEventRepository()
     return CatalogueCreationPorts(
-        invoice_repository=_InMemoryInvoiceRepository(),
-        event_repository=_InMemoryEventRepository(),
+        invoice_repository=invoices,
+        event_repository=events,
+        audit_commit=_InMemoryAuditCommit(invoices, events),
         rate_provider=_InMemoryRateProvider(),
     )
 

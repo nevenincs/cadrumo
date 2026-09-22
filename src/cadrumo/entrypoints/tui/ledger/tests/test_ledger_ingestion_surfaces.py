@@ -6,7 +6,7 @@ from datetime import date
 from decimal import Decimal
 
 import pytest
-from textual.widgets import Button, DataTable, Input, Static
+from textual.widgets import Button, DataTable, Input, Select, Static
 
 from .....application.ledger.attachment_review import AttachmentReviewItem
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
@@ -137,6 +137,41 @@ async def test_invoice_entry_records_only_the_reviewed_entry() -> None:
             currency="EUR",
         )
     ]
+
+
+@pytest.mark.asyncio
+async def test_invoice_entry_preserves_explicit_iva_treatment_for_linked_income() -> None:
+    """The issued document's tax treatment reaches the shared invoice writer."""
+    door = _InvoiceDoor()
+    screen = _invoice_screen(door)
+    with override_settings(cadrumo_output_language="en"):
+        async with ScreenHostApp[None](screen).run_test(size=(100, 80)) as pilot:
+            await pilot.pause()
+            _fill(
+                screen,
+                counterparty_name="Synthetic client",
+                counterparty_nif="A58818501",
+                invoice_number="S-01",
+                invoice_date="2025-02-15",
+                taxable_base="4000.00",
+                iva_rate="21",
+                iva_category="domestic_general",
+                retention_rate="0.07",
+                retention_amount="280.00",
+            )
+            screen.query_one("#ledger-invoice-kind", Select).value = "issued"
+            screen.query_one("#ledger-invoice-review", Button).press()
+            await pilot.pause()
+            assert screen.flow_state is LedgerFlowState.CONFIRMING, str(
+                screen.query_one("#ledger-refusal", Static).render()
+            )
+            screen.query_one("#ledger-invoice-confirm", Button).press()
+            await pilot.pause()
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+            assert screen.flow_state is LedgerFlowState.SUCCEEDED
+    assert len(door.entries) == 1
+    assert door.entries[0].iva_category.value == "domestic_general"
 
 
 @pytest.mark.asyncio

@@ -231,14 +231,20 @@ def _ledger_classification_submitter(
 
     def write(submission: LedgerClassificationSubmissionV1) -> ManualLedgerTransactionResult:
         from ...application.ledger.actions_manual import update_manual_transaction_fields
+        from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
         from ..ledger_action_composition import compose_ledger_action_ports
 
         ports = compose_ledger_action_ports(bucket_id=profile_id, operation=operation)
+        patch = submission.patch
+        if patch.iva_category is not None:
+            patch = patch.model_copy(
+                update={"iva_category": require_iva_category(patch.iva_category, authority=operation)}
+            )
 
         return update_manual_transaction_fields(
             bucket_id=profile_id,
             transaction_id=submission.transaction_id,
-            patch=submission.patch,
+            patch=patch,
             actor="operator",
             source_command=str(submission.action.action_id),
             ports=ports,
@@ -394,6 +400,7 @@ class InstalledWorkbenchRootInputsV1:
     admissions: Mapping[str, WorkbenchDestinationAdmission]
     account_factories: AccountFactoriesV1
     ledger_factory: TuiScreenFactoryV1 | None
+    withholding_factory: TuiScreenFactoryV1 | None
     declarations_factory: TuiScreenFactoryV1 | None
     aeat_sync_factory: TuiScreenFactoryV1 | None
     search_inputs: InstalledWorkbenchSearchInputsV1 | None
@@ -576,6 +583,9 @@ def compose_installed_workbench_generation_provider(
             admissions: dict[str, WorkbenchDestinationAdmission] = {
                 "workbench.home": _available_admission("workbench.home"),
                 "workbench.ledger": generation.ledger_admission,
+                "workbench.withholding": generation.ledger_admission.model_copy(
+                    update={"destination": "workbench.withholding"}
+                ),
                 "workbench.declarations": generation.declarations_admission,
                 "workbench.aeat_sync": generation.aeat_sync_admission,
                 "workbench.profile": dependencies.profile_admission,
@@ -590,6 +600,7 @@ def compose_installed_workbench_generation_provider(
             )
             if ledger_factory is not None:
                 factories["workbench.ledger"] = ledger_factory
+                factories["workbench.withholding"] = _withholding_generation_factory(dependencies.account.profile_id)
             declarations_factory = _declarations_generation_factory(
                 current,
                 dependencies,
@@ -617,6 +628,7 @@ def compose_installed_workbench_generation_provider(
             admissions=admissions,
             account_factories=account_factories,
             ledger_factory=factories.get("workbench.ledger"),
+            withholding_factory=factories.get("workbench.withholding"),
             declarations_factory=factories.get("workbench.declarations"),
             aeat_sync_factory=factories.get("workbench.aeat_sync"),
             search_inputs=_search_inputs(generation),
@@ -762,6 +774,7 @@ def _ledger_generation_factory(
     """
     if current[0].ledger.projection is None:
         return None
+    from .ledger.record_doors import LedgerRecordDoors
     from .ledger.routes import ledger_screen_factory
 
     def create(context: TuiScreenContextV1) -> Screen[None]:
@@ -842,7 +855,23 @@ def _ledger_generation_factory(
             evidence_door=LedgerEvidenceDoor(profile_id=profile_id, operation=operation),
             refresh=ledger_workspace_refresh(profile_id, capture_ledger),
             activity_asset_actions=activity_asset_actions,
+            record_doors=LedgerRecordDoors(bucket_id=profile_id, operation=operation),
         )(context)
+
+    return create
+
+
+def _withholding_generation_factory(bucket_id: str) -> TuiScreenFactoryV1:
+    """Require an operator-selected filing year before opening shared withholding capture."""
+    from .components.filing_year_route import FilingYearRouteScreen
+    from .withholding.installed import compose_installed_withholding_screen
+
+    def create(context: TuiScreenContextV1) -> Screen[None]:
+        if context.destination != "workbench.withholding":
+            raise ValueError("withholding requires its admitted destination")
+        return FilingYearRouteScreen(
+            screen_factory=lambda year: compose_installed_withholding_screen(bucket_id=bucket_id, filing_year=year)
+        )
 
     return create
 
@@ -871,8 +900,9 @@ def _declarations_generation_factory(
                 if current[0].modelo_lifecycle.projection is not None
                 else (),
                 lifecycle_actions_factory=lambda lifecycle: _modelo_lifecycle_door(
-                    operation_runtime.services,
+                    operation_runtime,
                     lifecycle,
+                    bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
                     refresh_after_success=refresh_generation,
                 ),
             )
@@ -897,23 +927,39 @@ def _declarations_generation_factory(
 
 
 def _modelo_lifecycle_door(
-    services: OperationComposedServices,
+    operation_runtime: TuiOperationCompositionV1,
     lifecycle: object,
     *,
+    bucket_id: str,
     refresh_after_success: Callable[[], object] | None = None,
 ) -> object:
     """Bind one lifecycle read to the session's operation services without repository access."""
+    from ...application.modelo.edit_admission import admit_modelo_edit_baseline
+    from ...application.modelo.edit_models import ModeloEditAdmittedV1
     from ...application.modelo.workspace_models import ModeloWorkspaceLifecycleProjectionV1
+    from ..adapter_composition import build_calculation_action_ports
     from .modelo.lifecycle import ModeloWorkspaceLifecycleDoor
 
     if not isinstance(lifecycle, ModeloWorkspaceLifecycleProjectionV1) or lifecycle.target.work_unit_id is None:
         raise ValueError("Modelo lifecycle actions require an admitted work-unit lifecycle projection")
+    ports = build_calculation_action_ports(
+        bucket_id=bucket_id,
+        operation=operation_runtime.authority_operation,
+    )
+    admission = admit_modelo_edit_baseline(
+        work_unit_id=str(lifecycle.target.work_unit_id),
+        work_catalogue=ports.work_unit_repository.load(),
+        calculation_catalogue=ports.calculation_repository.load(),
+        operation=operation_runtime.authority_operation,
+        operation_contracts=operation_runtime.public_contracts,
+    )
     return ModeloWorkspaceLifecycleDoor(
-        services=services,
+        services=operation_runtime.services,
         work_unit_id=str(lifecycle.target.work_unit_id),
         calculation_revision_id=lifecycle.calculation_revision_id,
         verification_report_id=lifecycle.verification_report_id,
         refresh_after_success=refresh_after_success,
+        edit_baseline=admission.baseline if isinstance(admission, ModeloEditAdmittedV1) else None,
     )
 
 
@@ -1116,6 +1162,7 @@ def compose_installed_workbench_root(
         for destination, factory in {
             "workbench.home": home_factory,
             "workbench.ledger": inputs.ledger_factory,
+            "workbench.withholding": inputs.withholding_factory,
             "workbench.declarations": inputs.declarations_factory,
             "workbench.aeat_sync": inputs.aeat_sync_factory,
             "workbench.profile": inputs.account_factories.profile,

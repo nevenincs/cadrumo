@@ -113,11 +113,15 @@ def test_no_two_enrolments_redeclare_one_subject() -> None:
 
 
 @pytest.mark.parametrize("factory_name", sorted(_definition_factories()))
-def test_each_enrolment_is_recorded_and_journals_a_credential_free_request(factory_name: str) -> None:
-    """Lifecycle work is durable, and its request is safe to journal."""
+def test_each_enrolment_is_recorded_and_stores_its_request_safely(factory_name: str) -> None:
+    """Lifecycle work is durable; manual financial edits use secure references."""
     definition = _build(_definition_factories()[factory_name])
 
     assert definition.capabilities.durability is OperationDurability.RECORDED
+    if definition.definition_id == definitions_module.MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID:
+        assert definition.capabilities.request_storage is OperationRequestStoragePolicy.SECURE_REFERENCE
+        assert not issubclass(definition.request_type, CredentialFreeOperationRequest)
+        return
     assert definition.capabilities.request_storage is OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
     assert issubclass(definition.request_type, CredentialFreeOperationRequest)
 
