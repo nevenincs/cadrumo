@@ -59,6 +59,7 @@
         "cadrumo.application.aggregation.irnr_income_ledger",
         "cadrumo.application.aggregation.iva_ledger",
         "cadrumo.application.aggregation.ledger_filing_snapshot",
+        "cadrumo.application.aggregation.m193_phase_materialization",
         "cadrumo.application.aggregation.m303_arrivals",
         "cadrumo.application.aggregation.modelo_bindings",
         "cadrumo.application.aggregation.modelo_bindings_actividad_assets",
@@ -1076,6 +1077,7 @@
         "cadrumo.entrypoints.tui.components.account_chrome",
         "cadrumo.entrypoints.tui.components.app_access",
         "cadrumo.entrypoints.tui.components.dialogs",
+        "cadrumo.entrypoints.tui.components.filing_year_route",
         "cadrumo.entrypoints.tui.components.host",
         "cadrumo.entrypoints.tui.components.status",
         "cadrumo.entrypoints.tui.components.theme",
@@ -1106,6 +1108,8 @@
         "cadrumo.entrypoints.tui.ledger.models_actividad_asset",
         "cadrumo.entrypoints.tui.ledger.overview",
         "cadrumo.entrypoints.tui.ledger.reconciliation",
+        "cadrumo.entrypoints.tui.ledger.record_doors",
+        "cadrumo.entrypoints.tui.ledger.record_views",
         "cadrumo.entrypoints.tui.ledger.review",
         "cadrumo.entrypoints.tui.ledger.routes",
         "cadrumo.entrypoints.tui.ledger.workspace_injection",
@@ -1142,7 +1146,9 @@
         "cadrumo.entrypoints.tui.secret.passphrase",
         "cadrumo.entrypoints.tui.secret.registration",
         "cadrumo.entrypoints.tui.withholding",
-        "cadrumo.entrypoints.tui.withholding.door"
+        "cadrumo.entrypoints.tui.withholding.door",
+        "cadrumo.entrypoints.tui.withholding.installed",
+        "cadrumo.entrypoints.tui.withholding.screen"
       ]
     }
   }
