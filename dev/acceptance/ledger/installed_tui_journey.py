@@ -45,6 +45,10 @@ _COUNTERPARTY_NIF = "A58818501"
 _INVOICE_BASE = Decimal("100.00")
 _INVOICE_IVA = Decimal("21.00")
 _INVOICE_TOTAL = _INVOICE_BASE + _INVOICE_IVA
+_TUI_IMPORTED_TRANSACTION_AMOUNT = Decimal("10.00")
+_TUI_IMPORTED_TRANSACTION_DIRECTION = "INCOMING"
+_LINKED_IDENTITY_REFUSAL = "linked transaction identity cannot change without updating its invoice link"
+_N26_HEADER = "Date,Payee,Payment reference,Amount (EUR),Currency,Transaction ID"
 
 type ChildMode = Literal[
     "tui_only_capture_update",
@@ -110,6 +114,35 @@ class InstalledLedgerTuiReceipt:
         return cast("dict[str, object]", asdict(self))
 
 
+@dataclass(frozen=True, slots=True)
+class TuiOnlyCliOracleReceipt:
+    """Sanitized installed-CLI readback for the independently TUI-written fixture."""
+
+    schema_version: str
+    status: Literal["proven"]
+    journey: Literal["tui_only_cli_oracle"]
+    package_identity: str
+    year: int
+    product_origin: str
+    product_init_sha256: str
+    tui_only_observations: tuple[str, ...]
+    cli_oracle_observations: tuple[str, ...]
+    cli_command_count: int
+
+    def to_dict(self) -> dict[str, object]:
+        """Return value-free evidence for the supplemental installed journey."""
+        return cast("dict[str, object]", asdict(self))
+
+
+@dataclass(frozen=True, slots=True)
+class _TuiOnlyRun:
+    """Private coordinates retained only while an outer journey reads back its own store."""
+
+    receipt: LedgerTuiChildReceipt
+    cli_oracle_observations: tuple[str, ...]
+    cli_command_count: int
+
+
 def _require_empty_directory(path: Path, *, label: str) -> Path:
     """Create one caller-owned acceptance directory only when it is fresh."""
     if path.exists() and any(path.iterdir()):
@@ -124,6 +157,47 @@ def _result(document: dict[str, Any], *, stage: str) -> dict[str, Any]:
     if not isinstance(result, dict):
         raise LedgerInstalledTuiError(f"{stage} did not return a public result object")
     return result
+
+
+def _cli_command(
+    cli: InstalledCli,
+    arguments: Sequence[str],
+    *,
+    stage: str,
+    command: str,
+    allow_error: bool = False,
+) -> dict[str, Any]:
+    """Run one public command and retain a value-free failure identity.
+
+    The shared runner deliberately keeps envelopes out of its evidence.  The
+    acceptance layer adds the scenario stage plus a static command name and
+    its public exit/status so a failed installed journey can be diagnosed
+    without retaining identifiers, financial values, or credentials.
+    """
+    command_count = len(cli.commands)
+    try:
+        return cli.run(arguments, command=command, allow_error=allow_error)
+    except InstalledCliError as error:
+        evidence = cli.commands[-1] if len(cli.commands) > command_count else None
+        if evidence is None:
+            outcome = "no accepted envelope"
+        else:
+            outcome = f"status={evidence.status}, exit_code={evidence.returncode}"
+        raise LedgerInstalledTuiError(f"{stage}: installed CLI {command} failed ({outcome})") from error
+
+
+def _create_profile(cli: InstalledCli, *, year: int, stage: str) -> None:
+    """Create the shared synthetic profile while preserving a safe failure stage."""
+    command_count = len(cli.commands)
+    try:
+        cli.create_profile(year=year)
+    except InstalledCliError as error:
+        evidence = cli.commands[-1] if len(cli.commands) > command_count else None
+        command = evidence.command if evidence is not None else "config.profile"
+        outcome = (
+            "no accepted envelope" if evidence is None else f"status={evidence.status}, exit_code={evidence.returncode}"
+        )
+        raise LedgerInstalledTuiError(f"{stage}: installed CLI {command} failed ({outcome})") from error
 
 
 def _decimal(value: object, *, stage: str) -> Decimal:
@@ -194,7 +268,15 @@ def _transaction_observation(payload: dict[str, Any], *, stage: str) -> Transact
 def _read_invoice(cli: InstalledCli, invoice_id: str, *, stage: str) -> InvoiceObservation:
     """Read one canonical invoice through the installed public CLI."""
     return _invoice_observation(
-        _result(cli.run(("app", "ledger", "invoice", "view", invoice_id)), stage=stage),
+        _result(
+            _cli_command(
+                cli,
+                ("app", "ledger", "invoice", "view", invoice_id),
+                stage=stage,
+                command="ledger.invoice.view",
+            ),
+            stage=stage,
+        ),
         stage=stage,
     )
 
@@ -202,14 +284,30 @@ def _read_invoice(cli: InstalledCli, invoice_id: str, *, stage: str) -> InvoiceO
 def _read_transaction(cli: InstalledCli, transaction_id: str, *, stage: str) -> TransactionObservation:
     """Read one transaction and its public edit lineage through ``ledger track``."""
     return _transaction_observation(
-        _result(cli.run(("app", "ledger", "track", transaction_id)), stage=stage),
+        _result(
+            _cli_command(
+                cli,
+                ("app", "ledger", "track", transaction_id),
+                stage=stage,
+                command="ledger.track",
+            ),
+            stage=stage,
+        ),
         stage=stage,
     )
 
 
 def _find_invoice_by_number(cli: InstalledCli, invoice_number: str, *, stage: str) -> InvoiceObservation:
     """Resolve a public invoice identity only from the canonical list surface."""
-    listing = _result(cli.run(("app", "ledger", "invoice", "list")), stage=stage)
+    listing = _result(
+        _cli_command(
+            cli,
+            ("app", "ledger", "invoice", "list"),
+            stage=stage,
+            command="ledger.invoice.list",
+        ),
+        stage=stage,
+    )
     rows = listing.get("rows")
     if not isinstance(rows, list):
         raise LedgerInstalledTuiError(f"{stage} did not expose public invoice rows")
@@ -217,6 +315,107 @@ def _find_invoice_by_number(cli: InstalledCli, invoice_number: str, *, stage: st
     if len(matches) != 1:
         raise LedgerInstalledTuiError(f"{stage} did not expose exactly one matching public invoice")
     return _invoice_observation(cast("dict[str, Any]", matches[0]), stage=stage)
+
+
+def _assert_tui_only_cli_oracle(
+    cli: InstalledCli,
+    *,
+    invoice_number: str,
+    updated_notes: str,
+    updated_description: str,
+) -> tuple[str, ...]:
+    """Read back a TUI-only write through canonical installed JSON commands.
+
+    The child already proves the public import picker, preview, and confirmation.
+    The JSON CLI intentionally has no source filename or source-row projection
+    for ``ledger track``, so this oracle confines itself to the values and
+    lineage the typed JSON surfaces actually expose.
+    """
+    invoice = _find_invoice_by_number(
+        cli,
+        invoice_number,
+        stage="TUI-only CLI oracle invoice discovery",
+    )
+    invoice_payload = _result(
+        _cli_command(
+            cli,
+            ("app", "ledger", "invoice", "view", invoice.invoice_id),
+            stage="TUI-only CLI oracle invoice readback",
+            command="ledger.invoice.view",
+        ),
+        stage="TUI-only CLI oracle invoice readback",
+    )
+    if (
+        _text(invoice_payload.get("invoice_id"), stage="TUI-only CLI oracle invoice readback") != invoice.invoice_id
+        or invoice_payload.get("invoice_number") != invoice_number
+        or invoice_payload.get("notes") != updated_notes
+    ):
+        raise LedgerInstalledTuiError("TUI-only CLI oracle did not preserve canonical invoice identity or metadata")
+    if (
+        _decimal(invoice_payload.get("base_total"), stage="TUI-only CLI oracle invoice readback"),
+        _decimal(invoice_payload.get("iva_total"), stage="TUI-only CLI oracle invoice readback"),
+        _decimal(invoice_payload.get("grand_total"), stage="TUI-only CLI oracle invoice readback"),
+    ) != (_INVOICE_BASE, _INVOICE_IVA, _INVOICE_TOTAL):
+        raise LedgerInstalledTuiError("TUI-only CLI oracle did not preserve canonical invoice totals")
+    if invoice_payload.get("linked_transaction_ids") != []:
+        raise LedgerInstalledTuiError("TUI-only CLI oracle invoice unexpectedly acquired a transaction link")
+
+    listing = _result(
+        _cli_command(
+            cli,
+            ("app", "ledger", "list"),
+            stage="TUI-only CLI oracle transaction discovery",
+            command="ledger.list",
+        ),
+        stage="TUI-only CLI oracle transaction discovery",
+    )
+    rows = listing.get("rows")
+    if not isinstance(rows, list):
+        raise LedgerInstalledTuiError("TUI-only CLI oracle did not expose public transaction rows")
+    matches = [row for row in rows if isinstance(row, dict) and row.get("description") == updated_description]
+    if len(matches) != 1:
+        raise LedgerInstalledTuiError("TUI-only CLI oracle did not expose exactly one imported transaction")
+    transaction_row = cast("dict[str, Any]", matches[0])
+    transaction_id = _text(transaction_row.get("transaction_id"), stage="TUI-only CLI oracle transaction readback")
+    if (
+        _decimal(transaction_row.get("amount"), stage="TUI-only CLI oracle transaction readback")
+        != _TUI_IMPORTED_TRANSACTION_AMOUNT
+        or transaction_row.get("direction") != _TUI_IMPORTED_TRANSACTION_DIRECTION
+        or transaction_row.get("invoice_id") is not None
+    ):
+        raise LedgerInstalledTuiError(
+            "TUI-only CLI oracle did not preserve imported transaction value, direction, or link"
+        )
+
+    tracking_payload = _result(
+        _cli_command(
+            cli,
+            ("app", "ledger", "track", transaction_id),
+            stage="TUI-only CLI oracle transaction lineage",
+            command="ledger.track",
+        ),
+        stage="TUI-only CLI oracle transaction lineage",
+    )
+    tracked = _transaction_observation(tracking_payload, stage="TUI-only CLI oracle transaction lineage")
+    transaction = tracking_payload.get("transaction")
+    if (
+        not isinstance(transaction, dict)
+        or tracked.transaction_id != transaction_id
+        or tracked.description != updated_description
+        or tracked.amount != _TUI_IMPORTED_TRANSACTION_AMOUNT
+        or tracked.invoice_id is not None
+        or transaction.get("direction") != _TUI_IMPORTED_TRANSACTION_DIRECTION
+    ):
+        raise LedgerInstalledTuiError("TUI-only CLI oracle did not preserve tracked transaction state")
+    if not tracked.predecessor_ids or transaction_id in tracked.predecessor_ids:
+        raise LedgerInstalledTuiError("TUI-only CLI oracle did not expose supported edit lineage")
+    return (
+        "cli_invoice_identity_and_totals",
+        "cli_invoice_absent_link",
+        "cli_imported_transaction_value_and_direction",
+        "cli_imported_transaction_absent_link",
+        "cli_post_edit_lineage",
+    )
 
 
 def _add_invoice(
@@ -228,7 +427,8 @@ def _add_invoice(
     stage: str,
 ) -> InvoiceObservation:
     """Capture one small issued invoice through the installed public CLI."""
-    document = cli.run(
+    document = _cli_command(
+        cli,
         (
             "app",
             "ledger",
@@ -254,7 +454,9 @@ def _add_invoice(
             "domestic_general",
             "--notes",
             notes,
-        )
+        ),
+        stage=stage,
+        command="ledger.invoice.add",
     )
     return _invoice_observation(_result(document, stage=stage), stage=stage)
 
@@ -269,7 +471,8 @@ def _add_transaction(
     stage: str,
 ) -> TransactionObservation:
     """Capture a public unlinked transaction with explicit IVA facts."""
-    document = cli.run(
+    document = _cli_command(
+        cli,
         (
             "app",
             "ledger",
@@ -296,7 +499,9 @@ def _add_transaction(
             "ES",
             "--idempotency-key",
             idempotency_key,
-        )
+        ),
+        stage=stage,
+        command="ledger.add",
     )
     result = _result(document, stage=stage)
     return _read_transaction(cli, _text(result.get("transaction_id"), stage=stage), stage=stage)
@@ -305,29 +510,58 @@ def _add_transaction(
 def _link_transaction(cli: InstalledCli, transaction_id: str, invoice_id: str, *, stage: str) -> None:
     """Link through the public command and require the normal successful envelope."""
     _result(
-        cli.run(("app", "ledger", "link", transaction_id, "--invoice-id", invoice_id)),
+        _cli_command(
+            cli,
+            ("app", "ledger", "link", transaction_id, "--invoice-id", invoice_id),
+            stage=stage,
+            command="ledger.link",
+        ),
         stage=stage,
     )
 
 
 def _assert_linked_identity_refused(cli: InstalledCli, transaction_id: str) -> None:
     """Exercise the public guarded rejection before a TUI readback verifies stability."""
-    document = cli.run(
-        ("app", "ledger", "update", transaction_id, "--amount", format(_INVOICE_TOTAL + Decimal("1.00"), "f")),
+    document = _cli_command(
+        cli,
+        ("app", "ledger", "update", transaction_id, "--description", "ledger-linked-refusal-attempt"),
+        stage="linked identity refusal",
+        command="ledger.update",
         allow_error=True,
     )
-    if not cli.commands or cli.commands[-1].returncode == 0 or document.get("status") != "error":
+    error = document.get("error")
+    if (
+        not cli.commands
+        or cli.commands[-1].returncode == 0
+        or document.get("status") != "error"
+        or not isinstance(error, dict)
+        or error.get("code") != "ERROR_TRANSACTION_VALIDATION"
+        or error.get("message") != _LINKED_IDENTITY_REFUSAL
+    ):
         raise LedgerInstalledTuiError("public linked identity edit did not refuse")
+
+
+def _optional_link_id(value: object, *, stage: str) -> str | None:
+    """Project a canonical optional invoice link without accepting other blank identifiers."""
+    return None if value is None else _text(value, stage=stage)
 
 
 def _compare_export(cli: InstalledCli, *, output_path: Path, stage: str) -> tuple[int, str]:
     """Compare the installed JSONL export with public persisted rows and links."""
-    persisted = _result(cli.run(("app", "ledger", "list")), stage=stage)
+    persisted = _result(
+        _cli_command(cli, ("app", "ledger", "list"), stage=stage, command="ledger.list"),
+        stage=stage,
+    )
     rows = persisted.get("rows")
     if not isinstance(rows, list) or not all(isinstance(row, dict) for row in rows):
         raise LedgerInstalledTuiError(f"{stage} did not expose public persisted transaction rows")
     exported = _result(
-        cli.run(("app", "ledger", "export", "--output", str(output_path), "--export-format", "jsonl")),
+        _cli_command(
+            cli,
+            ("app", "ledger", "export", "--output", str(output_path), "--export-format", "jsonl"),
+            stage=stage,
+            command="ledger.export",
+        ),
         stage=stage,
     )
     if not output_path.is_file():
@@ -347,13 +581,22 @@ def _compare_export(cli: InstalledCli, *, output_path: Path, stage: str) -> tupl
         raise LedgerInstalledTuiError(f"{stage} export identities differ from public persisted state")
     for transaction_id, persisted_row in persisted_by_id.items():
         exported_row = exported_by_id[transaction_id]
+        # JSONL exports deliberately render an absent optional text link as an
+        # empty cell, whereas the public list envelope projects it as null.
+        # Normalize only that documented absent-link representation; a linked
+        # identifier continues through the exact-string comparison below.
+        exported_link = _optional_link_id(
+            None if exported_row.get("invoice_id") == "" else exported_row.get("invoice_id"),
+            stage=stage,
+        )
+        persisted_link = _optional_link_id(persisted_row.get("invoice_id"), stage=stage)
         if (
             _decimal(exported_row.get("amount"), stage=stage),
-            exported_row.get("invoice_id"),
+            exported_link,
             exported_row.get("direction"),
         ) != (
             _decimal(persisted_row.get("amount"), stage=stage),
-            persisted_row.get("invoice_id"),
+            persisted_link,
             persisted_row.get("direction"),
         ):
             raise LedgerInstalledTuiError(f"{stage} export values or links differ from public persisted state")
@@ -495,9 +738,7 @@ async def _select_table_row_by_text(pilot: Any, *, selector: str, expected: str)
     for _ in range(180):
         table = query_public_selector(pilot, selector, DataTable)
         matches = [
-            row_key
-            for row_key in table.rows
-            if expected in " ".join(str(cell) for cell in table.get_row(row_key))
+            row_key for row_key in table.rows if expected in " ".join(str(cell) for cell in table.get_row(row_key))
         ]
         if len(matches) == 1:
             table.focus()
@@ -560,6 +801,64 @@ async def _capture_invoice_via_tui(
     await wait_for_public_selector(pilot, "#ledger-invoice-review", polls=180)
     await pilot.press("escape")
     await wait_for_public_selector(pilot, "#ledger-add-invoice", polls=180)
+
+
+def _tui_only_transaction_descriptions(year: int) -> tuple[str, str]:
+    """Return the distinct visible import label and its supported edited value."""
+    return (f"ledger-tui-entry-{year}-initial", f"ledger-tui-entry-{year}-updated")
+
+
+def _write_tui_only_statement(*, scratch: Path, year: int, description: str) -> Path:
+    """Write one transient statement for the public Ledger import form.
+
+    The file is an operator-selected input to the UI, never a persistence
+    fixture.  A fresh receipt directory prevents an earlier acceptance run
+    from being overwritten.
+    """
+    scratch.mkdir(parents=True, exist_ok=True)
+    statement = scratch / "ledger-tui-only-entry.csv"
+    if statement.exists():
+        raise LedgerInstalledTuiError("TUI-only transaction input path must be fresh")
+    statement.write_text(
+        "\n".join(
+            (
+                _N26_HEADER,
+                f"{year}-03-16,Ledger acceptance counterparty,{description},10.00,EUR,ledger-tui-entry-{year}",
+                "",
+            )
+        ),
+        encoding="utf-8",
+        newline="\n",
+    )
+    return statement
+
+
+async def _capture_transaction_via_tui(pilot: Any, *, statement: Path) -> None:
+    """Persist one transaction through Ledger's visible import review and confirmation flow."""
+    from textual.widgets import Button, Input, Select, Static
+
+    from dev.acceptance.income_tax.installed_tui_child import select_public_data_table_row
+
+    await _open_ledger_destination(pilot)
+    await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="import")
+    await wait_for_public_selector(pilot, "#ledger-import-path", polls=180)
+    query_public_selector(pilot, "#ledger-import-kind", Select).value = "bank_statement"
+    query_public_selector(pilot, "#ledger-import-provider", Select).value = "csv"
+    query_public_selector(pilot, "#ledger-import-path", Input).value = str(statement)
+    await _activate_button(pilot, "#ledger-import-preview-button")
+    await pilot.app.workers.wait_for_complete()
+    await wait_for_public_selector(pilot, "#ledger-import-confirm", polls=180)
+    refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip()
+    confirm = query_public_selector(pilot, "#ledger-import-confirm", Button)
+    if refusal or confirm.disabled:
+        raise LedgerInstalledTuiError("installed Ledger transaction import did not reach public confirmation")
+    await _activate_button(pilot, "#ledger-import-confirm")
+    await pilot.app.workers.wait_for_complete()
+    if str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip():
+        raise LedgerInstalledTuiError("installed Ledger transaction import visibly refused persistence")
+    await _activate_button(pilot, "#ledger-import-again")
+    await pilot.app.workers.wait_for_complete()
+    await wait_for_public_selector(pilot, "#ledger-import-preview-button", polls=180)
 
 
 async def _open_invoice_detail(pilot: Any, *, invoice_number: str) -> None:
@@ -651,6 +950,75 @@ async def _edit_unlinked_transaction(
         raise LedgerInstalledTuiError("installed transaction detail visibly refused the supported edit")
 
 
+async def _refuse_linked_transaction_edit(pilot: Any, *, description: str) -> None:
+    """Exercise the public review/save refusal before rereading committed detail."""
+    from textual.widgets import Button, Input, Static
+
+    await _inspect_transaction(pilot, description=description)
+    query_public_selector(pilot, "#ledger-transaction-description", Input).value = f"{description}-attempted-edit"
+    await _activate_button(pilot, "#ledger-transaction-edit-review")
+    save = query_public_selector(pilot, "#ledger-transaction-edit-save", Button)
+    if save.disabled:
+        raise LedgerInstalledTuiError("installed linked transaction detail did not enable its reviewed save action")
+    await _activate_button(pilot, "#ledger-transaction-edit-save")
+    await pilot.app.workers.wait_for_complete()
+    refusal = str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip().casefold()
+    if not all(marker in refusal for marker in ("linked transaction identity", "invoice link")):
+        raise LedgerInstalledTuiError("installed linked transaction detail did not show the linked-identity refusal")
+    await _inspect_transaction(pilot, description=description)
+
+
+async def _login_existing_profile_through_installed_tui(*, passphrase: str) -> None:
+    """Admit an existing profile through its installed public Login screen.
+
+    A fresh child has no active bucket session.  The production launcher keeps
+    credential screens out of a headless run, so this generic prelude drives
+    the same visible Login controls before the actual launcher owns the Ledger
+    journey.  It never reads or writes the secure store directly.
+    """
+    from textual.widgets import Input
+
+    from cadrumo.application.user_profile.login_interaction import (
+        ProfileLoginInventoryState,
+        attempt_profile_login,
+        observe_profile_login_inventory,
+    )
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+    from cadrumo.entrypoints.tui.secret.login import LoginScreen
+
+    inventory = observe_profile_login_inventory()
+    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
+        raise LedgerInstalledTuiError("installed Ledger Login screen did not recognize the existing profile")
+    with bundled_indexed_authority().operation() as operation:
+        screen = LoginScreen(
+            choices=inventory.choices,
+            authenticate=lambda profile_id, secret: attempt_profile_login(
+                profile_id,
+                secret,
+                profile_decode_context=operation.profile_decode_context(),
+            ),
+            preselected=inventory.preselected_profile_id,
+        )
+        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
+            await wait_for_public_selector(pilot, "#field-passphrase")
+            query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
+            await pilot.click("#btn-unlock")
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+    if screen.outcome is None:
+        raise LedgerInstalledTuiError("installed Ledger Login screen did not admit the existing profile")
+
+
+def _admit_existing_profile_for_headless_launcher(*, passphrase: str) -> None:
+    """Prepare one fresh process through the generic public credential prelude."""
+    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+    from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
+
+    with live_exchange_rate_composition(), profile_adapter_composition():
+        asyncio.run(_login_existing_profile_through_installed_tui(passphrase=passphrase))
+
+
 def _run_launcher(*, passphrase: str, drive_after_home: Any) -> None:
     """Run one ordinary installed launch and require a truthful normal exit."""
     from cadrumo.entrypoints.tui.launcher import main
@@ -679,6 +1047,7 @@ def _child_receipt(*, workspace_root: Path, mode: ChildMode, observations: tuple
 def _run_tui_only_capture_update_child(
     *,
     workspace_root: Path,
+    scratch: Path,
     passphrase: str,
     invoice_number: str,
     initial_notes: str,
@@ -692,6 +1061,10 @@ def _run_tui_only_capture_update_child(
     with live_exchange_rate_composition(), profile_adapter_composition():
         asyncio.run(register_profile_through_installed_tui(profile_label="ledger-tui-only", passphrase=passphrase))
 
+    observations: list[str] = []
+    initial_description, updated_description = _tui_only_transaction_descriptions(year)
+    statement = _write_tui_only_statement(scratch=scratch, year=year, description=initial_description)
+
     async def drive(pilot: Any) -> None:
         await _capture_invoice_via_tui(
             pilot,
@@ -699,19 +1072,40 @@ def _run_tui_only_capture_update_child(
             notes=initial_notes,
             year=year,
         )
+        observations.append("invoice_capture")
+        await _capture_transaction_via_tui(pilot, statement=statement)
+        observations.append("transaction_capture")
         await _update_invoice_notes(
             pilot,
             invoice_number=invoice_number,
             initial_notes=initial_notes,
             updated_notes=updated_notes,
         )
+        observations.extend(("invoice_catalogue", "invoice_detail", "invoice_metadata_update"))
+        await _edit_unlinked_transaction(
+            pilot,
+            description=initial_description,
+            updated_description=updated_description,
+        )
+        observations.extend(("transaction_detail", "transaction_edit"))
         pilot.app.exit()
 
     _run_launcher(passphrase=passphrase, drive_after_home=drive)
+    expected_observations = (
+        "invoice_capture",
+        "transaction_capture",
+        "invoice_catalogue",
+        "invoice_detail",
+        "invoice_metadata_update",
+        "transaction_detail",
+        "transaction_edit",
+    )
+    if tuple(observations) != expected_observations:
+        raise LedgerInstalledTuiError("installed Ledger capture callback did not complete its public route")
     return _child_receipt(
         workspace_root=workspace_root,
         mode="tui_only_capture_update",
-        observations=("invoice_capture", "invoice_catalogue", "invoice_detail", "invoice_metadata_update"),
+        observations=tuple(observations),
     )
 
 
@@ -729,10 +1123,15 @@ def _run_existing_profile_child(
     """Run one public readback or continuation action against an existing profile."""
     observations: list[str] = []
 
+    _admit_existing_profile_for_headless_launcher(passphrase=passphrase)
+
     async def drive(pilot: Any) -> None:
         if mode == "tui_only_reopen":
+            if transaction_description is None:
+                raise LedgerInstalledTuiError("TUI-only reopen child is missing its captured transaction description")
             await _inspect_invoice(pilot, invoice_number=invoice_number, expected_notes=initial_notes)
-            observations.extend(("fresh_process", "invoice_catalogue", "invoice_detail"))
+            await _inspect_transaction(pilot, description=transaction_description)
+            observations.extend(("fresh_process", "invoice_catalogue", "invoice_detail", "transaction_detail"))
         elif mode == "cli_to_tui":
             if updated_notes is None or transaction_description is None or updated_description is None:
                 raise LedgerInstalledTuiError("CLI-to-TUI child is missing its public continuation input")
@@ -752,8 +1151,10 @@ def _run_existing_profile_child(
             if transaction_description is None:
                 raise LedgerInstalledTuiError("linked refusal child is missing its public transaction description")
             await _inspect_invoice(pilot, invoice_number=invoice_number, expected_notes=initial_notes)
-            await _inspect_transaction(pilot, description=transaction_description)
-            observations.extend(("invoice_detail", "linked_transaction_detail", "refusal_readback"))
+            await _refuse_linked_transaction_edit(pilot, description=transaction_description)
+            observations.extend(
+                ("invoice_detail", "linked_transaction_detail", "linked_transaction_edit_refusal", "refusal_readback")
+            )
         elif mode == "tui_to_cli_reopen":
             await _inspect_invoice(pilot, invoice_number=invoice_number, expected_notes=initial_notes)
             observations.extend(("fresh_process", "invoice_catalogue", "cli_updated_invoice_detail"))
@@ -768,6 +1169,7 @@ def _run_existing_profile_child(
 def run_installed_tui_child(
     *,
     workspace_root: Path,
+    scratch: Path,
     passphrase: str,
     mode: ChildMode,
     invoice_number: str,
@@ -785,6 +1187,7 @@ def run_installed_tui_child(
             raise LedgerInstalledTuiError("TUI-only capture child requires updated invoice notes")
         return _run_tui_only_capture_update_child(
             workspace_root=workspace_root,
+            scratch=scratch,
             passphrase=passphrase,
             invoice_number=invoice_number,
             initial_notes=initial_notes,
@@ -810,13 +1213,15 @@ def _run_tui_only(
     authority_root: Path,
     output_root: Path,
     year: int,
-) -> LedgerTuiChildReceipt:
+    cli_executable: Path | None = None,
+) -> _TuiOnlyRun:
     """Prove capture, detail update, and fresh-process readback using only installed TUI controls."""
     store = _require_empty_directory(output_root / "secure-store", label="TUI-only Ledger store")
     passphrase = secrets.token_urlsafe(32)
     invoice_number = f"LEDGER-TUI-{year}-001"
     initial_notes = "ledger-tui-initial"
     updated_notes = "ledger-tui-updated"
+    _initial_description, updated_description = _tui_only_transaction_descriptions(year)
     capture = _run_child(
         python_executable=python_executable,
         workspace_root=workspace_root,
@@ -841,16 +1246,30 @@ def _run_tui_only(
         year=year,
         invoice_number=invoice_number,
         initial_notes=updated_notes,
+        transaction_description=updated_description,
     )
     if capture.product_init_sha256 != reopened.product_init_sha256:
         raise LedgerInstalledTuiError("TUI-only fresh child imported a different installed product")
-    return LedgerTuiChildReceipt(
+    receipt = LedgerTuiChildReceipt(
         schema_version=_SCHEMA_VERSION,
         status="proven",
         mode="tui_only_reopen",
         product_origin="site-packages",
         product_init_sha256=capture.product_init_sha256,
         observations=(*capture.observations, *reopened.observations),
+    )
+    if cli_executable is None:
+        return _TuiOnlyRun(receipt=receipt, cli_oracle_observations=(), cli_command_count=0)
+    cli = InstalledCli(cli_executable, storage_root=store, authority_root=authority_root, passphrase=passphrase)
+    return _TuiOnlyRun(
+        receipt=receipt,
+        cli_oracle_observations=_assert_tui_only_cli_oracle(
+            cli,
+            invoice_number=invoice_number,
+            updated_notes=updated_notes,
+            updated_description=updated_description,
+        ),
+        cli_command_count=len(cli.commands),
     )
 
 
@@ -867,7 +1286,7 @@ def _run_cli_to_tui(
     store = _require_empty_directory(output_root / "secure-store", label="CLI-to-TUI Ledger store")
     passphrase = secrets.token_urlsafe(32)
     cli = InstalledCli(cli_executable, storage_root=store, authority_root=authority_root, passphrase=passphrase)
-    cli.create_profile(year=year)
+    _create_profile(cli, year=year, stage="CLI-to-TUI profile creation")
     invoice_number = f"LEDGER-CLI-TUI-{year}-001"
     initial_notes = "ledger-cli-initial"
     updated_notes = "ledger-tui-followup"
@@ -892,7 +1311,7 @@ def _run_cli_to_tui(
     unlinked = _add_transaction(
         cli,
         description=unlinked_description,
-        amount=Decimal("10.00"),
+        amount=_INVOICE_TOTAL,
         idempotency_key="ledger-cli-tui-unlinked",
         year=year,
         stage="CLI-to-TUI unlinked transaction capture",
@@ -976,7 +1395,8 @@ def _run_tui_to_cli(
     passphrase = secrets.token_urlsafe(32)
     invoice_number = f"LEDGER-TUI-CLI-{year}-001"
     initial_notes = "ledger-tui-origin"
-    updated_notes = "ledger-cli-followup"
+    tui_updated_notes = "ledger-tui-captured"
+    cli_updated_notes = "ledger-cli-followup"
     capture_child = _run_child(
         python_executable=python_executable,
         workspace_root=workspace_root,
@@ -988,16 +1408,23 @@ def _run_tui_to_cli(
         year=year,
         invoice_number=invoice_number,
         initial_notes=initial_notes,
-        updated_notes=initial_notes,
+        updated_notes=tui_updated_notes,
     )
     cli = InstalledCli(cli_executable, storage_root=store, authority_root=authority_root, passphrase=passphrase)
     before_invoice = _find_invoice_by_number(cli, invoice_number, stage="TUI-to-CLI public invoice discovery")
+    if before_invoice.notes != tui_updated_notes:
+        raise LedgerInstalledTuiError("TUI-to-CLI capture did not commit its visible invoice metadata update")
     _result(
-        cli.run(("app", "ledger", "invoice", "update", before_invoice.invoice_id, "--notes", updated_notes)),
+        _cli_command(
+            cli,
+            ("app", "ledger", "invoice", "update", before_invoice.invoice_id, "--notes", cli_updated_notes),
+            stage="TUI-to-CLI public invoice update",
+            command="ledger.invoice.update",
+        ),
         stage="TUI-to-CLI public invoice update",
     )
     after_invoice = _read_invoice(cli, before_invoice.invoice_id, stage="TUI-to-CLI invoice after CLI edit")
-    assert_invoice_metadata_continuation(before_invoice, after_invoice, expected_notes=updated_notes)
+    assert_invoice_metadata_continuation(before_invoice, after_invoice, expected_notes=cli_updated_notes)
     linked = _add_transaction(
         cli,
         description="ledger-tui-cli-linked-export-row",
@@ -1022,7 +1449,7 @@ def _run_tui_to_cli(
         mode="tui_to_cli_reopen",
         year=year,
         invoice_number=invoice_number,
-        initial_notes=updated_notes,
+        initial_notes=cli_updated_notes,
     )
     if capture_child.product_init_sha256 != reopen_child.product_init_sha256:
         raise LedgerInstalledTuiError("TUI-to-CLI children imported different installed product identities")
@@ -1059,7 +1486,7 @@ def run_installed_ledger_tui_journey(
     if not package_identity.startswith("wheel_sha256:") or len(package_identity.removeprefix("wheel_sha256:")) != 64:
         raise LedgerInstalledTuiError("installed Ledger journey requires the exact built wheel identity")
     root = _require_empty_directory(output_root, label="LEDGER installed-TUI output root")
-    tui_only = _run_tui_only(
+    tui_only_run = _run_tui_only(
         python_executable=python,
         workspace_root=workspace,
         authority_root=authority,
@@ -1083,7 +1510,7 @@ def run_installed_ledger_tui_journey(
         year=year,
     )
     product_hashes = {
-        tui_only.product_init_sha256,
+        tui_only_run.receipt.product_init_sha256,
         cli_to_tui_child.product_init_sha256,
         tui_to_cli_child.product_init_sha256,
     }
@@ -1096,9 +1523,53 @@ def run_installed_ledger_tui_journey(
         year=year,
         product_origin="site-packages",
         product_init_sha256=product_hashes.pop(),
-        tui_only_observations=tui_only.observations,
+        tui_only_observations=tui_only_run.receipt.observations,
         cli_to_tui=cli_to_tui,
         tui_to_cli=tui_to_cli,
+    )
+
+
+def run_installed_tui_only_cli_oracle(
+    *,
+    cli_executable: Path,
+    python_executable: Path,
+    workspace_root: Path,
+    authority_root: Path,
+    output_root: Path,
+    package_identity: str,
+    year: int = _YEAR,
+) -> TuiOnlyCliOracleReceipt:
+    """Run only the independent TUI path plus read-only installed CLI proof."""
+    workspace = workspace_root.resolve(strict=True)
+    authority = authority_root.resolve(strict=True)
+    cli = cli_executable.resolve(strict=True)
+    python = python_executable.resolve(strict=True)
+    if cli.parent != python.parent:
+        raise LedgerInstalledTuiError("installed CLI and TUI child Python do not belong to one environment")
+    if not package_identity.startswith("wheel_sha256:") or len(package_identity.removeprefix("wheel_sha256:")) != 64:
+        raise LedgerInstalledTuiError("installed Ledger journey requires the exact built wheel identity")
+    root = _require_empty_directory(output_root, label="LEDGER supplemental installed-TUI output root")
+    tui_only = _run_tui_only(
+        python_executable=python,
+        workspace_root=workspace,
+        authority_root=authority,
+        output_root=_require_empty_directory(root / "tui-only", label="supplemental TUI-only Ledger output root"),
+        year=year,
+        cli_executable=cli,
+    )
+    if not tui_only.cli_oracle_observations:
+        raise LedgerInstalledTuiError("supplemental TUI-only CLI oracle recorded no public observations")
+    return TuiOnlyCliOracleReceipt(
+        schema_version=_SCHEMA_VERSION,
+        status="proven",
+        journey="tui_only_cli_oracle",
+        package_identity=package_identity,
+        year=year,
+        product_origin="site-packages",
+        product_init_sha256=tui_only.receipt.product_init_sha256,
+        tui_only_observations=tui_only.receipt.observations,
+        cli_oracle_observations=tui_only.cli_oracle_observations,
+        cli_command_count=tui_only.cli_command_count,
     )
 
 
@@ -1110,15 +1581,19 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--authority-root", type=Path)
     parser.add_argument("--output-root", type=Path)
     parser.add_argument("--package-identity")
+    parser.add_argument("--supplemental-tui-only", action="store_true")
     parser.add_argument("--receipt", required=True, type=Path)
     parser.add_argument("--year", type=int, default=_YEAR)
-    parser.add_argument("--mode", choices=(
-        "tui_only_capture_update",
-        "tui_only_reopen",
-        "cli_to_tui",
-        "linked_refusal_readback",
-        "tui_to_cli_reopen",
-    ))
+    parser.add_argument(
+        "--mode",
+        choices=(
+            "tui_only_capture_update",
+            "tui_only_reopen",
+            "cli_to_tui",
+            "linked_refusal_readback",
+            "tui_to_cli_reopen",
+        ),
+    )
     parser.add_argument("--invoice-number")
     parser.add_argument("--initial-notes")
     parser.add_argument("--updated-notes")
@@ -1134,14 +1609,17 @@ def _write_receipt(path: Path, document: dict[str, object]) -> None:
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    """Run the outer installed journey or one stdin-credentialed installed TUI child."""
+    """Run an installed outer journey or one stdin-credentialed installed TUI child."""
     args = _parser().parse_args(argv)
     try:
         if args.mode is not None:
-            if any(value is not None for value in (args.output_root, args.cli, args.python, args.authority_root)):
+            if args.supplemental_tui_only or any(
+                value is not None for value in (args.output_root, args.cli, args.python, args.authority_root)
+            ):
                 raise LedgerInstalledTuiError("installed Ledger TUI child received outer-only arguments")
             receipt = run_installed_tui_child(
                 workspace_root=args.workspace_root,
+                scratch=args.receipt.parent,
                 passphrase=read_passphrase_from_stdin(),
                 mode=cast("ChildMode", args.mode),
                 invoice_number=cast("str", args.invoice_number),
@@ -1157,15 +1635,26 @@ def main(argv: Sequence[str] | None = None) -> int:
             raise LedgerInstalledTuiError(
                 "installed Ledger outer journey requires CLI, Python, authority, output and wheel identity"
             )
-        receipt = run_installed_ledger_tui_journey(
-            cli_executable=args.cli,
-            python_executable=args.python,
-            workspace_root=args.workspace_root,
-            authority_root=args.authority_root,
-            output_root=args.output_root,
-            package_identity=args.package_identity,
-            year=args.year,
-        )
+        if args.supplemental_tui_only:
+            receipt = run_installed_tui_only_cli_oracle(
+                cli_executable=args.cli,
+                python_executable=args.python,
+                workspace_root=args.workspace_root,
+                authority_root=args.authority_root,
+                output_root=args.output_root,
+                package_identity=args.package_identity,
+                year=args.year,
+            )
+        else:
+            receipt = run_installed_ledger_tui_journey(
+                cli_executable=args.cli,
+                python_executable=args.python,
+                workspace_root=args.workspace_root,
+                authority_root=args.authority_root,
+                output_root=args.output_root,
+                package_identity=args.package_identity,
+                year=args.year,
+            )
         _write_receipt(args.receipt, receipt.to_dict())
         return 0
     except (LedgerInstalledTuiError, InstalledTuiChildError, InstalledCliError) as error:
@@ -1203,7 +1692,9 @@ __all__ = [
     "LedgerContinuationReceipt",
     "LedgerInstalledTuiError",
     "LedgerTuiChildReceipt",
+    "TuiOnlyCliOracleReceipt",
     "main",
     "run_installed_ledger_tui_journey",
     "run_installed_tui_child",
+    "run_installed_tui_only_cli_oracle",
 ]
