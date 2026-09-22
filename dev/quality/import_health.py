@@ -191,8 +191,26 @@ def build_import_health(
             failed_reasons.append(f"{count} {label}")
     if graph["contracts_broken"] and not candidate["summary"]["contract_occurrences"]:
         failed_reasons.append("broken graph contracts have no attributable direct occurrence")
+    # A linter that aborts before evaluating anything exits 1 and prints its
+    # reason, which is indistinguishable from a clean run by returncode and
+    # by contract counts alike -- both leave `contracts_broken` at 0. Reading
+    # that as an authoritative graph is how a missing layer in an exhaustive
+    # contract took all fifteen contracts out of the merge gate without
+    # changing its verdict.
+    #
+    # Raised only when nothing else already explains the empty graph. A
+    # planted source defect stops the linter building a graph too, and
+    # there the subordinate finding IS the verdict: calling that a tool
+    # failure would bury a real finding under "unavailable".
+    if not graph["contracts_total"] and not blocking_findings and not load_failures:
+        operational_reasons.append("import-linter evaluated no contracts; the configured contract set was not applied")
 
-    debt_total = ratchet["counts"]["approved_active"] + ratchet["counts"]["retirement_ready"]
+    # A broken contract is debt whether or not the ratchet has an entry for it.
+    # Blocking is a separate policy question and the answer is no; reading
+    # identically to a clean run is not.
+    debt_total = (
+        ratchet["counts"]["approved_active"] + ratchet["counts"]["retirement_ready"] + graph["contracts_broken"]
+    )
     if operational_reasons:
         verdict = "failed"
         classification = "tool_failure"
@@ -962,9 +980,12 @@ def _headline(
     if not isinstance(counts, dict):
         raise TypeError("ratchet counts payload must be a mapping")
     if verdict == "passing_with_debt":
+        broken = graph["contracts_broken"]
+        contracts = f", {broken} broken contract(s)" if broken else ""
         return (
             "Import health is passing with explicit debt: "
-            f"{counts['approved_active']} active occurrence(s), "
+            f"{counts['approved_active']} active occurrence(s)"
+            f"{contracts}, "
             f"{counts['retirement_candidates']} pending verified retirement."
         )
     return (
