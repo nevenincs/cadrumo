@@ -15,10 +15,9 @@ from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Final, Literal, cast
 
-from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
+from dev.acceptance.installed_cli import InstalledCli, InstalledCliError, authority_generation
 
 from .cli_journey import (
-    _AUTHORITY_GENERATION,
     IvaCliJourneyError,
     SanitizedCommandReceipt,
     _checkout_source_identity,
@@ -386,7 +385,7 @@ def run_iva_negative_4t_cli_journey(
         executable_sha256=_sha256_path(cli.executable),
         source_identity=_checkout_source_identity(),
         package_identity=_installed_package_identity(),
-        authority_generation=_AUTHORITY_GENERATION(authority_root),
+        authority_generation=authority_generation(authority_root),
         authority_descriptor_sha256=_sha256_path(descriptor),
         storage_root=str(storage_root.resolve()),
         purchase_artifact=_PRIVATE_ARTIFACT_PLACEHOLDER,
