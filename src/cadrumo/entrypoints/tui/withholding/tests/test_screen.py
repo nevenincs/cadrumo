@@ -112,6 +112,7 @@ def _fill_common(screen: WithholdingEvidenceScreen, invoice: Invoice, *, base: s
     _set(screen, "allocated-settlement", base)
     _set(screen, "idempotency-key", f"replay-{invoice.invoice_number}")
     _set(screen, "annual-percentage", "19.00")
+    _set(screen, "territorial-deduction", "0")
 
 
 @pytest.mark.asyncio
@@ -129,6 +130,10 @@ async def test_pilot_enters_professional_evidence_replays_and_refuses_stale_clea
         async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
             await pilot.pause()
             _fill_common(screen, invoice, base="500.00", withholding="95.00")
+            _set(screen, "territorial-deduction", "")
+            await _click(pilot, screen, "#withholding-capture")
+            assert _status(screen) == "refused: invalid_withholding_evidence"
+            _set(screen, "territorial-deduction", "0")
             await _click(pilot, screen, "#withholding-capture")
             assert _status(screen) == "captured"
             await _click(pilot, screen, "#withholding-capture")
