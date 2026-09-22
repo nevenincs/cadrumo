@@ -8,11 +8,12 @@ walk, an annual projection, or any filing action.
 
 from __future__ import annotations
 
-import importlib
 from dataclasses import asdict, dataclass
 from typing import Any, Literal, get_args
 
 from cadrumo.application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
+from cadrumo.core.json_contract import RegisteredSchema
+from cadrumo.entrypoints.cli.command_schema import command_schema_type
 from cadrumo.entrypoints.cli.command_specs import COMMAND_GRAPH
 
 from .scenario import INSTALLED_CLI_SCENARIO_VERSION
@@ -49,7 +50,7 @@ class PublicCorrectionHistoryEvidence:
 
     def to_dict(self) -> dict[str, object]:
         """Return a stable, payload-free receipt shape."""
-        return asdict(self)
+        return dict[str, object](asdict(self))
 
 
 def inspect_resident_professional_correction_capability() -> PublicCorrectionHistoryEvidence:
@@ -117,20 +118,15 @@ def inspect_resident_professional_correction_capability() -> PublicCorrectionHis
 
 def _result_fields(spec: Any) -> frozenset[str]:
     """Resolve a live CLI result contract through its declared target."""
-    return frozenset(_result_model(spec).model_fields)
+    return frozenset[str](_result_model(spec).model_fields)
 
 
-def _result_model(spec: Any) -> Any:
-    """Resolve the Pydantic model declared by one live CLI result target."""
+def _result_model(spec: Any) -> RegisteredSchema:
+    """Resolve one live CLI result through its public schema contract."""
     target = spec.result_schema.target
     if target is None:
         raise AssertionError(f"{spec.key} has no result target")
-    value: object = importlib.import_module(target.module)
-    for component in target.qualname.split("."):
-        value = getattr(value, component)
-    if not isinstance(getattr(value, "model_fields", None), dict):
-        raise AssertionError(f"{target.identity} is not a Pydantic output schema")
-    return value
+    return command_schema_type(spec.result_schema.identity)
 
 
 def _nested_model(model: Any, field_name: str) -> Any:
