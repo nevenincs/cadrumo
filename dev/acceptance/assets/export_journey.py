@@ -19,8 +19,8 @@ from typing import cast
 
 from dev.acceptance.income_tax.cli_journey import (
     JourneyError,
-    _ingest,  # pyright: ignore[reportPrivateUsage] -- approved installed-ledger acceptance reuse
-    _result,  # pyright: ignore[reportPrivateUsage] -- approved acceptance-runner reuse
+    command_result,
+    ingest_income_fixture,
 )
 from dev.acceptance.income_tax.scenario import IncomeTaxScenario, build_scenario
 from dev.acceptance.income_tax.tui_journey import LocalXsdValidationEvidence, validate_modelo_100_xsd
@@ -129,7 +129,7 @@ def _money(value: object) -> str:
 
 
 def _m130_work(cli: InstalledCli, *, period: str) -> str:
-    created = _result(
+    created = command_result(
         cli.run(
             (
                 "app",
@@ -161,7 +161,7 @@ def _calculate_and_file_m130(
     asset_expense_delta: str = "0.00",
 ) -> tuple[str, str]:
     work_id = _m130_work(cli, period=period)
-    calculation = _result(cli.run(("app", "modelo", "work", "calculate", work_id, "--by", "assets-acceptance")))
+    calculation = command_result(cli.run(("app", "modelo", "work", "calculate", work_id, "--by", "assets-acceptance")))
     values = calculation.get("casilla_values")
     if not isinstance(values, dict):
         raise JourneyError("Modelo 130 returned no casilla map")
@@ -179,7 +179,7 @@ def _calculate_and_file_m130(
             f"income={income} (expected {control_income}), expenses={expenses} (expected {expected_expenses})"
         )
     revision_id = str(calculation["calculation_revision_id"])
-    verified = _result(cli.run(("app", "modelo", "work", "verify", revision_id, "--by", "assets-acceptance")))
+    verified = command_result(cli.run(("app", "modelo", "work", "verify", revision_id, "--by", "assets-acceptance")))
     if verified.get("granted_verificado_completo") is not True:
         raise JourneyError(f"Modelo 130 {period} did not verify complete")
     cli.run(
@@ -202,7 +202,7 @@ def _calculate_export_m100(
     cli: InstalledCli, *, oracle: AssetOverlayOracle, output_dir: Path, report_stage: Callable[[str], None]
 ) -> tuple[str, str, str, Path]:
     report_stage("m100.create")
-    created = _result(
+    created = command_result(
         cli.run(
             (
                 "app",
@@ -224,7 +224,7 @@ def _calculate_export_m100(
     )
     work_id = str(created["work_unit_id"])
     report_stage("m100.calculate")
-    calculation = _result(
+    calculation = command_result(
         cli.run(
             (
                 "app",
@@ -278,7 +278,7 @@ def _calculate_export_m100(
     # a second basis-consuming deduction.
     revision_id = str(calculation["calculation_revision_id"])
     report_stage("m100.verify")
-    verified = _result(cli.run(("app", "modelo", "work", "verify", revision_id, "--by", "assets-acceptance")))
+    verified = command_result(cli.run(("app", "modelo", "work", "verify", revision_id, "--by", "assets-acceptance")))
     if verified.get("granted_verificado_completo") is not True:
         raise JourneyError("Modelo 100 did not verify complete")
     target = output_dir / "modelo-100-2025-asset.xml"
@@ -310,12 +310,12 @@ def run_asset_export_journey(
     cli.create_profile(year=_YEAR)
     oracle = _asset_overlay_oracle()
     report_stage("ledger.ingest_control")
-    _ingest(cli, year=_YEAR)
+    ingest_income_fixture(cli, year=_YEAR)
     report_stage("asset.create")
-    created = _result(cli.run(("app", "ledger", "actividad-asset", "create", _asset_revision_json())))
+    created = command_result(cli.run(("app", "ledger", "actividad-asset", "create", _asset_revision_json())))
     asset_id = str(created["revisions"][0]["asset_id"])
     report_stage("asset.forecast")
-    forecast = _result(
+    forecast = command_result(
         cli.run(
             (
                 "app",
@@ -335,7 +335,7 @@ def run_asset_export_journey(
     if _money(forecast.get("amount")) != "300.00":
         raise JourneyError("published low-value authority did not produce the EUR 300 charge")
     report_stage("asset.claim")
-    claim = _result(
+    claim = command_result(
         cli.run(
             (
                 "app",
@@ -350,7 +350,7 @@ def run_asset_export_journey(
     )
     claim_id = str(claim["claim"]["claim_id"])
     report_stage("asset.filing_handoff")
-    handoff = _result(
+    handoff = command_result(
         cli.run(("app", "ledger", "actividad-asset", "filing-handoff", "--tax-year", "2025", "--m130-period", "4T"))
     )
     material_m100 = handoff.get("material_m100")

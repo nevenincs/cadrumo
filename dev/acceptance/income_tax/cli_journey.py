@@ -124,7 +124,8 @@ class CliControlsEvidence:
         return asdict(self)
 
 
-def _result(document: dict[str, Any]) -> dict[str, Any]:
+def command_result(document: dict[str, Any]) -> dict[str, Any]:
+    """Require the object payload returned by an installed CLI command."""
     result = document.get("result")
     if not isinstance(result, dict):
         raise JourneyError(f"command result is not an object: {document!r}")
@@ -135,7 +136,7 @@ def _money(value: Decimal) -> str:
     return f"{value:.2f}"
 
 
-def _ingest(
+def ingest_income_fixture(
     cli: InstalledCli,
     *,
     year: int,
@@ -150,7 +151,7 @@ def _ingest(
     invoice_ids: list[str] = []
     issued_pairs: list[LinkedLedgerPair] = []
     for income in income_items:
-        income_tx = _result(
+        income_tx = command_result(
             cli.run(
                 (
                     "app",
@@ -183,7 +184,7 @@ def _ingest(
                 )
             )
         )
-        income_invoice = _result(
+        income_invoice = command_result(
             cli.run(
                 (
                     "app",
@@ -229,7 +230,7 @@ def _ingest(
         )
 
     for expense in expense_items:
-        expense_tx = _result(
+        expense_tx = command_result(
             cli.run(
                 (
                     "app",
@@ -262,7 +263,7 @@ def _ingest(
                 )
             )
         )
-        expense_invoice = _result(
+        expense_invoice = command_result(
             cli.run(
                 (
                     "app",
@@ -317,7 +318,7 @@ def _m130_expected(oracle: QuarterlyOracle) -> dict[str, str]:
 
 
 def _create_m130_work(cli: InstalledCli, *, year: int, period: str) -> str:
-    create = _result(
+    create = command_result(
         cli.run(
             (
                 "app",
@@ -341,7 +342,7 @@ def _create_m130_work(cli: InstalledCli, *, year: int, period: str) -> str:
 
 
 def _calculate_m130_work(cli: InstalledCli, *, work_id: str, oracle: QuarterlyOracle) -> tuple[dict[str, str], str]:
-    calculation = _result(cli.run(("app", "modelo", "work", "calculate", work_id, "--by", "income-acceptance")))
+    calculation = command_result(cli.run(("app", "modelo", "work", "calculate", work_id, "--by", "income-acceptance")))
     values = calculation.get("casilla_values")
     if not isinstance(values, dict):
         raise JourneyError(f"Modelo 130 {oracle.period} returned no casilla map")
@@ -353,7 +354,9 @@ def _calculate_m130_work(cli: InstalledCli, *, work_id: str, oracle: QuarterlyOr
 
 
 def _verify_and_file_m130(cli: InstalledCli, *, revision_id: str, period: str) -> None:
-    verification = _result(cli.run(("app", "modelo", "work", "verify", revision_id, "--by", "income-acceptance")))
+    verification = command_result(
+        cli.run(("app", "modelo", "work", "verify", revision_id, "--by", "income-acceptance"))
+    )
     if verification.get("granted_verificado_completo") is not True:
         raise JourneyError(f"Modelo 130 {period} did not verify complete")
     cli.run(
@@ -405,7 +408,7 @@ def _calculate_m100(
     annual_oracle: AnnualOracle | None = None,
     attempt_export: bool = True,
 ) -> dict[str, object]:
-    create = _result(
+    create = command_result(
         cli.run(
             (
                 "app",
@@ -457,7 +460,7 @@ def _calculate_m100(
             "export_readiness": "not_exercised",
             "diagnostic_code": error.get("code") if isinstance(error, dict) else None,
         }
-    calculation = _result(calculated)
+    calculation = command_result(calculated)
     values = calculation.get("casilla_values")
     if not isinstance(values, dict):
         raise JourneyError("Modelo 100 returned no casilla map")
@@ -546,7 +549,7 @@ def _control_cli(*, executable: Path, authority_root: Path, storage_root: Path, 
 
 def _assert_reopened_ledger(cli: InstalledCli, ingested: IngestedLedgerEvidence) -> int:
     """Prove the next process can read every persisted transaction identity."""
-    listed = _result(cli.run(("app", "ledger", "list")))
+    listed = command_result(cli.run(("app", "ledger", "list")))
     rows = listed.get("rows")
     if not isinstance(rows, list):
         raise JourneyError("ledger list returned no transaction collection")
@@ -570,7 +573,7 @@ def _a2_retention_mutation_case(
     cli = _control_cli(executable=executable, authority_root=authority_root, storage_root=storage_root, year=year)
     scenario = build_scenario(year)
     mutation = build_retention_mutation_oracle(year)
-    ingested = _ingest(cli, year=year)
+    ingested = ingest_income_fixture(cli, year=year)
     _assert_reopened_ledger(cli, ingested)
 
     for oracle in scenario.quarter_oracle[:3]:
@@ -650,7 +653,7 @@ def _a4_boundary_case(
     """Exercise the year and quarter controls against their own persisted store."""
     cli = _control_cli(executable=executable, authority_root=authority_root, storage_root=storage_root, year=year)
     controls = build_boundary_control_scenario(year)
-    ingested = _ingest(
+    ingested = ingest_income_fixture(
         cli,
         year=year,
         income=controls.ingested_income,
@@ -774,7 +777,7 @@ def _a5_history_case(
             ),
             commands,
         )
-    recorded_result = _result(recorded_zero)
+    recorded_result = command_result(recorded_zero)
     values = recorded_result.get("casilla_values")
     if not isinstance(values, dict) or _money(Decimal(str(values.get("05")))) != "0.00":
         return (
@@ -886,10 +889,10 @@ def run_cli_journey(
         executable, storage_root=storage_root, authority_root=authority_root, passphrase=secrets.token_urlsafe(32)
     )
     cli.create_profile(year=year)
-    ingested = _ingest(cli, year=year)
+    ingested = ingest_income_fixture(cli, year=year)
     # A new child process reads the store after all ingestion; no in-memory
     # object crosses this boundary.
-    listed = _result(cli.run(("app", "ledger", "list")))
+    listed = command_result(cli.run(("app", "ledger", "list")))
     rows = listed.get("rows")
     if not isinstance(rows, list):
         raise JourneyError("ledger list returned no transaction collection")
