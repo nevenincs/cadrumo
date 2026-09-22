@@ -173,6 +173,7 @@ def _permitted_surface(snapshot: RegistrySnapshot) -> tuple[ModeloEditPermittedS
                 reason=ModeloEditNonWritableReason.SCHEMA_DECLARED_READ_ONLY,
             )
         )
+
     def address_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:
         if isinstance(entry, (ModeloEditWritableScalarSurfaceEntryV1, ModeloEditNonWritableScalarSurfaceEntryV1)):
             return "scalar", str(entry.casilla_id)

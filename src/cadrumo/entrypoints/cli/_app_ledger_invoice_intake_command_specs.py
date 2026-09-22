@@ -40,9 +40,7 @@ LEDGER_INVOICE_INTAKE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=InvocationSpec(invoke_without_command=False, no_args_is_help=False, context_parameter="ctx"),
         parameters=(
             *(
-                replace(option, default=ParameterDefault.value(None))
-                if option.name == "taxable_base"
-                else option
+                replace(option, default=ParameterDefault.value(None)) if option.name == "taxable_base" else option
                 for option in INVOICE_INTAKE_WIZARD_CORE_OPTIONS
             ),
             *INVOICE_LIFECYCLE_METADATA_OPTIONS[:5],

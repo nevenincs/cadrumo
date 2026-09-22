@@ -297,7 +297,9 @@ def test_inventory_row_templates_expand_complete_activities_in_canonical_rows() 
 def test_resale_stock_acquisition_projects_to_anexo_d_not_the_amortization_casilla() -> None:
     """A stock purchase remains an inventory cost, distinct from a 0208 expense."""
     result = InventorySourceResolver(
-        inventory_repository=_InventoryLedgerRepositoryScenario(InventoryLedgerDocument(ledgers=(inventory_ledger("retail"),)))
+        inventory_repository=_InventoryLedgerRepositoryScenario(
+            InventoryLedgerDocument(ledgers=(inventory_ledger("retail"),))
+        )
     ).resolve(_context(_revision(inventory=True)))
 
     assert result.row_binding_values == {

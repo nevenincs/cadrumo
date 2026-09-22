@@ -19,8 +19,7 @@ def test_every_assets_scenario_has_one_truthful_terminal_state() -> None:
     assert tuple(item.scenario for item in ASSET_ACCEPTANCE_EVIDENCE) == tuple(f"AS{number}" for number in range(1, 13))
     assert all(item.evidence for item in ASSET_ACCEPTANCE_EVIDENCE)
     assert all(
-        (item.blocker is not None) == (item.status is AcceptanceStatus.BLOCKED)
-        for item in ASSET_ACCEPTANCE_EVIDENCE
+        (item.blocker is not None) == (item.status is AcceptanceStatus.BLOCKED) for item in ASSET_ACCEPTANCE_EVIDENCE
     )
 
 

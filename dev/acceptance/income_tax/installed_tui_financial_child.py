@@ -4,6 +4,7 @@ The child drives only visible Textual controls.  It writes financial source data
 through the normal import and invoice forms, and persists only value-free
 receipt evidence.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -348,9 +349,7 @@ async def _classify_transaction(
         "#ledger-classification-iva-rate": format(item.iva_rate, "f"),
         "#ledger-classification-iva-amount": format(item.iva, "f"),
         "#ledger-classification-iva-category": "domestic_general",
-        "#ledger-classification-irpf-category": (
-            "actividad_economica" if isinstance(item, IssuedInvoice) else ""
-        ),
+        "#ledger-classification-irpf-category": ("actividad_economica" if isinstance(item, IssuedInvoice) else ""),
     }
     for selector, value in values.items():
         query_public_selector(pilot, selector, Input).value = value
@@ -425,9 +424,7 @@ async def _reconcile_invoice(pilot: Any, *, transaction_id: str, invoice_id: str
     await wait_for_public_selector(pilot, "#ledger-suggestions")
     table = query_public_selector(pilot, "#ledger-suggestions", DataTable)
     matching = [
-        row_key
-        for row_key in table.rows
-        if transaction_id in " ".join(str(cell) for cell in table.get_row(row_key))
+        row_key for row_key in table.rows if transaction_id in " ".join(str(cell) for cell in table.get_row(row_key))
     ]
     if len(matching) != 1:
         raise InstalledTuiChildError(
@@ -590,9 +587,7 @@ async def _apply_annual_edits(pilot: Any, *, work_unit_id: str) -> None:
         from textual.widgets import Static
 
         log = query_public_selector(pilot, "#operation-modal-log", Static)
-        public_codes = sorted(
-            set(re.findall(r"\b(?:modelo|operation|calculation)\.[a-z0-9_.-]+\b", str(log.render())))
-        )
+        public_codes = sorted(set(re.findall(r"\b(?:modelo|operation|calculation)\.[a-z0-9_.-]+\b", str(log.render()))))
         raise InstalledTuiChildError(
             f"modelo.edit.apply terminal={terminal.terminal_condition}, "
             f"receipt_present={terminal.receipt_present}, diagnostic_present={terminal.diagnostic_present}, "
@@ -762,9 +757,7 @@ def run_financial_child(
         if len(rows) != 8:
             raise InstalledTuiChildError("fresh installed TUI session lost imported transaction rows")
         await _open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
-        await select_public_data_table_row(
-            pilot=pilot, table_selector="#ledger-navigation", row_key="reconciliation"
-        )
+        await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="reconciliation")
         from textual.widgets import DataTable
 
         suggestions = query_public_selector(pilot, "#ledger-suggestions", DataTable)
@@ -858,4 +851,3 @@ def main(argv: Sequence[str] | None = None) -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

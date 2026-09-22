@@ -132,8 +132,20 @@ def _m130_work(cli: InstalledCli, *, period: str) -> str:
     created = _result(
         cli.run(
             (
-                "app", "modelo", "work", "create", "--modelo", "130", "--year", str(_YEAR),
-                "--period", period, "--revision", "2019-y-siguientes", "--by", "assets-acceptance",
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "130",
+                "--year",
+                str(_YEAR),
+                "--period",
+                period,
+                "--revision",
+                "2019-y-siguientes",
+                "--by",
+                "assets-acceptance",
             )
         )
     )
@@ -172,8 +184,15 @@ def _calculate_and_file_m130(
         raise JourneyError(f"Modelo 130 {period} did not verify complete")
     cli.run(
         (
-            "app", "modelo", "work", "file", revision_id, "--by", "assets-acceptance",
-            "--notes", "Synthetic local pending filing only; not sent to AEAT",
+            "app",
+            "modelo",
+            "work",
+            "file",
+            revision_id,
+            "--by",
+            "assets-acceptance",
+            "--notes",
+            "Synthetic local pending filing only; not sent to AEAT",
         )
     )
     return income, expenses
@@ -186,8 +205,20 @@ def _calculate_export_m100(
     created = _result(
         cli.run(
             (
-                "app", "modelo", "work", "create", "--modelo", "100", "--year", str(_YEAR),
-                "--period", "0A", "--revision", str(_YEAR), "--by", "assets-acceptance",
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "100",
+                "--year",
+                str(_YEAR),
+                "--period",
+                "0A",
+                "--revision",
+                str(_YEAR),
+                "--by",
+                "assets-acceptance",
             )
         )
     )
@@ -196,10 +227,23 @@ def _calculate_export_m100(
     calculation = _result(
         cli.run(
             (
-                "app", "modelo", "work", "calculate", work_id,
-                "--casilla", "0001=declarante", "--casilla", "0165=declarante", "--casilla", "0166=A05",
-                "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
-                "--binding", "renta-certificado-trabajo-retenciones=0", "--by", "assets-acceptance",
+                "app",
+                "modelo",
+                "work",
+                "calculate",
+                work_id,
+                "--casilla",
+                "0001=declarante",
+                "--casilla",
+                "0165=declarante",
+                "--casilla",
+                "0166=A05",
+                "--binding",
+                "renta-modelo-100-estimacion-directa-es-normal=1",
+                "--binding",
+                "renta-certificado-trabajo-retenciones=0",
+                "--by",
+                "assets-acceptance",
             )
         )
     )
@@ -274,8 +318,17 @@ def run_asset_export_journey(
     forecast = _result(
         cli.run(
             (
-                "app", "ledger", "actividad-asset", "forecast", asset_id,
-                "--selection-json", _selection_json(), "--covered-from", "2025-01-01", "--covered-until", "2026-01-01",
+                "app",
+                "ledger",
+                "actividad-asset",
+                "forecast",
+                asset_id,
+                "--selection-json",
+                _selection_json(),
+                "--covered-from",
+                "2025-01-01",
+                "--covered-until",
+                "2026-01-01",
             )
         )
     )
@@ -285,8 +338,13 @@ def run_asset_export_journey(
     claim = _result(
         cli.run(
             (
-                "app", "ledger", "actividad-asset", "claim", json.dumps(forecast, separators=(",", ":")),
-                "--creating-operation", "assets-acceptance.record-claim",
+                "app",
+                "ledger",
+                "actividad-asset",
+                "claim",
+                json.dumps(forecast, separators=(",", ":")),
+                "--creating-operation",
+                "assets-acceptance.record-claim",
             )
         )
     )

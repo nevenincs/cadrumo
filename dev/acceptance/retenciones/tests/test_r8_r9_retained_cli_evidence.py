@@ -83,9 +83,7 @@ def _mapping(document: Mapping[str, object], key: str) -> Mapping[str, object]:
     return cast(Mapping[str, object], value)
 
 
-def _assert_retained_file(
-    manifest: Mapping[str, object], artifacts: Path, proof_key: str, artifact_key: str
-) -> None:
+def _assert_retained_file(manifest: Mapping[str, object], artifacts: Path, proof_key: str, artifact_key: str) -> None:
     proof = _mapping(manifest, proof_key)
     expected = _mapping(proof, artifact_key)
     path = artifacts / str(expected["path"])
@@ -113,9 +111,7 @@ def _sources(slice_: Mapping[str, object], evidence_state: str) -> tuple[Mapping
     periods = slice_.get("source_periods")
     assert isinstance(periods, list)
     matches = [
-        period
-        for period in periods
-        if isinstance(period, Mapping) and period.get("evidence_state") == evidence_state
+        period for period in periods if isinstance(period, Mapping) and period.get("evidence_state") == evidence_state
     ]
     return tuple(cast(Mapping[str, object], period) for period in matches)
 

@@ -103,11 +103,7 @@ def _receipt_progress(path: Path) -> tuple[str | None, str | None, tuple[str, ..
     stage = payload.get("stage")
     status = payload.get("status")
     raw_stages = payload.get("completed_stages")
-    stages = (
-        tuple(item for item in raw_stages if isinstance(item, str))
-        if isinstance(raw_stages, list)
-        else ()
-    )
+    stages = tuple(item for item in raw_stages if isinstance(item, str)) if isinstance(raw_stages, list) else ()
     return (stage if isinstance(stage, str) else None, status if isinstance(status, str) else None, stages)
 
 
@@ -333,10 +329,7 @@ def run_installed_tui_probe(
         schema_version=_SCHEMA_VERSION,
         status=(
             "proven"
-            if process.returncode == 0
-            and child_status == "proven"
-            and required_stage_missing is None
-            and not timed_out
+            if process.returncode == 0 and child_status == "proven" and required_stage_missing is None and not timed_out
             else "failed"
         ),
         command_sha256=command_sha,

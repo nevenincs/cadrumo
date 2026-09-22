@@ -146,9 +146,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             period=aggregation.period,
         )
         all_observations = (*aggregation.observations, *asset_observations)
-        unrouted = unsupported_ledger_renta_gastos_estimacion_directa_observations(
-            context.revision, all_observations
-        )
+        unrouted = unsupported_ledger_renta_gastos_estimacion_directa_observations(context.revision, all_observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,

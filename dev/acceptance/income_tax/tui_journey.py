@@ -510,9 +510,7 @@ def blocked_tui_journey_evidence(
             source_state="installed_tui_contract_unavailable"
             if f"A{number}" in blocked_cases
             else "not_exercised_by_tui_driver",
-            diagnostic_code="acceptance.installed_tui.contract_unavailable"
-            if f"A{number}" in blocked_cases
-            else None,
+            diagnostic_code="acceptance.installed_tui.contract_unavailable" if f"A{number}" in blocked_cases else None,
         )
         for number in range(1, 11)
     )
@@ -629,8 +627,7 @@ def validate_modelo_100_xsd(*, xml_path: Path, xsd_path: Path) -> LocalXsdValida
         document = etree.fromstring(xml_bytes)
         xsd_valid = schema.validate(document)
         errors = tuple(
-            _schema_error_identity(error.domain_name, error.type_name, error.line)
-            for error in schema.error_log
+            _schema_error_identity(error.domain_name, error.type_name, error.line) for error in schema.error_log
         )
     except etree.LxmlError as exc:
         # The textual parser message can contain document values.  Keep only

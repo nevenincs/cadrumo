@@ -152,7 +152,9 @@ def test_effective_claims_enforce_exact_cap_without_request_order_or_retry_consu
     exact_cap = record_claim(retried.claims, second)
 
     assert retried.reused_existing_claim is True
-    assert sum((claim.amount for claim in effective_free_depreciation_claims(exact_cap.claims, tax_year=2025)), Decimal("0")) == Decimal("500.00")
+    assert sum(
+        (claim.amount for claim in effective_free_depreciation_claims(exact_cap.claims, tax_year=2025)), Decimal("0")
+    ) == Decimal("500.00")
     with pytest.raises(ActividadAssetClaimConflictError, match="annual cap"):
         record_claim(exact_cap.claims, excess)
 
@@ -169,7 +171,9 @@ def test_correction_replaces_effective_free_claim_before_rechecking_cap() -> Non
     result = record_claim(existing, corrected)
 
     assert effective_free_depreciation_claims(result.claims, tax_year=2025) == (corrected,)
-    assert sum((claim.amount for claim in effective_free_depreciation_claims(result.claims, tax_year=2025)), Decimal("0")) == Decimal("200.00")
+    assert sum(
+        (claim.amount for claim in effective_free_depreciation_claims(result.claims, tax_year=2025)), Decimal("0")
+    ) == Decimal("200.00")
 
 
 def test_linear_fallback_is_a_separate_operator_selection_not_an_implicit_cap_allocation() -> None:

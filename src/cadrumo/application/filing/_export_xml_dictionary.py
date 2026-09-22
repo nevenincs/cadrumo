@@ -575,9 +575,7 @@ def _xml_dictionary_rendered_value(
     return rendered
 
 
-def _prune_zero_only_xml_subtrees(
-    root: ElementTree.Element[str], *, optional_element_paths: frozenset[str]
-) -> None:
+def _prune_zero_only_xml_subtrees(root: ElementTree.Element[str], *, optional_element_paths: frozenset[str]) -> None:
     """Omit optional Modelo 100 branches containing only calculated zero placeholders.
 
     Modelo 100 calculations deliberately retain zero-valued casillas for audit and
@@ -604,8 +602,10 @@ def _prune_zero_only_xml_subtrees(
                 node.remove(child)
             else:
                 retained_child_states.append(child_is_zero_only)
-        return all(retained_child_states) and is_zero_token(node.text) and all(
-            is_zero_token(value) for value in node.attrib.values()
+        return (
+            all(retained_child_states)
+            and is_zero_token(node.text)
+            and all(is_zero_token(value) for value in node.attrib.values())
         )
 
     prune(root, "")

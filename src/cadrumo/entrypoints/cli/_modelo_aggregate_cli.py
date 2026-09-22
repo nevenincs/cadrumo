@@ -134,11 +134,7 @@ def _withholding_window_readback(
     scope = WithholdingWindowScope(modelo=command.modelo, period=command.period)
     service = withholding_observation_service(ctx, bucket_id=active_bucket_id_or_refuse())
     state = service.read_window(scope)
-    generation_audit = (
-        None
-        if state.generation == 0
-        else service.read_generation(scope, state.baseline.generation_id)
-    )
+    generation_audit = None if state.generation == 0 else service.read_generation(scope, state.baseline.generation_id)
     return WithholdingWindowReadbackPayload.from_window_state(state, generation_audit=generation_audit)
 
 

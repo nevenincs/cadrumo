@@ -47,9 +47,13 @@ def test_material_and_intangible_authority_remain_distinct_and_grounded() -> Non
     assert normal_rows["edificio-industrial"] == "3"
     assert normal_rows["equipo-proceso-informacion"] == "25"
     assert normal_rows["intangible-software"] == "33"
-    assert parameters["renta-actividad-inmovilizado-intangible-vida-util-no-estimable-limite-anual"]["values"][
-        0
-    ]["value"] == "5"
-    assert parameters["renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-umbral-unitario"][
-        "values"
-    ][0]["value"] == "300"
+    assert (
+        parameters["renta-actividad-inmovilizado-intangible-vida-util-no-estimable-limite-anual"]["values"][0]["value"]
+        == "5"
+    )
+    assert (
+        parameters["renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-umbral-unitario"]["values"][0][
+            "value"
+        ]
+        == "300"
+    )

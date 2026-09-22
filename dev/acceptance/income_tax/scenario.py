@@ -382,11 +382,11 @@ def _quarterly_oracle(
                 cumulative_expenses=cumulative_expenses,
                 cumulative_net=net,
                 twenty_percent=twenty_percent,
-            cumulative_withholding=withholding,
-            prior_positive_results=prior_positive_results,
-            partial_result=partial_result,
-            low_income_reduction=M130_LOW_INCOME_REDUCTION,
-            payment=payment,
+                cumulative_withholding=withholding,
+                prior_positive_results=prior_positive_results,
+                partial_result=partial_result,
+                low_income_reduction=M130_LOW_INCOME_REDUCTION,
+                payment=payment,
             )
         )
         prior_positive_results += partial_result

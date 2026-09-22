@@ -1347,8 +1347,7 @@ def _iva_selected_scope_evidence_finding(target: CalculationRevision) -> ModeloV
     issues = tuple(
         issue
         for issue in target.source_issues
-        if issue.binding_source is _IVA_AGGREGATION_SOURCE
-        and issue.reason == "iva_selected_scope_evidence_failure"
+        if issue.binding_source is _IVA_AGGREGATION_SOURCE and issue.reason == "iva_selected_scope_evidence_failure"
     )
     if not issues:
         return None

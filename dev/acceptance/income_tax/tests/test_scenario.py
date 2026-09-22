@@ -23,10 +23,16 @@ def test_invoice_decomposition_and_bank_amounts_are_coherent() -> None:
     scenario = build_scenario(2025)
 
     assert [item.taxable_base for item in scenario.income] == [
-        Decimal("4000"), Decimal("3500"), Decimal("2000"), Decimal("2500")
+        Decimal("4000"),
+        Decimal("3500"),
+        Decimal("2000"),
+        Decimal("2500"),
     ]
     assert [item.net_receipt for item in scenario.income] == [
-        Decimal("4560.00"), Decimal("3990.00"), Decimal("2280.00"), Decimal("2850.00")
+        Decimal("4560.00"),
+        Decimal("3990.00"),
+        Decimal("2280.00"),
+        Decimal("2850.00"),
     ]
     assert all(item.net_receipt == item.taxable_base + item.iva - item.withholding for item in scenario.income)
     assert all(item.bank_payment == item.taxable_base + item.iva for item in scenario.expenses)
@@ -42,10 +48,16 @@ def test_quarterly_oracle_is_cumulative_and_distinct() -> None:
         (Decimal("12000"), Decimal("2400")),
     ]
     assert [row.payment for row in scenario.quarter_oracle] == [
-        Decimal("320.00"), Decimal("215.00"), Decimal("100.00"), Decimal("45.00")
+        Decimal("320.00"),
+        Decimal("215.00"),
+        Decimal("100.00"),
+        Decimal("45.00"),
     ]
     assert [row.partial_result for row in scenario.quarter_oracle] == [
-        Decimal("420.00"), Decimal("315.00"), Decimal("200.00"), Decimal("145.00")
+        Decimal("420.00"),
+        Decimal("315.00"),
+        Decimal("200.00"),
+        Decimal("145.00"),
     ]
     assert {row.low_income_reduction for row in scenario.quarter_oracle} == {Decimal("100.00")}
     assert scenario.annual_oracle.activity_net_income == Decimal("9600")

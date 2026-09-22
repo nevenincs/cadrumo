@@ -212,6 +212,7 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
 
     def _confirm_local_filing(self) -> None:
         """Require an explicit acknowledgement before recording a local filing."""
+
         def closed(confirmed: bool | None) -> None:
             if confirmed:
                 actions = self._session.lifecycle_actions

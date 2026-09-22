@@ -109,9 +109,9 @@ def test_a_positive_amount_reaches_only_the_amount_to_pay_branch(_declarations: 
     assert _modelo_100_sign_branch_value(
         entries[_NON_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations
     ) == Decimal("1234.56")
-    assert _modelo_100_sign_branch_value(
-        entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations
-    ) is None
+    assert (
+        _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations) is None
+    )
 
 
 def test_verifier_matches_the_selected_0695_branch(
@@ -119,15 +119,18 @@ def test_verifier_matches_the_selected_0695_branch(
 ) -> None:
     """A selected 0695 branch renders the value the verifier expects."""
     entries = _branch_entries()
-    assert _xml_dictionary_expected_wire_value(
-        entries[_NON_NEGATIVE_BRANCH],
-        Decimal("1234.56"),
-        modelo="100",
-        modelo_100_declarations=dict(_declarations),
-    ) == "1234.56"
-    assert _modelo_100_sign_branch_value(
-        entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations
-    ) is None
+    assert (
+        _xml_dictionary_expected_wire_value(
+            entries[_NON_NEGATIVE_BRANCH],
+            Decimal("1234.56"),
+            modelo="100",
+            modelo_100_declarations=dict(_declarations),
+        )
+        == "1234.56"
+    )
+    assert (
+        _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("1234.56"), declarations=_declarations) is None
+    )
 
 
 def test_a_negative_amount_reaches_only_the_refund_branch(_declarations: Mapping[str, str]) -> None:
@@ -137,9 +140,10 @@ def test_a_negative_amount_reaches_only_the_refund_branch(_declarations: Mapping
     assert _modelo_100_sign_branch_value(
         entries[_NEGATIVE_BRANCH], Decimal("-987.65"), declarations=_declarations
     ) == Decimal("-987.65")
-    assert _modelo_100_sign_branch_value(
-        entries[_NON_NEGATIVE_BRANCH], Decimal("-987.65"), declarations=_declarations
-    ) is None
+    assert (
+        _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], Decimal("-987.65"), declarations=_declarations)
+        is None
+    )
 
 
 def test_zero_uses_the_non_negative_branch(_declarations: Mapping[str, str]) -> None:
@@ -149,9 +153,7 @@ def test_zero_uses_the_non_negative_branch(_declarations: Mapping[str, str]) -> 
     assert _modelo_100_sign_branch_value(
         entries[_NON_NEGATIVE_BRANCH], Decimal("0"), declarations=_declarations
     ) == Decimal("0")
-    assert _modelo_100_sign_branch_value(
-        entries[_NEGATIVE_BRANCH], Decimal("0"), declarations=_declarations
-    ) is None
+    assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], Decimal("0"), declarations=_declarations) is None
 
 
 @pytest.mark.parametrize("uncoercible", ["abc", "", "1.234,56", True, None])
@@ -172,9 +174,7 @@ def test_a_value_that_will_not_coerce_selects_a_branch_instead_of_raising(
         _modelo_100_sign_branch_value(entries[_NON_NEGATIVE_BRANCH], uncoercible, declarations=_declarations)
         is uncoercible
     )
-    assert _modelo_100_sign_branch_value(
-        entries[_NEGATIVE_BRANCH], uncoercible, declarations=_declarations
-    ) is None
+    assert _modelo_100_sign_branch_value(entries[_NEGATIVE_BRANCH], uncoercible, declarations=_declarations) is None
 
 
 def test_the_carry_class_is_left_alone(_declarations: Mapping[str, str]) -> None:

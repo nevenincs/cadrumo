@@ -196,9 +196,7 @@ def test_final_receipt_keeps_financial_readback_hashed_and_requires_validated_ex
         work_create_id="#declarations-calendar-agenda",
     )
     fingerprint = canonical_financial_value_fingerprint(values={"130.01": "4000.00", "130.02": "500.00"})
-    assert fingerprint == canonical_financial_value_fingerprint(
-        values={"130.02": "500.00", "130.01": "4000.00"}
-    )
+    assert fingerprint == canonical_financial_value_fingerprint(values={"130.02": "500.00", "130.01": "4000.00"})
     xsd = LocalXsdValidationEvidence(
         xml_sha256="c" * 64,
         xml_size=1,

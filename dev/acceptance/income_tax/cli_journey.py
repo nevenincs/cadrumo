@@ -153,25 +153,65 @@ def _ingest(
         income_tx = _result(
             cli.run(
                 (
-                    "app", "ledger", "add", "--date", income.transaction_date.isoformat(),
-                    "--amount", _money(income.net_receipt), "--direction", "INCOMING",
-                    "--description", f"Synthetic income {income.period}", "--classification", "BUSINESS",
-                    "--taxable-base", _money(income.taxable_base), "--iva-rate", str(income.iva_rate),
-                    "--iva-amount", _money(income.iva), "--iva-category", "domestic_general",
-                    "--irpf-category", "actividad_economica", "--source-jurisdiction", "ES",
-                    "--idempotency-key", income.transaction_id,
+                    "app",
+                    "ledger",
+                    "add",
+                    "--date",
+                    income.transaction_date.isoformat(),
+                    "--amount",
+                    _money(income.net_receipt),
+                    "--direction",
+                    "INCOMING",
+                    "--description",
+                    f"Synthetic income {income.period}",
+                    "--classification",
+                    "BUSINESS",
+                    "--taxable-base",
+                    _money(income.taxable_base),
+                    "--iva-rate",
+                    str(income.iva_rate),
+                    "--iva-amount",
+                    _money(income.iva),
+                    "--iva-category",
+                    "domestic_general",
+                    "--irpf-category",
+                    "actividad_economica",
+                    "--source-jurisdiction",
+                    "ES",
+                    "--idempotency-key",
+                    income.transaction_id,
                 )
             )
         )
         income_invoice = _result(
             cli.run(
                 (
-                    "app", "ledger", "invoice", "add", "--kind", "issued",
-                    "--counterparty-name", "Synthetic Client SL", "--counterparty-nif", _CLIENT_NIF,
-                    "--invoice-number", income.invoice_id.upper(), "--invoice-date", income.invoice_date.isoformat(),
-                    "--taxable-base", _money(income.taxable_base), "--iva-rate", "21", "--country-code", "ES",
-                    "--retention-rate", str(income.withholding_rate), "--retention-amount", _money(income.withholding),
-                    "--iva-category", "domestic_general",
+                    "app",
+                    "ledger",
+                    "invoice",
+                    "add",
+                    "--kind",
+                    "issued",
+                    "--counterparty-name",
+                    "Synthetic Client SL",
+                    "--counterparty-nif",
+                    _CLIENT_NIF,
+                    "--invoice-number",
+                    income.invoice_id.upper(),
+                    "--invoice-date",
+                    income.invoice_date.isoformat(),
+                    "--taxable-base",
+                    _money(income.taxable_base),
+                    "--iva-rate",
+                    "21",
+                    "--country-code",
+                    "ES",
+                    "--retention-rate",
+                    str(income.withholding_rate),
+                    "--retention-amount",
+                    _money(income.withholding),
+                    "--iva-category",
+                    "domestic_general",
                 )
             )
         )
@@ -192,24 +232,61 @@ def _ingest(
         expense_tx = _result(
             cli.run(
                 (
-                    "app", "ledger", "add", "--date", expense.transaction_date.isoformat(),
-                    "--amount", _money(expense.bank_payment), "--direction", "OUTGOING",
-                    "--description", f"Synthetic expense {expense.period}", "--classification", "BUSINESS",
-                    "--category-id", expense.category, "--taxable-base", _money(expense.taxable_base),
-                    "--iva-rate", str(expense.iva_rate), "--iva-amount", _money(expense.iva),
-                    "--iva-category", "domestic_general", "--source-jurisdiction", "ES",
-                    "--idempotency-key", expense.transaction_id,
+                    "app",
+                    "ledger",
+                    "add",
+                    "--date",
+                    expense.transaction_date.isoformat(),
+                    "--amount",
+                    _money(expense.bank_payment),
+                    "--direction",
+                    "OUTGOING",
+                    "--description",
+                    f"Synthetic expense {expense.period}",
+                    "--classification",
+                    "BUSINESS",
+                    "--category-id",
+                    expense.category,
+                    "--taxable-base",
+                    _money(expense.taxable_base),
+                    "--iva-rate",
+                    str(expense.iva_rate),
+                    "--iva-amount",
+                    _money(expense.iva),
+                    "--iva-category",
+                    "domestic_general",
+                    "--source-jurisdiction",
+                    "ES",
+                    "--idempotency-key",
+                    expense.transaction_id,
                 )
             )
         )
         expense_invoice = _result(
             cli.run(
                 (
-                    "app", "ledger", "invoice", "add", "--kind", "received",
-                    "--counterparty-name", "Synthetic Supplier SL", "--counterparty-nif", _CLIENT_NIF,
-                    "--invoice-number", expense.invoice_id.upper(), "--invoice-date", expense.invoice_date.isoformat(),
-                    "--taxable-base", _money(expense.taxable_base), "--iva-rate", "21", "--country-code", "ES",
-                    "--iva-category", "domestic_general",
+                    "app",
+                    "ledger",
+                    "invoice",
+                    "add",
+                    "--kind",
+                    "received",
+                    "--counterparty-name",
+                    "Synthetic Supplier SL",
+                    "--counterparty-nif",
+                    _CLIENT_NIF,
+                    "--invoice-number",
+                    expense.invoice_id.upper(),
+                    "--invoice-date",
+                    expense.invoice_date.isoformat(),
+                    "--taxable-base",
+                    _money(expense.taxable_base),
+                    "--iva-rate",
+                    "21",
+                    "--country-code",
+                    "ES",
+                    "--iva-category",
+                    "domestic_general",
                 )
             )
         )
@@ -263,9 +340,7 @@ def _create_m130_work(cli: InstalledCli, *, year: int, period: str) -> str:
     return str(create["work_unit_id"])
 
 
-def _calculate_m130_work(
-    cli: InstalledCli, *, work_id: str, oracle: QuarterlyOracle
-) -> tuple[dict[str, str], str]:
+def _calculate_m130_work(cli: InstalledCli, *, work_id: str, oracle: QuarterlyOracle) -> tuple[dict[str, str], str]:
     calculation = _result(cli.run(("app", "modelo", "work", "calculate", work_id, "--by", "income-acceptance")))
     values = calculation.get("casilla_values")
     if not isinstance(values, dict):
@@ -312,7 +387,10 @@ def _calculate_quarters(
         payload = target.read_bytes()
         artifacts.append(
             ArtifactEvidence(
-                modelo="130", period=oracle.period, path=str(target), size=len(payload),
+                modelo="130",
+                period=oracle.period,
+                path=str(target),
+                size=len(payload),
                 sha256=hashlib.sha256(payload).hexdigest(),
             )
         )
@@ -330,21 +408,43 @@ def _calculate_m100(
     create = _result(
         cli.run(
             (
-                "app", "modelo", "work", "create", "--modelo", "100", "--year", str(year),
-                "--period", "0A", "--revision", str(year), "--by", "income-acceptance",
+                "app",
+                "modelo",
+                "work",
+                "create",
+                "--modelo",
+                "100",
+                "--year",
+                str(year),
+                "--period",
+                "0A",
+                "--revision",
+                str(year),
+                "--by",
+                "income-acceptance",
             )
         )
     )
     work_id = str(create["work_unit_id"])
     calculated = cli.run(
         (
-            "app", "modelo", "work", "calculate", work_id,
-            "--casilla", "0001=declarante",
-            "--casilla", "0165=declarante",
-            "--casilla", "0166=A05",
-            "--binding", "renta-modelo-100-estimacion-directa-es-normal=1",
-            "--binding", "renta-certificado-trabajo-retenciones=0",
-            "--by", "income-acceptance",
+            "app",
+            "modelo",
+            "work",
+            "calculate",
+            work_id,
+            "--casilla",
+            "0001=declarante",
+            "--casilla",
+            "0165=declarante",
+            "--casilla",
+            "0166=A05",
+            "--binding",
+            "renta-modelo-100-estimacion-directa-es-normal=1",
+            "--binding",
+            "renta-certificado-trabajo-retenciones=0",
+            "--by",
+            "income-acceptance",
         ),
         allow_error=True,
     )
@@ -479,9 +579,7 @@ def _a2_retention_mutation_case(
         _verify_and_file_m130(cli, revision_id=revision_id, period=oracle.period)
 
     q4_work_id = _create_m130_work(cli, year=year, period=mutation.baseline_quarter.period)
-    before, _before_revision = _calculate_m130_work(
-        cli, work_id=q4_work_id, oracle=mutation.baseline_quarter
-    )
+    before, _before_revision = _calculate_m130_work(cli, work_id=q4_work_id, oracle=mutation.baseline_quarter)
     pair = next(
         (item for item in ingested.issued_pairs if item.fixture_invoice_id == mutation.target_invoice.invoice_id),
         None,

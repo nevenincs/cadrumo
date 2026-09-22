@@ -222,9 +222,9 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                 original=calendar_date_label(row.closes_on),
                 effective=calendar_date_label(row.adjusted_closes_on),
                 evaluated=calendar_date_label(row.evaluated_on),
-                overdue=row.days_overdue if row.days_overdue is not None else declarations_copy(
-                    "tui.declarations.calendar.none"
-                ),
+                overdue=row.days_overdue
+                if row.days_overdue is not None
+                else declarations_copy("tui.declarations.calendar.none"),
                 shift=row.shift_reason,
             ),
             declarations_copy(

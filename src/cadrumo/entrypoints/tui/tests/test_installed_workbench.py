@@ -35,7 +35,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 _CLI_PACKAGE = "cadrumo.entrypoints.cli"
 _PRIMARY_DESTINATIONS = (
-    "workbench.home", "workbench.ledger", "workbench.withholding", "workbench.declarations", "workbench.aeat_sync"
+    "workbench.home",
+    "workbench.ledger",
+    "workbench.withholding",
+    "workbench.declarations",
+    "workbench.aeat_sync",
 )
 
 

@@ -16,7 +16,9 @@ def test_aeat_aux_version_derives_from_the_canonical_package_release() -> None:
 
 
 @pytest.mark.parametrize("package_version", ("0.5.1rc1", "0.5.1+local", "0.5", "0.5.1.2"))
-def test_aeat_aux_version_refuses_non_release_package_versions(monkeypatch: pytest.MonkeyPatch, package_version: str) -> None:
+def test_aeat_aux_version_refuses_non_release_package_versions(
+    monkeypatch: pytest.MonkeyPatch, package_version: str
+) -> None:
     monkeypatch.setattr(identity_module, "PACKAGE_VERSION", package_version)
 
     with pytest.raises(FilingExportValidationError, match="exactly three ASCII decimal components"):

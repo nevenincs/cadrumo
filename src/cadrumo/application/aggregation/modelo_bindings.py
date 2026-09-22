@@ -1229,9 +1229,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         # ledger_renta_gastos_pago_fraccionado_aggregation binding would otherwise be silently
         # dropped (no-silent-under-declaration). Calculate still succeeds; the
         # operator sees the unrouted expense instead of an under-declared form.
-        unrouted = unsupported_ledger_renta_gastos_pago_fraccionado_observations(
-            context.revision, all_observations
-        )
+        unrouted = unsupported_ledger_renta_gastos_pago_fraccionado_observations(context.revision, all_observations)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,

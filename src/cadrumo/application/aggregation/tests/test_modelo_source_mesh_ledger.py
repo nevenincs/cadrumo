@@ -354,9 +354,7 @@ def _renta_transaction(
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "purchase_invoice_evidence_id": purchase_invoice_evidence_id,
-            "category_id": (
-                SpendingCategory.from_registry("asesoria_fiscal") if category is None else category
-            ).value,
+            "category_id": (SpendingCategory.from_registry("asesoria_fiscal") if category is None else category).value,
             "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",
         },

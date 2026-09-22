@@ -93,8 +93,7 @@ def test_missing_regime_parameter_fails_before_class_lookup() -> None:
             "parameters": tuple(
                 parameter
                 for parameter in revision.parameters
-                if str(parameter.id)
-                != "renta-actividad-inmovilizado-amortizacion-normal-coeficiente-lineal-maximo"
+                if str(parameter.id) != "renta-actividad-inmovilizado-amortizacion-normal-coeficiente-lineal-maximo"
             ),
         },
     )

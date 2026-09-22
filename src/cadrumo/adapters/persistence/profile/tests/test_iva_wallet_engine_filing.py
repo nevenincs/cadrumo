@@ -316,7 +316,10 @@ def test_refiling_local_modelo_303_preserves_each_settlement_credit_snapshot_and
         assert current.settlement.credit_snapshot.applied_amount == Decimal("600.00")
         assert current.settlement.credit_snapshot.remaining_amount == Decimal("0")
         assert current.settlement != retired.settlement
-        assert calc_repo.load().get(revisions[0].calculation_revision_id).state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
+        assert (
+            calc_repo.load().get(revisions[0].calculation_revision_id).state
+            is CalculationRevisionState.PRESENTADO_SUPERSEDIDO
+        )
         assert calc_repo.load().get(revisions[1].calculation_revision_id).state is CalculationRevisionState.PRESENTADO
 
 

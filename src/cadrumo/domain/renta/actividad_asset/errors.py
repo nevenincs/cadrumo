@@ -1,5 +1,6 @@
 """Errors raised by the IRPF activity-asset domain."""
 
+
 class ActividadAssetError(ValueError):
     """Base error for IRPF activity-asset contracts."""
 

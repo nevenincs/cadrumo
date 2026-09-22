@@ -742,9 +742,7 @@ def assert_xml_declaration_aux_declared(layout: ExportLayoutDefinition, *, aux_v
     if layout.format is not ExportLayoutFormat.XML_DICTIONARY:
         return
     undeclared = [
-        name
-        for name, value in (("aux_idioma", layout.aux_idioma), ("aux_version", aux_version))
-        if not value
+        name for name, value in (("aux_idioma", layout.aux_idioma), ("aux_version", aux_version)) if not value
     ]
     if not undeclared:
         return

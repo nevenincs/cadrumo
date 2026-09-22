@@ -680,7 +680,7 @@ def _run_annual_slice(
             raise RetencionesInstalledCliError(
                 stage=f"{slice_.slice_id}:fresh_reopen:{period}",
                 diagnostic_code="annual_observation_count_mismatch",
-        )
+            )
         reopened_counts[period] = observed_count
 
     no_activity_attestations = _attest_annual_no_activity_periods(

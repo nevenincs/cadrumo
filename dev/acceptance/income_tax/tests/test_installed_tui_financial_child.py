@@ -1,4 +1,5 @@
 """Focused contract checks for the installed financial child."""
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -43,10 +44,7 @@ def test_transaction_csv_is_n26_compatible_transient_scenario_input(tmp_path: Pa
 
 def test_annual_artifact_parser_checks_financial_meaning_and_official_schema() -> None:
     root = Path(__file__).resolve().parents[4]
-    xml = root / (
-        ".agents/session-briefs/handoffs/artifacts/income-01/cli-baseline-8c3a40fecf/"
-        "modelo-100-2025-0A.xml"
-    )
+    xml = root / (".agents/session-briefs/handoffs/artifacts/income-01/cli-baseline-8c3a40fecf/modelo-100-2025-0A.xml")
     schema = root / (
         "src/cadrumo/_data/corpus/aeat_official/disenos_registro/modelo_100/files/"
         "03-100-esquema-xsd-ejercicio-2025-actualizado-24-06-2026-793-kb-ejecutable.xsd"
@@ -55,9 +53,7 @@ def test_annual_artifact_parser_checks_financial_meaning_and_official_schema() -
     assert values == {"E1INGRESO": "12000.00", "E1NGD": "2400.00", "E1RN": "9600.00", "PAGOS": "680.00"}
     assert validation["xsd_valid"] is True
     assert validation["normalization_count"] == 16
-    assert validation["original_schema_sha256"] == (
-        "df94cc5160e8ad8244e6fc5fb0f257280b4c8c3f70107f0c2acc99d395f678c2"
-    )
+    assert validation["original_schema_sha256"] == ("df94cc5160e8ad8244e6fc5fb0f257280b4c8c3f70107f0c2acc99d395f678c2")
 
 
 @pytest.mark.asyncio
@@ -88,9 +84,7 @@ async def test_palette_selects_the_exact_destination_after_fuzzy_results(monkeyp
     async def available(_pilot: Any, _selector: str, *, polls: int) -> None:
         assert polls == 180
 
-    monkeypatch.setattr(
-        "dev.acceptance.income_tax.installed_tui_financial_child.wait_for_public_selector", available
-    )
+    monkeypatch.setattr("dev.acceptance.income_tax.installed_tui_financial_child.wait_for_public_selector", available)
     await _open_destination(PilotStub(), query="declarations", expected_selector="#declarations-list")
     assert listing.highlighted == 1
     assert pressed == ["ctrl+p", "enter"]

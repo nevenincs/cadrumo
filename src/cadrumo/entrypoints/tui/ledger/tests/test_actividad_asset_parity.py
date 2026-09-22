@@ -234,11 +234,15 @@ async def test_interactive_tui_exposes_correction_claim_replay_and_filing_throug
         screen.query_one("#asset-id", Input).value = revision.asset_id
         screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
         await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-create")
-        assert await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="created\tinteractive-tui\trevisions=1")
+        assert await _wait_for_screen_result(
+            pilot=pilot, screen=screen, expected_prefix="created\tinteractive-tui\trevisions=1"
+        )
         first_revision_id = await _wait_for_current_revision_id(pilot=pilot, screen=screen)
         assert first_revision_id == revision.revision_id
         await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-inspect")
-        assert await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="asset\tinteractive-tui\trevisions=1")
+        assert await _wait_for_screen_result(
+            pilot=pilot, screen=screen, expected_prefix="asset\tinteractive-tui\trevisions=1"
+        )
         assert await _wait_for_current_revision_id(pilot=pilot, screen=screen) == first_revision_id
 
         correction = revision.model_copy(
@@ -254,7 +258,9 @@ async def test_interactive_tui_exposes_correction_claim_replay_and_filing_throug
         )
         screen.query_one("#asset-revision-json", Input).value = correction.model_dump_json()
         await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-correct")
-        assert await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="corrected\tinteractive-tui\trevisions=2")
+        assert await _wait_for_screen_result(
+            pilot=pilot, screen=screen, expected_prefix="corrected\tinteractive-tui\trevisions=2"
+        )
         assert await _wait_for_current_revision_id(pilot=pilot, screen=screen) == correction.revision_id
 
         screen.query_one("#asset-selection-json", Input).value = _selection().model_dump_json()

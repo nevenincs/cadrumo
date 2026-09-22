@@ -235,6 +235,7 @@ async def _register_profile(*, profile_label: str, passphrase: str) -> None:
         build_profile_recovery_enrollment_attempt,
         build_profile_registration_attempt,
     )
+
     screen = RegistrationScreen(
         assess=assess_profile_password,
         register=build_profile_registration_attempt,
@@ -393,9 +394,7 @@ async def _activate_public_button(
             stage=stage,
             diagnostic=_public_surface_diagnostic(pilot),
         )
-    result = (
-        await _wait_for_public_selector(pilot, "#asset-result", stage=stage) if capture_asset_result else None
-    )
+    result = await _wait_for_public_selector(pilot, "#asset-result", stage=stage) if capture_asset_result else None
     if result is not None and not isinstance(result, Static):
         raise InstalledAssetTuiError(
             "installed TUI asset result control has an unexpected type",
@@ -641,11 +640,7 @@ async def _exercise_linear_asset_lifecycle(*, pilot: Any, progress: Callable[[st
         transition=forecast_action,
     )
     forecast_parts = forecast.split("\t", maxsplit=2)
-    if (
-        len(forecast_parts) != 3
-        or forecast_parts[1] != _LINEAR_CORRECTED_FORECAST_AMOUNT
-        or not forecast_parts[2]
-    ):
+    if len(forecast_parts) != 3 or forecast_parts[1] != _LINEAR_CORRECTED_FORECAST_AMOUNT or not forecast_parts[2]:
         raise InstalledAssetTuiError(
             "installed TUI forecast did not match the independently grounded linear amount",
             stage="asset_forecast",

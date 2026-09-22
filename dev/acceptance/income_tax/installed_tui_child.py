@@ -496,9 +496,7 @@ def run_installed_tui_child_process(
     if not child_module:
         raise InstalledTuiChildError("installed TUI child module and arguments must be strings")
     environment = {
-        key: value
-        for key, value in os.environ.items()
-        if not key.startswith("CADRUMO_") and key != "PYTHONPATH"
+        key: value for key, value in os.environ.items() if not key.startswith("CADRUMO_") and key != "PYTHONPATH"
     }
     environment.update(
         {

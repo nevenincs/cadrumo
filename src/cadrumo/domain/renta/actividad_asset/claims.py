@@ -51,9 +51,7 @@ class AmortizationClaim(BaseModel):
     @field_validator("free_depreciation_unit_acquisition_value", "free_depreciation_annual_cap")
     @classmethod
     def _require_optional_positive_cents_amount(cls, value: Decimal | None) -> Decimal | None:
-        if value is not None and (
-            not value.is_finite() or value <= Decimal("0") or value != round_to_cents(value)
-        ):
+        if value is not None and (not value.is_finite() or value <= Decimal("0") or value != round_to_cents(value)):
             raise ValueError("free-depreciation claim amounts must be positive Decimal amounts rounded to euro cents")
         return value
 
@@ -179,8 +177,7 @@ def record_claim(
         if existing.asset_id != candidate.asset_id:
             continue
         exact_interval = (
-            existing.covered_from == candidate.covered_from
-            and existing.covered_until == candidate.covered_until
+            existing.covered_from == candidate.covered_from and existing.covered_until == candidate.covered_until
         )
         if exact_interval:
             if matching_superseded is existing:

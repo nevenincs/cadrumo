@@ -1541,6 +1541,7 @@ _DurableSourceIssueReason = Literal[
     "iva_compensation_annual_source_evidence_failure",
 ]
 
+
 def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _DurableSourceIssueReason | None:
     """Narrow a diagnostic reason to the durable subset, or ``None``.
 

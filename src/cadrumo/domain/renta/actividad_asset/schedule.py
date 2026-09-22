@@ -71,9 +71,7 @@ class ScheduleAuthority(BaseModel):
     @field_validator("free_depreciation_unit_threshold", "free_depreciation_annual_cap")
     @classmethod
     def _require_positive_cents_amount(cls, value: Decimal | None) -> Decimal | None:
-        if value is not None and (
-            not value.is_finite() or value <= Decimal("0") or value != round_to_cents(value)
-        ):
+        if value is not None and (not value.is_finite() or value <= Decimal("0") or value != round_to_cents(value)):
             raise ValueError(
                 "free-depreciation authority amounts must be positive Decimal amounts rounded to euro cents",
             )
@@ -138,9 +136,7 @@ class ScheduledAmortizationCharge(BaseModel):
     @field_validator("free_depreciation_unit_acquisition_value", "free_depreciation_annual_cap")
     @classmethod
     def _require_optional_positive_cents_amount(cls, value: Decimal | None) -> Decimal | None:
-        if value is not None and (
-            not value.is_finite() or value <= Decimal("0") or value != round_to_cents(value)
-        ):
+        if value is not None and (not value.is_finite() or value <= Decimal("0") or value != round_to_cents(value)):
             raise ValueError(
                 "free-depreciation schedule amounts must be positive Decimal amounts rounded to euro cents",
             )

@@ -71,9 +71,7 @@ def _snapshot() -> object:
     manual = SimpleNamespace(id="0001", input_kind=InputKind.MANUAL, data_type=CasillaDataType.TEXT)
     computed = SimpleNamespace(id="0171", input_kind=InputKind.COMPUTED, data_type=CasillaDataType.MONEY)
     manual_binding = SimpleNamespace(id="renta-manual", source=BindingSourceKind.MANUAL_INPUT)
-    ledger_binding = SimpleNamespace(
-        id="renta-ledger", source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
-    )
+    ledger_binding = SimpleNamespace(id="renta-ledger", source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION)
     revision = SimpleNamespace(
         id="2025-y-siguientes",
         casillas=(manual, computed),
@@ -84,7 +82,9 @@ def _snapshot() -> object:
 
 
 def _contracts(*, include_edit: bool = True) -> OperationPublicContractSetV1:
-    schema = OperationSchemaIdentityV1(schema_id="modelo.edit.apply.request", schema_version=1, schema_fingerprint=_DIGEST)
+    schema = OperationSchemaIdentityV1(
+        schema_id="modelo.edit.apply.request", schema_version=1, schema_fingerprint=_DIGEST
+    )
     contract = OperationPublicDefinitionContractV1.model_construct(
         manifest_version=1,
         definition_id="modelo.edit.apply",
@@ -144,7 +144,13 @@ def test_published_2025_modelo_100_surface_size_is_admitted_without_dropping_ent
 
     assert isinstance(outcome, ModeloEditAdmittedV1)
     assert len(outcome.baseline.permitted_surface) == 2320
-    assert sum(isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1) for entry in outcome.baseline.permitted_surface) == 71
+    assert (
+        sum(
+            isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1)
+            for entry in outcome.baseline.permitted_surface
+        )
+        == 71
+    )
 
 
 def test_oversized_edit_surface_refuses_at_admission_before_model_validation() -> None:

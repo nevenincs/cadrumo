@@ -746,22 +746,22 @@ def _run_tui_to_cli_direction(
         checkpoint=tui_checkpoint, frontend="cli", resumed_state=resumed, completion_state=completion
     )
     return ContinuationPathReceipt(
-            "tui_to_cli",
-            "proven",
-            year,
-            str(child["product_origin"]),
-            str(child["product_init_sha256"]),
-            tui_handoff.state_sha256(),
-            proven.resumed_state_sha256,
-            completion.state_sha256(),
-            8,
-            8,
-            8,
-            completion.locally_filed_periods,
-            bool(validation.get("xsd_valid")),
-            len(cast("Sequence[object]", validation.get("error_identities", ()))),
-            _oracle_fingerprint(year),
-            ("cross_frontend_public_value_fingerprint",),
+        "tui_to_cli",
+        "proven",
+        year,
+        str(child["product_origin"]),
+        str(child["product_init_sha256"]),
+        tui_handoff.state_sha256(),
+        proven.resumed_state_sha256,
+        completion.state_sha256(),
+        8,
+        8,
+        8,
+        completion.locally_filed_periods,
+        bool(validation.get("xsd_valid")),
+        len(cast("Sequence[object]", validation.get("error_identities", ()))),
+        _oracle_fingerprint(year),
+        ("cross_frontend_public_value_fingerprint",),
     )
 
 

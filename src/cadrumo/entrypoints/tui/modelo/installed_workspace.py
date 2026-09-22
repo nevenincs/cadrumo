@@ -84,9 +84,7 @@ def _admitted_sessions(
     lifecycle_actions_factory: Callable[[ModeloWorkspaceLifecycleProjectionV1], object] | None,
 ) -> Mapping[str, ModeloWorkspaceReadSession]:
     lifecycle_by_work_unit = {
-        str(item.target.work_unit_id): item
-        for item in lifecycle_projections
-        if item.target.work_unit_id is not None
+        str(item.target.work_unit_id): item for item in lifecycle_projections if item.target.work_unit_id is not None
     }
     if len(lifecycle_by_work_unit) != len(lifecycle_projections):
         raise ModeloWorkspaceDeclarationAdmissionError("the generation carries duplicate Modelo lifecycle targets")
@@ -117,9 +115,7 @@ def _admitted_sessions(
             raise ModeloWorkspaceDeclarationAdmissionError("the generation carries duplicate Modelo workspace targets")
         lifecycle = lifecycle_by_work_unit.get(str(work_unit_id))
         actions = (
-            None
-            if lifecycle is None or lifecycle_actions_factory is None
-            else lifecycle_actions_factory(lifecycle)
+            None if lifecycle is None or lifecycle_actions_factory is None else lifecycle_actions_factory(lifecycle)
         )
         sessions[str(work_unit_id)] = open_workspace_read_session(
             projection,

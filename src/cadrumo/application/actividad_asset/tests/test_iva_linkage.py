@@ -91,11 +91,14 @@ def test_distinct_irpf_and_iva_records_share_only_canonical_acquisition_lineage(
 
 
 def test_non_iva_irpf_acquisition_is_supported_without_fabricating_a_register_record() -> None:
-    assert verify_optional_iva_linkage(
-        asset=_asset(),
-        iva_record=None,
-        transaction_replacements={},
-    ) is None
+    assert (
+        verify_optional_iva_linkage(
+            asset=_asset(),
+            iva_record=None,
+            transaction_replacements={},
+        )
+        is None
+    )
 
 
 def test_linkage_refuses_stale_irpf_evidence_after_transaction_correction() -> None:
