@@ -1,0 +1,26 @@
+# IVA-01 → income-tax / shared Modelo-TUI owner: ordinary M303 calculation evidence
+
+Source: `tui/modelo` HEAD `b240a2a319d4ecd5c140f35749ae23e1dce5a626` at factual trace. No product edit or test accompanies this proposal. It concerns the existing `modelo.work.calculate` operation only; do not add a second calculation operation, a TUI-only calculator, caller-supplied derived envelope fields or plaintext evidence storage.
+
+| Input | Meaning/type | Source of truth | Applicability | Existing producer | Required validation | Consumer |
+|---|---|---|---|---|---|---|
+| `joint_return_elected` | Explicit `bool` election; `false` is a value, missing is not | Genuine operator declaration, not profile-derived | Current ordinary quarterly M303 authoring for 2025, bound to selected work year/period | CLI `work calculate` and `quickfile`; no TUI producer | Require explicit true/false; reject missing; authoring checks selected filing year/period and supported ordinary revision | `OrdinaryM303FilingEvidenceRequest` → `FilingInstanceEvidence.m303` → encrypted calculation revision and identity |
+| `annual_volume_nonzero` | Explicit `bool` annual-volume filing fact; `false` is a value | Genuine operator declaration; profile data may inform a human, but current authoring does not derive it | Same ordinary M303 boundary | CLI `work calculate` and `quickfile`; no TUI producer | Require explicit true/false and same year/period/applicability checks | Same typed filing evidence and revision |
+| `m303_exonerado_390_attachment_id` | `Hex64Str` secure attachment identity | Existing secure attestation record; its underlying `NOT_APPLICABLE` assertion is operator-authored | Same ordinary M303 evidence path; must match selected profile/bucket/year/period | Public `attest-m303-exonerado-390` emits ID/SHA; CLI calculate/quickfile consume both | 64-hex; ID/SHA pair equality; exact bucket/profile witness, role, value, kind/source/MIME, timing, period, conflict and blob-custody checks | Existing attestation resolver → `FilingEvidenceReference` → `M303Exonerado390FilingEvidence.applicability_reference` → encrypted revision |
+| `m303_exonerado_390_sha256` | `Hex64Str` canonical attachment digest; currently equals the attachment ID | Digest of the admitted secure attestation bytes, not a free-form user value | Same pair/applicability | Same public attestation and CLI consumers | Manifest digest and `verify_blob`; canonical payload, role/scope/period/profile/timing/conflict checks; reject stale, mismatched or invented digest | Same resolver and revision evidence |
+
+Grounding: `src/cadrumo/application/modelo/m303_ordinary_filing_evidence_authoring.py:38-72,141`; `src/cadrumo/application/modelo/m303_exonerado_390_applicability_attestation.py:57,126`; `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py:265-299`; `src/cadrumo/entrypoints/cli/_modelo_work_m303_attestation_cli.py:23-73`; `src/cadrumo/application/modelo/operation_definitions.py:321-369`; `src/cadrumo/entrypoints/tui/modelo/lifecycle.py:64-72`; `.vault/adr/2026-09-21-iva-workflow-m303-filing-evidence-authoring-adr.md:41-77,111-143`.
+
+## Minimal shared-operation proposal requiring owner review
+
+Add one typed ordinary-M303 subrequest containing these four explicitly supplied inputs to the **existing** `ModeloWorkCalculateRequest`. The executor derives work year/period, profile and pinned authority from the admitted work unit/composition; it calls the existing `author_ordinary_m303_filing_instance_evidence` and passes the result to the canonical calculation action. Require this subrequest for applicable M303, reject it for other modelos, and refuse missing/invalid evidence before revision persistence. TUI collects the two explicit assertions and an admitted secure attestation reference through the existing workspace; CLI and TUI converge on the same operation semantics.
+
+This changes the operation request schema and likely its secure-custody policy/fingerprint (currently credential-free), so the shared Modelo/TUI owner must review the accepted TUI architecture and operation-observation decisions and choose the migration. A separate M303 operation or post-submit interaction are bounded alternatives, **not approved here**. Do not silently default either boolean or convert a missing attestation to not-applicable.
+
+Requested owner response: owner-applied patch or a non-overlapping narrow file lease naming `operation_definitions.py`, the TUI lifecycle/workspace files, secure composition port, exact retained peer hunks, and source commit. Coordinate any overlap with LEDGER-01's invoice/detail TUI and installed-runner lease before granting two writers. Return schema/custody decision, exact focused refusal/parity/replay tests, and integrated source identity. Proposed checks are **NOT RUN**: missing vs explicit false; wrong bucket/role/period/digest/stale/conflicting attestation; no revision on refusal; equivalent CLI/TUI persisted evidence; installed fresh-process TUI calculate/verify/readback to the independent €10.50 oracle. Export identity remains separately blocked.
+
+## Communication state
+
+- Proposal prepared in this shared-worktree handoff file.
+- Direct delivery to the income-tax session: **not confirmed**; no addressable session handle is available in this thread.
+- Owner acknowledgement/lease: **not received**.
