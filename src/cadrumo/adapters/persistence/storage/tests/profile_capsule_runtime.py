@@ -30,6 +30,7 @@ from .....core.bucket_pointer import resolve_active_bucket_id
 from .....core.config import override_settings
 from .....core.identity.profile import canonical_profile_bucket_id
 from .....core.paths import effective_storage_root
+from .....core.time.clock import now as _utc_now
 from .....domain.buckets.event import BucketEventType
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.authority_artifact import ProfileSchemaComponentQuery
@@ -277,7 +278,7 @@ def replace_test_profile_record(
             create_context=repository.session.create_context(),
             record_revision=current.record_revision + 1,
             previous_record_digest=current.content_digest,
-            updated_at=datetime.now(UTC),
+            updated_at=_utc_now(),
         )
         repository.apply_fact_changes(
             identity,
@@ -322,7 +323,7 @@ def upsert_test_profile_facts(
             expected_content_digest=current.content_digest,
             event_type=BucketEventType.PROFILE_VALUES_UPDATED,
             event_payload={},
-            now=datetime.now(UTC),
+            now=_utc_now(),
         )
         return repository.load(identity)
 
