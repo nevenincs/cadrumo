@@ -171,6 +171,11 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
         """Render one canonical invoice returned by the shared read operation."""
         self.baseline = invoice
         linked_ids = ", ".join(invoice.linked_transaction_ids) or "-"
+        source = (
+            f"{invoice.provenance.source_path.name}:{invoice.provenance.source_row_index}"
+            if invoice.provenance is not None
+            else "-"
+        )
         self.query_one("#ledger-record-detail", Static).update(
             "\n".join(
                 (
@@ -178,8 +183,7 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
                     f"{invoice.counterparty_name} · {invoice.counterparty_tax_id or '-'}",
                     f"{invoice.base_total} + {invoice.iva_total} = {invoice.grand_total} {invoice.currency}",
                     f"{ledger_copy('tui.ledger.records.links')}: {linked_ids}",
-                    f"{ledger_copy('tui.ledger.records.source')}: "
-                    f"{invoice.provenance.source_path if invoice.provenance is not None else '-'}",
+                    f"{ledger_copy('tui.ledger.records.source')}: {source}",
                 )
             )
         )
@@ -290,6 +294,11 @@ class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
     def _show_transaction(self, transaction: Transaction) -> None:
         """Render one canonical transaction returned by the shared read operation."""
         self.baseline = transaction
+        source = (
+            f"{transaction.raw.provenance.source_path.name}:{transaction.raw.provenance.source_row_index}"
+            if transaction.created_event_id is None
+            else "-"
+        )
         self.query_one("#ledger-record-detail", Static).update(
             "\n".join(
                 (
@@ -297,6 +306,7 @@ class LedgerTransactionDetailScreen(LedgerWorkspaceScreen):
                     f"{transaction.direction.value} · {transaction.raw.amount} {transaction.raw.currency}",
                     f"{ledger_copy('tui.ledger.records.links')}: {transaction.invoice_id or '-'}",
                     f"{ledger_copy('tui.ledger.records.identity')}: {transaction.transaction_id}",
+                    f"{ledger_copy('tui.ledger.records.source')}: {source}",
                 )
             )
         )

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
+from pathlib import Path
 from typing import cast, override
 
 import pytest
@@ -18,7 +19,7 @@ from .....domain.iva.classification import InvoiceKind
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.models import Transaction
-from .....domain.transactions.raw_transaction import RawTransaction
+from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..controller import LedgerWorkspaceController
 from ..record_doors import LedgerRecordDoors
 from ..record_views import LedgerInvoiceCatalogueScreen, LedgerInvoiceDetailScreen, LedgerTransactionDetailScreen
@@ -157,3 +158,39 @@ async def test_linked_transaction_detail_shows_refusal_without_claiming_a_save()
             assert "identity cannot change" in str(screen.query_one("#ledger-refusal", Static).render())
             assert screen.baseline == transaction
             assert door.linked_transaction == transaction
+
+
+@pytest.mark.asyncio
+async def test_imported_record_details_show_stored_filename_and_row() -> None:
+    provenance = RawProvenance.model_construct(
+        source_path=Path("march-statement.csv"), source_row_index=7, source_format=SourceFormat.CSV
+    )
+    invoice = _invoice().model_copy(update={"provenance": provenance})
+    transaction = Transaction.model_construct(
+        transaction_id="t" * 64,
+        created_event_id=None,
+        direction=TransactionDirection.INCOMING,
+        invoice_id=None,
+        raw=RawTransaction.model_construct(
+            booked_date=date(2025, 3, 18),
+            amount=Decimal("10.00"),
+            currency="EUR",
+            description="imported description",
+            provenance=provenance,
+        ),
+    )
+    door = _LinkedRecordDoor(invoice, transaction)
+    controller = _controller(door)
+    with override_settings(cadrumo_output_language="en"):
+        invoice_screen = LedgerInvoiceDetailScreen(controller, cast(LedgerRecordDoors, door), invoice.invoice_id)
+        async with _WorkspaceHostApp(invoice_screen).run_test(size=(110, 55)) as pilot:
+            await pilot.app.workers.wait_for_complete()
+            assert "march-statement.csv:7" in str(invoice_screen.query_one("#ledger-record-detail", Static).render())
+        transaction_screen = LedgerTransactionDetailScreen(
+            controller, cast(LedgerRecordDoors, door), transaction.transaction_id
+        )
+        async with _WorkspaceHostApp(transaction_screen).run_test(size=(110, 55)) as pilot:
+            await pilot.app.workers.wait_for_complete()
+            assert "march-statement.csv:7" in str(
+                transaction_screen.query_one("#ledger-record-detail", Static).render()
+            )

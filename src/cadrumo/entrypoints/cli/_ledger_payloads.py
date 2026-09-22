@@ -35,7 +35,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from pydantic import NonNegativeInt, field_validator, model_validator
+from pydantic import NonNegativeInt, PositiveInt, field_validator, model_validator
 
 from ...application.ledger.models import (
     DiagnosticKind,
@@ -1105,6 +1105,8 @@ class LedgerTrackResult(OutputSchema):
     bucket_id: BucketId
     transaction: TransactionPayload
     tracking: LedgerTrackingPayload
+    source_filename: NonEmptyStr | None = None
+    source_row_index: PositiveInt | None = None
     participated_in: list[LedgerTransactionParticipationEntryPayload] | None = None
 
 

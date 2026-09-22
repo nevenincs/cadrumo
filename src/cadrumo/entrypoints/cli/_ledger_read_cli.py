@@ -816,6 +816,16 @@ def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
                 "bucket_id": result.ref.bucket_id,
                 "transaction": ledger_transaction_payload(result.transaction).model_dump(mode="json"),
                 "tracking": ledger_transaction_tracking_payload(result.transaction).model_dump(mode="json"),
+                "source_filename": (
+                    result.transaction.raw.provenance.source_path.name
+                    if result.transaction.created_event_id is None
+                    else None
+                ),
+                "source_row_index": (
+                    result.transaction.raw.provenance.source_row_index
+                    if result.transaction.created_event_id is None
+                    else None
+                ),
                 "participated_in": participated_in,
             }
         ),
@@ -941,6 +951,7 @@ def _ledger_track_lines(transaction_id: str, transaction: Transaction) -> list[s
         provenance = transaction.raw.provenance
         lines.append(f"import_provider\t{provenance.provider_name}")
         lines.append(f"import_source\t{provenance.source_path.name}")
+        lines.append(f"import_source_row\t{provenance.source_row_index}")
         lines.append(f"import_ingested_at\t{provenance.ingested_at.isoformat()}")
         lines.append(f"import_fingerprint\t{transaction.import_fingerprint or '-'}")
     return lines

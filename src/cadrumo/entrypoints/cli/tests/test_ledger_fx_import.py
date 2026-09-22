@@ -222,17 +222,26 @@ def test_review_filter_by_classification() -> None:
 
 
 def test_track_surfaces_import_provenance_for_imported_rows() -> None:
-    """track names the import batch (provider/source/ingest) instead of a bare '-'."""
+    """Text and JSON track expose the stored import filename and row."""
 
     res = _import_statement(_CORPUS / "bbva-business-eur.csv")
     assert res.exit_code == 0, res.output
     rows = _ledger_rows()
     tx = rows[0].get("full_id") or rows[0]["transaction_id"]
+    bucket_id = resolve_active_bucket_id()
+    assert bucket_id is not None
+    stored = next(row for row in _stored_catalogue(bucket_id).values() if row.transaction_id == tx)
     tracked = _invoke(["app", "ledger", "track", tx])
     assert tracked.exit_code == 0, tracked.output
     assert "import_provider" in tracked.output
-    assert "import_source" in tracked.output
+    assert f"import_source\t{stored.raw.provenance.source_path.name}" in tracked.output
+    assert f"import_source_row\t{stored.raw.provenance.source_row_index}" in tracked.output
     assert "import_fingerprint" in tracked.output
+    tracked_json = _invoke(["--format", "json", "app", "ledger", "track", tx])
+    assert tracked_json.exit_code == 0, tracked_json.output
+    payload = _json_result(tracked_json)
+    assert payload["source_filename"] == stored.raw.provenance.source_path.name
+    assert payload["source_row_index"] == stored.raw.provenance.source_row_index
     assert "	-" not in tracked.output.split("import_fingerprint")[1]  # fingerprint not bare
 
 
