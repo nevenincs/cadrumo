@@ -8,7 +8,7 @@ related:
   - '[[2026-09-21-iva-workflow-m303-filing-evidence-authoring-adr]]'
 modified: '2026-09-23'
 body_schema: body-v2
-body_hash: 'sha256:a2d7aa11b5c32512dabb10ebdc6c721acb64d850c7031778e0d98488ade88666'
+body_hash: 'sha256:0f300d543530d8cb80b41a2bb9283ae7cee482471a7b39d062a8157604c4f62f'
 ---
 
 <!-- LINK RULES:
@@ -122,10 +122,10 @@ Scope: persisted evidence shape (S01), coordinate and authoring (S02), the calcu
 ## Steps
 
 - [x] `S01` - make the persisted ordinary Modelo 303 evidence period-scoped: optional annual-volume answer, Modelo 390 evidence required only in the last period, stored revisions still valid; `src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py, application/filing/producer_snapshot.py, application/filing/export_producer.py, application/modelo/m303_filing_evidence.py`.
-- [ ] `S02` - admit monthly coordinates and author period-scoped evidence; refuse a 390 attestation outside the last period; record which owner refuses monthly work for a non-monthly filer; `src/cadrumo/application/modelo/m303_ordinary_evidence_coordinate.py, m303_ordinary_filing_evidence_authoring.py, m303_exonerado_390_applicability_attestation.py`.
-- [ ] `S03` - version the calculate request: nested ordinary request without the annual-volume answer and with an optional attestation pair, schema version 3, previous pending invocations refused; `src/cadrumo/application/modelo/operation_definitions.py and its conformance tests`.
-- [ ] `S04` - align the CLI and quickfile flags with the period rule and regenerate the CLI reference and locale keys; `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py, _app_quickfile.py, command specs, locales`.
-- [ ] `S05` - align the TUI evidence form: no annual-volume question, attestation only in the last period; `src/cadrumo/entrypoints/tui/modelo/m303_evidence.py, view/overview.py, lifecycle.py, locales`.
+- [x] `S02` - admit monthly coordinates and author period-scoped evidence; refuse a 390 attestation outside the last period; record which owner refuses monthly work for a non-monthly filer; `src/cadrumo/application/modelo/m303_ordinary_evidence_coordinate.py, m303_ordinary_filing_evidence_authoring.py, m303_exonerado_390_applicability_attestation.py`.
+- [x] `S03` - version the calculate request: nested ordinary request without the annual-volume answer and with an optional attestation pair, schema version 3, previous pending invocations refused; `src/cadrumo/application/modelo/operation_definitions.py and its conformance tests`.
+- [x] `S04` - align the CLI and quickfile flags with the period rule and regenerate the CLI reference and locale keys; `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py, _app_quickfile.py, command specs, locales`.
+- [x] `S05` - align the TUI evidence form: no annual-volume question, attestation only in the last period; `src/cadrumo/entrypoints/tui/modelo/m303_evidence.py, view/overview.py, lifecycle.py, locales`.
 - [ ] `S07` - update the Modelo 303 and 390 docs sequence contracts to the period rule and regenerate their goldens through the sequence runner; `docs/_sequences/contracts/how-to/modelo-303, modelo-390 and the other contracts that calculate Modelo 303`.
 - [ ] `S06` - prove the attestation contract at 4T and a monthly coordinate on an installed wheel built from a committed source; `dev/acceptance/iva/installed_m303_evidence_journey.py`.
 
