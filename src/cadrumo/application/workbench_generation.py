@@ -432,7 +432,9 @@ class WorkbenchGenerationInputsV1(BaseModel):
     aeat_sync: WorkbenchGenerationSourceResultV1[AeatSyncWorkspaceProjectionV1]
     modelo: WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceProjectionV1, ...]]
     modelo_lifecycle: WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceLifecycleProjectionV1, ...]] = (
-        WorkbenchGenerationSourceResultV1.never_captured(refusal="workbench.modelo.lifecycle_not_captured")
+        WorkbenchGenerationSourceResultV1[tuple[ModeloWorkspaceLifecycleProjectionV1, ...]].never_captured(
+            refusal="workbench.modelo.lifecycle_not_captured",
+        )
     )
     ledger_admission: WorkbenchDestinationAdmission
     declarations_admission: WorkbenchDestinationAdmission
@@ -798,7 +800,12 @@ class SecureProfileWorkbenchGenerationReadDoorV1:
         filings: ModeloRecordCatalogue,
     ) -> tuple[ModeloWorkspaceLifecycleProjectionV1, ...] | None:
         """Project lifecycle references from the same catalogues as this generation."""
-        if modelo is None or verification is None or self.bucket_event_repository is None:
+        if (
+            modelo is None
+            or verification is None
+            or self.verification_repository is None
+            or self.bucket_event_repository is None
+        ):
             return None
         from .modelo.history import assemble_work_unit_history
         from .modelo.history_ports import ModeloHistoryPorts

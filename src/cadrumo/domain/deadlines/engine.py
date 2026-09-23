@@ -14,7 +14,7 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from datetime import date
 from threading import Lock
-from typing import TYPE_CHECKING, Final, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Final, Protocol, override, runtime_checkable
 
 from ...core.logging import get_logger
 from ...core.modelo import Modelo
@@ -619,18 +619,16 @@ def next_deadline(schedule: Schedule, today: date | None = None) -> ModeloDeadli
     return upcoming[0]
 
 
-@runtime_checkable
-class ScheduleProducer(Protocol):
-    """Structural surface over :class:`DeadlineEngine.compute`.
+class ObligationScheduleSource(Protocol):
+    """Structural surface over :class:`DeadlineEngine.compute` alone.
 
     :func:`compute_obligation_schedule` is typed against this Protocol
     rather than the concrete :class:`DeadlineEngine` so the workflow
     engine — which injects a protocol-typed deadline engine — and the
     state projection — which uses a concrete :class:`DeadlineEngine` —
-    can both feed the same single-producer function.
+    can both feed the same single-producer function. It asks for nothing
+    that function does not read.
     """
-
-    due_soon_days: int
 
     def compute(
         self,
@@ -649,8 +647,36 @@ class ScheduleProducer(Protocol):
         ...
 
 
+@runtime_checkable
+class ScheduleProducer(ObligationScheduleSource, Protocol):
+    """An :class:`ObligationScheduleSource` that also exposes its due-soon window.
+
+    The overview calendar reads ``due_soon_days`` to classify rows it
+    projects itself, so it needs this wider surface.
+    """
+
+    due_soon_days: int
+
+    @override
+    def compute(
+        self,
+        profile: TaxpayerProfile,
+        year: int,
+        *,
+        today: date | None = None,
+    ) -> Schedule:
+        """Return a :class:`Schedule` for ``profile`` in ``year``.
+
+        Args:
+            profile: The :class:`TaxpayerProfile` to compute obligations for.
+            year: The fiscal year to compute for.
+            today: Reference date for status classification.
+        """
+        ...
+
+
 def compute_obligation_schedule(
-    engine: ScheduleProducer,
+    engine: ObligationScheduleSource,
     profile: TaxpayerProfile,
     *,
     today: date,
@@ -670,7 +696,7 @@ def compute_obligation_schedule(
 
     Args:
         engine: The deadline engine to compute with. Any
-            :class:`ScheduleProducer` — a concrete
+            :class:`ObligationScheduleSource` — a concrete
             :class:`DeadlineEngine` or the workflow engine's
             protocol-typed injected deadline engine.
         profile: The :class:`TaxpayerProfile` to schedule obligations for.
