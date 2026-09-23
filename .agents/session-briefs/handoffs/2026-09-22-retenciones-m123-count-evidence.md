@@ -16,3 +16,17 @@ The inspected official material establishes the selected field and its two categ
 Exact question for authoritative clarification: *For Modelo 123 revision 2024-y-siguientes, casillas 01/02 `Número de rentas`, when one identifiable income entitlement is paid in two instalments (including across quarters), is each instalment counted as a separate renta in the period of withholding, or is the economic income entitlement counted once? How does the answer differ when the income is recognized/exigible before later settlement, and which field or official example defines that treatment?*
 
 Until an authoritative answer is obtained and boundary tests implement it through the typed binding, no inferred count may feed Modelo 123 verification or export. The existing public mutation refusal in `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py` remains required. This limitation is separate from the supported 111/115/180/190 installed campaign.
+
+## Follow-up research — 2026-09-23
+
+Result: no official AEAT, BOE or DGT text defines the 2024-revision "Número de rentas" unit or settles instalments. Filing-grade Modelo 123 stays refused, and the capability stays advisory.
+
+Official material found, with the scope each item actually has:
+
+- The pre-2024 field "N.º de perceptores" counted taxpayers. AEAT's printed instructions "Instrucciones para cumplimentar el modelo 123" (form M-123E-80/0.30, citing RD 439/2007 and RD 1777/2004) define casilla 01 as «el número total de contribuyentes o sujetos pasivos que hayan obtenido rentas o rendimientos del capital mobiliario». The copy read was on a third-party host (caisistemas.es/enlaces/instr_123.PDF); it is AEAT text, but that host is not an official locator. This definition applies only to the old field.
+- Orden HAC/56/2024 (BOE-A-2024-1772) says its new annex I only adds a breakdown of dividends and other participation income («con la finalidad, exclusivamente, de incluir un desglose…»). It gives no definition of the relabelled "Número de rentas" count and has no instructions annex.
+- The Modelo 111 instructions (AEAT sede, updated 09/06/2026) count persons for "Nº de perceptores". They say nothing on repeated payments to one person, and they cover a different modelo.
+- Timing is settled by RIRPF art. 94.1 (RD 439/2007) and RIS art. 65.1 (RD 634/2015): the retention arises when the income becomes exigible, or when it is paid if payment comes first, and it is declared in that quarter under RIRPF art. 108.1. DGT V3165-21 applies the same rule to dividends. None of these define the count.
+- DGT V1151-14 repeats the "contribuyentes" reading only as the consultant's own statement; it is not a DGT ruling on counting.
+
+The authority still missing, and any one of these would settle the question: the casilla help inside the AEAT 2024 online form (OVME-COMN/123/E2024, which needs a login), an AEAT instruction or FAQ page for the 2024 revision, or a DGT consulta vinculante on how "número de rentas" is counted. Until one is obtained, Modelo 123 must keep a typed, visible advisory reason in both frontends. Today the CLI refusal is a hard-coded English `typer.BadParameter` in `src/cadrumo/entrypoints/cli/_modelo_aggregate_cli.py`. It is not localized, not typed, and does not name this missing authority. Replacing it with a typed refusal through the locale catalogue is an open implementation target, and it is blocked only by the shared `cli.yml`/`common.yml` catalogue slot.
