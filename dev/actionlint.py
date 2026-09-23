@@ -60,12 +60,11 @@ VERSION = "1.7.12"
 #: workflow blocks this file replaces; bump the version and every digest
 #: together, never one of them.
 #:
-#: ONLY the two platforms whose digests this fleet has actually verified are
-#: listed. macOS and Windows are absent on purpose rather than filled in from
-#: memory: a digest nobody checked is not a verification, and the honest
-#: failure for an unlisted platform is the refusal below - which says exactly
-#: what to add and where to get it. Workflow linting runs on the Linux cells
-#: in all five repos, so nothing is currently blocked by the gap.
+#: Every entry is read from `actionlint_<VERSION>_checksums.txt` on the
+#: release, never filled in from memory: a digest nobody checked is not a
+#: verification. Every platform a runner has must be listed, because init's
+#: tools phase provisions actionlint on all of them and an unlisted platform
+#: is refused - which is the honest failure, and says what to add.
 ARCHIVES: dict[tuple[str, str], tuple[str, str]] = {
     ("linux", "x86_64"): (
         "linux_amd64.tar.gz",
@@ -74,6 +73,22 @@ ARCHIVES: dict[tuple[str, str], tuple[str, str]] = {
     ("linux", "aarch64"): (
         "linux_arm64.tar.gz",
         "325e971b6ba9bfa504672e29be93c24981eeb1c07576d730e9f7c8805afff0c6",
+    ),
+    ("darwin", "x86_64"): (
+        "darwin_amd64.tar.gz",
+        "5b44c3bc2255115c9b69e30efc0fecdf498fdb63c5d58e17084fd5f16324c644",
+    ),
+    ("darwin", "aarch64"): (
+        "darwin_arm64.tar.gz",
+        "aba9ced2dee8d27fecca3dc7feb1a7f9a52caefa1eb46f3271ea66b6e0e6953f",
+    ),
+    ("windows", "x86_64"): (
+        "windows_amd64.zip",
+        "6e7241b51e6817ea6a047693d8e6fed13b31819c9a0dd6c5a726e1592d22f6e9",
+    ),
+    ("windows", "aarch64"): (
+        "windows_arm64.zip",
+        "cadcf7ea4efe3a68728893813643cebe1185e5b1d4be5b96245f65c9a4d5ea41",
     ),
 }
 
@@ -92,10 +107,6 @@ def _platform_key() -> tuple[str, str]:
     system = platform.system().lower()
     machine = platform.machine().lower()
     machine = {"amd64": "x86_64", "x64": "x86_64", "arm64": "aarch64"}.get(machine, machine)
-    if system == "windows":
-        machine = "amd64" if machine == "x86_64" else machine
-    if system == "darwin":
-        machine = "arm64" if machine == "aarch64" else machine
     return system, machine
 
 
@@ -165,10 +176,10 @@ def _extract_member(archive: Path, suffix: str, destination: Path) -> None:
 def find() -> Path | None:
     """Return an actionlint already available here, without provisioning one.
 
-    This is what the CHECK path asks, and the distinction is the contract:
-    `just check-workflows` verifies workflows and changes nothing, so a missing
-    executable is a refusal naming `just setup-repository-tools`, never a
-    download nobody asked for. A check that quietly fetches a binary is a check
+    This is what the CHECK path asks, and the distinction is the contract: the
+    workflow check verifies workflows and changes nothing, so a missing
+    executable is a refusal naming the provisioning command, never a download
+    nobody asked for. A check that quietly fetches a binary is a check
     that behaves differently the first time it runs.
 
     An actionlint on PATH wins over the provisioned copy: a developer who
@@ -189,8 +200,8 @@ def find() -> Path | None:
 def ensure() -> Path:
     """Return a verified actionlint executable, downloading it once if needed.
 
-    Provisioning, not checking: reached through ``--install``, which is how
-    `just setup-repository-tools` installs the pinned version. The check path
+    Provisioning, not checking: reached through ``--install``, which the
+    repository's tool setup runs to install the pinned version. The check path
     uses :func:`find` and refuses instead.
     """
     available = find()
@@ -234,8 +245,8 @@ def ensure() -> Path:
 def main(argv: list[str] | None = None) -> int:
     """Run actionlint over the repository's workflows, or provision it.
 
-    ``--install`` is the provisioning entry point `just setup-repository-tools`
-    uses; every other invocation is the read-only check, which refuses rather
+    ``--install`` is the provisioning entry point the repository's tool setup
+    runs; every other invocation is the read-only check, which refuses rather
     than downloading. Remaining arguments are actionlint's own.
     """
     args = list(sys.argv[1:] if argv is None else argv)
@@ -254,9 +265,10 @@ def main(argv: list[str] | None = None) -> int:
     binary = find()
     if binary is None:
         print(
-            f"actionlint is not available, so workflows cannot be checked. This check installs nothing: "
-            f"run `just setup-repository-tools` to provision the pinned version ({VERSION}), or put "
-            "actionlint on PATH.",
+            "actionlint is not available, so workflows cannot be checked. This check "
+            f"installs nothing: provision the pinned version ({VERSION}) with "
+            "`python -m dev.actionlint --install`, which the repository's tool setup "
+            "runs, or put actionlint on PATH.",
             file=sys.stderr,
         )
         return TOOL_MISSING
@@ -264,7 +276,18 @@ def main(argv: list[str] | None = None) -> int:
     # whether a runner happens to carry them. actionlint silently skips a
     # missing external linter, so leaving them implicit means the gate checks
     # a different set of things on every machine and nobody can tell which.
-    command = [str(binary), "-no-color", "-shellcheck=", "-pyflakes=", *args]
+    # Runner labels are provisioned by infrastructure outside this codebase.
+    # Keep actionlint's workflow parsing and all code-owned checks without
+    # turning this project into a registry for fleet topology.
+    command = [
+        str(binary),
+        "-no-color",
+        "-shellcheck=",
+        "-pyflakes=",
+        "-ignore",
+        'label ".+" is unknown',
+        *args,
+    ]
     return subprocess.call(command)
 
 
