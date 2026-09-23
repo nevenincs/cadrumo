@@ -21,7 +21,7 @@ those once that is resolved -- do not infer the missing semantics.
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from ...core.authority_grade import RegistryAuthorityGrade
@@ -110,6 +110,7 @@ from .workspace_producers import (
     ModeloWorkspaceContributingProjectionV1,
     ModeloWorkspaceEpochV1,
     ModeloWorkspaceFieldManifestPortV1,
+    ModeloWorkspaceLocaleCatalogueBatchPortV1,
     ModeloWorkspaceLocaleCataloguePortV1,
     ModeloWorkspaceProducerContractV1,
     ModeloWorkspaceProducerStampV1,
@@ -316,59 +317,96 @@ def _resolve_locale_summary_and_value(
     *,
     output_language: OutputLanguage,
 ) -> tuple[ModeloWorkspaceLocaleSummaryV1, str | None]:
-    """Resolve one canonical locale coordinate plus its text value, for any key.
+    """Resolve one canonical locale coordinate plus its text value, for any key."""
+    ((summary, value),) = _resolve_locale_summaries_and_values((key,), output_language=output_language)
+    return summary, value
+
+
+def _resolve_locale_summaries_and_values(
+    keys: Sequence[str],
+    *,
+    output_language: OutputLanguage,
+) -> tuple[tuple[ModeloWorkspaceLocaleSummaryV1, str | None], ...]:
+    """Resolve canonical locale coordinates plus text values for keys, in key order.
 
     Shared by the revision-level summary (:func:`capture_modelo_workspace_locale_summary`)
     and any per-record label resolution (schema_facet). Spanish is the source
     language for every catalogue entry (``aeat-locales-cli``), so a requested
     language whose own key is absent falls back to Spanish rather than to an
     arbitrary third language; Spanish absent as well is the suppressed floor,
-    never a missing key propagated as an exception. The returned value is
+    never a missing key propagated as an exception. A returned value is
     ``None`` only when even the Spanish source is absent -- callers needing a
     non-empty display string treat that as a distinct refusal, never a blank.
+
+    All keys of one call are read over one catalogue window per language, so a
+    schema facet's labels provably come from one catalogue state.
     """
-    requested = ModeloWorkspaceLocaleCataloguePortV1(
-        translation_key=key,
+    requested = ModeloWorkspaceLocaleCatalogueBatchPortV1(
+        translation_keys=keys,
         locale=output_language.value,
-    ).capture_projection_with_epoch()
-    if requested.projection.value is not None:
-        return (
-            ModeloWorkspaceLocaleSummaryV1(
-                requested_language=output_language,
-                resolved_language=output_language,
-                disposition=ModeloWorkspaceLocaleDisposition.EXACT,
-                catalogue_digest=requested.projection.catalogue_digest,
-            ),
-            requested.projection.value,
-        )
-    if output_language is OutputLanguage.ES:
-        return (
-            ModeloWorkspaceLocaleSummaryV1(
-                requested_language=output_language,
-                resolved_language=OutputLanguage.ES,
-                disposition=ModeloWorkspaceLocaleDisposition.SUPPRESSED,
-                catalogue_digest=requested.projection.catalogue_digest,
-            ),
-            None,
-        )
-    spanish = ModeloWorkspaceLocaleCataloguePortV1(
-        translation_key=key,
-        locale=OutputLanguage.ES.value,
-    ).capture_projection_with_epoch()
-    disposition = (
-        ModeloWorkspaceLocaleDisposition.SPANISH_FALLBACK
-        if spanish.projection.value is not None
-        else ModeloWorkspaceLocaleDisposition.SUPPRESSED
+    ).capture_projections_with_epoch()
+    fallback_keys = tuple(
+        capture.projection.translation_key
+        for capture in requested
+        if capture.projection.value is None and output_language is not OutputLanguage.ES
     )
-    return (
-        ModeloWorkspaceLocaleSummaryV1(
-            requested_language=output_language,
-            resolved_language=OutputLanguage.ES,
-            disposition=disposition,
-            catalogue_digest=spanish.projection.catalogue_digest,
-        ),
-        spanish.projection.value,
-    )
+    spanish = {
+        capture.projection.translation_key: capture
+        for capture in (
+            ModeloWorkspaceLocaleCatalogueBatchPortV1(
+                translation_keys=fallback_keys,
+                locale=OutputLanguage.ES.value,
+            ).capture_projections_with_epoch()
+            if fallback_keys
+            else ()
+        )
+    }
+    resolved: list[tuple[ModeloWorkspaceLocaleSummaryV1, str | None]] = []
+    for capture in requested:
+        if capture.projection.value is not None:
+            resolved.append(
+                (
+                    ModeloWorkspaceLocaleSummaryV1(
+                        requested_language=output_language,
+                        resolved_language=output_language,
+                        disposition=ModeloWorkspaceLocaleDisposition.EXACT,
+                        catalogue_digest=capture.projection.catalogue_digest,
+                    ),
+                    capture.projection.value,
+                )
+            )
+            continue
+        if output_language is OutputLanguage.ES:
+            resolved.append(
+                (
+                    ModeloWorkspaceLocaleSummaryV1(
+                        requested_language=output_language,
+                        resolved_language=OutputLanguage.ES,
+                        disposition=ModeloWorkspaceLocaleDisposition.SUPPRESSED,
+                        catalogue_digest=capture.projection.catalogue_digest,
+                    ),
+                    None,
+                )
+            )
+            continue
+        fallback = spanish[capture.projection.translation_key]
+        disposition = (
+            ModeloWorkspaceLocaleDisposition.SPANISH_FALLBACK
+            if fallback.projection.value is not None
+            else ModeloWorkspaceLocaleDisposition.SUPPRESSED
+        )
+        resolved.append(
+            (
+                ModeloWorkspaceLocaleSummaryV1(
+                    requested_language=output_language,
+                    resolved_language=OutputLanguage.ES,
+                    disposition=disposition,
+                    catalogue_digest=fallback.projection.catalogue_digest,
+                ),
+                fallback.projection.value,
+            )
+        )
+    return tuple(resolved)
 
 
 def capture_modelo_workspace_locale_summary(
@@ -727,16 +765,19 @@ def static_inspection_casilla_schema_records(
     edge here.
     """
     formulas = inspection.formulas
-    records: list[ModeloWorkspaceSchemaRecordV1] = []
-    for casilla_id in sorted(inspection.casilla_ids):
+    casilla_ids = sorted(inspection.casilla_ids)
+    keys: list[str] = []
+    for casilla_id in casilla_ids:
         chain = inspection.casilla_localization_keys.get(casilla_id) or (
             casilla_occurrence_locale_key(
                 target.modelo, target.law_selected_revision_id, casilla_id, ModeloLocalizationFieldKind.LABEL
             ),
         )
         source = modelo_localization_source(chain, locale=output_language.value)
-        key = chain[0] if source is None else source[0]
-        locale_summary, value = _resolve_locale_summary_and_value(key, output_language=output_language)
+        keys.append(chain[0] if source is None else source[0])
+    labels = _resolve_locale_summaries_and_values(keys, output_language=output_language)
+    records: list[ModeloWorkspaceSchemaRecordV1] = []
+    for casilla_id, key, (locale_summary, value) in zip(casilla_ids, keys, labels, strict=True):
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceCasillaReferenceV1(casilla_id=casilla_id),

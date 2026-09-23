@@ -1305,3 +1305,64 @@ def _minimal_calculation_revision(*, work_unit_id: str, state):
         verified_at=verified_at,
         verified_by=verified_by,
     )
+
+
+def test_static_inspection_labels_equal_per_key_resolution_in_every_language() -> None:
+    """Batching the casilla labels changes neither a value, a disposition nor a catalogue coordinate."""
+    from cadrumo.application.modelo.workspace_models import (
+        ModeloWorkspaceCasillaReferenceV1,
+        ModeloWorkspaceLocaleDisposition,
+        ModeloWorkspaceLocalizedTextV1,
+        ModeloWorkspaceResolvedTargetV1,
+        ModeloWorkspaceRevisionAssertionV1,
+    )
+    from cadrumo.core.external_constants import OutputLanguage
+    from cadrumo.core.i18n.locale_catalogue import capture_locale_catalogue
+    from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
+
+    inspection = (
+        published_authority_operation()
+        .capture_law_selected_projection("130", filing_year=_FILING_YEAR, period="1T")
+        .projection
+    )
+    assert isinstance(inspection, RegistryRevisionInspection)
+    not_present = ModeloWorkspaceRevisionAssertionDisposition.NOT_PRESENT
+    target = ModeloWorkspaceResolvedTargetV1(
+        bucket_id="test-bucket-0000-0000-0000-000000000000",
+        modelo="130",
+        filing_year=_FILING_YEAR,
+        period=Period.from_year_and_code(_FILING_YEAR, "1T"),
+        law_selected_revision_id=_LAW_SELECTED_REVISION_ID,
+        review_status=inspection.review_status,
+        requested_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.REQUESTED, disposition=not_present, asserted_revision_id=None
+        ),
+        stored_revision_assertion=ModeloWorkspaceRevisionAssertionV1(
+            source=ModeloWorkspaceRevisionAssertionSource.STORED, disposition=not_present, asserted_revision_id=None
+        ),
+    )
+
+    for language in (OutputLanguage.ES, OutputLanguage.EN):
+        records = static_inspection_casilla_schema_records(inspection, target, output_language=language)
+        assert records
+        for record in records:
+            label = record.label
+            assert isinstance(label, ModeloWorkspaceLocalizedTextV1)
+            assert isinstance(record.reference, ModeloWorkspaceCasillaReferenceV1)
+            own = capture_locale_catalogue(label.locale_key, locale=language.value)
+            if own.value is not None:
+                expected = (own.value, ModeloWorkspaceLocaleDisposition.EXACT, own.catalogue_digest)
+            else:
+                spanish = capture_locale_catalogue(label.locale_key, locale=OutputLanguage.ES.value)
+                disposition = (
+                    ModeloWorkspaceLocaleDisposition.SPANISH_FALLBACK
+                    if spanish.value is not None and language is not OutputLanguage.ES
+                    else ModeloWorkspaceLocaleDisposition.SUPPRESSED
+                )
+                expected = (spanish.value, disposition, spanish.catalogue_digest)
+            resolved_value = expected[0] if expected[0] is not None else record.reference.casilla_id
+            assert (label.value, label.locale.disposition, label.locale.catalogue_digest) == (
+                resolved_value,
+                expected[1],
+                expected[2],
+            )

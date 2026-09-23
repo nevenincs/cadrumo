@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import hashlib
 import os
+from collections.abc import Sequence
 from dataclasses import dataclass
 from secrets import token_bytes
 from threading import RLock
@@ -177,29 +178,46 @@ def _locale_catalogue_generation_for(domain: str, observation: tuple[str, ...]) 
 
 
 def capture_locale_catalogue(translation_key: str, /, *, locale: str) -> LocaleCatalogueCapture:
-    """Read one catalogue entry over a window in which the catalogue did not move.
+    """Read one catalogue entry over a window in which the catalogue did not move."""
+    (capture,) = capture_locale_catalogue_entries((translation_key,), locale=locale)
+    return capture
+
+
+def capture_locale_catalogue_entries(
+    translation_keys: Sequence[str],
+    /,
+    *,
+    locale: str,
+) -> tuple[LocaleCatalogueCapture, ...]:
+    """Read several catalogue entries over one window in which the catalogue did not move.
 
     The shard digest is taken either side of the sole
-    :func:`~cadrumo.core.i18n.render.lookup_translation_entry` reader, so a catalogue
-    rewritten mid-read is retried rather than published as an entry paired with
-    a coordinate from another catalogue state.
+    :func:`~cadrumo.core.i18n.render.lookup_translation_entry` reads, so a catalogue
+    rewritten mid-read is retried rather than published as entries paired with
+    a coordinate from another catalogue state.  Every entry of one call shares
+    that window, which a consumer resolving many labels needs anyway and which
+    costs one pair of shard fingerprints instead of one pair per key.
     """
     normalized = _supported_locale(locale)
     for _attempt in range(_LOCALE_CATALOGUE_CAPTURE_MAX_ATTEMPTS):
         before = _locale_catalogue_observation(normalized)
-        present, value = lookup_translation_entry(translation_key, locale=normalized)
+        entries = [(key, *lookup_translation_entry(key, locale=normalized)) for key in translation_keys]
         after = _locale_catalogue_observation(normalized)
         if before != after:
             continue
         domain = _locale_catalogue_comparison_domain(normalized)
-        return LocaleCatalogueCapture(
-            locale=normalized,
-            translation_key=translation_key,
-            present=present,
-            value=value,
-            catalogue_digest=after[1],
-            comparison_domain=domain,
-            generation=_locale_catalogue_generation_for(domain, after),
+        generation = _locale_catalogue_generation_for(domain, after)
+        return tuple(
+            LocaleCatalogueCapture(
+                locale=normalized,
+                translation_key=key,
+                present=present,
+                value=value,
+                catalogue_digest=after[1],
+                comparison_domain=domain,
+                generation=generation,
+            )
+            for key, present, value in entries
         )
     raise LocaleCatalogueCaptureError(
         translated_message="errors.refused.locale_catalogue_capture_not_current",
@@ -212,4 +230,5 @@ __all__ = [
     "LocaleCatalogueCaptureError",
     "LocaleCatalogueCurrentCoordinate",
     "capture_locale_catalogue",
+    "capture_locale_catalogue_entries",
 ]

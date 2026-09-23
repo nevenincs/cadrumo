@@ -7,6 +7,7 @@ Core types:
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated, Literal, Protocol, Self, TypedDict
@@ -522,6 +523,42 @@ class ModeloWorkspaceLocaleCataloguePortV1:
         )
 
 
+class ModeloWorkspaceLocaleCatalogueBatchPortV1:
+    """Application-owned port capturing many LOCALE_CATALOGUE entries over one catalogue window."""
+
+    def __init__(self, *, translation_keys: Sequence[str], locale: str) -> None:
+        """Bind the translation keys and locale this port resolves against."""
+        self._translation_keys = tuple(translation_keys)
+        self._locale = locale
+
+    @property
+    def producer_contract(self) -> ModeloWorkspaceProducerContractV1:
+        """Return the frozen LOCALE_CATALOGUE contributor contract."""
+        return MODELO_WORKSPACE_LOCALE_CATALOGUE_PRODUCER_CONTRACT_V1
+
+    def capture_projections_with_epoch(
+        self,
+    ) -> tuple[ModeloWorkspaceContributingProjectionV1[ModeloWorkspaceLocaleCatalogueProjectionV1], ...]:
+        """Capture every bound entry in one window, each stamped with that window's epoch."""
+        from ...core.i18n.locale_catalogue import capture_locale_catalogue_entries
+
+        return tuple(
+            _contributing_projection(
+                self.producer_contract,
+                projection=ModeloWorkspaceLocaleCatalogueProjectionV1(
+                    locale=capture.locale,
+                    translation_key=capture.translation_key,
+                    present=capture.present,
+                    value=capture.value,
+                    catalogue_digest=capture.catalogue_digest,
+                ),
+                comparison_domain=capture.comparison_domain,
+                generation=capture.generation,
+            )
+            for capture in capture_locale_catalogue_entries(self._translation_keys, locale=self._locale)
+        )
+
+
 class ModeloWorkspaceFieldManifestPortV1:
     """Application-owned port realization delegating to the sole FIELD_MANIFEST capture.
 
@@ -591,6 +628,7 @@ __all__ = [
     "ModeloWorkspaceEpochKindV1",
     "ModeloWorkspaceEpochV1",
     "ModeloWorkspaceFieldManifestPortV1",
+    "ModeloWorkspaceLocaleCatalogueBatchPortV1",
     "ModeloWorkspaceLocaleCataloguePortV1",
     "ModeloWorkspaceLocaleCatalogueProjectionV1",
     "ModeloWorkspaceProducerContractV1",
