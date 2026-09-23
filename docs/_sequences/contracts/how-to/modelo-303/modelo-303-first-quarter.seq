@@ -2,8 +2,11 @@
 @step Open a Modelo 303 draft for the first quarter.
 aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @capture work_unit_id result.work_unit_id
+@setup aeat --format json app modelo work attest-m303-exonerado-390 --year 2026 --period 1T --observed-at 2026-03-31T12:00:00+00:00
+@capture m303_attestation_id result.attachment_id
+@capture m303_attestation_sha256 result.sha256
 @step Calculate the quarter's IVA from the classified ledger.
-aeat --format json app modelo work calculate {work_unit_id} --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
+aeat --format json app modelo work calculate {work_unit_id} --no-joint-return-elected --no-annual-volume-nonzero --m303-exonerado-390-attachment-id {m303_attestation_id} --m303-exonerado-390-sha256 {m303_attestation_sha256}
 @capture calculation_revision_id result.calculation_revision_id
 @expect result.casilla_values.71 == "105.00"
 @step Verify the draft; verification captures the evidence over the contributing rows.
@@ -13,5 +16,5 @@ aeat --format json app modelo work verify {calculation_revision_id}
 aeat --format json app modelo work file --modelo 303 --year 2026 --period 1T
 @step Try to export the filed revision; it refuses without reviewed product/software identity authority.
 @result aeat --format json app modelo export --modelo 303 --year 2026 --period 1T --output modelo-303-1t.boe
-@expect exit_code == 5
-@expect error.code == "FAIL_MODELO_EXPORT"
+@expect exit_code == 2
+@expect error.code == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"

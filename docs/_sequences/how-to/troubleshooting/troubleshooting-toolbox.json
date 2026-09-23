@@ -369,6 +369,11 @@
                 {
                   "detail": null,
                   "requirement": "optional",
+                  "summary": "withholding.modelo_115_no_relevant_payment_periods — Modelo 115 periods with no relevant payment"
+                },
+                {
+                  "detail": null,
+                  "requirement": "optional",
                   "summary": "irpf.estimation_regime — IRPF estimation regime"
                 },
                 {
@@ -460,7 +465,7 @@
               "name": "profile.readiness",
               "precondition_action": null,
               "status": "ok",
-              "summary": "12/81 profile keys set."
+              "summary": "12/82 profile keys set."
             },
             {
               "audience": "operator",
@@ -556,7 +561,7 @@
             "missing_required": [],
             "profile_present_keys": 12,
             "profile_ready": true,
-            "profile_total_keys": 81
+            "profile_total_keys": 82
           }
         },
         "schema_version": "2",

@@ -2,8 +2,11 @@
 @step Create the work unit for the filing target.
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
 @capture history_work_unit_id result.work_unit_id
+@setup aeat --format json app modelo work attest-m303-exonerado-390 --year 2026 --period 1T --observed-at 2026-03-31T12:00:00+00:00
+@capture m303_attestation_id result.attachment_id
+@capture m303_attestation_sha256 result.sha256
 @step Calculate the quarter's IVA from the classified ledger.
-@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --m303-filing-evidence fixtures/m303-filing-evidence-2026-1T.json
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected --no-annual-volume-nonzero --m303-exonerado-390-attachment-id {m303_attestation_id} --m303-exonerado-390-sha256 {m303_attestation_sha256}
 @step Review all actions the tool has taken on this filing, in order.
 @result aeat --format json app modelo work history {history_work_unit_id}
 @expect exit_code == 0

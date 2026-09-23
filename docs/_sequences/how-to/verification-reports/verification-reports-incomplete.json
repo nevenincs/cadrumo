@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "C-2026-0087",
+          "invoice_number": "sha256:17853e99",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -256,28 +256,10 @@
           "revision": "2026-y-siguientes",
           "rows": [
             {
-              "casilla_id": "22",
-              "help_text": "Box 22: taxable base for the 5.2% equivalence surcharge.",
-              "input_kind": "manual",
-              "label": "Equivalence surcharge at 5.2% - taxable base",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "22",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
               "casilla_id": "23",
-              "help_text": "Box 23: rate percentage for the 5.2% equivalence surcharge.",
+              "help_text": "Box 23: percentage rate of the equivalence surcharge at 5.2%.",
               "input_kind": "manual",
-              "label": "Equivalence surcharge at 5.2% - rate percentage",
+              "label": "Equivalence surcharge at 5.2% - Rate percentage",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -293,9 +275,9 @@
             },
             {
               "casilla_id": "24",
-              "help_text": "Box 24: surcharge amount for the 5.2% equivalence surcharge.",
+              "help_text": "Box 24: amount of the equivalence surcharge at 5.2%.",
               "input_kind": "bound",
-              "label": "Equivalence surcharge at 5.2% - surcharge amount",
+              "label": "Equivalence surcharge at 5.2% - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -312,9 +294,9 @@
             },
             {
               "casilla_id": "25",
-              "help_text": "Box 25: taxable base for changes to equivalence surcharge bases and amounts.",
+              "help_text": "Box 25: taxable base of the adjustment to bases and amounts of the equivalence surcharge.",
               "input_kind": "manual",
-              "label": "Changes to equivalence surcharge bases and amounts - taxable base",
+              "label": "Adjustment of taxable bases and amounts, equivalence surcharge - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -330,9 +312,9 @@
             },
             {
               "casilla_id": "26",
-              "help_text": "Box 26: surcharge amount for changes to equivalence surcharge bases and amounts.",
+              "help_text": "Box 26: amount of the adjustment to bases and amounts of the equivalence surcharge.",
               "input_kind": "manual",
-              "label": "Changes to equivalence surcharge bases and amounts - surcharge amount",
+              "label": "Adjustment of taxable bases and amounts, equivalence surcharge - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -348,7 +330,7 @@
             },
             {
               "casilla_id": "27",
-              "help_text": "Box 27: total accrued VAT amount.",
+              "help_text": "Box 27: total amount of VAT accrued.",
               "input_kind": "computed",
               "label": "Total accrued VAT amount",
               "legal_refs": [
@@ -366,9 +348,9 @@
             },
             {
               "casilla_id": "28",
-              "help_text": "Box 28: base for deductible VAT on domestic current transactions.",
+              "help_text": "Box 28: base of deductible VAT on current domestic transactions.",
               "input_kind": "bound",
-              "label": "Deductible VAT on domestic current transactions - base",
+              "label": "Deductible VAT on domestic current transactions - Tax base",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -384,9 +366,9 @@
             },
             {
               "casilla_id": "29",
-              "help_text": "Box 29: VAT amount for deductible VAT on domestic current transactions.",
+              "help_text": "Box 29: amount of deductible VAT on current domestic transactions.",
               "input_kind": "computed",
-              "label": "Deductible VAT on domestic current transactions - VAT amount",
+              "label": "Deductible VAT on domestic current transactions - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -402,9 +384,9 @@
             },
             {
               "casilla_id": "30",
-              "help_text": "Box 30: base for deductible VAT on domestic capital goods.",
+              "help_text": "Box 30: base of deductible VAT on domestic transactions in capital goods.",
               "input_kind": "manual",
-              "label": "Deductible VAT on domestic capital goods - base",
+              "label": "Deductible VAT on domestic transactions involving capital goods - Tax base",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -420,9 +402,9 @@
             },
             {
               "casilla_id": "31",
-              "help_text": "Box 31: VAT amount for deductible VAT on domestic capital goods.",
+              "help_text": "Box 31: amount of deductible VAT on domestic transactions in capital goods.",
               "input_kind": "manual",
-              "label": "Deductible VAT on domestic capital goods - VAT amount",
+              "label": "Deductible VAT on domestic transactions involving capital goods - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -438,9 +420,9 @@
             },
             {
               "casilla_id": "32",
-              "help_text": "Box 32: base for deductible VAT on imports of current goods.",
+              "help_text": "Box 32: base of deductible VAT on imports of current goods.",
               "input_kind": "manual",
-              "label": "Deductible VAT on imports of current goods - base",
+              "label": "Deductible VAT on imports of current goods - Tax base",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -456,9 +438,9 @@
             },
             {
               "casilla_id": "33",
-              "help_text": "Box 33: VAT amount for deductible VAT on imports of current goods.",
+              "help_text": "Box 33: amount of deductible VAT on imports of current goods.",
               "input_kind": "computed",
-              "label": "Deductible VAT on imports of current goods - VAT amount",
+              "label": "Deductible VAT on imports of current goods - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -474,9 +456,9 @@
             },
             {
               "casilla_id": "34",
-              "help_text": "Box 34: base for deductible VAT on imports of capital goods.",
+              "help_text": "Box 34: base of deductible VAT on imports of capital goods.",
               "input_kind": "manual",
-              "label": "Deductible VAT on imports of capital goods - base",
+              "label": "Deductible VAT on imports of capital goods - Tax base",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -492,9 +474,9 @@
             },
             {
               "casilla_id": "35",
-              "help_text": "Box 35: VAT amount for deductible VAT on imports of capital goods.",
+              "help_text": "Box 35: amount of deductible VAT on imports of capital goods.",
               "input_kind": "manual",
-              "label": "Deductible VAT on imports of capital goods - VAT amount",
+              "label": "Deductible VAT on imports of capital goods - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -510,9 +492,9 @@
             },
             {
               "casilla_id": "36",
-              "help_text": "Box 36: base for deductible VAT on intra-Community acquisitions of current goods.",
+              "help_text": "Box 36: base of deductible VAT on current intra-Community acquisitions.",
               "input_kind": "manual",
-              "label": "Deductible VAT on intra-Community acquisitions of current goods - base",
+              "label": "Deductible VAT on intra-Community acquisitions of current goods - Tax base",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -528,9 +510,9 @@
             },
             {
               "casilla_id": "37",
-              "help_text": "Box 37: VAT amount for deductible VAT on intra-Community acquisitions of current goods.",
+              "help_text": "Box 37: amount of deductible VAT on current intra-Community acquisitions.",
               "input_kind": "computed",
-              "label": "Deductible VAT on intra-Community acquisitions of current goods - VAT amount",
+              "label": "Deductible VAT on intra-Community acquisitions of current goods - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -546,9 +528,9 @@
             },
             {
               "casilla_id": "38",
-              "help_text": "Box 38: base for deductible VAT on intra-Community acquisitions of capital goods.",
+              "help_text": "Box 38: base of deductible VAT on intra-Community acquisitions of capital goods.",
               "input_kind": "manual",
-              "label": "Deductible VAT on intra-Community acquisitions of capital goods - base",
+              "label": "Deductible VAT on intra-Community acquisitions of capital goods - Tax base",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -564,9 +546,9 @@
             },
             {
               "casilla_id": "39",
-              "help_text": "Box 39: VAT amount for deductible VAT on intra-Community acquisitions of capital goods.",
+              "help_text": "Box 39: amount of deductible VAT on intra-Community acquisitions of capital goods.",
               "input_kind": "manual",
-              "label": "Deductible VAT on intra-Community acquisitions of capital goods - VAT amount",
+              "label": "Deductible VAT on intra-Community acquisitions of capital goods - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -582,9 +564,9 @@
             },
             {
               "casilla_id": "40",
-              "help_text": "Box 40: base for deduction corrections.",
+              "help_text": "Box 40: base of the correction of deductions.",
               "input_kind": "manual",
-              "label": "Deduction corrections - base",
+              "label": "Correction of deductions - Tax base",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -600,9 +582,9 @@
             },
             {
               "casilla_id": "41",
-              "help_text": "Box 41: VAT amount for deduction corrections.",
+              "help_text": "Box 41: amount of the correction of deductions.",
               "input_kind": "manual",
-              "label": "Deduction corrections - VAT amount",
+              "label": "Correction of deductions - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -618,9 +600,9 @@
             },
             {
               "casilla_id": "42",
-              "help_text": "Box 42: compensation amount under the special agriculture, livestock and fisheries scheme.",
+              "help_text": "Box 42: amount of compensation under the special scheme for agriculture, livestock farming and fishing.",
               "input_kind": "manual",
-              "label": "Special agriculture, livestock and fisheries scheme compensations - amount",
+              "label": "Flat-rate compensation under the special scheme for agriculture, livestock farming and fishing - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-92",
                 "ley-37-1992:art-94",
@@ -636,9 +618,9 @@
             },
             {
               "casilla_id": "43",
-              "help_text": "Box 43: VAT amount for capital goods regularization.",
-              "input_kind": "manual",
-              "label": "Capital goods regularization - amount",
+              "help_text": "Box 43: amount of the capital goods adjustment.",
+              "input_kind": "bound",
+              "label": "Capital goods adjustment - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-107",
                 "ley-37-1992:art-108",
@@ -655,9 +637,9 @@
             },
             {
               "casilla_id": "44",
-              "help_text": "Box 44: VAT amount for pro rata regularization using the final percentage.",
-              "input_kind": "manual",
-              "label": "Pro rata regularization using final percentage - amount",
+              "help_text": "Box 44: amount of the pro rata adjustment by definitive percentage.",
+              "input_kind": "bound",
+              "label": "Pro rata regularisation using the final percentage - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-104",
                 "ley-37-1992:art-105",
@@ -675,7 +657,7 @@
             },
             {
               "casilla_id": "45",
-              "help_text": "Box 45: total deductible VAT amount.",
+              "help_text": "Box 45: total amount of VAT to be deducted.",
               "input_kind": "computed",
               "label": "Total deductible amount",
               "legal_refs": [
@@ -693,9 +675,9 @@
             },
             {
               "casilla_id": "47",
-              "help_text": "Box 47: sum of payments on account for all activities under the simplified regime in Q1, Q2, or Q3.",
+              "help_text": "Box 47: sum of payments on account for all activities under the simplified regime in the 1st, 2nd or 3rd quarter.",
               "input_kind": "manual",
-              "label": "Simplified regime, Q1-Q3 - sum of payments on account for all activities",
+              "label": "Simplified regime - Q1-Q2-Q3: total payments on account for all activities",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -711,9 +693,9 @@
             },
             {
               "casilla_id": "48",
-              "help_text": "Box 48: sum of amounts derived from all simplified-regime activities in Q4.",
+              "help_text": "Box 48: sum of amounts arising from all activities under the simplified regime in the 4th quarter.",
               "input_kind": "manual",
-              "label": "Simplified regime, Q4 - sum of derived amounts for all activities",
+              "label": "Simplified regime - Q4: total VAT amounts under the simplified regime for all activities",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -729,9 +711,9 @@
             },
             {
               "casilla_id": "49",
-              "help_text": "Box 49: sum of payments on account made during the year under the simplified regime in Q4.",
+              "help_text": "Box 49: sum of payments on account made during the year under the simplified regime in the 4th quarter.",
               "input_kind": "manual",
-              "label": "Simplified regime, Q4 - sum of payments on account made in the year",
+              "label": "Simplified regime - Q4: total payments on account made during the tax year",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -747,9 +729,9 @@
             },
             {
               "casilla_id": "50",
-              "help_text": "Box 50: simplified-regime Q4 result calculated as box 48 minus box 49.",
+              "help_text": "Box 50: result of the simplified regime in the 4th quarter, calculated as box 48 minus box 49 ([48]-[49]).",
               "input_kind": "manual",
-              "label": "Simplified regime, Q4 - result ([48] - [49])",
+              "label": "Simplified regime - Q4: result ([48]-[49])",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -765,9 +747,9 @@
             },
             {
               "casilla_id": "51",
-              "help_text": "Box 51: accrued VAT on intra-Community acquisitions of goods under the simplified regime.",
+              "help_text": "Box 51: VAT amounts accrued on intra-Community acquisitions of goods under the simplified regime.",
               "input_kind": "manual",
-              "label": "Simplified regime - accrued VAT on intra-Community acquisitions of goods",
+              "label": "Simplified regime - VAT accrued on intra-Community acquisitions of goods",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -783,9 +765,9 @@
             },
             {
               "casilla_id": "52",
-              "help_text": "Box 52: accrued VAT on supplies of fixed assets under the simplified regime.",
+              "help_text": "Box 52: VAT amounts accrued on supplies of fixed assets under the simplified regime.",
               "input_kind": "manual",
-              "label": "Simplified regime - accrued VAT on supplies of fixed assets",
+              "label": "Simplified regime - VAT accrued on disposals of fixed assets",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -801,9 +783,9 @@
             },
             {
               "casilla_id": "53",
-              "help_text": "Box 53: accrued VAT under the simplified regime from transactions subject to reverse charge.",
+              "help_text": "Box 53: VAT amounts accrued under the simplified regime on transactions subject to the reverse charge mechanism.",
               "input_kind": "manual",
-              "label": "Simplified regime - accrued VAT from reverse-charge transactions",
+              "label": "Simplified regime - VAT accrued under the reverse charge mechanism",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -819,9 +801,9 @@
             },
             {
               "casilla_id": "54",
-              "help_text": "Box 54: total resulting VAT amount under the simplified regime.",
+              "help_text": "Box 54: total resulting amount under the simplified regime.",
               "input_kind": "manual",
-              "label": "Simplified regime - total resulting amount",
+              "label": "Simplified regime - Total resulting VAT amount",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -837,9 +819,9 @@
             },
             {
               "casilla_id": "55",
-              "help_text": "Box 55: deductible VAT on acquisition or import of fixed assets under the simplified regime.",
+              "help_text": "Box 55: deductible VAT on the acquisition or import of fixed assets under the simplified regime.",
               "input_kind": "manual",
-              "label": "Simplified regime - deductible VAT on acquisition or import of fixed assets",
+              "label": "Simplified regime - Deductible VAT on the acquisition or import of fixed assets",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -855,9 +837,9 @@
             },
             {
               "casilla_id": "56",
-              "help_text": "Box 56: deductible VAT from capital goods regularization under the simplified regime.",
+              "help_text": "Box 56: deductible VAT on the capital goods adjustment under the simplified regime.",
               "input_kind": "manual",
-              "label": "Simplified regime - deductible VAT from capital goods regularization",
+              "label": "Simplified regime - Deductible VAT from the capital goods adjustment",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -873,9 +855,9 @@
             },
             {
               "casilla_id": "57",
-              "help_text": "Box 57: total deductible VAT under the simplified regime, calculated as box 55 plus box 56.",
+              "help_text": "Box 57: total deductible VAT under the simplified regime, calculated as box 55 plus box 56 ([55]+[56]).",
               "input_kind": "manual",
-              "label": "Simplified regime - total deductible VAT ([55] + [56])",
+              "label": "Simplified regime - Total deductible VAT under the simplified regime ([55]+[56])",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -891,9 +873,9 @@
             },
             {
               "casilla_id": "58",
-              "help_text": "Box 58: simplified-regime result calculated as box 54 minus box 57.",
+              "help_text": "Box 58: result of the simplified regime, calculated as box 54 minus box 57 ([54]-[57]).",
               "input_kind": "manual",
-              "label": "Simplified regime result ([54] - [57])",
+              "label": "Simplified regime - Result under the simplified regime ([54]-[57])",
               "legal_refs": [
                 "ley-37-1992:art-122",
                 "ley-37-1992:art-123",
@@ -911,7 +893,7 @@
               "casilla_id": "59",
               "help_text": "Box 59: additional information on intra-Community supplies of goods and services.",
               "input_kind": "bound",
-              "label": "Additional information - intra-Community supplies of goods and services",
+              "label": "Additional information - Intra-Community supplies of goods and services",
               "legal_refs": [
                 "ley-37-1992:art-25",
                 "rd-1624-1992:art-71",
@@ -927,7 +909,7 @@
               "casilla_id": "60",
               "help_text": "Box 60: additional information on exports and assimilated transactions.",
               "input_kind": "bound",
-              "label": "Additional information - exports and assimilated transactions",
+              "label": "Additional information - Exports and similar transactions",
               "legal_refs": [
                 "ley-37-1992:art-21",
                 "ley-37-1992:art-22",
@@ -942,7 +924,7 @@
             },
             {
               "casilla_id": "120",
-              "help_text": "Box 120: additional information on transactions not subject to VAT due to place-of-supply rules, excluding box 123.",
+              "help_text": "Box 120: additional information on transactions not subject to tax under place-of-supply rules, excluding box 123.",
               "input_kind": "bound",
               "label": "Additional information - transactions not subject due to place-of-supply rules, excluding box 123",
               "legal_refs": [
@@ -958,7 +940,7 @@
             },
             {
               "casilla_id": "122",
-              "help_text": "Box 122: additional information on transactions subject to reverse charge.",
+              "help_text": "Box 122: additional information on transactions subject to the reverse charge mechanism.",
               "input_kind": "bound",
               "label": "Additional information - transactions subject to reverse charge",
               "legal_refs": [
@@ -974,9 +956,9 @@
             },
             {
               "casilla_id": "123",
-              "help_text": "Box 123: additional information on transactions not subject under place-of-supply rules for one-stop shop special schemes.",
+              "help_text": "Box 123: additional information on transactions not subject to tax under place-of-supply rules within special one-stop shop schemes.",
               "input_kind": "manual",
-              "label": "Additional information - transactions not subject under one-stop shop special schemes place-of-supply rules",
+              "label": "Additional information - Transactions not subject to tax under place-of-supply rules, special One-Stop Shop schemes",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-92",
@@ -991,9 +973,9 @@
             },
             {
               "casilla_id": "124",
-              "help_text": "Box 124: additional information on transactions subject under one-stop shop special schemes.",
+              "help_text": "Box 124: additional information on transactions subject to tax within special one-stop shop schemes.",
               "input_kind": "manual",
-              "label": "Additional information - transactions subject under one-stop shop special schemes",
+              "label": "Additional information - Transactions subject to tax under special One-Stop Shop schemes",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-92",
@@ -1008,9 +990,9 @@
             },
             {
               "casilla_id": "62",
-              "help_text": "Box 62: taxable base for cash accounting supplies accrued under Article 75 LIVA.",
+              "help_text": "Box 62: taxable base of supplies accrued under the cash accounting scheme pursuant to article 75 LIVA.",
               "input_kind": "bound",
-              "label": "Additional information - cash accounting supplies accrued under Article 75 LIVA - taxable base",
+              "label": "Additional information - Supplies accrued under the cash accounting scheme (Art. 75 LIVA) - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-75",
                 "ley-37-1992:art-163-decies",
@@ -1028,9 +1010,9 @@
             },
             {
               "casilla_id": "63",
-              "help_text": "Box 63: VAT amount for cash accounting supplies accrued under Article 75 LIVA.",
+              "help_text": "Box 63: amount of supplies accrued under the cash accounting scheme pursuant to article 75 LIVA.",
               "input_kind": "bound",
-              "label": "Additional information - cash accounting supplies accrued under Article 75 LIVA - VAT amount",
+              "label": "Additional information - Supplies accrued under the cash accounting scheme (Art. 75 LIVA) - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-75",
                 "ley-37-1992:art-163-decies",
@@ -1048,9 +1030,9 @@
             },
             {
               "casilla_id": "74",
-              "help_text": "Box 74: taxable base for acquisitions under the cash accounting scheme.",
+              "help_text": "Box 74: taxable base of acquisitions under the cash accounting scheme.",
               "input_kind": "bound",
-              "label": "Additional information - cash accounting acquisitions - taxable base",
+              "label": "Additional information - Acquisitions under the cash accounting scheme - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-163-decies",
                 "ley-37-1992:art-163-undecies",
@@ -1068,9 +1050,9 @@
             },
             {
               "casilla_id": "75",
-              "help_text": "Box 75: VAT amount for acquisitions under the cash accounting scheme.",
+              "help_text": "Box 75: amount of acquisitions under the cash accounting scheme.",
               "input_kind": "bound",
-              "label": "Additional information - cash accounting acquisitions - VAT amount",
+              "label": "Additional information - Acquisitions under the cash accounting scheme - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-163-decies",
                 "ley-37-1992:art-163-undecies",
@@ -1088,9 +1070,9 @@
             },
             {
               "casilla_id": "76",
-              "help_text": "Box 76: result adjustment for regularization under Article 80.Five.5 LIVA.",
+              "help_text": "Box 76: adjustment to the result for the correction of amounts under article 80.cinco.5ª LIVA.",
               "input_kind": "manual",
-              "label": "Result - regularization under Article 80.Five.5 LIVA",
+              "label": "Result - Adjustment of VAT amounts under Art. 80.Five.5a LIVA",
               "legal_refs": [
                 "ley-37-1992:art-99",
                 "ley-37-1992:art-115",
@@ -1106,9 +1088,9 @@
             },
             {
               "casilla_id": "64",
-              "help_text": null,
+              "help_text": "Field declared on modelo 303, taken from the official record design.",
               "input_kind": "computed",
-              "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
+              "label": "Result - Sum of results ([46]+[58]+[76])",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-92",
@@ -1126,7 +1108,7 @@
             },
             {
               "casilla_id": "65",
-              "help_text": "Box 65: percentage of the result attributable to the State Tax Administration.",
+              "help_text": "Box 65: percentage of the result attributable to the State Administration.",
               "input_kind": "bound",
               "label": "Result - percentage attributable to the State Tax Administration",
               "legal_refs": [
@@ -1144,9 +1126,9 @@
             },
             {
               "casilla_id": "66",
-              "help_text": null,
+              "help_text": "Field declared on modelo 303, taken from the official record design.",
               "input_kind": "computed",
-              "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
+              "label": "Result - Amount attributable to the State Tax Administration ([64]×[65]/100)",
               "legal_refs": [
                 "rd-1624-1992:art-71"
               ],
@@ -1161,7 +1143,7 @@
               "casilla_id": "77",
               "help_text": "Box 77: import VAT assessed by Customs that is pending payment.",
               "input_kind": "manual",
-              "label": "Result - import VAT assessed by Customs pending payment",
+              "label": "Result - Import VAT settled by Customs pending payment",
               "legal_refs": [
                 "ley-37-1992:art-99",
                 "ley-37-1992:art-115",
@@ -1177,9 +1159,9 @@
             },
             {
               "casilla_id": "68",
-              "help_text": "Box 68: annual regularization result for joint taxation.",
+              "help_text": "Box 68: result of the annual adjustment for joint taxation.",
               "input_kind": "manual",
-              "label": "Result - joint taxation annual regularization result",
+              "label": "Result - Joint taxation, annual adjustment result",
               "legal_refs": [
                 "ley-37-1992:art-99",
                 "ley-37-1992:art-115",
@@ -1195,9 +1177,9 @@
             },
             {
               "casilla_id": "70",
-              "help_text": "Box 70: amounts payable from previous self-assessments for the same year and period.",
+              "help_text": "Box 70: amounts payable arising from previous self-assessments for the same year and period.",
               "input_kind": "manual",
-              "label": "Result - amounts payable from previous self-assessments for the same year and period",
+              "label": "Result - Amounts payable from previous self-assessments of the tax year and period",
               "legal_refs": [
                 "ley-37-1992:art-99",
                 "ley-37-1992:art-115",
@@ -1212,28 +1194,10 @@
               ]
             },
             {
-              "casilla_id": "109",
-              "help_text": "Box 109: refunds agreed by AEAT for previous self-assessments for the same year and period.",
-              "input_kind": "manual",
-              "label": "Result - refunds agreed by AEAT for previous self-assessments for the same year and period",
-              "legal_refs": [
-                "ley-37-1992:art-99",
-                "ley-37-1992:art-115",
-                "ley-37-1992:art-116",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "109",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
               "casilla_id": "71",
-              "help_text": null,
+              "help_text": "Data declared in modelo 303, taken from the official record design.",
               "input_kind": "computed",
-              "label": "Resultado final ([69]-[70]+[109])",
+              "label": "Result final ([69]-[70]+[109])",
               "legal_refs": [
                 "ley-37-1992:art-99",
                 "ley-37-1992:art-115",
@@ -1250,64 +1214,10 @@
               ]
             },
             {
-              "casilla_id": "108",
-              "help_text": "Box 108: other adjustments in a corrective return for cases determined by discrepancy with administrative criterion.",
-              "input_kind": "manual",
-              "label": "Corrective return - other adjustments in cases determined by discrepancy with administrative criterion",
-              "legal_refs": [
-                "ley-37-1992:art-99",
-                "ley-37-1992:art-115",
-                "ley-37-1992:art-116",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "108",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "111",
-              "help_text": "Box 111: correction amount reported in a corrective return.",
-              "input_kind": "manual",
-              "label": "Corrective return - correction amount",
-              "legal_refs": [
-                "ley-37-1992:art-99",
-                "ley-37-1992:art-115",
-                "ley-37-1992:art-116",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "111",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "112",
-              "help_text": "Manual amount for the advance payment on gasoline, diesel and biofuel supplies allocated to the State; it reduces Modelo 303 casilla 71.",
-              "input_kind": "manual",
-              "label": "Advance payment for gasoline, diesel and biofuels supplies allocated to the State",
-              "legal_refs": [
-                "ley-37-1992:art-99",
-                "ley-37-1992:art-115",
-                "ley-37-1992:art-116",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "112",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
               "casilla_id": "500",
-              "help_text": null,
+              "help_text": "Box 500 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 1 - Código CNAE",
+              "label": "Pro rata shares - 1 - CNAE activity code",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1322,9 +1232,9 @@
             },
             {
               "casilla_id": "501",
-              "help_text": null,
+              "help_text": "Box 501 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 1 - Importe de operaciones",
+              "label": "Pro rata shares - 1 - Amount of transactions",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1339,9 +1249,9 @@
             },
             {
               "casilla_id": "502",
-              "help_text": null,
+              "help_text": "Box 502 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 1 - Importe de operaciones con derecho a deducción",
+              "label": "Pro rata shares - 1 - Amount of transactions carrying a right to deduct",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1356,9 +1266,9 @@
             },
             {
               "casilla_id": "503",
-              "help_text": null,
+              "help_text": "Box 503 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 1 - Tipo de prorrata",
+              "label": "Pro rata shares - 1 - Pro rata type",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1373,9 +1283,9 @@
             },
             {
               "casilla_id": "504",
-              "help_text": null,
+              "help_text": "Box 504 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 1 - % de prorrata",
+              "label": "Pro rata shares - 1 - Pro rata %",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1390,9 +1300,9 @@
             },
             {
               "casilla_id": "505",
-              "help_text": null,
+              "help_text": "Box 505 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 2 - Código CNAE",
+              "label": "Pro rata shares - 2 - CNAE activity code",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1407,9 +1317,9 @@
             },
             {
               "casilla_id": "506",
-              "help_text": null,
+              "help_text": "Box 506 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 2 - Importe de operaciones",
+              "label": "Pro rata shares - 2 - Amount of transactions",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1424,9 +1334,9 @@
             },
             {
               "casilla_id": "507",
-              "help_text": null,
+              "help_text": "Box 507 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 2 - Importe de operaciones con derecho a deducción",
+              "label": "Pro rata shares - 2 - Amount of transactions carrying a right to deduct",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1441,9 +1351,9 @@
             },
             {
               "casilla_id": "508",
-              "help_text": null,
+              "help_text": "Box 508 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 2 - Tipo de prorrata",
+              "label": "Pro rata shares - 2 - Pro rata type",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1458,9 +1368,9 @@
             },
             {
               "casilla_id": "509",
-              "help_text": null,
+              "help_text": "Box 509 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 2 - % de prorrata",
+              "label": "Pro rata shares - 2 - Pro rata %",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1475,9 +1385,9 @@
             },
             {
               "casilla_id": "510",
-              "help_text": null,
+              "help_text": "Box 510 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 3 - Código CNAE",
+              "label": "Pro rata shares - 3 - CNAE activity code",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1492,9 +1402,9 @@
             },
             {
               "casilla_id": "511",
-              "help_text": null,
+              "help_text": "Box 511 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 3 - Importe de operaciones",
+              "label": "Pro rata shares - 3 - Amount of transactions",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1509,9 +1419,9 @@
             },
             {
               "casilla_id": "512",
-              "help_text": null,
+              "help_text": "Box 512 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 3 - Importe de operaciones con derecho a deducción",
+              "label": "Pro rata shares - 3 - Amount of transactions carrying a right to deduct",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1526,9 +1436,9 @@
             },
             {
               "casilla_id": "513",
-              "help_text": null,
+              "help_text": "Box 513 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 3 - Tipo de prorrata",
+              "label": "Pro rata shares - 3 - Pro rata type",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1543,9 +1453,9 @@
             },
             {
               "casilla_id": "514",
-              "help_text": null,
+              "help_text": "Box 514 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 3 - % de prorrata",
+              "label": "Pro rata shares - 3 - Pro rata %",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1560,9 +1470,9 @@
             },
             {
               "casilla_id": "515",
-              "help_text": null,
+              "help_text": "Box 515 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 4 - Código CNAE",
+              "label": "Pro rata shares - 4 - CNAE activity code",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1577,9 +1487,9 @@
             },
             {
               "casilla_id": "516",
-              "help_text": null,
+              "help_text": "Box 516 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 4 - Importe de operaciones",
+              "label": "Pro rata shares - 4 - Amount of transactions",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1594,9 +1504,9 @@
             },
             {
               "casilla_id": "517",
-              "help_text": null,
+              "help_text": "Box 517 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 4 - Importe de operaciones con derecho a deducción",
+              "label": "Pro rata shares - 4 - Amount of transactions carrying a right to deduct",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1611,9 +1521,9 @@
             },
             {
               "casilla_id": "518",
-              "help_text": null,
+              "help_text": "Box 518 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 4 - Tipo de prorrata",
+              "label": "Pro rata shares - 4 - Pro rata type",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1628,9 +1538,9 @@
             },
             {
               "casilla_id": "519",
-              "help_text": null,
+              "help_text": "Box 519 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 4 - % de prorrata",
+              "label": "Pro rata shares - 4 - Pro rata %",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1645,9 +1555,9 @@
             },
             {
               "casilla_id": "520",
-              "help_text": null,
+              "help_text": "Box 520 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 5 - Código CNAE",
+              "label": "Pro rata shares - 5 - CNAE activity code",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1662,9 +1572,9 @@
             },
             {
               "casilla_id": "521",
-              "help_text": null,
+              "help_text": "Box 521 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 5 - Importe de operaciones",
+              "label": "Pro rata shares - 5 - Amount of transactions",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1679,9 +1589,9 @@
             },
             {
               "casilla_id": "522",
-              "help_text": null,
+              "help_text": "Box 522 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 5 - Importe de operaciones con derecho a deducción",
+              "label": "Pro rata shares - 5 - Amount of transactions carrying a right to deduct",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1696,9 +1606,9 @@
             },
             {
               "casilla_id": "523",
-              "help_text": null,
+              "help_text": "Box 523 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 5 - Tipo de prorrata",
+              "label": "Pro rata shares - 5 - Pro rata type",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1713,9 +1623,9 @@
             },
             {
               "casilla_id": "524",
-              "help_text": null,
+              "help_text": "Box 524 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "Prorratas - 5 - % de prorrata",
+              "label": "Pro rata shares - 5 - Pro rata %",
               "legal_refs": [
                 "ley-37-1992:art-102",
                 "ley-37-1992:art-104",
@@ -1730,9 +1640,9 @@
             },
             {
               "casilla_id": "700",
-              "help_text": null,
+              "help_text": "Box 700 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes y servicios corrientes - Base imponible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, domestic transactions - Current goods and services - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1747,9 +1657,9 @@
             },
             {
               "casilla_id": "701",
-              "help_text": null,
+              "help_text": "Box 701 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes y servicios corrientes - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, domestic transactions - Current goods and services - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1764,9 +1674,9 @@
             },
             {
               "casilla_id": "702",
-              "help_text": null,
+              "help_text": "Box 702 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes inversión - Base imponible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, domestic transactions - Capital goods - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1781,9 +1691,9 @@
             },
             {
               "casilla_id": "703",
-              "help_text": null,
+              "help_text": "Box 703 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Operac. Interiores - Bienes inversión - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, domestic transactions - Capital goods - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1798,9 +1708,9 @@
             },
             {
               "casilla_id": "704",
-              "help_text": null,
+              "help_text": "Box 704 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes corrientes - Base imponible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, imports - Current goods - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1815,9 +1725,9 @@
             },
             {
               "casilla_id": "705",
-              "help_text": null,
+              "help_text": "Box 705 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes corrientes - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, imports - Current goods - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1832,9 +1742,9 @@
             },
             {
               "casilla_id": "706",
-              "help_text": null,
+              "help_text": "Box 706 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes inversión - Base imponible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, imports - Capital goods - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1849,9 +1759,9 @@
             },
             {
               "casilla_id": "707",
-              "help_text": null,
+              "help_text": "Box 707 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Importaciones - Bienes inversión - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, imports - Capital goods - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1866,9 +1776,9 @@
             },
             {
               "casilla_id": "708",
-              "help_text": null,
+              "help_text": "Box 708 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun. - Bienes corrientes y servicios - Base imponible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community acquisitions - Current goods and services - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1883,9 +1793,9 @@
             },
             {
               "casilla_id": "709",
-              "help_text": null,
+              "help_text": "Box 709 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun. - Bienes corrientes y servicios - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community acquisitions - Current goods and services - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1900,9 +1810,9 @@
             },
             {
               "casilla_id": "710",
-              "help_text": null,
+              "help_text": "Box 710 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun. - Bienes inversión - Base imponible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community acquisitions - Capital goods - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1917,9 +1827,9 @@
             },
             {
               "casilla_id": "711",
-              "help_text": null,
+              "help_text": "Box 711 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - IVA ded. Adquisic. intracomun. - Bienes inversión - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 1 - Deductible IVA, intra-Community acquisitions - Capital goods - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1934,9 +1844,9 @@
             },
             {
               "casilla_id": "712",
-              "help_text": null,
+              "help_text": "Box 712 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca - Base impon.",
+              "label": "13. Differentiated deduction regimes - 1 - Compensation, special regime for agriculture, livestock and fishing - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1951,9 +1861,9 @@
             },
             {
               "casilla_id": "713",
-              "help_text": null,
+              "help_text": "Box 713 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - Compensac. rég. especial agric./ganad./pesca - Cuota deduc.",
+              "label": "13. Differentiated deduction regimes - 1 - Compensation, special regime for agriculture, livestock and fishing - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1968,9 +1878,9 @@
             },
             {
               "casilla_id": "714",
-              "help_text": null,
+              "help_text": "Box 714 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones - Base impon.",
+              "label": "13. Differentiated deduction regimes - 1 - Correction of deductions - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -1985,9 +1895,9 @@
             },
             {
               "casilla_id": "715",
-              "help_text": null,
+              "help_text": "Box 715 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - Rectificación de deducciones - Cuota deduc.",
+              "label": "13. Differentiated deduction regimes - 1 - Correction of deductions - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2002,9 +1912,9 @@
             },
             {
               "casilla_id": "716",
-              "help_text": null,
+              "help_text": "Box 716 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - Regularización de bienes de inversión",
+              "label": "13. Differentiated deduction regimes - 1 - Adjustment of capital goods",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2019,9 +1929,9 @@
             },
             {
               "casilla_id": "717",
-              "help_text": null,
+              "help_text": "Box 717 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 1 - Suma de deducciones",
+              "label": "13. Differentiated deduction regimes - 1 - Total deductions",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2036,9 +1946,9 @@
             },
             {
               "casilla_id": "718",
-              "help_text": null,
+              "help_text": "Box 718 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes y servicios corrientes - Base imponible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, domestic transactions - Current goods and services - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2053,9 +1963,9 @@
             },
             {
               "casilla_id": "719",
-              "help_text": null,
+              "help_text": "Box 719 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes y servicios corrientes - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, domestic transactions - Current goods and services - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2070,9 +1980,9 @@
             },
             {
               "casilla_id": "720",
-              "help_text": null,
+              "help_text": "Box 720 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes inversión - Base imponible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, domestic transactions - Capital goods - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2087,9 +1997,9 @@
             },
             {
               "casilla_id": "721",
-              "help_text": null,
+              "help_text": "Box 721 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Operac. Interiores - Bienes inversión - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, domestic transactions - Capital goods - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2104,9 +2014,9 @@
             },
             {
               "casilla_id": "722",
-              "help_text": null,
+              "help_text": "Box 722 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes corrientes - Base imponible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, imports - Current goods - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2121,9 +2031,9 @@
             },
             {
               "casilla_id": "723",
-              "help_text": null,
+              "help_text": "Box 723 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes corrientes - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, imports - Current goods - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2138,9 +2048,9 @@
             },
             {
               "casilla_id": "724",
-              "help_text": null,
+              "help_text": "Box 724 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes inversión - Base imponible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, imports - Capital goods - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2155,9 +2065,9 @@
             },
             {
               "casilla_id": "725",
-              "help_text": null,
+              "help_text": "Box 725 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Importaciones - Bienes inversión - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, imports - Capital goods - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2172,9 +2082,9 @@
             },
             {
               "casilla_id": "726",
-              "help_text": null,
+              "help_text": "Box 726 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun. - Bienes corrientes y servicios - Base imponible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community acquisitions - Current goods and services - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2189,9 +2099,9 @@
             },
             {
               "casilla_id": "727",
-              "help_text": null,
+              "help_text": "Box 727 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun. - Bienes corrientes y servicios - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community acquisitions - Current goods and services - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2206,9 +2116,9 @@
             },
             {
               "casilla_id": "728",
-              "help_text": null,
+              "help_text": "Box 728 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun. - Bienes inversión - Base imponible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community acquisitions - Capital goods - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2223,9 +2133,9 @@
             },
             {
               "casilla_id": "729",
-              "help_text": null,
+              "help_text": "Box 729 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - IVA ded. Adquisic. intracomun. - Bienes inversión - Cuota deducible",
+              "label": "13. Differentiated deduction regimes - 2 - Deductible IVA, intra-Community acquisitions - Capital goods - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2240,9 +2150,9 @@
             },
             {
               "casilla_id": "730",
-              "help_text": null,
+              "help_text": "Box 730 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca - Base impon.",
+              "label": "13. Differentiated deduction regimes - 2 - Compensation, special regime for agriculture, livestock and fishing - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2257,9 +2167,9 @@
             },
             {
               "casilla_id": "731",
-              "help_text": null,
+              "help_text": "Box 731 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - Compensac. rég. especial agric./ganad./pesca - Cuota deduc.",
+              "label": "13. Differentiated deduction regimes - 2 - Compensation, special regime for agriculture, livestock and fishing - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2274,9 +2184,9 @@
             },
             {
               "casilla_id": "732",
-              "help_text": null,
+              "help_text": "Box 732 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones - Base impon.",
+              "label": "13. Differentiated deduction regimes - 2 - Correction of deductions - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2291,9 +2201,9 @@
             },
             {
               "casilla_id": "733",
-              "help_text": null,
+              "help_text": "Box 733 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - Rectificación de deducciones - Cuota deduc.",
+              "label": "13. Differentiated deduction regimes - 2 - Correction of deductions - Deductible amount",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2308,9 +2218,9 @@
             },
             {
               "casilla_id": "734",
-              "help_text": null,
+              "help_text": "Box 734 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - Regularización de bienes de inversión",
+              "label": "13. Differentiated deduction regimes - 2 - Adjustment of capital goods",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2325,9 +2235,9 @@
             },
             {
               "casilla_id": "735",
-              "help_text": null,
+              "help_text": "Box 735 of modelo 303, tax year 2022.",
               "input_kind": "projection_only",
-              "label": "13. Reg. Deducc. Diferenc.- 2 - Suma de deducciones",
+              "label": "13. Differentiated deduction regimes - 2 - Total deductions",
               "legal_refs": [
                 "ley-37-1992:art-101",
                 "ley-37-1992:art-104",
@@ -2342,9 +2252,9 @@
             },
             {
               "casilla_id": "79",
-              "help_text": null,
+              "help_text": "Box 79 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Entregas de bienes inmuebles, operaciones financieras y relativas al oro de inversión no habituales",
+              "label": "Transactions carried out in the year - Non-recurring supplies of immovable property, financial transactions and investment gold transactions",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2358,9 +2268,9 @@
             },
             {
               "casilla_id": "80",
-              "help_text": null,
+              "help_text": "Box 80 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Operaciones en régimen general",
+              "label": "Transactions carried out in the year - General-regime transactions",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2374,9 +2284,9 @@
             },
             {
               "casilla_id": "81",
-              "help_text": null,
+              "help_text": "Box 81 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Operaciones en régimen especial del criterio de caja conforme art. 75 LIVA",
+              "label": "Transactions carried out in the year - Transactions under the special cash-basis regime per art. 75 LIVA",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2390,9 +2300,9 @@
             },
             {
               "casilla_id": "83",
-              "help_text": null,
+              "help_text": "Box 83 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Operaciones exentas sin derecho a deducción",
+              "label": "Transactions carried out in the year - Exempt transactions with no right to deduct",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2406,9 +2316,9 @@
             },
             {
               "casilla_id": "84",
-              "help_text": null,
+              "help_text": "Box 84 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Operaciones no sujetas por reglas de localización (excepto las incluidas en la casilla 126)",
+              "label": "Transactions carried out in the year - Transactions not subject under place-of-supply rules (except those in box 126)",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2422,9 +2332,9 @@
             },
             {
               "casilla_id": "86",
-              "help_text": null,
+              "help_text": "Box 86 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Operaciones en régimen simplificado",
+              "label": "Transactions carried out in the year - Transactions under the simplified regime",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2438,9 +2348,9 @@
             },
             {
               "casilla_id": "88",
-              "help_text": null,
+              "help_text": "Box 88 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Total volumen de operaciones",
+              "label": "Transactions carried out in the year - Total turnover",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2454,9 +2364,9 @@
             },
             {
               "casilla_id": "89",
-              "help_text": null,
+              "help_text": "Box 89 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Información de la tributación por razón de territorio: Álava",
+              "label": "Territorial taxation information: Álava",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2470,9 +2380,9 @@
             },
             {
               "casilla_id": "90",
-              "help_text": null,
+              "help_text": "Box 90 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Información de la tributación por razón de territorio: Guipuzcoa",
+              "label": "Territorial taxation information: Gipuzkoa",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2486,9 +2396,9 @@
             },
             {
               "casilla_id": "91",
-              "help_text": null,
+              "help_text": "Box 91 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Información de la tributación por razón de territorio: Vizcaya",
+              "label": "Territorial taxation information: Bizkaia",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2502,9 +2412,9 @@
             },
             {
               "casilla_id": "92",
-              "help_text": null,
+              "help_text": "Box 92 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Información de la tributación por razón de territorio: Navarra",
+              "label": "Territorial taxation information: Navarre",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2518,9 +2428,9 @@
             },
             {
               "casilla_id": "93",
-              "help_text": null,
+              "help_text": "Box 93 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Entregas intracomunitarias de bienes y servicios",
+              "label": "Transactions carried out in the year - Intra-Community supplies of goods and services",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2534,9 +2444,9 @@
             },
             {
               "casilla_id": "94",
-              "help_text": null,
+              "help_text": "Box 94 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Exportaciones y otras operaciones exentas con derecho a deducción",
+              "label": "Transactions carried out in the year - Exports and other exempt transactions carrying a right to deduct",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2550,9 +2460,9 @@
             },
             {
               "casilla_id": "95",
-              "help_text": null,
+              "help_text": "Box 95 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Operaciones en régimen especial de la agricultura, ganadería y pesca",
+              "label": "Transactions carried out in the year - Transactions under the special regime for agriculture, livestock and fishing",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2566,9 +2476,9 @@
             },
             {
               "casilla_id": "96",
-              "help_text": null,
+              "help_text": "Box 96 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Operaciones realizadas por sujetos pasivos acogidos al régimen especial del recargo de equivalencia",
+              "label": "Transactions carried out in the year - Transactions by taxable persons under the equivalence surcharge special regime",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2582,9 +2492,9 @@
             },
             {
               "casilla_id": "97",
-              "help_text": null,
+              "help_text": "Box 97 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Operaciones en Régimen especial de bienes usados, objetos de arte, antigüedades y objetos de colección",
+              "label": "Transactions carried out in the year - Transactions under the special regime for second-hand goods, works of art, antiques and collectors' items",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2598,9 +2508,9 @@
             },
             {
               "casilla_id": "98",
-              "help_text": null,
+              "help_text": "Box 98 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Operaciones en régimen especial de Agencias de Viajes",
+              "label": "Transactions carried out in the year - Transactions under the special regime for travel agencies",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2614,9 +2524,9 @@
             },
             {
               "casilla_id": "99",
-              "help_text": null,
+              "help_text": "Box 99 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones realizadas en el ejercicio - Entregas de bienes de inversión",
+              "label": "Transactions carried out in the year - Supplies of capital goods",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2630,9 +2540,9 @@
             },
             {
               "casilla_id": "107",
-              "help_text": null,
+              "help_text": "Box 107 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Información de la tributación por razón de territorio: Territorio común",
+              "label": "Territorial taxation information: common territory",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2646,9 +2556,9 @@
             },
             {
               "casilla_id": "125",
-              "help_text": null,
+              "help_text": "Box 125 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones sujetas con inversión del sujeto pasivo",
+              "label": "Transactions subject under the reverse charge",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2662,9 +2572,9 @@
             },
             {
               "casilla_id": "126",
-              "help_text": null,
+              "help_text": "Box 126 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones no sujetas por reglas de localización acogidas a los regímenes especiales de ventanilla única",
+              "label": "Transactions not subject under place-of-supply rules covered by the one-stop-shop special regimes",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2678,9 +2588,9 @@
             },
             {
               "casilla_id": "127",
-              "help_text": null,
+              "help_text": "Box 127 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "OSS. Operaciones sujetas y acogidas a los regímenes especiales de ventanilla única",
+              "label": "OSS. Transactions subject to and covered by the one-stop-shop special regimes",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2694,9 +2604,9 @@
             },
             {
               "casilla_id": "128",
-              "help_text": null,
+              "help_text": "Box 128 of modelo 303, tax year 2022.",
               "input_kind": "manual",
-              "label": "Operaciones intragrupo valoradas conforme a lo dispuesto en los arts. 78 y 79 LIVA",
+              "label": "Intra-group transactions valued per arts. 78 and 79 LIVA",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -2757,40 +2667,6 @@
               ]
             },
             {
-              "casilla_id": "iva.repercutido.reducido.transitorio",
-              "help_text": "Transitional box under RD-ley 4/2024 for the reduced rate, coexisting with the ordinary 10% reduced rate.",
-              "input_kind": "bound",
-              "label": "Output VAT amount at the transitional reduced rate (5%/7.5%)",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "iva.repercutido.reducido.transitorio",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "iva.repercutido.super-reducido.transitorio",
-              "help_text": "Transitional box under RD-ley 4/2024 for the super-reduced rate, coexisting with the ordinary 4% super-reduced rate.",
-              "input_kind": "bound",
-              "label": "Output VAT amount at the transitional super-reduced rate (2%)",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "iva.repercutido.super-reducido.transitorio",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
               "casilla_id": "iva.soportado.interiores",
               "help_text": "Deductible input VAT borne on domestic current transactions.",
               "input_kind": "bound",
@@ -2810,7 +2686,7 @@
               "casilla_id": "iva.autorepercutido.intracomunitaria",
               "help_text": "Self-assessed VAT amount on intra-Community acquisitions under the reverse-charge rules.",
               "input_kind": "bound",
-              "label": "Reverse-charge VAT amount on intra-Community acquisitions",
+              "label": "Reverse-charge VAT amount on intra-Community acquisitions (LIVA art. 84.Uno.2)",
               "legal_refs": [
                 "ley-37-1992:art-69",
                 "ley-37-1992:art-70",
@@ -2828,7 +2704,7 @@
               "casilla_id": "iva.autorepercutido.interior.devengado",
               "help_text": "Accrued self-assessed VAT on domestic transactions subject to reverse charge.",
               "input_kind": "bound",
-              "label": "Accrued reverse-charge VAT on domestic transactions",
+              "label": "Accrued reverse-charge VAT on domestic transactions (LIVA art. 84.Uno.2; official box 13)",
               "legal_refs": [
                 "ley-37-1992:art-84",
                 "rd-1624-1992:art-71",
@@ -2844,7 +2720,7 @@
               "casilla_id": "iva.autorepercutido.interior.deducible",
               "help_text": "Deductible self-assessed VAT on domestic transactions subject to reverse charge.",
               "input_kind": "bound",
-              "label": "Deductible reverse-charge VAT on domestic transactions",
+              "label": "Deductible reverse-charge VAT on domestic transactions (LIVA art. 84.Uno.2 + art. 92; official box 37)",
               "legal_refs": [
                 "ley-37-1992:art-84",
                 "ley-37-1992:art-92",
@@ -2861,7 +2737,7 @@
               "casilla_id": "iva.autorepercutido.intracomunitaria.devengado",
               "help_text": "Accrued self-assessed VAT on intra-Community acquisitions of goods and services.",
               "input_kind": "bound",
-              "label": "Accrued reverse-charge VAT on intra-Community acquisitions",
+              "label": "Accrued reverse-charge VAT on intra-Community acquisitions (LIVA art. 13 + art. 15 + art. 84.Uno.2; official boxes 10/11)",
               "legal_refs": [
                 "ley-37-1992:art-13",
                 "ley-37-1992:art-15",
@@ -2878,30 +2754,10 @@
               ]
             },
             {
-              "casilla_id": "iva.autorepercutido.intracomunitaria.devengado.base",
-              "help_text": "Add up the self-charged taxable base accrued on intra-Community acquisitions.",
-              "input_kind": "bound",
-              "label": "Taxable base of accrued reverse-charge VAT on intra-Community acquisitions",
-              "legal_refs": [
-                "ley-37-1992:art-13",
-                "ley-37-1992:art-15",
-                "ley-37-1992:art-69",
-                "ley-37-1992:art-70",
-                "ley-37-1992:art-84",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "iva.autorepercutido.intracomunitaria.devengado.base",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
               "casilla_id": "iva.autorepercutido.intracomunitaria.deducible",
               "help_text": "Deductible self-assessed VAT on intra-Community acquisitions of goods and services.",
               "input_kind": "bound",
-              "label": "Deductible reverse-charge VAT on intra-Community acquisitions",
+              "label": "Deductible reverse-charge VAT on intra-Community acquisitions (LIVA art. 13 + art. 15 + art. 84.Uno.2 + art. 92; official boxes 36/37)",
               "legal_refs": [
                 "ley-37-1992:art-13",
                 "ley-37-1992:art-15",
@@ -2922,7 +2778,7 @@
               "casilla_id": "iva.soportado.importaciones",
               "help_text": "Deductible input VAT borne on imports of current goods.",
               "input_kind": "bound",
-              "label": "Deductible input VAT on imports of current goods",
+              "label": "Deductible input VAT on imports of current goods (LIVA art. 17 + art. 92; official box 33)",
               "legal_refs": [
                 "ley-37-1992:art-17",
                 "ley-37-1992:art-92",
@@ -2930,41 +2786,6 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "number": "iva.soportado.importaciones",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "iva.autoconsumo.promotor.base",
-              "help_text": null,
-              "input_kind": "bound",
-              "label": "Base imponible del autoconsumo del promotor inmobiliario (coste de construccion, Art. 9.1.c + Art. 79.4 LISIVA)",
-              "legal_refs": [
-                "ley-37-1992:art-9",
-                "ley-37-1992:art-79",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "iva.autoconsumo.promotor.base",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "iva.autoconsumo.promotor.cuota",
-              "help_text": null,
-              "input_kind": "computed",
-              "label": "Cuota IVA del autoconsumo del promotor inmobiliario (21% sobre base imponible, Art. 9.1.c + Art. 90 LISIVA)",
-              "legal_refs": [
-                "ley-37-1992:art-9",
-                "ley-37-1992:art-79",
-                "ley-37-1992:art-90",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "iva.autoconsumo.promotor.cuota",
               "required": false,
               "source_refs": [
                 "aeat-dr-303-2026"
@@ -3059,7 +2880,7 @@
               "casilla_id": "iva.prorrata-porcentaje",
               "help_text": "General pro rata percentage calculated from deductible-right turnover over total turnover.",
               "input_kind": "computed",
-              "label": "General pro rata percentage",
+              "label": "General pro rata percentage (eligible turnover / total turnover × 100)",
               "legal_refs": [
                 "ley-37-1992:art-104",
                 "ley-37-1992:art-102",
@@ -3077,7 +2898,7 @@
               "casilla_id": "iva.regularizacion-inversiones",
               "help_text": "VAT adjustment for capital goods under the investment-goods regularization rules.",
               "input_kind": "manual",
-              "label": "Capital goods adjustment",
+              "label": "Capital goods adjustment (LIVA arts. 107-110)",
               "legal_refs": [
                 "ley-37-1992:art-107",
                 "ley-37-1992:art-108",
@@ -3097,7 +2918,7 @@
               "casilla_id": "iva.compensacion-pendiente-periodos-anteriores",
               "help_text": "VAT amounts to offset that remain pending from prior periods.",
               "input_kind": "bound",
-              "label": "Amounts to offset pending from prior periods",
+              "label": "VAT credit pending offset from previous periods",
               "legal_refs": [
                 "ley-37-1992:art-99",
                 "ley-37-1992:art-115",
@@ -3119,7 +2940,7 @@
               "casilla_id": "iva.compensacion-aplicada-periodo",
               "help_text": "VAT amounts pending from prior periods that are applied in this period.",
               "input_kind": "computed",
-              "label": "Prior-period offsets applied in this period",
+              "label": "VAT credit from previous periods applied in this period",
               "legal_refs": [
                 "ley-37-1992:art-99",
                 "ley-37-1992:art-115",
@@ -3141,7 +2962,7 @@
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
               "help_text": "Prior-period VAT offsets that remain pending for later periods.",
               "input_kind": "computed",
-              "label": "Prior-period offsets pending for later periods",
+              "label": "VAT credit from previous periods carried forward to later periods",
               "legal_refs": [
                 "ley-37-1992:art-99",
                 "ley-37-1992:art-115",
@@ -3161,9 +2982,9 @@
             },
             {
               "casilla_id": "iva.resultado",
-              "help_text": null,
+              "help_text": "Data declared in modelo 303, taken from the official record design.",
               "input_kind": "computed",
-              "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
+              "label": "Result of the self-assessment ([66]+[77]+[68]-[78])",
               "legal_refs": [
                 "ley-37-1992:art-99",
                 "ley-37-1992:art-115",
@@ -3184,7 +3005,7 @@
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
               "help_text": "VAT offset balance available to carry forward after this period.",
               "input_kind": "computed",
-              "label": "Offset balance available at period end",
+              "label": "Offset balance available for later periods",
               "legal_refs": [
                 "ley-37-1992:art-99",
                 "ley-37-1992:art-115",
@@ -3244,7 +3065,7 @@
               "casilla_id": "decl.periodo",
               "help_text": "Quarterly period for the self-assessment: 1Q, 2Q, 3Q, or 4Q.",
               "input_kind": "informational",
-              "label": "Quarterly period",
+              "label": "Quarterly period (1T / 2T / 3T / 4T)",
               "legal_refs": [
                 "rd-1624-1992:art-71",
                 "orden-eha-3786-2008:art-1"
@@ -3257,282 +3078,10 @@
               ]
             },
             {
-              "casilla_id": "150",
-              "help_text": "Box 150: taxable base for accrued VAT under the general regime new rate tier 1.",
-              "input_kind": "manual",
-              "label": "Accrued VAT, general regime new rate tier 1 - taxable base",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "150",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "151",
-              "help_text": "Box 151: rate percentage for accrued VAT under the general regime new rate tier 1.",
-              "input_kind": "manual",
-              "label": "Accrued VAT, general regime new rate tier 1 - rate percentage",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "151",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "152",
-              "help_text": "Box 152: VAT amount for accrued VAT under the general regime new rate tier 1.",
-              "input_kind": "manual",
-              "label": "Accrued VAT, general regime new rate tier 1 - VAT amount",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "152",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "153",
-              "help_text": "Box 153: taxable base for accrued VAT under the general regime new rate tier 2.",
-              "input_kind": "bound",
-              "label": "Accrued VAT, general regime new rate tier 2 - taxable base",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "153",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "154",
-              "help_text": "Box 154: rate percentage for accrued VAT under the general regime new rate tier 2.",
-              "input_kind": "computed",
-              "label": "Accrued VAT, general regime new rate tier 2 - rate percentage",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "154",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "155",
-              "help_text": "Box 155: VAT amount for accrued VAT under the general regime new rate tier 2.",
-              "input_kind": "computed",
-              "label": "Accrued VAT, general regime new rate tier 2 - VAT amount",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "155",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "156",
-              "help_text": "Box 156: taxable base for the 0.5% equivalence surcharge.",
-              "input_kind": "manual",
-              "label": "Equivalence surcharge at 0.5% - taxable base",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "156",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "157",
-              "help_text": "Box 157: rate percentage for the 0.5% equivalence surcharge.",
-              "input_kind": "manual",
-              "label": "Equivalence surcharge at 0.5% - rate percentage",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "157",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "158",
-              "help_text": "Box 158: surcharge amount for the 0.5% equivalence surcharge.",
-              "input_kind": "manual",
-              "label": "Equivalence surcharge at 0.5% - surcharge amount",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "ley-37-1992:art-161",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "158",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "165",
-              "help_text": "Box 165: taxable base for accrued VAT under the general regime 2% rate from 2024.",
-              "input_kind": "bound",
-              "label": "Accrued VAT, general regime 2% rate from 2024 - taxable base",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "165",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "166",
-              "help_text": "Box 166: rate percentage for accrued VAT under the general regime 2% rate from 2024.",
-              "input_kind": "computed",
-              "label": "Accrued VAT, general regime 2% rate from 2024 - rate percentage",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "166",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "167",
-              "help_text": "Box 167: VAT amount for accrued VAT under the general regime 2% rate from 2024.",
-              "input_kind": "computed",
-              "label": "Accrued VAT, general regime 2% rate from 2024 - VAT amount",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "167",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "168",
-              "help_text": "Box 168: taxable base for the new equivalence surcharge rate from 2024.",
-              "input_kind": "manual",
-              "label": "New equivalence surcharge rate from 2024 - taxable base",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "168",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "169",
-              "help_text": "Box 169: rate percentage for the new equivalence surcharge rate from 2024.",
-              "input_kind": "manual",
-              "label": "New equivalence surcharge rate from 2024 - rate percentage",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "169",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
-              "casilla_id": "170",
-              "help_text": "Box 170: surcharge amount for the new equivalence surcharge rate from 2024.",
-              "input_kind": "bound",
-              "label": "New equivalence surcharge rate from 2024 - surcharge amount",
-              "legal_refs": [
-                "ley-37-1992:art-88",
-                "ley-37-1992:art-90",
-                "ley-37-1992:art-91",
-                "ley-37-1992:art-161",
-                "rd-1624-1992:art-71",
-                "orden-eha-3786-2008:art-1"
-              ],
-              "number": "170",
-              "required": false,
-              "source_refs": [
-                "aeat-dr-303-2026"
-              ]
-            },
-            {
               "casilla_id": "01",
-              "help_text": "Box 01: taxable base for accrued VAT under the general regime super-reduced 4% rate.",
+              "help_text": "Box 01: taxable base of VAT accrued under the general regime at the super-reduced rate of 4%.",
               "input_kind": "bound",
-              "label": "Accrued VAT, general regime super-reduced 4% rate - taxable base",
+              "label": "Accrued VAT, general regime super-reduced 4% rate - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3548,9 +3097,9 @@
             },
             {
               "casilla_id": "02",
-              "help_text": "Box 02: rate percentage for accrued VAT under the general regime super-reduced 4% rate.",
+              "help_text": "Box 02: percentage rate of VAT accrued under the general regime at the super-reduced rate of 4%.",
               "input_kind": "manual",
-              "label": "Accrued VAT, general regime super-reduced 4% rate - rate percentage",
+              "label": "Accrued VAT, general regime super-reduced 4% rate - Rate percentage",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3566,9 +3115,9 @@
             },
             {
               "casilla_id": "03",
-              "help_text": "Box 03: VAT amount for accrued VAT under the general regime super-reduced 4% rate.",
+              "help_text": "Box 03: amount of VAT accrued under the general regime at the super-reduced rate of 4%.",
               "input_kind": "computed",
-              "label": "Accrued VAT, general regime super-reduced 4% rate - VAT amount",
+              "label": "Accrued VAT, general regime super-reduced 4% rate - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3584,9 +3133,9 @@
             },
             {
               "casilla_id": "04",
-              "help_text": "Box 04: taxable base for accrued VAT under the general regime reduced 10% rate.",
+              "help_text": "Box 04: taxable base of VAT accrued under the general regime at the reduced rate of 10%.",
               "input_kind": "bound",
-              "label": "Accrued VAT, general regime reduced 10% rate - taxable base",
+              "label": "Accrued VAT, general regime reduced 10% rate - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3602,9 +3151,9 @@
             },
             {
               "casilla_id": "05",
-              "help_text": "Box 05: rate percentage for accrued VAT under the general regime reduced 10% rate.",
+              "help_text": "Box 05: percentage rate of VAT accrued under the general regime at the reduced rate of 10%.",
               "input_kind": "manual",
-              "label": "Accrued VAT, general regime reduced 10% rate - rate percentage",
+              "label": "Accrued VAT, general regime reduced 10% rate - Rate percentage",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3620,9 +3169,9 @@
             },
             {
               "casilla_id": "06",
-              "help_text": "Box 06: VAT amount for accrued VAT under the general regime reduced 10% rate.",
+              "help_text": "Box 06: amount of VAT accrued under the general regime at the reduced rate of 10%.",
               "input_kind": "computed",
-              "label": "Accrued VAT, general regime reduced 10% rate - VAT amount",
+              "label": "Accrued VAT, general regime reduced 10% rate - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3638,9 +3187,9 @@
             },
             {
               "casilla_id": "07",
-              "help_text": "Box 07: taxable base for accrued VAT under the general regime standard 21% rate.",
+              "help_text": "Box 07: taxable base of VAT accrued under the general regime at the standard rate of 21%.",
               "input_kind": "bound",
-              "label": "Accrued VAT, general regime standard 21% rate - taxable base",
+              "label": "Accrued VAT, general regime standard 21% rate - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3656,9 +3205,9 @@
             },
             {
               "casilla_id": "08",
-              "help_text": "Box 08: rate percentage for accrued VAT under the general regime standard 21% rate.",
+              "help_text": "Box 08: percentage rate of VAT accrued under the general regime at the standard rate of 21%.",
               "input_kind": "manual",
-              "label": "Accrued VAT, general regime standard 21% rate - rate percentage",
+              "label": "Accrued VAT, general regime standard 21% rate - Rate percentage",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3674,9 +3223,9 @@
             },
             {
               "casilla_id": "09",
-              "help_text": "Box 09: VAT amount for accrued VAT under the general regime standard 21% rate.",
+              "help_text": "Box 09: amount of VAT accrued under the general regime at the standard rate of 21%.",
               "input_kind": "computed",
-              "label": "Accrued VAT, general regime standard 21% rate - VAT amount",
+              "label": "Accrued VAT, general regime standard 21% rate - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3692,9 +3241,9 @@
             },
             {
               "casilla_id": "10",
-              "help_text": "Box 10: base for accrued VAT on intra-Community acquisitions of goods and services.",
+              "help_text": "Box 10: base of VAT accrued on intra-Community acquisitions of goods and services.",
               "input_kind": "computed",
-              "label": "Accrued VAT on intra-Community acquisitions of goods and services - base",
+              "label": "Accrued VAT on intra-Community acquisitions of goods and services - Tax base",
               "legal_refs": [
                 "ley-37-1992:art-13",
                 "ley-37-1992:art-15",
@@ -3712,9 +3261,9 @@
             },
             {
               "casilla_id": "11",
-              "help_text": "Box 11: VAT amount for accrued VAT on intra-Community acquisitions of goods and services.",
+              "help_text": "Box 11: amount of VAT accrued on intra-Community acquisitions of goods and services.",
               "input_kind": "computed",
-              "label": "Accrued VAT on intra-Community acquisitions of goods and services - VAT amount",
+              "label": "Accrued VAT on intra-Community acquisitions of goods and services - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3730,9 +3279,9 @@
             },
             {
               "casilla_id": "12",
-              "help_text": "Box 12: base for accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions.",
+              "help_text": "Box 12: base of VAT accrued on other transactions subject to the reverse charge mechanism, excluding intra-Community transactions.",
               "input_kind": "manual",
-              "label": "Accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions - base",
+              "label": "Accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions - Tax base",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3748,9 +3297,9 @@
             },
             {
               "casilla_id": "13",
-              "help_text": "Box 13: VAT amount for accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions.",
+              "help_text": "Box 13: amount of VAT accrued on other transactions subject to the reverse charge mechanism, excluding intra-Community transactions.",
               "input_kind": "computed",
-              "label": "Accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions - VAT amount",
+              "label": "Accrued VAT on other reverse-charge transactions excluding intra-Community acquisitions - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3766,9 +3315,9 @@
             },
             {
               "casilla_id": "14",
-              "help_text": "Box 14: taxable base for changes to accrued VAT taxable bases and amounts.",
+              "help_text": "Box 14: taxable base of the adjustment to bases and amounts of VAT accrued.",
               "input_kind": "manual",
-              "label": "Changes to accrued VAT taxable bases and amounts - taxable base",
+              "label": "Adjustment of taxable bases and amounts, accrued VAT - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3784,9 +3333,9 @@
             },
             {
               "casilla_id": "15",
-              "help_text": "Box 15: VAT amount for changes to accrued VAT taxable bases and amounts.",
+              "help_text": "Box 15: amount of the adjustment to bases and amounts of VAT accrued.",
               "input_kind": "manual",
-              "label": "Changes to accrued VAT taxable bases and amounts - VAT amount",
+              "label": "Adjustment of taxable bases and amounts, accrued VAT - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3802,9 +3351,9 @@
             },
             {
               "casilla_id": "16",
-              "help_text": "Box 16: taxable base for the 1.0% equivalence surcharge.",
+              "help_text": "Box 16: taxable base of the equivalence surcharge at 1.0%.",
               "input_kind": "manual",
-              "label": "Equivalence surcharge at 1.0% - taxable base",
+              "label": "Equivalence surcharge at 1.0% - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3820,9 +3369,9 @@
             },
             {
               "casilla_id": "17",
-              "help_text": "Box 17: rate percentage for the 1.0% equivalence surcharge.",
+              "help_text": "Box 17: percentage rate of the equivalence surcharge at 1.0%.",
               "input_kind": "manual",
-              "label": "Equivalence surcharge at 1.0% - rate percentage",
+              "label": "Equivalence surcharge at 1.0% - Rate percentage",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3838,9 +3387,9 @@
             },
             {
               "casilla_id": "18",
-              "help_text": "Box 18: surcharge amount for the 1.0% equivalence surcharge.",
+              "help_text": "Box 18: amount of the equivalence surcharge at 1.0%.",
               "input_kind": "manual",
-              "label": "Equivalence surcharge at 1.0% - surcharge amount",
+              "label": "Equivalence surcharge at 1.0% - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3856,9 +3405,9 @@
             },
             {
               "casilla_id": "19",
-              "help_text": "Box 19: taxable base for the 1.4% equivalence surcharge.",
+              "help_text": "Box 19: taxable base of the equivalence surcharge at 1.4%.",
               "input_kind": "manual",
-              "label": "Equivalence surcharge at 1.4% - taxable base",
+              "label": "Equivalence surcharge at 1.4% - Taxable base",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3874,9 +3423,9 @@
             },
             {
               "casilla_id": "20",
-              "help_text": "Box 20: rate percentage for the 1.4% equivalence surcharge.",
+              "help_text": "Box 20: percentage rate of the equivalence surcharge at 1.4%.",
               "input_kind": "manual",
-              "label": "Equivalence surcharge at 1.4% - rate percentage",
+              "label": "Equivalence surcharge at 1.4% - Rate percentage",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3892,9 +3441,9 @@
             },
             {
               "casilla_id": "21",
-              "help_text": "Box 21: surcharge amount for the 1.4% equivalence surcharge.",
+              "help_text": "Box 21: amount of the equivalence surcharge at 1.4%.",
               "input_kind": "bound",
-              "label": "Equivalence surcharge at 1.4% - surcharge amount",
+              "label": "Equivalence surcharge at 1.4% - Tax amount",
               "legal_refs": [
                 "ley-37-1992:art-88",
                 "ley-37-1992:art-90",
@@ -3904,6 +3453,457 @@
                 "orden-eha-3786-2008:art-1"
               ],
               "number": "21",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "22",
+              "help_text": "Box 22: taxable base of the equivalence surcharge at 5.2%.",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 5.2% - Taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "22",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "109",
+              "help_text": "Box 109: refunds agreed by the AEAT in previous self-assessments for the same year and period.",
+              "input_kind": "manual",
+              "label": "Result - Refunds agreed by the AEAT from previous self-assessments of the tax year and period",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "109",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "iva.repercutido.reducido.transitorio",
+              "help_text": "Transitional box under RD-ley 4/2024 for the reduced rate, coexisting with the ordinary 10% reduced rate.",
+              "input_kind": "bound",
+              "label": "Output VAT amount at the transitional reduced rate (5%/7.5%)",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "iva.repercutido.reducido.transitorio",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "iva.autorepercutido.intracomunitaria.devengado.base",
+              "help_text": "Add up the self-charged taxable base accrued on intra-Community acquisitions.",
+              "input_kind": "bound",
+              "label": "Taxable base of accrued reverse-charge VAT on intra-Community acquisitions (LIVA art. 13 + art. 15 + art. 84.Uno.2; official boxes 10/11)",
+              "legal_refs": [
+                "ley-37-1992:art-13",
+                "ley-37-1992:art-15",
+                "ley-37-1992:art-69",
+                "ley-37-1992:art-70",
+                "ley-37-1992:art-84",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "iva.autorepercutido.intracomunitaria.devengado.base",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "iva.autoconsumo.promotor.base",
+              "help_text": null,
+              "input_kind": "bound",
+              "label": "Tax base of the property developer's self-supply (construction cost, Art. 9.1.c + Art. 79.4 LISIVA)",
+              "legal_refs": [
+                "ley-37-1992:art-9",
+                "ley-37-1992:art-79",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "iva.autoconsumo.promotor.base",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "iva.autoconsumo.promotor.cuota",
+              "help_text": null,
+              "input_kind": "computed",
+              "label": "IVA amount on self-supply by the property developer (21% of the taxable base, Art. 9.1.c + Art. 90 LISIVA)",
+              "legal_refs": [
+                "ley-37-1992:art-9",
+                "ley-37-1992:art-79",
+                "ley-37-1992:art-90",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "iva.autoconsumo.promotor.cuota",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "150",
+              "help_text": "Box 150: taxable base of VAT accrued under the general regime at the new rate, tier 1.",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime new rate tier 1 - Taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "150",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "151",
+              "help_text": "Box 151: percentage rate of VAT accrued under the general regime at the new rate, tier 1.",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime new rate tier 1 - Rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "151",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "152",
+              "help_text": "Box 152: amount of VAT accrued under the general regime at the new rate, tier 1.",
+              "input_kind": "manual",
+              "label": "Accrued VAT, general regime new rate tier 1 - Tax amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "152",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "153",
+              "help_text": "Box 153: taxable base of VAT accrued under the general regime at the new rate, tier 2.",
+              "input_kind": "bound",
+              "label": "Accrued VAT, general regime new rate tier 2 - Taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "153",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "154",
+              "help_text": "Box 154: percentage rate of VAT accrued under the general regime at the new rate, tier 2.",
+              "input_kind": "computed",
+              "label": "Accrued VAT, general regime new rate tier 2 - Rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "154",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "155",
+              "help_text": "Box 155: amount of VAT accrued under the general regime at the new rate, tier 2.",
+              "input_kind": "computed",
+              "label": "Accrued VAT, general regime new rate tier 2 - Tax amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "155",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "156",
+              "help_text": "Box 156: taxable base of the equivalence surcharge at 0.5%.",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 0.5% - Taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "156",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "157",
+              "help_text": "Box 157: percentage rate of the equivalence surcharge at 0.5%.",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 0.5% - Rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "157",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "158",
+              "help_text": "Box 158: amount of the equivalence surcharge at 0.5%.",
+              "input_kind": "manual",
+              "label": "Equivalence surcharge at 0.5% - Tax amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "158",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "iva.repercutido.super-reducido.transitorio",
+              "help_text": "Transitional box under RD-ley 4/2024 for the super-reduced rate, coexisting with the ordinary 4% super-reduced rate.",
+              "input_kind": "bound",
+              "label": "Output VAT amount at the transitional super-reduced rate (2%)",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "iva.repercutido.super-reducido.transitorio",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "108",
+              "help_text": "Box 108: other adjustments in an amending self-assessment for cases determined by a discrepancy in administrative interpretation.",
+              "input_kind": "manual",
+              "label": "Corrective return - other adjustments in cases determined by discrepancy with administrative criterion",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "108",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "111",
+              "help_text": "Box 111: amount of the correction declared in an amending self-assessment.",
+              "input_kind": "manual",
+              "label": "Corrective return - correction amount",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "111",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "165",
+              "help_text": "Box 165: taxable base of VAT accrued under the general regime at the rate of 2% from 2024.",
+              "input_kind": "bound",
+              "label": "Accrued VAT, general regime 2% rate from 2024 - Taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "165",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "166",
+              "help_text": "Box 166: percentage rate of VAT accrued under the general regime at the rate of 2% from 2024.",
+              "input_kind": "computed",
+              "label": "Accrued VAT, general regime 2% rate from 2024 - Rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "166",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "167",
+              "help_text": "Box 167: amount of VAT accrued under the general regime at the rate of 2% from 2024.",
+              "input_kind": "computed",
+              "label": "Accrued VAT, general regime 2% rate from 2024 - Tax amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "167",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "168",
+              "help_text": "Box 168: taxable base of the new equivalence surcharge rate from 2024.",
+              "input_kind": "manual",
+              "label": "New equivalence surcharge rate from 2024 - Taxable base",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "168",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "169",
+              "help_text": "Box 169: percentage rate of the new equivalence surcharge from 2024.",
+              "input_kind": "manual",
+              "label": "New equivalence surcharge rate from 2024 - Rate percentage",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "169",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "170",
+              "help_text": "Box 170: amount of the new equivalence surcharge from 2024.",
+              "input_kind": "bound",
+              "label": "New equivalence surcharge rate from 2024 - Tax amount",
+              "legal_refs": [
+                "ley-37-1992:art-88",
+                "ley-37-1992:art-90",
+                "ley-37-1992:art-91",
+                "ley-37-1992:art-161",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "170",
+              "required": false,
+              "source_refs": [
+                "aeat-dr-303-2026"
+              ]
+            },
+            {
+              "casilla_id": "112",
+              "help_text": "Payment on account for supplies of petrol, diesel and biofuels attributed to the State",
+              "input_kind": "manual",
+              "label": "Result - Advance payment on supplies of petrol, diesel and biofuels after the winding up of the warehousing regime other than customs (State Administration)",
+              "legal_refs": [
+                "ley-37-1992:art-99",
+                "ley-37-1992:art-115",
+                "ley-37-1992:art-116",
+                "rd-1624-1992:art-71",
+                "orden-eha-3786-2008:art-1"
+              ],
+              "number": "112",
               "required": false,
               "source_refs": [
                 "aeat-dr-303-2026"
@@ -3928,6 +3928,57 @@
         "app",
         "modelo",
         "work",
+        "attest-m303-exonerado-390",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--observed-at",
+        "2026-03-31T12:00:00+00:00"
+      ],
+      "captures": [
+        {
+          "json_path": "result.attachment_id",
+          "name": "m303_attestation_id",
+          "value": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
+        },
+        {
+          "json_path": "result.sha256",
+          "name": "m303_attestation_sha256",
+          "value": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.attest-m303-exonerado-390",
+        "notices": [],
+        "result": {
+          "attachment_id": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0",
+          "filing_year": 2026,
+          "operation": "modelo.work.attest-m303-exonerado-390",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "sha256": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
         "calculate",
         "--modelo",
         "303",
@@ -3935,8 +3986,12 @@
         "2026",
         "--period",
         "1T",
-        "--m303-filing-evidence",
-        "fixtures/m303-filing-evidence-2026-1T.json",
+        "--no-joint-return-elected",
+        "--no-annual-volume-nonzero",
+        "--m303-exonerado-390-attachment-id",
+        "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0",
+        "--m303-exonerado-390-sha256",
+        "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0",
         "--casilla",
         "44=150.00"
       ],
@@ -3996,7 +4051,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "d90b835e179f0b786c24ffef906024994c87b011bd6568f00bfa8af0a827ac37",
+          "calculation_revision_id": "54a3ddd4bc8e06167329927323e9805ed5895f18dfa93d69d95e7281b97cc73a",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -4258,7 +4313,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4326,7 +4381,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4394,7 +4449,7 @@
                 "210"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4424,7 +4479,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4510,7 +4565,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4744,7 +4799,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -4889,7 +4944,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -4916,7 +4971,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -5042,7 +5097,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure"
               ],
               "value": "0.00"
@@ -5069,7 +5124,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -5360,7 +5415,7 @@
                 "210.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -5408,7 +5463,7 @@
                 "105"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -5496,7 +5551,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -5584,7 +5639,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -5755,7 +5810,7 @@
                 "255.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -6111,7 +6166,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -6158,7 +6213,7 @@
                 "100"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -6883,7 +6938,7 @@
                 "-45.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -6916,7 +6971,7 @@
                 "45.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -6946,7 +7001,7 @@
                 "-45.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -7003,7 +7058,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -7044,7 +7099,7 @@
                 "150.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -7118,7 +7173,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-late",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -7146,7 +7201,7 @@
                 "0"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "aeat-modelo-303-procedure",
                 "boe-modelo-303-2008-form"
               ],
@@ -7338,7 +7393,7 @@
                 "0.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -7368,7 +7423,7 @@
                 "255.00"
               ],
               "source_refs": [
-                "aeat-dr-303-2026",
+                "aeat-dr-303-2024-early",
                 "boe-modelo-303-2008-form",
                 "aeat-modelo-303-procedure"
               ],
@@ -7413,6 +7468,12 @@
             }
           ],
           "operation": "modelo.work.calculate",
+          "registry_snapshot_ref": {
+            "modelo": "303",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2026-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -7435,37 +7496,37 @@
             },
             {
               "casilla_id": "64",
-              "label": "Resultado - Suma de resultados ([46]+[58]+[76])",
+              "label": "Result - Sum of results ([46]+[58]+[76])",
               "role": "key_figure",
               "value": "-45.00"
             },
             {
               "casilla_id": "66",
-              "label": "Resultado - Importe atribuible Administracion del Estado ([64]×[65]/100)",
+              "label": "Result - Amount attributable to the State Tax Administration ([64]×[65]/100)",
               "role": "key_figure",
               "value": "-45.00"
             },
             {
               "casilla_id": "iva.compensacion-aplicada-periodo",
-              "label": "Prior-period offsets applied in this period",
+              "label": "VAT credit from previous periods applied in this period",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.compensacion-pendiente-periodos-posteriores",
-              "label": "Prior-period offsets pending for later periods",
+              "label": "VAT credit from previous periods carried forward to later periods",
               "role": "key_figure",
               "value": "0.00"
             },
             {
               "casilla_id": "iva.resultado",
-              "label": "Resultado de la autoliquidacion ([66]+[77]+[68]-[78])",
+              "label": "Result of the self-assessment ([66]+[77]+[68]-[78])",
               "role": "key_figure",
               "value": "-45.00"
             },
             {
               "casilla_id": "71",
-              "label": "Resultado final ([69]-[70]+[109])",
+              "label": "Result final ([69]-[70]+[109])",
               "role": "key_figure",
               "value": "-45.00"
             },
@@ -7477,7 +7538,7 @@
             },
             {
               "casilla_id": "iva.compensacion-disponible-fin-periodo",
-              "label": "Offset balance available at period end",
+              "label": "Offset balance available for later periods",
               "role": "key_figure",
               "value": "45.00"
             },
@@ -7495,7 +7556,42 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision d90b835e179f0b786c24ffef906024994c87b011bd6568f00bfa8af0a827ac37 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 303 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision d90b835e179f0b786c24ffef906024994c87b011bd6568f00bfa8af0a827ac37`.",
+          "saved_confirmation": "Saved as draft calculation revision 54a3ddd4bc8e06167329927323e9805ed5895f18dfa93d69d95e7281b97cc73a (state: draft). It is persisted and can be resumed later.",
+          "source_provenance": [
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518"
+            },
+            {
+              "contributor_binding_source": "ledger_iva_aggregation",
+              "contributor_source_kind": "ledger_iva_aggregation",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_iva_aggregation",
+              "resolver_id": "ledger_iva_aggregation",
+              "source_ref": "transaction:e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d"
+            },
+            {
+              "contributor_binding_source": "prorrata_regularizacion",
+              "contributor_source_kind": "prorrata_regularizacion",
+              "dependency_treatment": "",
+              "fingerprint": null,
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "prorrata_regularizacion",
+              "resolver_id": "prorrata_regularizacion",
+              "source_ref": "303:2026:1T,2T,3T,4T:prorrata-current-year-values"
+            }
+          ],
           "state": "borrador",
           "superseded_at": null,
           "updated_at": "2026-04-01T09:00:00+00:00",

@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "C-2026-0087",
+          "invoice_number": "sha256:17853e99",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -240,6 +240,57 @@
         "app",
         "modelo",
         "work",
+        "attest-m303-exonerado-390",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--observed-at",
+        "2026-03-31T12:00:00+00:00"
+      ],
+      "captures": [
+        {
+          "json_path": "result.attachment_id",
+          "name": "m303_attestation_id",
+          "value": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
+        },
+        {
+          "json_path": "result.sha256",
+          "name": "m303_attestation_sha256",
+          "value": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.attest-m303-exonerado-390",
+        "notices": [],
+        "result": {
+          "attachment_id": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0",
+          "filing_year": 2026,
+          "operation": "modelo.work.attest-m303-exonerado-390",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "sha256": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
         "calculate",
         "--modelo",
         "303",
@@ -247,8 +298,12 @@
         "2026",
         "--period",
         "1T",
-        "--m303-filing-evidence",
-        "fixtures/m303-filing-evidence-2026-1T.json"
+        "--no-joint-return-elected",
+        "--no-annual-volume-nonzero",
+        "--m303-exonerado-390-attachment-id",
+        "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0",
+        "--m303-exonerado-390-sha256",
+        "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
       ],
       "captures": [],
       "envelope": {
@@ -293,7 +348,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92",
+          "calculation_revision_id": "004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3798,7 +3853,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -3876,9 +3931,9 @@
           "revision_count": 1,
           "revisions": [
             {
-              "calculation_revision_id": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92",
+              "calculation_revision_id": "004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec",
               "created_at": "2026-04-01T09:00:00+00:00",
-              "short_calculation_revision_id": "c039ba694b92",
+              "short_calculation_revision_id": "895042b0d3ec",
               "short_work_unit_id": "af6b2264dd9d",
               "state": "borrador",
               "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
@@ -3953,7 +4008,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "f976ec3e454a1fa1c12c1f41d30947cc66821ffa5ee62c4f871ec039ba694b92",
+          "calculation_revision_id": "004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec",
           "casilla_values": {
             "01": "0",
             "02": "0",

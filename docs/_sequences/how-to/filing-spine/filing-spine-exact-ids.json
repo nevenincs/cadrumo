@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "C-2026-0087",
+          "invoice_number": "sha256:17853e99",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -281,6 +281,57 @@
         "app",
         "modelo",
         "work",
+        "attest-m303-exonerado-390",
+        "--year",
+        "2026",
+        "--period",
+        "1T",
+        "--observed-at",
+        "2026-03-31T12:00:00+00:00"
+      ],
+      "captures": [
+        {
+          "json_path": "result.attachment_id",
+          "name": "m303_attestation_id",
+          "value": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
+        },
+        {
+          "json_path": "result.sha256",
+          "name": "m303_attestation_sha256",
+          "value": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
+        }
+      ],
+      "envelope": {
+        "active_profile": "docs-sequence-sandbox",
+        "command": "modelo.work.attest-m303-exonerado-390",
+        "notices": [],
+        "result": {
+          "attachment_id": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0",
+          "filing_year": 2026,
+          "operation": "modelo.work.attest-m303-exonerado-390",
+          "period": {
+            "code": "1T",
+            "filing_year": 2026
+          },
+          "sha256": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
+        },
+        "schema_version": "2",
+        "status": "success"
+      },
+      "envelope_source": "stdout",
+      "exit_code": 0,
+      "kind": "setup",
+      "stderr_text": null,
+      "text": null
+    },
+    {
+      "argv": [
+        "aeat",
+        "--format",
+        "json",
+        "app",
+        "modelo",
+        "work",
         "calculate",
         "--modelo",
         "303",
@@ -288,14 +339,18 @@
         "2026",
         "--period",
         "1T",
-        "--m303-filing-evidence",
-        "fixtures/m303-filing-evidence-2026-1T.json"
+        "--no-joint-return-elected",
+        "--no-annual-volume-nonzero",
+        "--m303-exonerado-390-attachment-id",
+        "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0",
+        "--m303-exonerado-390-sha256",
+        "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "revision_id",
-          "value": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
+          "value": "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387"
         }
       ],
       "envelope": {
@@ -340,7 +395,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
+          "calculation_revision_id": "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3845,7 +3900,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -3917,7 +3972,7 @@
         "modelo",
         "work",
         "verify",
-        "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
+        "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387"
       ],
       "captures": [],
       "envelope": {
@@ -3973,7 +4028,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
+          "calculation_revision_id": "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4042,7 +4097,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "e55136e9efc8a73cac623ceb483b9a764240fc929c103760167fd753f4935a55",
+          "verification_report_id": "5349a165c3f9b363a85850cd889e1ef120dbdb4bf8f3782c85b71f8940256f7b",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -4063,7 +4118,7 @@
         "modelo",
         "work",
         "file",
-        "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
+        "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387"
       ],
       "captures": [],
       "envelope": {
@@ -4075,13 +4130,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
+          "calculation_revision_id": "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "e6d810f1fe077e8f156fc1cd0c09e94a73a32c10fbe274899afb74345b87579f",
+          "filing_record_id": "5439d5f51142fdbeca89c257e3a9f4c9c3b7867047d3b00e6481793638d544ed",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
@@ -4118,7 +4173,7 @@
         "export",
         "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
         "--revision",
-        "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed",
+        "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387",
         "--output",
         "./modelo-303.boe"
       ],
@@ -4128,12 +4183,16 @@
         "command": "modelo.export",
         "error": {
           "action": null,
-          "category": "FAIL",
-          "code": "FAIL_MODELO_EXPORT",
+          "category": "REFUSED",
+          "code": "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE",
           "context": {
-            "calculation_revision_id": "703a1967150ffa63e7666477f502a198d7a3e7fe83f90dfe6f1ef424171059ed"
+            "calculation_revision_id": "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387",
+            "developer_positions": "101-109",
+            "modelo": "303",
+            "program_positions": "93-96",
+            "record": "DP30300"
           },
-          "message": "Modelo 303 export requires explicit product/software identity authority",
+          "message": "Official export is unavailable: the record design reserves the header fields \"Versión del Programa\" and \"NIF del desarrollador\" for the software developer, and no reviewed product identity exists for them. Cadrumo does not fill them with blanks or placeholders. The calculation and its verification remain valid; exporting needs a reviewed program identifier and developer NIF from the software developer.",
           "retryable": false,
           "runbook_id": null,
           "trace_id": null
@@ -4143,7 +4202,7 @@
         "status": "error"
       },
       "envelope_source": "stderr",
-      "exit_code": 5,
+      "exit_code": 2,
       "kind": "result",
       "stderr_text": null,
       "text": null
