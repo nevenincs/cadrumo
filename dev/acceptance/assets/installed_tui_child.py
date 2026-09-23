@@ -28,16 +28,18 @@ type InstalledAssetTuiJourney = Literal[
     "profile_ready",
     "ledger",
     "asset_screen",
-    "asset_linear_lifecycle",
+    "asset_method_lifecycle",
     "asset_readback",
     "asset_cli_readback",
 ]
 
-_LINEAR_ASSET_ID = "assets-tui-linear-material-2025"
-_LINEAR_CORRECTED_FORECAST_AMOUNT = "180.00"
-_LINEAR_REVISION_JSON = json.dumps(
+METHOD_ASSET_ID = "assets-tui-constant-percentage-machine-2025"
+# Machinery, normal modality: the 12% maximum implies 8.33 years, weighted 2.5
+# (RIS art. 5.1.c) to a 30% constant percentage; 1,800 x 30% = 540.00.
+METHOD_CORRECTED_FORECAST_AMOUNT = "540.00"
+METHOD_REVISION_JSON = json.dumps(
     {
-        "asset_id": _LINEAR_ASSET_ID,
+        "asset_id": METHOD_ASSET_ID,
         "revision_number": 1,
         "acquisition": {
             "observed_transaction_id": "a" * 64,
@@ -53,24 +55,22 @@ _LINEAR_REVISION_JSON = json.dumps(
         },
         "in_service_date": "2025-01-01",
         "opening_history": {"status": "known", "accumulated_amount": "0.00"},
-    },
-    separators=(",", ":"),
-)
-_LINEAR_SELECTION_JSON = json.dumps(
-    {
-        "regime": "simplified",
-        "asset_kind": "material",
-        "authority_class_key": "instalacion-mobiliario-enseres-resto-material",
+        "acquired_condition": "new",
+        "amortization": {
+            "regime": "normal",
+            "method": "constant_percentage",
+            "authority_class_key": "maquinaria",
+        },
     },
     separators=(",", ":"),
 )
 
 
-def _linear_correction_json(*, supersedes_revision_id: str) -> str:
+def _method_correction_json(*, supersedes_revision_id: str) -> str:
     """Build a synthetic correction only after public inspection supplied its ID."""
-    raw_document: object = json.loads(_LINEAR_REVISION_JSON)
+    raw_document: object = json.loads(METHOD_REVISION_JSON)
     if not isinstance(raw_document, dict):  # pragma: no cover - static fixture invariant
-        raise RuntimeError("linear installed-TUI fixture is not a JSON object")
+        raise RuntimeError("method installed-TUI fixture is not a JSON object")
     document = cast("dict[str, object]", raw_document)
     document["revision_number"] = 2
     document["supersedes_revision_id"] = supersedes_revision_id
@@ -540,28 +540,28 @@ def _claim_result_reused(*, rendered: str, expected: bool, stage: str) -> None:
         )
 
 
-async def _exercise_linear_asset_lifecycle(*, pilot: Any, progress: Callable[[str], None]) -> dict[str, object]:
+async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[str], None]) -> dict[str, object]:
     """Create, correct, forecast, claim, and hand off one public asset lifecycle."""
     await _set_public_input(
         pilot=pilot,
         selector="#asset-id",
-        value=_LINEAR_ASSET_ID,
+        value=METHOD_ASSET_ID,
         stage="asset_creation",
     )
     await _set_public_input(
         pilot=pilot,
         selector="#asset-revision-json",
-        value=_LINEAR_REVISION_JSON,
+        value=METHOD_REVISION_JSON,
         stage="asset_creation",
     )
     creation_action = await _activate_public_button(pilot=pilot, selector="#asset-create", stage="asset_creation")
     created = await _wait_for_asset_result(
         pilot=pilot,
-        expected_prefix=f"created\t{_LINEAR_ASSET_ID}\trevisions=1",
+        expected_prefix=f"created\t{METHOD_ASSET_ID}\trevisions=1",
         stage="asset_creation",
         transition=creation_action,
     )
-    if created != f"created\t{_LINEAR_ASSET_ID}\trevisions=1":
+    if created != f"created\t{METHOD_ASSET_ID}\trevisions=1":
         raise InstalledAssetTuiError(
             "installed TUI asset creation returned an unexpected public result",
             stage="asset_creation",
@@ -572,11 +572,11 @@ async def _exercise_linear_asset_lifecycle(*, pilot: Any, progress: Callable[[st
     inspection_action = await _activate_public_button(pilot=pilot, selector="#asset-inspect", stage="asset_inspection")
     inspected = await _wait_for_asset_result(
         pilot=pilot,
-        expected_prefix=f"asset\t{_LINEAR_ASSET_ID}\trevisions=1",
+        expected_prefix=f"asset\t{METHOD_ASSET_ID}\trevisions=1",
         stage="asset_inspection",
         transition=inspection_action,
     )
-    if inspected != f"asset\t{_LINEAR_ASSET_ID}\trevisions=1":
+    if inspected != f"asset\t{METHOD_ASSET_ID}\trevisions=1":
         raise InstalledAssetTuiError(
             "installed TUI asset inspection returned an unexpected public result",
             stage="asset_inspection",
@@ -591,17 +591,17 @@ async def _exercise_linear_asset_lifecycle(*, pilot: Any, progress: Callable[[st
     await _set_public_input(
         pilot=pilot,
         selector="#asset-revision-json",
-        value=_linear_correction_json(supersedes_revision_id=first_revision_id),
+        value=_method_correction_json(supersedes_revision_id=first_revision_id),
         stage="asset_correction",
     )
     correction_action = await _activate_public_button(pilot=pilot, selector="#asset-correct", stage="asset_correction")
     corrected = await _wait_for_asset_result(
         pilot=pilot,
-        expected_prefix=f"corrected\t{_LINEAR_ASSET_ID}\trevisions=2",
+        expected_prefix=f"corrected\t{METHOD_ASSET_ID}\trevisions=2",
         stage="asset_correction",
         transition=correction_action,
     )
-    if corrected != f"corrected\t{_LINEAR_ASSET_ID}\trevisions=2":
+    if corrected != f"corrected\t{METHOD_ASSET_ID}\trevisions=2":
         raise InstalledAssetTuiError(
             "installed TUI asset correction returned an unexpected public result",
             stage="asset_correction",
@@ -614,12 +614,6 @@ async def _exercise_linear_asset_lifecycle(*, pilot: Any, progress: Callable[[st
         )
     progress("asset_corrected")
 
-    await _set_public_input(
-        pilot=pilot,
-        selector="#asset-selection-json",
-        value=_LINEAR_SELECTION_JSON,
-        stage="asset_forecast",
-    )
     await _set_public_input(
         pilot=pilot,
         selector="#asset-covered-from",
@@ -640,9 +634,9 @@ async def _exercise_linear_asset_lifecycle(*, pilot: Any, progress: Callable[[st
         transition=forecast_action,
     )
     forecast_parts = forecast.split("\t", maxsplit=2)
-    if len(forecast_parts) != 3 or forecast_parts[1] != _LINEAR_CORRECTED_FORECAST_AMOUNT or not forecast_parts[2]:
+    if len(forecast_parts) != 3 or forecast_parts[1] != METHOD_CORRECTED_FORECAST_AMOUNT or not forecast_parts[2]:
         raise InstalledAssetTuiError(
-            "installed TUI forecast did not match the independently grounded linear amount",
+            "installed TUI forecast did not match the independently grounded constant-percentage amount",
             stage="asset_forecast",
         )
     progress("asset_forecast")
@@ -698,9 +692,9 @@ async def _exercise_linear_asset_lifecycle(*, pilot: Any, progress: Callable[[st
     )
     expected_handoff = (
         "filing_handoff"
-        f"\tm100_material={_LINEAR_CORRECTED_FORECAST_AMOUNT}"
+        f"\tm100_material={METHOD_CORRECTED_FORECAST_AMOUNT}"
         "\tm100_intangible=0.00"
-        f"\tm130_material={_LINEAR_CORRECTED_FORECAST_AMOUNT}"
+        f"\tm130_material={METHOD_CORRECTED_FORECAST_AMOUNT}"
         "\tm130_intangible=0.00"
     )
     if handoff != expected_handoff:
@@ -713,32 +707,32 @@ async def _exercise_linear_asset_lifecycle(*, pilot: Any, progress: Callable[[st
         "asset_created": True,
         "asset_inspected": True,
         "correction_uses_public_revision_identity": True,
-        "forecast_amount": _LINEAR_CORRECTED_FORECAST_AMOUNT,
+        "forecast_amount": METHOD_CORRECTED_FORECAST_AMOUNT,
         "forecast_provenance_present": True,
         "claim_replay_reused": True,
-        "filing_handoff_material_m100": _LINEAR_CORRECTED_FORECAST_AMOUNT,
-        "filing_handoff_material_m130": _LINEAR_CORRECTED_FORECAST_AMOUNT,
+        "filing_handoff_material_m100": METHOD_CORRECTED_FORECAST_AMOUNT,
+        "filing_handoff_material_m130": METHOD_CORRECTED_FORECAST_AMOUNT,
         "inspection_revision_identity_exposed": True,
         "filing_handoff_control_exposed": True,
     }
 
 
-async def _exercise_linear_asset_readback(*, pilot: Any, progress: Callable[[str], None]) -> dict[str, object]:
+async def _exercise_method_asset_readback(*, pilot: Any, progress: Callable[[str], None]) -> dict[str, object]:
     """Read an asset created by a prior installed TUI process through its public screen."""
     await _set_public_input(
         pilot=pilot,
         selector="#asset-id",
-        value=_LINEAR_ASSET_ID,
+        value=METHOD_ASSET_ID,
         stage="asset_readback",
     )
     readback_action = await _activate_public_button(pilot=pilot, selector="#asset-inspect", stage="asset_readback")
     inspected = await _wait_for_asset_result(
         pilot=pilot,
-        expected_prefix=f"asset\t{_LINEAR_ASSET_ID}\trevisions=2",
+        expected_prefix=f"asset\t{METHOD_ASSET_ID}\trevisions=2",
         stage="asset_readback",
         transition=readback_action,
     )
-    if inspected != f"asset\t{_LINEAR_ASSET_ID}\trevisions=2":
+    if inspected != f"asset\t{METHOD_ASSET_ID}\trevisions=2":
         raise InstalledAssetTuiError(
             "installed TUI fresh readback returned an unexpected public result",
             stage="asset_readback",
@@ -753,7 +747,7 @@ async def _exercise_cli_created_asset_readback(*, pilot: Any, progress: Callable
     await _set_public_input(
         pilot=pilot,
         selector="#asset-id",
-        value=_LINEAR_ASSET_ID,
+        value=METHOD_ASSET_ID,
         stage="asset_cli_readback",
     )
     cli_readback_action = await _activate_public_button(
@@ -763,11 +757,11 @@ async def _exercise_cli_created_asset_readback(*, pilot: Any, progress: Callable
     )
     inspected = await _wait_for_asset_result(
         pilot=pilot,
-        expected_prefix=f"asset\t{_LINEAR_ASSET_ID}\trevisions=1",
+        expected_prefix=f"asset\t{METHOD_ASSET_ID}\trevisions=1",
         stage="asset_cli_readback",
         transition=cli_readback_action,
     )
-    if inspected != f"asset\t{_LINEAR_ASSET_ID}\trevisions=1":
+    if inspected != f"asset\t{METHOD_ASSET_ID}\trevisions=1":
         raise InstalledAssetTuiError(
             "installed TUI CLI-created-asset readback returned an unexpected public result",
             stage="asset_cli_readback",
@@ -919,7 +913,7 @@ def _run_probe(
             "profile_ready",
             "ledger",
             "asset_screen",
-            "asset_linear_lifecycle",
+            "asset_method_lifecycle",
             "asset_readback",
             "asset_cli_readback",
         }:
@@ -949,12 +943,12 @@ def _run_probe(
             observed.append(_public_surface_diagnostic(pilot))
             completed.append("profile_completed")
             publish("profile_completed", diagnostic=observed[-1])
-        if journey in {"ledger", "asset_screen", "asset_linear_lifecycle", "asset_readback", "asset_cli_readback"}:
+        if journey in {"ledger", "asset_screen", "asset_method_lifecycle", "asset_readback", "asset_cli_readback"}:
             await _open_ledger_destination(pilot=pilot)
             observed.append(_public_surface_diagnostic(pilot))
             completed.append("ledger_ready")
             publish("ledger_ready", diagnostic=observed[-1])
-        if journey in {"asset_screen", "asset_linear_lifecycle", "asset_readback", "asset_cli_readback"}:
+        if journey in {"asset_screen", "asset_method_lifecycle", "asset_readback", "asset_cli_readback"}:
             await _open_activity_asset_screen(pilot=pilot)
             observed.append(_public_surface_diagnostic(pilot))
             completed.append("asset_screen_ready")
@@ -964,11 +958,11 @@ def _run_probe(
             completed.append(stage)
             publish(stage, diagnostic=_public_surface_diagnostic(pilot), receipt_assertions=assertions or None)
 
-        if journey == "asset_linear_lifecycle":
-            assertions.update(await _exercise_linear_asset_lifecycle(pilot=pilot, progress=record_asset_stage))
+        if journey == "asset_method_lifecycle":
+            assertions.update(await _exercise_method_asset_lifecycle(pilot=pilot, progress=record_asset_stage))
             publish("asset_claim_replay", diagnostic=_public_surface_diagnostic(pilot), receipt_assertions=assertions)
         if journey == "asset_readback":
-            assertions.update(await _exercise_linear_asset_readback(pilot=pilot, progress=record_asset_stage))
+            assertions.update(await _exercise_method_asset_readback(pilot=pilot, progress=record_asset_stage))
             publish("asset_readback", diagnostic=_public_surface_diagnostic(pilot), receipt_assertions=assertions)
         if journey == "asset_cli_readback":
             assertions.update(await _exercise_cli_created_asset_readback(pilot=pilot, progress=record_asset_stage))
@@ -1031,7 +1025,7 @@ def _parser() -> argparse.ArgumentParser:
             "profile_ready",
             "ledger",
             "asset_screen",
-            "asset_linear_lifecycle",
+            "asset_method_lifecycle",
             "asset_readback",
             "asset_cli_readback",
         ),
@@ -1090,6 +1084,9 @@ if __name__ == "__main__":  # pragma: no cover - executable module boundary
 
 
 __all__ = [
+    "METHOD_ASSET_ID",
+    "METHOD_CORRECTED_FORECAST_AMOUNT",
+    "METHOD_REVISION_JSON",
     "InstalledAssetTuiError",
     "InstalledAssetTuiReceipt",
     "main",

@@ -10,6 +10,7 @@ from dev.acceptance.assets.evidence import (
     ASSET_ACCEPTANCE_EVIDENCE,
     AcceptanceStatus,
     annual_linear_charge_oracle,
+    first_year_constant_percentage_oracle,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -28,3 +29,17 @@ def test_full_year_oracle_is_independent_and_pins_the_repaired_two_thousand_euro
         allocated_basis=Decimal("2000.00"),
         annual_rate=Decimal("0.26"),
     ) == Decimal("520.00")
+
+
+def test_constant_percentage_oracle_pins_the_installed_journey_amounts() -> None:
+    # Machinery: 12% maximum, 8.33-year period, weighted 2.5 -> 30%.
+    assert first_year_constant_percentage_oracle(
+        allocated_basis=Decimal("1000.00"),
+        linear_coefficient=Decimal("0.12"),
+        weighting=Decimal("2.5"),
+    ) == Decimal("300.00")
+    assert first_year_constant_percentage_oracle(
+        allocated_basis=Decimal("1800.00"),
+        linear_coefficient=Decimal("0.12"),
+        weighting=Decimal("2.5"),
+    ) == Decimal("540.00")

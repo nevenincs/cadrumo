@@ -263,7 +263,7 @@ def run_installed_cli_profile_setup(
             "--activity",
             "consultoria",
             "--irpf-estimation-regime",
-            "directa_simplificada",
+            "directa_normal",
             "--iva-regime",
             "GENERAL",
             "--iva-m303-regime-composition",

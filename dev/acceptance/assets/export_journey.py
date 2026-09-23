@@ -81,43 +81,34 @@ class AssetExportEvidence:
 
 
 def _asset_revision_json() -> str:
-    """Return the minimal primary-purchase shape the accepted contract supports."""
+    """Return a new machine under the normal-modality constant-percentage method.
+
+    Machinery's 12% maximum implies 8.33 years, weighted 2.5 (RIS art. 5.1.c) to
+    a 30% constant percentage, so the full 2025 year charges 1,000 x 30% = 300.00.
+    """
     return json.dumps(
         {
-            "asset_id": "acceptance-low-value-material-2025",
+            "asset_id": "acceptance-constant-percentage-machine-2025",
             "revision_number": 1,
             "acquisition": {
                 "observed_transaction_id": "a" * 64,
-                "invoice_evidence_id": "synthetic-new-material-invoice",
+                "invoice_evidence_id": "synthetic-new-machine-invoice",
                 "evidence_fingerprint": "b" * 64,
             },
             "acquisition_shape": "primary_purchase",
             "asset_kind": "material",
             "basis": {
                 "stage": "business_allocated",
-                "basis_amount": "300.00",
+                "basis_amount": "1000.00",
                 "prior_allocation_provenance": "synthetic acceptance allocation",
             },
             "in_service_date": "2025-01-01",
             "opening_history": {"status": "known", "accumulated_amount": "0.00"},
-        },
-        separators=(",", ":"),
-    )
-
-
-def _selection_json() -> str:
-    """Request the published low-value branch with explicit taxpayer evidence."""
-    return json.dumps(
-        {
-            "regime": "normal",
-            "asset_kind": "material",
-            "authority_class_key": "mobiliario",
-            "method": "low_value_free",
-            "free_depreciation_election": {
-                "election_reference": "synthetic-explicit-low-value-election",
-                "new_material_evidence_reference": "synthetic-new-material-invoice",
-                "unit_acquisition_value": "300.00",
-                "requested_amount": "300.00",
+            "acquired_condition": "new",
+            "amortization": {
+                "regime": "normal",
+                "method": "constant_percentage",
+                "authority_class_key": "maquinaria",
             },
         },
         separators=(",", ":"),
@@ -323,8 +314,6 @@ def run_asset_export_journey(
                 "actividad-asset",
                 "forecast",
                 asset_id,
-                "--selection-json",
-                _selection_json(),
                 "--covered-from",
                 "2025-01-01",
                 "--covered-until",
@@ -333,7 +322,7 @@ def run_asset_export_journey(
         )
     )
     if _money(forecast.get("amount")) != "300.00":
-        raise JourneyError("published low-value authority did not produce the EUR 300 charge")
+        raise JourneyError("published constant-percentage authority did not produce the EUR 300 charge")
     report_stage("asset.claim")
     claim = command_result(
         cli.run(

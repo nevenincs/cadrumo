@@ -22,7 +22,7 @@ type InstalledAssetTuiJourney = Literal[
     "profile_ready",
     "ledger",
     "asset_screen",
-    "asset_linear_lifecycle",
+    "asset_method_lifecycle",
     "asset_readback",
     "asset_cli_readback",
 ]
@@ -130,7 +130,7 @@ def required_installed_tui_stages(
         "profile_ready",
         "ledger",
         "asset_screen",
-        "asset_linear_lifecycle",
+        "asset_method_lifecycle",
         "asset_readback",
         "asset_cli_readback",
     }:
@@ -139,11 +139,11 @@ def required_installed_tui_stages(
         required.append("profile_ready")
     if journey == "profile_ready":
         required.append("profile_completed")
-    if journey in {"ledger", "asset_screen", "asset_linear_lifecycle", "asset_readback", "asset_cli_readback"}:
+    if journey in {"ledger", "asset_screen", "asset_method_lifecycle", "asset_readback", "asset_cli_readback"}:
         required.append("ledger_ready")
-    if journey in {"asset_screen", "asset_linear_lifecycle", "asset_readback", "asset_cli_readback"}:
+    if journey in {"asset_screen", "asset_method_lifecycle", "asset_readback", "asset_cli_readback"}:
         required.append("asset_screen_ready")
-    if journey == "asset_linear_lifecycle":
+    if journey == "asset_method_lifecycle":
         required.extend(
             (
                 "asset_created",
@@ -386,7 +386,7 @@ def _parser() -> argparse.ArgumentParser:
             "profile_ready",
             "ledger",
             "asset_screen",
-            "asset_linear_lifecycle",
+            "asset_method_lifecycle",
             "asset_readback",
             "asset_cli_readback",
         ),

@@ -47,7 +47,10 @@ ASSET_ACCEPTANCE_EVIDENCE: tuple[AssetAcceptanceEvidence, ...] = (
     AssetAcceptanceEvidence(
         "AS3",
         AcceptanceStatus.PROVEN,
-        ("published 2025 Modelo 100 authority selection resolves exact regime/class keys",),
+        (
+            "the revision election resolves through published 2025 Modelo 100 authority: method admission by "
+            "modality, table-class groups, coefficient bounds and weighting",
+        ),
     ),
     AssetAcceptanceEvidence(
         "AS4",
@@ -94,7 +97,8 @@ ASSET_ACCEPTANCE_EVIDENCE: tuple[AssetAcceptanceEvidence, ...] = (
         "AS11",
         AcceptanceStatus.PROVEN,
         (
-            "installed TUI-to-CLI continuation preserves two revisions and the EUR 180 non-consuming handoff",
+            "installed TUI-to-CLI continuation preserves two revisions and the EUR 540 constant-percentage "
+            "non-consuming handoff",
             "installed CLI-to-TUI continuation exposes the asset and canonical revision identity in a fresh process",
         ),
     ),
@@ -103,7 +107,8 @@ ASSET_ACCEPTANCE_EVIDENCE: tuple[AssetAcceptanceEvidence, ...] = (
         AcceptanceStatus.PROVEN,
         (
             "claim projections retain pinned authority and source provenance",
-            "installed M130/M100 calculation carries one EUR 300 claim and the generated Modelo 100 XML passes "
+            "installed M130/M100 calculation carries one EUR 300 constant-percentage claim and the generated "
+            "Modelo 100 XML passes "
             "the pinned official 2025 XSD",
         ),
     ),
@@ -115,9 +120,20 @@ def annual_linear_charge_oracle(*, allocated_basis: Decimal, annual_rate: Decima
     return (allocated_basis * annual_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
 
 
+def first_year_constant_percentage_oracle(
+    *,
+    allocated_basis: Decimal,
+    linear_coefficient: Decimal,
+    weighting: Decimal,
+) -> Decimal:
+    """Independent cents oracle for a full first year under RIS art. 5.1."""
+    return (allocated_basis * linear_coefficient * weighting).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+
+
 __all__ = [
     "ASSET_ACCEPTANCE_EVIDENCE",
     "AcceptanceStatus",
     "AssetAcceptanceEvidence",
     "annual_linear_charge_oracle",
+    "first_year_constant_percentage_oracle",
 ]

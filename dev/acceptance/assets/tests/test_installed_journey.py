@@ -78,7 +78,9 @@ def test_supervisor_marks_timeout_cleanup_as_failure_evidence(tmp_path: Path) ->
     error = _run_fixture(
         tmp_path=tmp_path,
         module="dev.acceptance.assets.tests.installed_tui_fixture_sleep",
-        timeout_seconds=0.2,
+        # Long enough for interpreter start-up to write the stage on a loaded
+        # host, far short of the fixture's 30-second sleep.
+        timeout_seconds=5.0,
     )
 
     assert error.receipt.status == "failed"
@@ -102,7 +104,7 @@ def test_supervisor_allows_only_explicit_existing_profile_continuation(tmp_path:
 def test_full_asset_lifecycle_requires_public_correction_and_filing_stages() -> None:
     """A clean child exit cannot omit the newly supported public asset actions."""
     assert required_installed_tui_stages(
-        journey="asset_linear_lifecycle",
+        journey="asset_method_lifecycle",
         profile_bootstrap="existing",
     ) == (
         "installed_origin",
