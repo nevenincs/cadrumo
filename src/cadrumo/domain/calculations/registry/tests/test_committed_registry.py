@@ -10,6 +10,7 @@ import pytest
 
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id, validated_casilla_id_map
+from ..binding_selector_utils import binding_row_set_selector
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..errors import FilingYearOutsideSupportEnvelopeError
 from ..export import resolve_export_layout
@@ -452,13 +453,38 @@ def _modelo_180_parsed_casillas(
 
     The fixed-width field maps and the expected casilla values are
     module-level constants so the test row table reads top-down.
+
+    The perceptor record is a ``binding_record`` row template: its fields are
+    binding slots, not casilla edges, so the parser reports them by field.
+    Each slot's casilla is resolved here the way the registry names it -- the
+    binding's row-set ``row_field`` looked up in the record's
+    ``row_field_casilla_ids`` -- so a value parsed at the wrong position, or a
+    slot mapped to the wrong casilla, still fails its case.
     """
     snapshot = registry_snapshot("180", 2026, "0A")
     layout = resolve_export_layout(snapshot).layout
     declarante = _fixed_width_record(500, _MODELO_180_DECLARANTE_FIELDS)
     perceptor = _fixed_width_record(500, _MODELO_180_PERCEPTOR_FIELDS)
     parsed = parse_export_payload(layout, (declarante + perceptor).encode("latin-1"))
-    return {field.casilla_id: field.value for field in parsed.casillas if field.casilla_id is not None}
+    values: dict[CasillaId, object] = {
+        field.casilla_id: field.value for field in parsed.casillas if field.casilla_id is not None
+    }
+    bindings = {str(binding.id): binding for binding in snapshot.revision.bindings}
+    for record in layout.records:
+        if record.binding_record is None:
+            continue
+        fields_by_id = {str(field.id): field for field in record.fields}
+        for parsed_field in parsed.fields:
+            field = fields_by_id.get(str(parsed_field.field_id))
+            if parsed_field.record_id != str(record.id) or field is None or field.binding is None:
+                continue
+            selector = binding_row_set_selector(bindings[str(field.binding)])
+            if selector is None:
+                continue
+            casilla_id = record.row_field_casilla_ids.get(selector.row_field)
+            if casilla_id is not None:
+                values[casilla_id] = parsed_field.value
+    return values
 
 
 @pytest.mark.parametrize(("casilla_id", "expected_value"), _MODELO_180_EXPECTED_CASILLAS)
