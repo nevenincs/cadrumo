@@ -165,10 +165,7 @@ def modelo_work_profile_baseline_missing_paths(
     values = record_to_path_values(record)
 
     def has_value(path: str) -> bool:
-        return any(
-            section_field_key(candidate) == path and value is not None and bool(str(value).strip())
-            for candidate, value in values.items()
-        )
+        return any(section_field_key(candidate) == path and bool(value.strip()) for candidate, value in values.items())
 
     return tuple(path for path in _modelo_work_baseline_paths(record, modelo=modelo) if not has_value(path))
 
