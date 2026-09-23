@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ...domain.filing_evidence import FilingEvidenceReference
@@ -21,7 +22,11 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
 )
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
-from .action_errors import M303FilingEvidenceError, ModeloProfileReadinessError
+from .action_errors import (
+    M303ApplicabilityAttestationUnadmissibleError,
+    M303FilingEvidenceError,
+    ModeloProfileReadinessError,
+)
 from .m303_exonerado_390_applicability_attestation import (
     resolve_m303_exonerado_390_not_applicable_attestation,
 )
@@ -78,15 +83,21 @@ def author_ordinary_m303_filing_instance_evidence(
     scope = m303_regimen_simplificado_scope_for_profile(taxpayer_profile_for_work(profile))
     if not scope.is_not_claimed:
         raise M303FilingEvidenceError("simplified-regime profile requires its unsupported evidence branch")
-    applicability_reference = resolve_m303_exonerado_390_not_applicable_attestation(
-        bucket_id=work_unit.bucket_id,
-        filing_year=request.filing_year,
-        period=request.period,
-        evidence_reference=request.exonerado_390_applicability_reference,
-        operation=operation,
-        store=attachment_store,
-        profile=profile,
-    )
+    try:
+        applicability_reference = resolve_m303_exonerado_390_not_applicable_attestation(
+            bucket_id=work_unit.bucket_id,
+            filing_year=request.filing_year,
+            period=request.period,
+            evidence_reference=request.exonerado_390_applicability_reference,
+            operation=operation,
+            store=attachment_store,
+            profile=profile,
+        )
+    except (AttachmentNotFoundError, AttachmentValidationError) as exc:
+        raise M303ApplicabilityAttestationUnadmissibleError(
+            "Modelo 390 applicability attestation cannot back this Modelo 303 work unit",
+            context={"reason": type(exc).__name__},
+        ) from exc
     regimen_snapshot = resolve_m303_regimen_simplificado_snapshot(
         registry_snapshot=registry_snapshot,
         scope_decision=scope,

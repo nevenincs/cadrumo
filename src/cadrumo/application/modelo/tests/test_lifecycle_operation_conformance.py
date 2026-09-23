@@ -32,7 +32,6 @@ from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationDurability, OperationEffect, OperationLifecycle
 from ....core.period import Period
 from ....domain.attachments.enums import AttachmentKind, AttachmentSource
-from ....domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
 from ....domain.attachments.m303_filing_evidence import (
     M303Exonerado390ApplicabilityAssertion,
     M303Exonerado390ApplicabilityAttestation,
@@ -59,7 +58,12 @@ from ...operations.supervisor import OperationSupervisor
 from ...user_profile.profile_record_repository import ProfileRecordRepository
 from .. import calculation_actions as calculation_actions_module
 from .. import operation_definitions as definitions_module
-from ..action_errors import M303FilingEvidenceError, ModeloProfileReadinessError
+from ..action_errors import (
+    M303ApplicabilityAttestationUnadmissibleError,
+    M303FilingEvidenceError,
+    ModeloProfileReadinessError,
+)
+from ..calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
 from ..m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationRequest,
     admit_m303_exonerado_390_applicability_attestation,
@@ -173,7 +177,12 @@ def _m303_work_unit(
     )
 
 
-def _calculation_ports_factory(work_unit: WorkUnit):
+def _work_unit_read_ports(ports: object) -> CalculationActionPorts:
+    """Present a work-unit-only stub as the bundle; the executor reads nothing else before admission."""
+    return cast(CalculationActionPorts, ports)
+
+
+def _calculation_ports_factory(work_unit: WorkUnit) -> CalculationActionPortsFactory:
     """Return the executor's exact work-unit read capability and no writer."""
 
     repository = SimpleNamespace(
@@ -181,8 +190,11 @@ def _calculation_ports_factory(work_unit: WorkUnit):
         load=lambda: WorkUnitCatalogue(work_units={work_unit.work_unit_id: work_unit}),
     )
 
-    def build(**_kwargs: object) -> object:
-        return SimpleNamespace(work_unit_repository=repository)
+    def build(
+        *, bucket_id: str, operation: PinnedAuthorityOperation, profile_record: object | None = None
+    ) -> CalculationActionPorts:
+        del bucket_id, operation, profile_record
+        return _work_unit_read_ports(SimpleNamespace(work_unit_repository=repository))
 
     return build
 
@@ -355,11 +367,11 @@ _EvidenceBuilder = Callable[
 ]
 
 _UNADMISSIBLE_EVIDENCE: dict[str, tuple[_EvidenceBuilder, type[CadrumoError]]] = {
-    "unknown_digest": (_unknown_digest, AttachmentNotFoundError),
-    "wrong_role": (_wrong_role, AttachmentValidationError),
-    "wrong_period": (_wrong_period, AttachmentValidationError),
-    "stale_profile_witness": (_stale_profile_witness, AttachmentValidationError),
-    "conflicting_assertion": (_conflicting_assertion, AttachmentValidationError),
+    "unknown_digest": (_unknown_digest, M303ApplicabilityAttestationUnadmissibleError),
+    "wrong_role": (_wrong_role, M303ApplicabilityAttestationUnadmissibleError),
+    "wrong_period": (_wrong_period, M303ApplicabilityAttestationUnadmissibleError),
+    "stale_profile_witness": (_stale_profile_witness, M303ApplicabilityAttestationUnadmissibleError),
+    "conflicting_assertion": (_conflicting_assertion, M303ApplicabilityAttestationUnadmissibleError),
 }
 
 
@@ -572,7 +584,7 @@ def test_calculate_executor_refuses_mismatched_m303_attachment_pair_before_calcu
     )
     with (
         isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID),
-        pytest.raises(AttachmentValidationError),
+        pytest.raises(M303ApplicabilityAttestationUnadmissibleError),
     ):
         asyncio.run(executor.execute(_calculate_request(work_unit, evidence_input), _calculate_context(operation)))
 

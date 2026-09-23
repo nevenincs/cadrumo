@@ -25,6 +25,7 @@ from ...domain.attachments.m303_filing_evidence import (
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ...domain.filing_evidence import FilingEvidenceReference
+from .action_errors import M303ApplicabilityAttestationUnadmissibleError
 from .m303_ordinary_evidence_coordinate import ordinary_m303_evidence_coordinate_supported
 from .profile_readiness_gate import load_modelo_work_profile
 
@@ -177,8 +178,11 @@ def m303_exonerado_390_filing_evidence_reference(*, attachment_id: str, sha256: 
             attachment_id=attachment_id,
             sha256=sha256,
         )
-    except ValidationError as exc:
-        raise AttachmentValidationError("Modelo 390 applicability attachment identity is invalid") from exc
+    except (ValidationError, AttachmentValidationError) as exc:
+        raise M303ApplicabilityAttestationUnadmissibleError(
+            "Modelo 390 applicability attachment identity is invalid",
+            context={"reason": "malformed_identity"},
+        ) from exc
     return admission.filing_evidence_reference()
 
 

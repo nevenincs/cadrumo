@@ -333,6 +333,16 @@ class M303FilingEvidenceError(ModeloPreconditionErrorMixin, ModeloError):
     """
 
 
+class M303ApplicabilityAttestationUnadmissibleError(M303FilingEvidenceError):
+    """Raised when the supplied Modelo 390 applicability attestation cannot back this Modelo 303.
+
+    The identifier pair may be malformed, or the attestation it names may be
+    unknown to this profile's custody, recorded for another profile or period,
+    stale against the current profile, or contradicted by another attestation.
+    Each is the operator's evidence being refused, not a storage fault.
+    """
+
+
 class CasillaProvenanceMissingError(ModeloError):
     """Raised when an engine-result casilla has no registry definition."""
 

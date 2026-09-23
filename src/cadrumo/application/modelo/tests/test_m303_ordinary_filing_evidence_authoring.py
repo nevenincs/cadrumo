@@ -7,7 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.application.modelo.action_errors import M303FilingEvidenceError, ModeloProfileReadinessError
+from cadrumo.application.modelo.action_errors import (
+    M303ApplicabilityAttestationUnadmissibleError,
+    M303FilingEvidenceError,
+    ModeloProfileReadinessError,
+)
 from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationRequest,
     admit_m303_exonerado_390_applicability_attestation,
@@ -214,7 +218,7 @@ def test_refuses_an_unresolved_secure_applicability_reference(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
-        with bound_test_profile_record(_BUCKET_ID), pytest.raises(AttachmentValidationError):
+        with bound_test_profile_record(_BUCKET_ID), pytest.raises(M303ApplicabilityAttestationUnadmissibleError):
             author_ordinary_m303_filing_instance_evidence(
                 work_unit=_work_unit(operation),
                 request=OrdinaryM303FilingEvidenceRequest(

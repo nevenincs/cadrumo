@@ -7,6 +7,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo.action_errors import M303ApplicabilityAttestationUnadmissibleError
 from cadrumo.application.modelo.m303_exonerado_390_applicability_attestation import (
     M303Exonerado390ApplicabilityAttestationRequest,
     admit_m303_exonerado_390_applicability_attestation,
@@ -103,9 +104,9 @@ def test_applicable_assertion_refuses_before_custody_mutation(tmp_path: Path, op
 
 
 def test_split_attachment_identifiers_refuse_malformed_or_conflicting_values() -> None:
-    with pytest.raises(AttachmentValidationError):
+    with pytest.raises(M303ApplicabilityAttestationUnadmissibleError):
         m303_exonerado_390_filing_evidence_reference(attachment_id="not-a-digest", sha256="a" * 64)
-    with pytest.raises(AttachmentValidationError):
+    with pytest.raises(M303ApplicabilityAttestationUnadmissibleError):
         m303_exonerado_390_filing_evidence_reference(attachment_id="a" * 64, sha256="b" * 64)
 
 
