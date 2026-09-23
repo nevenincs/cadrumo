@@ -1195,6 +1195,7 @@ tui:
         dates: 'Nyitás: {opening} · Fizetés: {payment} · Eredeti zárás: {original}
           · Tényleges zárás: {effective} · Értékelés: {evaluated} · Késedelmes napok:
           {overdue} · Eltolás: {shift}'
+        holidays: 'Ünnepnapok: {coverage}'
         source: '{source}: {availability} · Megfigyelve: {observed}'
       empty:
         known: Ebben az időszakban nincs kötelezettség.

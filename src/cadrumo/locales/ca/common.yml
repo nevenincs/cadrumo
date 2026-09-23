@@ -1204,6 +1204,7 @@ tui:
         dates: 'Obertura: {opening} · Pagament: {payment} · Tancament original: {original}
           · Tancament efectiu: {effective} · Avaluat: {evaluated} · Dies de retard:
           {overdue} · Ajust: {shift}'
+        holidays: 'Festius: {coverage}'
         source: '{source}: {availability} · Observat: {observed}'
       empty:
         known: No hi ha obligacions en aquest interval.

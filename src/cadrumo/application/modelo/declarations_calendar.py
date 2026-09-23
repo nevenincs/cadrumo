@@ -20,6 +20,7 @@ from ...core.filing_year import FilingYear
 from ...core.identifier_grammar import NamespacedId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
+from ...domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage
 from ...domain.deadlines.models import ObligationStatus
 from ...domain.modelos.codes import ModeloCode
 from ..operator_actions.models import DeclaredNextAction
@@ -115,6 +116,8 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     closes_on: date
     adjusted_closes_on: date
     shift_reason: str
+    holiday_coverage: DeadlineHolidayCoverage
+    holiday_territory: CalendarCCAA | None = None
     payment_cutoff_on: date | None = None
     evaluated_on: date
     days_overdue: NonNegativeInt | None = None
@@ -350,6 +353,8 @@ def _project_calendar_row(
         closes_on=entry.closes_on,
         adjusted_closes_on=entry.adjusted_closes_on,
         shift_reason=entry.shift_reason,
+        holiday_coverage=entry.holiday_coverage,
+        holiday_territory=entry.holiday_territory,
         payment_cutoff_on=entry.payment_cutoff_on,
         evaluated_on=entry.evaluated_on,
         days_overdue=entry.days_overdue,

@@ -17,6 +17,7 @@ from .....application.modelo.declarations_calendar import (
 from .....application.overview.next_actions import declare_next_action
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
+from .....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...components.host import ScreenHostApp
 from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
@@ -376,3 +377,25 @@ def test_calendar_module_has_no_io_adapter_cli_or_protected_search_fields() -> N
     source = module.read_text(encoding="utf-8").lower()
     for forbidden in ("work_unit_id", "filing_record_id", "calculation_revision_id", "nif", "url"):
         assert forbidden not in source
+
+
+@pytest.mark.asyncio
+async def test_unavailable_holiday_calendar_is_visible_in_words_not_tokens() -> None:
+    base = calendar_projection()
+    first = base.entries[0].model_copy(
+        update={
+            "shift_reason": "calendar_unavailable",
+            "holiday_coverage": DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+        },
+    )
+    screen = DeclarationsCalendarScreen(
+        calendar_controller(base.model_copy(update={"entries": (first, *base.entries[1:])})),
+    )
+    app = ScreenHostApp[None](screen)
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        detail = str(screen.query_one("#declarations-calendar-detail", Static).render())
+
+    assert "Ajuste: Calendario no disponible" in detail
+    assert "Festivos: calendario de festivos no disponible; la fecha de cierre original no está verificada" in detail
+    assert "calendar_unavailable" not in detail

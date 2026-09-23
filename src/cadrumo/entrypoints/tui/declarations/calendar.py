@@ -15,6 +15,7 @@ from ....application.modelo.declarations_calendar import (
     DeclarationsCalendarSource,
 )
 from ....application.operator_actions.models import DeclaredNextAction
+from ....application.overview.calendar import holiday_coverage_statement, shift_reason_statement
 from ....application.overview.home import HomeAvailability
 from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError
@@ -225,7 +226,11 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
                 overdue=row.days_overdue
                 if row.days_overdue is not None
                 else declarations_copy("tui.declarations.calendar.none"),
-                shift=row.shift_reason,
+                shift=shift_reason_statement(row.shift_reason),
+            ),
+            declarations_copy(
+                "tui.declarations.calendar.detail.holidays",
+                coverage=holiday_coverage_statement(row.holiday_coverage, row.holiday_territory),
             ),
             declarations_copy(
                 "tui.declarations.calendar.detail.axes",

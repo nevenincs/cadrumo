@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:7b6c7095366c959b62c7cd78d99317e6d97e62c034b37e35ce356377774dacdf'
+body_hash: 'sha256:d0c644526e4ce41f09c770e7b686aabf06f7896c03de1559be43a59c5d4d7c40'
 related:
   - "[[2026-09-23-calendar-obligations-plan]]"
 ---
@@ -85,10 +85,20 @@ related:
 - `S06` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2025-23702-dias-inhabiles-2026.html.extracted.md`
 - `S06` `verify:` `pytest -n0 -m unit festivos, holiday authority, retirement master, calendar` -> `pass`
 - `S06` `by:` `calendar-holiday-authoring`
+- `S03` `M` `src/cadrumo/application/modelo/declarations_calendar.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/calendar.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/tests/calendar_fixtures.py`
+- `S03` `M` `src/cadrumo/entrypoints/tui/declarations/tests/test_calendar.py`
+- `S03` `M` `src/cadrumo/locales/en/common.yml`
+- `S03` `M` `src/cadrumo/locales/es/common.yml`
+- `S03` `M` `src/cadrumo/locales/ca/common.yml`
+- `S03` `M` `src/cadrumo/locales/hu/common.yml`
+- `S03` `verify:` `ruff, format, ty on changed files` -> `pass`
 
 ## Notes
 
 - `S01` published logical_generation 5159b729af5353be4a71983c93a68ad73ad86f39d37578fc70e643257e49e9be
 - `S02` S02 also carries the CLI projection and the cli-to-application shift-label key move; the TUI projection is S03
 - `S06` published logical_generation 9421767bfd79f05374bb6d99f095071c11d9373d90ef60e4f089e1bedf796880; Val d'Aran and Canarias island days excluded as sub-territorial
+- `S03` S06 holiday re-authoring paths were committed inside IVA commit 63a201418e by a shared-index collision; content unchanged
 

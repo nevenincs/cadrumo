@@ -1215,6 +1215,7 @@ tui:
         dates: 'Apertura: {opening} · Pago: {payment} · Cierre original: {original}
           · Cierre efectivo: {effective} · Evaluado: {evaluated} · Días de retraso:
           {overdue} · Ajuste: {shift}'
+        holidays: 'Festivos: {coverage}'
         source: '{source}: {availability} · Observado: {observed}'
       empty:
         known: No hay obligaciones en este intervalo.
