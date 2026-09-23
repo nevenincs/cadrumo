@@ -79,7 +79,12 @@ from ...domain.calculations.registry.applicability import derive_taxpayer_files_
 from ...domain.calculations.registry.applicability_modelo202 import derive_modelo_202_modality
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.schema import BindingDefinition
-from ...domain.calculations.registry.schema_exports import ExportLayoutDefinition
+from ...domain.calculations.registry.schema_exports import (
+    AuxiliaryEnvelopeHeaderDefinition,
+    ExportLayoutDefinition,
+    FilingEnvelopeDefinition,
+    FilingEnvelopePrefixRole,
+)
 from ...domain.deadlines.models import ModeloIVAProfile, TaxpayerProfile
 from ...domain.filing.errors import FilingExportError
 from ...domain.filing.protocols import ModeloInputs
@@ -87,7 +92,7 @@ from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
-from ...domain.modelos.errors import ModeloError, ModeloExportError
+from ...domain.modelos.errors import ModeloError, ModeloExportError, ModeloExportProductIdentityUnavailableError
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.register import ProrrataRegister
 from ..aggregation.iva_ledger import (
@@ -1394,6 +1399,44 @@ def _require_modelo_export_clean_state(
     )
 
 
+def _product_identity_unavailable(
+    *,
+    work_unit: WorkUnit,
+    envelope: FilingEnvelopeDefinition | AuxiliaryEnvelopeHeaderDefinition | None,
+    calculation_revision_id: str,
+) -> ModeloExportProductIdentityUnavailableError:
+    """Name the developer-owned header fields, located by the selected record design, that block export.
+
+    Positions are 1-based byte ranges accumulated from the layout's declared
+    prefix fields, so the refusal points at the same bytes the official design
+    reserves for the program identifier and the developer's tax identifier.
+    """
+    positions: dict[FilingEnvelopePrefixRole, str] = {}
+    offset = 0
+    for field in () if envelope is None else envelope.prefix_fields:
+        if field.role in {FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER, FilingEnvelopePrefixRole.DEVELOPER_TAX_ID}:
+            positions[field.role] = f"{offset + 1}-{offset + field.length}"
+        offset += field.length
+    program = positions.get(FilingEnvelopePrefixRole.PROGRAM_IDENTIFIER)
+    developer = positions.get(FilingEnvelopePrefixRole.DEVELOPER_TAX_ID)
+    if envelope is None or program is None or developer is None:
+        raise ModeloExportError(
+            f"Modelo {work_unit.modelo} export layout renders an envelope without locating its product identity",
+            context={"calculation_revision_id": calculation_revision_id},
+        )
+    return ModeloExportProductIdentityUnavailableError(
+        f"Modelo {work_unit.modelo} export needs {envelope.record_identity} header fields "
+        f"program identifier ({program}) and developer tax id ({developer}); no reviewed product identity exists",
+        context={
+            "calculation_revision_id": calculation_revision_id,
+            "modelo": str(work_unit.modelo),
+            "record": envelope.record_identity,
+            "program_positions": program,
+            "developer_positions": developer,
+        },
+    )
+
+
 def _resolve_modelo_exportprior_domiciliation(
     command: ModeloExportCommand,
     *,
@@ -1416,9 +1459,10 @@ def _resolve_modelo_exportprior_domiciliation(
         export_layouts[0].filing_envelope is not None or export_layouts[0].auxiliary_envelope_header is not None
     )
     if renders_envelope_prefix and command.product_software_identity is None:
-        raise ModeloExportError(
-            f"Modelo {work_unit.modelo} export requires explicit product/software identity authority",
-            context={"calculation_revision_id": command.calculation_revision_id},
+        raise _product_identity_unavailable(
+            work_unit=work_unit,
+            envelope=export_layouts[0].filing_envelope or export_layouts[0].auxiliary_envelope_header,
+            calculation_revision_id=command.calculation_revision_id,
         )
     if not renders_envelope_prefix and command.product_software_identity is not None:
         raise ModeloExportError(

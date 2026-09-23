@@ -74,7 +74,7 @@ from .....application.user_profile.login_session import login_profile
 from .....application.user_profile.profile_record_repository import ProfileRecordRepository
 from .....application.user_profile.registration import register_profile_with_credentials
 from .....core.config import override_settings
-from .....core.i18n.render import clear_output_language_cache
+from .....core.i18n.render import clear_output_language_cache, tr
 from .....core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
 from .....core.time.clock import now
 from .....domain.calculations.registry.authority import bundled_indexed_authority
@@ -775,6 +775,45 @@ def test_the_terminal_receipt_reaches_the_receipt_widget(tmp_path: Path) -> None
                 modal._refresh_detail_rows(settled)
                 receipt = str(modal.query_one("#operation-modal-receipt", Static).content)
                 assert settled.receipt_ref in receipt
+                await host.action_quit()
+
+        asyncio.run(run())
+
+
+@pytest.mark.parametrize(
+    ("refusal_ref", "explained"),
+    [
+        ("REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE", True),
+        ("REFUSED_PROFILE_LIFO_FORBIDDEN", False),
+    ],
+)
+def test_a_refusal_code_is_explained_only_when_its_registry_message_is_public(
+    tmp_path: Path, refusal_ref: str, explained: bool
+) -> None:
+    """A settled refusal keeps only its code; the modal explains it only from a self-contained registry message."""
+    with _runtime(tmp_path) as (services, _registry, profile_id):
+
+        async def run() -> None:
+            watched = await _submit_censal_review(services, profile_id)
+            watching = OperationController(services=services, submission=watched, actor_ref=_ACTOR)
+            observed = await watching.observe(0)
+            assert isinstance(observed, OperationObservationSuccessV1)
+            refused = build_operation_modal_view_model(observed.projection).model_copy(
+                update={"receipt_kind": "refusal", "receipt_ref": refusal_ref}
+            )
+            modal = OperationModal(watching)
+            host = ScreenHostApp(modal)
+            async with host.run_test(size=(120, 40)) as pilot:
+                for _ in range(200):
+                    await pilot.pause()
+                    if modal.is_mounted and modal.query("#operation-modal-receipt"):
+                        break
+                modal._refresh_detail_rows(refused)
+                receipt = str(modal.query_one("#operation-modal-receipt", Static).content)
+                explanation = tr("errors.refused.refused_modelo_export_product_identity_unavailable")
+                assert refusal_ref in receipt
+                assert (explanation in receipt) is explained
+                assert ("Versión del Programa" in receipt) is explained
                 await host.action_quit()
 
         asyncio.run(run())

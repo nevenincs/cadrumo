@@ -1105,6 +1105,13 @@ errors:
       la taula de despacho de filtres.
     refused_modelo_charge_account_missing: S ha triat una domiciliació pero no hi
       ha cap compte de càrrec registrat.
+    refused_modelo_export_product_identity_unavailable: 'L''exportació oficial no
+      està disponible: el disseny de registre reserva els camps de capçalera «Versión
+      del Programa» i «NIF del desarrollador» a l''entitat desenvolupadora del programari,
+      i no hi ha cap identitat de producte revisada per a aquests camps. Cadrumo no
+      els omple amb blancs ni amb valors ficticis. El càlcul i la seva verificació
+      continuen sent vàlids; per exportar cal un identificador de programa i un NIF
+      de desenvolupador revisats, facilitats pel desenvolupador del programari.'
     refused_modelo_ledger_evidence_recapture: No es pot tornar a agrupar l'evidència
       d'aquesta declaració perquè els assentaments comptables que la sustenten han
       canviat des que es va segellar. Torna a calcular la declaració; la recaptura

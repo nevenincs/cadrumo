@@ -1098,6 +1098,13 @@ errors:
       la tabla de despacho de filtros.
     refused_modelo_charge_account_missing: Se ha elegido una domiciliacion pero no
       hay una cuenta de cargo registrada.
+    refused_modelo_export_product_identity_unavailable: 'La exportación oficial no
+      está disponible: el diseño de registro reserva los campos de cabecera «Versión
+      del Programa» y «NIF del desarrollador» a la entidad desarrolladora del software,
+      y no existe una identidad de producto revisada para ellos. Cadrumo no los rellena
+      con blancos ni con valores ficticios. El cálculo y su verificación siguen siendo
+      válidos; para exportar hace falta un identificador de programa y un NIF de desarrollador
+      revisados, facilitados por el desarrollador del software.'
     refused_modelo_ledger_evidence_recapture: No se puede volver a agrupar la evidencia
       de esta declaración porque los apuntes contables que la sustentan han cambiado
       desde que se selló. Vuelve a calcular la declaración; la recaptura solo recoge

@@ -35,10 +35,15 @@ _PURCHASE_IVA: Final = Decimal("10.50")
 _EXPECTED_RESULT: Final = _SALE_IVA - _PURCHASE_IVA
 _PRIVATE_ARTIFACT_PLACEHOLDER: Final = "<synthetic-purchase-artifact>"
 _EXPORT_ARTIFACT_PLACEHOLDER: Final = "<local-m303-export-artifact>"
-_PRODUCT_IDENTITY_EXPORT_REFUSAL_CODE: Final = "FAIL_MODELO_EXPORT"
+_PRODUCT_IDENTITY_EXPORT_REFUSAL_CODE: Final = "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
 _PRODUCT_IDENTITY_EXPORT_REFUSAL_DIAGNOSTIC: Final = (
-    "Modelo 303 export requires explicit product/software identity authority"
+    'Official export is unavailable: the record design reserves the header fields "Versión del Programa" '
+    'and "NIF del desarrollador" for the software developer, and no reviewed product identity exists for '
+    "them. Cadrumo does not fill them with blanks or placeholders. The calculation and its verification "
+    "remain valid; exporting needs a reviewed program identifier and developer NIF from the software developer."
 )
+# The 2025 DP30300 record design reserves positions 93-96 and 101-109 for these two fields.
+_PRODUCT_IDENTITY_EXPORT_REFUSAL_POSITIONS: Final = ("DP30300", "93-96", "101-109")
 _AUTHORITY_GENERATION: Final = authority_generation
 
 
@@ -95,7 +100,7 @@ class IvaM303CliJourneyReceipt:
 
     def to_dict(self) -> dict[str, object]:
         """Return a JSON-safe receipt without financial source bytes or secrets."""
-        return asdict(self)
+        return cast(dict[str, object], asdict(self))
 
 
 def run_iva_m303_cli_journey(
@@ -398,7 +403,7 @@ def run_iva_m303_cli_journey(
     if not isinstance(casillas_raw, dict):
         raise IvaCliJourneyError("Modelo 303 calculate returned no public casilla projection")
     casillas = cast(dict[str, object], casillas_raw)
-    raw_resultado = cast(object, casillas.get("iva.resultado"))
+    raw_resultado = casillas.get("iva.resultado")
     try:
         iva_resultado = Decimal(str(raw_resultado)).quantize(Decimal("0.01"))
     except Exception as exc:  # Decimal exposes several public parse exceptions.
@@ -447,6 +452,15 @@ def run_iva_m303_cli_journey(
     if export_error:
         if export_artifact.exists():
             raise IvaCliJourneyError("refused Modelo 303 export wrote an artifact")
+        refusal_context = _object_mapping(export_error.get("context"))
+        observed_positions = tuple(
+            refusal_context.get(key) for key in ("record", "program_positions", "developer_positions")
+        )
+        if observed_positions != _PRODUCT_IDENTITY_EXPORT_REFUSAL_POSITIONS:
+            raise IvaCliJourneyError(
+                f"export refusal located the developer header fields at {observed_positions}, "
+                f"not the official {_PRODUCT_IDENTITY_EXPORT_REFUSAL_POSITIONS}"
+            )
         export_status = "verified_export_blocked"
         export_failure_code = _PRODUCT_IDENTITY_EXPORT_REFUSAL_CODE
         export_failure_diagnostic = _PRODUCT_IDENTITY_EXPORT_REFUSAL_DIAGNOSTIC
@@ -673,7 +687,7 @@ def _sanitize_argv(
 
 
 def _result(document: dict[str, object]) -> dict[str, object]:
-    result = cast(object, document.get("result"))
+    result = document.get("result")
     if not isinstance(result, dict):
         raise IvaCliJourneyError("public command returned no object result")
     return cast(dict[str, object], result)

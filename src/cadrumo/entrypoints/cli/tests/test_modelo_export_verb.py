@@ -500,6 +500,8 @@ def test_export_modelo_202_2024_emilio_refuses_missing_product_software_identity
 
     result = _invoke(
         [
+            "--format",
+            "json",
             "app",
             "modelo",
             "export",
@@ -516,9 +518,17 @@ def test_export_modelo_202_2024_emilio_refuses_missing_product_software_identity
         ],
     )
 
-    assert result.exit_code == 5, result.output
-    assert "product/software identity" in result.output.lower(), result.output
-    assert f"calculation revision id: {calculation_revision_id}" in result.output.lower(), result.output
+    assert result.exit_code == 2, result.output
+    error = json.loads(result.output)["error"]
+    assert error["code"] == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
+    assert error["category"] == "REFUSED"
+    assert error["context"]["calculation_revision_id"] == calculation_revision_id
+    assert error["context"]["modelo"] == "202"
+    assert "Versión del Programa" in error["message"]
+    assert "NIF del desarrollador" in error["message"]
+    assert error["context"]["record"]
+    assert error["context"]["program_positions"]
+    assert error["context"]["developer_positions"]
     assert not out.exists()
 
 

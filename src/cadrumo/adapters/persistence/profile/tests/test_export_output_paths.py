@@ -42,6 +42,7 @@ from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.directory_scan import (
     iter_directory,
 )
+from cadrumo.core.errors.error_codes import get_registered_error_code
 from cadrumo.core.observed_header_fact import ObservedHeaderFact
 from cadrumo.core.payment_election import PaymentElection
 from cadrumo.core.period import Period
@@ -70,6 +71,7 @@ from cadrumo.domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
 )
+from cadrumo.domain.modelos.errors import ModeloExportProductIdentityUnavailableError
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
     ExternalEvidence,
@@ -166,6 +168,54 @@ def test_export_modelo_303_wallet_only_revision_writes_fichero_with_redacted_wal
         assert "1200" not in event_json
         assert "synthetic-modelo-303-export" not in result_json
         assert "synthetic-modelo-303-export" not in event_json
+
+
+def test_export_modelo_303_without_product_identity_names_the_developer_header_fields(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """A verified revision still refuses official export, naming the DP30300 bytes the developer must fill.
+
+    The official Modelo 303 record design reserves positions 93-96 for the
+    program version and 101-109 for the developer NIF; neither may be
+    fabricated, blanked or taken from the taxpayer.
+    """
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+            operation=_authority_operation_for_test,
+        )
+        output_path = tmp_path / "modelo-303-without-identity.txt"
+
+        with pytest.raises(ModeloExportProductIdentityUnavailableError) as refused:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=verified.calculation_revision_id,
+                    output_path=output_path,
+                    actor="operator",
+                    prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+                ),
+                workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+                export_ports=modelo_export_ports_for_test(
+                    bucket_id=bucket_id,
+                    taxpayer_tax_id=taxpayer_nif,
+                    work_unit=work_repo,
+                    calculation=calc_repo,
+                    bucket_event=event_repo,
+                ),
+                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+                operation=_authority_operation_for_test,
+            )
+
+        assert refused.value.context == {
+            "calculation_revision_id": verified.calculation_revision_id,
+            "modelo": "303",
+            "record": "DP30300",
+            "program_positions": "93-96",
+            "developer_positions": "101-109",
+        }
+        assert get_registered_error_code(refused.value).code == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
+        assert not output_path.exists()
+        assert not event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
 
 
 def _typed_profile_with_charge_account(*, taxpayer_nif: str, charge_iban: str | None) -> TaxpayerProfile:

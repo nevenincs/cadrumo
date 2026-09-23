@@ -52,6 +52,7 @@ from .interactions import (
 )
 from .logs import OperationModalLogViewV1, build_initial_log_view, fold_event_page
 from .projection import OperationModalViewModelV1, build_operation_modal_view_model
+from .refusal_explanation import public_refusal_explanation
 
 _POLL_INTERVAL = timedelta(milliseconds=200)
 
@@ -259,7 +260,9 @@ class OperationModal(ModalScreen[OperationModalOutcomeV1 | None]):
         if view_model.receipt_kind == "result":
             receipt.update(f"{tr('operation.modal.detail.receipt_result')}: {view_model.receipt_ref}")
         elif view_model.receipt_kind == "refusal":
-            receipt.update(f"{tr('operation.modal.detail.receipt_refusal')}: {view_model.receipt_ref}")
+            refusal = f"{tr('operation.modal.detail.receipt_refusal')}: {view_model.receipt_ref}"
+            explanation = public_refusal_explanation(view_model.receipt_ref)
+            receipt.update(refusal if explanation is None else f"{refusal}\n{explanation}")
         else:
             receipt.update("")
 

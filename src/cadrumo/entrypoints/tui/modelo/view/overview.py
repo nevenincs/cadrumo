@@ -56,6 +56,7 @@ from ...components.dialogs import ConfirmScreen
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
 from ...operations.controller import OperationController
+from ...operations.refusal_explanation import public_refusal_explanation
 from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from .controller import ModeloWorkspaceReadSession
 from .models import (
@@ -365,8 +366,13 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
             OperationTerminalCondition.TIMED_OUT: tr("operation.modal.terminal.timed_out"),
             OperationTerminalCondition.INTERRUPTED: tr("operation.modal.terminal.interrupted"),
         }.get(condition)
+        explanation = (
+            public_refusal_explanation(outcome.view_model.receipt_ref)
+            if outcome.view_model.receipt_kind == "refusal"
+            else None
+        )
         if terminal_copy is not None:
-            self._notice(terminal_copy)
+            self._notice(terminal_copy if explanation is None else f"{terminal_copy}: {explanation}")
         if condition is not OperationTerminalCondition.SUCCEEDED:
             return
         actions = self._session.lifecycle_actions

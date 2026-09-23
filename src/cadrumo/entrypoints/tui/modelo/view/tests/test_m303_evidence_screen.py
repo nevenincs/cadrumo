@@ -208,6 +208,36 @@ async def test_overview_admits_new_evidence_then_calculates_the_same_work_unit_i
     ]
 
 
+@pytest.mark.parametrize(
+    ("receipt_kind", "receipt_ref", "explained"),
+    [
+        ("refusal", "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE", True),
+        ("refusal", "REFUSED_PROFILE_LIFO_FORBIDDEN", False),
+    ],
+)
+def test_overview_keeps_a_public_refusal_explanation_after_the_modal_settles(
+    monkeypatch: pytest.MonkeyPatch, receipt_kind: str, receipt_ref: str, explained: bool
+) -> None:
+    """The modal dismisses on settlement, so the workspace notice carries the only lasting reason."""
+    from ......core.operations import OperationTerminalCondition
+    from ....operations.modal import OperationModalSettledOutcomeV1
+
+    overview, notices, _started = _overview(monkeypatch, actions=None)
+    outcome = OperationModalSettledOutcomeV1.model_construct(
+        view_model=SimpleNamespace(
+            projection=SimpleNamespace(terminal_condition=OperationTerminalCondition.REFUSED),
+            receipt_kind=receipt_kind,
+            receipt_ref=receipt_ref,
+        )
+    )
+
+    overview._on_lifecycle_operation_settled(outcome)
+
+    refused = tr("operation.modal.terminal.refused")
+    explanation = tr("errors.refused.refused_modelo_export_product_identity_unavailable")
+    assert notices == [f"{refused}: {explanation}" if explained else refused]
+
+
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("attachment_id", "sha256", "observed_at"),

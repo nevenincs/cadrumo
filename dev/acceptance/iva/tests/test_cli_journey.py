@@ -36,10 +36,10 @@ def test_installed_cli_records_product_identity_block_after_verifying_ordinary_2
     assert receipt.verification_granted is True
     assert receipt.verification_status
     assert receipt.export_status == "verified_export_blocked"
-    assert receipt.export_failure_code == "FAIL_MODELO_EXPORT"
-    assert (
-        receipt.export_failure_diagnostic == "Modelo 303 export requires explicit product/software identity authority"
-    )
+    assert receipt.export_failure_code == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
+    assert receipt.export_failure_diagnostic is not None
+    assert '"Versión del Programa" (positions 93-96)' in receipt.export_failure_diagnostic
+    assert '"NIF del desarrollador" (positions 101-109)' in receipt.export_failure_diagnostic
     assert receipt.export_artifact is None
     assert receipt.export_size is None
     assert receipt.export_sha256 is None
