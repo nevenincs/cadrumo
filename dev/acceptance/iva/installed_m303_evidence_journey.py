@@ -1015,7 +1015,7 @@ def _setup_store(
         raise IvaInstalledM303Error("installed CLI profile creation refused") from error
     if monthly_filer:
         # RD 1624/1992 art. 71: a REDEME-registered taxpayer settles Modelo 303 monthly.
-        cli.run(("config", "profile", "set", "iva.redeme_enrolled", "true"))
+        cli.run(("config", "profile", "edit", f"income-{_YEAR}", "--quiet", "--iva-redeme-enrolled"))
     work_unit_id = _cli_capture_and_create_work(
         cli, artifact=artifact, period=period, wallet_period=wallet_period, dates=dates
     )
