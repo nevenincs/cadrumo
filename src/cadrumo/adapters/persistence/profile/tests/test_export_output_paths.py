@@ -71,7 +71,10 @@ from cadrumo.domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
 )
-from cadrumo.domain.modelos.errors import ModeloExportProductIdentityUnavailableError
+from cadrumo.domain.modelos.errors import (
+    ModeloExportPriorDomiciliationElectionRequiredError,
+    ModeloExportProductIdentityUnavailableError,
+)
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
     ExternalEvidence,
@@ -214,6 +217,44 @@ def test_export_modelo_303_without_product_identity_names_the_developer_header_f
             "developer_positions": "101-109",
         }
         assert get_registered_error_code(refused.value).code == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
+        assert not output_path.exists()
+        assert not event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
+
+
+def test_export_modelo_303_without_a_prior_domiciliation_election_refuses_before_any_byte(
+    isolated_backend: None,
+    tmp_path: Path,
+) -> None:
+    """The page-three marker is the operator's choice; an export that carries none is refused, not failed."""
+    with _indexed_authority_for_test().operation() as _authority_operation_for_test:
+        taxpayer_nif, bucket_id, verified, work_repo, calc_repo, event_repo = _build_verified_modelo_303_revision(
+            operation=_authority_operation_for_test,
+        )
+        output_path = tmp_path / "modelo-303-without-election.txt"
+
+        with pytest.raises(ModeloExportPriorDomiciliationElectionRequiredError) as refused:
+            export_modelo_revision(
+                ModeloExportCommand(
+                    calculation_revision_id=verified.calculation_revision_id,
+                    output_path=output_path,
+                    actor="operator",
+                ),
+                workflow_profile=_typed_profile_with_charge_account(taxpayer_nif=taxpayer_nif, charge_iban=None),
+                export_ports=modelo_export_ports_for_test(
+                    bucket_id=bucket_id,
+                    taxpayer_tax_id=taxpayer_nif,
+                    work_unit=work_repo,
+                    calculation=calc_repo,
+                    bucket_event=event_repo,
+                ),
+                clock=datetime(2026, 5, 21, 12, 3, tzinfo=UTC),
+                operation=_authority_operation_for_test,
+            )
+
+        assert get_registered_error_code(refused.value).code == (
+            "REFUSED_MODELO_EXPORT_PRIOR_DOMICILIATION_ELECTION_REQUIRED"
+        )
+        assert refused.value.context == {"calculation_revision_id": verified.calculation_revision_id, "modelo": "303"}
         assert not output_path.exists()
         assert not event_repo.load().for_bucket(bucket_id, event_types=(BucketEventType.MODELO_EXPORTED,))
 

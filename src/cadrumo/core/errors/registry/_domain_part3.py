@@ -489,6 +489,17 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.modelos.errors.ModeloExportPriorDomiciliationElectionRequiredError",
+        ErrorCode(
+            code="REFUSED_MODELO_EXPORT_PRIOR_DOMICILIATION_ELECTION_REQUIRED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_export_prior_domiciliation_election_required",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.modelos.errors.ModeloExportManifestError",
         ErrorCode(
             code="FAIL_MODELO_EXPORT_MANIFEST",

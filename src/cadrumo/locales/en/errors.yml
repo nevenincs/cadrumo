@@ -1048,6 +1048,9 @@ errors:
       filter dispatch table.
     refused_modelo_charge_account_missing: A direct-debit filing was selected but
       no charge account is recorded.
+    refused_modelo_export_prior_domiciliation_election_required: Modelo 303 export
+      needs a choice for any earlier direct debit (keep it, or cancel or modify it);
+      none was given, so nothing was written. Choose one and export again.
     refused_modelo_export_product_identity_unavailable: 'Official export is unavailable:
       the record design reserves the header fields "Versión del Programa" and "NIF
       del desarrollador" for the software developer, and no reviewed product identity

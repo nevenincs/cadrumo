@@ -817,7 +817,14 @@ def test_m390_refuses_post_calculate_non_vigente_source_filing_record(
 def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_file_and_export(
     secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """No later action trusts a stale carrier after source result/evidence replacement."""
+    """No later action trusts a stale carrier after source result/evidence replacement.
+
+    Verify, file and export each order their own preconditions. The target
+    also carries an unresolved annual-evidence issue, so each action must reach
+    the stale handoff BEFORE any evidence gate for the refusal below to be the
+    handoff's; an action that judged evidence first would refuse for the wrong
+    reason on a revision built from a superseded source.
+    """
     _store_ready_profile(secure_objects)
     work_units, calculations, filings, source = _persist_presentado_source(secure_objects, operation=operation)
     target = _calculate_m390_annual(
@@ -826,6 +833,9 @@ def test_m390_revalidates_source_result_and_evidence_replacement_before_verify_f
         calculations=calculations,
         filings=filings,
     ).revision
+    assert "iva_compensation_annual_source_evidence_failure" in {issue.reason for issue in target.source_issues}, (
+        "the ordering this test pins needs an evidence gate that would also refuse the target"
+    )
     replacement = _replace_source_with_new_filed_revision(
         work_units=work_units,
         calculations=calculations,

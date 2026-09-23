@@ -1128,6 +1128,10 @@ errors:
       la tabla de despacho de filtros.
     refused_modelo_charge_account_missing: Se ha elegido una domiciliacion pero no
       hay una cuenta de cargo registrada.
+    refused_modelo_export_prior_domiciliation_election_required: La exportación del
+      modelo 303 necesita una elección sobre la domiciliación anterior (mantenerla,
+      o anularla o modificarla); no se indicó ninguna, así que no se ha escrito nada.
+      Elija una y vuelva a exportar.
     refused_modelo_export_product_identity_unavailable: 'La exportación oficial no
       está disponible: el diseño de registro reserva los campos de cabecera «Versión
       del Programa» y «NIF del desarrollador» a la entidad desarrolladora del software,

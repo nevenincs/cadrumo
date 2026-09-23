@@ -92,7 +92,12 @@ from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ...domain.filing.software_identity import AeatProductSoftwareIdentity
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ...domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
-from ...domain.modelos.errors import ModeloError, ModeloExportError, ModeloExportProductIdentityUnavailableError
+from ...domain.modelos.errors import (
+    ModeloError,
+    ModeloExportError,
+    ModeloExportPriorDomiciliationElectionRequiredError,
+    ModeloExportProductIdentityUnavailableError,
+)
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.register import ProrrataRegister
 from ..aggregation.iva_ledger import (
@@ -1449,9 +1454,9 @@ def _resolve_modelo_exportprior_domiciliation(
 ) -> PriorDomiciliationElectionProjection:
     is_m303 = str(work_unit.modelo) == Modelo("303").value
     if is_m303 and command.prior_domiciliation_election is None:
-        raise ModeloExportError(
+        raise ModeloExportPriorDomiciliationElectionRequiredError(
             "Modelo 303 export requires an explicit prior-domiciliation election",
-            context={"calculation_revision_id": command.calculation_revision_id},
+            context={"calculation_revision_id": command.calculation_revision_id, "modelo": str(work_unit.modelo)},
         )
     export_layouts = schema_provider.get_subview(str(work_unit.modelo)).export_layouts
     # The product/software identity belongs to the layout's envelope prefix -- a
@@ -1521,8 +1526,9 @@ def _prepare_modelo_export(
         justificante_repository=export_ports.justificante,
     )
     _require_exportable_revision_state(revision)
-    _raise_if_ledger_export_evidence_missing(revision)
-    _raise_if_deductible_iva_evidence_missing(revision)
+    # A handoff whose filed source was replaced makes the revision a statement
+    # about superseded facts, so it is refused before anything judges that
+    # revision's own evidence -- the order verification and filing keep too.
     validate_m303_regimen_simplificado_annual_summary_target_revision(
         target_work_unit=work_unit,
         target_revision=revision,
@@ -1532,6 +1538,8 @@ def _prepare_modelo_export(
         regimen_simplificado_applies=m303_regimen_simplificado_annual_summary_applies(work_unit),
         operation=operation,
     )
+    _raise_if_ledger_export_evidence_missing(revision)
+    _raise_if_deductible_iva_evidence_missing(revision)
     period, schema_provider = _prepare_modelo_export_schema(
         work_unit=work_unit,
         revision=revision,

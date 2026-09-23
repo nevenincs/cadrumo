@@ -1135,6 +1135,10 @@ errors:
       la taula de despacho de filtres.
     refused_modelo_charge_account_missing: S ha triat una domiciliació pero no hi
       ha cap compte de càrrec registrat.
+    refused_modelo_export_prior_domiciliation_election_required: L'exportació del
+      model 303 necessita una elecció sobre la domiciliació anterior (mantenir-la,
+      o anul·lar-la o modificar-la); no se n'ha indicat cap, així que no s'ha escrit
+      res. Trieu-ne una i torneu a exportar.
     refused_modelo_export_product_identity_unavailable: 'L''exportació oficial no
       està disponible: el disseny de registre reserva els camps de capçalera «Versión
       del Programa» i «NIF del desarrollador» a l''entitat desenvolupadora del programari,

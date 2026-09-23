@@ -1070,6 +1070,10 @@ errors:
       táblázatot.
     refused_modelo_charge_account_missing: Csoportos beszedési bevallást választottak,
       de nincs rögzített terhelési számla.
+    refused_modelo_export_prior_domiciliation_election_required: A 303-as nyomtatvány
+      exportálásához döntés szükséges a korábbi csoportos beszedésről (megtartás,
+      illetve visszavonás vagy módosítás); ilyen nem érkezett, ezért semmi sem íródott
+      ki. Válasszon egyet, és exportáljon újra.
     refused_modelo_export_product_identity_unavailable: 'A hivatalos export nem érhető
       el: a rekordterv a „Versión del Programa” és a „NIF del desarrollador” fejlécmezőt
       a szoftverfejlesztőnek tartja fenn, és ezekhez nincs ellenőrzött termékazonosító.

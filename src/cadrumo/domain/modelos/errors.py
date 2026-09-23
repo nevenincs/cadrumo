@@ -52,6 +52,15 @@ class ModeloExportProductIdentityUnavailableError(ModeloExportError):
     """
 
 
+class ModeloExportPriorDomiciliationElectionRequiredError(ModeloExportError):
+    """Raised when a Modelo 303 export names no prior-domiciliation action.
+
+    The page-three marker is the operator's per-filing choice, so an export
+    that carries none refuses before any byte is written instead of guessing
+    one.
+    """
+
+
 class Modelo036LifecycleError(ModeloError):
     """Base error for the Modelo 036 lifecycle (alta / modificacion / baja)."""
 
