@@ -702,8 +702,6 @@ cli:
           l'opció per a diverses observacions
         foreign_asset_observation_help: Objecte JSON ForeignAssetObservation; repeteix
           l'opció per a diverses observacions
-        invoice_retencion_excluded_notice: 'La factura %{invoice_id} no es va encaminar
-          cap a l''emmagatzematge de retencions: %{reasons}.'
         invoice_retencion_wrong_modelo: --received-invoice-retencion encamina cap
           a l'emmagatzematge de retencions per perceptor; el model %{modelo} no és
           un dels 111, 115, 123, 180, 190, 193.

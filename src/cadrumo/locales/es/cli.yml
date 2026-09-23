@@ -709,8 +709,6 @@ cli:
         foreign_asset_observation_help: Objeto JSON ForeignAssetObservation. El valor
           source_kind debe ser ledger_transaction, purchase_invoice_evidence, payable_invoice
           o collectible_invoice. Repetible para varias observaciones.
-        invoice_retencion_excluded_notice: 'La factura %{invoice_id} no se enrutó
-          al almacén de retenciones: %{reasons}.'
         invoice_retencion_wrong_modelo: --received-invoice-retención enruta al almacén
           de retenciones por perceptor; el modelo %{modelo} no es uno de 111, 115,
           123, 180, 190, 193.

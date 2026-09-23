@@ -651,8 +651,6 @@ cli:
         foreign_asset_observation_help: JSON ForeignAssetObservation object. The source_kind
           value must be ledger_transaction, purchase_invoice_evidence, payable_invoice,
           or collectible_invoice. Repeat for multiple observations.
-        invoice_retencion_excluded_notice: 'Invoice %{invoice_id} was not routed into
-          the retenciones store: %{reasons}.'
         invoice_retencion_wrong_modelo: --received-invoice-retencion routes into the
           retenciones per-perceptor store; modelo %{modelo} is not one of 111, 115,
           123, 180, 190, 193.
