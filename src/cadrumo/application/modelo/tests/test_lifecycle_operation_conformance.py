@@ -683,12 +683,12 @@ def test_calculate_executor_refuses_ordinary_evidence_outside_its_filing_context
     operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The executor derives axes from work; callers cannot select the 2025 evidence branch."""
+    """The executor derives axes from work; a monthly work unit cannot select the quarterly evidence branch."""
     _refuse_calculation_entry(monkeypatch)
     work_unit = _m303_work_unit(
         operation,
-        filing_year=2026,
-        period=Period.from_year_and_code(2026, "1T"),
+        filing_year=2025,
+        period=Period.from_year_and_code(2025, "01"),
     )
     evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
         joint_return_elected=False,

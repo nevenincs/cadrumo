@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:29daf0a07aa578a8fafd194f8226e3853089a577e9bcd1bcb545b7e3bea97870'
+body_hash: 'sha256:7b6c7095366c959b62c7cd78d99317e6d97e62c034b37e35ce356377774dacdf'
 related:
   - "[[2026-09-23-calendar-obligations-plan]]"
 ---
@@ -69,9 +69,26 @@ related:
 - `S02` `M` `src/cadrumo/locales/hu/cli.yml`
 - `S02` `A` `src/cadrumo/domain/deadlines/tests/test_holiday_territory_profile.py`
 - `S02` `verify:` `ruff, format, ty, basedpyright, pyrefly on changed files` -> `pass`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/facts/0066-holiday-calendar-publication.toml`
+- `S06` `M` `src/cadrumo/_data/registry/aeat/facts/0067-public-holiday.toml`
+- `S06` `A` `src/cadrumo/_data/registry/aeat/legal/dias-inhabiles-age.toml`
+- `S06` `A` `src/cadrumo/domain/deadlines/tests/test_holiday_calendar_authority.py`
+- `S06` `M` `dev/registry/tests/test_facts_holiday_calendar_retirement.py`
+- `S06` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2023-23637-dias-inhabiles-2024.html`
+- `S06` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2023-23637-dias-inhabiles-2024.html.extracted.json`
+- `S06` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2023-23637-dias-inhabiles-2024.html.extracted.md`
+- `S06` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2024-26935-dias-inhabiles-2025.html`
+- `S06` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2024-26935-dias-inhabiles-2025.html.extracted.json`
+- `S06` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2024-26935-dias-inhabiles-2025.html.extracted.md`
+- `S06` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2025-23702-dias-inhabiles-2026.html`
+- `S06` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2025-23702-dias-inhabiles-2026.html.extracted.json`
+- `S06` `A` `src/cadrumo/_data/corpus/normatives/html/boe-a-2025-23702-dias-inhabiles-2026.html.extracted.md`
+- `S06` `verify:` `pytest -n0 -m unit festivos, holiday authority, retirement master, calendar` -> `pass`
+- `S06` `by:` `calendar-holiday-authoring`
 
 ## Notes
 
 - `S01` published logical_generation 5159b729af5353be4a71983c93a68ad73ad86f39d37578fc70e643257e49e9be
 - `S02` S02 also carries the CLI projection and the cli-to-application shift-label key move; the TUI projection is S03
+- `S06` published logical_generation 9421767bfd79f05374bb6d99f095071c11d9373d90ef60e4f089e1bedf796880; Val d'Aran and Canarias island days excluded as sub-territorial
 

@@ -823,6 +823,7 @@
         "cadrumo.application.modelo.m145_communication_records_ports",
         "cadrumo.application.modelo.m303_exonerado_390_applicability_attestation",
         "cadrumo.application.modelo.m303_filing_evidence",
+        "cadrumo.application.modelo.m303_ordinary_evidence_coordinate",
         "cadrumo.application.modelo.m303_ordinary_filing_evidence_authoring",
         "cadrumo.application.modelo.m303_regimen_simplificado_scope",
         "cadrumo.application.modelo.maritime_preview",

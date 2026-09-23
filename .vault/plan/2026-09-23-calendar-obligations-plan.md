@@ -10,7 +10,7 @@ related:
   - '[[2026-06-05-calendar-filing-semantics-adr]]'
 modified: '2026-09-23'
 body_schema: body-v2
-body_hash: 'sha256:f4da38875c1543bd2c063d6163af9d170da505a055c3a8af975001626cad8028'
+body_hash: 'sha256:ddf81dcadad1a1ad85fcae590f81d6a89026b0d286b5322429df57b2c540357c'
 ---
 
 # `calendar-obligations` plan
@@ -30,7 +30,7 @@ S01 and S02 implement the accepted `2026-09-23-calendar-obligations-holiday-juri
 - [ ] `S03` - Project holiday coverage and translated shift reasons into the CLI and TUI calendar; `src/cadrumo/entrypoints/cli/_overview_payloads.py, _overview_rendering.py, src/cadrumo/application/modelo/declarations_calendar.py, src/cadrumo/entrypoints/tui/declarations/calendar.py, locales and owning tests`.
 - [ ] `S04` - Replace in-process parity with an installed-wheel CLI/TUI calendar driver and sanitized receipt; `dev/acceptance/calendar/, dev/acceptance/income_tax/installed_tui_child.py and owning tests`.
 - [ ] `S05` - Run type, lint and import gates on changed files and write the checkpoint and handoff; `.agents/session-briefs/handoffs/`.
-- [ ] `S06` - Re-author the 2024-2026 holiday facts from the AGE días-inhábiles resolutions and republish the authority; `src/cadrumo/_data/registry/aeat/facts/0066-holiday-calendar-publication.toml, 0067-public-holiday.toml, legal/dias-inhabiles-age.toml, corpus normatives and owning tests`.
+- [x] `S06` - Re-author the 2024-2026 holiday facts from the AGE días-inhábiles resolutions and republish the authority; `src/cadrumo/_data/registry/aeat/facts/0066-holiday-calendar-publication.toml, 0067-public-holiday.toml, legal/dias-inhabiles-age.toml, corpus normatives and owning tests`.
 
 ## Parallelization
 

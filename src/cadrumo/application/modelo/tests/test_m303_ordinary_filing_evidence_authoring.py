@@ -105,6 +105,110 @@ def test_authors_general_scope_evidence_from_current_profile_and_authority(
     assert evidence.m303.regimen_simplificado.calculation_result.activities == ()
 
 
+def _coordinate_work_unit(operation: PinnedAuthorityOperation, period: Period) -> WorkUnit:
+    snapshot = operation.snapshot("303", filing_year=period.filing_year, period=period.registry_token)
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=period.filing_year,
+            period=period,
+            revision_id=snapshot.revision.id,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo="303",
+        filing_year=period.filing_year,
+        period=period,
+        revision_id=snapshot.revision.id,
+        name=f"303-{period.filing_year}-{period.registry_token}",
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+
+
+@pytest.mark.parametrize(("filing_year", "code"), [(2022, "1T"), (2026, "1T")], ids=["earliest", "latest"])
+def test_authors_every_quarter_whose_record_design_declares_the_ordinary_evidence_fields(
+    tmp_path: Path, operation: PinnedAuthorityOperation, filing_year: int, code: str
+) -> None:
+    """Support follows the selected revision's record design, from its first to its latest authored year."""
+    period = Period.from_year_and_code(filing_year, code)
+    observed_at = datetime.combine(period.end_date, datetime.min.time(), tzinfo=UTC).replace(hour=12)
+    clock = observed_at.replace(hour=13)
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
+        with bound_test_profile_record(_BUCKET_ID):
+            store = AttachmentStore()
+            reference = admit_m303_exonerado_390_applicability_attestation(
+                bucket_id=_BUCKET_ID,
+                request=M303Exonerado390ApplicabilityAttestationRequest(
+                    filing_year=filing_year,
+                    period=period,
+                    asserted_value=M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
+                    observed_at=observed_at,
+                ),
+                actor="operator:test",
+                operation=operation,
+                store=store,
+                clock=lambda: clock,
+            ).filing_evidence_reference()
+            evidence = author_ordinary_m303_filing_instance_evidence(
+                work_unit=_coordinate_work_unit(operation, period),
+                request=OrdinaryM303FilingEvidenceRequest(
+                    filing_year=filing_year,
+                    period=period,
+                    joint_return_elected=False,
+                    annual_volume_nonzero=False,
+                    exonerado_390_applicability_reference=reference,
+                ),
+                operation=operation,
+                attachment_store=store,
+            )
+
+    assert evidence.m303.period == period
+    assert evidence.m303.joint_return_elected is False
+    assert evidence.m303.annual_volume_nonzero is False
+    assert evidence.m303.exonerado_390.applicable is False
+
+
+def test_refuses_a_monthly_coordinate_before_admitting_any_attestation(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """The ordinary evidence path is quarterly; a monthly filer is refused rather than given quarterly evidence."""
+    period = Period.from_year_and_code(2026, "01")
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
+        seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
+        with bound_test_profile_record(_BUCKET_ID):
+            store = AttachmentStore()
+            with pytest.raises(AttachmentValidationError, match="quarterly"):
+                admit_m303_exonerado_390_applicability_attestation(
+                    bucket_id=_BUCKET_ID,
+                    request=M303Exonerado390ApplicabilityAttestationRequest(
+                        filing_year=2026,
+                        period=period,
+                        asserted_value=M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
+                        observed_at=datetime(2026, 2, 1, 12, tzinfo=UTC),
+                    ),
+                    actor="operator:test",
+                    operation=operation,
+                    store=store,
+                    clock=lambda: datetime(2026, 2, 2, 12, tzinfo=UTC),
+                )
+            assert tuple(store.iter_manifests()) == ()
+            with pytest.raises(M303FilingEvidenceError, match="quarterly"):
+                author_ordinary_m303_filing_instance_evidence(
+                    work_unit=_coordinate_work_unit(operation, period),
+                    request=OrdinaryM303FilingEvidenceRequest(
+                        filing_year=2026,
+                        period=period,
+                        joint_return_elected=False,
+                        annual_volume_nonzero=False,
+                        exonerado_390_applicability_reference=FilingEvidenceReference(reference="attachment:none"),
+                    ),
+                    operation=operation,
+                    attachment_store=store,
+                )
+
+
 def test_refuses_an_unresolved_secure_applicability_reference(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:

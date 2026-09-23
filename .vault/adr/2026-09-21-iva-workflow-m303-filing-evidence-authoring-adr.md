@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#iva-workflow'
 date: '2026-09-21'
-modified: '2026-09-21'
+modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:b25d6596a45ab8ce662c5e9c39d9fc48f7c97bc6e18cdcb8fcdf77f33535135e'
+body_hash: 'sha256:7fc6486f14fcc4f6a334b9caccda4b91f9fa75583f36e448a8649bd174c4b9e0'
 related:
   - "[[2026-09-21-iva-workflow-m303-filing-evidence-authoring-reference]]"
   - "[[2026-09-21-iva-workflow-adr]]"
@@ -141,3 +141,9 @@ AEAT acceptance or independent truth. The public CLI may collect the typed
 attestation only through the shared application admission operation and returns
 a sanitized secure reference; it never manufactures metadata or writes an
 intermediate JSON file.
+
+
+## Amendment 2 — Registry-selected ordinary coordinates
+
+Accepted 2026-09-23 under the IVA implementation authorization, refining the first-slice scope rather than reversing it. The ordinary evidence envelope carries three operator-declared header facts: the joint self-assessment election, the non-zero annual volume answer and the Modelo 390 exemption applicability. A filing coordinate admits ordinary authoring and applicability attestation only when it is quarterly and the law-selected Modelo 303 revision for that quarter declares all three facts in its official record design (producer keys `m303.joint_return_elected`, `m303.annual_volume_nonzero` and `m303.exonerado_390_applicable`). Support therefore follows the registry instead of a year constant. Every authored revision from 2022 through `2026-y-siguientes` declares the three facts, so 2026 quarters are no longer refused. The 2026 design's new hydrocarbon-deposit header fact is profile-owned and does not enter the operator evidence. Monthly coordinates and coordinates outside the registry envelope still refuse before custody is touched. Grounding for the per-revision declarations is the registry record design cited by each revision's export layout; no new authority generation or publication is implied.
+

@@ -1,4 +1,4 @@
-"""Transient authoring of the ordinary 2025 Modelo 303 filing-evidence envelope."""
+"""Transient authoring of the ordinary Modelo 303 filing-evidence envelope."""
 
 from __future__ import annotations
 
@@ -26,6 +26,7 @@ from .m303_exonerado_390_applicability_attestation import (
     resolve_m303_exonerado_390_not_applicable_attestation,
 )
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
+from .m303_ordinary_evidence_coordinate import ordinary_m303_evidence_coordinate_supported
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_scope_for_profile,
     taxpayer_profile_for_work,
@@ -36,11 +37,9 @@ from .work_profile import ModeloWorkProfile
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
-_ORDINARY_M303_FILING_YEAR = 2025
-
 
 class OrdinaryM303FilingEvidenceRequest(BaseModel):
-    """The complete operator-owned input for one ordinary 2025 M303 envelope."""
+    """The complete operator-owned input for one ordinary M303 envelope."""
 
     model_config = STRICT_FROZEN_CONFIG
 
@@ -71,7 +70,7 @@ def author_ordinary_m303_filing_instance_evidence(
     ``filing_instance_evidence`` input; it is durable only when that action
     persists the resulting calculation revision.
     """
-    _require_ordinary_work_coordinate(work_unit=work_unit, request=request)
+    _require_ordinary_work_coordinate(work_unit=work_unit, request=request, operation=operation)
     registry_snapshot = operation.snapshot("303", filing_year=request.filing_year, period=request.period.registry_token)
     if registry_snapshot.revision.id != work_unit.revision_id:
         raise M303FilingEvidenceError("ordinary M303 evidence authority revision is stale for this work unit")
@@ -138,15 +137,19 @@ def author_ordinary_m303_filing_instance_evidence(
     return validated
 
 
-def _require_ordinary_work_coordinate(*, work_unit: WorkUnit, request: OrdinaryM303FilingEvidenceRequest) -> None:
+def _require_ordinary_work_coordinate(
+    *, work_unit: WorkUnit, request: OrdinaryM303FilingEvidenceRequest, operation: PinnedAuthorityOperation
+) -> None:
     if (
         work_unit.modelo != Modelo("303")
-        or request.filing_year != _ORDINARY_M303_FILING_YEAR
-        or not request.period.is_quarterly
         or (work_unit.filing_year, work_unit.period) != (request.filing_year, request.period)
+        or not ordinary_m303_evidence_coordinate_supported(
+            filing_year=request.filing_year, period=request.period, operation=operation
+        )
     ):
         raise M303FilingEvidenceError(
-            "ordinary evidence authoring supports only the exact 2025 quarterly Modelo 303 work unit"
+            "ordinary evidence authoring supports only a quarterly Modelo 303 work unit whose selected "
+            "record design declares the ordinary evidence header fields"
         )
 
 

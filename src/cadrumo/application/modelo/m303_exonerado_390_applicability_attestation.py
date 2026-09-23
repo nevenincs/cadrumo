@@ -25,13 +25,13 @@ from ...domain.attachments.m303_filing_evidence import (
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from ...domain.filing_evidence import FilingEvidenceReference
+from .m303_ordinary_evidence_coordinate import ordinary_m303_evidence_coordinate_supported
 from .profile_readiness_gate import load_modelo_work_profile
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from .work_profile import ModeloWorkProfile
 
-_ORDINARY_M303_FILING_YEAR = 2025
 _ATTESTATION_MIME_TYPE = "application/vnd.cadrumo.m303-exonerado-390-applicability+json"
 _ATTESTATION_REFERENCE_PREFIX = "attachment:"
 _ATTESTATION_SOURCE_COMMAND = "application.modelo.m303_exonerado_390_applicability_attestation"
@@ -84,7 +84,7 @@ def admit_m303_exonerado_390_applicability_attestation(
     clock: Callable[[], datetime] = _utc_now,
 ) -> M303Exonerado390ApplicabilityAttestationAdmission:
     """Admit one canonical ordinary-M303 assertion into encrypted attachment custody."""
-    _require_ordinary_not_applicable_request(request)
+    _require_ordinary_not_applicable_request(request, operation=operation)
     profile = _current_profile(bucket_id=bucket_id, operation=operation, profile=profile)
     captured_at = validate_utc_aware(clock())
     _require_observation_timing(
@@ -135,7 +135,7 @@ def resolve_m303_exonerado_390_not_applicable_attestation(
     clock: Callable[[], datetime] = _utc_now,
 ) -> FilingEvidenceReference:
     """Resolve one current, custody-verified ordinary M303 non-applicability reference."""
-    _require_ordinary_coordinate(filing_year=filing_year, period=period)
+    _require_ordinary_coordinate(filing_year=filing_year, period=period, operation=operation)
     profile = _current_profile(bucket_id=bucket_id, operation=operation, profile=profile)
     attachment_id, sha256 = _parse_filing_evidence_reference(evidence_reference)
     attachment = store.load_manifest(attachment_id)
@@ -202,16 +202,19 @@ def _current_profile(
     return profile
 
 
-def _require_ordinary_not_applicable_request(request: M303Exonerado390ApplicabilityAttestationRequest) -> None:
-    _require_ordinary_coordinate(filing_year=request.filing_year, period=request.period)
+def _require_ordinary_not_applicable_request(
+    request: M303Exonerado390ApplicabilityAttestationRequest, *, operation: PinnedAuthorityOperation
+) -> None:
+    _require_ordinary_coordinate(filing_year=request.filing_year, period=request.period, operation=operation)
     if request.asserted_value is M303Exonerado390ApplicabilityAssertion.APPLICABLE:
         raise AttachmentValidationError("applicable Modelo 390 evidence is not supported by the ordinary path")
 
 
-def _require_ordinary_coordinate(*, filing_year: int, period: Period) -> None:
-    if filing_year != _ORDINARY_M303_FILING_YEAR or period.filing_year != filing_year or not period.is_quarterly:
+def _require_ordinary_coordinate(*, filing_year: int, period: Period, operation: PinnedAuthorityOperation) -> None:
+    if not ordinary_m303_evidence_coordinate_supported(filing_year=filing_year, period=period, operation=operation):
         raise AttachmentValidationError(
-            "Modelo 390 applicability evidence supports only ordinary 2025 quarterly Modelo 303"
+            "Modelo 390 applicability evidence supports only a quarterly Modelo 303 whose selected record "
+            "design declares the ordinary evidence header fields"
         )
 
 

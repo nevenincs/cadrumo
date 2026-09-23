@@ -1,3 +1,14 @@
+# Annual publication of the días inhábiles calendar that fixes filing-deadline
+# extensions (Ley 39/2015 art. 30.5 and 30.6). Each year cites the Secretaría de
+# Estado de Función Pública resolution for the Administración General del Estado,
+# the calendar that governs AEAT procedures.
+#
+# verified_territories lists every calendar territory whose complete list of
+# territory-wide non-working weekdays for the year is authored in fact
+# deadlines.public-holiday from the same resolution. Days the resolution lists
+# for a territory but that its own notes make non-uniform inside it are left out
+# of that territory; the reasons are recorded in 0067-public-holiday.toml.
+
 [fact]
 fact_id = "deadlines.holiday-calendar-publication"
 family = "event"
@@ -7,20 +18,21 @@ variant_id = "holiday-calendar-publication:2024"
 date_axis = "submission_date"
 valid_from = 2024-01-01
 valid_to = 2024-12-31
-legal_refs = ["ley-39-2015:art-30.5"]
-source_refs = ["aeat-calendario-contribuyente-2024"]
-review_status = "pending_review"
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+source_refs = ["boe-dias-inhabiles-age-2024"]
+review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
-source_ref = "aeat-calendario-contribuyente-2024"
-required_text = ["Calendario del contribuyente"]
+source_ref = "boe-dias-inhabiles-age-2024"
+required_text = ["Calendario de días inhábiles, 2024"]
 [fact.variants.payload]
 kind = "event"
 event_date = 2024-01-01
 event_code = "holiday_calendar_published"
 outputs = [
-  { name = "boe_ref", value = "boe-resolucion-festivos-2024" },
-  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2023-21965" },
+  { name = "boe_ref", value = "resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637" },
+  { name = "verified_territories", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
 ]
 
 [[fact.variants]]
@@ -28,18 +40,41 @@ variant_id = "holiday-calendar-publication:2025"
 date_axis = "submission_date"
 valid_from = 2025-01-01
 valid_to = 2025-12-31
-legal_refs = ["ley-39-2015:art-30.5"]
-source_refs = ["aeat-calendario-contribuyente-2025"]
-review_status = "pending_review"
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+source_refs = ["boe-dias-inhabiles-age-2025"]
+review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
-source_ref = "aeat-calendario-contribuyente-2025"
-required_text = ["Calendario del contribuyente"]
+source_ref = "boe-dias-inhabiles-age-2025"
+required_text = ["2025 - Calendario de días inhábiles"]
 [fact.variants.payload]
 kind = "event"
 event_date = 2025-01-01
 event_code = "holiday_calendar_published"
 outputs = [
-  { name = "boe_ref", value = "boe-resolucion-festivos-2025" },
-  { name = "boe_url", value = "https://www.boe.es/diario_boe/txt.php?id=BOE-A-2024-22011" },
+  { name = "boe_ref", value = "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935" },
+  { name = "verified_territories", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
+]
+
+[[fact.variants]]
+variant_id = "holiday-calendar-publication:2026"
+date_axis = "submission_date"
+valid_from = 2026-01-01
+valid_to = 2026-12-31
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6", "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+source_refs = ["boe-dias-inhabiles-age-2026"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-dias-inhabiles-age-2026"
+required_text = ["2026 Calendario de días inhábiles"]
+[fact.variants.payload]
+kind = "event"
+event_date = 2026-01-01
+event_code = "holiday_calendar_published"
+outputs = [
+  { name = "boe_ref", value = "resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo" },
+  { name = "boe_url", value = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702" },
+  { name = "verified_territories", value = "ES-AN,ES-AR,ES-AS,ES-IB,ES-CN,ES-CB,ES-CM,ES-CL,ES-CT,ES-EX,ES-GA,ES-RI,ES-MD,ES-MC,ES-NC,ES-PV,ES-VC,ES-CE,ES-ML" },
 ]

@@ -404,8 +404,8 @@ def test_quickfile_runs_full_chain_to_exported_fichero(
     assert out.stat().st_size > 0, "the exported fichero is empty"
 
 
-def test_quickfile_m303_2026_refuses_the_retired_plaintext_evidence_authority(tmp_path: Path) -> None:
-    """Only the supported ordinary 2025 authoring path may reach M303 calculate."""
+def test_quickfile_m303_2026_refuses_an_unadmitted_attestation_pair(tmp_path: Path) -> None:
+    """A well-formed attestation pair that custody never admitted cannot reach M303 calculate."""
 
     _create_profile()
     out = tmp_path / "modelo-303-2026-1T.boe"

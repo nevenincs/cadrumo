@@ -1,0 +1,110 @@
+# Secretaría de Estado de Función Pública resolutions fixing the calendar of días
+# inhábiles of the Administración General del Estado for the cómputo de plazos
+# (Ley 39/2015 art. 30.7). AEAT procedures follow this calendar, so it grounds the
+# per-date non-working days that extend a filing deadline under art. 30.5 and 30.6.
+#
+# Each resolution is bundled as published (BOE holds no consolidated text for it);
+# its ANEXO lists every weekday that is inhábil nationally or in each autonomous
+# community and city, followed by notes on sub-territorial variations.
+
+[legal."resolucion-sefp-2023-11-16-dias-inhabiles-2024:anexo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instruction"
+corpus_ref = "corpus/normatives/html/boe-a-2023-23637-dias-inhabiles-2024.html#anexo"
+document_id = "BOE-A-2023-23637"
+article = "anexo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+published_at = 2023-11-22
+effective_from = 2023-11-22
+effective_to = 2024-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-23
+reviewed_by = "agent-authored from BOE-A-2023-23637 downloaded from boe.es; operator to re-stamp"
+notes = "Resolución de 16 de noviembre de 2023 de la Secretaría de Estado de Función Pública: calendario de días inhábiles de la Administración General del Estado para 2024, a efectos de cómputo de plazos, fijado con sujeción a la relación de fiestas laborales (BOE-A-2023-22014)."
+required_text = [
+    "Calendario de días inhábiles, 2024",
+    "Día 1: Inhábil en todo el territorio nacional.",
+]
+
+[legal."resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instruction"
+corpus_ref = "corpus/normatives/html/boe-a-2024-26935-dias-inhabiles-2025.html#anexo"
+document_id = "BOE-A-2024-26935"
+article = "anexo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+published_at = 2024-12-24
+effective_from = 2024-12-24
+effective_to = 2025-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-23
+reviewed_by = "agent-authored from BOE-A-2024-26935 downloaded from boe.es; operator to re-stamp"
+notes = "Resolución de 16 de diciembre de 2024 de la Secretaría de Estado de Función Pública: calendario de días inhábiles de la Administración General del Estado para 2025, a efectos de cómputo de plazos, fijado con sujeción a la relación de fiestas laborales (BOE-A-2024-21316)."
+required_text = [
+    "2025 - Calendario de días inhábiles",
+    "Día 1: Inhábil en todo el territorio nacional.",
+]
+
+[legal."resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instruction"
+corpus_ref = "corpus/normatives/html/boe-a-2025-23702-dias-inhabiles-2026.html#anexo"
+document_id = "BOE-A-2025-23702"
+article = "anexo"
+permalink = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+published_at = 2025-11-24
+effective_from = 2025-11-24
+effective_to = 2026-12-31
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-23
+reviewed_by = "agent-authored from BOE-A-2025-23702 downloaded from boe.es; operator to re-stamp"
+notes = "Resolución de 18 de noviembre de 2025 de la Secretaría de Estado de Función Pública: calendario de días inhábiles de la Administración General del Estado para 2026, a efectos de cómputo de plazos, fijado con sujeción a la relación de fiestas laborales (BOE-A-2025-21667)."
+required_text = [
+    "2026 Calendario de días inhábiles",
+    "Día 1: Inhábil en todo el territorio nacional.",
+]
+
+[sources."boe-dias-inhabiles-age-2024"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2023-23637-dias-inhabiles-2024.html"
+sha256 = "d3af13b108436d5b4ae222169a4d74993360f6b3b13457d9a50d657fd3eb690c"
+bytes = 33267
+retrieved_at = 2026-09-23
+published_at = 2023-11-22
+applies_from = 2024-01-01
+applies_to = 2024-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2023-23637"
+review_status = "pending_review"
+
+[sources."boe-dias-inhabiles-age-2025"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2024-26935-dias-inhabiles-2025.html"
+sha256 = "ddf151e5d44f586b0789988057d6e34317b4a834c327e988db60f78cc2165dcb"
+bytes = 33069
+retrieved_at = 2026-09-23
+published_at = 2024-12-24
+applies_from = 2025-01-01
+applies_to = 2025-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2024-26935"
+review_status = "pending_review"
+
+[sources."boe-dias-inhabiles-age-2026"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/boe-a-2025-23702-dias-inhabiles-2026.html"
+sha256 = "ae5f73f6ad2dd5a80171317580b6b3540127747c7b75adef1cb70e0433289a9a"
+bytes = 32434
+retrieved_at = 2026-09-23
+published_at = 2025-11-24
+applies_from = 2026-01-01
+applies_to = 2026-12-31
+source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2025-23702"
+review_status = "pending_review"
