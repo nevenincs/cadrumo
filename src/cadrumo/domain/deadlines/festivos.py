@@ -37,9 +37,11 @@ validated registry authority.
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from collections.abc import Iterable
 from datetime import date, timedelta
 from enum import StrEnum
+from threading import RLock
 from typing import TYPE_CHECKING, Annotated, Self
 
 from pydantic import BaseModel, Field, GetCoreSchemaHandler, NonNegativeInt, StringConstraints
@@ -258,13 +260,35 @@ MODELOS_WITHOUT_SHIFT: tuple[str, ...] = (Modelo("369"),)
 # ---------------------------------------------------------------------------
 
 
+_HOLIDAY_CALENDAR_CACHE_SIZE = 16
+_holiday_calendar_cache: OrderedDict[tuple[object, int], HolidayCalendar] = OrderedDict()
+_holiday_calendar_cache_lock = RLock()
+
+
 def load_holiday_calendar(
     year: int,
     *,
     operation: PinnedAuthorityOperation,
 ) -> HolidayCalendar:
-    """Load a calendar through the caller's pinned operation."""
-    return holiday_calendar_from_authority(year, operation=operation)
+    """Load a calendar through the caller's pinned operation.
+
+    A calendar view shifts every deadline of a year against the same
+    publication, so successful loads are reused per generation pin and year.
+    A refused year is not cached and is resolved again on its next request.
+    """
+    key = (operation.pin(), year)
+    with _holiday_calendar_cache_lock:
+        cached = _holiday_calendar_cache.get(key)
+        if cached is not None:
+            _holiday_calendar_cache.move_to_end(key)
+            return cached
+    calendar = holiday_calendar_from_authority(year, operation=operation)
+    with _holiday_calendar_cache_lock:
+        _holiday_calendar_cache[key] = calendar
+        _holiday_calendar_cache.move_to_end(key)
+        while len(_holiday_calendar_cache) > _HOLIDAY_CALENDAR_CACHE_SIZE:
+            _holiday_calendar_cache.popitem(last=False)
+    return calendar
 
 
 def holiday_calendar_from_authority(
@@ -303,12 +327,22 @@ def holiday_calendar_from_authority(
     verified_value = publication_outputs.get("verified_territories", "")
     if not isinstance(verified_value, str):
         raise DeadlineValidationError(f"holiday calendar publication for {year} has malformed verified territories")
-    from ..calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
+    from ..calculations.registry.calendar_ccaa_catalogue import (
+        CalendarCcaaCatalogue,
+        resolve_calendar_ccaa_catalogue,
+    )
+
+    catalogues: dict[date, CalendarCcaaCatalogue] = {}
+
+    def territory(value: str, effective_date: date) -> CalendarCCAA:
+        catalogue = catalogues.get(effective_date)
+        if catalogue is None:
+            catalogue = resolve_calendar_ccaa_catalogue(effective_date=effective_date, authority=selected)
+            catalogues[effective_date] = catalogue
+        return catalogue.require(value)
 
     verified_territories = tuple(
-        require_calendar_ccaa(token.strip(), effective_date=coordinate, authority=selected)
-        for token in verified_value.split(",")
-        if token.strip()
+        territory(token.strip(), coordinate) for token in verified_value.split(",") if token.strip()
     )
     if len(set(verified_territories)) != len(verified_territories):
         raise DeadlineValidationError(f"holiday calendar publication for {year} repeats a verified territory")
@@ -346,15 +380,7 @@ def holiday_calendar_from_authority(
         holiday = Holiday(
             holiday_date=resolved.payload.event_date,
             jurisdiction=jurisdiction,
-            ccaa_code=(
-                require_calendar_ccaa(
-                    ccaa_value,
-                    effective_date=variant.valid_from,
-                    authority=selected,
-                )
-                if isinstance(ccaa_value, str)
-                else None
-            ),
+            ccaa_code=territory(ccaa_value, variant.valid_from) if isinstance(ccaa_value, str) else None,
             name=name,
         )
         if jurisdiction is HolidayJurisdiction.NATIONAL:

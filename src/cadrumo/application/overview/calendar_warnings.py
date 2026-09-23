@@ -19,7 +19,9 @@ See Also:
 
 from __future__ import annotations
 
+from collections import OrderedDict
 from collections.abc import Iterable, Mapping
+from threading import RLock
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
@@ -174,7 +176,43 @@ def _operation_revision_inventory(
             yield modelo, operation.revision(modelo, str(metadata.id))
 
 
+_GATING_FIELDS_CACHE_SIZE = 4
+_registry_gating_fields_cache: OrderedDict[object, MappingProxyType[str, tuple[tuple[str, ...], str, str]]] = (
+    OrderedDict()
+)
+_registry_gating_fields_cache_lock = RLock()
+
+
 def _gating_fields(
+    *,
+    operation: PinnedAuthorityOperation,
+    revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,
+    modelos: Iterable[str] | None = None,
+) -> MappingProxyType[str, tuple[tuple[str, ...], str, str]]:
+    """Return every profile key that gates an obligation, with its modelos and warning metadata.
+
+    The whole-registry answer depends only on the authority generation, yet
+    deriving it decodes every revision; it is reused per generation pin so one
+    workbench generation, which builds several calendars, pays for it once.
+    """
+    if revision_inventory is not None or modelos is not None:
+        return _derive_gating_fields(operation=operation, revision_inventory=revision_inventory, modelos=modelos)
+    key = operation.pin()
+    with _registry_gating_fields_cache_lock:
+        cached = _registry_gating_fields_cache.get(key)
+        if cached is not None:
+            _registry_gating_fields_cache.move_to_end(key)
+            return cached
+    derived = _derive_gating_fields(operation=operation)
+    with _registry_gating_fields_cache_lock:
+        _registry_gating_fields_cache[key] = derived
+        _registry_gating_fields_cache.move_to_end(key)
+        while len(_registry_gating_fields_cache) > _GATING_FIELDS_CACHE_SIZE:
+            _registry_gating_fields_cache.popitem(last=False)
+    return derived
+
+
+def _derive_gating_fields(
     *,
     operation: PinnedAuthorityOperation,
     revision_inventory: Iterable[tuple[str, ModeloRevision]] | None = None,

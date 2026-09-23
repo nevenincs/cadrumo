@@ -535,3 +535,19 @@ def test_no_hardcoded_festivos_table_in_cli() -> None:
                 f"reach the CLI through "
                 f"`cadrumo.domain.deadlines`."
             )
+
+
+def test_a_published_year_is_loaded_once_per_generation_pin() -> None:
+    """One calendar view shifts many deadlines of a year against the same publication."""
+    with bundled_indexed_authority().operation() as operation:
+        first = load_holiday_calendar(2025, operation=operation)
+        assert load_holiday_calendar(2025, operation=operation) is first
+    with bundled_indexed_authority().operation() as later:
+        assert load_holiday_calendar(2025, operation=later) == first
+
+
+def test_a_refused_year_is_never_cached_as_a_calendar() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        for _ in range(2):
+            with pytest.raises(DeadlineValidationError):
+                load_holiday_calendar(1999, operation=operation)
