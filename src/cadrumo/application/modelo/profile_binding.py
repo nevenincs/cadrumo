@@ -236,6 +236,19 @@ def inject_derived_marriage_facts(
         fact_index["renta_taxpayer.marriage_month_end"] = Decimal("12")
 
 
+def _authored_year(snapshot: RegistrySnapshot) -> int:
+    """Return the year a snapshot's revision was authored for.
+
+    Derived profile selectors and the revision's date context are keyed by it:
+    a projected snapshot reuses its source revision's declarations, and a
+    snapshot carrying no projection is authored for its own filing year.
+    Formatting the optional field directly would key an unprojected snapshot
+    as ``..._None``, which no declared selector matches, and the injector
+    would skip the fact without a word.
+    """
+    return snapshot.authored_filing_year or snapshot.filing_year
+
+
 def _declared_profile_selectors(revision: ModeloRevision) -> frozenset[str]:
     """Every selector the revision's ``source = "profile"`` bindings name.
 
@@ -661,7 +674,7 @@ def _resolved_minimo_descendientes_tranches(
     the check stays defensive for any future partial revision).
     """
     # A projected year reuses the authored edition's dated parameter values.
-    date_context = {"filing_period": date(snapshot.authored_filing_year or snapshot.filing_year, 12, 31)}
+    date_context = {"filing_period": date(_authored_year(snapshot), 12, 31)}
 
     def _resolve_tranche(suffix: str) -> Decimal | None:
         specific = (
@@ -715,7 +728,7 @@ def _resolved_minimo_descendientes_thresholds(
     a fabricated ceiling.
     """
     # A projected year reuses the authored edition's dated parameter values.
-    date_context = {"filing_period": date(snapshot.authored_filing_year or snapshot.filing_year, 12, 31)}
+    date_context = {"filing_period": date(_authored_year(snapshot), 12, 31)}
 
     def _resolve(suffix: str) -> Decimal | None:
         parameter = _minimo_descendientes_parameter(snapshot, suffix=suffix)
@@ -833,8 +846,8 @@ def inject_derived_minimo_descendientes_facts(
     """
     if context is None:
         context = _family_fact_context(snapshot, operation=operation)
-    estatal_key = f"renta_family.descendientes_minimos_aggregate_{snapshot.authored_filing_year}"
-    autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{snapshot.authored_filing_year}"
+    estatal_key = f"renta_family.descendientes_minimos_aggregate_{_authored_year(snapshot)}"
+    autonomico_key = f"renta_family.descendientes_minimos_aggregate_autonomico_{_authored_year(snapshot)}"
 
     estatal_tranches = _resolved_minimo_descendientes_tranches(snapshot, ccaa_infix=None)
     if estatal_tranches is None:
@@ -984,7 +997,7 @@ def inject_derived_anualidades_eligibility_facts(
     if context is None:
         context = _family_fact_context(snapshot, operation=operation)
     filing_year = snapshot.filing_year
-    key = f"renta_family.anualidades_sin_minimo_descendientes_{snapshot.authored_filing_year}"
+    key = f"renta_family.anualidades_sin_minimo_descendientes_{_authored_year(snapshot)}"
     if key not in _declared_profile_selectors(snapshot.revision):
         return
     thresholds = _resolved_minimo_descendientes_thresholds(snapshot)
@@ -1221,7 +1234,7 @@ def _inject_derived_incremento_guarderia_facts(
     """
     if context is None:
         context = _family_fact_context(snapshot, operation=operation)
-    key = f"renta_family.incremento_guarderia_{snapshot.authored_filing_year}"
+    key = f"renta_family.incremento_guarderia_{_authored_year(snapshot)}"
     if key not in declared_selectors:
         return
 
@@ -1265,7 +1278,7 @@ def _inject_derived_deduccion_maternidad_facts(
     """
     if context is None:
         context = _family_fact_context(snapshot, operation=operation)
-    key = f"renta_family.deduccion_maternidad_{snapshot.authored_filing_year}"
+    key = f"renta_family.deduccion_maternidad_{_authored_year(snapshot)}"
     if key not in declared_selectors:
         return
 
@@ -1611,7 +1624,7 @@ def _load_profile_facts(
         fact_index,
         snapshot.filing_year,
         declared_selectors,
-        authored_filing_year=snapshot.authored_filing_year or snapshot.filing_year,
+        authored_filing_year=_authored_year(snapshot),
         context=family_context,
         operation=operation,
     )
