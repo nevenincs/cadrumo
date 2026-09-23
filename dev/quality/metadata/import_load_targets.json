@@ -2298,6 +2298,7 @@
         "dev.acceptance.assets.evidence",
         "dev.acceptance.assets.export_journey",
         "dev.acceptance.assets.installed_journey",
+        "dev.acceptance.assets.installed_method_proof",
         "dev.acceptance.assets.installed_profile_setup",
         "dev.acceptance.assets.installed_tui_child",
         "dev.acceptance.calendar",
