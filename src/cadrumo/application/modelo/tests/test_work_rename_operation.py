@@ -62,6 +62,7 @@ from ..operation_definitions import (
     build_modelo_work_verify_definition,
     build_modelo_work_verify_registration,
 )
+from ..operator_inputs import ModeloExportOperatorInput
 from ._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
@@ -419,6 +420,38 @@ def test_the_export_stamps_the_identity_this_invocation_recorded() -> None:
     assert {"calculation_revision_id", "output_path", "actor"} <= fields
     for resolved in ("presenter", "taxpayer_identity", "product_software_identity"):
         assert resolved not in fields, f"the request pins an identity that should be resolved: {resolved}"
+
+
+@pytest.mark.parametrize("election", ["refund_election", "payment_election", "prior_domiciliation_election"])
+def test_the_export_request_accepts_each_election_the_command_line_accepts(election: str) -> None:
+    """One revision must export as the same declaration type whichever surface asked.
+
+    The operation once took no election at all, so a Modelo 303 export
+    through it failed where the command line, supplying its defaults,
+    reached the export gates.
+    """
+    operation_field = ModeloExportRequest.model_fields[election]
+    command_line_field = ModeloExportOperatorInput.model_fields[election]
+
+    assert operation_field.annotation is command_line_field.annotation
+    assert operation_field.default is command_line_field.default
+
+
+def test_the_export_executor_hands_every_election_to_the_export_command() -> None:
+    """An election the request carries but the executor drops would reach the export as its default."""
+    source = textwrap.dedent(inspect.getsource(ModeloExportExecutor.execute))
+    [command] = [
+        node
+        for node in ast.walk(ast.parse(source))
+        if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == "ModeloExportCommand"
+    ]
+    threaded = {
+        keyword.arg
+        for keyword in command.keywords
+        if isinstance(keyword.value, ast.Attribute) and keyword.value.attr == keyword.arg
+    }
+
+    assert {"refund_election", "payment_election", "prior_domiciliation_election"} <= threaded
 
 
 def _amend_definition():

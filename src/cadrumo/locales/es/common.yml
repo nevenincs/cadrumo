@@ -1944,6 +1944,20 @@ tui:
       apply: Aplicar valores declarados
       binding: Dato declarado {binding}
       scalar: Casilla {casilla}
+    export:
+      payment_election:
+        cuenta_corriente: Cuenta corriente tributaria
+        domiciliacion: Domiciliación bancaria
+        ingreso: Ingreso
+        label: 'Resultado a ingresar: forma de pago'
+      prior_domiciliation_election:
+        cancel_or_modify: Anularla o modificarla
+        keep: Mantenerla
+        label: Domiciliación anterior (solo autoliquidación rectificativa)
+      refund_election:
+        compensar: Compensar en periodos posteriores
+        devolver: Solicitar la devolución
+        label: 'Resultado negativo: compensar o solicitar la devolución'
     finding_kind:
       advisory: Consejo
       blocking_rule: Regla no cumplida

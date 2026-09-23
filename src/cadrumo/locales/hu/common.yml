@@ -1918,6 +1918,20 @@ tui:
       apply: Bevallott értékek alkalmazása
       binding: 'Bevallott adat: {binding}'
       scalar: '{casilla}. rovat'
+    export:
+      payment_election:
+        cuenta_corriente: Adófolyószámla (cuenta corriente tributaria)
+        domiciliacion: Csoportos beszedés (domiciliación)
+        ingreso: Befizetés (ingreso)
+        label: 'Befizetendő eredmény: a fizetés módja'
+      prior_domiciliation_election:
+        cancel_or_modify: Visszavonás vagy módosítás
+        keep: Megtartás
+        label: Korábbi csoportos beszedés (csak helyesbítő önbevallásnál)
+      refund_election:
+        compensar: Továbbvitel a későbbi időszakokra (compensar)
+        devolver: Visszatérítés kérése (devolver)
+        label: 'Negatív eredmény: továbbvitel vagy visszatérítés kérése'
     finding_kind:
       advisory: Tanács
       blocking_rule: Nem teljesülő szabály

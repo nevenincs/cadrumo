@@ -40,7 +40,7 @@ from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.binding import Binding
-from textual.widgets import Button, DataTable, Input, Static
+from textual.widgets import Button, DataTable, Input, Select, Static
 
 from .....application.modelo.edit_models import (
     ModeloEditWritableBindingOverrideSurfaceEntryV1,
@@ -50,6 +50,9 @@ from .....core.errors.error_codes import resolve_error_message
 from .....core.errors.hierarchy import CadrumoError
 from .....core.i18n.render import tr
 from .....core.operations import OperationTerminalCondition
+from .....core.payment_election import PaymentElection
+from .....core.prior_domiciliation_election import PriorDomiciliationElection
+from .....core.refund_election import RefundElection
 from ...components.account_chrome import AccountChromeScreen
 from ...components.app_access import TypedAppAccess
 from ...components.dialogs import ConfirmScreen
@@ -77,6 +80,22 @@ _ADDRESS_ROW_KEYS: tuple[str, ...] = ("modelo", "filing_year", "period", "work_s
 _REVISION_ROW_KEYS: tuple[str, ...] = ("requested_assertion", "stored_assertion", "review_status")
 _CAPABILITY_COLUMN_KEYS: tuple[str, ...] = ("capability", "disposition")
 _OTHER_DESTINATIONS: tuple[str, ...] = ("inputs", "results", "verification", "provenance", "filing")
+
+#: The Modelo 303 export elections, each rendered in the operator's words and
+#: pre-set to the same neutral default the command line applies when omitted.
+REFUND_ELECTION_LOCALE_KEYS: dict[RefundElection, str] = {
+    RefundElection.COMPENSAR: "tui.modelo.export.refund_election.compensar",
+    RefundElection.DEVOLVER: "tui.modelo.export.refund_election.devolver",
+}
+PAYMENT_ELECTION_LOCALE_KEYS: dict[PaymentElection, str] = {
+    PaymentElection.INGRESO: "tui.modelo.export.payment_election.ingreso",
+    PaymentElection.DOMICILIACION: "tui.modelo.export.payment_election.domiciliacion",
+    PaymentElection.CUENTA_CORRIENTE: "tui.modelo.export.payment_election.cuenta_corriente",
+}
+PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS: dict[PriorDomiciliationElection, str] = {
+    PriorDomiciliationElection.KEEP: "tui.modelo.export.prior_domiciliation_election.keep",
+    PriorDomiciliationElection.CANCEL_OR_MODIFY: "tui.modelo.export.prior_domiciliation_election.cancel_or_modify",
+}
 
 
 def edit_control_id(kind: str, key: str) -> str:
@@ -148,7 +167,39 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
                     placeholder=tr("application.modelo.lifecycle.export_destination_placeholder"),
                     id="modelo-lifecycle-export-path",
                 )
+                if self._is_m303_calculation():
+                    yield from self._compose_export_elections()
                 yield Button(tr("application.modelo.lifecycle.export"), id="modelo-lifecycle-export")
+
+    def _compose_export_elections(self) -> ComposeResult:
+        """Offer each declaration-shaping export election, pre-set to its neutral default and never blank."""
+        for control_id, label_key, keys, default in (
+            (
+                "modelo-lifecycle-export-refund-election",
+                "tui.modelo.export.refund_election.label",
+                REFUND_ELECTION_LOCALE_KEYS,
+                RefundElection.COMPENSAR,
+            ),
+            (
+                "modelo-lifecycle-export-payment-election",
+                "tui.modelo.export.payment_election.label",
+                PAYMENT_ELECTION_LOCALE_KEYS,
+                PaymentElection.INGRESO,
+            ),
+            (
+                "modelo-lifecycle-export-prior-domiciliation-election",
+                "tui.modelo.export.prior_domiciliation_election.label",
+                PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS,
+                PriorDomiciliationElection.KEEP,
+            ),
+        ):
+            yield Static(tr(label_key), markup=False)
+            yield Select[str](
+                tuple((tr(key), member.value) for member, key in keys.items()),
+                value=default.value,
+                allow_blank=False,
+                id=control_id,
+            )
 
     def on_mount(self) -> None:
         """Populate the header, the destination list, the disclosure groups, and the action notice."""
@@ -227,12 +278,33 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
             if not output_path:
                 self._notice(tr("application.modelo.lifecycle.refusal.export_destination_required"))
                 return
+            keyword_arguments = self._export_elections()
         submit = getattr(actions, method_name, None)
         if submit is None:
             return
         if output_path is not None:
             keyword_arguments["output_path"] = output_path
         self._start_lifecycle_action(submit, keyword_arguments=keyword_arguments)
+
+    def _export_elections(self) -> dict[str, object]:
+        """Read the operator's export elections; a modelo that offers none submits the neutral defaults."""
+        if not self._is_m303_calculation():
+            return {
+                "refund_election": RefundElection.COMPENSAR,
+                "payment_election": PaymentElection.INGRESO,
+                "prior_domiciliation_election": PriorDomiciliationElection.KEEP,
+            }
+        return {
+            "refund_election": RefundElection(
+                str(self.query_one("#modelo-lifecycle-export-refund-election", Select).value)
+            ),
+            "payment_election": PaymentElection(
+                str(self.query_one("#modelo-lifecycle-export-payment-election", Select).value)
+            ),
+            "prior_domiciliation_election": PriorDomiciliationElection(
+                str(self.query_one("#modelo-lifecycle-export-prior-domiciliation-election", Select).value)
+            ),
+        }
 
     def _is_m303_calculation(self) -> bool:
         """Return whether Calculate must collect the ordinary Modelo 303 evidence form."""

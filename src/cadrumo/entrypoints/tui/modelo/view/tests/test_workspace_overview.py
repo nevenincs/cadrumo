@@ -11,7 +11,8 @@ from __future__ import annotations
 from types import SimpleNamespace
 
 import pytest
-from textual.widgets import Button, Input, Static
+from textual.widgets import Button, Input, Select, Static
+from textual.widgets.select import InvalidSelectValueError
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......application.modelo.edit_models import ModeloEditWritableScalarSurfaceEntryV1
@@ -21,12 +22,21 @@ from ......application.modelo.workspace_models import (
 )
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import tr
+from ......core.payment_election import PaymentElection
+from ......core.prior_domiciliation_election import PriorDomiciliationElection
+from ......core.refund_election import RefundElection
 from ....components.dialogs import ConfirmScreen
 from ....components.host import ScreenHostApp
 from ....components.widgets import ContentDataTable
 from ...lifecycle import ModeloLifecycleActionUnavailableError
 from ..controller import ModeloWorkspaceReadSession, open_workspace_read_session
-from ..overview import ModeloWorkspaceOverviewScreen, edit_control_id
+from ..overview import (
+    PAYMENT_ELECTION_LOCALE_KEYS,
+    PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS,
+    REFUND_ELECTION_LOCALE_KEYS,
+    ModeloWorkspaceOverviewScreen,
+    edit_control_id,
+)
 from .conftest import resolve_real_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -244,3 +254,114 @@ async def test_lifecycle_controls_require_confirmation_or_a_typed_precondition(
         assert str(app.screen.query_one("#modelo-lifecycle-notice", Static).content) == tr(
             "application.modelo.lifecycle.refusal.calculation_required"
         )
+
+
+class _ExportRecordingActions:
+    """A lifecycle door that records what the export control submitted, then refuses it."""
+
+    def __init__(self) -> None:
+        self.exported: list[dict[str, object]] = []
+
+    async def export(self, **kwargs: object) -> object:
+        self.exported.append(kwargs)
+        raise ModeloLifecycleActionUnavailableError(
+            translated_message="application.modelo.lifecycle.refusal.calculation_required"
+        )
+
+
+_ELECTION_CONTROLS: tuple[str, ...] = (
+    "#modelo-lifecycle-export-refund-election",
+    "#modelo-lifecycle-export-payment-election",
+    "#modelo-lifecycle-export-prior-domiciliation-election",
+)
+
+
+def _export_session(
+    bucket_id: str, repository: WorkUnitCatalogueRepository, *, modelo: str, actions: _ExportRecordingActions
+) -> ModeloWorkspaceReadSession:
+    projection = resolve_real_result(bucket_id, repository, OutputLanguage.ES, modelo=modelo).projection
+    return open_workspace_read_session(
+        projection,
+        lifecycle=ModeloWorkspaceLifecycleProjectionV1(target=projection.target),
+        lifecycle_actions=actions,
+    )
+
+
+@pytest.mark.asyncio
+async def test_a_modelo_303_export_offers_each_election_preset_to_its_neutral_default(
+    m303_bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """The operator sees and can change every declaration-shaping choice; nothing is decided out of sight."""
+    bucket_id, repository = m303_bucket_and_repository
+    actions = _ExportRecordingActions()
+    app = ScreenHostApp(
+        ModeloWorkspaceOverviewScreen(_export_session(bucket_id, repository, modelo="303", actions=actions))
+    )
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert [app.screen.query_one(control, Select).value for control in _ELECTION_CONTROLS] == [
+            RefundElection.COMPENSAR.value,
+            PaymentElection.INGRESO.value,
+            PriorDomiciliationElection.KEEP.value,
+        ]
+        for control in _ELECTION_CONTROLS:
+            with pytest.raises(InvalidSelectValueError):
+                app.screen.query_one(control, Select).clear()
+        app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-303.boe"
+        app.screen.query_one(_ELECTION_CONTROLS[0], Select).value = RefundElection.DEVOLVER.value
+        app.screen.query_one(_ELECTION_CONTROLS[2], Select).value = PriorDomiciliationElection.CANCEL_OR_MODIFY.value
+        app.screen.query_one("#modelo-lifecycle-export", Button).press()
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+
+    assert actions.exported == [
+        {
+            "refund_election": RefundElection.DEVOLVER,
+            "payment_election": PaymentElection.INGRESO,
+            "prior_domiciliation_election": PriorDomiciliationElection.CANCEL_OR_MODIFY,
+            "output_path": "modelo-303.boe",
+        }
+    ]
+
+
+@pytest.mark.asyncio
+async def test_a_modelo_without_those_elections_exports_with_the_command_line_defaults(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """Modelo 130 offers no Modelo 303 choice, and submits what the command line applies when they are omitted."""
+    bucket_id, repository = bucket_and_repository
+    actions = _ExportRecordingActions()
+    app = ScreenHostApp(
+        ModeloWorkspaceOverviewScreen(_export_session(bucket_id, repository, modelo="130", actions=actions))
+    )
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert not app.screen.query(Select)
+        app.screen.query_one("#modelo-lifecycle-export-path", Input).value = "modelo-130.boe"
+        app.screen.query_one("#modelo-lifecycle-export", Button).press()
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+
+    assert actions.exported == [
+        {
+            "refund_election": RefundElection.COMPENSAR,
+            "payment_election": PaymentElection.INGRESO,
+            "prior_domiciliation_election": PriorDomiciliationElection.KEEP,
+            "output_path": "modelo-130.boe",
+        }
+    ]
+
+
+@pytest.mark.parametrize(
+    ("election", "keys"),
+    [
+        (RefundElection, REFUND_ELECTION_LOCALE_KEYS),
+        (PaymentElection, PAYMENT_ELECTION_LOCALE_KEYS),
+        (PriorDomiciliationElection, PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS),
+    ],
+)
+def test_every_election_member_has_a_label(election: type, keys: dict[object, str]) -> None:
+    """A member added to an election set must be offered, not silently missing from the form."""
+    assert set(keys) == set(election)

@@ -590,11 +590,14 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
         raise InstalledTuiChildError(
             f"installed TUI {step} left no workspace notice", diagnostic=public_surface_diagnostic(pilot)
         )
-    return TuiOutcome(
-        step=step,
-        terminal_condition="refused" if notice == refused or notice.startswith(f"{refused}: ") else "other",
-        visible_notice_key=refusal_key if notice == f"{refused}: {tr(refusal_key)}" else None,
-    )
+    if notice != f"{refused}: {tr(refusal_key)}":
+        # The notice is the only place the product explains a non-refusal; a
+        # bare condition would send the reader to the operation journal.
+        raise InstalledTuiChildError(
+            f"installed TUI {step} expected refusal {refusal_key}, workspace notice was {notice[:400]!r}",
+            diagnostic=public_surface_diagnostic(pilot),
+        )
+    return TuiOutcome(step=step, terminal_condition="refused", visible_notice_key=refusal_key)
 
 
 async def _submit_evidence(pilot: Any, *, step: str) -> TuiOutcome:

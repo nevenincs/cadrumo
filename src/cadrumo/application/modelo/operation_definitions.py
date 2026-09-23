@@ -51,6 +51,7 @@ from ...core.operations import (
 )
 from ...core.payment_election import PaymentElection
 from ...core.period import Period
+from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.time.clock import now as _utc_now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -1031,11 +1032,15 @@ def build_modelo_work_file_registration(
 
 
 class ModeloExportRequest(CredentialFreeOperationRequest):
-    """The revision to export and where the operator wants the artefact.
+    """The revision to export, where the operator wants the artefact, and the elections that shape it.
 
     The path is the operator's chosen destination, journalled because it is a
     location rather than content. The exported bytes never enter the request
     or the result.
+
+    The three elections are the declaration-shaping choices the command line
+    also accepts, with the same neutral defaults, so one revision exports as
+    the same declaration type from either surface.
     """
 
     model_config = ConfigDict(strict=True, frozen=True, extra="forbid", validate_default=True)
@@ -1045,6 +1050,9 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     #: ``min_length`` alone admits. NOT stripped: a path must stay byte-exact,
     #: and silently trimming one would mask a typo rather than surface it.
     output_path: Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]
+    refund_election: RefundElection = RefundElection.COMPENSAR
+    payment_election: PaymentElection = PaymentElection.INGRESO
+    prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
 
     #: The operator this invocation acts as; stamped onto the exported
     #: artefact through the command built from this request.
@@ -1111,6 +1119,9 @@ class ModeloExportExecutor:
             calculation_revision_id=payload.calculation_revision_id,
             output_path=Path(payload.output_path),
             actor=payload.actor,
+            refund_election=payload.refund_election,
+            payment_election=payload.payment_election,
+            prior_domiciliation_election=payload.prior_domiciliation_election,
         )
         from ...core.bucket_pointer import require_active_bucket_id
 
@@ -1178,7 +1189,7 @@ def build_modelo_export_registration(
         definition=definition,
         request_schema=OperationSchemaBindingV1.bind(
             schema_id="modelo.export.request",
-            schema_version=1,
+            schema_version=2,
             model_type=definition.request_type,
         ),
         result_schema=OperationSchemaBindingV1.bind(

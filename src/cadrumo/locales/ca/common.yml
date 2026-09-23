@@ -1931,6 +1931,20 @@ tui:
       apply: Aplica els valors declarats
       binding: Dada declarada {binding}
       scalar: Casella {casilla}
+    export:
+      payment_election:
+        cuenta_corriente: Compte corrent tributari
+        domiciliacion: Domiciliació bancària
+        ingreso: Ingrés
+        label: 'Resultat a ingressar: forma de pagament'
+      prior_domiciliation_election:
+        cancel_or_modify: Anul·lar-la o modificar-la
+        keep: Mantenir-la
+        label: Domiciliació anterior (només autoliquidació rectificativa)
+      refund_election:
+        compensar: Compensar en períodes posteriors
+        devolver: Sol·licitar la devolució
+        label: 'Resultat negatiu: compensar o sol·licitar la devolució'
     finding_kind:
       advisory: Consell
       blocking_rule: Regla no complerta

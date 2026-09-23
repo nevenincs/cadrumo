@@ -1894,6 +1894,20 @@ tui:
       apply: Apply declared values
       binding: Declared input {binding}
       scalar: Box {casilla}
+    export:
+      payment_election:
+        cuenta_corriente: Tax current account (cuenta corriente tributaria)
+        domiciliacion: Direct debit (domiciliación)
+        ingreso: Payment by the taxpayer (ingreso)
+        label: 'Result to pay: how it is paid'
+      prior_domiciliation_election:
+        cancel_or_modify: Cancel or modify it
+        keep: Keep it
+        label: Earlier direct debit (corrective return only)
+      refund_election:
+        compensar: Carry forward to later periods (compensar)
+        devolver: Request a refund (devolver)
+        label: 'Negative result: carry it forward or request a refund'
     finding_kind:
       advisory: Advice
       blocking_rule: Rule not met

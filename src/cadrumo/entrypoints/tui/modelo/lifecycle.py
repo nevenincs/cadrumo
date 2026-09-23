@@ -47,6 +47,9 @@ from ....application.modelo.operation_definitions import (
 from ....application.operations.composition import OperationComposedServices
 from ....application.operations.models import OperationRequest
 from ....core.errors.hierarchy import CadrumoError
+from ....core.payment_election import PaymentElection
+from ....core.prior_domiciliation_election import PriorDomiciliationElection
+from ....core.refund_election import RefundElection
 from ..operations.controller import OperationController
 
 _ACTOR_REF = "operator:tui-modelo"
@@ -189,8 +192,15 @@ class ModeloWorkspaceLifecycleDoor:
             )
         )
 
-    async def export(self, *, output_path: str) -> OperationController:
-        """Export the selected verified revision to the operator-selected local path."""
+    async def export(
+        self,
+        *,
+        output_path: str,
+        refund_election: RefundElection,
+        payment_election: PaymentElection,
+        prior_domiciliation_election: PriorDomiciliationElection,
+    ) -> OperationController:
+        """Export the selected verified revision to the operator-selected path with the operator's elections."""
         return await self._submit(
             OperationRequest(
                 definition_id=MODELO_EXPORT_OPERATION_DEFINITION_ID,
@@ -198,6 +208,9 @@ class ModeloWorkspaceLifecycleDoor:
                 payload=ModeloExportRequest(
                     calculation_revision_id=self._require_calculation_revision(),
                     output_path=output_path,
+                    refund_election=refund_election,
+                    payment_election=payment_election,
+                    prior_domiciliation_election=prior_domiciliation_election,
                     actor=_ACTOR_REF,
                 ),
             )
