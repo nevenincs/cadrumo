@@ -189,10 +189,10 @@ def test_work_calculate_persists_ordinary_2025_m303_evidence_from_secure_attesta
     assert evidence.m303.joint_return_elected is True
     assert evidence.m303.annual_volume_nonzero is True
     assert evidence.m303.insolvency is None
-    assert evidence.m303.exonerado_390.applicable is False
-    assert evidence.m303.exonerado_390.applicability_reference.reference == (
-        f"attachment:{admitted.attachment_id}:{admitted.sha256}"
-    )
+    exonerado_390 = evidence.m303.exonerado_390
+    assert exonerado_390 is not None
+    assert exonerado_390.applicable is False
+    assert exonerado_390.applicability_reference.reference == (f"attachment:{admitted.attachment_id}:{admitted.sha256}")
     assert evidence.m303.regimen_simplificado.scope_decision.is_not_claimed is True
     assert evidence.m303.regimen_simplificado.rows.activities == ()
     assert evidence.m303.regimen_simplificado.calculation_result.activities == ()
