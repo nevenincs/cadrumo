@@ -12,8 +12,12 @@ import pytest
 from .....core.identity.documents import IdentityError, validate_identity
 from .....core.redaction.rules import redact_for_cli_output, redact_for_log
 from .....core.redaction.tax_identity_admission import bind_tax_identity_admission
+from ..facts.resolution import GovernedFactQuery, ResolvedGovernedFact
+from ..governed_fact_scope import validating_governed_facts
 from ..nif_iva_catalogue import nif_iva_format_for_country
+from ..schema_references import TemporalSupportEnvelope
 from ..tax_id_format import runtime_tax_id_format
+from ..tax_identity_admission import RegistryTaxIdentityAdmission
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
@@ -146,3 +150,26 @@ def test_without_an_answering_authority_a_member_state_number_is_still_redacted(
     """
     with bind_tax_identity_admission(None):
         assert _redacts(printed_identity), f"{printed_identity!r} leaked with the admission gate suspended"
+
+
+class _AuthorityWithoutComponents:
+    """An authority whose store holds none of the queried components.
+
+    It fails the way the published store does for a component its generation
+    does not carry, which is what a partial fixture registry presents.
+    """
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        raise LookupError(f"authority component governed_fact/{query.fact_id} is unavailable")
+
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
+        raise LookupError("authority component support envelope is unavailable")
+
+
+@pytest.mark.parametrize("printed_identity", ["SE556677889901", "FR12345678901", "ESB12345674"])
+def test_an_authority_missing_the_catalogue_over_redacts_without_raising(printed_identity: str) -> None:
+    """A partial authority is unbound for admission, so the lexical fail-safe hashes."""
+    admission = RegistryTaxIdentityAdmission()
+    with validating_governed_facts(_AuthorityWithoutComponents()):
+        assert admission.admits_nif_iva(printed_identity) is None
+        assert _redacts(printed_identity), f"{printed_identity!r} leaked when the catalogue was unavailable"
