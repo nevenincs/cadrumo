@@ -33,7 +33,6 @@ from ...application.user_profile.capabilities import cloud_evidence_upload_eligi
 from ...core.aggregation import IntracomOperationType
 from ...core.config import load_settings
 from ...core.config_support import LLMProvider
-from ...core.hashing import sha256_hex
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.calculations.registry.authority import bundled_indexed_authority
@@ -855,11 +854,9 @@ def _evidence_payload(record: PurchaseInvoiceEvidence) -> dict[str, object]:
     # to return a str-keyed dict, so neither a mapping check nor a key check
     # could fire here. (A `RootModel` would differ -- see _root_payloads.py,
     # where the parameter is `type[BaseModel]` and the guard IS live.)
-    payload: dict[str, object] = dict(record.model_dump(mode="json"))
-    invoice_number = payload.get("invoice_number")
-    if isinstance(invoice_number, str):
-        payload["invoice_number"] = f"sha256:{sha256_hex(invoice_number.encode('utf-8'))[:8]}"
-    return payload
+    # The invoice number is the supplier's document number the operator must
+    # check before confirming; it is shown as recorded, as `invoice view` does.
+    return dict(record.model_dump(mode="json"))
 
 
 def _evidence_text_lines(record: PurchaseInvoiceEvidence) -> list[str]:

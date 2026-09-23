@@ -606,8 +606,9 @@ def test_a_confirmed_document_shows_its_confirmed_figures_on_the_evidence_record
     record = json.loads(viewed.output)["result"]
 
     assert record["supplier"] == _SUPPLIER_NAME
-    # Identity-shaped tokens leave the CLI through the redaction funnel.
-    assert record["invoice_number"] == _redacted(_INVOICE_NUMBER)
+    # A supplier's invoice number is a document reference, not a tax identity,
+    # so the evidence record shows it as the confirmed invoice does.
+    assert record["invoice_number"] == _INVOICE_NUMBER
     assert record["invoice_date"] == _ISSUE_DATE
     assert record["taxable_base"] == _TAXABLE_BASE
     assert record["iva_amount"] == "21.00"
