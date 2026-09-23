@@ -8,7 +8,7 @@ related:
   - '[[2026-09-21-iva-workflow-m303-filing-evidence-authoring-adr]]'
 modified: '2026-09-23'
 body_schema: body-v2
-body_hash: 'sha256:80e2e770a7d47509f77682bd0aa7c8e1962f9c521cec6b6437b7478f3a7a8b61'
+body_hash: 'sha256:a2d7aa11b5c32512dabb10ebdc6c721acb64d850c7031778e0d98488ade88666'
 ---
 
 <!-- LINK RULES:
@@ -121,7 +121,7 @@ Scope: persisted evidence shape (S01), coordinate and authoring (S02), the calcu
 
 ## Steps
 
-- [ ] `S01` - make the persisted ordinary Modelo 303 evidence period-scoped: optional annual-volume answer, Modelo 390 evidence required only in the last period, stored revisions still valid; `src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py, application/filing/producer_snapshot.py, application/filing/export_producer.py, application/modelo/m303_filing_evidence.py`.
+- [x] `S01` - make the persisted ordinary Modelo 303 evidence period-scoped: optional annual-volume answer, Modelo 390 evidence required only in the last period, stored revisions still valid; `src/cadrumo/domain/modelos/calculation_revision_m303_handoff.py, application/filing/producer_snapshot.py, application/filing/export_producer.py, application/modelo/m303_filing_evidence.py`.
 - [ ] `S02` - admit monthly coordinates and author period-scoped evidence; refuse a 390 attestation outside the last period; record which owner refuses monthly work for a non-monthly filer; `src/cadrumo/application/modelo/m303_ordinary_evidence_coordinate.py, m303_ordinary_filing_evidence_authoring.py, m303_exonerado_390_applicability_attestation.py`.
 - [ ] `S03` - version the calculate request: nested ordinary request without the annual-volume answer and with an optional attestation pair, schema version 3, previous pending invocations refused; `src/cadrumo/application/modelo/operation_definitions.py and its conformance tests`.
 - [ ] `S04` - align the CLI and quickfile flags with the period rule and regenerate the CLI reference and locale keys; `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py, _app_quickfile.py, command specs, locales`.
