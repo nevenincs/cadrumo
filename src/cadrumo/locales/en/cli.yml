@@ -1245,7 +1245,13 @@ cli:
           or rectificativa)
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
+        annual_volume_nonzero_help: 'Modelo 303: state explicitly whether the annual
+          volume of operations (art. 121 LIVA) is other than zero; use --no-annual-volume-nonzero
+          for no. Required for Modelo 303 and never assumed.'
         app_help: Manage the lifecycle of modelo work units
+        attest_m303_exonerado_390_help: Record in encrypted custody your attestation
+          that the Modelo 390 exemption section does not apply to this Modelo 303
+          quarter, and print its identifier and SHA-256 for `work calculate`.
         autoconsumo_promotor_base_help: 'Tax base for the real-estate developer self-supply
           (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties
           converted to the rental estate. The assistant automatically applies 21%
@@ -1367,6 +1373,9 @@ cli:
           SHA-256 digest; received {value}.
         invalid_work_unit_lookup_id: work_unit_id must be a lowercase hexadecimal
           SHA-256 id or unambiguous prefix
+        joint_return_elected_help: 'Modelo 303: state explicitly whether this is a
+          joint self-assessment (autoliquidación conjunta); use --no-joint-return-elected
+          for no. Required for Modelo 303 and never assumed.'
         kv_empty_key_error: '{flag} key must not be empty; got {spec}.'
         kv_format_error: '{flag} must be written as {key_label}={value_label}. This
           is a key-value entry: put the field name on the left of one equals sign
@@ -1385,6 +1394,10 @@ cli:
           or Spanish-source ledger aggregation.'
         m210_plazo_resolved: 'Modelo 210 filing window resolved: voluntary filing
           closes on %{closes_on}.'
+        m303_exonerado_390_attachment_id_help: 'Modelo 303: identifier of the secure
+          Modelo 390 non-applicability attestation returned by `app modelo work attest-m303-exonerado-390`.'
+        m303_exonerado_390_sha256_help: 'Modelo 303: SHA-256 of that attestation,
+          exactly as `attest-m303-exonerado-390` returned it.'
         m303_filing_evidence_help: Path to the complete typed Modelo 303 filing-evidence
           JSON document.
         m303_rectificativa_motive_help: 'Required for an applicable Modelo 303 rectificativa:
@@ -1416,6 +1429,9 @@ cli:
         name_required: Supply --name.
         notes_help: Optional notes attached to the filing record
         observations_help: Show typed per-casilla calculation observations and provenance.
+        observed_at_help: When you confirmed the attestation, as an ISO 8601 instant
+          with a UTC offset (for example 2025-03-31T12:00:00+00:00); not before the
+          quarter closes and not in the future.
         output_language_help: Output language for rendered messages.
         override_help: Binding value with KEY=VALUE syntax (repeatable); run `aeat
           app modelo bindings list --missing` to see the bindings the calculation
@@ -1610,15 +1626,6 @@ cli:
       app_help: 'Run the full local modelo filing chain in one command: readiness
         -> create -> calculate -> verify -> export. Build and export only; never submits
         to AEAT'
-      errors:
-        m303_evidence_forbidden: Modelo 303 filing-instance evidence is forbidden
-          for another modelo.
-        m303_filing_evidence_invalid: The Modelo 303 filing-evidence document at {path}
-          is unreadable or invalid.
-        m303_filing_evidence_period_mismatch: The Modelo 303 filing-evidence period
-          does not match the selected work period.
-        m303_filing_evidence_required: Modelo 303 requires a complete filing-evidence
-          JSON document before calculation.
   common:
     errors:
       filing_requires_declared_tax_id: 'The active profile does not declare a tax

@@ -1348,8 +1348,14 @@ cli:
           o rectificativa)
         amendment_reason_help: Motivo libre de la amendación (traza de auditoría del
           operador)
+        annual_volume_nonzero_help: 'Modelo 303: indique expresamente si el volumen
+          anual de operaciones (art. 121 LIVA) es distinto de cero; use --no-annual-volume-nonzero
+          para «no». Obligatorio para el modelo 303 y nunca se presupone.'
         app_help: Gestionar el ciclo de vida de las unidades de trabajo de un modelo
           tributario
+        attest_m303_exonerado_390_help: Registra en custodia cifrada su atestación
+          de que el apartado de exoneración del modelo 390 no se aplica a este trimestre
+          del modelo 303, e imprime su identificador y SHA-256 para `work calculate`.
         autoconsumo_promotor_base_help: 'Base imponible del autoconsumo del promotor
           inmobiliario (Art. 9.1.c + Art. 79.4 LISIVA): coste de construcción o rehabilitación
           de inmuebles afectados al patrimonio de arrendamiento. El asistente aplica
@@ -1479,6 +1485,9 @@ cli:
           en minúsculas de 64 caracteres; se recibió {value}.
         invalid_work_unit_lookup_id: work_unit_id debe ser un identificador SHA-256
           hexadecimal en minúsculas o un prefijo inequívoco
+        joint_return_elected_help: 'Modelo 303: indique expresamente si es una autoliquidación
+          conjunta; use --no-joint-return-elected para «no». Obligatorio para el modelo
+          303 y nunca se presupone.'
         kv_empty_key_error: La clave de {flag} no puede estar vacía; se recibió {spec}.
         kv_format_error: '{flag} debe escribirse como {key_label}={value_label}. Es
           una entrada clave-valor: pon el nombre del campo a la izquierda de un único
@@ -1500,6 +1509,10 @@ cli:
           (predeterminada) o agregación de libro mayor de fuente española.'
         m210_plazo_resolved: 'Se resolvió el plazo de presentación del Modelo 210:
           la presentación voluntaria finaliza el %{closes_on}.'
+        m303_exonerado_390_attachment_id_help: 'Modelo 303: identificador de la atestación
+          segura de no aplicación del modelo 390 que devuelve `app modelo work attest-m303-exonerado-390`.'
+        m303_exonerado_390_sha256_help: 'Modelo 303: SHA-256 de esa atestación, tal
+          como lo devolvió `attest-m303-exonerado-390`.'
         m303_filing_evidence_help: Ruta al documento JSON completo de evidencias de
           presentación del modelo 303.
         m303_rectificativa_motive_help: 'Obligatorio para una rectificativa aplicable
@@ -1534,6 +1547,9 @@ cli:
         notes_help: Notas opcionales asociadas al filing record
         observations_help: Mostrar observaciones de cálculo tipadas por casilla y
           su procedencia.
+        observed_at_help: Cuándo confirmó la atestación, como instante ISO 8601 con
+          desfase UTC (por ejemplo 2025-03-31T12:00:00+00:00); no antes del cierre
+          del trimestre ni en el futuro.
         output_language_help: Idioma de salida para los mensajes renderizados.
         override_help: Valor de binding con sintaxis KEY=VALUE (repetible); ejecuta
           `aeat app modelo bindings list --missing` para ver los bindings que requiere
@@ -1738,15 +1754,6 @@ cli:
       app_help: 'Ejecuta toda la cadena local de presentación de un modelo en un solo
         comando: preparación -> crear -> calcular -> verificar -> exportar. Solo construye
         y exporta; nunca presenta ante la AEAT'
-      errors:
-        m303_evidence_forbidden: La evidencia de instancia de declaración del modelo
-          303 está prohibida para otro modelo.
-        m303_filing_evidence_invalid: El documento de evidencias de presentación del
-          modelo 303 en {path} no se puede leer o no es válido.
-        m303_filing_evidence_period_mismatch: El período de las evidencias de presentación
-          del modelo 303 no coincide con el período de trabajo seleccionado.
-        m303_filing_evidence_required: El modelo 303 requiere un documento JSON completo
-          de evidencias de presentación antes del cálculo.
   common:
     errors:
       filing_requires_declared_tax_id: 'El perfil activo no declara una identidad

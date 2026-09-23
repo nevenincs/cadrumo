@@ -1333,7 +1333,15 @@ cli:
         amendment_kind_help: A módosítás jogi típusa (complementaria, sustitutiva
           vagy rectificativa)
         amendment_reason_help: A módosítás szabad szöveges oka (üzemeltetői auditnaplóhoz).
+        annual_volume_nonzero_help: '303-as nyomtatvány: adja meg kifejezetten, hogy
+          az éves ügyletforgalom (LIVA 121. cikk) eltér-e nullától; nem esetén használja
+          a --no-annual-volume-nonzero kapcsolót. A 303-as nyomtatványhoz kötelező,
+          és soha nem feltételezett.'
         app_help: Nyomtatvány-munkaegységek életciklusának kezelése.
+        attest_m303_exonerado_390_help: Titkosított őrzésben rögzíti a nyilatkozatát
+          arról, hogy a 390-es nyomtatvány alóli mentesség szakasza nem alkalmazandó
+          erre a 303-as negyedévre, és kiírja az azonosítóját és SHA-256 értékét a
+          `work calculate` számára.
         autoconsumo_promotor_base_help: 'Az ingatlanfejlesztő önadóztatásának adóalapja
           (LISIVA 9.1.c cikk + 79.4 cikk): bérbeadásra áttért saját fejlesztésű ingatlanok
           építési vagy felújítási költsége. Az asszisztens automatikusan alkalmazza
@@ -1459,6 +1467,10 @@ cli:
           SHA-256-kivonatnak kell lennie; kapott: {value}.'
         invalid_work_unit_lookup_id: A work_unit_id értékének kisbetűs hexadecimális
           SHA-256-azonosítónak vagy egyértelmű előtagnak kell lennie
+        joint_return_elected_help: '303-as nyomtatvány: adja meg kifejezetten, hogy
+          közös önbevallásról (autoliquidación conjunta) van-e szó; nem esetén használja
+          a --no-joint-return-elected kapcsolót. A 303-as nyomtatványhoz kötelező,
+          és soha nem feltételezett.'
         kv_empty_key_error: 'A(z) {flag} kulcsa nem lehet üres; kapott: {spec}.'
         kv_format_error: 'A(z) {flag} értéket {key_label}={value_label} alakban kell
           megadni. Ez egy kulcs-érték bejegyzés: A kulcs a bal oldalon áll, utána
@@ -1481,6 +1493,11 @@ cli:
           (alapértelmezett) vagy spanyol forrású főkönyvi összesítés.'
         m210_plazo_resolved: 'A 210-es modell benyújtási időszaka meghatározva: az
           önkéntes benyújtás határideje %{closes_on}.'
+        m303_exonerado_390_attachment_id_help: '303-as nyomtatvány: a 390-es nyomtatvány
+          alkalmazhatatlanságáról szóló biztonságos nyilatkozat azonosítója, amelyet
+          az `app modelo work attest-m303-exonerado-390` ad vissza.'
+        m303_exonerado_390_sha256_help: '303-as nyomtatvány: a nyilatkozat SHA-256
+          értéke, pontosan úgy, ahogy az `attest-m303-exonerado-390` visszaadta.'
         m303_filing_evidence_help: A teljes, típusos 303-es nyomtatvány bevallási
           bizonyíték JSON-dokumentumának elérési útja.
         m303_rectificativa_motive_help: 'Alkalmazható 303-as rectificativa esetén
@@ -1515,6 +1532,9 @@ cli:
         notes_help: Opcionális megjegyzések a benyújtási rekordhoz.
         observations_help: Tipizált, mezőnkénti számítási megfigyelések és eredet
           megjelenítése.
+        observed_at_help: A nyilatkozat megerősítésének időpontja ISO 8601 formátumban,
+          UTC-eltolással (például 2025-03-31T12:00:00+00:00); nem lehet a negyedév
+          zárása előtt és nem lehet jövőbeli.
         output_language_help: A megjelenített üzenetek kimeneti nyelve.
         override_help: 'Kötési érték KEY=VALUE szintaxissal (ismételhető); futtassa:
           `aeat app modelo bindings list --missing` a hiányzó kötések megtekintéséhez.'
@@ -1718,15 +1738,6 @@ cli:
       app_help: 'Futtassa a teljes helyi modell beadási láncot egyetlen paranccsal:
         készenlét -> létrehozás -> számítás -> ellenőrzés -> exportálás. Csak összeállít
         és exportál; soha nem nyújt be az AEAT-hoz'
-      errors:
-        m303_evidence_forbidden: A 303-as modell bevallási példányához tartozó bizonyíték
-          más modellhez nem használható.
-        m303_filing_evidence_invalid: A(z) {path} helyen lévő 303-es nyomtatvány bevallási
-          bizonyíték dokumentum nem olvasható vagy érvénytelen.
-        m303_filing_evidence_period_mismatch: A 303-as nyomtatvány bevallási bizonyíték
-          időszaka nem egyezik a kiválasztott munkaidőszakkal.
-        m303_filing_evidence_required: A 303-as nyomtatvány számításhoz előzetesen
-          teljes bevallási bizonyíték JSON-dokumentum szükséges.
   common:
     errors:
       filing_requires_declared_tax_id: 'Az aktív profil nem ad meg adóazonosítót,

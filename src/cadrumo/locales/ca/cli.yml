@@ -1329,8 +1329,14 @@ cli:
         amendment_kind_help: Classe legal de la modificació (complementària, substitutiva
           o rectificativa)
         amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
+        annual_volume_nonzero_help: 'Model 303: indiqueu expressament si el volum
+          anual d''operacions (art. 121 LIVA) és diferent de zero; useu --no-annual-volume-nonzero
+          per a «no». Obligatori per al Model 303 i mai no es pressuposa.'
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
           tributari
+        attest_m303_exonerado_390_help: Registra en custòdia xifrada la vostra atestació
+          que l'apartat d'exoneració del Model 390 no s'aplica a aquest trimestre
+          del Model 303, i imprimeix el seu identificador i SHA-256 per a `work calculate`.
         autoconsumo_promotor_base_help: 'Base imposable de l''autoconsum del promotor
           immobiliari (art. 9.1.c + art. 79.4 LISIVA): cost de construcció o rehabilitació
           d''immobles afectats al patrimoni d''arrendament. L''assistent aplica automàticament
@@ -1462,6 +1468,9 @@ cli:
           en minúscules de 64 caràcters; s'ha rebut {value}.
         invalid_work_unit_lookup_id: work_unit_id ha de ser un identificador SHA-256
           hexadecimal en minúscules o un prefix inequívoc
+        joint_return_elected_help: 'Model 303: indiqueu expressament si és una autoliquidació
+          conjunta; useu --no-joint-return-elected per a «no». Obligatori per al Model
+          303 i mai no es pressuposa.'
         kv_empty_key_error: La clau de {flag} no pot estar buida; s'ha rebut {spec}.
         kv_format_error: '{flag} s''ha d''escriure com {key_label}={value_label}.
           És una entrada clau-valor: posa el nom del camp a l''esquerra d''un únic
@@ -1483,6 +1492,10 @@ cli:
           (predeterminada) o agregació de llibre major de font espanyola.'
         m210_plazo_resolved: 'S''ha resolt el termini de presentació del Model 210:
           la presentació voluntària finalitza el %{closes_on}.'
+        m303_exonerado_390_attachment_id_help: 'Model 303: identificador de l''atestació
+          segura de no aplicació del Model 390 que retorna `app modelo work attest-m303-exonerado-390`.'
+        m303_exonerado_390_sha256_help: 'Model 303: SHA-256 d''aquesta atestació,
+          tal com l''ha retornat `attest-m303-exonerado-390`.'
         m303_filing_evidence_help: Camí al document JSON complet d'evidències de presentació
           del model 303.
         m303_rectificativa_motive_help: 'Obligatori per a una rectificativa aplicable
@@ -1517,6 +1530,9 @@ cli:
         notes_help: Notes opcionals associades al filing record
         observations_help: Mostrar observacions de càlcul tipades per casella i la
           seva procedència.
+        observed_at_help: Quan vau confirmar l'atestació, com a instant ISO 8601 amb
+          desplaçament UTC (per exemple 2025-03-31T12:00:00+00:00); no abans del tancament
+          del trimestre ni en el futur.
         output_language_help: Idioma de sortida per als missatges renderitzats.
         override_help: Valor de binding amb sintaxi KEY=VALUE (repetible); executa
           `aeat app modelo bindings list --missing` per veure els bindings que necessita
@@ -1723,15 +1739,6 @@ cli:
       app_help: 'Executa tota la cadena local de presentació d''un model en una sola
         ordre: preparació -> crear -> calcular -> verificar -> exportar. Només construeix
         i exporta; mai presenta a l''AEAT'
-      errors:
-        m303_evidence_forbidden: L’evidència d’instància de declaració del model 303
-          està prohibida per a un altre model.
-        m303_filing_evidence_invalid: El document d'evidències de presentació del
-          model 303 a {path} no es pot llegir o no és vàlid.
-        m303_filing_evidence_period_mismatch: El període de les evidències de presentació
-          del model 303 no coincideix amb el període de treball seleccionat.
-        m303_filing_evidence_required: El model 303 requereix un document JSON complet
-          d'evidències de presentació abans del càlcul.
   common:
     errors:
       filing_requires_declared_tax_id: 'El perfil actiu no declara una identitat fiscal,
