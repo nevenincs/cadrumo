@@ -1003,7 +1003,7 @@ application:
       recipient_registry_not_found: No recipient is registered under id %{recipient_id}.
       reconcile_declaration_unsupported: Declaration-PDF casilla-level reconcile is
         not yet enrolled for this modelo; reconcile a downloaded justificante via
-        aeat app modelo reconcile file, or wait for this modelo to be enrolled.
+        aeat app modelo reconcile import, or wait for this modelo to be enrolled.
       reconcile_no_active_bucket: No active profile bucket; run `aeat config profile
         create NAME` before reconciling a work unit.
       refund_election_not_eligible: Refund (devolver) was elected for Modelo %{modelo}
@@ -1239,8 +1239,8 @@ application:
             audits each calculated casilla, and ''Tarifas'' mirrors the active parameters
             used by formulas.'
           period: '%{modelo_title} - period %{period} / %{filing_year}.'
-          pull_command: To pull your edits into local storage, run 'aeat config google
-            sync calc pull' from the CLI.
+          pull_command: To pull your edits into local storage, run 'aeat app modelo
+            spreadsheet pull' from the CLI.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Casilla

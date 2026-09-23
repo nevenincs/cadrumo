@@ -1106,7 +1106,7 @@ application:
       recipient_registry_not_found: No hi ha cap destinatari registrat amb l'id %{recipient_id}.
       reconcile_declaration_unsupported: La reconciliació per casella des de PDF de
         declaració encara no està habilitada per a aquest model; reconcilia un justificant
-        descarregat amb aeat app modelo reconcile file, o espera que aquest model
+        descarregat amb aeat app modelo reconcile import, o espera que aquest model
         estigui habilitat.
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una unitat de treball.
@@ -1354,7 +1354,7 @@ application:
             reflecteix els paràmetres vigents consultats per les fórmules.'
           period: '%{modelo_title} - període %{period} / %{filing_year}.'
           pull_command: Per incorporar les vostres edicions a l'emmagatzematge local,
-            executeu 'aeat config google sync calc pull' des de la CLI.
+            executeu 'aeat app modelo spreadsheet pull' des de la CLI.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Casella

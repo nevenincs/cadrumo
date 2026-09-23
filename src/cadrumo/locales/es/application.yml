@@ -1106,7 +1106,7 @@ application:
         %{recipient_id}.
       reconcile_declaration_unsupported: La reconciliación por casilla desde PDF de
         declaración aún no está habilitada para este modelo; reconcilia un justificante
-        descargado con aeat app modelo reconcile file, o espera a que este modelo
+        descargado con aeat app modelo reconcile import, o espera a que este modelo
         se habilite.
       reconcile_no_active_bucket: No hay un perfil activo; ejecuta `aeat config profile
         create NAME` antes de reconciliar una unidad de trabajo.
@@ -1359,7 +1359,7 @@ application:
             y ''Tarifas'' refleja los parámetros vigentes consultados por las fórmulas.'
           period: '%{modelo_title} - período %{period} / %{filing_year}.'
           pull_command: Para recoger sus ediciones en el almacenamiento local, ejecute
-            'aeat config google sync calc pull' desde la CLI.
+            'aeat app modelo spreadsheet pull' desde la CLI.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Casilla

@@ -368,7 +368,7 @@ def _scenario_casilla_decimal_map(node: object) -> dict[CasillaId, Decimal]:
     if not is_object_dict(node):
         return {}
     return {
-        validated_casilla_id(k, surface="google sync calc scenario casilla.id"): _scenario_decimal_value(v)
+        validated_casilla_id(k, surface="spreadsheet verify scenario casilla.id"): _scenario_decimal_value(v)
         for k, v in node.items()
     }
 

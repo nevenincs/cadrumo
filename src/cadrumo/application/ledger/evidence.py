@@ -10,7 +10,7 @@ evidence progression, and owns no bytes of its own:
 1. :class:`~cadrumo.domain.attachments.models.Attachment` owns byte custody. It is
    strictly content-addressed (``attachment_id == sha256`` of the stored bytes),
    immutable, and carries no fiscal figures. ``aeat app ledger attach`` and
-   ``aeat app ledger doclink`` link one directly to a transaction.
+   ``aeat app ledger evidence pull`` link one directly to a transaction.
 2. :class:`PurchaseInvoiceEvidence` is an operator-registered CLAIM ABOUT one
    such byte payload: a mutable record whose supplier, invoice number, invoice
    date, and IVA figures are all OPTIONAL, because a scan whose text layer

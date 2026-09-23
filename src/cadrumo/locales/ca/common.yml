@@ -160,8 +160,10 @@ aggregation:
       m111_no_retenciones_attestation_missing: 'No hi ha observacions de retenció
         per perceptor per al model 111 %{filing_year} %{period}. No presentis un Model
         111 en blanc: declara el trimestre com a període sense retencions amb `aeat
-        config profile complete setup --modelo-111-no-retenciones-periods %{attestation_period}`,
-        o registra les files de perceptor amb `aeat app modelo aggregate --retencion-observation`.'
+        config profile edit --modelo-111-no-retenciones-periods %{attestation_period}`
+        (l''opció substitueix la llista desada, així que inclou també, separats per
+        comes, els períodes ja declarats), o registra les files de perceptor amb `aeat
+        app modelo aggregate --retencion-observation`.'
       perceptor_nif_blank: El NIF del perceptor no pot estar buit.
       perceptor_observations_missing: No hi ha observacions de retencions per perceptor
         per al model %{modelo} %{filing_year} %{period}; la font %{source_kind} no

@@ -486,7 +486,7 @@ def pull_operator_edits(
 ) -> _PullResult:
     """Read operator-edited cells back from a workbook into typed records.
 
-    This is the readback entrypoint behind ``aeat config google sync calc
+    This is the readback entrypoint behind ``aeat app modelo spreadsheet
     pull``. It verifies the Drive ownership marker, reads developer metadata,
     classifies metadata against ``snapshot``, reads operator/binding/relation
     cells plus Detalle row-set blocks, and returns a

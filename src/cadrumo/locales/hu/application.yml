@@ -1060,7 +1060,7 @@ application:
         címzett.
       reconcile_declaration_unsupported: A bevallás-PDF rovatszintű egyeztetése még
         nincs engedélyezve ehhez a modellhez; egyeztessen egy letöltött justificantét
-        a aeat app modelo reconcile file paranccsal, vagy várjon, amíg ez a modell
+        az aeat app modelo reconcile import paranccsal, vagy várjon, amíg ez a modell
         engedélyezésre kerül.
       reconcile_no_active_bucket: 'Nincs aktív profilmappa; futtassa: `aeat config
         profile create NÉV` az egyeztetés előtt.'
@@ -1315,8 +1315,8 @@ application:
             az egyes számított mezők auditját, a ''Tarifas'' pedig a képletek által
             használt érvényes paramétereket tartalmazza.'
           period: '%{modelo_title} - időszak %{period} / %{filing_year}.'
-          pull_command: A módosítások helyi tárba húzásához futtassa a 'aeat config
-            google sync calc pull' parancsot a CLI-ből.
+          pull_command: A módosítások helyi tárba húzásához futtassa az 'aeat app
+            modelo spreadsheet pull' parancsot a CLI-ből.
           title: '%{modelo_title} - %{period}/%{filing_year}'
         labels:
           casilla: Rovat

@@ -436,7 +436,7 @@ class LedgerAllocateResult(_LedgerMutationResult):
 
 
 class LedgerAttachResult(_LedgerMutationResult):
-    """JSON envelope for ``aeat app ledger attach`` and ``ledger doclink``."""
+    """JSON envelope for ``aeat app ledger attach`` and ``aeat app ledger evidence pull``."""
 
 
 class LedgerDetachResult(_LedgerMutationResult):

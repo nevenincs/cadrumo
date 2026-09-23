@@ -150,8 +150,9 @@ aggregation:
       m111_no_retenciones_attestation_missing: 'No per-perceptor retention observations
         exist for modelo 111 %{filing_year} %{period}. Do not file an all-blank Modelo
         111: declare the quarter as a no-retenciones period with `aeat config profile
-        complete setup --modelo-111-no-retenciones-periods %{attestation_period}`,
-        or record the perceptor rows with `aeat app modelo aggregate --retencion-observation`.'
+        edit --modelo-111-no-retenciones-periods %{attestation_period}` (the option
+        replaces the stored list, so also list, comma-separated, any periods already
+        declared), or record the perceptor rows with `aeat app modelo aggregate --retencion-observation`.'
       perceptor_nif_blank: Perceptor NIF must not be blank.
       perceptor_observations_missing: No per-perceptor retention observations exist
         for modelo %{modelo} %{filing_year} %{period}; source %{source_kind} cannot
