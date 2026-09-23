@@ -37,6 +37,7 @@ from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m303_ordinary_cli_support import admit_ordinary_m303_secure_evidence
+from ._modelo_work_ux_support import _capture_m115_invoice_withholding
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -355,39 +356,8 @@ def test_work_calculate_modelo_115_uses_retenciones_aggregation_observation() ->
     """M115 CLI calculation consumes persisted URBAN_RENTAL retención evidence."""
 
     _create_profile()
-    work_unit = _create_115_work_unit()
-    observation = json.dumps(
-        {
-            "source_kind": "ledger_transaction",
-            "source_object_id": "rent-ledger-row-001",
-            "perceptor_nif": "B12345678",
-            "perceptor_name": "Arrendador Ejemplo SL",
-            "scheme": "arrendamiento_urbano",
-            "taxable_base": "2700.00",
-            "retencion_amount": "513.00",
-            "accrued_on": "2026-03-15",
-        },
-    )
-
-    aggregated = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "aggregate",
-            "--modelo",
-            "115",
-            "--year",
-            "2026",
-            "--period",
-            "1T",
-            "--retencion-observation",
-            observation,
-        ],
-    )
-    assert aggregated.exit_code == 0, aggregated.output
-    assert _payload(aggregated.output)["observation_count"] == 1
+    work_unit = _create_115_work_unit(year=2025)
+    _capture_m115_invoice_withholding()
 
     calculated = invoke_cached_cli(
         [

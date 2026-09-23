@@ -15,7 +15,7 @@ from ....core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from ._m130_source_support import seed_m130_expense_transaction, seed_m130_income_transaction
-from ._modelo_work_ux_support import _seed_m111_retencion_observation
+from ._modelo_work_ux_support import _capture_m111_invoice_withholding
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -119,7 +119,7 @@ def test_modelo_111_calculate_verify_export_without_copied_ids(tmp_path: Path) -
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
-    _seed_m111_retencion_observation()
+    _capture_m111_invoice_withholding()
 
     status = _invoke(
         [
@@ -204,7 +204,7 @@ def test_modelo_verify_is_idempotent_across_both_addressing_modes() -> None:
         ],
     )  # fmt: skip
     assert created.exit_code == 0, created.output
-    _seed_m111_retencion_observation()
+    _capture_m111_invoice_withholding()
     calculated = _invoke(
         [
             "--format", "json",
@@ -486,7 +486,7 @@ def test_adjacent_work_commands_resolve_visible_targets() -> None:
     )  # fmt: skip
     assert created.exit_code == 0, created.output
     work_unit_id = _payload(created.output)["work_unit_id"]
-    _seed_m111_retencion_observation()
+    _capture_m111_invoice_withholding()
 
     renamed = _invoke(
         [

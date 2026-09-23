@@ -6,7 +6,7 @@ no seeded revisions. Each test runs the actual
 readiness -> create -> calculate -> verify -> export services in sequence.
 
 Coverage:
-- a calculable modelo (115, fed one real retención observation) reaches granted
+- a calculable modelo (115, fed one invoice-backed retención) reaches granted
   verification before honestly refusing its unavailable export layout;
 - a modelo whose ``previous_filing`` source is absent (130 without an observed
   prior-year Modelo 100 filing) calculates using the caller-supplied override
@@ -37,6 +37,13 @@ from ....adapters.persistence.storage.sql.engine import dispose_engine
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
+)
+from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
+from ....application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
+from ....application.aggregation.withholding_recognition import (
+    WithholdingIncomeKind,
+    WithholdingRecipientTaxRegime,
+    WithholdingRecipientTaxStatus,
 )
 from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....application.state_projection import ProjectionModeloReadiness
@@ -124,34 +131,81 @@ def _create_profile(*, activity_start_date: str = "2026-01-01") -> None:
     )
 
 
-def _seed_m115_retencion_observation() -> None:
-    """Persist one real URBAN_RENTAL retención observation for M115 2026 1T.
+def _capture_m115_invoice_withholding() -> None:
+    """Capture one received urban-rent invoice's retención as Modelo 115 2025 1T evidence.
 
     Modelo 115 aggregates its cuota from persisted retención evidence; with one
-    observation seeded the calculate stage resolves and the chain runs to
-    completion. This is the source-preflight the ``calculate`` stage reads.
+    captured allocation the calculate stage resolves and the chain runs to
+    completion. The evidence enters through the public path only: ``ledger
+    invoice add`` mints a received rent invoice (2700.00 base, 19% retención =
+    513.00), then ``modelo aggregate --received-invoice-retencion`` records its
+    single paid allocation with the property detail Modelo 180 requires. The
+    settlement is the invoice grand total (2700.00 + 21% IVA = 3267.00) less
+    the retención: 2754.00.
     """
-    observation = json.dumps(
-        {
-            "source_kind": "ledger_transaction",
-            "source_object_id": "rent-ledger-row-001",
-            "perceptor_nif": "B12345678",
-            "perceptor_name": "Arrendador Ejemplo SL",
-            "scheme": "arrendamiento_urbano",
-            "taxable_base": "2700.00",
-            "retencion_amount": "513.00",
-            "accrued_on": "2026-03-15",
-        },
+    paid_on = date(2025, 3, 15)
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "ledger", "invoice", "add",
+            "--kind", "received",
+            "--counterparty-name", "Arrendador Ejemplo SL",
+            "--counterparty-nif", "B12345674",
+            "--invoice-number", "M115-RENT-2025-001",
+            "--invoice-date", paid_on.isoformat(),
+            "--country-code", "ES",
+            "--taxable-base", "2700.00", "--iva-rate", "21",
+            "--retention-rate", "0.19", "--retention-amount", "513.00",
+            "--iva-category", "domestic_general",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    invoice_id = _payload(created.output)["invoice_id"]
+    assert isinstance(invoice_id, str) and invoice_id, created.output
+
+    request = InvoiceWithholdingEvidenceRequest(
+        invoice_id=invoice_id,
+        income_kind=WithholdingIncomeKind.URBAN_RENT,
+        scheme="arrendamiento_urbano",
+        recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
+        recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
+        payment_event_id="m115-rent-payment-2025-03-15",
+        payment_occurred_on=paid_on,
+        allocation_id="m115-rent-allocation-1",
+        allocated_base=Decimal("2700.00"),
+        allocated_withholding=Decimal("513.00"),
+        allocated_settlement=Decimal("2754.00"),
+        idempotency_key="m115-rent-allocation-1",
+        modelo_180_property=Modelo180PropertyEvidence(
+            property_key="quickfile-rent-property",
+            situation="1",
+            cadastral_reference="1234567VK4713C0001XY",
+            address=Modelo180StructuredAddress(
+                province_code="28",
+                municipality_code="079",
+                municipality="Madrid",
+                locality="Madrid",
+                postal_code="28001",
+                street_type="CL",
+                street_name="Ejemplo",
+                number_type="NUM",
+                house_number="1",
+            ),
+            recipient_province_code="28",
+            modality="1",
+            accrual_year=2025,
+            withholding_percentage=Decimal("19.00"),
+        ),
     )
-    result = _invoke(
+    captured = _invoke(
         [
             "--format", "json",
             "app", "modelo", "aggregate",
-            "--modelo", "115", "--year", "2026", "--period", "1T",
-            "--retencion-observation", observation,
+            "--modelo", "115", "--year", "2025", "--period", "1T",
+            "--received-invoice-retencion", request.model_dump_json(),
         ],
     )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    assert captured.exit_code == 0, captured.output
 
 
 def _active_bucket_id() -> str:
@@ -353,10 +407,12 @@ def test_quickfile_runs_full_chain_to_exported_fichero(
 ) -> None:
     """One command carries a calculable M115 from create to a written fichero.
 
-    Modelo 115 1T 2026 with one seeded retención observation is calculable, so
+    Modelo 115 1T 2025 with one invoice-backed retención allocation is calculable, so
     the chain reaches granted verification and then EXPORTS: the revision's
     ``modelo-115-fichero-boe`` layout is a renderable fixed-width definition
-    carrying its records, so local declaration bytes are produced.
+    carrying its records, so local declaration bytes are produced. The quarter
+    is 2025 because invoice-backed withholding recognition is grounded for the
+    2025 applicable year only and refuses capture for any other year.
 
     This assertion was inverted for a period when no complete export layout was
     authored and the stage legitimately refused. The layout is authored again,
@@ -365,15 +421,15 @@ def test_quickfile_runs_full_chain_to_exported_fichero(
     subject.
     """
 
-    _create_profile()
-    _seed_m115_retencion_observation()
+    _create_profile(activity_start_date="2025-01-01")
+    _capture_m115_invoice_withholding()
     out = tmp_path / "modelo-115.txt"
 
     result = _invoke(
         [
             "--format", "json",
             "app", "quickfile",
-            "--modelo", "115", "--year", "2026", "--period", "1T",
+            "--modelo", "115", "--year", "2025", "--period", "1T",
             "--casilla", "04=0",
             "--output", str(out),
         ],

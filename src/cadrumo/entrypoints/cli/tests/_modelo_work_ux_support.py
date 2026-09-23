@@ -2,22 +2,35 @@
 
 from __future__ import annotations
 
-import json
+from datetime import date
+from decimal import Decimal
 
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
+from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvidenceRequest
+from ....application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
+from ....application.aggregation.withholding_recognition import (
+    WithholdingIncomeKind,
+    WithholdingRecipientTaxRegime,
+    WithholdingRecipientTaxStatus,
+)
 
 # Importing the wizard catalogue + persistence modules triggers
 # register_wizard_catalogue() at import time, exactly as the production CLI
 # startup does.
 from ....application.wizard import catalogue as _wizard_catalogue
 from ....application.wizard import persistence as _wizard_persistence
-from ....core.aggregation import BindingSourceKind
+from ....core.aggregation import RetencionClave
 from ....domain.calculations.registry.temporal import select_revision
 from ....domain.calculations.registry.tests.registry_tree import bundled_registry_tree
+from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
+from ....tests.cli_envelope import unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
 
 _WIZARD_REGISTRATION_MODULES = (_wizard_catalogue, _wizard_persistence)
+_M111_PROFESSIONAL_NIF = "B12345674"
+_M111_PROFESSIONAL_NAME = "Asesoria Profesional SL"
+_M111_PAID_ON = date(2025, 1, 15)
 _PROFILE_LABEL = "operator"
 #: The seeded profile's machine identity. A profile id is a UUID; the
 #: readable "operator" above is the operator-chosen LABEL, and the two are
@@ -133,50 +146,174 @@ def _create_m303_work_unit() -> str:
     )
 
 
-def _seed_m111_retencion_observation() -> None:
-    """Seed one work-income retención percepción so a Modelo 111 work unit's
-    ``work calculate`` resolves the ``retenciones_aggregation`` source.
+def m111_withholding_invoice_arguments() -> list[str]:
+    """Return the ``ledger invoice add`` arguments for the Modelo 111 2025 1T withholding invoice.
 
-    Modelo 111 calculation requires per-perceptor retención evidence: the
-    source resolver refuses an all-blank quarter rather than silently filing
-    a zero return. One real ``rendimientos_trabajo`` percepción is the
-    minimum that makes the 2025 1T quarter calculable.
+    The received professional invoice carries a 15% retención: 1000.00 base,
+    150.00 withheld. Callers prepend their own global options.
     """
-    observation = json.dumps(
-        {
-            "source_kind": BindingSourceKind.LEDGER_TRANSACTION.value,
-            "source_object_id": "m111-work-income-row-001",
-            "perceptor_nif": "A12345678",
-            "perceptor_name": "Empresa Pagadora SL",
-            "scheme": "rendimientos_trabajo",
-            "taxable_base": "1000.00",
-            "retencion_amount": "190.00",
-            "accrued_on": "2025-01-15",
-        },
+    return [
+        "app", "ledger", "invoice", "add",
+        "--kind", "received",
+        "--counterparty-name", _M111_PROFESSIONAL_NAME,
+        "--counterparty-nif", _M111_PROFESSIONAL_NIF,
+        "--invoice-number", "M111-PROF-2025-001",
+        "--invoice-date", _M111_PAID_ON.isoformat(),
+        "--country-code", "ES",
+        "--taxable-base", "1000.00", "--iva-rate", "21",
+        "--retention-rate", "0.15", "--retention-amount", "150.00",
+        "--iva-category", "domestic_general",
+    ]  # fmt: skip
+
+
+def m111_withholding_aggregate_arguments(invoice_id: str) -> list[str]:
+    """Return the ``modelo aggregate`` arguments recording the invoice's single paid allocation.
+
+    The settlement is the invoice grand total (1000.00 + 21% IVA = 1210.00)
+    less the retención: 1060.00.
+    """
+    request = InvoiceWithholdingEvidenceRequest(
+        invoice_id=invoice_id,
+        income_kind=WithholdingIncomeKind.PROFESSIONAL,
+        scheme="actividades_profesionales",
+        recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
+        recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
+        payment_event_id="m111-professional-payment-2025-01-15",
+        payment_occurred_on=_M111_PAID_ON,
+        allocation_id="m111-professional-allocation-1",
+        allocated_base=Decimal("1000.00"),
+        allocated_withholding=Decimal("150.00"),
+        allocated_settlement=Decimal("1060.00"),
+        idempotency_key="m111-professional-allocation-1",
+        modelo_190_detail=WithholdingObservation(
+            source_id=invoice_id,
+            source_allocation_id="m111-professional-allocation-1",
+            perceptor_tax_id=_M111_PROFESSIONAL_NIF,
+            perceptor_legal_name=_M111_PROFESSIONAL_NAME,
+            transaction_date=_M111_PAID_ON,
+            clave=RetencionClave.from_registry("G"),
+            subclave="01",
+            percibido_dinerario=Decimal("1000.00"),
+            retencion_practicada=Decimal("150.00"),
+            incapacity_cash_perception=Decimal("0"),
+            incapacity_cash_withholding=Decimal("0"),
+            incapacity_kind_value=Decimal("0"),
+            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
+            incapacity_kind_repercutido=Decimal("0"),
+            foral_retention_estatal=Decimal("0"),
+            foral_retention_navarra=Decimal("0"),
+            foral_retention_araba=Decimal("0"),
+            foral_retention_gipuzkoa=Decimal("0"),
+            foral_retention_bizkaia=Decimal("0"),
+            base_retenciones=Decimal("1000.00"),
+            porcentaje_retencion=Decimal("15"),
+        ),
     )
-    result = _invoke(
-        [
-            "--format", "json",
-            "app", "modelo", "aggregate",
-            "--modelo", "111", "--year", "2025", "--period", "1T",
-            "--retencion-observation", observation,
-        ],
-    )  # fmt: skip
-    assert result.exit_code == 0, result.output
+    return [
+        "app", "modelo", "aggregate",
+        "--modelo", "111", "--year", "2025", "--period", "1T",
+        "--received-invoice-retencion", request.model_dump_json(),
+    ]  # fmt: skip
+
+
+def _capture_m111_invoice_withholding() -> None:
+    """Capture one received professional invoice's retención as Modelo 111 2025 1T evidence.
+
+    Modelo 111 calculation refuses an all-blank quarter rather than filing a
+    silent zero, so a calculable work unit needs one real percepción. The
+    evidence enters through the public path only: ``ledger invoice add`` mints
+    the invoice, then ``modelo aggregate --received-invoice-retencion`` records
+    its paid allocation.
+    """
+    created = _invoke(["--format", "json", *m111_withholding_invoice_arguments()])
+    assert created.exit_code == 0, created.output
+    invoice_id = unwrap_schema_envelope(created.output)["invoice_id"]
+    assert isinstance(invoice_id, str) and invoice_id, created.output
+    captured = _invoke(["--format", "json", *m111_withholding_aggregate_arguments(invoice_id)])
+    assert captured.exit_code == 0, captured.output
 
 
 def _create_calculable_work_unit() -> str:
-    """Create a modelo 111 work unit whose `work calculate` succeeds.
-
-    Seeds one real work-income retención percepción so the
-    ``retenciones_aggregation`` source resolves the quarter; the calc path
-    then needs no further operator-supplied casilla inputs.
-    """
+    """Create a Modelo 111 2025 1T work unit whose ``work calculate`` succeeds."""
     work_unit_id = create_modelo_work_unit_via_cli(
         modelo="111",
         filing_year=2025,
         period="1T",
         revision="2019-y-siguientes",
     )
-    _seed_m111_retencion_observation()
+    _capture_m111_invoice_withholding()
     return work_unit_id
+
+
+def _capture_m115_invoice_withholding() -> None:
+    """Capture one received urban-rent invoice's retención as Modelo 115 2025 1T evidence.
+
+    ``ledger invoice add`` mints a received rent invoice (2700.00 base, 19%
+    retención = 513.00), then ``modelo aggregate --received-invoice-retencion``
+    records its single paid allocation with the property detail Modelo 180
+    requires. The settlement is the invoice grand total (2700.00 + 21% IVA =
+    3267.00) less the retención: 2754.00.
+    """
+    paid_on = date(2025, 3, 15)
+    created = _invoke(
+        [
+            "--format", "json",
+            "app", "ledger", "invoice", "add",
+            "--kind", "received",
+            "--counterparty-name", "Arrendador Ejemplo SL",
+            "--counterparty-nif", "B12345674",
+            "--invoice-number", "M115-RENT-2025-001",
+            "--invoice-date", paid_on.isoformat(),
+            "--country-code", "ES",
+            "--taxable-base", "2700.00", "--iva-rate", "21",
+            "--retention-rate", "0.19", "--retention-amount", "513.00",
+            "--iva-category", "domestic_general",
+        ],
+    )  # fmt: skip
+    assert created.exit_code == 0, created.output
+    invoice_id = unwrap_schema_envelope(created.output)["invoice_id"]
+    assert isinstance(invoice_id, str) and invoice_id, created.output
+
+    request = InvoiceWithholdingEvidenceRequest(
+        invoice_id=invoice_id,
+        income_kind=WithholdingIncomeKind.URBAN_RENT,
+        scheme="arrendamiento_urbano",
+        recipient_tax_status=WithholdingRecipientTaxStatus.RESIDENT,
+        recipient_tax_regime=WithholdingRecipientTaxRegime.IRPF,
+        payment_event_id="m115-rent-payment-2025-03-15",
+        payment_occurred_on=paid_on,
+        allocation_id="m115-rent-allocation-1",
+        allocated_base=Decimal("2700.00"),
+        allocated_withholding=Decimal("513.00"),
+        allocated_settlement=Decimal("2754.00"),
+        idempotency_key="m115-rent-allocation-1",
+        modelo_180_property=Modelo180PropertyEvidence(
+            property_key="m115-rent-property",
+            situation="1",
+            cadastral_reference="1234567VK4713C0001XY",
+            address=Modelo180StructuredAddress(
+                province_code="28",
+                municipality_code="079",
+                municipality="Madrid",
+                locality="Madrid",
+                postal_code="28001",
+                street_type="CL",
+                street_name="Ejemplo",
+                number_type="NUM",
+                house_number="1",
+            ),
+            recipient_province_code="28",
+            modality="1",
+            accrual_year=2025,
+            withholding_percentage=Decimal("19.00"),
+        ),
+    )
+    captured = _invoke(
+        [
+            "--format", "json",
+            "app", "modelo", "aggregate",
+            "--modelo", "115", "--year", "2025", "--period", "1T",
+            "--received-invoice-retencion", request.model_dump_json(),
+        ],
+    )  # fmt: skip
+    assert captured.exit_code == 0, captured.output
