@@ -2301,6 +2301,7 @@
         "dev.acceptance.assets.installed_profile_setup",
         "dev.acceptance.assets.installed_tui_child",
         "dev.acceptance.calendar",
+        "dev.acceptance.calendar.installed_parity",
         "dev.acceptance.income_tax",
         "dev.acceptance.income_tax.authority",
         "dev.acceptance.income_tax.cli_journey",
