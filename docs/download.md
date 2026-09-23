@@ -87,8 +87,8 @@ Per-channel install paths:
 
 ```bash
 pip install cadrumo
-uv tool install cadrumo
-uvx --from cadrumo aeat
+uv tool install --compile-bytecode cadrumo
+uvx --compile-bytecode --from cadrumo aeat
 ```
 
 **Homebrew formula**: macOS (Apple silicon), Linux (x86-64 and arm64)

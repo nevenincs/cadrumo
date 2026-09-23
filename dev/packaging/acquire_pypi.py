@@ -182,6 +182,7 @@ def run_pypi_acquisition(
             str(uv),
             "pip",
             "install",
+            "--compile-bytecode",
             "--python",
             str(venv_python),
             "--index-url",

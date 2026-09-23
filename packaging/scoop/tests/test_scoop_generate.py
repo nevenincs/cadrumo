@@ -236,6 +236,8 @@ def test_generated_manifest_binds_exact_cohort_and_the_cli_command(
     assert "[agent]" not in hooks[3]
     # A wheel cached from an earlier resolution must not satisfy the pin.
     assert "--no-cache" in hooks[3]
+    # uv compiles no bytecode by default; the first launch must not pay for it.
+    assert "--compile-bytecode" in hooks[3]
     assert "--constraint (Join-Path $dir 'constraints.txt')" in hooks[3]
     # That single exact pin is what closes over the rest of the cohort. The
     # constraints file deliberately omits the product rows, so the companions
