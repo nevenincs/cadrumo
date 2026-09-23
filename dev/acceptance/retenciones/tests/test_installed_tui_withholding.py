@@ -5,14 +5,21 @@ from __future__ import annotations
 import asyncio
 import json
 import secrets
+from collections.abc import Callable, Coroutine
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any, cast
 
 import pytest
 
 from .. import installed_tui_withholding as driver
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def _child_args(call: dict[str, object]) -> tuple[str, ...]:
+    """Return the argument vector one recorded installed-child launch received."""
+    return tuple(cast("tuple[str, ...]", call["child_args"]))
 
 
 def _document(*, fresh_readback: list[str]) -> dict[str, object]:
@@ -92,7 +99,7 @@ def test_cli_seeded_replacement_uses_the_last_inspected_professional_baseline(
     async def fake_capture(*_args: object, kind: str, mode: str, **_kwargs: object) -> None:
         events.append((mode, kind))
 
-    def fake_launcher(*, drive_after_home: object, **_kwargs: object) -> None:
+    def fake_launcher(*, drive_after_home: Callable[[Any], Coroutine[Any, Any, None]], **_kwargs: object) -> None:
         assert callable(drive_after_home)
         admission_events.append("launcher")
         asyncio.run(drive_after_home(SimpleNamespace(app=SimpleNamespace(exit=lambda: None))))
@@ -137,7 +144,7 @@ def test_reopen_admits_cli_created_profile_before_fresh_launcher(
     async def fake_inspect(*_args: object, **_kwargs: object) -> None:
         return None
 
-    def fake_launcher(*, drive_after_home: object, **_kwargs: object) -> None:
+    def fake_launcher(*, drive_after_home: Callable[[Any], Coroutine[Any, Any, None]], **_kwargs: object) -> None:
         assert callable(drive_after_home)
         admission_events.append("launcher")
         asyncio.run(drive_after_home(SimpleNamespace(app=SimpleNamespace(exit=lambda: None))))
@@ -172,7 +179,7 @@ def test_launcher_requires_completed_public_callback(monkeypatch: pytest.MonkeyP
 
     monkeypatch.setattr(driver, "admitted_session_autopilot", lambda **kwargs: kwargs["drive_after_home"])
 
-    def fake_main(*, auto_pilot: object, **_kwargs: object) -> int:
+    def fake_main(*, auto_pilot: Callable[[Any], Coroutine[Any, Any, None]], **_kwargs: object) -> int:
         assert callable(auto_pilot)
         asyncio.run(auto_pilot(object()))
         return 0
@@ -302,7 +309,7 @@ def test_tui_to_cli_annual_runner_records_only_local_annual_lifecycle(
         observed.append(kwargs)
         receipt_path = kwargs["receipt_path"]
         assert isinstance(receipt_path, Path)
-        mode = tuple(kwargs["child_args"])[1]
+        mode = _child_args(kwargs)[1]
         document = _document(
             fresh_readback=(
                 ["modelo-111", "modelo-115"] if mode == "reopen" else ["not_yet_reopened", "not_yet_reopened"]
@@ -331,7 +338,7 @@ def test_tui_to_cli_annual_runner_records_only_local_annual_lifecycle(
         "source_history": "local_only",
         "status": "proven",
     }
-    assert [tuple(call["child_args"])[1] for call in observed] == ["capture", "reopen"]
+    assert [_child_args(call)[1] for call in observed] == ["capture", "reopen"]
 
 
 def test_tui_to_cli_annual_runner_preserves_its_exact_safe_refusal(
@@ -409,7 +416,7 @@ def test_parent_uses_two_stdin_credential_children_without_retaining_the_secret(
         observed.append(kwargs)
         receipt_path = kwargs["receipt_path"]
         assert isinstance(receipt_path, Path)
-        mode = tuple(kwargs["child_args"])[1]
+        mode = _child_args(kwargs)[1]
         assert mode in {"mutate", "reopen"}
         document = _document(
             fresh_readback=(
@@ -447,7 +454,182 @@ def test_parent_uses_two_stdin_credential_children_without_retaining_the_secret(
     assert receipt.cli_periodic_lifecycle == ()
     assert receipt.cli_seeded_scopes == ("modelo-111", "modelo-115")
     assert receipt.tui_mutation == "professional_replace"
-    assert [tuple(call["child_args"])[1] for call in observed] == ["mutate", "reopen"]
+    assert [_child_args(call)[1] for call in observed] == ["mutate", "reopen"]
     assert all(call["child_module"] == "dev.acceptance.retenciones.installed_tui_withholding" for call in observed)
     assert all(call["timeout_seconds"] == 1200 for call in observed)
     assert "passphrase" not in json.dumps(receipt.to_dict())
+
+
+def _tui_only_document(year: int = 2025) -> dict[str, object]:
+    token = driver._address_token
+    return {
+        "schema_version": driver._TUI_ONLY_SCHEMA_VERSION,
+        "status": "proven",
+        "product_origin": "site-packages",
+        "product_init_sha256": "a" * 64,
+        "year": year,
+        "profile_setup": "completed",
+        "required_detail_refusal": "observed",
+        "historical_profile_context": "current_profile_at_run",
+        "work_route": [
+            *(f"created:{token(modelo=m, year=year, period=p)}" for m, p in driver._TUI_ONLY_SOURCE_ADDRESSES),
+            f"reused:{token(modelo='111', year=year, period='2T')}",
+            f"refused:{token(modelo='111', year=year, period='0A')}",
+            *(f"created:{token(modelo=m, year=year, period=p)}" for m, p in driver._TUI_ONLY_ANNUAL_ADDRESSES),
+        ],
+        "periodic_lifecycle": [f"step-{index}" for index in range(17)],
+        "annual_lifecycle": [f"step-{index}" for index in range(6)],
+        "artifacts": [
+            {"modelo": modelo, "period": period, "sha256": "b" * 64, "size": 10}
+            for modelo, period in (*driver._TUI_ONLY_EXPORTED_PERIODIC, *driver._TUI_ONLY_ANNUAL_ADDRESSES)
+        ],
+        "fresh_readback": [],
+        "fresh_filing_history": [],
+        "unexercised": list(driver._TUI_ONLY_UNEXERCISED),
+    }
+
+
+def _tui_only_reopen_document(year: int = 2025) -> dict[str, object]:
+    return {
+        "schema_version": driver._TUI_ONLY_SCHEMA_VERSION,
+        "status": "proven",
+        "product_origin": "site-packages",
+        "product_init_sha256": "a" * 64,
+        "year": year,
+        "reopened_work": list(driver._tui_only_expected_addresses(year)),
+        "filing_history": list(driver._tui_only_expected_filings(year)),
+    }
+
+
+def test_tui_only_receipt_accepts_the_complete_public_route() -> None:
+    receipt = driver._tui_only_receipt(_tui_only_document(), year=2025)
+
+    assert receipt.work_route[-4:-2] == ("reused:111|2025|2T", "refused:111|2025|0A")
+    assert [(artifact.modelo, artifact.period) for artifact in receipt.artifacts] == [
+        ("111", "2T"),
+        ("115", "2T"),
+        ("180", "0A"),
+        ("190", "0A"),
+    ]
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "reason"),
+    [
+        ("work_route", ["created:111|2025|2T"], "work_route_mismatch"),
+        ("artifacts", [], "artifact_set_mismatch"),
+        ("annual_lifecycle", ["step-0"], "annual_lifecycle_incomplete"),
+        ("periodic_lifecycle", ["step-0"], "periodic_lifecycle_incomplete"),
+        ("required_detail_refusal", "skipped", "expected_journey"),
+    ],
+)
+def test_tui_only_receipt_refuses_a_journey_missing_any_public_step(field: str, value: object, reason: str) -> None:
+    document = _tui_only_document()
+    document[field] = value
+
+    with pytest.raises(driver.RetencionesInstalledTuiError, match=reason):
+        driver._tui_only_receipt(document, year=2025)
+
+
+def test_tui_only_reopen_requires_every_declaration_and_local_filing() -> None:
+    receipt = driver._tui_only_reopen_receipt(_tui_only_reopen_document(), year=2025)
+    assert len(receipt.reopened_work) == 7
+    assert len(receipt.filing_history) == 5
+
+    document = _tui_only_reopen_document()
+    document["filing_history"] = list(driver._tui_only_expected_filings(2025))[1:]
+    with pytest.raises(driver.RetencionesInstalledTuiError, match="filing_history_mismatch"):
+        driver._tui_only_reopen_receipt(document, year=2025)
+
+
+def test_tui_only_export_validation_refuses_an_artifact_changed_after_export(tmp_path: Path) -> None:
+    receipt = driver._tui_only_receipt(_tui_only_document(), year=2025)
+    for artifact in receipt.artifacts:
+        path = driver._tui_only_export_path(tmp_path, modelo=artifact.modelo, year=2025, period=artifact.period)
+        path.write_bytes(b"0123456789")
+
+    with pytest.raises(driver.RetencionesInstalledTuiError, match="artifact_changed_after_export:111"):
+        driver._validate_tui_only_exports(receipt=receipt, scratch=tmp_path, authority_root=tmp_path, year=2025)
+
+
+def _validation_document(*, artifacts: list[dict[str, object]] | None = None) -> dict[str, object]:
+    return {
+        "schema_version": driver._TUI_ONLY_SCHEMA_VERSION,
+        "status": "proven",
+        "authority_generation": "c" * 64,
+        "artifacts": _tui_only_document()["artifacts"] if artifacts is None else artifacts,
+    }
+
+
+def _fake_tui_only_children(observed: list[dict[str, object]], validation: dict[str, object]) -> object:
+    def fake_child(**kwargs: object) -> SimpleNamespace:
+        observed.append(kwargs)
+        receipt_path = kwargs["receipt_path"]
+        assert isinstance(receipt_path, Path)
+        mode = _child_args(kwargs)[1]
+        document = {
+            "tui-only": _tui_only_document(),
+            "tui-only-validate": validation,
+            "tui-only-reopen": _tui_only_reopen_document(),
+        }[mode]
+        receipt_path.write_text(json.dumps(document), encoding="utf-8")
+        return SimpleNamespace(returncode=0, receipt_status="proven")
+
+    return fake_child
+
+
+def test_tui_only_runner_uses_installed_tui_children_and_no_cli(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import dev.acceptance.installed_cli as installed_cli
+
+    observed: list[dict[str, object]] = []
+
+    def forbidden(*_args: object, **_kwargs: object) -> None:
+        raise AssertionError("the TUI-only parent must neither construct a CLI nor read the authority itself")
+
+    monkeypatch.setattr(
+        driver, "run_installed_tui_child_process", _fake_tui_only_children(observed, _validation_document())
+    )
+    monkeypatch.setattr(driver, "_validate_tui_only_exports", forbidden)
+    monkeypatch.setattr(installed_cli, "InstalledCli", forbidden)
+
+    receipt = driver.run_installed_tui_only_journey(
+        python_executable=Path(__file__).resolve(),
+        workspace_root=tmp_path,
+        authority_root=tmp_path,
+        output_root=tmp_path / "tui-only",
+    )
+
+    modes = [_child_args(call)[1] for call in observed]
+    assert modes == ["tui-only", "tui-only-validate", "tui-only-reopen"]
+    validate_args = _child_args(observed[1])
+    assert validate_args[validate_args.index("--journey-receipt") + 1] == str(
+        (tmp_path / "tui-only" / "tui-only.json").resolve()
+    )
+    assert receipt.fresh_readback == ("modelo-111", "modelo-115")
+    assert receipt.fresh_filing_history == driver._tui_only_expected_filings(2025)
+    assert "passphrase" not in json.dumps(receipt.to_dict())
+
+
+def test_tui_only_runner_refuses_a_validation_of_other_artifacts(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    artifacts = _tui_only_document()["artifacts"]
+    assert isinstance(artifacts, list)
+    other: list[dict[str, object]] = [dict(item, sha256="d" * 64) for item in artifacts if isinstance(item, dict)]
+    observed: list[dict[str, object]] = []
+    monkeypatch.setattr(
+        driver,
+        "run_installed_tui_child_process",
+        _fake_tui_only_children(observed, _validation_document(artifacts=other)),
+    )
+
+    with pytest.raises(driver.RetencionesInstalledTuiError, match="validation_not_proven_for_the_journey_artifacts"):
+        driver.run_installed_tui_only_journey(
+            python_executable=Path(__file__).resolve(),
+            workspace_root=tmp_path,
+            authority_root=tmp_path,
+            output_root=tmp_path / "tui-only",
+        )
+    assert [_child_args(call)[1] for call in observed] == ["tui-only", "tui-only-validate"]

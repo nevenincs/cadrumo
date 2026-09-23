@@ -1,19 +1,24 @@
-"""Installed-TUI withholding evidence journey for RETENCIONES-01.
+"""Installed-TUI withholding journeys for the professional and urban-rent families.
 
-The driver uses only rendered Textual controls: Ledger creates two synthetic
-received invoices, Withholding records professional and urban-rent evidence,
-and a new installed process reads both scopes back. It deliberately stops at
-that persisted-evidence vertical slice; declaration lifecycle and cross-client
-continuations remain separate, unexercised work.
+Every child drives only rendered Textual controls of an installed product:
+Ledger creates two synthetic received invoices and Withholding records
+professional and urban-rent evidence. The capture, mutation and reopen modes
+pair that TUI evidence with public CLI continuations. The ``tui-only`` mode
+instead creates every source and annual declaration through Declarations and
+calculates, verifies, files locally and exports them in the TUI, and
+``tui-only-reopen`` reads the result back in a fresh process. No mode submits
+anything to AEAT.
 """
 
 from __future__ import annotations
 
 import argparse
 import asyncio
+import hashlib
 import json
 import secrets
-from collections.abc import Sequence
+import time
+from collections.abc import Callable, Sequence
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Final, Literal, cast
@@ -26,16 +31,18 @@ from dev.acceptance.income_tax.installed_tui_child import (
     read_passphrase_from_stdin,
     register_profile_through_installed_tui,
     run_installed_tui_child_process,
-    select_public_data_table_row,
-    set_profile_manager_field,
-    wait_for_public_selector,
+    wait_for_any_public_selector,
     write_installed_tui_failure_receipt,
 )
 from dev.acceptance.income_tax.installed_tui_financial_child import required_profile_facts
 from dev.acceptance.income_tax.scenario import build_scenario
 
 _SCHEMA_VERSION: Final = "retenciones-01-installed-tui-withholding-v5"
+_TUI_ONLY_SCHEMA_VERSION: Final = "retenciones-01-installed-tui-only-v1"
 _YEAR: Final = 2025
+# Wall-clock budget for one visible TUI state to settle in an installed child.
+_TUI_WAIT_SECONDS: Final = 240.0
+_ADMISSION_POLLS: Final = 60000
 _UNEXERCISED: Final[tuple[str, ...]] = (
     "tui_only_historical_work_creation",
     "tui_only_periodic_lifecycle",
@@ -53,6 +60,32 @@ _COUNTERPARTY_NIF: Final = "B12345674"
 _LEDGER_RETENTION_RATE: Final = "0.19"
 _TUI_COUNTERPARTY_NAME: Final = "Synthetic withholding recipient"
 _TUI_PROPERTY_REFERENCE: Final = "1234567VK4713S0001AA"
+_TUI_ONLY_UNEXERCISED: Final[tuple[str, ...]] = (
+    "modelo_123_counting",
+    "later_year_modelo_193_export",
+)
+# Every source quarter the annual returns consume: 111 2T carries the professional
+# allocation, 115 needs a local record for each quarter, attested or not.
+_TUI_ONLY_SOURCE_ADDRESSES: Final[tuple[tuple[str, str], ...]] = (
+    ("111", "2T"),
+    ("115", "1T"),
+    ("115", "2T"),
+    ("115", "3T"),
+    ("115", "4T"),
+)
+_TUI_ONLY_EXPORTED_PERIODIC: Final[tuple[tuple[str, str], ...]] = (("111", "2T"), ("115", "2T"))
+_TUI_ONLY_ANNUAL_ADDRESSES: Final[tuple[tuple[str, str], ...]] = (("180", "0A"), ("190", "0A"))
+_TUI_ONLY_NO_ACTIVITY_QUARTERS: Final[tuple[str, ...]] = ("1T", "3T", "4T")
+_TUI_ONLY_NO_ACTIVITY_FIELDS: Final[tuple[str, ...]] = (
+    "withholding.modelo_111_no_retenciones_periods",
+    "withholding.modelo_115_no_relevant_payment_periods",
+)
+_TUI_ONLY_WITHHOLDING_PROFILE_CHOICES: Final[tuple[tuple[str, int], ...]] = (
+    ("withholding.colegio_concertado", 1),
+    ("withholding.pays_professionals_with_retencion", 0),
+    ("withholding.pays_rent_with_retencion", 0),
+    ("withholding.pays_capital_income_with_retencion", 1),
+)
 
 
 class RetencionesInstalledTuiError(RuntimeError):
@@ -116,15 +149,48 @@ def _public_navigation_state(pilot: Any) -> str:
         notice = pilot.app.query_one("#root-navigation-refusal", Static)
     except NoMatches:
         return "root_navigation_notice_unavailable"
-    return "root_navigation_refused" if str(notice.render()).strip() else "root_navigation_notice_empty"
+    rendered = str(notice.render()).strip()
+    return f"root_navigation_refused:{rendered[:300]}" if rendered else "root_navigation_notice_empty"
 
 
-async def _wait_for_active_screen(pilot: Any, *, screen_id: str, polls: int = 180) -> None:
+async def _settle(pilot: Any) -> None:
+    """Yield one Textual cycle plus a little wall-clock time between polls."""
+    await pilot.pause()
+    await asyncio.sleep(0.05)
+
+
+def _deadline(seconds: float = _TUI_WAIT_SECONDS) -> float:
+    """Return the monotonic instant a wall-clock wait gives up at."""
+    return time.monotonic() + seconds
+
+
+async def _wait_for_selector(pilot: Any, selector: str, *, seconds: float = _TUI_WAIT_SECONDS) -> None:
+    """Wait on a wall-clock budget for a public control on the active screen.
+
+    Poll counts measure nothing on a loaded machine: an installed root that
+    rebuilds its catalogue on a worker thread can outlast any fixed number of
+    Textual cycles.
+    """
+    from textual.css.query import NoMatches
+
+    until = _deadline(seconds)
+    while time.monotonic() < until:
+        try:
+            query_public_selector(pilot, selector)
+        except NoMatches:
+            await _settle(pilot)
+        else:
+            return
+    raise RetencionesInstalledTuiError(f"installed TUI did not expose {selector}:{_public_screen_identity(pilot)}")
+
+
+async def _wait_for_active_screen(pilot: Any, *, screen_id: str) -> None:
     """Wait for a routed screen that is itself the public selector target."""
-    for _ in range(polls):
+    until = _deadline()
+    while time.monotonic() < until:
         if getattr(pilot.app.screen, "id", None) == screen_id:
             return
-        await pilot.pause()
+        await _settle(pilot)
     raise RetencionesInstalledTuiError(f"installed TUI did not mount {screen_id}")
 
 
@@ -168,6 +234,72 @@ class WithholdingAnnualContinuationReceipt:
         return cast(dict[str, object], asdict(self))
 
 
+@dataclass(frozen=True, slots=True)
+class WithholdingTuiOnlyArtifactEvidence:
+    """A value-free fingerprint of one locally exported TUI artifact."""
+
+    modelo: str
+    period: str
+    sha256: str
+    size: int
+
+
+@dataclass(frozen=True, slots=True)
+class WithholdingTuiOnlyReceipt:
+    """Sanitized evidence of the full professional/rent installed TUI path."""
+
+    schema_version: str
+    status: Literal["proven"]
+    product_origin: str
+    product_init_sha256: str
+    year: int
+    profile_setup: Literal["completed"]
+    required_detail_refusal: Literal["observed"]
+    work_route: tuple[str, ...]
+    periodic_lifecycle: tuple[str, ...]
+    annual_lifecycle: tuple[str, ...]
+    artifacts: tuple[WithholdingTuiOnlyArtifactEvidence, ...]
+    fresh_readback: tuple[str, ...]
+    fresh_filing_history: tuple[str, ...]
+    historical_profile_context: Literal["current_profile_at_run"]
+    unexercised: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        """Return only public lifecycle and artifact evidence."""
+        return cast(dict[str, object], asdict(self))
+
+
+@dataclass(frozen=True, slots=True)
+class WithholdingTuiOnlyExportValidation:
+    """Value-free result of checking every TUI export against the served official layouts."""
+
+    schema_version: str
+    status: Literal["proven"]
+    authority_generation: str
+    artifacts: tuple[WithholdingTuiOnlyArtifactEvidence, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        """Return the generation and artifact fingerprints the validation covered."""
+        return cast(dict[str, object], asdict(self))
+
+
+@dataclass(frozen=True, slots=True)
+class WithholdingTuiOnlyReopenReceipt:
+    """Value-free fresh-process persistence readback for the TUI-only path."""
+
+    schema_version: str
+    status: Literal["proven"]
+    product_origin: str
+    product_init_sha256: str
+    year: int
+    reopened_work: tuple[str, ...]
+    filing_history: tuple[str, ...]
+
+    def to_dict(self) -> dict[str, object]:
+        """Return only the persisted public identities read after restart."""
+        return cast(dict[str, object], asdict(self))
+
+
 def _require_empty_directory(path: Path, *, label: str) -> Path:
     """Accept only a fresh, caller-owned run directory."""
     if path.exists() and any(path.iterdir()):
@@ -178,45 +310,96 @@ def _require_empty_directory(path: Path, *, label: str) -> Path:
 
 async def _activate_button(pilot: Any, selector: str) -> None:
     """Activate a visible button through normal keyboard interaction."""
+    from textual.css.query import NoMatches
     from textual.widgets import Button
 
-    button = query_public_selector(pilot, selector, Button)
-    button.focus()
+    # A disabled button cannot take focus, so Enter would reach whichever
+    # control held it before; refuse instead of activating something else.
+    for _ in range(40):
+        await pilot.app.workers.wait_for_complete()
+        if not query_public_selector(pilot, selector, Button).disabled:
+            break
+        await pilot.pause()
+    else:
+        raise RetencionesInstalledTuiError(f"{selector}_disabled:{_visible_manager_status(pilot)}")
+
+    def resolve() -> Any:
+        try:
+            return pilot.app.screen.query_one(selector, Button)
+        except NoMatches:
+            return None
+
+    await _focus_resolved(pilot, resolve, label=selector)
     await pilot.press("enter")
     await pilot.pause()
 
 
-async def _open_destination(pilot: Any, *, query: str, expected_selector: str) -> None:
-    """Use the visible command palette to enter an admitted workspace."""
+def _visible_manager_status(pilot: Any) -> str:
+    """Return the Profile Manager's visible status line, when that page is mounted."""
+    from textual.css.query import NoMatches
+
+    try:
+        status = pilot.app.screen.query_one("#manager-status")
+    except NoMatches:
+        return _public_screen_identity(pilot)
+    return str(status.render()).strip()[:400]
+
+
+async def _activate_palette_destination(pilot: Any, *, query: str, label: str) -> None:
+    """Open the command palette, search ``query`` and activate the option labelled ``label``.
+
+    The palette is recognised by its Textual type, never as "whichever screen
+    has an Input": a Modelo workspace has inputs of its own. A ``ctrl+p``
+    that lands while the screen is still settling is pressed again, and the
+    whole wait runs on the wall-clock budget rather than a cycle count.
+    """
+    from textual.command import CommandPalette
     from textual.css.query import NoMatches
     from textual.widgets import Input, OptionList
 
+    until = _deadline()
+    pressed_at = 0.0
+    while time.monotonic() < until:
+        screen = pilot.app.screen
+        if not isinstance(screen, CommandPalette):
+            if time.monotonic() - pressed_at > 5.0:
+                await pilot.app.workers.wait_for_complete()
+                await pilot.press("ctrl+p")
+                pressed_at = time.monotonic()
+            await _settle(pilot)
+            continue
+        try:
+            search = screen.query_one(Input)
+            options = screen.query_one(OptionList)
+        except NoMatches:
+            await _settle(pilot)
+            continue
+        if search.value != query:
+            search.value = query
+        for index in range(options.option_count):
+            hit = getattr(options.get_option_at_index(index), "hit", None)
+            if getattr(hit, "text", None) == label:
+                options.highlighted = index
+                options.focus()
+                await _settle(pilot)
+                await pilot.press("enter")
+                await _settle(pilot)
+                return
+        await _settle(pilot)
+    raise RetencionesInstalledTuiError(f"installed command palette did not offer the {query} destination")
+
+
+async def _open_destination(pilot: Any, *, query: str, expected_selector: str) -> None:
+    """Use the visible command palette to enter an admitted workspace."""
     from cadrumo.core.i18n.render import tr
 
-    if query not in {"ledger", "withholding", "declarations"}:
+    if query not in {"home", "ledger", "withholding", "declarations"}:
         raise RetencionesInstalledTuiError("withholding journey requested an unknown workbench destination")
     stage = "palette_offer"
     try:
-        label = tr(f"tui.search.destination.{query}")
-        await pilot.press("ctrl+p")
-        for _ in range(180):
-            await pilot.pause()
-            try:
-                palette = pilot.app.screen
-                search = palette.query_one(Input)
-                options = palette.query_one(OptionList)
-            except NoMatches:
-                continue
-            search.value = query
-            for index in range(options.option_count):
-                hit = getattr(options.get_option_at_index(index), "hit", None)
-                if getattr(hit, "text", None) == label:
-                    options.highlighted = index
-                    stage = "destination_activation"
-                    await pilot.press("enter")
-                    await wait_for_public_selector(pilot, expected_selector, polls=180)
-                    return
-        raise RetencionesInstalledTuiError(f"installed command palette did not offer the {query} destination")
+        await _activate_palette_destination(pilot, query=query, label=tr(f"tui.search.destination.{query}"))
+        stage = "destination_activation"
+        await _wait_for_selector(pilot, expected_selector)
     except RetencionesInstalledTuiError as error:
         raise RetencionesInstalledTuiError(
             f"destination_{query}_{stage}_failed:{_public_screen_identity(pilot)}:{_public_navigation_state(pilot)}:{error}"
@@ -227,37 +410,169 @@ async def _open_destination(pilot: Any, *, query: str, expected_selector: str) -
         ) from error
 
 
-async def _configure_profile(pilot: Any, *, year: int) -> None:
-    """Answer through Profile Manager so the installed Ledger admission is real."""
+async def _focus_resolved(pilot: Any, resolve: Callable[[], Any], *, label: str) -> Any:
+    """Focus the control ``resolve`` finds, re-resolving until one laid-out instance holds focus.
+
+    Textual applies ``focus()`` on a later message cycle, and a Profile
+    Manager write redraws its section tables one loop turn at a time, so a
+    table found a moment ago may already be a detached, undisplayed copy.
+    Pressing Enter before focus is confirmed can activate whichever control
+    held it instead, such as the document-reader card.
+    """
+    widget: Any = None
+    until = _deadline()
+    while time.monotonic() < until:
+        await pilot.app.workers.wait_for_complete()
+        await _settle(pilot)
+        widget = resolve()
+        if widget is None or not widget.display or not widget.region.area:
+            continue
+        widget.focus()
+        for _ in range(10):
+            await pilot.pause()
+            if pilot.app.focused is widget:
+                return widget
+    focused = pilot.app.focused
+    state = (
+        "unresolved"
+        if widget is None
+        else f"display={widget.display}:region={widget.region}:disabled={widget.disabled}"
+    )
+    raise RetencionesInstalledTuiError(
+        f"{label}_did_not_take_focus:{_public_screen_identity(pilot)}:"
+        f"focused={type(focused).__name__}#{getattr(focused, 'id', None)}:{state}"
+    )
+
+
+async def _select_table_row(*, pilot: Any, table_selector: str, row_key: str) -> None:
+    """Select one visible DataTable row by its stable key, once the table holds focus."""
+    from textual.css.query import NoMatches
+    from textual.widgets import DataTable
+
+    await _wait_for_selector(pilot, table_selector)
+
+    def resolve() -> Any:
+        try:
+            table = pilot.app.screen.query_one(table_selector, DataTable)
+        except NoMatches:
+            return None
+        return table if any(str(candidate.value) == row_key for candidate in table.rows) else None
+
+    table = await _focus_resolved(pilot, resolve, label=f"{table_selector}_row_{row_key}")
+    target = next(candidate for candidate in table.rows if str(candidate.value) == row_key)
+    table.move_cursor(row=table.get_row_index(target))
+    await pilot.pause()
+    await pilot.press("enter")
+    await pilot.pause()
+
+
+async def _set_profile_field(
+    *, pilot: Any, path: str, value: str | None = None, option_index: int | None = None
+) -> None:
+    """Persist one Profile Manager fact through its visible editor, confirming focus first."""
+    from textual.widgets import DataTable, Input, OptionList
+
+    def resolve() -> Any:
+        return next(
+            (
+                candidate
+                for candidate in pilot.app.screen.query(DataTable)
+                if any(str(row_key.value) == path for row_key in candidate.rows)
+            ),
+            None,
+        )
+
+    table = await _focus_resolved(pilot, resolve, label=f"profile_field_{path}")
+    row_key = next(row_key for row_key in table.rows if str(row_key.value) == path)
+    table.move_cursor(row=table.get_row_index(row_key))
+    await pilot.pause()
+    await pilot.press("enter")
+    editor = await wait_for_any_public_selector(pilot, ("#edit-input", "#edit-options"))
+    if editor == "#edit-input":
+        if value is None or option_index is not None:
+            raise RetencionesInstalledTuiError(f"profile_field_{path}_requires_text")
+        query_public_selector(pilot, editor, Input).value = value
+    else:
+        if option_index is None or value is not None:
+            raise RetencionesInstalledTuiError(f"profile_field_{path}_requires_an_option")
+        options = query_public_selector(pilot, editor, OptionList)
+        if not 0 <= option_index < options.option_count:
+            raise RetencionesInstalledTuiError(f"profile_field_{path}_option_outside_list")
+        options.highlighted = option_index
+    await _activate_button(pilot, "#btn-edit-save")
+    await pilot.app.workers.wait_for_complete()
+    await _wait_for_selector(pilot, "#manager-status")
+
+
+async def _configure_profile(pilot: Any, *, year: int, no_activity_attestations: bool = False) -> None:
+    """Set withholding applicability facts and complete setup through Profile Manager.
+
+    ``no_activity_attestations`` also records the quarters with no payment
+    subject to withholding, which the annual returns need as explicit
+    taxpayer facts rather than inferred zeros.
+    """
     from textual.widgets import Input
 
     await pilot.press("f4")
-    await wait_for_public_selector(pilot, "#manager-status", polls=180)
+    await _wait_for_selector(pilot, "#manager-status")
     await _activate_button(pilot, "#manager-add-row-activities")
-    await wait_for_public_selector(pilot, "#row-input-0")
+    await _wait_for_selector(pilot, "#row-input-0")
     query_public_selector(pilot, "#row-input-0", Input).value = "withholding acceptance activity"
     await _activate_button(pilot, "#btn-row-save")
     await pilot.app.workers.wait_for_complete()
-    await wait_for_public_selector(pilot, "#manager-status", polls=180)
+    await _wait_for_selector(pilot, "#manager-status")
     for fact in required_profile_facts(build_scenario(year)):
-        await set_profile_manager_field(
+        await _set_profile_field(
             pilot=pilot,
             path=fact.path,
             value=fact.value,
             option_index=fact.option_index,
         )
-    await pilot.press("f8")
-    await pilot.app.workers.wait_for_complete()
+    # The shared income fixture makes these optional payer facts false.  This
+    # journey must set its own professional/rent applicability through the
+    # public profile surface rather than correcting it with the CLI later.
+    for path, option_index in _TUI_ONLY_WITHHOLDING_PROFILE_CHOICES:
+        await _set_profile_field(pilot=pilot, path=path, option_index=option_index)
+    if no_activity_attestations:
+        quarters = ",".join(f"{year}:{quarter}" for quarter in _TUI_ONLY_NO_ACTIVITY_QUARTERS)
+        for path in _TUI_ONLY_NO_ACTIVITY_FIELDS:
+            await _set_profile_field(pilot=pilot, path=path, value=quarters)
+    await _complete_profile_setup(pilot)
     await pilot.press("escape")
     await _wait_for_refreshed_home(pilot)
 
 
-async def _wait_for_refreshed_home(pilot: Any, *, polls: int = 360) -> None:
+async def _complete_profile_setup(pilot: Any) -> None:
+    """Use the visible completion act and require it to settle as complete."""
+    from textual.css.query import NoMatches
+
+    await _wait_for_selector(pilot, "#manager-complete-setup")
+    await _activate_button(pilot, "#manager-complete-setup")
+    await pilot.app.workers.wait_for_complete()
+    until = _deadline()
+    while time.monotonic() < until:
+        try:
+            query_public_selector(pilot, "#manager-status")
+        except NoMatches:
+            await _settle(pilot)
+            continue
+        try:
+            query_public_selector(pilot, "#manager-complete-setup")
+        except NoMatches:
+            return
+        await _settle(pilot)
+    raise RetencionesInstalledTuiError(
+        f"installed Profile Manager did not complete setup:{_visible_manager_status(pilot)}"
+    )
+
+
+async def _wait_for_refreshed_home(pilot: Any) -> None:
     """Wait for the profile write to rebuild the installed destination catalogue."""
     from textual.css.query import NoMatches
     from textual.widgets import Static
 
-    for _ in range(polls):
+    until = _deadline()
+    while time.monotonic() < until:
         try:
             updating = query_public_selector(pilot, "#root-updating", Static)
             pilot.app.screen.query_one("#home-agenda")
@@ -266,8 +581,10 @@ async def _wait_for_refreshed_home(pilot: Any, *, polls: int = 360) -> None:
         else:
             if not updating.display:
                 return
-        await pilot.pause()
-    raise RetencionesInstalledTuiError("installed TUI did not complete its public Home refresh")
+        await _settle(pilot)
+    raise RetencionesInstalledTuiError(
+        f"installed TUI did not complete its public Home refresh:{_public_screen_identity(pilot)}"
+    )
 
 
 async def _create_received_invoice(pilot: Any, *, number: str, base: str, withholding: str, year: int) -> None:
@@ -278,10 +595,10 @@ async def _create_received_invoice(pilot: Any, *, number: str, base: str, withho
     try:
         await _open_destination(pilot, query="ledger", expected_selector="#ledger-navigation")
         stage = "open_invoice_form"
-        await select_public_data_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="overview")
-        await wait_for_public_selector(pilot, "#ledger-add-invoice")
+        await _select_table_row(pilot=pilot, table_selector="#ledger-navigation", row_key="overview")
+        await _wait_for_selector(pilot, "#ledger-add-invoice")
         await _activate_button(pilot, "#ledger-add-invoice")
-        await wait_for_public_selector(pilot, "#ledger-invoice-review")
+        await _wait_for_selector(pilot, "#ledger-invoice-review")
         stage = "review_invoice"
         query_public_selector(pilot, "#ledger-invoice-kind", Select).value = "received"
         query_public_selector(pilot, "#ledger-invoice-class", Select).value = "ordinaria"
@@ -289,11 +606,11 @@ async def _create_received_invoice(pilot: Any, *, number: str, base: str, withho
         for selector, value in values.items():
             query_public_selector(pilot, selector, Input).value = value
         await _activate_button(pilot, "#ledger-invoice-review")
-        await wait_for_public_selector(pilot, "#ledger-invoice-confirm")
+        await _wait_for_selector(pilot, "#ledger-invoice-confirm")
         stage = "persist_invoice"
         await _activate_button(pilot, "#ledger-invoice-confirm")
         await pilot.app.workers.wait_for_complete()
-        await wait_for_public_selector(pilot, "#ledger-invoice-again")
+        await _wait_for_selector(pilot, "#ledger-invoice-again")
         if str(query_public_selector(pilot, "#ledger-refusal", Static).render()).strip():
             raise RetencionesInstalledTuiError("invoice_persistence_refused")
         stage = "reset_invoice_form"
@@ -323,43 +640,21 @@ def _ledger_invoice_form_values(*, number: str, base: str, withholding: str, yea
 
 async def _open_withholding(pilot: Any, *, year: int) -> None:
     """Open the routed screen after its visible filing-year step."""
-    from textual.css.query import NoMatches
-    from textual.widgets import Input, OptionList
+    from textual.widgets import Input
 
     from cadrumo.core.i18n.render import tr
 
     stage = "palette_offer"
     try:
-        await pilot.press("ctrl+p")
-        label = tr("tui.search.destination.withholding")
-        for _ in range(180):
-            await pilot.pause()
-            try:
-                palette = pilot.app.screen
-                search = palette.query_one(Input)
-                options = palette.query_one(OptionList)
-            except NoMatches:
-                continue
-            search.value = "withholding"
-            for index in range(options.option_count):
-                hit = getattr(options.get_option_at_index(index), "hit", None)
-                if getattr(hit, "text", None) == label:
-                    options.highlighted = index
-                    options.focus()
-                    stage = "destination_activation"
-                    await pilot.press("enter")
-                    await pilot.pause()
-                    stage = "filing_year_selector"
-                    # The routed screen is the selector target itself, so it is
-                    # not a descendant returned by Textual's ``query_one``.
-                    await _wait_for_active_screen(pilot, screen_id="filing-year-route-screen", polls=180)
-                    query_public_selector(pilot, "#filing-year-route-year", Input).value = str(year)
-                    stage = "mounted_withholding_screen"
-                    await _activate_button(pilot, "#filing-year-route-open")
-                    await _wait_for_active_screen(pilot, screen_id="withholding-evidence-screen", polls=180)
-                    return
-            await pilot.pause()
-        raise RetencionesInstalledTuiError("withholding_palette_offer_unavailable")
+        await _activate_palette_destination(pilot, query="withholding", label=tr("tui.search.destination.withholding"))
+        stage = "filing_year_selector"
+        # The routed screen is the selector target itself, so it is
+        # not a descendant returned by Textual's ``query_one``.
+        await _wait_for_active_screen(pilot, screen_id="filing-year-route-screen")
+        query_public_selector(pilot, "#filing-year-route-year", Input).value = str(year)
+        stage = "mounted_withholding_screen"
+        await _activate_button(pilot, "#filing-year-route-open")
+        await _wait_for_active_screen(pilot, screen_id="withholding-evidence-screen")
     except RetencionesInstalledTuiError as error:
         raise RetencionesInstalledTuiError(
             f"withholding_{stage}_failed:{_public_screen_identity(pilot)}:{error}"
@@ -377,7 +672,44 @@ async def _set_capture(
     mode: Literal["append", "replace"] = "append",
 ) -> None:
     """Enter and capture one complete visible withholding allocation."""
-    from textual.widgets import Input, Select, Static
+    from textual.widgets import Static
+
+    await _populate_capture_form(pilot, invoice_number=invoice_number, kind=kind, year=year, mode=mode)
+    await _activate_button(pilot, "#withholding-capture")
+    if str(query_public_selector(pilot, "#withholding-status", Static).render()).strip() != "captured":
+        raise RetencionesInstalledTuiError(f"installed {kind} capture did not report captured")
+
+
+async def _assert_professional_required_detail_refusal(pilot: Any, *, invoice_number: str, year: int) -> None:
+    """Prove the visible form refuses a missing required Modelo 190 detail."""
+    from textual.widgets import Input, Static
+
+    await _populate_capture_form(
+        pilot,
+        invoice_number=invoice_number,
+        kind="professional",
+        year=year,
+        mode="append",
+    )
+    query_public_selector(pilot, "#withholding-territorial-deduction", Input).value = ""
+    await _activate_button(pilot, "#withholding-capture")
+    status = str(query_public_selector(pilot, "#withholding-status", Static).render()).strip()
+    if status != "refused: invalid_withholding_evidence":
+        raise RetencionesInstalledTuiError(
+            "installed professional capture did not refuse missing required annual detail"
+        )
+
+
+async def _populate_capture_form(
+    pilot: Any,
+    *,
+    invoice_number: str,
+    kind: Literal["professional", "urban_rent"],
+    year: int,
+    mode: Literal["append", "replace"],
+) -> None:
+    """Set one complete public capture form without submitting it."""
+    from textual.widgets import Input, Select
 
     values = _withholding_capture_form_values(invoice_number=invoice_number, kind=kind, year=year)
     for field, value in values.items():
@@ -389,20 +721,17 @@ async def _set_capture(
     if kind == "professional":
         query_public_selector(pilot, "#withholding-scheme", Input).value = "actividades_profesionales"
         query_public_selector(pilot, "#withholding-inspect-modelo", Input).value = "111"
-    else:
-        query_public_selector(pilot, "#withholding-scheme", Input).value = "arrendamiento_urbano"
-        query_public_selector(pilot, "#withholding-property-key", Input).value = "synthetic-office-a"
-        query_public_selector(pilot, "#withholding-property-situation", Input).value = "1"
-        query_public_selector(pilot, "#withholding-cadastral-reference", Input).value = _TUI_PROPERTY_REFERENCE
-        query_public_selector(pilot, "#withholding-municipality-code", Input).value = "079"
-        query_public_selector(pilot, "#withholding-municipality", Input).value = "Madrid"
-        query_public_selector(pilot, "#withholding-postal-code", Input).value = "28001"
-        query_public_selector(pilot, "#withholding-street-name", Input).value = "Synthetic"
-        query_public_selector(pilot, "#withholding-property-modality", Input).value = "1"
-        query_public_selector(pilot, "#withholding-inspect-modelo", Input).value = "115"
-    await _activate_button(pilot, "#withholding-capture")
-    if str(query_public_selector(pilot, "#withholding-status", Static).render()).strip() != "captured":
-        raise RetencionesInstalledTuiError(f"installed {kind} capture did not report captured")
+        return
+    query_public_selector(pilot, "#withholding-scheme", Input).value = "arrendamiento_urbano"
+    query_public_selector(pilot, "#withholding-property-key", Input).value = "synthetic-office-a"
+    query_public_selector(pilot, "#withholding-property-situation", Input).value = "1"
+    query_public_selector(pilot, "#withholding-cadastral-reference", Input).value = _TUI_PROPERTY_REFERENCE
+    query_public_selector(pilot, "#withholding-municipality-code", Input).value = "079"
+    query_public_selector(pilot, "#withholding-municipality", Input).value = "Madrid"
+    query_public_selector(pilot, "#withholding-postal-code", Input).value = "28001"
+    query_public_selector(pilot, "#withholding-street-name", Input).value = "Synthetic"
+    query_public_selector(pilot, "#withholding-property-modality", Input).value = "1"
+    query_public_selector(pilot, "#withholding-inspect-modelo", Input).value = "115"
 
 
 def _withholding_capture_form_values(
@@ -445,103 +774,6 @@ async def _inspect_scope(pilot: Any, *, modelo: Literal["111", "115"], expected_
         raise RetencionesInstalledTuiError(f"installed withholding inspection did not read back Modelo {modelo}")
 
 
-async def _create_calendar_work(pilot: Any, *, modelo: str, year: int, period: str) -> None:
-    """Create one periodic work unit through the public Calendar confirmation."""
-    from textual.widgets import DataTable, Static
-
-    stage = "open_declarations"
-    try:
-        await _open_destination(pilot, query="declarations", expected_selector="#declarations-navigation")
-        stage = "open_calendar"
-        await select_public_data_table_row(
-            pilot=pilot, table_selector="#declarations-navigation", row_key="declarations.calendar"
-        )
-        await wait_for_public_selector(pilot, "#declarations-calendar-agenda")
-        stage = "select_periodic_row"
-        target = f"{modelo}|{year}|{period}"
-        agenda = query_public_selector(pilot, "#declarations-calendar-agenda", DataTable)
-        visible_periods = sorted(
-            row_key.split("|", maxsplit=2)[2]
-            for row_key in (str(item.value) for item in agenda.rows)
-            if row_key.startswith(f"{modelo}|{year}|") and row_key.count("|") == 2
-        )
-        if target not in {str(item.value) for item in agenda.rows}:
-            state = "none" if not visible_periods else "other"
-            raise RetencionesInstalledTuiError(f"calendar_target_period_{state}")
-        await select_public_data_table_row(pilot=pilot, table_selector="#declarations-calendar-agenda", row_key=target)
-        stage = "confirm_creation"
-        await wait_for_public_selector(pilot, "#btn-confirm-accept")
-        await _activate_button(pilot, "#btn-confirm-accept")
-        await pilot.app.workers.wait_for_complete()
-        stage = "creation_notice"
-        notice = str(query_public_selector(pilot, "#declarations-calendar-notice", Static).render()).strip()
-        if not notice.startswith("Created "):
-            category = "setup_incomplete" if "setup complete" in notice else "recovery_refused"
-            raise RetencionesInstalledTuiError(f"calendar_work_create_{category}")
-        stage = "return_home"
-        await pilot.press("escape")
-        await _wait_for_refreshed_home(pilot)
-    except RetencionesInstalledTuiError as error:
-        raise RetencionesInstalledTuiError(
-            f"calendar_{stage}_failed:{_public_screen_identity(pilot)}:{error}"
-        ) from error
-    except InstalledTuiChildError as error:
-        raise RetencionesInstalledTuiError(f"calendar_{stage}_failed:{_public_screen_identity(pilot)}") from error
-
-
-async def _work_id_for_address(pilot: Any, *, modelo: str, year: int, period: str) -> str:
-    """Resolve the opaque public row key for one displayed natural address."""
-    from textual.widgets import DataTable
-
-    await _open_destination(pilot, query="declarations", expected_selector="#declarations-list")
-    table = query_public_selector(pilot, "#declarations-list", DataTable)
-    matches = [
-        row_key
-        for row_key in table.rows
-        if modelo in " ".join(str(cell) for cell in table.get_row(row_key))
-        and str(year) in " ".join(str(cell) for cell in table.get_row(row_key))
-        and period in " ".join(str(cell) for cell in table.get_row(row_key))
-    ]
-    if len(matches) != 1:
-        raise RetencionesInstalledTuiError("declarations_did_not_expose_one_periodic_work_row")
-    return str(matches[0].value)
-
-
-async def _open_work(pilot: Any, *, work_unit_id: str) -> None:
-    """Open one work unit using its rendered declaration-list row key."""
-    await _open_destination(pilot, query="declarations", expected_selector="#declarations-list")
-    await select_public_data_table_row(pilot=pilot, table_selector="#declarations-list", row_key=work_unit_id)
-    await wait_for_public_selector(pilot, "#modelo-lifecycle-calculate")
-
-
-async def _run_periodic_lifecycle(pilot: Any, *, work_unit_id: str, export_path: Path) -> tuple[str, ...]:
-    """Calculate, verify, and export an existing work through visible controls."""
-    from textual.widgets import Input
-
-    from dev.acceptance.income_tax.tui_journey import (
-        activate_tui_operation,
-        installed_lifecycle_contract,
-        wait_for_tui_refresh,
-    )
-
-    contract = installed_lifecycle_contract(work_create_id="#declarations-calendar-agenda")
-    completed: list[str] = []
-    for binding in (contract.calculate, contract.verify):
-        await _open_work(pilot, work_unit_id=work_unit_id)
-        terminal = await activate_tui_operation(pilot, binding=binding)
-        if terminal.outcome.value != "proven":
-            raise RetencionesInstalledTuiError(f"{binding.operation_id}_did_not_reach_succeeded_terminal")
-        await wait_for_tui_refresh(pilot, binding=binding)
-        completed.append(binding.operation_id)
-    await _open_work(pilot, work_unit_id=work_unit_id)
-    query_public_selector(pilot, "#modelo-lifecycle-export-path", Input).value = str(export_path)
-    terminal = await activate_tui_operation(pilot, binding=contract.export)
-    if terminal.outcome.value != "proven" or not export_path.is_file() or export_path.stat().st_size == 0:
-        raise RetencionesInstalledTuiError("modelo_export_did_not_reach_succeeded_terminal")
-    completed.append(contract.export.operation_id)
-    return tuple(completed)
-
-
 def _run_launcher(*, passphrase: str, drive_after_home: Any) -> None:
     """Run and prove that the headless launcher executed its public callback."""
     from cadrumo.entrypoints.tui.launcher import main
@@ -557,7 +789,11 @@ def _run_launcher(*, passphrase: str, drive_after_home: Any) -> None:
 
     exit_code = main(
         headless=True,
-        auto_pilot=admitted_session_autopilot(passphrase=passphrase, drive_after_home=observed_drive),
+        # The installed root opens on a worker thread; on a loaded machine the
+        # shared helper's default admission budget expires before Home appears.
+        auto_pilot=admitted_session_autopilot(
+            passphrase=passphrase, drive_after_home=observed_drive, polls=_ADMISSION_POLLS
+        ),
     )
     if exit_code != 0:
         raise RetencionesInstalledTuiError("installed withholding launcher did not exit cleanly")
@@ -592,7 +828,7 @@ async def _login_existing_profile_through_tui(*, passphrase: str) -> None:
             preselected=inventory.preselected_profile_id,
         )
         async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
-            await wait_for_public_selector(pilot, "#field-passphrase")
+            await _wait_for_selector(pilot, "#field-passphrase")
             query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
             await pilot.click("#btn-unlock")
             await pilot.app.workers.wait_for_complete()
@@ -777,7 +1013,7 @@ def _proven_receipt(
         or len(initializer) != 64
         or document.get("professional_capture") != "captured"
         or document.get("urban_rent_capture") != "captured"
-        or tuple(document.get("cli_periodic_lifecycle", ())) != ()
+        or document.get("cli_periodic_lifecycle") != []
         or (
             (seeded_scopes != ["modelo-111", "modelo-115"] or tui_mutation != "professional_replace")
             if require_tui_mutation
@@ -932,6 +1168,8 @@ def _tui_captured_annual_slices(year: int) -> tuple[Any, ...]:
     )
 
     professional_reference, rent_reference = build_installed_periodic_cli_slices(year)
+    if rent_reference.modelo_180_property is None:
+        raise RetencionesInstalledTuiError("tui_annual_oracle_rent_property_missing")
     professional = dataclass_replace(
         professional_reference,
         counterparty_name=_TUI_COUNTERPARTY_NAME,
@@ -1064,7 +1302,7 @@ def _attest_tui_captured_no_activity_periods(
         if not captures:
             tokens.append(f"{year}:{source_period.period}")
     if not tokens:
-        return frozenset()
+        return frozenset[str]()
     _require_result(
         cli,
         (
@@ -1429,6 +1667,7 @@ def run_installed_tui_withholding_journey(
     if mutation.returncode != 0:
         raise RetencionesInstalledTuiError("installed withholding mutation child did not exit cleanly")
     _proven_receipt(_child_document(mutation_path), year=year, require_fresh_readback=False, require_tui_mutation=True)
+    readback: _ReplacementReadback | None = None
     try:
         readback = _assert_tui_replacement(
             cli_executable=cli_executable,
@@ -1461,7 +1700,7 @@ def run_installed_tui_withholding_journey(
                     "status": "failed",
                     "stage": "assertion",
                     "code": str(error),
-                    "readback": asdict(readback) if "readback" in locals() else None,
+                    "readback": asdict(readback) if readback is not None else None,
                 },
                 sort_keys=True,
             )
@@ -1651,9 +1890,671 @@ def run_installed_tui_to_cli_annual_journey(
     )
 
 
+def _natural_address(*, modelo: str, year: int, period: str) -> str:
+    """Render one work address exactly as the installed Declarations screen does."""
+    from cadrumo.core.period import Period
+    from cadrumo.entrypoints.tui.declarations.controller import natural_address
+
+    return natural_address(modelo, year, Period.from_year_and_code(year, period))
+
+
+def _address_token(*, modelo: str, year: int, period: str) -> str:
+    """Return the value-free receipt token for one Modelo/year/period address."""
+    return f"{modelo}|{year}|{period}"
+
+
+async def _return_home(pilot: Any) -> None:
+    """Return to Home through the palette's Home destination; not every workspace binds Back."""
+    if not pilot.app.screen.query("#home-agenda"):
+        await _open_destination(pilot, query="home", expected_selector="#home-agenda")
+    await _wait_for_refreshed_home(pilot)
+
+
+async def _open_fresh_declarations(pilot: Any, *, expected_selector: str) -> None:
+    """Enter Declarations from Home so the screen is built from the latest refreshed generation."""
+    await _return_home(pilot)
+    await _open_destination(pilot, query="declarations", expected_selector=expected_selector)
+
+
+async def _submit_declarations_work(
+    pilot: Any, *, modelo: str, year: int, period: str
+) -> Literal["created", "reused", "refused"]:
+    """Select one Modelo/year/period in Declarations and classify the visible outcome."""
+    from textual.widgets import Input, Static
+
+    from cadrumo.core.i18n.render import tr
+
+    await _open_fresh_declarations(pilot, expected_selector="#declarations-work-create")
+    query_public_selector(pilot, "#declarations-work-modelo", Input).value = modelo
+    query_public_selector(pilot, "#declarations-work-year", Input).value = str(year)
+    query_public_selector(pilot, "#declarations-work-period", Input).value = period
+    await _activate_button(pilot, "#declarations-work-create")
+    address = _natural_address(modelo=modelo, year=year, period=period)
+    outcomes: dict[str, Literal["created", "reused"]] = {
+        tr("tui.declarations.work_create.created", address=address): "created",
+        tr("tui.declarations.work_create.reused", address=address): "reused",
+    }
+    progress = tr("tui.declarations.work_create.progress")
+    until = _deadline()
+    while time.monotonic() < until:
+        await pilot.app.workers.wait_for_complete()
+        notice = str(query_public_selector(pilot, "#declarations-work-create-notice", Static).render()).strip()
+        if notice and notice != progress:
+            return outcomes.get(notice, "refused")
+        await _settle(pilot)
+    raise RetencionesInstalledTuiError(f"declarations_work_create_did_not_settle:{modelo}|{year}|{period}")
+
+
+async def _create_declarations_work(pilot: Any, *, modelo: str, year: int, period: str) -> None:
+    """Create one work unit through the public Declarations selection and require creation."""
+    outcome = await _submit_declarations_work(pilot, modelo=modelo, year=year, period=period)
+    if outcome != "created":
+        raise RetencionesInstalledTuiError(f"declarations_work_create_{outcome}:{modelo}|{year}|{period}")
+
+
+async def _open_work_address(pilot: Any, *, modelo: str, year: int, period: str) -> None:
+    """Open one declaration by its displayed natural address in a freshly built list."""
+    from textual.widgets import DataTable
+
+    await _open_fresh_declarations(pilot, expected_selector="#declarations-list")
+    table = query_public_selector(pilot, "#declarations-list", DataTable)
+    address = _natural_address(modelo=modelo, year=year, period=period)
+    matches = [row_key for row_key in table.rows if str(table.get_row(row_key)[0]) == address]
+    if len(matches) != 1:
+        raise RetencionesInstalledTuiError(f"declarations_list_rows_{len(matches)}:{modelo}|{year}|{period}")
+    await _select_table_row(pilot=pilot, table_selector="#declarations-list", row_key=str(matches[0].value))
+    await _wait_for_selector(pilot, "#modelo-lifecycle-calculate")
+
+
+async def _run_work_operation(
+    pilot: Any,
+    *,
+    modelo: str,
+    year: int,
+    period: str,
+    operation: Literal["calculate", "verify", "file", "export"],
+    export_path: Path | None = None,
+) -> str:
+    """Run one lifecycle control on one addressed declaration and require a succeeded terminal."""
+    from textual.widgets import Input, Static
+
+    from dev.acceptance.income_tax.tui_journey import (
+        activate_tui_operation,
+        installed_lifecycle_contract,
+        wait_for_tui_refresh,
+    )
+
+    contract = installed_lifecycle_contract(work_create_id="#declarations-work-create")
+    binding = {
+        "calculate": contract.calculate,
+        "verify": contract.verify,
+        "file": contract.local_file,
+        "export": contract.export,
+    }[operation]
+    await _open_work_address(pilot, modelo=modelo, year=year, period=period)
+    if operation == "export":
+        if export_path is None:
+            raise RetencionesInstalledTuiError("tui_only_export_requires_a_destination")
+        query_public_selector(pilot, "#modelo-lifecycle-export-path", Input).value = str(export_path)
+    terminal = await activate_tui_operation(pilot, binding=binding, maximum_polls=20000)
+    token = _address_token(modelo=modelo, year=year, period=period)
+    if terminal.outcome.value != "proven":
+        notice = str(query_public_selector(pilot, "#modelo-lifecycle-notice", Static).render()).strip()
+        raise RetencionesInstalledTuiError(
+            f"{token}:{binding.operation_id}:{terminal.terminal_condition}:{notice[:240]}"
+        )
+    if operation == "export":
+        if export_path is None or not export_path.is_file() or export_path.stat().st_size == 0:
+            raise RetencionesInstalledTuiError(f"{token}:modelo.export:artifact_missing")
+    else:
+        await wait_for_tui_refresh(pilot, binding=binding, maximum_polls=20000)
+    return f"{token}:{binding.operation_id}"
+
+
+def _tui_only_export_path(scratch: Path, *, modelo: str, year: int, period: str) -> Path:
+    """Return the deterministic local export destination the parent validates."""
+    return scratch / f"tui-only-modelo-{modelo}-{year}-{period}.boe"
+
+
+def _artifact_evidence(path: Path, *, modelo: str, period: str) -> WithholdingTuiOnlyArtifactEvidence:
+    """Fingerprint one exported artifact without retaining its financial payload."""
+    payload = path.read_bytes()
+    return WithholdingTuiOnlyArtifactEvidence(
+        modelo=modelo,
+        period=period,
+        sha256=hashlib.sha256(payload).hexdigest(),
+        size=len(payload),
+    )
+
+
+async def _read_filing_history(pilot: Any) -> tuple[str, ...]:
+    """Read the natural addresses of the local filing records Declarations lists."""
+    from textual.widgets import DataTable
+
+    await _open_fresh_declarations(pilot, expected_selector="#declarations-navigation")
+    await _select_table_row(
+        pilot=pilot, table_selector="#declarations-navigation", row_key="declarations.filing_history"
+    )
+    await _wait_for_selector(pilot, "#declarations-filings")
+    table = query_public_selector(pilot, "#declarations-filings", DataTable)
+    return tuple(
+        sorted(str(table.get_row(row_key)[0]) for row_key in table.rows if str(row_key.value).startswith("filing:"))
+    )
+
+
+async def _read_declaration_addresses(pilot: Any) -> tuple[str, ...]:
+    """Read the natural addresses of every declaration the fresh list shows."""
+    from textual.widgets import DataTable
+
+    await _open_fresh_declarations(pilot, expected_selector="#declarations-list")
+    table = query_public_selector(pilot, "#declarations-list", DataTable)
+    return tuple(sorted(str(table.get_row(row_key)[0]) for row_key in table.rows))
+
+
+def _tui_only_expected_addresses(year: int) -> tuple[str, ...]:
+    """Return every declaration address the TUI-only journey must create."""
+    return tuple(
+        sorted(
+            _natural_address(modelo=modelo, year=year, period=period)
+            for modelo, period in (*_TUI_ONLY_SOURCE_ADDRESSES, *_TUI_ONLY_ANNUAL_ADDRESSES)
+        )
+    )
+
+
+def _tui_only_expected_filings(year: int) -> tuple[str, ...]:
+    """Return the addresses whose local filing record the annual returns consume."""
+    return tuple(
+        sorted(
+            _natural_address(modelo=modelo, year=year, period=period) for modelo, period in _TUI_ONLY_SOURCE_ADDRESSES
+        )
+    )
+
+
+def run_tui_only_child(
+    *, workspace_root: Path, profile_label: str, passphrase: str, year: int, scratch: Path
+) -> WithholdingTuiOnlyReceipt:
+    """Drive the whole professional/urban-rent filing year through installed TUI controls only."""
+    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+    from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
+
+    with live_exchange_rate_composition(), profile_adapter_composition():
+        asyncio.run(register_profile_through_installed_tui(profile_label=profile_label, passphrase=passphrase))
+
+    stage = "profile_configuration"
+    periodic: list[str] = []
+    annual: list[str] = []
+    route: list[str] = []
+    artifacts: list[WithholdingTuiOnlyArtifactEvidence] = []
+
+    async def drive(pilot: Any) -> None:
+        nonlocal stage
+        try:
+            await _configure_profile(pilot, year=year, no_activity_attestations=True)
+            stage = "professional_invoice"
+            await _create_received_invoice(
+                pilot, number="RET-PRO-2025-001", base="500.00", withholding="95.00", year=year
+            )
+            stage = "urban_rent_invoice"
+            await _create_received_invoice(
+                pilot, number="RET-RENT-2025-001", base="3000.00", withholding="570.00", year=year
+            )
+            stage = "withholding_route"
+            await _open_withholding(pilot, year=year)
+            stage = "required_detail_refusal"
+            await _assert_professional_required_detail_refusal(pilot, invoice_number="RET-PRO-2025-001", year=year)
+            stage = "professional_capture"
+            await _set_capture(pilot, invoice_number="RET-PRO-2025-001", kind="professional", year=year)
+            await _inspect_scope(pilot, modelo="111", expected_entries=2, year=year)
+            stage = "urban_rent_capture"
+            await _set_capture(pilot, invoice_number="RET-RENT-2025-001", kind="urban_rent", year=year)
+            await _inspect_scope(pilot, modelo="115", expected_entries=1, year=year)
+            for modelo, period in _TUI_ONLY_SOURCE_ADDRESSES:
+                stage = f"work_create:{modelo}|{period}"
+                await _create_declarations_work(pilot, modelo=modelo, year=year, period=period)
+                route.append(f"created:{_address_token(modelo=modelo, year=year, period=period)}")
+            # The same address again must reopen the existing work, never a second unit.
+            stage = "work_reuse"
+            reused = await _submit_declarations_work(pilot, modelo="111", year=year, period="2T")
+            if reused != "reused":
+                raise RetencionesInstalledTuiError(f"declarations_work_reuse_{reused}")
+            route.append(f"reused:{_address_token(modelo='111', year=year, period='2T')}")
+            # Modelo 111 declares no annual period; the application refusal must reach the screen.
+            stage = "work_refusal"
+            refused = await _submit_declarations_work(pilot, modelo="111", year=year, period="0A")
+            if refused != "refused":
+                raise RetencionesInstalledTuiError(f"declarations_undeclared_period_{refused}")
+            route.append(f"refused:{_address_token(modelo='111', year=year, period='0A')}")
+            for modelo, period in _TUI_ONLY_SOURCE_ADDRESSES:
+                for operation in ("calculate", "verify"):
+                    stage = f"{operation}:{modelo}|{period}"
+                    periodic.append(
+                        await _run_work_operation(pilot, modelo=modelo, year=year, period=period, operation=operation)
+                    )
+                if (modelo, period) in _TUI_ONLY_EXPORTED_PERIODIC:
+                    stage = f"export:{modelo}|{period}"
+                    target = _tui_only_export_path(scratch, modelo=modelo, year=year, period=period)
+                    periodic.append(
+                        await _run_work_operation(
+                            pilot, modelo=modelo, year=year, period=period, operation="export", export_path=target
+                        )
+                    )
+                    artifacts.append(_artifact_evidence(target, modelo=modelo, period=period))
+                stage = f"file:{modelo}|{period}"
+                periodic.append(
+                    await _run_work_operation(pilot, modelo=modelo, year=year, period=period, operation="file")
+                )
+            for modelo, period in _TUI_ONLY_ANNUAL_ADDRESSES:
+                stage = f"work_create:{modelo}|{period}"
+                await _create_declarations_work(pilot, modelo=modelo, year=year, period=period)
+                route.append(f"created:{_address_token(modelo=modelo, year=year, period=period)}")
+                for operation in ("calculate", "verify"):
+                    stage = f"{operation}:{modelo}|{period}"
+                    annual.append(
+                        await _run_work_operation(pilot, modelo=modelo, year=year, period=period, operation=operation)
+                    )
+                stage = f"export:{modelo}|{period}"
+                target = _tui_only_export_path(scratch, modelo=modelo, year=year, period=period)
+                annual.append(
+                    await _run_work_operation(
+                        pilot, modelo=modelo, year=year, period=period, operation="export", export_path=target
+                    )
+                )
+                artifacts.append(_artifact_evidence(target, modelo=modelo, period=period))
+        except RetencionesInstalledTuiError as error:
+            raise RetencionesInstalledTuiError(f"tui_only_{stage}_failed:{error}") from error
+        except InstalledTuiChildError as error:
+            raise RetencionesInstalledTuiError(
+                f"tui_only_{stage}_failed:{_public_screen_identity(pilot)}:{error}"
+            ) from error
+        pilot.app.exit()
+
+    _run_launcher(passphrase=passphrase, drive_after_home=drive)
+    product = installed_product_evidence(workspace_root=workspace_root)
+    return WithholdingTuiOnlyReceipt(
+        schema_version=_TUI_ONLY_SCHEMA_VERSION,
+        status="proven",
+        product_origin=product.product_origin,
+        product_init_sha256=product.product_init_sha256,
+        year=year,
+        profile_setup="completed",
+        required_detail_refusal="observed",
+        work_route=tuple(route),
+        periodic_lifecycle=tuple(periodic),
+        annual_lifecycle=tuple(annual),
+        artifacts=tuple(artifacts),
+        fresh_readback=(),
+        fresh_filing_history=(),
+        historical_profile_context="current_profile_at_run",
+        unexercised=_TUI_ONLY_UNEXERCISED,
+    )
+
+
+def run_tui_only_reopen_child(*, workspace_root: Path, passphrase: str, year: int) -> WithholdingTuiOnlyReopenReceipt:
+    """Read evidence, declarations and local filing history through a fresh installed process."""
+    _admit_cli_created_profile(passphrase=passphrase)
+    stage = "withholding_route"
+    reopened: tuple[str, ...] = ()
+    history: tuple[str, ...] = ()
+
+    async def drive(pilot: Any) -> None:
+        nonlocal history, reopened, stage
+        try:
+            await _open_withholding(pilot, year=year)
+            stage = "professional_inspection"
+            await _inspect_scope(pilot, modelo="111", expected_entries=2, year=year)
+            stage = "urban_rent_inspection"
+            await _inspect_scope(pilot, modelo="115", expected_entries=1, year=year)
+            stage = "declarations"
+            reopened = await _read_declaration_addresses(pilot)
+            stage = "filing_history"
+            history = await _read_filing_history(pilot)
+        except RetencionesInstalledTuiError as error:
+            raise RetencionesInstalledTuiError(f"tui_only_reopen_{stage}_failed:{error}") from error
+        except InstalledTuiChildError as error:
+            raise RetencionesInstalledTuiError(
+                f"tui_only_reopen_{stage}_failed:{_public_screen_identity(pilot)}"
+            ) from error
+        pilot.app.exit()
+
+    _run_launcher(passphrase=passphrase, drive_after_home=drive)
+    product = installed_product_evidence(workspace_root=workspace_root)
+    return WithholdingTuiOnlyReopenReceipt(
+        schema_version=_TUI_ONLY_SCHEMA_VERSION,
+        status="proven",
+        product_origin=product.product_origin,
+        product_init_sha256=product.product_init_sha256,
+        year=year,
+        reopened_work=reopened,
+        filing_history=history,
+    )
+
+
+def _string_tuple(value: object, *, label: str) -> tuple[str, ...]:
+    """Require a JSON list of strings from a child receipt."""
+    if not isinstance(value, list) or not all(isinstance(item, str) for item in value):
+        raise RetencionesInstalledTuiError(f"tui_only_receipt_{label}_invalid")
+    return tuple(cast(list[str], value))
+
+
+def _tui_only_receipt(document: dict[str, object], *, year: int) -> WithholdingTuiOnlyReceipt:
+    """Validate the TUI-only child's public shape before trusting any of it."""
+    expected = {
+        "schema_version": _TUI_ONLY_SCHEMA_VERSION,
+        "status": "proven",
+        "year": year,
+        "profile_setup": "completed",
+        "required_detail_refusal": "observed",
+        "historical_profile_context": "current_profile_at_run",
+    }
+    if any(document.get(key) != value for key, value in expected.items()):
+        raise RetencionesInstalledTuiError("tui_only_child_did_not_prove_the_expected_journey")
+    origin = document.get("product_origin")
+    initializer = document.get("product_init_sha256")
+    if not isinstance(origin, str) or not origin or not isinstance(initializer, str) or len(initializer) != 64:
+        raise RetencionesInstalledTuiError("tui_only_child_product_identity_invalid")
+    raw_artifacts = document.get("artifacts")
+    if not isinstance(raw_artifacts, list):
+        raise RetencionesInstalledTuiError("tui_only_receipt_artifacts_invalid")
+    artifacts: list[WithholdingTuiOnlyArtifactEvidence] = []
+    for raw in cast(list[object], raw_artifacts):
+        if not isinstance(raw, dict):
+            raise RetencionesInstalledTuiError("tui_only_receipt_artifacts_invalid")
+        item = cast(dict[str, object], raw)
+        modelo, period, digest, size = item.get("modelo"), item.get("period"), item.get("sha256"), item.get("size")
+        if (
+            not isinstance(modelo, str)
+            or not isinstance(period, str)
+            or not isinstance(digest, str)
+            or len(digest) != 64
+            or isinstance(size, bool)
+            or not isinstance(size, int)
+            or size <= 0
+        ):
+            raise RetencionesInstalledTuiError("tui_only_receipt_artifacts_invalid")
+        artifacts.append(WithholdingTuiOnlyArtifactEvidence(modelo=modelo, period=period, sha256=digest, size=size))
+    exported = tuple((artifact.modelo, artifact.period) for artifact in artifacts)
+    if exported != (*_TUI_ONLY_EXPORTED_PERIODIC, *_TUI_ONLY_ANNUAL_ADDRESSES):
+        raise RetencionesInstalledTuiError("tui_only_receipt_artifact_set_mismatch")
+    route = _string_tuple(document.get("work_route"), label="work_route")
+    expected_route = (
+        *(f"created:{_address_token(modelo=m, year=year, period=p)}" for m, p in _TUI_ONLY_SOURCE_ADDRESSES),
+        f"reused:{_address_token(modelo='111', year=year, period='2T')}",
+        f"refused:{_address_token(modelo='111', year=year, period='0A')}",
+        *(f"created:{_address_token(modelo=m, year=year, period=p)}" for m, p in _TUI_ONLY_ANNUAL_ADDRESSES),
+    )
+    if route != expected_route:
+        raise RetencionesInstalledTuiError("tui_only_receipt_work_route_mismatch")
+    periodic = _string_tuple(document.get("periodic_lifecycle"), label="periodic_lifecycle")
+    annual = _string_tuple(document.get("annual_lifecycle"), label="annual_lifecycle")
+    if len(periodic) != 3 * len(_TUI_ONLY_SOURCE_ADDRESSES) + len(_TUI_ONLY_EXPORTED_PERIODIC):
+        raise RetencionesInstalledTuiError("tui_only_receipt_periodic_lifecycle_incomplete")
+    if len(annual) != 3 * len(_TUI_ONLY_ANNUAL_ADDRESSES):
+        raise RetencionesInstalledTuiError("tui_only_receipt_annual_lifecycle_incomplete")
+    if _string_tuple(document.get("unexercised"), label="unexercised") != _TUI_ONLY_UNEXERCISED:
+        raise RetencionesInstalledTuiError("tui_only_receipt_unexercised_mismatch")
+    return WithholdingTuiOnlyReceipt(
+        schema_version=_TUI_ONLY_SCHEMA_VERSION,
+        status="proven",
+        product_origin=origin,
+        product_init_sha256=initializer,
+        year=year,
+        profile_setup="completed",
+        required_detail_refusal="observed",
+        work_route=route,
+        periodic_lifecycle=periodic,
+        annual_lifecycle=annual,
+        artifacts=tuple(artifacts),
+        fresh_readback=(),
+        fresh_filing_history=(),
+        historical_profile_context="current_profile_at_run",
+        unexercised=_TUI_ONLY_UNEXERCISED,
+    )
+
+
+def _tui_only_reopen_receipt(document: dict[str, object], *, year: int) -> WithholdingTuiOnlyReopenReceipt:
+    """Validate the fresh-process readback against the addresses the journey created."""
+    if any(
+        document.get(key) != value
+        for key, value in {"schema_version": _TUI_ONLY_SCHEMA_VERSION, "status": "proven", "year": year}.items()
+    ):
+        raise RetencionesInstalledTuiError("tui_only_reopen_did_not_prove_the_expected_readback")
+    origin = document.get("product_origin")
+    initializer = document.get("product_init_sha256")
+    if not isinstance(origin, str) or not origin or not isinstance(initializer, str) or len(initializer) != 64:
+        raise RetencionesInstalledTuiError("tui_only_reopen_product_identity_invalid")
+    reopened = _string_tuple(document.get("reopened_work"), label="reopened_work")
+    history = _string_tuple(document.get("filing_history"), label="filing_history")
+    if reopened != _tui_only_expected_addresses(year):
+        raise RetencionesInstalledTuiError("tui_only_reopen_declarations_mismatch")
+    if history != _tui_only_expected_filings(year):
+        raise RetencionesInstalledTuiError("tui_only_reopen_filing_history_mismatch")
+    return WithholdingTuiOnlyReopenReceipt(
+        schema_version=_TUI_ONLY_SCHEMA_VERSION,
+        status="proven",
+        product_origin=origin,
+        product_init_sha256=initializer,
+        year=year,
+        reopened_work=reopened,
+        filing_history=history,
+    )
+
+
+def _validate_tui_only_exports(
+    *, receipt: WithholdingTuiOnlyReceipt, scratch: Path, authority_root: Path, year: int
+) -> str:
+    """Check every TUI export against the official layout and the independent oracle.
+
+    Returns the authority logical generation the layouts were selected from.
+    """
+    from dev.acceptance.retenciones.cli_journey import (
+        _selected_annual_layouts,
+        _selected_layouts,
+        _validate_annual_export,
+        _validate_export,
+    )
+    from dev.acceptance.retenciones.scenario import build_installed_periodic_cli_slices
+
+    payloads: dict[tuple[str, str], bytes] = {}
+    for artifact in receipt.artifacts:
+        payload = _tui_only_export_path(scratch, modelo=artifact.modelo, year=year, period=artifact.period).read_bytes()
+        if hashlib.sha256(payload).hexdigest() != artifact.sha256 or len(payload) != artifact.size:
+            raise RetencionesInstalledTuiError(f"tui_only_artifact_changed_after_export:{artifact.modelo}")
+        payloads[(artifact.modelo, artifact.period)] = payload
+    periodic_slices = build_installed_periodic_cli_slices(year)
+    annual_slices = _tui_captured_annual_slices(year)
+    periodic_generation, periodic_layouts = _selected_layouts(
+        authority_root=authority_root, slices=periodic_slices, year=year
+    )
+    annual_generation, annual_layouts = _selected_annual_layouts(
+        authority_root=authority_root, slices=annual_slices, year=year
+    )
+    if periodic_generation != annual_generation:
+        raise RetencionesInstalledTuiError("tui_only_layout_generations_differ")
+    for artifact in receipt.artifacts:
+        payload = payloads[(artifact.modelo, artifact.period)]
+        stage = f"tui_only_{artifact.modelo}_{artifact.period}_export"
+        periodic_slice = next((slice_ for slice_ in periodic_slices if slice_.modelo == artifact.modelo), None)
+        if periodic_slice is not None:
+            _validate_export(
+                layout=periodic_layouts[periodic_slice.slice_id],
+                payload=payload,
+                expected=periodic_slice.expected_casillas,
+                stage=stage,
+            )
+            continue
+        annual_slice = next(slice_ for slice_ in annual_slices if slice_.modelo == artifact.modelo)
+        _validate_annual_export(
+            layout=annual_layouts[annual_slice.slice_id],
+            payload=payload,
+            expected_header=annual_slice.expected_header_fields,
+            expected_type2_rows=annual_slice.expected_type2_rows,
+            stage=stage,
+        )
+    return str(periodic_generation)
+
+
+def run_tui_only_validation_child(
+    *, journey_receipt: Path, scratch: Path, year: int
+) -> WithholdingTuiOnlyExportValidation:
+    """Validate the journey's exports inside the installed interpreter.
+
+    The served authority's store format belongs to the installed product, so
+    only its own reader is guaranteed to open it; a development tree may
+    already read a newer format. The layouts come from the authority the
+    journey itself served, named by ``CADRUMO_AUTHORITY_ROOT``.
+    """
+    import os
+
+    authority_root = os.environ.get("CADRUMO_AUTHORITY_ROOT")
+    if not authority_root:
+        raise RetencionesInstalledTuiError("tui_only_validation_requires_the_served_authority_root")
+    journey = _tui_only_receipt(_child_document(journey_receipt), year=year)
+    generation = _validate_tui_only_exports(
+        receipt=journey, scratch=scratch, authority_root=Path(authority_root), year=year
+    )
+    return WithholdingTuiOnlyExportValidation(
+        schema_version=_TUI_ONLY_SCHEMA_VERSION,
+        status="proven",
+        authority_generation=generation,
+        artifacts=journey.artifacts,
+    )
+
+
+def _tui_only_validation(document: dict[str, object], *, journey: WithholdingTuiOnlyReceipt) -> str:
+    """Require a proven validation of exactly the journey's artifacts; return its generation."""
+    generation = document.get("authority_generation")
+    artifacts = document.get("artifacts")
+    if (
+        document.get("schema_version") != _TUI_ONLY_SCHEMA_VERSION
+        or document.get("status") != "proven"
+        or not isinstance(generation, str)
+        or len(generation) != 64
+        or not isinstance(artifacts, list)
+        or artifacts != [asdict(artifact) for artifact in journey.artifacts]
+    ):
+        raise RetencionesInstalledTuiError("tui_only_export_validation_not_proven_for_the_journey_artifacts")
+    return generation
+
+
+def _child_failure(path: Path) -> str:
+    """Return the failure a child recorded in its receipt, for the parent's refusal."""
+    try:
+        error = _child_document(path).get("error")
+    except RetencionesInstalledTuiError as unreadable:
+        return str(unreadable)
+    return error if isinstance(error, str) else "no recorded failure"
+
+
+def run_installed_tui_only_journey(
+    *,
+    python_executable: Path,
+    workspace_root: Path,
+    authority_root: Path,
+    output_root: Path,
+    year: int = _YEAR,
+) -> WithholdingTuiOnlyReceipt:
+    """Prove the professional/urban-rent filing year through installed TUI processes only.
+
+    The parent never runs a product command. It launches two installed TUI
+    children over one fresh encrypted store, then checks the exported bytes
+    against the official layouts and the independent oracle.
+    """
+    root = _require_empty_directory(output_root, label="RETENCIONES TUI-only output root")
+    workspace = workspace_root.resolve(strict=True)
+    authority = authority_root.resolve(strict=True)
+    store = _require_empty_directory(root / "secure-store", label="RETENCIONES TUI-only secure store")
+    scratch = _require_empty_directory(root / "transient", label="RETENCIONES TUI-only transient directory")
+    passphrase = secrets.token_urlsafe(32)
+    common = {
+        "python_executable": python_executable.resolve(strict=True),
+        "workspace_root": workspace,
+        "child_module": "dev.acceptance.retenciones.installed_tui_withholding",
+        "storage_root": store,
+        "authority_root": authority,
+        "passphrase": passphrase,
+        "timeout_seconds": 5400,
+    }
+    journey_path = root / "tui-only.json"
+    journey_child = run_installed_tui_child_process(
+        **common,
+        child_args=(
+            "--child-mode",
+            "tui-only",
+            "--workspace-root",
+            str(workspace),
+            "--year",
+            str(year),
+            "--scratch",
+            str(scratch),
+            "--receipt",
+            str(journey_path),
+        ),
+        receipt_path=journey_path,
+    )
+    if journey_child.returncode != 0:
+        raise RetencionesInstalledTuiError(f"installed TUI-only journey child failed:{_child_failure(journey_path)}")
+    journey = _tui_only_receipt(_child_document(journey_path), year=year)
+    validation_path = root / "export-validation.json"
+    validation_child = run_installed_tui_child_process(
+        **common,
+        child_args=(
+            "--child-mode",
+            "tui-only-validate",
+            "--workspace-root",
+            str(workspace),
+            "--year",
+            str(year),
+            "--scratch",
+            str(scratch),
+            "--journey-receipt",
+            str(journey_path),
+            "--receipt",
+            str(validation_path),
+        ),
+        receipt_path=validation_path,
+    )
+    if validation_child.returncode != 0:
+        raise RetencionesInstalledTuiError(
+            f"installed TUI-only exports failed independent validation:{_child_failure(validation_path)}"
+        )
+    _tui_only_validation(_child_document(validation_path), journey=journey)
+    reopen_path = root / "reopen.json"
+    reopen_child = run_installed_tui_child_process(
+        **common,
+        child_args=(
+            "--child-mode",
+            "tui-only-reopen",
+            "--workspace-root",
+            str(workspace),
+            "--year",
+            str(year),
+            "--scratch",
+            str(scratch),
+            "--receipt",
+            str(reopen_path),
+        ),
+        receipt_path=reopen_path,
+    )
+    if reopen_child.returncode != 0:
+        raise RetencionesInstalledTuiError(f"installed TUI-only reopen child failed:{_child_failure(reopen_path)}")
+    reopened = _tui_only_reopen_receipt(_child_document(reopen_path), year=year)
+    if (journey.product_origin, journey.product_init_sha256) != (reopened.product_origin, reopened.product_init_sha256):
+        raise RetencionesInstalledTuiError("installed TUI-only processes did not identify the same product")
+    return replace(
+        journey,
+        fresh_readback=("modelo-111", "modelo-115"),
+        fresh_filing_history=reopened.filing_history,
+    )
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--child-mode", choices=("capture", "mutate", "reopen"), required=True)
+    parser.add_argument(
+        "--child-mode",
+        choices=("capture", "mutate", "reopen", "tui-only", "tui-only-reopen", "tui-only-validate"),
+        required=True,
+    )
+    parser.add_argument("--journey-receipt", type=Path)
     parser.add_argument("--workspace-root", required=True, type=Path)
     parser.add_argument("--profile-label", default="retenciones-installed-tui")
     parser.add_argument("--year", type=int, default=_YEAR)
@@ -1667,7 +2568,31 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     try:
         passphrase = read_passphrase_from_stdin()
-        if args.child_mode == "capture":
+        receipt: (
+            WithholdingJourneyReceipt
+            | WithholdingTuiOnlyReceipt
+            | WithholdingTuiOnlyReopenReceipt
+            | WithholdingTuiOnlyExportValidation
+        )
+        if args.child_mode == "tui-only-validate":
+            if args.journey_receipt is None:
+                raise RetencionesInstalledTuiError("tui_only_validation_requires_the_journey_receipt")
+            receipt = run_tui_only_validation_child(
+                journey_receipt=args.journey_receipt, scratch=args.scratch.resolve(strict=True), year=args.year
+            )
+        elif args.child_mode == "tui-only":
+            receipt = run_tui_only_child(
+                workspace_root=args.workspace_root,
+                profile_label=args.profile_label,
+                passphrase=passphrase,
+                year=args.year,
+                scratch=args.scratch.resolve(strict=True),
+            )
+        elif args.child_mode == "tui-only-reopen":
+            receipt = run_tui_only_reopen_child(
+                workspace_root=args.workspace_root, passphrase=passphrase, year=args.year
+            )
+        elif args.child_mode == "capture":
             receipt = run_capture_child(
                 workspace_root=args.workspace_root,
                 profile_label=args.profile_label,
@@ -1686,6 +2611,17 @@ def main(argv: Sequence[str] | None = None) -> int:
             error=InstalledTuiChildError(f"installed withholding journey failed: {error}"),
         )
         return 2
+    except Exception as error:
+        # The parent discards the child's stderr, so an unexpected failure
+        # must still leave a receipt naming it, or the run has no evidence.
+        write_installed_tui_failure_receipt(
+            path=args.receipt,
+            schema_version=_SCHEMA_VERSION,
+            error=InstalledTuiChildError(
+                f"installed withholding journey crashed: {type(error).__name__}: {str(error)[:600]}"
+            ),
+        )
+        return 3
     args.receipt.parent.mkdir(parents=True, exist_ok=True)
     args.receipt.write_text(json.dumps(receipt.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return 0
