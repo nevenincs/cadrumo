@@ -10,7 +10,7 @@ related:
   - '[[2026-06-05-calendar-filing-semantics-adr]]'
 modified: '2026-09-23'
 body_schema: body-v2
-body_hash: 'sha256:493e89195929ad69e8b8fe5305082a873799024180f0770058c6afb7bfc6a3f6'
+body_hash: 'sha256:f4da38875c1543bd2c063d6163af9d170da505a055c3a8af975001626cad8028'
 ---
 
 # `calendar-obligations` plan
@@ -26,7 +26,7 @@ S01 and S02 implement the accepted `2026-09-23-calendar-obligations-holiday-juri
 ## Steps
 
 - [x] `S01` - Author the tax-residence territory relation and art. 30.6 reference, validate and publish the authority; `src/cadrumo/_data/registry/aeat/facts/0143-deadline-calendar-territory-catalogue.toml, src/cadrumo/_data/registry/aeat/legal/ley-39-2015-notificaciones.toml, src/cadrumo/domain/calculations/registry/calendar_ccaa_catalogue.py and owning tests`.
-- [ ] `S02` - Resolve the deadline holiday territory from a declared resident common-regime residence and record typed holiday coverage on calendar entries; `src/cadrumo/domain/deadlines/models.py, profiles.py, festivos.py, src/cadrumo/application/overview/calendar.py, calendar_models.py and owning tests`.
+- [x] `S02` - Resolve the deadline holiday territory from a declared resident common-regime residence and record typed holiday coverage on calendar entries; `src/cadrumo/domain/deadlines/models.py, profiles.py, festivos.py, src/cadrumo/application/overview/calendar.py, calendar_models.py and owning tests`.
 - [ ] `S03` - Project holiday coverage and translated shift reasons into the CLI and TUI calendar; `src/cadrumo/entrypoints/cli/_overview_payloads.py, _overview_rendering.py, src/cadrumo/application/modelo/declarations_calendar.py, src/cadrumo/entrypoints/tui/declarations/calendar.py, locales and owning tests`.
 - [ ] `S04` - Replace in-process parity with an installed-wheel CLI/TUI calendar driver and sanitized receipt; `dev/acceptance/calendar/, dev/acceptance/income_tax/installed_tui_child.py and owning tests`.
 - [ ] `S05` - Run type, lint and import gates on changed files and write the checkpoint and handoff; `.agents/session-briefs/handoffs/`.

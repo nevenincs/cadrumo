@@ -1316,6 +1316,23 @@ application:
         enum_boolean_invalid: El dato de perfil para el binding enum %{binding_id}
           resolvió a booleano; los booleanos no son claves válidas de despacho enum.
   overview:
+    calendar:
+      holiday_coverage:
+        calendar_unavailable: calendario de festivos no disponible; la fecha de cierre
+          original no está verificada
+        national_and_territory: festivos nacionales y de %{territory} comprobados;
+          festivos locales sin comprobar
+        national_only: solo festivos nacionales; festivos autonómicos y locales sin
+          comprobar
+        not_shifted: el plazo de este modelo no se traslada por días inhábiles
+        territory_unverified: solo festivos nacionales; los festivos autonómicos de
+          %{territory} de este año no están verificados y los locales no se comprueban
+      shift:
+        business_day: Día hábil
+        calendar_unavailable: Calendario no disponible
+        domingo: Domingo
+        modelo_exception: Excepción del modelo
+        sabado: Sábado
     errors:
       horizon_days_not_positive: horizon_days debe ser positivo; se recibió %{horizon_days}
     explain:

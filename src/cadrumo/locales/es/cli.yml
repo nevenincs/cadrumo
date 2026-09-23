@@ -3513,12 +3513,6 @@ cli:
       help: Genera el calendario de plazos para el perfil activo en la ventana de
         fechas indicada. Aplica festivos y desplazamientos de día hábil. Local; nunca
         contacta con AEAT.
-      shift:
-        business_day: Día hábil
-        calendar_unavailable: Calendario no disponible
-        domingo: Domingo
-        modelo_exception: Excepción del modelo
-        sabado: Sábado
       show_suppressed_help: Mostrar también las entradas suprimidas (no aplicables)
         en el calendario.
       to_help: Fecha de fin inclusiva del calendario (ISO YYYY-MM-DD).

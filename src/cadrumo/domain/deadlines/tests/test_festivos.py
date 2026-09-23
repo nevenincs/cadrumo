@@ -9,7 +9,7 @@ the shift formula to a freshly-invented date.
 
 The BOE-cited fixed dates used as anchors:
 
-* 2025-04-18 = Viernes Santo (national, BOE-A-2024-22011).
+* 2025-04-18 = Viernes Santo (national, BOE-A-2024-26935).
 * 2025-05-01 = Fiesta del Trabajo (Thursday; national).
 * 2025-11-01 = Todos los Santos (Saturday; national + weekend).
 * 2025-12-25 = Navidad (Thursday; national).
@@ -35,6 +35,7 @@ from ..errors import DeadlineValidationError
 from ..festivos import (
     MODELOS_WITHOUT_SHIFT,
     CalendarCCAA,
+    DeadlineHolidayCoverage,
     DeadlineShift,
     Holiday,
     HolidayCalendar,
@@ -135,16 +136,16 @@ _SHIFT_DEADLINE_CASES = (
 
 
 def test_load_calendar_2025_returns_boe_anchored_year() -> None:
-    """The 2025 governed calendar facts cite BOE-A-2024-22011 as their source."""
+    """The 2025 governed calendar facts cite the AGE días inhábiles resolution BOE-A-2024-26935."""
     with bundled_indexed_authority().operation() as operation:
         calendar = load_holiday_calendar(2025, operation=operation)
         assert calendar.year == 2025
-        assert calendar.boe_ref == "boe-resolucion-festivos-2025"
-        assert calendar.boe_url is not None and "BOE-A-2024-22011" in calendar.boe_url
+        assert calendar.boe_ref == "resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"
+        assert calendar.boe_url is not None and "BOE-A-2024-26935" in calendar.boe_url
 
 
 def test_load_calendar_2025_contains_boe_anchored_national_holidays() -> None:
-    """The published 2025 national list per BOE-A-2024-22011 includes
+    """The published 2025 national list per BOE-A-2024-26935 includes
     these fixed dates. The test asserts membership, not the total
     count, so future BOE corrections that add a single holiday do not
     fail the test for the wrong reason."""
@@ -250,32 +251,97 @@ def test_shift_deadline_basic_cases() -> None:
                 assert jurisdiction in result.jurisdictions, case_id
 
 
+def _diada_calendar(operation: PinnedAuthorityOperation, *, verified: bool) -> HolidayCalendar:
+    """A synthetic 2025 calendar holding only the Diada, verified or not for Cataluna."""
+    catalonia = _calendar_ccaa(operation, "ES-CT")
+    return HolidayCalendar(
+        year=2025,
+        boe_ref="synthetic-2025",
+        ccaa=(
+            Holiday(
+                holiday_date=date(2025, 9, 11),
+                jurisdiction=HolidayJurisdiction.CCAA,
+                ccaa_code=catalonia,
+                name="Diada",
+            ),
+        ),
+        verified_territories=(catalonia,) if verified else (),
+    )
+
+
 def test_shift_deadline_handles_ccaa_holiday_when_residence_matches() -> None:
-    """A Catalan taxpayer with a deadline on 2025-09-11 (Diada, Thursday)
-    sees the deadline shift to Friday 2025-09-12. A Madrid taxpayer
-    with the same close date does NOT shift."""
+    """A verified Catalan Diada (Thursday 2025-09-11) moves a Catalan
+    deadline to Friday 2025-09-12; a Madrid taxpayer with the same close
+    date does not shift."""
 
     with bundled_indexed_authority().operation() as operation:
         diada = date(2025, 9, 11)
+        calendar = _diada_calendar(operation, verified=True)
         catalan_result = shift_deadline(
             diada,
             modelo="303",
             ccaa_code=_calendar_ccaa(operation, "ES-CT"),
+            calendar=calendar,
             operation=operation,
         )
         assert catalan_result.shifted is True
         assert catalan_result.adjusted_close_date == date(2025, 9, 12)
         assert HolidayJurisdiction.CCAA in catalan_result.jurisdictions
         assert "Diada" in catalan_result.shift_reason
+        assert catalan_result.coverage is DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
 
         madrid_result = shift_deadline(
             diada,
             modelo="303",
             ccaa_code=_calendar_ccaa(operation, "ES-MD"),
+            calendar=calendar,
             operation=operation,
         )
         assert madrid_result.shifted is False
         assert madrid_result.adjusted_close_date == diada
+        assert madrid_result.coverage is DeadlineHolidayCoverage.TERRITORY_UNVERIFIED
+
+
+def test_unverified_regional_holiday_never_extends_a_deadline() -> None:
+    """A regional holiday the registry has not verified keeps the earlier date and says so."""
+    with bundled_indexed_authority().operation() as operation:
+        result = shift_deadline(
+            date(2025, 9, 11),
+            modelo="303",
+            ccaa_code=_calendar_ccaa(operation, "ES-CT"),
+            calendar=_diada_calendar(operation, verified=False),
+            operation=operation,
+        )
+    assert result.shifted is False
+    assert result.adjusted_close_date == date(2025, 9, 11)
+    assert result.coverage is DeadlineHolidayCoverage.TERRITORY_UNVERIFIED
+
+
+def test_unknown_territory_checks_national_holidays_only() -> None:
+    with bundled_indexed_authority().operation() as operation:
+        result = shift_deadline(
+            date(2025, 9, 11),
+            modelo="303",
+            ccaa_code=None,
+            calendar=_diada_calendar(operation, verified=True),
+            operation=operation,
+        )
+    assert result.shifted is False
+    assert result.coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
+
+
+def test_modelo_369_is_never_shifted_and_says_so() -> None:
+    """AEAT keeps Modelo 369's close date even on a weekend (2025-10-18 is a Saturday)."""
+    with bundled_indexed_authority().operation() as operation:
+        result = shift_deadline(
+            date(2025, 10, 18),
+            modelo="369",
+            ccaa_code=_calendar_ccaa(operation, "ES-CT"),
+            calendar=_diada_calendar(operation, verified=True),
+            operation=operation,
+        )
+    assert result.adjusted_close_date == date(2025, 10, 18)
+    assert result.coverage is DeadlineHolidayCoverage.NOT_SHIFTED
 
 
 def test_shift_deadline_modelos_without_shift_constant_contains_369() -> None:
@@ -323,9 +389,10 @@ def test_shift_deadline_records_holiday_refs_for_audit_trail() -> None:
             diada,
             modelo="303",
             ccaa_code=_calendar_ccaa(operation, "ES-CT"),
+            calendar=_diada_calendar(operation, verified=True),
             operation=operation,
         )
-        assert "Diada Nacional de Cataluña" in result.holiday_refs
+        assert "Diada" in result.holiday_refs
 
 
 def test_shift_deadline_handles_saturday_overlap_with_national_holiday() -> None:

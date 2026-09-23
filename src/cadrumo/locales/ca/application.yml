@@ -1312,6 +1312,23 @@ application:
         enum_boolean_invalid: La dada de perfil per al binding enum %{binding_id}
           ha resolt a booleà; els booleans no són claus vàlides de dispatch enum.
   overview:
+    calendar:
+      holiday_coverage:
+        calendar_unavailable: calendari de festius no disponible; la data de tancament
+          original no està verificada
+        national_and_territory: festius nacionals i de %{territory} comprovats; festius
+          locals sense comprovar
+        national_only: només festius nacionals; festius autonòmics i locals sense
+          comprovar
+        not_shifted: el termini d'aquest model no es trasllada per dies inhàbils
+        territory_unverified: només festius nacionals; els festius autonòmics de %{territory}
+          d'aquest any no estan verificats i els locals no es comproven
+      shift:
+        business_day: Dia hàbil
+        calendar_unavailable: Calendari no disponible
+        domingo: Diumenge
+        modelo_exception: Excepció del model
+        sabado: Dissabte
     errors:
       horizon_days_not_positive: horizon_days ha de ser positiu; s'ha rebut %{horizon_days}
     explain:

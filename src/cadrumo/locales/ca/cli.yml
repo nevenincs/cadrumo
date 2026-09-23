@@ -3478,12 +3478,6 @@ cli:
       help: Genera el calendari de terminis per al perfil actiu a la finestra de dates
         indicada. Aplica festius i desplaçaments de dia hàbil. Local; mai contacta
         amb AEAT.
-      shift:
-        business_day: Dia hàbil
-        calendar_unavailable: Calendari no disponible
-        domingo: Diumenge
-        modelo_exception: Excepció del model
-        sabado: Dissabte
       show_suppressed_help: Mostra també les entrades suprimides (no aplicables) al
         calendari.
       to_help: Data de fi inclusiva del calendari (ISO YYYY-MM-DD).

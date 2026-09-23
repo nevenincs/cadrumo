@@ -59,6 +59,8 @@ from ...domain.deadlines.errors import DeadlineValidationError as _DeadlineValid
 from ...domain.deadlines.errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
 from ...domain.deadlines.fact_context import DeadlineFactResolutionContext as _DeadlineFactResolutionContext
 from ...domain.deadlines.festivos import MODELOS_WITHOUT_SHIFT as _MODELOS_WITHOUT_SHIFT
+from ...domain.deadlines.festivos import CalendarCCAA as _CalendarCCAA
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
 from ...domain.deadlines.festivos import load_holiday_calendar as _load_holiday_calendar
 from ...domain.deadlines.festivos import shift_deadline as _shift_deadline
 from ...domain.deadlines.models import ModeloDeadline as _ModeloDeadline
@@ -354,6 +356,7 @@ def _annotate_entry_with_work_unit(
 def _calendar_entry_from_work_unit(
     unit: _WorkUnit,
     *,
+    holiday_territory: _CalendarCCAA | None,
     today: date,
     due_soon_days: int,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
@@ -375,6 +378,7 @@ def _calendar_entry_from_work_unit(
     )
     return _calendar_entry_from_obligation(
         obligation,
+        holiday_territory=holiday_territory,
         filing_evidence=effective_filing_evidence,
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
         today=today,
@@ -395,6 +399,7 @@ def _merge_work_units_into_entries(
     *,
     work_units: tuple[_WorkUnit, ...],
     calendar_range: _OverviewCalendarRange,
+    holiday_territory: _CalendarCCAA | None,
     today: date,
     due_soon_days: int,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
@@ -424,6 +429,7 @@ def _merge_work_units_into_entries(
         merged.append(
             _calendar_entry_from_work_unit(
                 unit,
+                holiday_territory=holiday_territory,
                 today=today,
                 due_soon_days=due_soon_days,
                 filing_evidence=filing_evidence,
@@ -837,9 +843,47 @@ def _modelo_record_calendar_event_date(record: ModeloRecord, evidence: _Overview
     return record.filed_at.date()
 
 
+def _shift_reason_part_statement(part: str) -> str:
+    """Return the localized label for one shift-reason token; holiday names pass through."""
+    if part == "business_day":
+        return _tr("application.overview.calendar.shift.business_day")
+    if part == "calendar_unavailable":
+        return _tr("application.overview.calendar.shift.calendar_unavailable")
+    if part == "domingo":
+        return _tr("application.overview.calendar.shift.domingo")
+    if part == "modelo_exception":
+        return _tr("application.overview.calendar.shift.modelo_exception")
+    if part == "sabado":
+        return _tr("application.overview.calendar.shift.sabado")
+    return part
+
+
+def shift_reason_statement(shift_reason: str) -> str:
+    """Return the localized statement of why a close date moved, or why it did not."""
+    return " + ".join(_shift_reason_part_statement(part) for part in shift_reason.split(" + "))
+
+
+def holiday_coverage_statement(coverage: _DeadlineHolidayCoverage, territory: _CalendarCCAA | None) -> str:
+    """Return the localized statement of which holidays an effective close date accounts for.
+
+    Both frontends render this one statement, so neither can describe a
+    national-only or unverified date as final.
+    """
+    if coverage is _DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY:
+        return _tr("application.overview.calendar.holiday_coverage.national_and_territory", territory=str(territory))
+    if coverage is _DeadlineHolidayCoverage.TERRITORY_UNVERIFIED:
+        return _tr("application.overview.calendar.holiday_coverage.territory_unverified", territory=str(territory))
+    if coverage is _DeadlineHolidayCoverage.NATIONAL_ONLY:
+        return _tr("application.overview.calendar.holiday_coverage.national_only")
+    if coverage is _DeadlineHolidayCoverage.NOT_SHIFTED:
+        return _tr("application.overview.calendar.holiday_coverage.not_shifted")
+    return _tr("application.overview.calendar.holiday_coverage.calendar_unavailable")
+
+
 def _calendar_entry_from_obligation(
     obligation: _ModeloDeadline,
     *,
+    holiday_territory: _CalendarCCAA | None,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     today: date,
@@ -855,7 +899,7 @@ def _calendar_entry_from_obligation(
         shift = _shift_deadline(
             obligation.closes_on,
             modelo=obligation.modelo,
-            ccaa_code=None,
+            ccaa_code=holiday_territory,
             calendar=holiday_calendar,
             operation=operation,
         )
@@ -863,6 +907,7 @@ def _calendar_entry_from_obligation(
         reason = shift.shift_reason
         holiday_refs = shift.holiday_refs
         jurisdictions = shift.jurisdictions
+        holiday_coverage = shift.coverage
     except _DeadlineValidationError as exc:
         _log.debug(
             "overview calendar ignored deadline shift validation error",
@@ -876,6 +921,7 @@ def _calendar_entry_from_obligation(
         reason = "calendar_unavailable"
         holiday_refs = ()
         jurisdictions = ()
+        holiday_coverage = _DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
     period = obligation.period
     status = _classify_obligation_status(adjusted, today, due_soon_days)
     recovery = None
@@ -907,6 +953,13 @@ def _calendar_entry_from_obligation(
         shift_reason=reason,
         holiday_refs=holiday_refs,
         jurisdictions=jurisdictions,
+        holiday_coverage=holiday_coverage,
+        holiday_territory=(
+            holiday_territory
+            if holiday_coverage
+            in (_DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY, _DeadlineHolidayCoverage.TERRITORY_UNVERIFIED)
+            else None
+        ),
         payment_cutoff_on=obligation.payment_cutoff_on,
         evaluated_on=today,
         days_overdue=(today - adjusted).days if status is _ObligationStatus.OVERDUE else None,
@@ -1032,6 +1085,7 @@ def _entries_and_suppressed_from_schedules(
             entries.append(
                 _calendar_entry_from_obligation(
                     obligation,
+                    holiday_territory=profile.holiday_territory,
                     filing_evidence=filing_evidence,
                     live_censo_verified_profile_keys=live_censo_verified_profile_keys,
                     today=today,
@@ -1166,6 +1220,7 @@ def build_overview_calendar(
         tuple(entries),
         work_units=work_units,
         calendar_range=calendar_range,
+        holiday_territory=profile.holiday_territory,
         today=today,
         due_soon_days=due_soon_days,
         filing_evidence=filing_evidence,

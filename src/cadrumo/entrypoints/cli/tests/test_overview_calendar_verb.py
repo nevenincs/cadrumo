@@ -22,7 +22,7 @@ from ....application.live.expedientes import (
 from ....application.live.expedientes_ports import ExpedientesDeclaration
 from ....application.live.notification_ports import NotificationsSnapshot, RemoteNotification
 from ....application.live.notifications import NotificationsService
-from ....application.overview.calendar import build_overview_calendar
+from ....application.overview.calendar import build_overview_calendar, shift_reason_statement
 from ....application.overview.calendar_models import OverviewCalendarRange
 from ....application.user_profile.projections import record_to_values
 from ....core.classification.policies import SensitivityClass
@@ -42,7 +42,6 @@ from ....domain.user_profile.values import ProfileSetupState, create_user_profil
 from ....entrypoints.adapter_composition import build_expedientes_ports
 from ....entrypoints.live_state_composition import compose_notifications_ports
 from .._overview_evidence import live_censo_verified_profile_keys
-from .._overview_rendering import calendar_shift_reason_text
 from ..common import current_workflow_state, profile_to_taxpayer
 from ._overview_calendar_support import (
     _SOURCE_URL,
@@ -230,6 +229,29 @@ def test_calendar_json_preserves_exact_modelo_303_2025_quarterly_coordinates() -
     )
 
 
+def test_calendar_states_that_no_aeat_history_was_ever_captured() -> None:
+    """A row's not-observed AEAT state is only meaningful beside the envelope's coverage statement."""
+    result = _invoke(
+        [
+            "--format",
+            "json",
+            "app",
+            "overview",
+            "calendar",
+            "--from",
+            "2025-04-01",
+            "--to",
+            "2025-04-30",
+            "--allow-incomplete",
+        ],
+    )
+
+    assert result.exit_code == 0, result.output
+    notices = {notice["code"]: notice for notice in json.loads(result.output)["notices"]}
+    history = notices["overview.no_aeat_history"]
+    assert history["action"]["action"]["cli_path"] == ["app", "live", "filed", "pull-all"]
+
+
 def test_calendar_json_matches_application_coordinates_for_every_supported_year() -> None:
     """Real CLI fleet parity consumes the canonical horizon and application projection."""
     with frozen_clock(now()):
@@ -338,7 +360,7 @@ def test_calendar_shift_formatter_localizes_weekend_tokens() -> None:
     with override_settings(cadrumo_output_language="ca"):
         clear_output_language_cache()
         try:
-            rendered = calendar_shift_reason_text("sabado + Todos los Santos + domingo")
+            rendered = shift_reason_statement("sabado + Todos los Santos + domingo")
         finally:
             clear_output_language_cache()
 
@@ -349,7 +371,7 @@ def test_calendar_shift_formatter_localizes_weekend_tokens() -> None:
     with override_settings(cadrumo_output_language="es"):
         clear_output_language_cache()
         try:
-            accented = calendar_shift_reason_text("sabado + business_day")
+            accented = shift_reason_statement("sabado + business_day")
         finally:
             clear_output_language_cache()
 

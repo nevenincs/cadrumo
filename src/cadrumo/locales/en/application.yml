@@ -1201,6 +1201,22 @@ application:
         enum_boolean_invalid: Profile fact for enum-channel binding %{binding_id}
           resolved to a boolean; boolean facts are not valid enum dispatch keys.
   overview:
+    calendar:
+      holiday_coverage:
+        calendar_unavailable: holiday calendar unavailable; the original close date
+          is unverified
+        national_and_territory: national and %{territory} holidays checked; local
+          holidays not checked
+        national_only: national holidays only; regional and local holidays not checked
+        not_shifted: this modelo's deadline does not move for non-working days
+        territory_unverified: national holidays only; %{territory} regional holidays
+          for this year are not verified, and local holidays are not checked
+      shift:
+        business_day: Business day
+        calendar_unavailable: Calendar unavailable
+        domingo: Sunday
+        modelo_exception: Modelo exception
+        sabado: Saturday
     errors:
       horizon_days_not_positive: horizon_days must be positive; got %{horizon_days}
     explain:

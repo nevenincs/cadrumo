@@ -3469,12 +3469,6 @@ cli:
       help: A határidő-naptár megjelenítése az aktív profilhoz a megadott dátumablakon
         belül. Festivos és munkanapszámítás alkalmazásával. Csak helyi; soha nem lép
         kapcsolatba az AEAT-tal.
-      shift:
-        business_day: Munkanap
-        calendar_unavailable: Naptár nem elérhető
-        domingo: Vasárnap
-        modelo_exception: Nyomtatvány-kivétel
-        sabado: Szombat
       show_suppressed_help: Elnyomott bejegyzések megjelenítése is a naptárban.
       to_help: A naptárablak záró dátuma (ISO ÉÉÉÉ-HH-NN, beleszámítva).
     calendar_local_filing_evidence_unavailable: A naptár helyi benyújtási bizonyítéka

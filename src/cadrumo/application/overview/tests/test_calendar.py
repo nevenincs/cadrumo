@@ -12,10 +12,12 @@ from pydantic import ValidationError
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import ApplicabilityVerdict, derive_modelo_applicability
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.calendar_ccaa_catalogue import require_calendar_ccaa
 from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.engine import DeadlineEngine
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import (
     IrpfSpecialRegime,
     IVARegime,
@@ -36,6 +38,7 @@ from ..calendar import (
     build_overview_calendar_events,
     calendar_events_from_expedientes_snapshots,
     calendar_events_from_notification_snapshots,
+    holiday_coverage_statement,
 )
 from ..calendar_models import (
     OverviewCalendar,
@@ -506,6 +509,7 @@ def _entry(**overrides: object) -> OverviewCalendarEntry:
         "closes_on": date(2026, 4, 20),
         "adjusted_closes_on": date(2026, 4, 20),
         "shift_reason": "business_day",
+        "holiday_coverage": DeadlineHolidayCoverage.NATIONAL_ONLY,
         "holiday_refs": (),
         "jurisdictions": (),
         "payment_cutoff_on": date(2026, 4, 15),
@@ -1095,6 +1099,7 @@ def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
     )
     on_effective_close = _calendar_entry_from_obligation(
         obligation,
+        holiday_territory=None,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
         today=date(2025, 4, 21),
@@ -1108,6 +1113,7 @@ def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
 
     after_effective_close = _calendar_entry_from_obligation(
         obligation,
+        holiday_territory=None,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
         today=date(2025, 4, 22),
@@ -1116,6 +1122,99 @@ def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
     )
     assert after_effective_close.status is ObligationStatus.OVERDUE
     assert after_effective_close.days_overdue == 1
+
+
+def _obligation(modelo: str, closes_on: date) -> ModeloDeadline:
+    return ModeloDeadline(
+        modelo=modelo,
+        period=Period.from_year_and_code(closes_on.year, "3T"),
+        opens_on=closes_on.replace(day=1),
+        closes_on=closes_on,
+        payment_cutoff_on=None,
+        status=ObligationStatus.UPCOMING,
+        applies_because="synthetic holiday-coverage obligation",
+        boe_references=(),
+        recovery=None,
+    )
+
+
+def _entry_for(obligation: ModeloDeadline, operation: PinnedAuthorityOperation, territory: str | None):
+    return _calendar_entry_from_obligation(
+        obligation,
+        holiday_territory=(
+            None
+            if territory is None
+            else require_calendar_ccaa(territory, effective_date=obligation.closes_on, authority=operation)
+        ),
+        filing_evidence=(),
+        live_censo_verified_profile_keys=None,
+        today=date(2025, 8, 1),
+        due_soon_days=14,
+        operation=operation,
+    )
+
+
+def test_regional_holiday_of_the_residence_moves_the_effective_close(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """The 2025 Diada (Thursday 11 September) is inhábil only in Cataluna (BOE-A-2024-26935)."""
+    catalan = _entry_for(_obligation("303", date(2025, 9, 11)), authority_operation, "ES-CT")
+    madrid = _entry_for(_obligation("303", date(2025, 9, 11)), authority_operation, "ES-MD")
+
+    assert catalan.adjusted_closes_on == date(2025, 9, 12)
+    assert catalan.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
+    assert str(catalan.holiday_territory) == "ES-CT"
+    assert "ES-CT" in holiday_coverage_statement(catalan.holiday_coverage, catalan.holiday_territory)
+    assert madrid.adjusted_closes_on == date(2025, 9, 11)
+    assert madrid.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
+
+
+def test_unresolved_territory_is_reported_as_national_only(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    entry = _entry_for(_obligation("303", date(2025, 9, 11)), authority_operation, None)
+
+    assert entry.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
+    assert entry.holiday_territory is None
+
+
+def test_modelo_369_entry_is_not_shifted_on_a_weekend(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    entry = _entry_for(_obligation("369", date(2025, 10, 18)), authority_operation, "ES-MD")
+
+    assert entry.adjusted_closes_on == date(2025, 10, 18)
+    assert entry.shift_reason == "modelo_exception"
+    assert entry.holiday_coverage is DeadlineHolidayCoverage.NOT_SHIFTED
+    assert entry.holiday_territory is None
+
+
+def test_missing_holiday_calendar_keeps_the_original_close_visibly_unverified(
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """No holiday publication exists for 2027 yet, so a Saturday close cannot be adjusted or certified."""
+    entry = _entry_for(_obligation("303", date(2027, 10, 16)), authority_operation, "ES-MD")
+
+    assert entry.adjusted_closes_on == entry.closes_on == date(2027, 10, 16)
+    assert entry.shift_reason == "calendar_unavailable"
+    assert entry.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
+    assert entry.holiday_territory is None
+
+
+def test_entry_refuses_a_shift_its_coverage_did_not_evaluate() -> None:
+    with pytest.raises(ValidationError, match="did not evaluate"):
+        OverviewCalendarEntry(
+            modelo="303",
+            period=Period.from_year_and_code(2026, "3T"),
+            opens_on=date(2026, 10, 1),
+            closes_on=date(2026, 10, 17),
+            adjusted_closes_on=date(2026, 10, 19),
+            shift_reason="calendar_unavailable",
+            holiday_coverage=DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+            evaluated_on=date(2026, 8, 1),
+            status=ObligationStatus.UPCOMING,
+            user_state=user_state_for(ObligationStatus.UPCOMING),
+        )
 
 
 def test_build_marks_modelo_369_as_modelo_exception(

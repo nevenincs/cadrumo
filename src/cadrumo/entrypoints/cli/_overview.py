@@ -62,9 +62,6 @@ from ._overview_payloads import (
     OverviewStatusResult,
 )
 from ._overview_rendering import (
-    calendar_shift_reason_text as calendar_shift_reason_text,
-)
-from ._overview_rendering import (
     overview_agenda_output,
     overview_backlog_output,
     overview_calendar_output,
@@ -514,9 +511,14 @@ def overview_calendar(
         expected_tax_id=expected_tax_id,
     )
     work_units, work_units_notice = local_modelo_work_units(bucket_id)
+    from ...domain.calculations.registry.applicability import derive_tax_route
+
+    # Without this, a row's "not observed" AEAT state cannot be told apart from
+    # a store that has never captured any AEAT history at all.
+    history_notice = overview_no_aeat_history_notice(tax_route=derive_tax_route(workflow_profile))
     evidence_notices = [
         notice
-        for notice in (live_notice, modelo_events_notice, filing_evidence_notice, work_units_notice)
+        for notice in (live_notice, modelo_events_notice, filing_evidence_notice, work_units_notice, history_notice)
         if notice is not None
     ]
     cal: OverviewCalendar = build_overview_calendar(

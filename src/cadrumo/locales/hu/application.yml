@@ -1272,6 +1272,24 @@ application:
         enum_boolean_invalid: A(z) %{binding_id} enumcsatornás kötés profiladata boolean
           értékre oldódott fel; a boolean adatok nem érvényes enum dispatch kulcsok.
   overview:
+    calendar:
+      holiday_coverage:
+        calendar_unavailable: az ünnepnapi naptár nem érhető el; az eredeti zárási
+          dátum nincs ellenőrizve
+        national_and_territory: országos és %{territory} ünnepnapok ellenőrizve; helyi
+          ünnepnapok nincsenek ellenőrizve
+        national_only: csak országos ünnepnapok; regionális és helyi ünnepnapok nincsenek
+          ellenőrizve
+        not_shifted: ennél a nyomtatványnál a határidő munkaszüneti nap miatt nem
+          tolódik
+        territory_unverified: csak országos ünnepnapok; %{territory} idei regionális
+          ünnepnapjai nincsenek ellenőrizve, a helyi ünnepnapok sem
+      shift:
+        business_day: Munkanap
+        calendar_unavailable: Naptár nem elérhető
+        domingo: Vasárnap
+        modelo_exception: Nyomtatvány-kivétel
+        sabado: Szombat
     errors:
       horizon_days_not_positive: 'a horizon_days értékének pozitívnak kell lennie;
         a kapott érték: %{horizon_days}'

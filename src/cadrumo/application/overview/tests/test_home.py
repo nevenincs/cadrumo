@@ -7,6 +7,7 @@ from pydantic import ValidationError
 
 from ....core.operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 from ....core.period import Period
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.deadlines.models import ObligationStatus
 from ...operator_actions.models import ActionArgumentBinding, ActionReference, DeclaredNextAction
 from ..agenda import OverviewAgenda
@@ -60,6 +61,7 @@ def _calendar_entry(modelo: str, due_on: date, period_code: str) -> OverviewCale
         closes_on=due_on,
         adjusted_closes_on=due_on,
         shift_reason="none",
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         evaluated_on=date(2026, 1, 1),
         status=ObligationStatus.DUE_SOON,
         user_state=OverviewPeriodState.DUE,

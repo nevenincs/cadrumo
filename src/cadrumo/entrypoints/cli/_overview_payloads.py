@@ -165,6 +165,10 @@ class OverviewCalendarEntrySummaryPayload(OutputSchema):
     closes_on: str
     adjusted_closes_on: str
     shift_reason: str
+    holiday_coverage: Literal[
+        "national_and_territory", "territory_unverified", "national_only", "not_shifted", "calendar_unavailable"
+    ]
+    holiday_territory: str | None = None
     payment_cutoff_on: str | None = None
     evaluated_on: str
     days_overdue: int | None = None

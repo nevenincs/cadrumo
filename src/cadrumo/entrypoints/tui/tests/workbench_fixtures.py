@@ -22,6 +22,7 @@ from textual.screen import Screen
 
 from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
+from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.entrypoints.adapter_composition import build_censal_fetch_port
 
@@ -554,6 +555,7 @@ def _calendar_projection(scenario: WorkbenchFixtureScenario) -> DeclarationsCale
                 closes_on=date(2026, 4, 30),
                 adjusted_closes_on=date(2026, 4, 30),
                 shift_reason="fixture",
+                holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
                 evaluated_on=date(2026, 2, 1),
                 status=ObligationStatus.UPCOMING,
                 user_state=OverviewPeriodState.DUE,

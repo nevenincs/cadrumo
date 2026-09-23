@@ -49,6 +49,7 @@ from ..contribuyente.entity_type import EntityType, LegalEntityForm
 from ..contribuyente.renta_codes import FiscalResidency
 from .errors import DeadlineValidationError
 from .fact_context import DeadlineFactResolutionContext
+from .festivos import CalendarCCAA
 
 
 class IVARegime(str):
@@ -489,6 +490,11 @@ class TaxpayerProfile(BaseModel):
         entity_type: The taxpayer's entity type (natural person, legal
             entity, or attribution entity). ``None`` when the operator
             has not yet declared it.
+        holiday_territory: The autonomous community whose holidays extend
+            this taxpayer's filing deadlines (Ley 39/2015 art. 30.6).
+            ``None`` when the territory is not established from a declared
+            residence; deadlines then shift for national holidays only and
+            say so.
         declaration_roles: The filer's :class:`~core.aggregation.ThirdPartyDeclarationRole`
             memberships -- orthogonal to ``entity_type`` and independent of
             it. Drives Modelo 347 claves C, D and E; empty when the operator
@@ -628,6 +634,7 @@ class TaxpayerProfile(BaseModel):
     enrollment: ModeloEnrollment = Field(default_factory=ModeloEnrollment)
     fiscal_address_cadastral_reference: str = ""
     fiscal_address_is_habitual_vivienda: bool = False
+    holiday_territory: CalendarCCAA | None = None
     activity_start_date: date | None = None
     activity_end_date: date | None = None
     incn_prior_12_months: Decimal | None = None

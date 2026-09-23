@@ -3238,12 +3238,6 @@ cli:
       help: Render the deadline calendar for the active profile across the supplied
         date window. Applies festivos and business-day shifts. Local-only; never contacts
         AEAT.
-      shift:
-        business_day: Business day
-        calendar_unavailable: Calendar unavailable
-        domingo: Sunday
-        modelo_exception: Modelo exception
-        sabado: Saturday
       show_suppressed_help: Include filtered (non-applicable) obligations in the output
         with their applicability verdict and reason.
       to_help: Inclusive end date for the calendar window (ISO YYYY-MM-DD).

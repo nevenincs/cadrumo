@@ -36,6 +36,8 @@ from ...core.source_locator import SourceUrl
 from ...core.time.date_range import validate_inclusive_date_range as _validate_inclusive_date_range
 from ...domain.calculations.registry.applicability import ApplicabilityVerdict
 from ...domain.calculations.registry.ids import RevisionId
+from ...domain.deadlines.festivos import CalendarCCAA as _CalendarCCAA
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
 from ...domain.deadlines.festivos import HolidayJurisdiction as _HolidayJurisdiction
 from ...domain.deadlines.models import ObligationStatus as _ObligationStatus
 from ...domain.deadlines.models import Recovery as _Recovery
@@ -281,6 +283,8 @@ class OverviewCalendarEntry(BaseModel):
     shift_reason: str = Field(min_length=1, max_length=64)
     holiday_refs: tuple[str, ...] = Field(default_factory=tuple)
     jurisdictions: tuple[_HolidayJurisdiction, ...] = Field(default_factory=tuple)
+    holiday_coverage: _DeadlineHolidayCoverage
+    holiday_territory: _CalendarCCAA | None = None
     payment_cutoff_on: date | None = None
     evaluated_on: date
     days_overdue: NonNegativeInt | None = None
@@ -311,6 +315,22 @@ class OverviewCalendarEntry(BaseModel):
                 f"precedes closes_on ({self.closes_on}); the shift rule may only move "
                 f"a deadline forward.",
             )
+        return self
+
+    @model_validator(mode="after")
+    def _enforce_holiday_coverage_consistency(self) -> OverviewCalendarEntry:
+        known_territory = self.holiday_coverage in (
+            _DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+            _DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
+        )
+        if known_territory != (self.holiday_territory is not None):
+            raise ValueError("OverviewCalendarEntry.holiday_territory is present exactly when the territory is known")
+        unevaluated = self.holiday_coverage in (
+            _DeadlineHolidayCoverage.NOT_SHIFTED,
+            _DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
+        )
+        if unevaluated and self.adjusted_closes_on != self.closes_on:
+            raise ValueError("OverviewCalendarEntry cannot shift a deadline its holiday coverage did not evaluate")
         return self
 
     @model_validator(mode="after")
