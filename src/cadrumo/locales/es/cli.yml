@@ -1,6 +1,20 @@
 cli:
   app:
     ledger:
+      actividad_asset:
+        claim_help: Registra una previsión como amortización; repetirla de forma idéntica
+          devuelve el registro existente.
+        correct_help: Añade una revisión que sustituye a la revisión vigente del activo
+          (JSON).
+        create_help: Crea un activo a partir de su primera revisión inmutable (JSON).
+        filing_handoff_help: Muestra las amortizaciones registradas proyectadas en
+          el Modelo 100 y, de forma acumulada, en el Modelo 130.
+        forecast_help: Calcula, sin registrarla, la amortización que admite la elección
+          de la revisión para un intervalo.
+        group_help: 'Registro de activos de actividades económicas del IRPF: revisiones
+          inmutables, previsiones de amortización y amortizaciones registradas (LIS
+          art. 12).'
+        inspect_help: Muestra la cadena completa de revisiones de un activo.
       bienes_inversion:
         acquisition_year_help: Año de adquisición del bien.
         art108_help: Si el bien tiene la consideración de bien de inversión según

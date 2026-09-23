@@ -1,6 +1,20 @@
 cli:
   app:
     ledger:
+      actividad_asset:
+        claim_help: Registra una previsió com a amortització; repetir-la de manera
+          idèntica retorna el registre existent.
+        correct_help: Afegeix una revisió que substitueix la revisió vigent de l'actiu
+          (JSON).
+        create_help: Crea un actiu a partir de la seva primera revisió immutable (JSON).
+        filing_handoff_help: Mostra les amortitzacions registrades projectades al
+          Model 100 i, de manera acumulada, al Model 130.
+        forecast_help: Calcula, sense registrar-la, l'amortització que admet l'elecció
+          de la revisió per a un interval.
+        group_help: 'Registre d''actius d''activitats econòmiques de l''IRPF: revisions
+          immutables, previsions d''amortització i amortitzacions registrades (LIS
+          art. 12).'
+        inspect_help: Mostra la cadena completa de revisions d'un actiu.
       bienes_inversion:
         acquisition_year_help: Any d'adquisició del bé.
         art108_help: Si el bé té la consideració de bé d'inversió segons LIVA art.

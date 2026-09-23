@@ -1,6 +1,19 @@
 cli:
   app:
     ledger:
+      actividad_asset:
+        claim_help: Record a forecast as an amortization claim; an identical replay
+          returns the existing claim.
+        correct_help: Append a revision that supersedes the asset's current revision
+          (JSON).
+        create_help: Create an activity asset from its first immutable revision (JSON).
+        filing_handoff_help: Show the recorded claims projected to Modelo 100 and,
+          cumulatively, to Modelo 130.
+        forecast_help: Preview, without recording it, the amortization the revision's
+          election allows for a covered interval.
+        group_help: 'IRPF activity-asset register: immutable revisions, amortization
+          forecasts and recorded claims (LIS art. 12).'
+        inspect_help: Show one activity asset's complete revision chain.
       bienes_inversion:
         acquisition_year_help: Year the good was acquired.
         art108_help: Whether the good qualifies as a bien de inversión under LIVA

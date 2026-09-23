@@ -1,6 +1,21 @@
 cli:
   app:
     ledger:
+      actividad_asset:
+        claim_help: Előrejelzés rögzítése értékcsökkenési elszámolásként; az azonos
+          ismétlés a meglévő bejegyzést adja vissza.
+        correct_help: Az eszköz aktuális változatát felváltó új változat hozzáfűzése
+          (JSON).
+        create_help: Eszköz létrehozása az első, megváltoztathatatlan változatából
+          (JSON).
+        filing_handoff_help: A rögzített elszámolások megjelenítése a 100-as nyomtatványon
+          és halmozottan a 130-as nyomtatványon.
+        forecast_help: A változat választása szerinti értékcsökkenés kiszámítása egy
+          időszakra, rögzítés nélkül.
+        group_help: 'IRPF gazdasági tevékenységi eszköznyilvántartás: megváltoztathatatlan
+          változatok, értékcsökkenési előrejelzések és rögzített elszámolások (LIS
+          12. cikk).'
+        inspect_help: Egy eszköz teljes változatláncának megjelenítése.
       bienes_inversion:
         acquisition_year_help: A jószág beszerzésének éve.
         art108_help: A jószág a LIVA 108. cikk szerint beruházási jószágnak minősül-e.
