@@ -4,11 +4,8 @@
 @capture work_unit_id result.work_unit_id
 @step Show the work unit status by its reference number.
 aeat --format json app modelo work status {work_unit_id}
-@setup aeat --format json app modelo work attest-m303-exonerado-390 --year 2026 --period 1T --observed-at 2026-03-31T12:00:00+00:00
-@capture m303_attestation_id result.attachment_id
-@capture m303_attestation_sha256 result.sha256
 @step Calculate by the same reference number.
-aeat --format json app modelo work calculate {work_unit_id} --no-joint-return-elected --no-annual-volume-nonzero --m303-exonerado-390-attachment-id {m303_attestation_id} --m303-exonerado-390-sha256 {m303_attestation_sha256}
+aeat --format json app modelo work calculate {work_unit_id} --no-joint-return-elected
 @step List the saved revisions by the same reference number.
 @result aeat --format json app modelo work revisions {work_unit_id}
 @expect result.revision_count == 1

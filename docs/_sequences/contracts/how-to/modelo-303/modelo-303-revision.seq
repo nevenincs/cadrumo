@@ -1,9 +1,6 @@
 :seed: autonomo-irpf-2026
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@setup aeat --format json app modelo work attest-m303-exonerado-390 --year 2026 --period 1T --observed-at 2026-03-31T12:00:00+00:00
-@capture m303_attestation_id result.attachment_id
-@capture m303_attestation_sha256 result.sha256
-@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected --no-annual-volume-nonzero --m303-exonerado-390-attachment-id {m303_attestation_id} --m303-exonerado-390-sha256 {m303_attestation_sha256}
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected
 @step List the saved calculation revisions for the filing.
 aeat --format json app modelo work revisions --modelo 303 --year 2026 --period 1T
 @step Show the current revision's persisted casilla values and provenance.

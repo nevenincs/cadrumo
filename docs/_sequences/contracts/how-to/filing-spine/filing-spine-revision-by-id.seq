@@ -1,11 +1,8 @@
 :seed: filing-spine-303-ledger
 @step Create the work unit for the filing target.
 @setup aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@setup aeat --format json app modelo work attest-m303-exonerado-390 --year 2026 --period 1T --observed-at 2026-03-31T12:00:00+00:00
-@capture m303_attestation_id result.attachment_id
-@capture m303_attestation_sha256 result.sha256
 @step Calculate the quarter so a saved revision carries a reference number.
-@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected --no-annual-volume-nonzero --m303-exonerado-390-attachment-id {m303_attestation_id} --m303-exonerado-390-sha256 {m303_attestation_sha256}
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected
 @capture revision_id result.calculation_revision_id
 @step View one specific saved calculation by its reference number.
 @result aeat --format json app modelo work revision {revision_id}

@@ -1,11 +1,8 @@
 :seed: iva-evidence-2026
 @step Open the first-quarter Modelo 303 draft.
 aeat --format json app modelo work create --modelo 303 --year 2026 --period 1T
-@setup aeat --format json app modelo work attest-m303-exonerado-390 --year 2026 --period 1T --observed-at 2026-03-31T12:00:00+00:00
-@capture m303_attestation_id result.attachment_id
-@capture m303_attestation_sha256 result.sha256
 @step Calculate the quarter's IVA from the classified, evidenced ledger.
-aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected --no-annual-volume-nonzero --m303-exonerado-390-attachment-id {m303_attestation_id} --m303-exonerado-390-sha256 {m303_attestation_sha256}
+aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected
 @expect result.casilla_values.71 == "105.00"
 @step Verify the draft; verification captures the evidence over the contributing rows.
 aeat --format json app modelo work verify --modelo 303 --year 2026 --period 1T

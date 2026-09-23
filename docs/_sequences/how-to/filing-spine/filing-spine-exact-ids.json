@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "sha256:17853e99",
+          "invoice_number": "C-2026-0087",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -281,57 +281,6 @@
         "app",
         "modelo",
         "work",
-        "attest-m303-exonerado-390",
-        "--year",
-        "2026",
-        "--period",
-        "1T",
-        "--observed-at",
-        "2026-03-31T12:00:00+00:00"
-      ],
-      "captures": [
-        {
-          "json_path": "result.attachment_id",
-          "name": "m303_attestation_id",
-          "value": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
-        },
-        {
-          "json_path": "result.sha256",
-          "name": "m303_attestation_sha256",
-          "value": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
-        }
-      ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.attest-m303-exonerado-390",
-        "notices": [],
-        "result": {
-          "attachment_id": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0",
-          "filing_year": 2026,
-          "operation": "modelo.work.attest-m303-exonerado-390",
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "sha256": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "modelo",
-        "work",
         "calculate",
         "--modelo",
         "303",
@@ -339,18 +288,13 @@
         "2026",
         "--period",
         "1T",
-        "--no-joint-return-elected",
-        "--no-annual-volume-nonzero",
-        "--m303-exonerado-390-attachment-id",
-        "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0",
-        "--m303-exonerado-390-sha256",
-        "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
+        "--no-joint-return-elected"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "revision_id",
-          "value": "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387"
+          "value": "e845c7e7fd41ea9cd826bbd5cdbab8bcca207bcfceea2216d1e20e4b19fc16a0"
         }
       ],
       "envelope": {
@@ -395,7 +339,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387",
+          "calculation_revision_id": "e845c7e7fd41ea9cd826bbd5cdbab8bcca207bcfceea2216d1e20e4b19fc16a0",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3900,7 +3844,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision e845c7e7fd41ea9cd826bbd5cdbab8bcca207bcfceea2216d1e20e4b19fc16a0 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -3972,7 +3916,7 @@
         "modelo",
         "work",
         "verify",
-        "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387"
+        "e845c7e7fd41ea9cd826bbd5cdbab8bcca207bcfceea2216d1e20e4b19fc16a0"
       ],
       "captures": [],
       "envelope": {
@@ -4028,7 +3972,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387",
+          "calculation_revision_id": "e845c7e7fd41ea9cd826bbd5cdbab8bcca207bcfceea2216d1e20e4b19fc16a0",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4097,7 +4041,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "5349a165c3f9b363a85850cd889e1ef120dbdb4bf8f3782c85b71f8940256f7b",
+          "verification_report_id": "e345422610fa7bf01e32fb97eb347a4be468d6fa63ea18b76db43163ea416e1d",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -4118,7 +4062,7 @@
         "modelo",
         "work",
         "file",
-        "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387"
+        "e845c7e7fd41ea9cd826bbd5cdbab8bcca207bcfceea2216d1e20e4b19fc16a0"
       ],
       "captures": [],
       "envelope": {
@@ -4130,13 +4074,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387",
+          "calculation_revision_id": "e845c7e7fd41ea9cd826bbd5cdbab8bcca207bcfceea2216d1e20e4b19fc16a0",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "5439d5f51142fdbeca89c257e3a9f4c9c3b7867047d3b00e6481793638d544ed",
+          "filing_record_id": "5096196102b03836a234da90f8bb1767fa820a8ded38cd0770dfb28695609a34",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,
@@ -4173,7 +4117,7 @@
         "export",
         "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
         "--revision",
-        "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387",
+        "e845c7e7fd41ea9cd826bbd5cdbab8bcca207bcfceea2216d1e20e4b19fc16a0",
         "--output",
         "./modelo-303.boe"
       ],
@@ -4186,7 +4130,7 @@
           "category": "REFUSED",
           "code": "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE",
           "context": {
-            "calculation_revision_id": "7edf8588e9faf42f2901a10f8c3e84bcee4e20b0b1b4a24114338b41df340387",
+            "calculation_revision_id": "e845c7e7fd41ea9cd826bbd5cdbab8bcca207bcfceea2216d1e20e4b19fc16a0",
             "developer_positions": "101-109",
             "modelo": "303",
             "program_positions": "93-96",

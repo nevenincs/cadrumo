@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "sha256:17853e99",
+          "invoice_number": "C-2026-0087",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -246,71 +246,15 @@
         "app",
         "modelo",
         "work",
-        "attest-m303-exonerado-390",
-        "--year",
-        "2026",
-        "--period",
-        "1T",
-        "--observed-at",
-        "2026-03-31T12:00:00+00:00"
-      ],
-      "captures": [
-        {
-          "json_path": "result.attachment_id",
-          "name": "m303_attestation_id",
-          "value": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
-        },
-        {
-          "json_path": "result.sha256",
-          "name": "m303_attestation_sha256",
-          "value": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
-        }
-      ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.attest-m303-exonerado-390",
-        "notices": [],
-        "result": {
-          "attachment_id": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0",
-          "filing_year": 2026,
-          "operation": "modelo.work.attest-m303-exonerado-390",
-          "period": {
-            "code": "1T",
-            "filing_year": 2026
-          },
-          "sha256": "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "modelo",
-        "work",
         "calculate",
         "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
-        "--no-joint-return-elected",
-        "--no-annual-volume-nonzero",
-        "--m303-exonerado-390-attachment-id",
-        "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0",
-        "--m303-exonerado-390-sha256",
-        "0be893f88272cba8eb444978a0c880b68edc118f37cdcbaa989bd0a1c7861dd0"
+        "--no-joint-return-elected"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec"
+          "value": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c"
         }
       ],
       "envelope": {
@@ -355,7 +299,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec",
+          "calculation_revision_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -3860,7 +3804,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -3921,7 +3865,7 @@
         "modelo",
         "work",
         "verify",
-        "004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec"
+        "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c"
       ],
       "captures": [],
       "envelope": {
@@ -3962,7 +3906,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec",
+          "calculation_revision_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4012,7 +3956,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "943a7e7923fdee0ab1087fd88bfca18ca084d1af6fc95b7f9c0b186c713cd070",
+          "verification_report_id": "1cc1f3f7135ab19abf0a569af90478d9bd2c6c141b698a09f2fa52fa00a8d91e",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -4084,7 +4028,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec",
+          "calculation_revision_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -7659,7 +7603,7 @@
           "category": "REFUSED",
           "code": "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE",
           "context": {
-            "calculation_revision_id": "004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec",
+            "calculation_revision_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
             "developer_positions": "101-109",
             "modelo": "303",
             "program_positions": "93-96",
@@ -7706,13 +7650,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "004e1e25932a1ad4afa7f2e047f1a60a2a096ffea0904dcfa30b895042b0d3ec",
+          "calculation_revision_id": "95f9f2f10aa3fcf106e938a099784f9051be1a8c648e51425560b88838bca37c",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "a5235d287a3da542d66cb92fa3ddcfe478532e0fbee550bdd33d31a6da462ca3",
+          "filing_record_id": "dbc89a2a0aec31221ac7c1a9e0eb7e5b18be104c27cc1785a3f753dc2158fe8d",
           "filing_year": 2026,
           "kind": "internal_filing",
           "live_submission": false,

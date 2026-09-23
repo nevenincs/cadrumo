@@ -4,11 +4,8 @@
 @capture work_unit_id result.work_unit_id
 @step Record another sale so this exact-reference example owns a fresh calculation revision under cumulative page execution.
 @setup aeat app ledger add --date 2026-03-25 --amount 60.50 --direction INCOMING --description "Exact reference transition sale" --classification BUSINESS --taxable-base 50 --iva-rate 0.21 --iva-amount 10.50 --iva-category domestic_general --idempotency-key filing-spine-exact-reference-transition
-@setup aeat --format json app modelo work attest-m303-exonerado-390 --year 2026 --period 1T --observed-at 2026-03-31T12:00:00+00:00
-@capture m303_attestation_id result.attachment_id
-@capture m303_attestation_sha256 result.sha256
 @step Calculate the quarter so a saved revision carries a reference number.
-@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected --no-annual-volume-nonzero --m303-exonerado-390-attachment-id {m303_attestation_id} --m303-exonerado-390-sha256 {m303_attestation_sha256}
+@setup aeat --format json app modelo work calculate --modelo 303 --year 2026 --period 1T --no-joint-return-elected
 @capture revision_id result.calculation_revision_id
 @step Verify a specific calculation by its reference number.
 aeat --format json app modelo work verify {revision_id}

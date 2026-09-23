@@ -302,7 +302,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "5c15a2fb5cc808d5",
           "invoice_date": "2025-03-05",
-          "invoice_number": "sha256:45c2e503",
+          "invoice_number": "C-2025-0087",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -414,71 +414,15 @@
         "app",
         "modelo",
         "work",
-        "attest-m303-exonerado-390",
-        "--year",
-        "2025",
-        "--period",
-        "1T",
-        "--observed-at",
-        "2025-03-31T12:00:00+00:00"
-      ],
-      "captures": [
-        {
-          "json_path": "result.attachment_id",
-          "name": "attestation1",
-          "value": "911f166b5d11f0cbbc050f3849ad41ff359565b6fa61219fcebbe1a9a5968078"
-        },
-        {
-          "json_path": "result.sha256",
-          "name": "attestation_sha256_1",
-          "value": "911f166b5d11f0cbbc050f3849ad41ff359565b6fa61219fcebbe1a9a5968078"
-        }
-      ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.attest-m303-exonerado-390",
-        "notices": [],
-        "result": {
-          "attachment_id": "911f166b5d11f0cbbc050f3849ad41ff359565b6fa61219fcebbe1a9a5968078",
-          "filing_year": 2025,
-          "operation": "modelo.work.attest-m303-exonerado-390",
-          "period": {
-            "code": "1T",
-            "filing_year": 2025
-          },
-          "sha256": "911f166b5d11f0cbbc050f3849ad41ff359565b6fa61219fcebbe1a9a5968078"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "modelo",
-        "work",
         "calculate",
         "09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3",
-        "--no-joint-return-elected",
-        "--no-annual-volume-nonzero",
-        "--m303-exonerado-390-attachment-id",
-        "911f166b5d11f0cbbc050f3849ad41ff359565b6fa61219fcebbe1a9a5968078",
-        "--m303-exonerado-390-sha256",
-        "911f166b5d11f0cbbc050f3849ad41ff359565b6fa61219fcebbe1a9a5968078"
+        "--no-joint-return-elected"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "cr1",
-          "value": "6b435f2d3232c6724e8bf312f72ec378158ed653992577b6ff276513a153ba33"
+          "value": "c58c93fda3add2832bc6147f34f480b94c4774698b5f08fbfc64316f9ca17065"
         }
       ],
       "envelope": {
@@ -552,7 +496,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "6b435f2d3232c6724e8bf312f72ec378158ed653992577b6ff276513a153ba33",
+          "calculation_revision_id": "c58c93fda3add2832bc6147f34f480b94c4774698b5f08fbfc64316f9ca17065",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -4040,7 +3984,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 6b435f2d3232c6724e8bf312f72ec378158ed653992577b6ff276513a153ba33 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision c58c93fda3add2832bc6147f34f480b94c4774698b5f08fbfc64316f9ca17065 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -4101,7 +4045,7 @@
         "modelo",
         "work",
         "verify",
-        "6b435f2d3232c6724e8bf312f72ec378158ed653992577b6ff276513a153ba33"
+        "c58c93fda3add2832bc6147f34f480b94c4774698b5f08fbfc64316f9ca17065"
       ],
       "captures": [],
       "envelope": {
@@ -4142,7 +4086,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "6b435f2d3232c6724e8bf312f72ec378158ed653992577b6ff276513a153ba33",
+          "calculation_revision_id": "c58c93fda3add2832bc6147f34f480b94c4774698b5f08fbfc64316f9ca17065",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4192,7 +4136,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "86f03b00ba49f8d6ba18553a75b1854ac8d63f68fad47d0d13085b8b7e413dfd",
+          "verification_report_id": "4301ca87cce2c3066a09e02351323c8d734d787d046cefa331bb96bb0a8aaeca",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -4213,7 +4157,7 @@
         "modelo",
         "work",
         "file",
-        "6b435f2d3232c6724e8bf312f72ec378158ed653992577b6ff276513a153ba33"
+        "c58c93fda3add2832bc6147f34f480b94c4774698b5f08fbfc64316f9ca17065"
       ],
       "captures": [],
       "envelope": {
@@ -4225,13 +4169,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "6b435f2d3232c6724e8bf312f72ec378158ed653992577b6ff276513a153ba33",
+          "calculation_revision_id": "c58c93fda3add2832bc6147f34f480b94c4774698b5f08fbfc64316f9ca17065",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "35e9e31eaf3a9c5eaf4da66171e69d1baa2dcab3aff84e56b9ff44d5ed00ed1c",
+          "filing_record_id": "3b51a73d3c8533db94334f5da6fd3ca3bb30900fc996ddfdceec7c7f5d4324e6",
           "filing_year": 2025,
           "kind": "internal_filing",
           "live_submission": false,
@@ -4332,71 +4276,15 @@
         "app",
         "modelo",
         "work",
-        "attest-m303-exonerado-390",
-        "--year",
-        "2025",
-        "--period",
-        "2T",
-        "--observed-at",
-        "2025-06-30T12:00:00+00:00"
-      ],
-      "captures": [
-        {
-          "json_path": "result.attachment_id",
-          "name": "attestation2",
-          "value": "13ebfb6936108d2c799cb13d2276d14e43c9f4adc5a9d01c52af59e5ed93236d"
-        },
-        {
-          "json_path": "result.sha256",
-          "name": "attestation_sha256_2",
-          "value": "13ebfb6936108d2c799cb13d2276d14e43c9f4adc5a9d01c52af59e5ed93236d"
-        }
-      ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.attest-m303-exonerado-390",
-        "notices": [],
-        "result": {
-          "attachment_id": "13ebfb6936108d2c799cb13d2276d14e43c9f4adc5a9d01c52af59e5ed93236d",
-          "filing_year": 2025,
-          "operation": "modelo.work.attest-m303-exonerado-390",
-          "period": {
-            "code": "2T",
-            "filing_year": 2025
-          },
-          "sha256": "13ebfb6936108d2c799cb13d2276d14e43c9f4adc5a9d01c52af59e5ed93236d"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "modelo",
-        "work",
         "calculate",
         "af6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c",
-        "--no-joint-return-elected",
-        "--no-annual-volume-nonzero",
-        "--m303-exonerado-390-attachment-id",
-        "13ebfb6936108d2c799cb13d2276d14e43c9f4adc5a9d01c52af59e5ed93236d",
-        "--m303-exonerado-390-sha256",
-        "13ebfb6936108d2c799cb13d2276d14e43c9f4adc5a9d01c52af59e5ed93236d"
+        "--no-joint-return-elected"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "cr2",
-          "value": "914342880de9faf2ef0f534cec2a18a68a9494b88ba08cc84530d558c9e26976"
+          "value": "04111a637a333809504b141f5b4057d824d0d99c505d62c65997e3f5ec7d7e65"
         }
       ],
       "envelope": {
@@ -4470,7 +4358,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "914342880de9faf2ef0f534cec2a18a68a9494b88ba08cc84530d558c9e26976",
+          "calculation_revision_id": "04111a637a333809504b141f5b4057d824d0d99c505d62c65997e3f5ec7d7e65",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -7958,7 +7846,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 914342880de9faf2ef0f534cec2a18a68a9494b88ba08cc84530d558c9e26976 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 04111a637a333809504b141f5b4057d824d0d99c505d62c65997e3f5ec7d7e65 (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -8008,7 +7896,7 @@
         "modelo",
         "work",
         "verify",
-        "914342880de9faf2ef0f534cec2a18a68a9494b88ba08cc84530d558c9e26976"
+        "04111a637a333809504b141f5b4057d824d0d99c505d62c65997e3f5ec7d7e65"
       ],
       "captures": [],
       "envelope": {
@@ -8051,7 +7939,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "914342880de9faf2ef0f534cec2a18a68a9494b88ba08cc84530d558c9e26976",
+          "calculation_revision_id": "04111a637a333809504b141f5b4057d824d0d99c505d62c65997e3f5ec7d7e65",
           "completeness_status": "complete",
           "findings": [
             {
@@ -8110,7 +7998,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "6efd19b2c9a7325e93a614f4c670936cc2385bea10fc5173a6c8387ef392a6ce",
+          "verification_report_id": "8407941a9e3e88f589724f4eb7d05b62daba0ff69fdaf8d8a77bb6e3a592fc27",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -8131,7 +8019,7 @@
         "modelo",
         "work",
         "file",
-        "914342880de9faf2ef0f534cec2a18a68a9494b88ba08cc84530d558c9e26976"
+        "04111a637a333809504b141f5b4057d824d0d99c505d62c65997e3f5ec7d7e65"
       ],
       "captures": [],
       "envelope": {
@@ -8143,13 +8031,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "914342880de9faf2ef0f534cec2a18a68a9494b88ba08cc84530d558c9e26976",
+          "calculation_revision_id": "04111a637a333809504b141f5b4057d824d0d99c505d62c65997e3f5ec7d7e65",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "db5cc3e84da78241be2cbcd41b26b7a8f939a9ddd9f4d68c4a38fd86dfc3695c",
+          "filing_record_id": "e2cdb102fb146851ca0e84350862269033368e45da694400a245df452e38c4f7",
           "filing_year": 2025,
           "kind": "internal_filing",
           "live_submission": false,
@@ -8250,71 +8138,15 @@
         "app",
         "modelo",
         "work",
-        "attest-m303-exonerado-390",
-        "--year",
-        "2025",
-        "--period",
-        "3T",
-        "--observed-at",
-        "2025-09-30T12:00:00+00:00"
-      ],
-      "captures": [
-        {
-          "json_path": "result.attachment_id",
-          "name": "attestation3",
-          "value": "4baba0c9d23c4a95af305e3fbe2f017a2a2d8fcc3f89c6d600bea42ba332f01d"
-        },
-        {
-          "json_path": "result.sha256",
-          "name": "attestation_sha256_3",
-          "value": "4baba0c9d23c4a95af305e3fbe2f017a2a2d8fcc3f89c6d600bea42ba332f01d"
-        }
-      ],
-      "envelope": {
-        "active_profile": "docs-sequence-sandbox",
-        "command": "modelo.work.attest-m303-exonerado-390",
-        "notices": [],
-        "result": {
-          "attachment_id": "4baba0c9d23c4a95af305e3fbe2f017a2a2d8fcc3f89c6d600bea42ba332f01d",
-          "filing_year": 2025,
-          "operation": "modelo.work.attest-m303-exonerado-390",
-          "period": {
-            "code": "3T",
-            "filing_year": 2025
-          },
-          "sha256": "4baba0c9d23c4a95af305e3fbe2f017a2a2d8fcc3f89c6d600bea42ba332f01d"
-        },
-        "schema_version": "2",
-        "status": "success"
-      },
-      "envelope_source": "stdout",
-      "exit_code": 0,
-      "kind": "setup",
-      "stderr_text": null,
-      "text": null
-    },
-    {
-      "argv": [
-        "aeat",
-        "--format",
-        "json",
-        "app",
-        "modelo",
-        "work",
         "calculate",
         "e214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c",
-        "--no-joint-return-elected",
-        "--no-annual-volume-nonzero",
-        "--m303-exonerado-390-attachment-id",
-        "4baba0c9d23c4a95af305e3fbe2f017a2a2d8fcc3f89c6d600bea42ba332f01d",
-        "--m303-exonerado-390-sha256",
-        "4baba0c9d23c4a95af305e3fbe2f017a2a2d8fcc3f89c6d600bea42ba332f01d"
+        "--no-joint-return-elected"
       ],
       "captures": [
         {
           "json_path": "result.calculation_revision_id",
           "name": "cr3",
-          "value": "9d2a240e90d7e4a014408af8656ab8314dfc3dc6880a37b2bd58641c1be1683f"
+          "value": "50bd3524d826e5296b94beb5de50d80062ea5920a61f8e3580e29ea8038a6a7b"
         }
       ],
       "envelope": {
@@ -8388,7 +8220,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "9d2a240e90d7e4a014408af8656ab8314dfc3dc6880a37b2bd58641c1be1683f",
+          "calculation_revision_id": "50bd3524d826e5296b94beb5de50d80062ea5920a61f8e3580e29ea8038a6a7b",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -11876,7 +11708,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 9d2a240e90d7e4a014408af8656ab8314dfc3dc6880a37b2bd58641c1be1683f (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 50bd3524d826e5296b94beb5de50d80062ea5920a61f8e3580e29ea8038a6a7b (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -11926,7 +11758,7 @@
         "modelo",
         "work",
         "verify",
-        "9d2a240e90d7e4a014408af8656ab8314dfc3dc6880a37b2bd58641c1be1683f"
+        "50bd3524d826e5296b94beb5de50d80062ea5920a61f8e3580e29ea8038a6a7b"
       ],
       "captures": [],
       "envelope": {
@@ -11969,7 +11801,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "9d2a240e90d7e4a014408af8656ab8314dfc3dc6880a37b2bd58641c1be1683f",
+          "calculation_revision_id": "50bd3524d826e5296b94beb5de50d80062ea5920a61f8e3580e29ea8038a6a7b",
           "completeness_status": "complete",
           "findings": [
             {
@@ -12028,7 +11860,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "8cc4225b2e0609f8dfabd946abf71b028dfec97b6b4f7de7fec2d61e7388d8c4",
+          "verification_report_id": "33054291704de947bff9f9925f3602a07359004ecdfa711840f18c0796a5ecf9",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -12049,7 +11881,7 @@
         "modelo",
         "work",
         "file",
-        "9d2a240e90d7e4a014408af8656ab8314dfc3dc6880a37b2bd58641c1be1683f"
+        "50bd3524d826e5296b94beb5de50d80062ea5920a61f8e3580e29ea8038a6a7b"
       ],
       "captures": [],
       "envelope": {
@@ -12061,13 +11893,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "9d2a240e90d7e4a014408af8656ab8314dfc3dc6880a37b2bd58641c1be1683f",
+          "calculation_revision_id": "50bd3524d826e5296b94beb5de50d80062ea5920a61f8e3580e29ea8038a6a7b",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "c412ccfd7d9ba2197d1aa6af77b635c0f3c4834e009961ac4a6b6c8937a38795",
+          "filing_record_id": "a0a56e9dd2b9fc9ff6969376e4ff9c49294d5e54f18ad2e1a9324cf20d82b7ac",
           "filing_year": 2025,
           "kind": "internal_filing",
           "live_submission": false,
@@ -12222,7 +12054,6 @@
         "calculate",
         "16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138",
         "--no-joint-return-elected",
-        "--no-annual-volume-nonzero",
         "--m303-exonerado-390-attachment-id",
         "ce64690c0506d2399f617a5500251ab59295cc7462704d10fbf22277e9aaee20",
         "--m303-exonerado-390-sha256",
@@ -12232,7 +12063,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "cr4",
-          "value": "c23d8eee64bd7970780caf41801fe117a1ffe6e56ae1a9286a017d7563e862be"
+          "value": "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c"
         }
       ],
       "envelope": {
@@ -12306,7 +12137,7 @@
             "modelo-303-recargo-equivalencia-reducido-cuota": "0",
             "modelo-303-recargo-equivalencia-super-reducido-cuota": "0"
           },
-          "calculation_revision_id": "c23d8eee64bd7970780caf41801fe117a1ffe6e56ae1a9286a017d7563e862be",
+          "calculation_revision_id": "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c",
           "casilla_values": {
             "01": "0",
             "02": "0",
@@ -15794,7 +15625,7 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision c23d8eee64bd7970780caf41801fe117a1ffe6e56ae1a9286a017d7563e862be (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "ledger_iva_aggregation",
@@ -15844,7 +15675,7 @@
         "modelo",
         "work",
         "verify",
-        "c23d8eee64bd7970780caf41801fe117a1ffe6e56ae1a9286a017d7563e862be"
+        "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c"
       ],
       "captures": [],
       "envelope": {
@@ -15887,7 +15718,7 @@
           }
         ],
         "result": {
-          "calculation_revision_id": "c23d8eee64bd7970780caf41801fe117a1ffe6e56ae1a9286a017d7563e862be",
+          "calculation_revision_id": "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c",
           "completeness_status": "complete",
           "findings": [
             {
@@ -15946,7 +15777,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "4cc6b882e5d96c50be85614b28b7943cbc8de40327bc73fb0d62a84f71a3fdd3",
+          "verification_report_id": "3c7f6e11bcc17334d36f4374dee66ca87544779fcb2b79e7e16ebd15f4eef3b3",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
@@ -15967,7 +15798,7 @@
         "modelo",
         "work",
         "file",
-        "c23d8eee64bd7970780caf41801fe117a1ffe6e56ae1a9286a017d7563e862be"
+        "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c"
       ],
       "captures": [],
       "envelope": {
@@ -15979,13 +15810,13 @@
           "aeat_register": null,
           "amends_filing_record_id": null,
           "bucket_id": "<bucket-id>",
-          "calculation_revision_id": "c23d8eee64bd7970780caf41801fe117a1ffe6e56ae1a9286a017d7563e862be",
+          "calculation_revision_id": "6fbc82e271baaad97b267e78dfad3e4c39cef67175bc2f097b02990b8ba4094c",
           "confirmation": "pendiente",
           "declaration_kind": "original",
           "external_evidence": null,
           "filed_at": "2026-04-01T09:00:00+00:00",
           "filed_by": "docs-sequence-sandbox",
-          "filing_record_id": "e87f6aad6d00831a79d75ce145fda681b2aaaedeecf2626fe8c004258d0ef478",
+          "filing_record_id": "153935b48ad6452b88db71b6b4590776e72405d526ffbbd197f4103e4cb523ac",
           "filing_year": 2025,
           "kind": "internal_filing",
           "live_submission": false,
@@ -25636,7 +25467,7 @@
       "exit_code": 0,
       "kind": "command",
       "stderr_text": null,
-      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.list\ninclude_discarded\tFalse\nwork_unit_count\t5\nshort_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\nf0269e6476b3\t09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3\t303\t2025\t1T\t2025\tfiled\t6513a153ba33\t6513a153ba33\t303-2025-1T\n7d5697fb590c\taf6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c\t303\t2025\t2T\t2025\tfiled\td558c9e26976\td558c9e26976\t303-2025-2T\n6adc206d0a2c\te214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c\t303\t2025\t3T\t2025\tfiled\t641c1be1683f\t641c1be1683f\t303-2025-3T\nf82ef1b8e138\t16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138\t303\t2025\t4T\t2025\tfiled\t7d7563e862be\t7d7563e862be\t303-2025-4T\nb24b688e777b\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\t390\t2025\t0A\t2025\tdraft\t81a768ba4791\t\t390-2025-0A\nnotice\tmodelo.work.list.selection_required\tChoose one work unit before continuing.\n"
+      "text": "active_profile\tdocs-sequence-sandbox\noperation\tmodelo.work.list\ninclude_discarded\tFalse\nwork_unit_count\t5\nshort_work_unit_id\twork_unit_id\tmodelo\tyear\tperiod\trevision_id\tstate\tcurrent_revision\tfiled_revision\tname\nf0269e6476b3\t09420aa5c5d838d4a8a8b9198fa2adc02ff2573a0983d696a225f0269e6476b3\t303\t2025\t1T\t2025\tfiled\t316f9ca17065\t316f9ca17065\t303-2025-1T\n7d5697fb590c\taf6d15eead73e8acebfb6efaefcbde65819a23082408d091b4947d5697fb590c\t303\t2025\t2T\t2025\tfiled\te3f5ec7d7e65\te3f5ec7d7e65\t303-2025-2T\n6adc206d0a2c\te214f91933b3bae05a0b032a61021b63be883fd5836372825eb06adc206d0a2c\t303\t2025\t3T\t2025\tfiled\t9ea8038a6a7b\t9ea8038a6a7b\t303-2025-3T\nf82ef1b8e138\t16b8f7f898fc8458c8dc67f8cdaf35f8382fc22e9f2e0742869ef82ef1b8e138\t303\t2025\t4T\t2025\tfiled\t990b8ba4094c\t990b8ba4094c\t303-2025-4T\nb24b688e777b\t66d74724a7f3194144d855c6ccee80b76ca7ed72ad50f7192d7eb24b688e777b\t390\t2025\t0A\t2025\tdraft\t81a768ba4791\t\t390-2025-0A\nnotice\tmodelo.work.list.selection_required\tChoose one work unit before continuing.\n"
     },
     {
       "argv": [
