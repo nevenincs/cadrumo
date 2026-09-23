@@ -299,6 +299,17 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             target_command_key="ledger.review",
         ),
         ActionCatalogueEntry(
+            action_id="operator.ledger.actividad_asset.correct_revision",
+            target_command_key="ledger.actividad_asset.correct",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="revision_json",
+                    source=ActionArgumentSource.REQUEST_CONTEXT,
+                    source_key="revision_json",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.ledger.preflight",
             target_command_key="ledger.preflight",
             argument_specifications=(

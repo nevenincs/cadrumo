@@ -26,6 +26,7 @@ from ...renta.actividad_asset.errors import (
     ActividadAssetIncompleteError,
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
+    VehicleAffectationRecovery,
 )
 from ...renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...renta.actividad_asset.schedule import ScheduleAuthority, add_fractional_years, add_years
@@ -603,10 +604,15 @@ def _require_vehicle_affectation(parameters: _Parameters, asset_revision: Activi
         restricted = _class_flag(parameters, _RESTRICTED_VEHICLE_CLASS_ID, class_key)
         references = (parameters.reference(_RESTRICTED_VEHICLE_CLASS_ID, class_key),)
     if affectation is None:
-        if restricted:
+        if restricted and class_key is not None:
             raise ActividadAssetIncompleteError(
-                f"table class {class_key!r} can hold a vehicle RIRPF art. 22.4 restricts, so it requires a "
-                "vehicle affectation declaration",
+                f"activity asset {asset_revision.asset_id!r} is in table class {class_key!r}, which can hold a "
+                "vehicle RIRPF art. 22.4 restricts, so it requires a vehicle affectation declaration",
+                vehicle_affectation_recovery=VehicleAffectationRecovery(
+                    asset_id=asset_revision.asset_id,
+                    revision_id=asset_revision.revision_id,
+                    class_key=class_key,
+                ),
             )
         if election.method is AmortizationMethod.ELECTRIC_VEHICLE_FREE:
             raise ActividadAssetIncompleteError("electric-vehicle free depreciation requires a vehicle declaration")

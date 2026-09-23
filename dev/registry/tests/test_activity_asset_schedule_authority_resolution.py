@@ -18,6 +18,7 @@ import pytest
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
 from cadrumo.application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
+from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -935,6 +936,32 @@ def test_constant_percentage_and_sum_of_digits_cannot_be_adopted_after_another_m
     linear = _asset(_linear("maquinaria"), basis="10000", in_service=date(2024, 1, 1), opening="3000")
     after_constant = AssetScheduleHistory(election_fingerprints_before_tax_year=(constant.amortization.fingerprint,))
     assert _charge(linear, history=after_constant).amount == Decimal("1200.00")  # 10,000 x 12%
+
+
+def test_an_undeclared_vehicle_refuses_with_its_correction_action_until_corrected() -> None:
+    operations, _ = _operations()
+    car = _asset(_linear("transporte-externo"), basis="20000", asset_id="undeclared-car")
+    operations.create(car)
+
+    with pytest.raises(ActividadAssetIncompleteError) as refused:
+        operations.forecast(asset_id=car.asset_id, covered_from=_YEAR_START, covered_until=_YEAR_END)
+
+    verdict = refused.value.terminal_precondition_verdict
+    assert isinstance(verdict, PreconditionVerdict)
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.ledger.actividad_asset.correct_revision"
+    assert verdict.missing_argument_names == ("revision_json",)
+    assert verdict.evidence[0].values["asset_id"] == "undeclared-car"
+    assert verdict.evidence[0].values["revision_id"] == car.revision_id
+    assert "undeclared-car" in str(refused.value)
+    assert "aeat " not in str(refused.value)
+    corrected = car.model_copy(
+        update={"revision_number": 2, "supersedes_revision_id": car.revision_id, "vehicle_affectation": _vehicle()},
+    )
+    operations.correct(corrected)
+    # The corrected car is used only for the activity: 20,000 x 16% = 3,200.00.
+    forecast = operations.forecast(asset_id=car.asset_id, covered_from=_YEAR_START, covered_until=_YEAR_END)
+    assert forecast.amount == Decimal("3200.00")
 
 
 def test_a_superseding_claim_is_forecast_without_the_claim_it_replaces() -> None:

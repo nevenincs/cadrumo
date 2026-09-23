@@ -1,6 +1,9 @@
 """Errors raised by the IRPF activity-asset domain."""
 
-from ....core.errors.hierarchy import CadrumoError
+from collections.abc import Mapping
+from dataclasses import dataclass
+
+from ....core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 
 
 class ActividadAssetError(CadrumoError):
@@ -15,8 +18,39 @@ class ActividadAssetUnsupportedError(ActividadAssetError):
     """Raised when a requested asset shape has no enrolled authority."""
 
 
-class ActividadAssetIncompleteError(ActividadAssetError):
-    """Raised when a filing-grade schedule lacks required history."""
+@dataclass(frozen=True, slots=True)
+class VehicleAffectationRecovery:
+    """The asset revision an operator must correct with a vehicle declaration."""
+
+    asset_id: str
+    revision_id: str
+    class_key: str
+
+
+class ActividadAssetIncompleteError(TerminalPreconditionErrorMixin[object], ActividadAssetError):
+    """Raised when a filing-grade schedule lacks required history or facts.
+
+    A missing vehicle affectation declaration also names the revision to
+    correct, so the application boundary can attach its recovery action.
+    """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_verdict: object | None = None,
+        vehicle_affectation_recovery: VehicleAffectationRecovery | None = None,
+    ) -> None:
+        """Retain the optional correctable revision beside the error facts."""
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_verdict=precondition_verdict,
+        )
+        self.vehicle_affectation_recovery = vehicle_affectation_recovery
 
 
 class ActividadAssetClaimConflictError(ActividadAssetError):
@@ -29,4 +63,5 @@ __all__ = [
     "ActividadAssetIncompleteError",
     "ActividadAssetUnsupportedError",
     "ActividadAssetValidationError",
+    "VehicleAffectationRecovery",
 ]

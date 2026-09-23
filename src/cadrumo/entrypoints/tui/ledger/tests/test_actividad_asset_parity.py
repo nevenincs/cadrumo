@@ -18,6 +18,7 @@ from textual.widgets import Button, Input, Static
 
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
+from cadrumo.application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -25,6 +26,7 @@ from cadrumo.domain.renta.actividad_asset.election import (
     AmortizationMethod,
     DirectEstimationRegime,
 )
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetIncompleteError, VehicleAffectationRecovery
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -399,3 +401,56 @@ async def test_activity_asset_screen_clears_a_stale_public_result_before_worker_
         assert str(screen.query_one("#asset-result", Static).render()).strip() == (
             "created\tpending-public-result\trevisions=1"
         )
+
+
+@pytest.mark.asyncio
+async def test_an_undeclared_vehicle_refusal_names_its_recovery_and_focuses_the_correction() -> None:
+    def refuse_undeclared_vehicle(
+        revision: ActivityAssetRevision,
+        *,
+        covered_from: date,
+        covered_until: date,
+        history: AssetScheduleHistory,
+        requested_free_amount: Decimal | None,
+    ) -> ScheduledAmortizationCharge:
+        recovery = VehicleAffectationRecovery(
+            asset_id=revision.asset_id,
+            revision_id=revision.revision_id,
+            class_key="transporte",
+        )
+        raise ActividadAssetIncompleteError(
+            f"activity asset {revision.asset_id!r} requires a vehicle affectation declaration",
+            precondition_verdict=vehicle_affectation_verdict(recovery),
+            vehicle_affectation_recovery=recovery,
+        )
+
+    actions = ActivityAssetTuiActionsV1(
+        operations=ActivityAssetOperations(
+            repository=_MemoryRepository(),
+            forecast_operation=refuse_undeclared_vehicle,
+            taxpayer_modality=_simplified,
+        ),
+    )
+    controller = LedgerWorkspaceController(
+        ledger_context(),
+        ledger_projection(),
+        LedgerWorkspaceInjection(review_action=ledger_review_action(), activity_asset_actions=actions),
+    )
+    screen = ActivityAssetScreen(controller)
+    revision = _revision("undeclared-van")
+    app = ScreenHostApp[None](screen)
+
+    async with app.run_test(size=(100, 35)) as pilot:
+        screen.query_one("#asset-id", Input).value = revision.asset_id
+        screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
+        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-create")
+        await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="created\t")
+        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-forecast")
+        refused = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused\t")
+
+        assert "undeclared-van" in refused
+        assert str(screen.query_one("#asset-recovery", Static).render()) == (
+            "recovery\toperator.ledger.actividad_asset.correct_revision"
+            f"\tasset\tundeclared-van\trevision\t{revision.revision_id}"
+        )
+        assert screen.focused is screen.query_one("#asset-correct", Button)

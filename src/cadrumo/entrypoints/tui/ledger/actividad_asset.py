@@ -13,8 +13,10 @@ from textual.widgets import Button, Input, Static
 
 from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operations import ActivityAssetFilingHandoff, ActivityAssetOperations
+from ....application.operator_actions.models import PreconditionVerdict
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.period import Period
+from ....domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
@@ -124,6 +126,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         yield Input(value="4T", id="asset-filing-m130-period")
         yield Button("Preparar traslado a modelos", id="asset-filing-handoff")
         yield Static("", id="asset-result", markup=False)
+        yield Static("", id="asset-recovery", markup=False)
 
     async def on_button_pressed(self, event: Button.Pressed) -> None:
         """Dispatch every mutation through the injected shared operations."""
@@ -132,16 +135,32 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         # running on the worker thread.  It has no accounting meaning and is
         # always replaced by either the operation result or a refusal below.
         self.query_one("#asset-result", Static).update(f"pending\t{event.button.id or 'unknown'}")
+        self.query_one("#asset-recovery", Static).update("")
         try:
             result = await asyncio.to_thread(self._dispatch, event.button.id)
         except (CadrumoError, ValueError) as exc:
             self.query_one("#asset-result", Static).update(f"refused\t{exc}")
+            self._show_recovery(exc)
             return
         self.query_one("#asset-result", Static).update(result.message)
         if result.current_revision_id is not None:
             self.query_one("#asset-current-revision-id", Static).update(
                 f"current_revision_id\t{result.current_revision_id}"
             )
+
+    def _show_recovery(self, exc: Exception) -> None:
+        """Name a refusal's recovery action and move focus to the correction it needs."""
+        if not isinstance(exc, ActividadAssetIncompleteError):
+            return
+        verdict: object = exc.terminal_precondition_verdict
+        if not isinstance(verdict, PreconditionVerdict) or verdict.action is None:
+            return
+        facts = verdict.evidence[0].values
+        self.query_one("#asset-recovery", Static).update(
+            f"recovery\t{verdict.action.action_id}\tasset\t{facts.get('asset_id', '')}"
+            f"\trevision\t{facts.get('revision_id', '')}",
+        )
+        self.query_one("#asset-correct", Button).focus()
 
     def _dispatch(self, button_id: str | None) -> _ActivityAssetScreenResult:
         """Delegate one public action, retaining no screen-local tax arithmetic."""

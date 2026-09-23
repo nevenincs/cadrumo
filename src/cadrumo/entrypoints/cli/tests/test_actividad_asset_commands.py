@@ -8,6 +8,8 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
+from cadrumo.application.calculations.actividad_asset_schedule import vehicle_affectation_verdict
+from cadrumo.application.cli_exception_preconditions import nested_terminal_precondition_verdict
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
@@ -15,6 +17,7 @@ from cadrumo.domain.renta.actividad_asset.election import (
     AmortizationMethod,
     DirectEstimationRegime,
 )
+from cadrumo.domain.renta.actividad_asset.errors import ActividadAssetIncompleteError, VehicleAffectationRecovery
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -27,6 +30,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
 )
 from cadrumo.entrypoints.cli.actividad_asset_receipts import claim_receipt, inspection_receipt
 from cadrumo.entrypoints.cli.command_schema import command_schema_type
+from cadrumo.entrypoints.cli.common import resolve_cli_precondition_action
 
 from .cli_runner import invoke_cached_cli
 
@@ -120,6 +124,28 @@ def test_activity_asset_claim_payload_includes_the_canonical_derived_claim_ident
     rendered_claim = payload.root["claim"]
     assert isinstance(rendered_claim, dict)
     assert rendered_claim["claim_id"] == claim.claim_id
+
+
+def test_an_undeclared_vehicle_refusal_names_the_live_correct_command() -> None:
+    recovery = VehicleAffectationRecovery(asset_id="car-1", revision_id="a" * 64, class_key="transporte-externo")
+    error = ActividadAssetIncompleteError(
+        "activity asset 'car-1' requires a vehicle affectation declaration",
+        precondition_verdict=vehicle_affectation_verdict(recovery),
+        vehicle_affectation_recovery=recovery,
+    )
+
+    verdict = nested_terminal_precondition_verdict(error)
+    assert verdict is not None
+    resolved = resolve_cli_precondition_action(verdict)
+
+    action = resolved.action
+    assert action is not None
+    assert action.action_id == "operator.ledger.actividad_asset.correct_revision"
+    assert action.target_command_key == "ledger.actividad_asset.correct"
+    assert action.cli_path is not None
+    assert action.cli_path[-2:] == ("actividad-asset", "correct")
+    assert resolved.missing_argument_names == ("revision_json",)
+    assert resolved.evidence[0].values["asset_id"] == "car-1"
 
 
 def test_activity_asset_inspect_dispatches_to_profile_resolution() -> None:
