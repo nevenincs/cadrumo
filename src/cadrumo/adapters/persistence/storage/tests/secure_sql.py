@@ -611,17 +611,22 @@ def isolated_cli_runtime_profile(
     name it is given.
     """
 
+    overrides = storage_overrides(
+        tmp_path,
+        StorageCategory.RUNS,
+        StorageCategory.DRAFTS,
+        StorageCategory.TOKENS,
+        StorageCategory.FINANCIAL_TRANSACTIONS,
+        StorageCategory.INVOICES,
+    )
+    # Each is an operator-selected override, which the storage tree refuses to
+    # create on the operator's behalf; this helper is that operator, so it
+    # creates every location it declares, as isolated_runtime_profile does.
+    for location in overrides.values():
+        location.mkdir(parents=True, exist_ok=True)
+
     with (
-        override_settings(
-            **storage_overrides(
-                tmp_path,
-                StorageCategory.RUNS,
-                StorageCategory.DRAFTS,
-                StorageCategory.TOKENS,
-                StorageCategory.FINANCIAL_TRANSACTIONS,
-                StorageCategory.INVOICES,
-            ),
-        ),
+        override_settings(**overrides),
         isolated_runtime_profile(
             tmp_path=tmp_path,
             bucket_id=bucket_id,
