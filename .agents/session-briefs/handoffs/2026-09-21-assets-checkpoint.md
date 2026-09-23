@@ -1,7 +1,9 @@
 # ASSETS-01 implementation checkpoint
 
-Updated: 2026-09-21
-Status: implementation and acceptance complete; AS1-AS12 proven
+Updated: 2026-09-23
+Status: AS1-AS12 proven; the 2025 amortization method set is implemented and
+installed-proven at `0d34b1534a`. Outcome, commits, checks, identities and remaining
+targets are in `2026-09-23-assets-amortization-method-set-handoff.md`.
 
 ## Session identity
 
