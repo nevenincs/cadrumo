@@ -11,6 +11,7 @@ from ...application.actividad_asset.history import ActivityAssetHistory, Activit
 from ...application.actividad_asset.modality import direct_estimation_modality
 from ...application.actividad_asset.operations import ActivityAssetFilingHandoff, ActivityAssetOperations
 from ...application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
+from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
 from ...domain.renta.actividad_asset.election import DirectEstimationRegime
 from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
@@ -212,7 +213,7 @@ def _claim_payload(result: ActivityAssetHistoryClaimResult) -> ActivityAssetClai
     document = result.model_dump(mode="json")
     claim_document = document["claim"]
     if not isinstance(claim_document, dict):  # pragma: no cover - domain result invariant
-        raise RuntimeError("activity-asset claim result must serialize a claim object")
+        raise InternalInvariantError("activity-asset claim result must serialize a claim object")
     document["claim"] = {**claim_document, "claim_id": result.claim.claim_id}
     return ActivityAssetClaimPayload(root=document)
 

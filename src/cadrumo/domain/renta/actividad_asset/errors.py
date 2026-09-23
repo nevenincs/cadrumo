@@ -1,7 +1,9 @@
 """Errors raised by the IRPF activity-asset domain."""
 
+from ....core.errors.hierarchy import CadrumoError
 
-class ActividadAssetError(ValueError):
+
+class ActividadAssetError(CadrumoError):
     """Base error for IRPF activity-asset contracts."""
 
 

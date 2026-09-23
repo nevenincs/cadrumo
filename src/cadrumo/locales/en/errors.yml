@@ -149,6 +149,7 @@ errors:
     error_access_gate_submission: The access-gate policy rejected a submission operation.
     error_access_gate_submission_preflight: Access-gate preflight rejected a write
       operation.
+    error_actividad_asset: An IRPF activity-asset operation failed.
     error_aggregation_config: An aggregation service composition invariant was violated.
     error_application_live: The live AEAT read orchestration failed.
     error_application_live_iva_surface_timeout: Live IVA read surface timed out before
@@ -527,6 +528,8 @@ errors:
       Z, and a CIF with A-H, J, N, P-S, U, V or W.'
     validate_expects_str: Identity validation expects a text value; got {got_type}.
   integrity:
+    canonical_actividad_asset_history_persistence: The encrypted activity-asset history
+      could not be reopened safely.
     canonical_aeat_sync_workspace_projection: The loaded AEAT authorities cannot form
       one safe snapshot.
     canonical_authority_component_codec: An authority component could not be encoded
@@ -872,6 +875,14 @@ errors:
       file.
     refused_access_gate_live_read_not_enabled: Live-read access to the AEAT is disabled.
       This operation cannot contact the AEAT under the current configuration.
+    refused_actividad_asset_claim_conflict: The amortization claim conflicts with
+      the asset's recorded claims.
+    refused_actividad_asset_incomplete: The activity-asset schedule lacks a fact it
+      needs, such as its opening amortization history.
+    refused_actividad_asset_unsupported: The requested activity-asset amortization
+      has no enrolled authority for this case.
+    refused_actividad_asset_validation: An IRPF activity-asset fact or amortization
+      request failed validation.
     refused_apoderado_invalid_represented_nif: The represented party's tax identifier
       is not a valid NIF, NIE, or CIF.
     refused_apoderado_live_check_unavailable: The live check of representatives is

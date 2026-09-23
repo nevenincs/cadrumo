@@ -9,6 +9,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from .election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod
@@ -151,6 +152,7 @@ class ActivityAssetBasis(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_basis_shape(self) -> Self:
         if self.basis_amount <= Decimal("0"):
             raise ValueError("basis_amount must be positive")
@@ -298,6 +300,7 @@ class ActivityAssetRevision(BaseModel):
         return value
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_revision_shape(self) -> Self:
         if self.revision_number == 1 and self.supersedes_revision_id is not None:
             raise ValueError("first asset revision cannot supersede another revision")

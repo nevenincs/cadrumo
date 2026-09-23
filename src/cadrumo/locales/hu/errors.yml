@@ -161,6 +161,8 @@ errors:
       műveletet.
     error_access_gate_submission_preflight: A hozzáférési kapu előzetes ellenőrzése
       elutasított egy írási műveletet.
+    error_actividad_asset: Egy IRPF gazdasági tevékenységi eszközművelet sikertelen
+      volt.
     error_aggregation_config: Az összesítési szolgáltatás összetételi invariáns megsértése.
     error_application_live: Az élő AEAT-olvasási vezénylés meghiúsult.
     error_application_live_iva_surface_timeout: Az élő IVA-olvasási felület időtúllépett,
@@ -538,6 +540,8 @@ errors:
     validate_expects_str: Az azonosítóérvényesítés szöveges értéket vár; {got_type}
       érkezett.
   integrity:
+    canonical_actividad_asset_history_persistence: A titkosított eszköztörténet nem
+      nyitható meg újra biztonságosan.
     canonical_aeat_sync_workspace_projection: A már betöltött AEAT-forrásokból nem
       állítható össze biztonságos pillanatkép.
     canonical_authority_component_codec: Egy hatósági komponenst nem lehet kanonikus
@@ -891,6 +895,14 @@ errors:
     refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférés le
       van tiltva. Ez a művelet az aktuális konfiguráció alatt nem léphet kapcsolatba
       az AEAT-tal.
+    refused_actividad_asset_claim_conflict: Az értékcsökkenési elszámolás ütközik
+      az eszköz már rögzített elszámolásaival.
+    refused_actividad_asset_incomplete: Az eszköz értékcsökkenési ütemtervéből hiányzik
+      egy szükséges adat, például a nyitó halmozott értékcsökkenés.
+    refused_actividad_asset_unsupported: A kért értékcsökkenéshez ebben az esetben
+      nincs nyilvántartott jogforrás.
+    refused_actividad_asset_validation: Egy eszközadat vagy értékcsökkenési kérés
+      nem felelt meg az ellenőrzésnek.
     refused_apoderado_invalid_represented_nif: A képviselt fél adóazonosítója nem
       érvényes NIF, NIE vagy CIF.
     refused_apoderado_live_check_unavailable: A képviselők élő ellenőrzése nem érhető

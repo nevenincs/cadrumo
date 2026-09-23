@@ -159,6 +159,8 @@ errors:
       de envío.
     error_access_gate_submission_preflight: La comprobación previa del control de
       acceso rechazó una operación de escritura.
+    error_actividad_asset: Ha fallado una operación sobre un activo de actividad económica
+      del IRPF.
     error_aggregation_config: Se ha violado un invariante de composición del servicio
       de agregación.
     error_application_live: La orquestación de la lectura en vivo de la AEAT falló.
@@ -572,6 +574,8 @@ errors:
     validate_expects_str: La validación de identidad espera un valor de texto; se
       obtuvo {got_type}.
   integrity:
+    canonical_actividad_asset_history_persistence: No se pudo reabrir con seguridad
+      el historial cifrado de activos.
     canonical_aeat_sync_workspace_projection: Las autoridades de la AEAT ya cargadas
       no pueden formar una instantánea segura.
     canonical_authority_component_codec: No se pudo codificar o descodificar un componente
@@ -940,6 +944,14 @@ errors:
     refused_access_gate_live_read_not_enabled: El acceso de lectura en vivo a la AEAT
       está desactivado. Esta operación no puede contactar con la AEAT en la configuración
       actual.
+    refused_actividad_asset_claim_conflict: La amortización registrada entra en conflicto
+      con las ya registradas para el activo.
+    refused_actividad_asset_incomplete: Al cuadro de amortización del activo le falta
+      un dato necesario, como su amortización acumulada inicial.
+    refused_actividad_asset_unsupported: La amortización solicitada no tiene una autoridad
+      inscrita para este caso.
+    refused_actividad_asset_validation: Un dato del activo o una solicitud de amortización
+      no superó la validación.
     refused_apoderado_invalid_represented_nif: El identificador fiscal del representado
       no es un NIF, NIE o CIF válido.
     refused_apoderado_live_check_unavailable: La comprobación en vivo de apoderamientos

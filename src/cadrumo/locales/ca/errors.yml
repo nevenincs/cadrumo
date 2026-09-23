@@ -161,6 +161,8 @@ errors:
       d'enviament.
     error_access_gate_submission_preflight: La comprovació prèvia del control d'accés
       ha rebutjat una operació d'escriptura.
+    error_actividad_asset: Ha fallat una operació sobre un actiu d'activitat econòmica
+      de l'IRPF.
     error_aggregation_config: S'ha violat un invariant de composició del servei d'agregació.
     error_application_live: L'orquestració de la lectura en viu de l'AEAT ha fallat.
     error_application_live_iva_surface_timeout: La superfície de lectura d'IVA en
@@ -578,6 +580,8 @@ errors:
     validate_expects_str: La validació d'identitat espera un valor de text; s'ha obtingut
       {got_type}.
   integrity:
+    canonical_actividad_asset_history_persistence: No s'ha pogut tornar a obrir amb
+      seguretat l'historial xifrat d'actius.
     canonical_aeat_sync_workspace_projection: Les autoritats de l'AEAT ja carregades
       no poden formar una instantània segura.
     canonical_authority_component_codec: No s'ha pogut codificar o descodificar un
@@ -947,6 +951,14 @@ errors:
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració
       actual.
+    refused_actividad_asset_claim_conflict: L'amortització registrada entra en conflicte
+      amb les ja registrades per a l'actiu.
+    refused_actividad_asset_incomplete: Al quadre d'amortització de l'actiu li falta
+      una dada necessària, com la seva amortització acumulada inicial.
+    refused_actividad_asset_unsupported: L'amortització sol·licitada no té una autoritat
+      inscrita per a aquest cas.
+    refused_actividad_asset_validation: Una dada de l'actiu o una sol·licitud d'amortització
+      no ha superat la validació.
     refused_apoderado_invalid_represented_nif: L'identificador fiscal del representat
       no és un NIF, NIE o CIF vàlid.
     refused_apoderado_live_check_unavailable: La comprovació en viu d'apoderaments

@@ -48,6 +48,56 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.renta.actividad_asset.errors.ActividadAssetError",
+        ErrorCode(
+            code="ERROR_ACTIVIDAD_ASSET",
+            category=ErrorCategory.ERROR,
+            message_key="errors.error.error_actividad_asset",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.renta.actividad_asset.errors.ActividadAssetValidationError",
+        ErrorCode(
+            code="REFUSED_ACTIVIDAD_ASSET_VALIDATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_actividad_asset_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.renta.actividad_asset.errors.ActividadAssetUnsupportedError",
+        ErrorCode(
+            code="REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_actividad_asset_unsupported",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.renta.actividad_asset.errors.ActividadAssetIncompleteError",
+        ErrorCode(
+            code="REFUSED_ACTIVIDAD_ASSET_INCOMPLETE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_actividad_asset_incomplete",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.domain.renta.actividad_asset.errors.ActividadAssetClaimConflictError",
+        ErrorCode(
+            code="REFUSED_ACTIVIDAD_ASSET_CLAIM_CONFLICT",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_actividad_asset_claim_conflict",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.bienes_inversion.register.BienInversionRecordError",
         ErrorCode(
             code="ERROR_PROFILE_BIENES_INVERSION_RECORD",

@@ -13,6 +13,7 @@ from textual.widgets import Button, Input, Static
 
 from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operations import ActivityAssetFilingHandoff, ActivityAssetOperations
+from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.period import Period
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
@@ -130,7 +131,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         self.query_one("#asset-result", Static).update(f"pending\t{event.button.id or 'unknown'}")
         try:
             result = await asyncio.to_thread(self._dispatch, event.button.id)
-        except (ValueError, RuntimeError) as exc:
+        except (CadrumoError, ValueError) as exc:
             self.query_one("#asset-result", Static).update(f"refused\t{exc}")
             return
         self.query_one("#asset-result", Static).update(result.message)
@@ -204,7 +205,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
     def _inspection_result(*, prefix: str, result: ActivityAssetInspectionV1) -> _ActivityAssetScreenResult:
         """Project the current immutable revision identity alongside its count."""
         if not result.revisions:  # pragma: no cover - application inspection invariant
-            raise RuntimeError("activity-asset inspection returned no current revision")
+            raise InternalInvariantError("activity-asset inspection returned no current revision")
         return _ActivityAssetScreenResult(
             message=f"{prefix}\t{result.asset_id}\trevisions={len(result.revisions)}",
             current_revision_id=result.revisions[-1].revision_id,

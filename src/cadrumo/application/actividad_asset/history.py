@@ -6,6 +6,7 @@ from typing import Self
 
 from pydantic import BaseModel, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents
 from ...domain.renta.actividad_asset.claims import AmortizationClaim, asset_schedule_history, record_claim
@@ -27,6 +28,7 @@ class ActivityAssetHistory(BaseModel):
     claims: tuple[AmortizationClaim, ...] = ()
 
     @model_validator(mode="after")
+    @pydantic_validation_boundary
     def _validate_history(self) -> Self:
         revisions_by_id = {revision.revision_id: revision for revision in self.revisions}
         if len(revisions_by_id) != len(self.revisions):

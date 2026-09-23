@@ -9,7 +9,7 @@ import pytest
 from pydantic import ValidationError
 
 from ..election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod, DirectEstimationRegime
-from ..errors import ActividadAssetIncompleteError
+from ..errors import ActividadAssetIncompleteError, ActividadAssetValidationError
 from ..lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -255,7 +255,7 @@ def test_an_authority_resolved_for_another_election_is_refused() -> None:
     revision = _revision()
     other = _revision(amortization=_linear_election("otro-elemento"))
 
-    with pytest.raises(ValueError, match="different amortization election"):
+    with pytest.raises(ActividadAssetValidationError, match="different amortization election"):
         schedule_charge(
             revision,
             _authority(other),

@@ -7,6 +7,7 @@ from pathlib import Path
 from pydantic import ValidationError
 
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
+from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
@@ -22,7 +23,7 @@ _log = get_logger(__name__)
 ACTIVIDAD_ASSET_HISTORY_FILENAME = "actividad-asset-history.secure-object"
 
 
-class ActividadAssetHistoryPersistenceError(RuntimeError):
+class ActividadAssetHistoryPersistenceError(CadrumoError):
     """Raised when encrypted activity-asset history cannot be reopened safely."""
 
 
