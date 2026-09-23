@@ -74,7 +74,7 @@ def _professional_services_invoice(
     bucket_id: str,
     kind: InvoiceKind = InvoiceKind.RECEIVED,
     number: str = "F-PROV-900",
-    issued_at: date = date(2026, 3, 15),
+    issued_at: date = date(2025, 3, 15),
 ) -> Invoice:
     subtotal = Decimal("1000.00")
     rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(2026, 1, 1))
@@ -246,11 +246,16 @@ def test_received_invoice_routes_through_aggregate_cli_into_m111(tmp_path: Path)
                 "--modelo",
                 "111",
                 "--year",
-                "2026",
+                "2025",
                 "--period",
                 "1T",
                 "--received-invoice-retencion",
-                f'{{"invoice_id": "{invoice.invoice_id}", "scheme": "actividades_profesionales"}}',
+                _withholding_evidence_payload(
+                    invoice,
+                    allocation_id="allocation-routed",
+                    payment_event_id="payment-routed",
+                    idempotency_key="capture-routed",
+                ),
             ],
         )
         assert result.exit_code == 0, result.output
@@ -260,13 +265,13 @@ def test_received_invoice_routes_through_aggregate_cli_into_m111(tmp_path: Path)
         # write landed in the same encrypted namespace the calculate path reads.
         stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
             "111",
-            Period.from_year_and_code(2026, "1T"),
+            Period.from_year_and_code(2025, "1T"),
         )
         assert len(stored) == 1
         assert stored[0].source_object_id == invoice.invoice_id
         assert stored[0].retencion_amount == Decimal("150.00")
 
-        values = _calculate_m111(objects, Period.from_year_and_code(2026, "1T"))
+        values = _calculate_m111(objects, Period.from_year_and_code(2025, "1T"))
 
     assert values["07"] == Decimal("1")
     assert values["08"] == Decimal("1000.00")
@@ -459,12 +464,11 @@ def test_aggregate_readback_survives_omission_and_supplies_replace_baseline(tmp_
     }
 
 
-def test_excluded_invoice_retencion_is_not_routed_and_surfaces_a_notice(tmp_path: Path) -> None:
+def test_issued_invoice_retencion_is_refused_and_not_routed(tmp_path: Path) -> None:
     """An issued invoice's retención is a CREDIT, not a retenedor liability, and is refused routing.
 
-    Excluding it must surface as a warning notice naming the invoice rather than
-    silently dropping it -- an excluded retención is a liability the taxpayer
-    may still owe.
+    The refusal names its reason rather than dropping the evidence silently,
+    and nothing reaches the per-perceptor store.
     """
     issued = _professional_services_invoice(bucket_id=_BUCKET_ID, kind=InvoiceKind.ISSUED, number="F-CLI-002")
 
@@ -482,21 +486,25 @@ def test_excluded_invoice_retencion_is_not_routed_and_surfaces_a_notice(tmp_path
                 "--modelo",
                 "111",
                 "--year",
-                "2026",
+                "2025",
                 "--period",
                 "1T",
                 "--received-invoice-retencion",
-                f'{{"invoice_id": "{issued.invoice_id}", "scheme": "actividades_profesionales"}}',
+                _withholding_evidence_payload(
+                    issued,
+                    allocation_id="allocation-issued",
+                    payment_event_id="payment-issued",
+                    idempotency_key="capture-issued",
+                ),
             ],
         )
 
-        assert result.exit_code == 0, result.output
+        assert result.exit_code == 2, result.output
         assert "not_a_retenedor_liability" in result.output
-        assert issued.invoice_id in result.output
 
         stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
             "111",
-            Period.from_year_and_code(2026, "1T"),
+            Period.from_year_and_code(2025, "1T"),
         )
         assert stored == ()
 
@@ -534,7 +542,7 @@ def _producer_created_invoice(
             counterparty_tax_id="B12345674",
             counterparty_country="ES",
             invoice_number=number,
-            issued_at=date(2026, 3, 15),
+            issued_at=date(2025, 3, 15),
             taxable_base=Decimal("1000.00"),
             iva_rate=Decimal("21"),
             currency="EUR",
@@ -577,24 +585,29 @@ def test_producer_created_invoice_routes_through_aggregate_cli_into_m111(tmp_pat
                 "--modelo",
                 "111",
                 "--year",
-                "2026",
+                "2025",
                 "--period",
                 "1T",
                 "--received-invoice-retencion",
-                f'{{"invoice_id": "{invoice.invoice_id}", "scheme": "actividades_profesionales"}}',
+                _withholding_evidence_payload(
+                    invoice,
+                    allocation_id="allocation-producer",
+                    payment_event_id="payment-producer",
+                    idempotency_key="capture-producer",
+                ),
             ],
         )
         assert result.exit_code == 0, result.output
 
         stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
             "111",
-            Period.from_year_and_code(2026, "1T"),
+            Period.from_year_and_code(2025, "1T"),
         )
         assert len(stored) == 1
         assert stored[0].source_object_id == invoice.invoice_id
         assert stored[0].retencion_amount == Decimal("150.00")
 
-        values = _calculate_m111(objects, Period.from_year_and_code(2026, "1T"))
+        values = _calculate_m111(objects, Period.from_year_and_code(2025, "1T"))
 
     assert values["07"] == Decimal("1")
     assert values["08"] == Decimal("1000.00")
@@ -609,7 +622,7 @@ def test_producer_without_retention_is_excluded_from_m111(tmp_path: Path) -> Non
     Same producer call, same base/rate/counterparty/category as
     :func:`test_producer_created_invoice_routes_through_aggregate_cli_into_m111`
     -- only ``retention_rate``/``retention_amount`` differ (both ``None``,
-    the pre-#66 state). The invoice is excluded for ``no_retencion_declared``,
+    the pre-#66 state). The capture is refused for ``no_retencion_declared``,
     so the per-perceptor store stays empty and the M111 calculate path refuses
     for want of any observation rather than emitting an all-blank filing.
 
@@ -639,25 +652,29 @@ def test_producer_without_retention_is_excluded_from_m111(tmp_path: Path) -> Non
                 "--modelo",
                 "111",
                 "--year",
-                "2026",
+                "2025",
                 "--period",
                 "1T",
                 "--received-invoice-retencion",
-                f'{{"invoice_id": "{invoice.invoice_id}", "scheme": "actividades_profesionales"}}',
+                _withholding_evidence_payload(
+                    invoice,
+                    allocation_id="allocation-unwithheld",
+                    payment_event_id="payment-unwithheld",
+                    idempotency_key="capture-unwithheld",
+                ),
             ],
         )
-        assert result.exit_code == 0, result.output
+        assert result.exit_code == 2, result.output
         assert "no_retencion_declared" in result.output
-        assert invoice.invoice_id in result.output
 
         stored = build_retencion_observation_ports(bucket_id=_BUCKET_ID).repository.load_observations(
             "111",
-            Period.from_year_and_code(2026, "1T"),
+            Period.from_year_and_code(2025, "1T"),
         )
         assert stored == ()
 
         with pytest.raises(AggregationValidationError) as exc_info:
-            _calculate_m111(objects, Period.from_year_and_code(2026, "1T"))
+            _calculate_m111(objects, Period.from_year_and_code(2025, "1T"))
 
     assert exc_info.value.translated_message == "aggregation.retenciones.errors.m111_no_retenciones_attestation_missing"
     context = exc_info.value.context
