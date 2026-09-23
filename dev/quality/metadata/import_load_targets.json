@@ -2314,6 +2314,7 @@
         "dev.acceptance.ledger.frontend_contract",
         "dev.acceptance.ledger.installed_provenance",
         "dev.acceptance.ledger.installed_tui_journey",
+        "dev.acceptance.ledger.provenance_fixtures",
         "dev.acceptance.ledger.scenario",
         "dev.acceptance.profile",
         "dev.acceptance.profile.cli_journey",

@@ -1,0 +1,357 @@
+{
+  "authority_generation": "b7b9175f1b9dd4cd7f776d251ccdc944dca3196def13a4a226d864a18ebfac0f",
+  "brief_revision": "0.1",
+  "cases": [
+    {
+      "case_id": "cli-csv",
+      "cli_authentication": "stdin_secret",
+      "file_format": "csv",
+      "filename": "ledger-prov-cli-csv.csv",
+      "import_frontend": "cli",
+      "invoice_kind": null,
+      "locator": 3,
+      "locator_kind": "physical_row",
+      "provider": "csv",
+      "record": "transaction",
+      "row_count": 2,
+      "surfaces": [
+        "cli_track_json",
+        "cli_track_text",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "cli-txt",
+      "cli_authentication": "stdin_secret",
+      "file_format": "txt",
+      "filename": "ledger-prov-cli-txt.txt",
+      "import_frontend": "cli",
+      "invoice_kind": null,
+      "locator": 2,
+      "locator_kind": "physical_row",
+      "provider": "auto",
+      "record": "transaction",
+      "row_count": 1,
+      "surfaces": [
+        "cli_track_json",
+        "cli_track_text",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "cli-xlsx",
+      "cli_authentication": "stdin_secret",
+      "file_format": "xlsx",
+      "filename": "ledger-prov-cli-xlsx.xlsx",
+      "import_frontend": "cli",
+      "invoice_kind": null,
+      "locator": 4,
+      "locator_kind": "physical_row",
+      "provider": "xlsx",
+      "record": "transaction",
+      "row_count": 3,
+      "surfaces": [
+        "cli_track_json",
+        "cli_track_text",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "cli-ofx",
+      "cli_authentication": "stdin_secret",
+      "file_format": "ofx",
+      "filename": "ledger-prov-cli-ofx.ofx",
+      "import_frontend": "cli",
+      "invoice_kind": null,
+      "locator": 3,
+      "locator_kind": "transaction_ordinal",
+      "provider": "ofx",
+      "record": "transaction",
+      "row_count": 3,
+      "surfaces": [
+        "cli_track_json",
+        "cli_track_text",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "cli-qfx",
+      "cli_authentication": "stdin_secret",
+      "file_format": "qfx",
+      "filename": "ledger-prov-cli-qfx.qfx",
+      "import_frontend": "cli",
+      "invoice_kind": null,
+      "locator": 1,
+      "locator_kind": "transaction_ordinal",
+      "provider": "auto",
+      "record": "transaction",
+      "row_count": 1,
+      "surfaces": [
+        "cli_track_json",
+        "cli_track_text",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "cli-pdf",
+      "cli_authentication": "stdin_secret",
+      "file_format": "pdf",
+      "filename": "ledger-prov-cli-pdf.pdf",
+      "import_frontend": "cli",
+      "invoice_kind": null,
+      "locator": 2,
+      "locator_kind": "transaction_ordinal",
+      "provider": "pdf-n26",
+      "record": "transaction",
+      "row_count": 2,
+      "surfaces": [
+        "cli_track_json",
+        "cli_track_text",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "cli-inv-csv",
+      "cli_authentication": "stdin_secret",
+      "file_format": "csv",
+      "filename": "ledger-prov-cli-inv-csv.csv",
+      "import_frontend": "cli",
+      "invoice_kind": "received",
+      "locator": 2,
+      "locator_kind": "physical_row",
+      "provider": null,
+      "record": "invoice",
+      "row_count": 1,
+      "surfaces": [
+        "cli_invoice_view_json",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "cli-inv-tsv",
+      "cli_authentication": "stdin_secret",
+      "file_format": "tsv",
+      "filename": "ledger-prov-cli-inv-tsv.tsv",
+      "import_frontend": "cli",
+      "invoice_kind": "received",
+      "locator": 3,
+      "locator_kind": "physical_row",
+      "provider": null,
+      "record": "invoice",
+      "row_count": 2,
+      "surfaces": [
+        "cli_invoice_view_json",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "cli-inv-xlsx",
+      "cli_authentication": "stdin_secret",
+      "file_format": "xlsx",
+      "filename": "ledger-prov-cli-inv-xlsx.xlsx",
+      "import_frontend": "cli",
+      "invoice_kind": "issued",
+      "locator": 4,
+      "locator_kind": "physical_row",
+      "provider": null,
+      "record": "invoice",
+      "row_count": 3,
+      "surfaces": [
+        "cli_invoice_view_json",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "cli-inv-xlsm",
+      "cli_authentication": "stdin_secret",
+      "file_format": "xlsm",
+      "filename": "ledger-prov-cli-inv-xlsm.xlsm",
+      "import_frontend": "cli",
+      "invoice_kind": "received",
+      "locator": 2,
+      "locator_kind": "physical_row",
+      "provider": null,
+      "record": "invoice",
+      "row_count": 1,
+      "surfaces": [
+        "cli_invoice_view_json",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "tui-csv",
+      "cli_authentication": "resumed_tui_session",
+      "file_format": "csv",
+      "filename": "ledger-prov-tui-csv.csv",
+      "import_frontend": "tui",
+      "invoice_kind": null,
+      "locator": 2,
+      "locator_kind": "physical_row",
+      "provider": "csv",
+      "record": "transaction",
+      "row_count": 2,
+      "surfaces": [
+        "cli_track_json",
+        "cli_track_text",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "tui-xlsx",
+      "cli_authentication": "resumed_tui_session",
+      "file_format": "xlsx",
+      "filename": "ledger-prov-tui-xlsx.xlsx",
+      "import_frontend": "tui",
+      "invoice_kind": null,
+      "locator": 3,
+      "locator_kind": "physical_row",
+      "provider": "xlsx",
+      "record": "transaction",
+      "row_count": 2,
+      "surfaces": [
+        "cli_track_json",
+        "cli_track_text",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "tui-ofx",
+      "cli_authentication": "resumed_tui_session",
+      "file_format": "ofx",
+      "filename": "ledger-prov-tui-ofx.ofx",
+      "import_frontend": "tui",
+      "invoice_kind": null,
+      "locator": 2,
+      "locator_kind": "transaction_ordinal",
+      "provider": "ofx",
+      "record": "transaction",
+      "row_count": 2,
+      "surfaces": [
+        "cli_track_json",
+        "cli_track_text",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "tui-qfx",
+      "cli_authentication": "resumed_tui_session",
+      "file_format": "qfx",
+      "filename": "ledger-prov-tui-qfx.qfx",
+      "import_frontend": "tui",
+      "invoice_kind": null,
+      "locator": 1,
+      "locator_kind": "transaction_ordinal",
+      "provider": "auto",
+      "record": "transaction",
+      "row_count": 1,
+      "surfaces": [
+        "cli_track_json",
+        "cli_track_text",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "tui-pdf",
+      "cli_authentication": "resumed_tui_session",
+      "file_format": "pdf",
+      "filename": "ledger-prov-tui-pdf.pdf",
+      "import_frontend": "tui",
+      "invoice_kind": null,
+      "locator": 3,
+      "locator_kind": "transaction_ordinal",
+      "provider": "pdf-n26",
+      "record": "transaction",
+      "row_count": 3,
+      "surfaces": [
+        "cli_track_json",
+        "cli_track_text",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "tui-inv-csv",
+      "cli_authentication": "resumed_tui_session",
+      "file_format": "csv",
+      "filename": "ledger-prov-tui-inv-csv.csv",
+      "import_frontend": "tui",
+      "invoice_kind": "issued",
+      "locator": 3,
+      "locator_kind": "physical_row",
+      "provider": null,
+      "record": "invoice",
+      "row_count": 2,
+      "surfaces": [
+        "cli_invoice_view_json",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "tui-inv-tsv",
+      "cli_authentication": "resumed_tui_session",
+      "file_format": "tsv",
+      "filename": "ledger-prov-tui-inv-tsv.tsv",
+      "import_frontend": "tui",
+      "invoice_kind": "received",
+      "locator": 2,
+      "locator_kind": "physical_row",
+      "provider": null,
+      "record": "invoice",
+      "row_count": 1,
+      "surfaces": [
+        "cli_invoice_view_json",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "tui-inv-xlsx",
+      "cli_authentication": "resumed_tui_session",
+      "file_format": "xlsx",
+      "filename": "ledger-prov-tui-inv-xlsx.xlsx",
+      "import_frontend": "tui",
+      "invoice_kind": "received",
+      "locator": 3,
+      "locator_kind": "physical_row",
+      "provider": null,
+      "record": "invoice",
+      "row_count": 2,
+      "surfaces": [
+        "cli_invoice_view_json",
+        "tui_detail"
+      ]
+    },
+    {
+      "case_id": "tui-inv-xlsm",
+      "cli_authentication": "resumed_tui_session",
+      "file_format": "xlsm",
+      "filename": "ledger-prov-tui-inv-xlsm.xlsm",
+      "import_frontend": "tui",
+      "invoice_kind": "issued",
+      "locator": 2,
+      "locator_kind": "physical_row",
+      "provider": null,
+      "record": "invoice",
+      "row_count": 1,
+      "surfaces": [
+        "cli_invoice_view_json",
+        "tui_detail"
+      ]
+    }
+  ],
+  "cli_json_command_count": 35,
+  "cli_text_command_count": 11,
+  "installed_extras": {
+    "ofxtools": "1.1.1"
+  },
+  "pattern_revision": "1.7",
+  "product_init_path": "C:\\Users\\hello\\AppData\\Local\\Temp\\ledger-01-provenance-e446258b3817431ba32200b43774e2b8\\venv-ofx\\Lib\\site-packages\\cadrumo\\__init__.py",
+  "product_init_sha256": "930e3f61c79bd2e3ff1f8aa11d1abd5d16bfbaab360ea739ae41f519f71b0ae7",
+  "product_origin": "site-packages",
+  "schema_version": "ledger-01-installed-provenance-v2",
+  "source_commit": "83dcd72d79849eed08f57c2ab84341cdcd847106",
+  "status": "proven",
+  "synthetic_store_retained": true,
+  "tui_child_process_count": 2,
+  "wheel_filename": "cadrumo-0.5.1-py3-none-any.whl",
+  "wheel_sha256": "cc29223858b49afa669778f1d7eb33b37362ce53eda1b21f0c253696a0b0509c",
+  "year": 2025
+}
