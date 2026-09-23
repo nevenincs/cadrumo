@@ -165,10 +165,10 @@ def _extract_member(archive: Path, suffix: str, destination: Path) -> None:
 def find() -> Path | None:
     """Return an actionlint already available here, without provisioning one.
 
-    This is what the CHECK path asks, and the distinction is the contract:
-    `just check-workflows` verifies workflows and changes nothing, so a missing
-    executable is a refusal naming `just setup-repository-tools`, never a
-    download nobody asked for. A check that quietly fetches a binary is a check
+    This is what the CHECK path asks, and the distinction is the contract: the
+    workflow check verifies workflows and changes nothing, so a missing
+    executable is a refusal naming the provisioning command, never a download
+    nobody asked for. A check that quietly fetches a binary is a check
     that behaves differently the first time it runs.
 
     An actionlint on PATH wins over the provisioned copy: a developer who
@@ -189,8 +189,8 @@ def find() -> Path | None:
 def ensure() -> Path:
     """Return a verified actionlint executable, downloading it once if needed.
 
-    Provisioning, not checking: reached through ``--install``, which is how
-    `just setup-repository-tools` installs the pinned version. The check path
+    Provisioning, not checking: reached through ``--install``, which the
+    repository's tool setup runs to install the pinned version. The check path
     uses :func:`find` and refuses instead.
     """
     available = find()
@@ -234,8 +234,8 @@ def ensure() -> Path:
 def main(argv: list[str] | None = None) -> int:
     """Run actionlint over the repository's workflows, or provision it.
 
-    ``--install`` is the provisioning entry point `just setup-repository-tools`
-    uses; every other invocation is the read-only check, which refuses rather
+    ``--install`` is the provisioning entry point the repository's tool setup
+    runs; every other invocation is the read-only check, which refuses rather
     than downloading. Remaining arguments are actionlint's own.
     """
     args = list(sys.argv[1:] if argv is None else argv)
@@ -254,9 +254,10 @@ def main(argv: list[str] | None = None) -> int:
     binary = find()
     if binary is None:
         print(
-            f"actionlint is not available, so workflows cannot be checked. This check installs nothing: "
-            f"run `just setup-repository-tools` to provision the pinned version ({VERSION}), or put "
-            "actionlint on PATH.",
+            "actionlint is not available, so workflows cannot be checked. This check "
+            f"installs nothing: provision the pinned version ({VERSION}) with "
+            "`python -m dev.actionlint --install`, which the repository's tool setup "
+            "runs, or put actionlint on PATH.",
             file=sys.stderr,
         )
         return TOOL_MISSING
@@ -264,7 +265,18 @@ def main(argv: list[str] | None = None) -> int:
     # whether a runner happens to carry them. actionlint silently skips a
     # missing external linter, so leaving them implicit means the gate checks
     # a different set of things on every machine and nobody can tell which.
-    command = [str(binary), "-no-color", "-shellcheck=", "-pyflakes=", *args]
+    # Runner labels are provisioned by infrastructure outside this codebase.
+    # Keep actionlint's workflow parsing and all code-owned checks without
+    # turning this project into a registry for fleet topology.
+    command = [
+        str(binary),
+        "-no-color",
+        "-shellcheck=",
+        "-pyflakes=",
+        "-ignore",
+        'label ".+" is unknown',
+        *args,
+    ]
     return subprocess.call(command)
 
 

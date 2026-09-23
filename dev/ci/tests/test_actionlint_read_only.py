@@ -27,4 +27,4 @@ def test_check_path_reports_remediation_without_calling_installer(
 
     assert actionlint.main([]) == actionlint.TOOL_MISSING
     assert installer_called is False
-    assert "just setup-repository-tools" in capsys.readouterr().err
+    assert "python -m dev.actionlint --install" in capsys.readouterr().err
