@@ -98,3 +98,12 @@ def test_the_build_path_carries_no_automation_conditional() -> None:
 
     assert automated_environment == local_environment
     assert language_build_command("es", Path("out")) == local_command
+
+
+def test_a_cutover_publish_refuses_every_automated_run(capsys: pytest.CaptureFixture[str], tmp_path: Path) -> None:
+    """The cutover changes the shared zone; CI publishes without it and is refused with it."""
+    for marker in _CI_MARKERS:
+        with pytest.raises(SystemExit) as refusal:
+            docs_static_site._publish(tmp_path, cutover=True, environment={marker: "true", **_CREDENTIALS})
+        assert marker in str(refusal.value)
+    assert capsys.readouterr().out == "", "a refused cutover must not start a build, upload or deploy"

@@ -320,7 +320,7 @@ Locally, the same credentials are read from `env/.env`:
 | `just docs-site-preview` | Build and validate every site root; uploads nothing. |
 | `just docs-publish` | Build, upload, deploy and verify one release. |
 | `just docs-rollback <release id>` | Serve an earlier uploaded release again; uploads nothing. |
-| `just docs-site-provision` | One-time zone wiring: proxy `cadrumo.neve.md` through Cloudflare and disable the redirect rules on `neve.md/cadrumo/docs`. Needs a token with DNS and redirect-rule access. |
+| `just docs-site-provision` | One-time zone wiring: proxy `cadrumo.neve.md` through Cloudflare and disable the redirect rules on `neve.md/cadrumo/docs`. Needs a token with DNS and redirect-rule access. Run it only once a release is live on the Worker routes; `python -m dev.deploy.docs_static_site publish --confirm publish-cadrumo-docs --cutover` publishes and wires the zone in that order. |
 
 ## Authorities
 

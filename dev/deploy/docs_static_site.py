@@ -879,20 +879,29 @@ def _require_local_session(verb: str, *, environment: Mapping[str, str]) -> None
         raise SystemExit(f"{verb} changes the neve.md zone and runs only from a local session ({', '.join(markers)}).")
 
 
-def _provision(*, environment: Mapping[str, str] | None = None) -> int:
-    """Route both docs mounts to the Worker: proxy the canonical host and retire the mirror redirect.
+def _wire_zone(credentials: DeliveryCredentials, zone: str) -> None:
+    """Proxy the canonical host and retire the mirror redirect; idempotent.
 
-    One-time zone wiring, idempotent on re-run. The canonical host keeps its
-    existing origin for every path outside ``/docs``; only the proxy flag on
-    its record changes. The redirect rules that sent the mirror mount to the
-    canonical host are disabled, not deleted, so re-enabling them reverts it.
+    The canonical host keeps its existing origin for every path outside
+    ``/docs``; only the proxy flag on its record changes. The redirect rules
+    that sent the mirror mount to the canonical host are disabled, not
+    deleted, so re-enabling them reverts it.
+    """
+    ensure_proxied(credentials.account, zone, CANONICAL_SITE_DOMAIN)
+    disable_redirect_rules(credentials.account, zone, source_prefix=f"{MIRROR_SITE_DOMAIN}/cadrumo/docs")
+
+
+def _provision(*, environment: Mapping[str, str] | None = None) -> int:
+    """Route both docs mounts to the Worker: one-time zone wiring, local only.
+
+    Run it once a release is live on the Worker routes (``publish --cutover``
+    does exactly that): retiring the mirror redirect earlier would leave the
+    mirror mount with nothing behind it.
     """
     env = environment if environment is not None else os.environ
     _require_local_session("provision", environment=env)
     credentials = _delivery_credentials(env)
-    zone = zone_id(credentials.account, DOCS_ZONE)
-    ensure_proxied(credentials.account, zone, CANONICAL_SITE_DOMAIN)
-    disable_redirect_rules(credentials.account, zone, source_prefix=f"{MIRROR_SITE_DOMAIN}/cadrumo/docs")
+    _wire_zone(credentials, zone_id(credentials.account, DOCS_ZONE))
     print("Zone wiring is in place for both documentation mounts.", flush=True)
     return 0
 
@@ -962,6 +971,7 @@ def _publish(
     repo_root: Path,
     *,
     release_label: str | None = None,
+    cutover: bool = False,
     environment: Mapping[str, str] | None = None,
 ) -> int:
     """Build, validate, upload, deploy and verify one documentation release.
@@ -970,12 +980,17 @@ def _publish(
         repo_root: Repository root the build commands run from.
         release_label: What the release id is labelled with; CI passes the
             release tag, a local publish defaults to the commit.
+        cutover: Also wire the zone (:func:`_wire_zone`) once this release is
+            live on the Worker routes, so neither mount is left without an
+            origin between the old delivery and the new one. Local only.
         environment: DI seam for tests, forwarded to
             :func:`_require_authorized_publish_environment`. ``None``
             (production) reads the real process environment.
     """
     env = environment if environment is not None else os.environ
     _require_authorized_publish_environment(environment=env)
+    if cutover:
+        _require_local_session("publish --cutover", environment=env)
     credentials = _delivery_credentials(env)
     zone = zone_id(credentials.account, DOCS_ZONE)
     release = release_id(release_label or _local_release_label(repo_root), now=datetime.now(UTC))
@@ -985,6 +1000,8 @@ def _publish(
     _upload_release(credentials, html_root, release)
     _deploy_release(credentials, release)
     ensure_routes(credentials.account, zone, DELIVERY_ROUTES)
+    if cutover:
+        _wire_zone(credentials, zone)
     _await_release_served(release)
     _verify_public_delivery(release)
     for base_url in (CANONICAL_DOCS_BASE_URL, MIRROR_DOCS_BASE_URL):
@@ -1029,6 +1046,11 @@ def main(argv: list[str] | None = None) -> int:
         help="Required literal acknowledgement for the publishing.",
     )
     publish.add_argument("--release-label", help="Label for the release id; defaults to the local commit.")
+    publish.add_argument(
+        "--cutover",
+        action="store_true",
+        help="Also retire the mirror redirect once the release is live on the routes (one-time, local only).",
+    )
     rollback = commands.add_parser("rollback", help="Serve an earlier uploaded release again.")
     rollback.add_argument(
         "--confirm",
@@ -1047,7 +1069,7 @@ def main(argv: list[str] | None = None) -> int:
         return _provision()
     if args.command == "rollback":
         return _rollback(args.release)
-    return _publish(repo_root, release_label=args.release_label)
+    return _publish(repo_root, release_label=args.release_label, cutover=args.cutover)
 
 
 if __name__ == "__main__":
