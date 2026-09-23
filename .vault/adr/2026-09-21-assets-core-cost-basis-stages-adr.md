@@ -3,53 +3,18 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-21'
-modified: '2026-09-21'
+modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:bbc111b7861bc04ea02b13306030a2d248293469b3b449bbe97cf2c13707b8cb'
+body_hash: 'sha256:e4670fd33085a292a7691aab03a467dad360f5f6fc7984f270e65a399bdaa200'
 related:
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #adr) and one feature tag.
-     Replace assets-core with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
 
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     Status convention: the H1 status value is one of proposed, accepted,
-     rejected, superseded, or deprecated. A new ADR starts as proposed; it
-     moves to accepted or rejected when the decision is made; it becomes
-     superseded when a later ADR replaces it (set by vault adr supersede,
-     which also records superseded_by); and deprecated when it is retired
-     without a direct successor.
-
-     Reuse, amendment, and supersession follow the vaultspec system section.
-     Preserve accepted content while a revision is pending; apply only an
-     authorized amendment. Accept a reversal's successor before superseding
-     its predecessor. Unchanged coverage needs no new record.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
 
 # `assets-core` adr: `IRPF asset cost-basis stages` | (**status:** `accepted`)
 
-<!-- DOCUMENT BOUNDARY:
-     This record owns the decision and only the decision. Grounding evidence
-     lives in the related research/reference/audit documents and is cited by stem
-     (e.g. `2026-02-04-editor-demo-research`), never restated - a restated
-     fact forks and goes stale. A fact this record needs but the grounding
-     lacks is added to the grounding first, then cited. -->
 
 ## Problem Statement
 
