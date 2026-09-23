@@ -170,7 +170,7 @@ def main() -> None:
     progress_sink = nullcontext()
     if not metadata_invocation:
         try:
-            _provision_dependencies_at_startup()
+            _admit_authority_at_startup()
         except typer.Exit as exit_request:
             raise SystemExit(exit_request.exit_code) from None
         from ...adapters.outbound.aeat.operator_progress import operator_progress_sink
@@ -180,19 +180,24 @@ def main() -> None:
         app(prog_name=_PRODUCT_IDENTITY.cli_executable)
 
 
-def _provision_dependencies_at_startup() -> None:
-    """Provision startup dependencies through the typed CLI error boundary."""
+def _admit_authority_at_startup() -> None:
+    """Admit the shipped authority through the typed CLI error boundary.
+
+    Storage is not provisioned here: a command provisions it at dispatch, once
+    parsing has accepted it, so help, a bare group and a parse-time refusal
+    write nothing.
+    """
     from ...application.profile_preconditions import (
         FormerProductDetectionScope,
         former_product_state_verdict,
     )
-    from ...application.provisioning import ensure_cli_startup_dependencies
+    from ...application.provisioning import admit_cli_authority
     from ...core.config_state_root import FormerProductStateError
     from ...core.errors.hierarchy import ActiveProfilePointerError, CadrumoError
     from .errors import CliRefusedBoundaryError, emit_error_and_exit, project_cli_boundary_error
 
     try:
-        ensure_cli_startup_dependencies()
+        admit_cli_authority()
     except FormerProductStateError as error:
         emit_error_and_exit(
             attach_cli_policy_verdict(
@@ -203,9 +208,9 @@ def _provision_dependencies_at_startup() -> None:
             )
         )
     except ActiveProfilePointerError as error:
-        emit_error_and_exit(project_cli_boundary_error(error, _provision_dependencies_at_startup))
+        emit_error_and_exit(project_cli_boundary_error(error, _admit_authority_at_startup))
     except CadrumoError as error:
-        emit_error_and_exit(project_cli_boundary_error(error, _provision_dependencies_at_startup))
+        emit_error_and_exit(project_cli_boundary_error(error, _admit_authority_at_startup))
 
 
 @contextmanager

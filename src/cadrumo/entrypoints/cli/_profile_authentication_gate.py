@@ -330,6 +330,11 @@ def preflight_parsed_leaf(
     root, leaf = _select_preflight_channels(ctx, spec=spec, arguments=arguments)
     if posture is not ProfileAuthenticationPosture.RESUME_FALLBACK and root is not None:
         _refuse("profile_secrets_inapplicable")
+    # The secret-source refusals above are still parse-time refusals and write
+    # nothing; from here on the command runs, so its state tree must exist.
+    from ...application.provisioning import provision_cli_storage
+
+    provision_cli_storage()
     root_state = cast("dict[str, object]", ctx.find_root().ensure_object(dict))
     _configure_root_logging(root_state)
     explicit_target, explicit_label = _resolve_profile_targets(
