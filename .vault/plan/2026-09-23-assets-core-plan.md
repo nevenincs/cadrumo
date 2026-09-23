@@ -8,9 +8,10 @@ related:
   - '[[2026-09-23-assets-core-amortization-method-set-adr]]'
   - '[[2026-09-21-assets-core-lifecycle-contract-adr]]'
   - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
+  - '[[2026-09-23-assets-core-vehicle-affectation-adr]]'
 modified: '2026-09-23'
 body_schema: body-v2
-body_hash: 'sha256:d719f95a0da5f22a0257af4eed1a7920483091239d6c697518f6815a67a0f5fe'
+body_hash: 'sha256:5e8a60449186249311feb4c14f1112aeccd9f11cbbec66163e223d94ef300acd'
 ---
 
 # `assets-core` plan
@@ -23,6 +24,8 @@ Approved 2026-09-23. Basis: the operator-coordinated ASSETS-01 continuation brie
 
 Decision coverage: `2026-09-23-assets-core-amortization-method-set-adr` governs the election contract, method admission and method arithmetic (S01-S06). `2026-09-21-assets-core-lifecycle-contract-adr` and its cost-basis amendment `2026-09-21-assets-core-cost-basis-stages-adr` continue to govern identity, claims, projections and allocation. The legal evidence is `2026-09-23-assets-core-amortization-method-set-research`. Limits 1, 2 and 5 of the brief (namespace tripwire, private parity import, current-generation re-verification) were routine corrections completed before this plan in commits `faf9b18bc7` and `a2e62cdb55`.
 
+S09-S12 were added on 2026-09-23 under the operator's instruction that every critical issue found is actioned, with the ordering and scope set by CADRUMO-ADMIN on the operator's behalf. `2026-09-23-assets-core-vehicle-affectation-adr` governs S09's vehicle work and the method-set amendment of 2026-09-23 governs its other admissions; S11 consumes the average-workforce field the taxpayer-profile schema version 7 adds.
+
 ## Steps
 
 - [x] `S01` - Enrol the 2025 method-admission, class-admission, weighting, threshold and incentive authority with legal entries and manual citations; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0002-activity-asset-amortization.toml`.
@@ -33,6 +36,10 @@ Decision coverage: `2026-09-23-assets-core-amortization-method-set-adr` governs 
 - [x] `S06` - Prove each method with independent worked examples, boundaries and cited refusals; `src/cadrumo/domain/renta/actividad_asset/tests/`.
 - [x] `S07` - Publish the authority once and prove a non-linear asset through installed CLI and TUI to M130, M100 and the 2025 XSD; `dev/acceptance/assets/`.
 - [ ] `S08` - Run the owning quality gates and write the checkpoint and handoff; `.agents/session-briefs/handoffs/`.
+- [x] `S09` - Admit the table-listed intangible methods, reduced-size acceleration of indefinite-life intangibles and goodwill, and vehicles on a typed affectation declaration with electric-vehicle free depreciation; `src/cadrumo/domain/renta/actividad_asset/vehicle_affectation.py`.
+- [ ] `S10` - Give the undeclared-vehicle refusal a typed recovery action to the CLI and TUI correction; `src/cadrumo/application/actividad_asset/`.
+- [ ] `S11` - Consume the average-workforce profile fact for job-creating and renewable self-consumption free depreciation; `src/cadrumo/domain/renta/actividad_asset/workforce.py`.
+- [ ] `S12` - Republish the authority once after the format cutover and prove the final tree through one installed run; `dev/acceptance/assets/`.
 
 ## Parallelization
 

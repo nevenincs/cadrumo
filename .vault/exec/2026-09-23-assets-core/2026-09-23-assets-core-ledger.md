@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:fc059e058f6f56513a12c2ff9414239c5f778d37d8c860ca53771e1091c3bcfe'
+body_hash: 'sha256:0de15a399b9eb719ff2f6cc9f7fb4048fad886c497d7253b5b3b0fca3f8315ad'
 related:
   - "[[2026-09-23-assets-core-plan]]"
 ---
@@ -68,6 +68,16 @@ related:
 - `S07` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_actividad_asset_parity.py`
 - `S07` `verify:` `asset suites 105 tests` -> `pass`
 - `S07` `by:` `assets-core`
+- `S09` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0002-activity-asset-amortization.toml`
+- `S09` `M` `src/cadrumo/_data/registry/aeat/legal/is.toml`
+- `S09` `M` `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`
+- `S09` `M` `src/cadrumo/domain/renta/actividad_asset/election.py`
+- `S09` `M` `src/cadrumo/domain/renta/actividad_asset/lifecycle.py`
+- `S09` `A` `src/cadrumo/domain/renta/actividad_asset/vehicle_affectation.py`
+- `S09` `M` `dev/registry/tests/test_activity_asset_schedule_authority_resolution.py`
+- `S09` `M` `dev/quality/metadata/import_load_targets.json`
+- `S09` `verify:` `asset suites 112 tests` -> `pass`
+- `S09` `by:` `assets-core`
 
 ## Notes
 
