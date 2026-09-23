@@ -17,10 +17,12 @@ import sys
 from collections.abc import Callable
 from dataclasses import dataclass
 from pathlib import Path
-from time import monotonic
+from time import monotonic, sleep
 from typing import Any, Literal, cast
 
 _SCHEMA_VERSION = "assets-01-installed-tui-child-v2"
+_RECEIPT_REPLACE_SECONDS = 2.0
+_RECEIPT_REPLACE_RETRY_SECONDS = 0.02
 type InstalledAssetTuiJourney = Literal[
     "probe",
     "home",
@@ -183,12 +185,26 @@ def _sanitized_diagnostic(diagnostic: dict[str, object] | None) -> dict[str, obj
     return sanitized
 
 
-def _write_receipt(*, path: Path, receipt: InstalledAssetTuiReceipt) -> None:
-    """Atomically publish the current stage for the supervising process."""
+def write_receipt_atomically(*, path: Path, receipt: InstalledAssetTuiReceipt) -> None:
+    """Atomically publish the current stage for the supervising process.
+
+    The supervisor polls this receipt, and Windows refuses to replace a file
+    that another process holds open.  A poll holds it only for one short read,
+    so the replacement is retried briefly before the refusal is surfaced.
+    """
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix(path.suffix + ".tmp")
     temporary.write_text(json.dumps(receipt.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    temporary.replace(path)
+    deadline = monotonic() + _RECEIPT_REPLACE_SECONDS
+    while True:
+        try:
+            temporary.replace(path)
+        except PermissionError:
+            if monotonic() >= deadline:
+                raise
+            sleep(_RECEIPT_REPLACE_RETRY_SECONDS)
+        else:
+            return
 
 
 def _completed_stages_from_receipt(path: Path) -> tuple[str, ...]:
@@ -851,7 +867,7 @@ def _run_probe(
         diagnostic: dict[str, object] | None = None,
         receipt_assertions: dict[str, object] | None = None,
     ) -> None:
-        _write_receipt(
+        write_receipt_atomically(
             path=receipt_path,
             receipt=InstalledAssetTuiReceipt(
                 schema_version=_SCHEMA_VERSION,
@@ -1060,7 +1076,7 @@ def main(argv: list[str] | None = None) -> int:
             stage = "timeout"
             diagnostic = None
             message = "installed TUI stage exceeded its bounded timeout"
-        _write_receipt(
+        write_receipt_atomically(
             path=args.receipt,
             receipt=InstalledAssetTuiReceipt(
                 schema_version=_SCHEMA_VERSION,
@@ -1074,7 +1090,7 @@ def main(argv: list[str] | None = None) -> int:
         )
         print(json.dumps({"status": "failed", "stage": stage, "error": message}, sort_keys=True))
         return 2
-    _write_receipt(path=args.receipt, receipt=receipt)
+    write_receipt_atomically(path=args.receipt, receipt=receipt)
     print(json.dumps({"status": "proven", "stage": receipt.stage}, sort_keys=True))
     return 0
 
