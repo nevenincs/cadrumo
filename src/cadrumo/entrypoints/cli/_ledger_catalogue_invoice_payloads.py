@@ -33,7 +33,7 @@ from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.identity.transaction_ids import TransactionId
 from ...core.json_contract import OutputSchema
 from ...core.parsing.codes import IsoCurrencyCode
-from ...core.text_bounds import NonEmptyStr, NonNegativeDecimal, PositiveCount, PositiveDecimal
+from ...core.text_bounds import NonEmptyList, NonEmptyStr, NonNegativeDecimal, PositiveCount, PositiveDecimal
 from ...domain.invoices.enums import InvoiceClass, InvoiceOperationDateRole, IvaRate, PaymentStatus
 from ...domain.invoices.validators import validate_counterparty_tax_id, validate_country_code
 from ...domain.iva.classification import InvoiceKind
@@ -91,7 +91,7 @@ class CatalogueInvoiceRecordPayload(OutputSchema):
     retention_amount: NonNegativeDecimal | None = None
     recargo_amount: NonNegativeDecimal | None = None
     operation_type: IntracomOperationType | None = None
-    lines: list[CatalogueInvoiceLinePayload] = Field(min_length=1)
+    lines: NonEmptyList[CatalogueInvoiceLinePayload]
     invoice_class: InvoiceClass
     series: str | None = None
     operation_date: date | None = None
