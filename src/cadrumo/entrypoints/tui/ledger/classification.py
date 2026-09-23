@@ -29,7 +29,8 @@ _CHOICES = (
     (BusinessClassification.REVIEWED_EXCLUDED, "tui.ledger.classification.excluded"),
 )
 
-_FIELD_LABELS: Final[tuple[str, ...]] = (
+#: The classification capture fields, each labelled by ``tui.ledger.classification.field.<name>``.
+CLASSIFICATION_FIELD_NAMES: Final[tuple[str, ...]] = (
     "taxable_base",
     "iva_rate",
     "iva_amount",
@@ -104,7 +105,7 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
                 id="ledger-classification-boundary",
                 markup=False,
             )
-            for field_name in _FIELD_LABELS:
+            for field_name in CLASSIFICATION_FIELD_NAMES:
                 yield Static(ledger_copy(f"tui.ledger.classification.field.{field_name}"), markup=False)
                 yield Input(id=_input_id(field_name))
             yield ContentDataTable[str](id="ledger-classifications", cursor_type="row", zebra_stripes=True)
@@ -247,4 +248,4 @@ class LedgerClassificationScreen(LedgerConfirmationFlowScreen):
         self.query_one("#ledger-classification-cancel", Button).disabled = True
 
 
-__all__ = ["LedgerClassificationScreen"]
+__all__ = ["CLASSIFICATION_FIELD_NAMES", "LedgerClassificationScreen"]

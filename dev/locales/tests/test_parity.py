@@ -865,13 +865,21 @@ def test_set_locale_value_rejects_locale_path_traversal(tmp_path: Path):
     assert _leaf(outside_data, "cli", "label") == "fuera"
 
 
-def test_locale_set_cli_rejects_path_like_locale_without_writing() -> None:
+def test_locale_set_cli_rejects_path_like_locale_without_writing(tmp_path: Path) -> None:
     """The canonical locale CLI rejects traversal-shaped locale arguments."""
 
-    result = invoke_typer_app(app, ["set", "../outside", "cli.locales.app_help", "unsafe"])
+    locales_dir = tmp_path / "locales"
+    locales_dir.mkdir()
+    outside = tmp_path / "outside.yml"
+    original = "cli:\n  locales:\n    app_help: fuera\n"
+    outside.write_text(original, encoding="utf-8")
+    temp_manager = LocaleManager(src_dir=tmp_path, locales_dir=locales_dir)
+
+    result = invoke_typer_app(app, ["set", "../outside", "cli.locales.app_help", "unsafe"], obj=temp_manager)
 
     assert result.exit_code != 0
     assert "Invalid locale code" in result.output
+    assert outside.read_text(encoding="utf-8") == original
 
 
 def test_ast_scanner_logs_syntax_failures_and_keeps_scanning(tmp_path: Path, caplog) -> None:

@@ -62,14 +62,14 @@ def _option(
     )
 
 
-def _boolean_choice(name: str, declaration: str, help_key: str) -> OptionSpec:
+def _boolean_choice(name: str, declaration: str, help_key: TranslationKey) -> OptionSpec:
     """Declare a tri-state operator choice without silently choosing false."""
     return OptionSpec(
         name,
         (declaration, f"--no-{declaration.removeprefix('--')}"),
         FLAG_VALUE,
         ParameterDefault.value(None),
-        TranslationKey(help_key),
+        help_key,
         is_flag=True,
         flag_value=True,
     )
@@ -135,7 +135,7 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _boolean_choice(
                 "joint_return_elected",
                 "--joint-return-elected",
-                "cli.app.modelo.work.joint_return_elected_help",
+                TranslationKey("cli.app.modelo.work.joint_return_elected_help"),
             ),
             _option(
                 "m303_exonerado_390_attachment_id",

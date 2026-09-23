@@ -12,7 +12,9 @@ test doubles, no patched clocks, and no sequential stand-in for a race.
 
 from __future__ import annotations
 
+import os
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
@@ -21,7 +23,7 @@ import yaml
 
 from ..errors import LocaleError, LocaleWriteConflictError
 from ..manager import LocaleManager
-from ..write_guard import LOCK_FILENAME, catalogue_write_guard
+from ..write_guard import CATALOGUE_REPLACE_RETRY_SECONDS, LOCK_FILENAME, catalogue_write_guard
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -139,3 +141,44 @@ def test_a_live_holder_is_waited_out_then_refused(manager: LocaleManager) -> Non
         pytest.fail("the second cycle must not acquire a lock this process still holds")
 
     assert not (manager.locales_dir / LOCK_FILENAME).exists()
+
+
+_WINDOWS_ONLY = pytest.mark.skipif(os.name != "nt", reason="an open handle blocks a replace only on Windows")
+
+
+@_WINDOWS_ONLY
+def test_a_replace_blocked_by_a_briefly_open_handle_lands_once_the_handle_closes(manager: LocaleManager) -> None:
+    """A scanner holding the catalogue for a moment must not fail the edit.
+
+    Windows refuses to replace a file another handle holds open, and the lock
+    cannot exclude a process outside this tool. A handle that closes inside the
+    retry window is waited out rather than reported as a failed write.
+    """
+    target = manager.locales_dir / "en.yml"
+    holder = target.open("rb")
+    release = threading.Timer(0.3, holder.close)
+    release.start()
+    try:
+        manager.set_locale_value("en", "cli.after_scan", "written")
+    finally:
+        release.cancel()
+        holder.close()
+
+    assert _read_leaves(target)["after_scan"] == "written"
+
+
+@_WINDOWS_ONLY
+def test_a_replace_blocked_past_the_retry_window_is_refused_and_leaves_the_catalogue_intact(
+    manager: LocaleManager,
+) -> None:
+    """A handle that never closes is reported, not retried forever and not half-written."""
+    target = manager.locales_dir / "en.yml"
+    before = target.read_bytes()
+    started = time.monotonic()
+
+    with target.open("rb"), pytest.raises(LocaleError, match="could not be replaced"):
+        manager.set_locale_value("en", "cli.never_lands", "blocked")
+
+    assert time.monotonic() - started >= CATALOGUE_REPLACE_RETRY_SECONDS
+    assert target.read_bytes() == before
+    assert not list(manager.locales_dir.glob("en.*.tmp")), "a refused replace must not leave its staging file"

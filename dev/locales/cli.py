@@ -313,6 +313,7 @@ def scaffold(
 
 @app.command("set")
 def set_value(
+    ctx: typer.Context,
     locale: Annotated[
         str,
         typer.Argument(help="Locale code to update (e.g. en, es, ca)."),
@@ -327,8 +328,9 @@ def set_value(
     ],
 ) -> None:
     """Set one locale string leaf."""
+    manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
     try:
-        path = _default_manager().set_locale_value(locale, key, value)
+        path = manager.set_locale_value(locale, key, value)
     except LocaleError as exc:
         raise typer.BadParameter(str(exc)) from exc
     typer.echo(f"updated {path.name}:{key}")
@@ -336,6 +338,7 @@ def set_value(
 
 @app.command("set-batch")
 def set_batch(
+    ctx: typer.Context,
     manifest: Annotated[
         Path,
         typer.Argument(
@@ -350,7 +353,7 @@ def set_batch(
         raise typer.BadParameter(f"Cannot read locale batch manifest: {exc}", param_hint="manifest") from exc
     if not isinstance(payload, dict):
         raise typer.BadParameter("Locale batch manifest must contain an object", param_hint="manifest")
-    manager = _default_manager()
+    manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
     updated: list[str] = []
     try:
         for locale, raw_values in sorted(payload.items()):
@@ -541,6 +544,7 @@ def remove_value(
 
 @app.command("remove-batch")
 def remove_batch(
+    ctx: typer.Context,
     manifest: Annotated[
         Path,
         typer.Argument(help="JSON object mapping locale codes to arrays of dotted keys."),
@@ -570,7 +574,7 @@ def remove_batch(
     if not isinstance(payload, dict):
         raise typer.BadParameter("Locale batch manifest must contain an object", param_hint="manifest")
 
-    manager = _default_manager()
+    manager = ctx.obj if isinstance(ctx.obj, LocaleManager) else _default_manager()
     plan: dict[str, tuple[list[str], list[str]]] = {}
     try:
         for locale, raw_keys in sorted(payload.items()):
