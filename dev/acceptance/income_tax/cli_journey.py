@@ -325,7 +325,8 @@ def _m130_expected(oracle: QuarterlyOracle) -> dict[str, str]:
     }
 
 
-def _create_m130_work(cli: InstalledCli, *, year: int, period: str) -> str:
+def create_m130_work(cli: InstalledCli, *, year: int, period: str) -> str:
+    """Create one Modelo 130 work unit for the quarter and return its public identity."""
     create = command_result(
         cli.run(
             (
@@ -349,7 +350,8 @@ def _create_m130_work(cli: InstalledCli, *, year: int, period: str) -> str:
     return str(create["work_unit_id"])
 
 
-def _calculate_m130_work(cli: InstalledCli, *, work_id: str, oracle: QuarterlyOracle) -> tuple[dict[str, str], str]:
+def calculate_m130_work(cli: InstalledCli, *, work_id: str, oracle: QuarterlyOracle) -> tuple[dict[str, str], str]:
+    """Calculate the quarter, require its casillas to equal the oracle, and return them with the revision id."""
     calculation = command_result(cli.run(("app", "modelo", "work", "calculate", work_id, "--by", "income-acceptance")))
     values = calculation.get("casilla_values")
     if not isinstance(values, dict):
@@ -361,7 +363,8 @@ def _calculate_m130_work(cli: InstalledCli, *, work_id: str, oracle: QuarterlyOr
     return actual, str(calculation["calculation_revision_id"])
 
 
-def _verify_and_file_m130(cli: InstalledCli, *, revision_id: str, period: str) -> None:
+def verify_and_file_m130(cli: InstalledCli, *, revision_id: str, period: str) -> None:
+    """Require complete verification, then record a local pending filing that is never sent to AEAT."""
     verification = command_result(
         cli.run(("app", "modelo", "work", "verify", revision_id, "--by", "income-acceptance"))
     )
@@ -389,10 +392,10 @@ def _calculate_quarters(
     observed: dict[str, dict[str, str]] = {}
     artifacts: list[ArtifactEvidence] = []
     for oracle in scenario.quarter_oracle:
-        work_id = _create_m130_work(cli, year=year, period=oracle.period)
-        actual, revision_id = _calculate_m130_work(cli, work_id=work_id, oracle=oracle)
+        work_id = create_m130_work(cli, year=year, period=oracle.period)
+        actual, revision_id = calculate_m130_work(cli, work_id=work_id, oracle=oracle)
         observed[oracle.period] = actual
-        _verify_and_file_m130(cli, revision_id=revision_id, period=oracle.period)
+        verify_and_file_m130(cli, revision_id=revision_id, period=oracle.period)
         target = output_dir / f"modelo-130-{year}-{oracle.period}.boe"
         cli.run(("app", "modelo", "export", work_id, "--output", str(target), "--by", "income-acceptance"))
         payload = target.read_bytes()
@@ -408,7 +411,7 @@ def _calculate_quarters(
     return observed, tuple(artifacts)
 
 
-def _calculate_m100(
+def calculate_m100(
     cli: InstalledCli,
     *,
     year: int,
@@ -416,6 +419,7 @@ def _calculate_m100(
     annual_oracle: AnnualOracle | None = None,
     attempt_export: bool = True,
 ) -> dict[str, object]:
+    """Create and calculate the annual Modelo 100 and return its public outcome, exporting when asked."""
     create = command_result(
         cli.run(
             (
@@ -585,12 +589,12 @@ def _a2_retention_mutation_case(
     _assert_reopened_ledger(cli, ingested)
 
     for oracle in scenario.quarter_oracle[:3]:
-        work_id = _create_m130_work(cli, year=year, period=oracle.period)
-        _actual, revision_id = _calculate_m130_work(cli, work_id=work_id, oracle=oracle)
-        _verify_and_file_m130(cli, revision_id=revision_id, period=oracle.period)
+        work_id = create_m130_work(cli, year=year, period=oracle.period)
+        _actual, revision_id = calculate_m130_work(cli, work_id=work_id, oracle=oracle)
+        verify_and_file_m130(cli, revision_id=revision_id, period=oracle.period)
 
-    q4_work_id = _create_m130_work(cli, year=year, period=mutation.baseline_quarter.period)
-    before, _before_revision = _calculate_m130_work(cli, work_id=q4_work_id, oracle=mutation.baseline_quarter)
+    q4_work_id = create_m130_work(cli, year=year, period=mutation.baseline_quarter.period)
+    before, _before_revision = calculate_m130_work(cli, work_id=q4_work_id, oracle=mutation.baseline_quarter)
     pair = next(
         (item for item in ingested.issued_pairs if item.fixture_invoice_id == mutation.target_invoice.invoice_id),
         None,
@@ -620,9 +624,9 @@ def _a2_retention_mutation_case(
             _money(mutation.corrected_invoice.net_receipt),
         )
     )
-    after, corrected_revision = _calculate_m130_work(cli, work_id=q4_work_id, oracle=mutation.corrected_quarter)
-    _verify_and_file_m130(cli, revision_id=corrected_revision, period=mutation.corrected_quarter.period)
-    annual = _calculate_m100(
+    after, corrected_revision = calculate_m130_work(cli, work_id=q4_work_id, oracle=mutation.corrected_quarter)
+    verify_and_file_m130(cli, revision_id=corrected_revision, period=mutation.corrected_quarter.period)
+    annual = calculate_m100(
         cli,
         year=year,
         output_dir=output_dir,
@@ -670,11 +674,11 @@ def _a4_boundary_case(
     _assert_reopened_ledger(cli, ingested)
     observed: dict[str, dict[str, str]] = {}
     for oracle in controls.quarter_oracle:
-        work_id = _create_m130_work(cli, year=year, period=oracle.period)
-        values, revision_id = _calculate_m130_work(cli, work_id=work_id, oracle=oracle)
-        _verify_and_file_m130(cli, revision_id=revision_id, period=oracle.period)
+        work_id = create_m130_work(cli, year=year, period=oracle.period)
+        values, revision_id = calculate_m130_work(cli, work_id=work_id, oracle=oracle)
+        verify_and_file_m130(cli, revision_id=revision_id, period=oracle.period)
         observed[oracle.period] = values
-    annual = _calculate_m100(
+    annual = calculate_m100(
         cli,
         year=year,
         output_dir=output_dir,
@@ -721,7 +725,7 @@ def _a5_history_case(
     first_root = storage_root / "first-period-and-recorded-zero"
     missing_root = storage_root / "missing-required-history"
     first_cli = _control_cli(executable=executable, authority_root=authority_root, storage_root=first_root, year=year)
-    q1_work_id = _create_m130_work(first_cli, year=year, period="1T")
+    q1_work_id = create_m130_work(first_cli, year=year, period="1T")
     q1_zero = QuarterlyOracle(
         period="1T",
         cumulative_income=Decimal(),
@@ -734,9 +738,9 @@ def _a5_history_case(
         low_income_reduction=Decimal("100.00"),
         payment=Decimal("-100.00"),
     )
-    q1_values, q1_revision_id = _calculate_m130_work(first_cli, work_id=q1_work_id, oracle=q1_zero)
-    _verify_and_file_m130(first_cli, revision_id=q1_revision_id, period="1T")
-    q2_work_id = _create_m130_work(first_cli, year=year, period="2T")
+    q1_values, q1_revision_id = calculate_m130_work(first_cli, work_id=q1_work_id, oracle=q1_zero)
+    verify_and_file_m130(first_cli, revision_id=q1_revision_id, period="1T")
+    q2_work_id = create_m130_work(first_cli, year=year, period="2T")
     recorded_zero = first_cli.run(
         ("app", "modelo", "work", "calculate", q2_work_id, "--by", "income-acceptance"), allow_error=True
     )
@@ -747,7 +751,7 @@ def _a5_history_case(
         storage_root=missing_root,
         year=year,
     )
-    missing_q2_work_id = _create_m130_work(missing_cli, year=year, period="2T")
+    missing_q2_work_id = create_m130_work(missing_cli, year=year, period="2T")
     missing = missing_cli.run(
         ("app", "modelo", "work", "calculate", missing_q2_work_id, "--by", "income-acceptance"), allow_error=True
     )
@@ -907,7 +911,7 @@ def run_cli_journey(
     if {str(row.get("transaction_id")) for row in rows if isinstance(row, dict)} != set(ingested.transaction_ids):
         raise JourneyError("fresh-process ledger read did not reproduce the ingested transaction identities")
     quarterly, artifacts = _calculate_quarters(cli, year=year, output_dir=output_dir)
-    modelo_100 = _calculate_m100(cli, year=year, output_dir=output_dir)
+    modelo_100 = calculate_m100(cli, year=year, output_dir=output_dir)
     return CliJourneyEvidence(
         brief_revision=BRIEF_REVISION,
         scenario=f"{SCENARIO_VERSION}:{year}:cli",

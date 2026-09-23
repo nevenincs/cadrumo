@@ -23,12 +23,12 @@ from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 
 from .cli_journey import (
     JourneyError,
-    _calculate_m100,
-    _calculate_m130_work,
-    _create_m130_work,
-    _verify_and_file_m130,
+    calculate_m100,
+    calculate_m130_work,
     command_result,
+    create_m130_work,
     ingest_income_fixture,
+    verify_and_file_m130,
 )
 from .installed_tui_child import (
     InstalledTuiChildError,
@@ -302,9 +302,9 @@ def _cli_complete(
     existing_units = _public_work_units(cli, year=year)
     for oracle in build_scenario(year).quarter_oracle[1:]:
         work_id = str(existing_units[oracle.period]["work_unit_id"])
-        _actual, revision = _calculate_m130_work(cli, work_id=work_id, oracle=oracle)
-        _verify_and_file_m130(cli, revision_id=revision, period=oracle.period)
-    annual = _calculate_m100(cli, year=year, output_dir=output_dir)
+        _actual, revision = calculate_m130_work(cli, work_id=work_id, oracle=oracle)
+        verify_and_file_m130(cli, revision_id=revision, period=oracle.period)
+    annual = calculate_m100(cli, year=year, output_dir=output_dir)
     if annual.get("export_execution") != "proven":
         diagnostic = annual.get("diagnostic_code")
         raise InstalledContinuationError(
@@ -634,11 +634,11 @@ def run_installed_tui_continuations(
     cli = InstalledCli(cli_executable, storage_root=cli_store, authority_root=authority_root, passphrase=cli_passphrase)
     cli.create_profile(year=year)
     ingest_income_fixture(cli, year=year)
-    work_ids = {period: _create_m130_work(cli, year=year, period=period) for period in ("1T", "2T", "3T", "4T")}
+    work_ids = {period: create_m130_work(cli, year=year, period=period) for period in ("1T", "2T", "3T", "4T")}
     q1 = build_scenario(year).quarter_oracle[0]
     q1_work = work_ids["1T"]
-    _actual, q1_revision = _calculate_m130_work(cli, work_id=q1_work, oracle=q1)
-    _verify_and_file_m130(cli, revision_id=q1_revision, period="1T")
+    _actual, q1_revision = calculate_m130_work(cli, work_id=q1_work, oracle=q1)
+    verify_and_file_m130(cli, revision_id=q1_revision, period="1T")
     cli_handoff = _state(
         generation=generation,
         year=year,

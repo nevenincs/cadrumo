@@ -7,6 +7,7 @@ import secrets
 from dataclasses import asdict
 from pathlib import Path
 from types import SimpleNamespace
+from typing import TYPE_CHECKING, cast
 
 import pytest
 
@@ -19,6 +20,9 @@ from ..installed_tui_continuations import (
     _state,
 )
 from ..tui_journey import create_continuation_checkpoint, prove_continuation
+
+if TYPE_CHECKING:
+    from dev.acceptance.installed_cli import InstalledCli
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -189,18 +193,18 @@ def test_cli_completion_reuses_public_handoff_work_ids(monkeypatch, tmp_path: Pa
     )
     monkeypatch.setattr(
         continuation_module,
-        "_create_m130_work",
+        "create_m130_work",
         lambda *_args, **_kwargs: pytest.fail("completion must not create an existing handoff work unit"),
     )
     monkeypatch.setattr(
         continuation_module,
-        "_calculate_m130_work",
+        "calculate_m130_work",
         lambda _cli, *, work_id, oracle: (observed.append(work_id) or {}, f"revision-{oracle.period}"),
     )
-    monkeypatch.setattr(continuation_module, "_verify_and_file_m130", lambda *_args, **_kwargs: None)
+    monkeypatch.setattr(continuation_module, "verify_and_file_m130", lambda *_args, **_kwargs: None)
     monkeypatch.setattr(
         continuation_module,
-        "_calculate_m100",
+        "calculate_m100",
         lambda *_args, **_kwargs: {"export_execution": "proven"},
     )
     monkeypatch.setattr(
@@ -211,7 +215,7 @@ def test_cli_completion_reuses_public_handoff_work_ids(monkeypatch, tmp_path: Pa
     monkeypatch.setattr(continuation_module, "_annual_schema", lambda *_args: tmp_path / "official.xsd")
 
     state, validation = continuation_module._cli_complete(
-        cli=SimpleNamespace(),
+        cli=cast("InstalledCli", SimpleNamespace()),
         workspace_root=tmp_path,
         output_dir=tmp_path,
         generation=_GENERATION,
