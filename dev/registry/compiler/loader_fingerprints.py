@@ -8,7 +8,7 @@ from collections.abc import Callable
 from pathlib import Path
 from typing import Protocol
 
-from cadrumo.core.directory_scan import scan_directory
+from cadrumo.core.directory_scan import DirectoryEntryKind, scan_directory
 from cadrumo.domain.calculations.registry.errors import (
     RegistryFailureClassification,
     RegistryFailureCondition,
@@ -215,24 +215,38 @@ def _live_cached_fingerprints(
 
 
 def _registry_source_fingerprints(resolved: Path) -> RegistryPathFingerprints:
-    """Fingerprint every catalogue TOML the loader will subsequently re-open."""
+    """Fingerprint every file under the registry root by content, the modelo tree in its directory form.
+
+    The identity keys the compiled registry, the disk pickle and the recorded
+    validation verdict, so a file the walk skips is an input whose edit keeps
+    the old identity: the compile cache serves the previous result and a
+    recorded clean verdict skips validation of the changed file. Enumerating
+    the root rather than naming directories or formats is what keeps a new
+    catalogue directory, or an input that is not TOML, from joining the
+    compiler's inputs unseen.
+    """
     # Import here because fact providers use this module's fingerprint type.
     # Their registered inputs are nevertheless compiler inputs and must affect
     # the authority identity that publication records.
     from .fact_providers import collect_registered_fact_provider_fingerprints
 
     fingerprints: list[RegistryPathFingerprint] = []
-    for path in scan_directory(resolved / "legal", pattern="*.toml"):
-        fingerprints.append(toml_file_fingerprint(path))
     modelos_dir = resolved / "modelos"
     for path in scan_directory(modelos_dir, pattern="*.toml"):
         fingerprints.append(toml_file_fingerprint(path))
     for entry in scan_directory(modelos_dir):
         fingerprints.extend(_modelo_directory_fingerprints(entry))
+    provider_fingerprints = collect_registered_fact_provider_fingerprints(resolved)
+    covered = {Path(row[0]) for row in (*fingerprints, *provider_fingerprints)}
+    for path in scan_directory(
+        resolved, recursive=True, select=DirectoryEntryKind.FILES, prune_directories=("modelos",)
+    ):
+        if path not in covered:
+            fingerprints.append(toml_file_fingerprint(path))
     schema_path = resolved / "user_profile" / "schema.toml"
-    if schema_path.is_file():
+    if schema_path.is_file() and schema_path not in covered:
         fingerprints.append(toml_file_fingerprint(schema_path))
-    return (*fingerprints, *collect_registered_fact_provider_fingerprints(resolved))
+    return (*fingerprints, *provider_fingerprints)
 
 
 def _store_registry_fingerprints(
