@@ -31,7 +31,9 @@ from ...application.aggregation.service import (
 )
 from ...application.aggregation.withholding_observation_service import (
     WithholdingGenerationAudit,
+    WithholdingGenerationId,
     WithholdingMutationMode,
+    WithholdingScopeToken,
     WithholdingWindowState,
 )
 from ...application.calculations.observations_repository import (
@@ -1435,16 +1437,16 @@ class WorkResumeResult(OutputSchema):
 class WithholdingWindowBaselinePayload(OutputSchema):
     """An exact public optimistic-concurrency baseline for one withholding scope."""
 
-    scope_token: str = Field(min_length=1)
-    generation_id: str = Field(min_length=64, max_length=64)
+    scope_token: WithholdingScopeToken
+    generation_id: WithholdingGenerationId
 
 
 class WithholdingGenerationAuditPayload(OutputSchema):
     """Payload-free immutable lineage facts for the current withholding generation."""
 
-    parent_generation_id: str = Field(min_length=64, max_length=64)
+    parent_generation_id: WithholdingGenerationId
     mode: WithholdingMutationMode
-    supersedes_generation_id: str | None = Field(default=None, min_length=64, max_length=64)
+    supersedes_generation_id: WithholdingGenerationId | None = None
 
     @field_validator("mode", mode="before")
     @classmethod

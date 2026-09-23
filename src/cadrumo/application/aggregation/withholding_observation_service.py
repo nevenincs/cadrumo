@@ -10,7 +10,7 @@ from __future__ import annotations
 import json
 from decimal import Decimal
 from enum import StrEnum
-from typing import Literal, Protocol
+from typing import Annotated, Literal, Protocol
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -20,6 +20,11 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .retenciones import RetencionObservation
+
+#: One immutable withholding-window generation, addressed by its SHA-256 hex digest.
+WithholdingGenerationId = Annotated[str, Field(min_length=64, max_length=64)]
+#: The portable logical token naming one withholding window scope.
+WithholdingScopeToken = Annotated[str, Field(min_length=1)]
 
 ABSENT_WITHHOLDING_GENERATION_ID = "0" * 64
 _MAX_APPEND_ATTEMPTS = 4
@@ -69,8 +74,8 @@ class WithholdingWindowBaseline(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    scope_token: str = Field(min_length=1)
-    generation_id: str = Field(min_length=64, max_length=64)
+    scope_token: WithholdingScopeToken
+    generation_id: WithholdingGenerationId
 
 
 class WithholdingProjectionIdentity(BaseModel):
@@ -201,7 +206,7 @@ class WithholdingMutationEnvelope(BaseModel):
     entries: tuple[WithholdingProjectionEntry, ...] = ()
     baseline: WithholdingWindowBaseline | None = None
     reason: str | None = Field(default=None, min_length=1, max_length=500)
-    supersedes_generation_id: str | None = Field(default=None, min_length=64, max_length=64)
+    supersedes_generation_id: WithholdingGenerationId | None = None
 
     @model_validator(mode="after")
     def _validate_shape(self) -> WithholdingMutationEnvelope:
@@ -268,10 +273,10 @@ class WithholdingGenerationAudit(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     baseline: WithholdingWindowBaseline
-    parent_generation_id: str = Field(min_length=64, max_length=64)
+    parent_generation_id: WithholdingGenerationId
     mode: WithholdingMutationMode
     reason: str | None = None
-    supersedes_generation_id: str | None = None
+    supersedes_generation_id: WithholdingGenerationId | None = None
 
 
 class WithholdingObservationMutationRepository(Protocol):
@@ -375,6 +380,7 @@ __all__ = [
     "EconomicAllocation",
     "SourceLiabilitySnapshot",
     "WithholdingGenerationAudit",
+    "WithholdingGenerationId",
     "WithholdingIdempotencyReplay",
     "WithholdingMutationEnvelope",
     "WithholdingMutationMode",
@@ -385,6 +391,7 @@ __all__ = [
     "WithholdingProjectionEntry",
     "WithholdingProjectionIdentity",
     "WithholdingProjectionRole",
+    "WithholdingScopeToken",
     "WithholdingWindowBaseline",
     "WithholdingWindowScope",
     "WithholdingWindowState",
