@@ -243,7 +243,7 @@ async def _register_via_production_screen(*, profile_label: str, passphrase: str
 register_profile_through_installed_tui = _register_via_production_screen
 
 
-async def admit_installed_session(*, pilot: Any, passphrase: str) -> None:
+async def admit_installed_session(*, pilot: Any, passphrase: str, polls: int = 180) -> None:
     """Unlock an installed session through its visible admission surface.
 
     A newly registered profile can reach either the Login screen or an already
@@ -255,26 +255,102 @@ async def admit_installed_session(*, pilot: Any, passphrase: str) -> None:
     initial_surface = await wait_for_any_public_selector(
         pilot,
         ("#field-passphrase", "#home-agenda"),
-        polls=180,
+        polls=polls,
     )
     if initial_surface == "#field-passphrase":
         query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
         await pilot.click("#btn-unlock")
-    await wait_for_public_selector(pilot, "#home-agenda", polls=180)
+    await wait_for_public_selector(pilot, "#home-agenda", polls=polls)
 
 
 def admitted_session_autopilot(
     *,
     passphrase: str,
     drive_after_home: Callable[[Any], Awaitable[None]],
+    polls: int = 180,
 ):
     """Build a launcher callback that admits, then delegates real TUI work."""
 
     async def drive(pilot: Any) -> None:
-        await admit_installed_session(pilot=pilot, passphrase=passphrase)
+        await admit_installed_session(pilot=pilot, passphrase=passphrase, polls=polls)
         await drive_after_home(pilot)
 
     return drive
+
+
+async def login_existing_profile_through_installed_tui(*, passphrase: str) -> None:
+    """Admit a profile that already exists through its installed public Login screen.
+
+    A fresh child has no active session, and the production launcher keeps
+    credential screens out of a headless run.  This prelude drives the same
+    visible Login controls first; it never reads or writes the secure store.
+    """
+    from textual.widgets import Input
+
+    from cadrumo.application.user_profile.login_interaction import (
+        ProfileLoginInventoryState,
+        attempt_profile_login,
+        observe_profile_login_inventory,
+    )
+    from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+    from cadrumo.entrypoints.tui.components.host import ScreenHostApp
+    from cadrumo.entrypoints.tui.secret.login import LoginScreen
+
+    inventory = observe_profile_login_inventory()
+    if inventory.state is not ProfileLoginInventoryState.RECOGNIZED:
+        raise InstalledTuiChildError("installed Login screen did not recognize the existing profile")
+    with bundled_indexed_authority().operation() as operation:
+        screen = LoginScreen(
+            choices=inventory.choices,
+            authenticate=lambda profile_id, secret: attempt_profile_login(
+                profile_id,
+                secret,
+                profile_decode_context=operation.profile_decode_context(),
+            ),
+            preselected=inventory.preselected_profile_id,
+        )
+        async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
+            await wait_for_public_selector(pilot, "#field-passphrase")
+            query_public_selector(pilot, "#field-passphrase", Input).value = passphrase
+            await pilot.click("#btn-unlock")
+            await pilot.app.workers.wait_for_complete()
+            await pilot.pause()
+    if screen.outcome is None:
+        raise InstalledTuiChildError("installed Login screen did not admit the existing profile")
+
+
+def admit_existing_profile_for_headless_launcher(*, passphrase: str) -> None:
+    """Run the Login prelude inside the product compositions a fresh child needs."""
+    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+    from cadrumo.entrypoints.exchange_rate_composition import live_exchange_rate_composition
+
+    with live_exchange_rate_composition(), profile_adapter_composition():
+        asyncio.run(login_existing_profile_through_installed_tui(passphrase=passphrase))
+
+
+def run_admitted_installed_launcher(
+    *,
+    passphrase: str,
+    drive_after_home: Callable[[Any], Awaitable[None]],
+    admission_polls: int = 180,
+) -> None:
+    """Run one ordinary headless installed launch and require a truthful normal exit.
+
+    ``admission_polls`` bounds the wait for Home; a store whose first workbench
+    generation projects two calendar years needs more than the default.
+    """
+    from cadrumo.entrypoints.tui.launcher import main
+
+    exit_code = main(
+        headless=True,
+        auto_pilot=admitted_session_autopilot(
+            passphrase=passphrase,
+            drive_after_home=drive_after_home,
+            polls=admission_polls,
+        ),
+    )
+    if exit_code != 0:
+        raise InstalledTuiChildError("installed launcher did not exit cleanly")
 
 
 async def open_profile_manager_field(*, pilot: Any, path: str) -> None:
