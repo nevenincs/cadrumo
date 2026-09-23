@@ -53,12 +53,14 @@ class ActivityAssetCli:
         covered_from: str,
         covered_until: str,
         free_depreciation_amount: str | None = None,
+        supersedes_claim_id: str | None = None,
     ) -> ScheduledAmortizationCharge:
         return self._operations.forecast(
             asset_id=asset_id,
             covered_from=date.fromisoformat(covered_from),
             covered_until=date.fromisoformat(covered_until),
             requested_free_amount=_parse_free_amount(free_depreciation_amount),
+            supersedes_claim_id=supersedes_claim_id,
         )
 
     def record_claim(
@@ -170,6 +172,7 @@ def actividad_asset_forecast(
     covered_from: str,
     covered_until: str,
     free_depreciation_amount: str | None = None,
+    supersedes_claim_id: str | None = None,
 ) -> None:
     """Preview an asset charge under its revision's election without recording a claim."""
     result = _runtime_cli(ctx).forecast(
@@ -177,6 +180,7 @@ def actividad_asset_forecast(
         covered_from=covered_from,
         covered_until=covered_until,
         free_depreciation_amount=free_depreciation_amount,
+        supersedes_claim_id=supersedes_claim_id,
     )
     payload = ActivityAssetForecastPayload(root=result.model_dump(mode="json"))
     emit_envelope(ctx, command="ledger.actividad_asset.forecast", result=payload, lines=(f"amount\t{result.amount}",))

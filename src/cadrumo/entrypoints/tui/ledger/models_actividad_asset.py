@@ -35,6 +35,7 @@ class ActivityAssetForecastRequestV1(BaseModel):
     covered_from: date
     covered_until: date
     requested_free_amount: Decimal | None = None
+    supersedes_claim_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
 
 
 class ActivityAssetClaimRequestV1(BaseModel):

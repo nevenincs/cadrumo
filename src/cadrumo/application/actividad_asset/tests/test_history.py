@@ -83,7 +83,6 @@ def _claim(revision: ActivityAssetRevision, **overrides: object) -> Amortization
 def test_history_preserves_revision_and_claim_supersession_trails() -> None:
     initial = _revision()
     correction = _revision(number=2, supersedes_revision_id=initial.revision_id)
-    history = ActivityAssetHistory().append_revision(initial).append_revision(correction)
     original_claim = _claim(initial)
     amended_claim = _claim(
         correction,
@@ -91,8 +90,8 @@ def test_history_preserves_revision_and_claim_supersession_trails() -> None:
         supersedes_claim_id=original_claim.claim_id,
     )
 
-    history = history.record_claim(original_claim).history
-    recorded = history.record_claim(amended_claim)
+    history = ActivityAssetHistory().append_revision(initial).record_claim(original_claim).history
+    recorded = history.append_revision(correction).record_claim(amended_claim)
 
     assert tuple(revision.revision_id for revision in recorded.history.revisions) == (
         initial.revision_id,

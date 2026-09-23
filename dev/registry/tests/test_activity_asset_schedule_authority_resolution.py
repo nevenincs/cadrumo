@@ -21,7 +21,7 @@ from cadrumo.application.calculations.actividad_asset_schedule import forecast_a
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
-from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
+from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim, effective_claims
 from cadrumo.domain.renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
@@ -679,7 +679,7 @@ def test_an_absent_admission_parameter_fails_closed() -> None:
             "parameters": tuple(
                 parameter
                 for parameter in revision.parameters
-                if str(parameter.id) != "renta-actividad-inmovilizado-amortizacion-normal-metodo-admitido"
+                if parameter.id != "renta-actividad-inmovilizado-amortizacion-normal-metodo-admitido"
             ),
         },
     )
@@ -785,6 +785,83 @@ def test_constant_percentage_and_sum_of_digits_cannot_be_adopted_after_another_m
     linear = _asset(_linear("maquinaria"), basis="10000", in_service=date(2024, 1, 1), opening="3000")
     after_constant = AssetScheduleHistory(election_fingerprints_before_tax_year=(constant.amortization.fingerprint,))
     assert _charge(linear, history=after_constant).amount == Decimal("1200.00")  # 10,000 x 12%
+
+
+def test_a_superseding_claim_is_forecast_without_the_claim_it_replaces() -> None:
+    operations, repository = _operations()
+    machine = _asset(
+        _linear("maquinaria"),
+        basis="1000",
+        in_service=date(2017, 1, 1),
+        opening="950",
+        asset_id="nearly-amortized-machine",
+    )
+    operations.create(machine)
+    first = operations.forecast(asset_id=machine.asset_id, covered_from=_YEAR_START, covered_until=date(2025, 4, 1))
+    operations.record_claim(first, creating_operation="test.q1")
+    second = operations.forecast(
+        asset_id=machine.asset_id,
+        covered_from=date(2025, 4, 1),
+        covered_until=date(2025, 7, 1),
+    )
+    second_claim = operations.record_claim(second, creating_operation="test.q2").claim
+    corrected = machine.model_copy(
+        update={"revision_number": 2, "supersedes_revision_id": machine.revision_id, "residual_value": Decimal("10")},
+    )
+    operations.correct(corrected)
+
+    # Counting the claim it would replace, 950 + 29.59 + 20.41 already exceeds the corrected 990 basis.
+    with pytest.raises(ActividadAssetValidationError, match="exceed the lawful amortizable basis"):
+        operations.forecast(asset_id=machine.asset_id, covered_from=date(2025, 4, 1), covered_until=date(2025, 7, 1))
+    replacement = operations.forecast(
+        asset_id=machine.asset_id,
+        covered_from=date(2025, 4, 1),
+        covered_until=date(2025, 7, 1),
+        supersedes_claim_id=second_claim.claim_id,
+    )
+    operations.record_claim(
+        replacement,
+        creating_operation="test.q2-corrected",
+        supersedes_claim_id=second_claim.claim_id,
+    )
+
+    # 1,000 x 12% x 90/365 = 29.59; the second quarter is capped at the 20.41 left of the 50.00 pending.
+    assert (first.amount, second.amount) == (Decimal("29.59"), Decimal("20.41"))
+    # Without it, the corrected 990 basis leaves 990 - 950 - 29.59 = 10.41.
+    assert replacement.amount == Decimal("10.41")
+    effective = {claim.claim_id: claim.amount for claim in effective_claims(repository.history.claims)}
+    assert second_claim.claim_id not in effective
+    assert sum(effective.values(), Decimal("0")) == Decimal("40.00")
+
+
+def test_a_forecast_cannot_supersede_a_claim_the_asset_does_not_have() -> None:
+    operations, _ = _operations()
+    machine = _asset(_linear("maquinaria"), basis="1000", asset_id="no-claims-machine")
+    operations.create(machine)
+
+    with pytest.raises(ActividadAssetValidationError, match="not an effective claim of this asset"):
+        operations.forecast(
+            asset_id=machine.asset_id,
+            covered_from=_YEAR_START,
+            covered_until=_YEAR_END,
+            supersedes_claim_id="c" * 64,
+        )
+
+
+def test_the_history_write_refuses_a_claim_under_a_superseded_revision() -> None:
+    machine = _asset(_linear("maquinaria"), basis="1000", asset_id="corrected-before-write")
+    corrected = machine.model_copy(
+        update={"revision_number": 2, "supersedes_revision_id": machine.revision_id, "residual_value": Decimal("10")},
+    )
+    history = ActivityAssetHistory(revisions=(machine, corrected))
+    stale = AmortizationClaim.from_schedule(
+        _charge(machine, covered_until=date(2025, 7, 1)),
+        asset_kind=machine.asset_kind,
+        creating_operation="test.stale-revision",
+    )
+
+    with pytest.raises(ActividadAssetClaimConflictError, match="current revision"):
+        history.record_claim(stale)
 
 
 def test_two_forecasts_taken_before_recording_cannot_both_consume_the_basis() -> None:

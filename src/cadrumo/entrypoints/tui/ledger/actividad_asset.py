@@ -75,6 +75,7 @@ class ActivityAssetTuiActionsV1:
             covered_from=request.covered_from,
             covered_until=request.covered_until,
             requested_free_amount=request.requested_free_amount,
+            supersedes_claim_id=request.supersedes_claim_id,
         )
 
     def record_claim(self, request: ActivityAssetClaimRequestV1) -> ActivityAssetHistoryClaimResult:
@@ -100,6 +101,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             raise ValueError("activity-asset screen requires an injected application door")
         self._actions = controller.activity_asset_actions
         self._last_forecast: ScheduledAmortizationCharge | None = None
+        self._last_forecast_supersedes: str | None = None
 
     @override
     def compose(self) -> ComposeResult:
@@ -114,6 +116,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         yield Input(placeholder="Importe de libertad de amortización (opcional)", id="asset-free-amount")
         yield Input(value="2025-01-01", id="asset-covered-from")
         yield Input(value="2026-01-01", id="asset-covered-until")
+        yield Input(placeholder="Amortización registrada que se sustituye (opcional)", id="asset-supersedes-claim-id")
         yield Button("Calcular previsión", id="asset-forecast")
         yield Input(value="actividad_asset.tui.claim", id="asset-creating-operation")
         yield Button("Registrar amortización", id="asset-claim")
@@ -158,14 +161,18 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             )
             return self._inspection_result(prefix="corrected", result=result)
         if button_id == "asset-forecast":
+            supersedes_claim_id = self.query_one("#asset-supersedes-claim-id", Input).value.strip() or None
             self._last_forecast = self._actions.forecast(
                 ActivityAssetForecastRequestV1(
                     asset_id=asset_id,
                     covered_from=date.fromisoformat(self.query_one("#asset-covered-from", Input).value),
                     covered_until=date.fromisoformat(self.query_one("#asset-covered-until", Input).value),
                     requested_free_amount=_optional_amount(self.query_one("#asset-free-amount", Input).value),
+                    supersedes_claim_id=supersedes_claim_id,
                 ),
             )
+            # The claim must replace exactly the claim this forecast left out.
+            self._last_forecast_supersedes = supersedes_claim_id
             return _ActivityAssetScreenResult(
                 message=f"forecast\t{self._last_forecast.amount}\t{self._last_forecast.source_reference}"
             )
@@ -176,6 +183,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                 ActivityAssetClaimRequestV1(
                     forecast=self._last_forecast,
                     creating_operation=self.query_one("#asset-creating-operation", Input).value,
+                    supersedes_claim_id=self._last_forecast_supersedes,
                 ),
             )
             return _ActivityAssetScreenResult(

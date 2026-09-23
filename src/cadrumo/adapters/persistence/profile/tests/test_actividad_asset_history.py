@@ -109,15 +109,15 @@ def test_history_roundtrips_encrypted_revision_and_claim_history(tmp_path: Path)
         initial = _revision()
         correction = _revision(number=2, supersedes_revision_id=initial.revision_id)
         repository = ActividadAssetHistoryRepository()
-        repository.append_revision(initial)
-        repository.append_revision(correction)
         original_claim = _claim(initial)
         corrected_claim = _claim(
             correction,
             amount=Decimal("99.99"),
             supersedes_claim_id=original_claim.claim_id,
         )
+        repository.append_revision(initial)
         repository.record_claim(original_claim)
+        repository.append_revision(correction)
         repository.record_claim(corrected_claim)
 
         reopened = ActividadAssetHistoryRepository().load()

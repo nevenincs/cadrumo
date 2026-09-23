@@ -92,6 +92,12 @@ class ActivityAssetHistory(BaseModel):
         revision = next((item for item in self.revisions if item.revision_id == claim.asset_revision_id), None)
         if revision is None:
             raise ActividadAssetValidationError("activity asset claim references an unknown revision")
+        current = max(
+            (item for item in self.revisions if item.asset_id == claim.asset_id),
+            key=lambda item: item.revision_number,
+        )
+        if current.revision_id != revision.revision_id:
+            raise ActividadAssetClaimConflictError("a new claim must be recorded under the asset's current revision")
         summary = asset_schedule_history(
             claims_after,
             self.revisions,

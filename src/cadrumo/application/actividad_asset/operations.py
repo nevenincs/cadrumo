@@ -14,6 +14,7 @@ from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     ClaimProjection,
     asset_schedule_history,
+    effective_claims,
     project_m100,
     project_m130,
 )
@@ -101,14 +102,24 @@ class ActivityAssetOperations:
         covered_from: date,
         covered_until: date,
         requested_free_amount: Decimal | None = None,
+        supersedes_claim_id: str | None = None,
     ) -> ScheduledAmortizationCharge:
-        """Calculate a forecast under the current revision's election without recording it."""
+        """Calculate a forecast under the current revision's election without recording it.
+
+        A forecast for a superseding claim leaves out the effective claim it
+        will replace, exactly as recording that claim does.
+        """
+        if supersedes_claim_id is not None and not any(
+            claim.claim_id == supersedes_claim_id and claim.asset_id == asset_id
+            for claim in effective_claims(self._service.reopen().claims)
+        ):
+            raise ActividadAssetValidationError("the superseded claim is not an effective claim of this asset")
         return self._forecast(
             asset_id=asset_id,
             covered_from=covered_from,
             covered_until=covered_until,
             requested_free_amount=requested_free_amount,
-            excluding_claim_id=None,
+            excluding_claim_id=supersedes_claim_id,
         )
 
     def _forecast(
