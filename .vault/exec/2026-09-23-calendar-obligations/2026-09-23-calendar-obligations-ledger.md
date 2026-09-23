@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:d0c644526e4ce41f09c770e7b686aabf06f7896c03de1559be43a59c5d4d7c40'
+body_hash: 'sha256:d34fe6864c0441d2725330b9eb55b00906912a9748cd94664f4ad2a6119bdf03'
 related:
   - "[[2026-09-23-calendar-obligations-plan]]"
 ---
@@ -94,6 +94,22 @@ related:
 - `S03` `M` `src/cadrumo/locales/ca/common.yml`
 - `S03` `M` `src/cadrumo/locales/hu/common.yml`
 - `S03` `verify:` `ruff, format, ty on changed files` -> `pass`
+- `S08` `M` `src/cadrumo/application/overview/calendar_warnings.py`
+- `S08` `M` `src/cadrumo/domain/deadlines/festivos.py`
+- `S08` `M` `src/cadrumo/domain/deadlines/tests/test_festivos.py`
+- `S08` `verify:` `ruff, format, ty` -> `pass`
+- `S09` `M` `src/cadrumo/core/i18n/locale_catalogue.py`
+- `S09` `M` `src/cadrumo/core/i18n/tests/test_locale_catalogue_capture.py`
+- `S09` `M` `src/cadrumo/application/modelo/workspace.py`
+- `S09` `M` `src/cadrumo/application/modelo/workspace_producers.py`
+- `S09` `M` `src/cadrumo/adapters/persistence/profile/tests/test_workspace.py`
+- `S09` `verify:` `ruff, format, ty, basedpyright, pyrefly` -> `pass`
+- `S07` `M` `src/cadrumo/domain/calculations/registry/authority_store.py`
+- `S07` `M` `dev/registry/compiler/authority_database.py`
+- `S07` `M` `dev/registry/pipeline/authority_publication.py`
+- `S07` `M` `dev/registry/tests/test_authority_artifact_currency.py`
+- `S07` `M` `.vault/adr/2026-09-14-registry-authority-artifact-boundary-indexed-storage-adr.md`
+- `S07` `verify:` `pytest -n0 -m unit currency, admission, catalogue, festivos (49)` -> `pass`
 
 ## Notes
 
@@ -101,4 +117,7 @@ related:
 - `S02` S02 also carries the CLI projection and the cli-to-application shift-label key move; the TUI projection is S03
 - `S06` published logical_generation 9421767bfd79f05374bb6d99f095071c11d9373d90ef60e4f089e1bedf796880; Val d'Aran and Canarias island days excluded as sub-territorial
 - `S03` S06 holiday re-authoring paths were committed inside IVA commit 63a201418e by a shared-index collision; content unchanged
+- `S08` profile of the installed first workbench generation: gating fields decoded 441 revisions x3 (15.8s), 61 holiday loads with 5,027 catalogue resolutions (5s); modelo workspace static inspection 11.3s belongs to the modelo workspace owner
+- `S09` each casilla label re-read and re-hashed the whole locale shard directory twice (208 labels, about 11 s per workbench generation); assigned to this lane by the coordinator
+- `S07` format v2 cutover under coordinator freeze 18:21-18:30; logical_generation 1022f65320ddd012ae398efc420361d2efdb08157ef570d1e0f8e02df7837bb2
 

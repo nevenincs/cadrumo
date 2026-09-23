@@ -13,9 +13,9 @@ related:
   - "[[2026-08-08-profile-requirement-grounding-adr]]"
 supersedes:
   - '2026-09-10-registry-authority-artifact-boundary-adr'
-modified: '2026-09-14'
+modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:de63723b520133821a81c90491fc1e02ce9cf898ca760bce9ad70f9817fc43ee'
+body_hash: 'sha256:9a3d286a51ecfc5a01800a62abd8fdc5c90cdd19c8b8143a00926471249a6fa3'
 ---
 
 # `registry-authority-artifact-boundary` adr: indexed authority and complete source enrollment | (**status:** `accepted`)
@@ -107,3 +107,11 @@ The selected design moves invariant work to compilation while making runtime cos
 ## Consequences
 
 Cold access and memory are expected to improve, but must pass the comparative gates. Compilation remains full and may become more expensive because it proves the encoded database independently. A small descriptor accompanies the single data file. Runtime now owns connection/resource leases and bounded caches, and callers must use explicit queries rather than eager graph traversal. Profile schema becomes generation-consistent while taxpayer persistence semantics stay separate. The current JSON backend remains the actual shipped implementation until the plan is executed and accepted.
+
+## Amendment 2026-09-23: persisted build identity
+
+Accepted 2026-09-23 under the operator's standing pre-approval of routine work, relayed by the tui-modelo coordinator, which assigned the gap to the calendar lane that found it.
+
+The Constraints section keeps source, compiler/schema, component-dependency and logical-generation identities distinct, but the published database persisted only the logical generation: the publisher builds the three-part `AuthorityBuildIdentity` (`dev/registry/pipeline/authority_publication.py:217`) and the manifest stored `format, logical_generation` only (`dev/registry/compiler/authority_database.py:62`). A generation reported stale against the live receipt could therefore not say which input drifted, and `authority_database_currency` returned no recorded build identity in either branch.
+
+Decision: the manifest persists the source-identity, compiler-identity and component-dependency digests beside the logical generation. The database format advances from `cadrumo-authority-sqlite-v1` to `cadrumo-authority-sqlite-v2`. Admission verifies that the three persisted digests recompute the recorded logical generation and refuses a mismatch; runtime accepts only the current format and never infers missing digests. The development currency check reports the recorded build identity and names each drifted component (source, compiler, dependency). A database of an older format is reported as unreadable by runtime and, to the currency check, as a generation whose build identity is explicitly unknown; it is never coerced, and the remedy is republication through the global publication queue.

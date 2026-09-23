@@ -10,7 +10,7 @@ related:
   - '[[2026-06-05-calendar-filing-semantics-adr]]'
 modified: '2026-09-23'
 body_schema: body-v2
-body_hash: 'sha256:2a122450eecfa2c49865b922f39c4ac4f5d73b75849b71d862a8844fabfd7d1b'
+body_hash: 'sha256:ddf306235edb123b14ea519ebced9f143a8bfdbbb3ef2492e5f41a179436e360'
 ---
 
 # `calendar-obligations` plan
@@ -31,6 +31,9 @@ S01 and S02 implement the accepted `2026-09-23-calendar-obligations-holiday-juri
 - [ ] `S04` - Replace in-process parity with an installed-wheel CLI/TUI calendar driver and sanitized receipt; `dev/acceptance/calendar/, dev/acceptance/income_tax/installed_tui_child.py and owning tests`.
 - [ ] `S05` - Run type, lint and import gates on changed files and write the checkpoint and handoff; `.agents/session-briefs/handoffs/`.
 - [x] `S06` - Re-author the 2024-2026 holiday facts from the AGE días-inhábiles resolutions and republish the authority; `src/cadrumo/_data/registry/aeat/facts/0066-holiday-calendar-publication.toml, 0067-public-holiday.toml, legal/dias-inhabiles-age.toml, corpus normatives and owning tests`.
+- [x] `S07` - Persist and report the authority build identity so a stale generation names its drifted input, cut over with one queued republish; `src/cadrumo/domain/calculations/registry/authority_store.py, dev/registry/compiler/authority_database.py, dev/registry/pipeline/authority_publication.py and owning tests`.
+- [x] `S08` - Stop the workbench calendar from re-deriving generation-constant data on every build; `src/cadrumo/application/overview/calendar_warnings.py, src/cadrumo/domain/deadlines/festivos.py and owning tests`.
+- [x] `S09` - Resolve a static inspection's casilla labels in one locale-catalogue window; `src/cadrumo/core/i18n/locale_catalogue.py, src/cadrumo/application/modelo/workspace.py, workspace_producers.py and owning tests`.
 
 ## Parallelization
 

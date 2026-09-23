@@ -20,6 +20,7 @@ from ....core.file_change_time import file_change_time_ns
 from ....core.hashing import hash_file, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from ....core.type_guards import is_str_keyed_dict
 from .authority_artifact import (
+    AuthorityBuildIdentity,
     AuthorityComponentQuery,
     AuthorityGenerationPin,
     authority_component_identity,
@@ -32,7 +33,7 @@ from .authority_cache import (
     RetainedAuthorityValue,
 )
 
-AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v1"
+AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v2"
 AUTHORITY_DESCRIPTOR_FORMAT: Final = "cadrumo-authority-descriptor-v1"
 _DESCRIPTOR_MEMBERS: Final = frozenset({"format", "database", "database_size", "database_sha256", "logical_generation"})
 _DATABASE_NAME = re.compile(r"authority-([0-9a-f]{64})\.sqlite3")
@@ -48,6 +49,10 @@ class AuthorityStoreCutoverError(AuthorityStoreError):
 
 class AuthorityStoreCorruptionError(AuthorityStoreError):
     """Content-addressed bytes or their declared component closure changed."""
+
+
+class AuthorityStoreFormatError(AuthorityStoreError):
+    """The database is intact but written in a format this runtime does not read."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -182,6 +187,7 @@ class SQLiteAuthorityReader:
         self._active_leases = 0
         self._closed = False
         self._component_queries: tuple[AuthorityComponentQuery, ...] | None = None
+        self._build_identity: AuthorityBuildIdentity
         for _ in range(max_connections):
             connection = self._open_connection()
             self._all_connections.append(connection)
@@ -320,7 +326,7 @@ class SQLiteAuthorityReader:
             self._connections.put(connection)
 
     def _admit_database(self) -> None:
-        """Bind the opened database to its descriptor's format and generation.
+        """Bind the opened database to its descriptor's format, generation and build receipts.
 
         Structural integrity -- page checks, foreign-key closure, a complete
         component count and an acyclic dependency graph -- is proved once, at
@@ -328,13 +334,36 @@ class SQLiteAuthorityReader:
         size and SHA-256 identity check has already tied the opened file to
         exactly those published bytes, so repeating the scans here would only
         re-prove what the digest guarantees.
+
+        The recorded source, compiler and dependency receipts must recompute the
+        logical generation; an older format that never recorded them is refused
+        rather than admitted with receipts it cannot state.
         """
         with self._checkout() as connection:
+            format_row = connection.execute("SELECT format FROM authority_manifest WHERE singleton = 1").fetchone()
+            if format_row is None or format_row[0] != AUTHORITY_DATABASE_FORMAT:
+                raise AuthorityStoreFormatError(
+                    f"authority database format {format_row[0] if format_row else None!r} is not "
+                    f"{AUTHORITY_DATABASE_FORMAT!r}; republish the authority",
+                )
             row = connection.execute(
-                "SELECT format, logical_generation FROM authority_manifest WHERE singleton = 1"
+                "SELECT logical_generation, source_identity_digest, compiler_identity_digest, "
+                "component_dependency_digest FROM authority_manifest WHERE singleton = 1"
             ).fetchone()
-        if row is None or row[0] != AUTHORITY_DATABASE_FORMAT or row[1] != self._descriptor.logical_generation:
+        if row is None or row[0] != self._descriptor.logical_generation:
             raise AuthorityStoreCorruptionError("authority database manifest disagrees with its descriptor")
+        try:
+            build_identity = AuthorityBuildIdentity(row[1], row[2], row[3])
+        except ValueError as exc:
+            raise AuthorityStoreCorruptionError("authority database build receipts are malformed") from exc
+        if build_identity.identity_digest != row[0]:
+            raise AuthorityStoreCorruptionError("authority database build receipts do not recompute its generation")
+        self._build_identity = build_identity
+
+    def build_identity(self) -> AuthorityBuildIdentity:
+        """Return the source, compiler and dependency receipts this generation was built from."""
+        self._require_open()
+        return self._build_identity
 
     def _read_database_identity(self) -> _DatabaseIdentity:
         """Hash the whole published database once per reader, streaming it.

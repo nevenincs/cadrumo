@@ -59,9 +59,17 @@ def build_authority_database(path: Path, artifact: AuthorityArtifact) -> Compile
             _insert_components(connection, components)
             _insert_dependencies(connection, components)
             connection.execute(
-                "INSERT INTO authority_manifest(singleton, format, logical_generation, component_count) "
-                "VALUES (1, ?, ?, ?)",
-                (AUTHORITY_DATABASE_FORMAT, artifact.identity_digest, len(components)),
+                "INSERT INTO authority_manifest(singleton, format, logical_generation, source_identity_digest, "
+                "compiler_identity_digest, component_dependency_digest, component_count) "
+                "VALUES (1, ?, ?, ?, ?, ?, ?)",
+                (
+                    AUTHORITY_DATABASE_FORMAT,
+                    artifact.identity_digest,
+                    artifact.build_identity.source_identity_digest,
+                    artifact.build_identity.compiler_identity_digest,
+                    artifact.build_identity.component_dependency_digest,
+                    len(components),
+                ),
             )
             connection.commit()
             integrity = connection.execute("PRAGMA integrity_check").fetchone()
@@ -271,6 +279,9 @@ def _create_schema(connection: sqlite3.Connection) -> None:
             singleton INTEGER PRIMARY KEY CHECK (singleton = 1),
             format TEXT NOT NULL,
             logical_generation TEXT NOT NULL CHECK (length(logical_generation) = 64),
+            source_identity_digest TEXT NOT NULL CHECK (length(source_identity_digest) = 64),
+            compiler_identity_digest TEXT NOT NULL CHECK (length(compiler_identity_digest) = 64),
+            component_dependency_digest TEXT NOT NULL CHECK (length(component_dependency_digest) = 64),
             component_count INTEGER NOT NULL CHECK (component_count > 0)
         ) STRICT;
         CREATE TABLE components (

@@ -10,13 +10,14 @@ from __future__ import annotations
 import json
 import os
 import shutil
+import sqlite3
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 from typer.testing import CliRunner
 
-from cadrumo.core.hashing import sha256_hex
+from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex, sha256_hex
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
@@ -40,6 +41,7 @@ from dev.registry.compiler.authority import compiled_bundled_authority
 from ..compiler.build_identity import authority_compiler_identity
 from ..conformance.cli import app as conformance_app
 from ..pipeline.authority_publication import (
+    AuthorityBuildInput,
     AuthorityDatabaseCurrencyStatus,
     authority_candidate_identity,
     authority_database_currency,
@@ -200,6 +202,8 @@ def test_an_artifact_published_from_the_live_inputs_is_current(tmp_path: Path) -
 
     assert currency.is_current
     assert currency.recorded_identity_digest == currency.candidate_identity_digest
+    assert currency.recorded_build_identity == currency.candidate_build_identity
+    assert currency.drifted_inputs == ()
 
 
 def test_unchanged_inputs_reproduce_the_same_candidate_identity(tmp_path: Path) -> None:
@@ -240,6 +244,8 @@ def test_a_registry_edit_after_publication_makes_the_artifact_stale(tmp_path: Pa
 
     assert currency.status is AuthorityDatabaseCurrencyStatus.STALE
     assert currency.recorded_identity_digest != currency.candidate_identity_digest
+    assert currency.drifted_inputs == (AuthorityBuildInput.SOURCE,)
+    assert "drifted: source" in currency.detail
 
 
 def test_a_same_size_registry_edit_with_its_timestamp_restored_is_still_stale(tmp_path: Path) -> None:
@@ -286,7 +292,9 @@ def test_a_compiler_only_change_is_reported_separately_from_sources(tmp_path: Pa
         source_root=source_root,
     )
     assert currency.status is AuthorityDatabaseCurrencyStatus.STALE
-    assert "logical identity differs" in currency.detail
+    assert currency.recorded_build_identity == compiler_changed
+    assert currency.drifted_inputs == (AuthorityBuildInput.COMPILER,)
+    assert "drifted: compiler" in currency.detail
 
 
 def test_a_planted_artifact_recording_another_candidate_is_stale(tmp_path: Path) -> None:
@@ -373,3 +381,114 @@ def test_the_integrity_gate_refuses_a_stale_database_on_stderr_before_compiling(
         registry_root=registry_root, source_root=source_root
     )
     assert refusal["republish_with"] == "python -m dev.registry.pipeline publish-authority"
+
+
+def _rewrite_published_manifest(descriptor_path: Path, statements: tuple[tuple[str, tuple[str, ...]], ...]) -> None:
+    """Republish a modified copy of the current database under its own content address."""
+    descriptor = json.loads(descriptor_path.read_text(encoding="utf-8"))
+    source = descriptor_path.parent / descriptor["database"]
+    staging = descriptor_path.parent / "rewrite.sqlite3"
+    shutil.copyfile(source, staging)
+    connection = sqlite3.connect(staging)
+    try:
+        for statement, parameters in statements:
+            connection.execute(statement, parameters)
+        connection.commit()
+        connection.execute("VACUUM")
+    finally:
+        connection.close()
+    payload = staging.read_bytes()
+    digest = sha256_hex(payload)
+    target = descriptor_path.parent / f"authority-{digest}.sqlite3"
+    staging.replace(target)
+    descriptor.update({"database": target.name, "database_sha256": digest, "database_size": len(payload)})
+    descriptor_path.write_bytes(canonical_json_bytes(descriptor))
+
+
+def test_a_generation_without_build_receipts_reports_them_as_unknown(tmp_path: Path) -> None:
+    """A previous-format database is refused, never admitted with receipts it did not record."""
+    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
+    _rewrite_published_manifest(
+        artifact_path,
+        (
+            (
+                "CREATE TABLE legacy_manifest (singleton INTEGER PRIMARY KEY, format TEXT NOT NULL, "
+                "logical_generation TEXT NOT NULL, component_count INTEGER NOT NULL) STRICT",
+                (),
+            ),
+            (
+                "INSERT INTO legacy_manifest SELECT singleton, ?, logical_generation, component_count "
+                "FROM authority_manifest",
+                ("cadrumo-authority-sqlite-v1",),
+            ),
+            ("DROP TABLE authority_manifest", ()),
+            ("ALTER TABLE legacy_manifest RENAME TO authority_manifest", ()),
+        ),
+    )
+
+    currency = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
+
+    assert currency.status is AuthorityDatabaseCurrencyStatus.UNSUPPORTED_FORMAT
+    assert currency.recorded_build_identity is None
+    assert currency.drifted_inputs == ()
+    assert not currency.is_current
+
+
+def test_build_receipts_that_do_not_recompute_the_generation_are_refused(tmp_path: Path) -> None:
+    """Receipts are admitted only when they reproduce the published logical generation."""
+    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
+    forged = _STALE_BUILD_IDENTITY
+    _rewrite_published_manifest(
+        artifact_path,
+        (
+            (
+                "UPDATE authority_manifest SET source_identity_digest = ?, compiler_identity_digest = ?, "
+                "component_dependency_digest = ?",
+                (
+                    forged.source_identity_digest,
+                    forged.compiler_identity_digest,
+                    forged.component_dependency_digest,
+                ),
+            ),
+        ),
+    )
+
+    currency = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
+
+    assert currency.status is AuthorityDatabaseCurrencyStatus.UNREADABLE
+    assert "do not recompute" in currency.detail
+
+
+def test_the_recorded_dependency_receipt_is_derived_from_source_and_compiler(tmp_path: Path) -> None:
+    """Recomputed here from its published schema, independently of the artifact code."""
+    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
+    recorded = authority_database_currency(
+        artifact_path, registry_root=registry_root, source_root=source_root
+    ).recorded_build_identity
+    assert recorded is not None
+
+    independent = content_hash_hex(
+        {
+            "schema": "authority-component-dependencies/v1",
+            "component": "complete-authority",
+            "source_identity_digest": recorded.source_identity_digest,
+            "compiler_identity_digest": recorded.compiler_identity_digest,
+        }
+    )
+
+    assert recorded.component_dependency_digest == independent
+
+
+def test_a_dependency_only_receipt_change_is_refused_at_admission(tmp_path: Path) -> None:
+    """A dependency receipt cannot drift alone: one that disagrees with its inputs is malformed."""
+    registry_root, source_root, artifact_path = _fresh_publication(tmp_path)
+    _rewrite_published_manifest(
+        artifact_path,
+        (("UPDATE authority_manifest SET component_dependency_digest = ?", (sha256_hex(b"forged dependency"),)),),
+    )
+
+    currency = authority_database_currency(artifact_path, registry_root=registry_root, source_root=source_root)
+
+    assert currency.status is AuthorityDatabaseCurrencyStatus.UNREADABLE
+    assert "build receipts are malformed" in currency.detail
+    assert currency.recorded_build_identity is None

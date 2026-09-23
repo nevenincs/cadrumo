@@ -49,6 +49,7 @@ from cadrumo.domain.calculations.registry.authority_artifact import (
 from cadrumo.domain.calculations.registry.authority_store import (
     AuthorityDescriptor,
     AuthorityStoreError,
+    AuthorityStoreFormatError,
     SQLiteAuthorityReader,
 )
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
@@ -88,6 +89,7 @@ def require_evidence_closure(artifact: AuthorityArtifact) -> None:
 
 
 __all__ = [
+    "AuthorityBuildInput",
     "AuthorityDatabaseCurrency",
     "AuthorityDatabaseCurrencyStatus",
     "AuthorityPublicationReceipt",
@@ -118,6 +120,19 @@ class AuthorityDatabaseCurrencyStatus(StrEnum):
     CURRENT = "current"
     STALE = "stale"
     UNREADABLE = "unreadable"
+    UNSUPPORTED_FORMAT = "unsupported_format"
+    """The generation predates persisted build receipts; its build identity is unknown."""
+
+
+class AuthorityBuildInput(StrEnum):
+    """One compiler input whose drift a stale generation can name.
+
+    The component-dependency receipt is derived from these two, so it drifts
+    exactly when one of them does and is never reported on its own.
+    """
+
+    SOURCE = "source"
+    COMPILER = "compiler"
 
 
 @dataclass(frozen=True, slots=True)
@@ -125,7 +140,10 @@ class AuthorityDatabaseCurrency:
     """One indexed generation's recorded identity against the candidate's live identity.
 
     ``recorded_identity_digest`` is ``None`` only when the descriptor could not
-    be read, in which case ``detail`` names the refusal.
+    be read, in which case ``detail`` names the refusal.  ``recorded_build_identity``
+    is ``None`` whenever the generation's receipts are unknown: unreadable, or an
+    older format that never recorded them.  ``drifted_inputs`` names every input
+    whose recorded receipt differs from the live one.
     """
 
     descriptor_path: Path
@@ -135,6 +153,7 @@ class AuthorityDatabaseCurrency:
     candidate_build_identity: AuthorityBuildIdentity
     recorded_build_identity: AuthorityBuildIdentity | None
     detail: str
+    drifted_inputs: tuple[AuthorityBuildInput, ...] = ()
 
     @property
     def is_current(self) -> bool:
@@ -314,8 +333,19 @@ def authority_database_currency(
         reader = SQLiteAuthorityReader(descriptor_path)
         try:
             recorded_identity = reader.pin().logical_generation
+            recorded_build = reader.build_identity()
         finally:
             reader.close()
+    except AuthorityStoreFormatError as exc:
+        return AuthorityDatabaseCurrency(
+            descriptor_path=descriptor_path,
+            status=AuthorityDatabaseCurrencyStatus.UNSUPPORTED_FORMAT,
+            candidate_identity_digest=receipt.identity_digest,
+            recorded_identity_digest=None,
+            candidate_build_identity=candidate_build,
+            recorded_build_identity=None,
+            detail=f"{type(exc).__name__}: {exc}",
+        )
     except (AuthorityStoreError, OSError, ValueError) as exc:
         return AuthorityDatabaseCurrency(
             descriptor_path=descriptor_path,
@@ -331,10 +361,27 @@ def authority_database_currency(
         if recorded_identity == receipt.identity_digest
         else AuthorityDatabaseCurrencyStatus.STALE
     )
+    drifted = tuple(
+        build_input
+        for build_input, recorded, candidate in (
+            (
+                AuthorityBuildInput.SOURCE,
+                recorded_build.source_identity_digest,
+                candidate_build.source_identity_digest,
+            ),
+            (
+                AuthorityBuildInput.COMPILER,
+                recorded_build.compiler_identity_digest,
+                candidate_build.compiler_identity_digest,
+            ),
+        )
+        if recorded != candidate
+    )
     detail = (
         "the indexed generation matches the live source manifest, compiler build, and component dependencies"
         if status is AuthorityDatabaseCurrencyStatus.CURRENT
-        else "the indexed generation logical identity differs from the live complete-authority receipt"
+        else "the indexed generation logical identity differs from the live complete-authority receipt; drifted: "
+        + (", ".join(build_input.value for build_input in drifted) or "none")
     )
     return AuthorityDatabaseCurrency(
         descriptor_path=descriptor_path,
@@ -342,8 +389,9 @@ def authority_database_currency(
         candidate_identity_digest=receipt.identity_digest,
         recorded_identity_digest=recorded_identity,
         candidate_build_identity=candidate_build,
-        recorded_build_identity=None,
+        recorded_build_identity=recorded_build,
         detail=detail,
+        drifted_inputs=drifted,
     )
 
 
