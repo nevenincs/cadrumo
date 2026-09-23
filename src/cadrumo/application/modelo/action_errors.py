@@ -30,7 +30,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Callable, Mapping
-from typing import cast
+from typing import cast, override
 
 from ...core.errors.not_found import CoreNotFoundError
 from ...core.operator_action_enums import ActionEvidenceProvenance
@@ -321,7 +321,39 @@ class ModeloProfileReadinessError(ModeloPreconditionErrorMixin, ModeloError):
     Carries the declared precondition failure so the operator surface resolves
     the recovery from the scenario identity and its machine facts rather than
     from a rendered explanation.
+
+    A refusal owned by the profile rather than by one modelo leaf - an
+    unfinished profile setup, which every filing-grade verb re-checks - carries
+    ``profile_precondition_verdict`` instead: the gate that raises it does not
+    know which leaf called it, so it cannot honestly name a leaf scenario.
     """
+
+    def __init__(
+        self,
+        message: str | None = None,
+        *,
+        context: Mapping[str, object] | None = None,
+        translated_message: str | None = None,
+        precondition_failure: ModeloPreconditionFailure | None = None,
+        profile_precondition_verdict: PreconditionVerdict | None = None,
+    ) -> None:
+        """Initialize the refusal with at most one leaf-scoped or profile-scoped decision."""
+        if precondition_failure is not None and profile_precondition_verdict is not None:
+            raise ValueError("a profile readiness refusal carries one precondition decision, not two")
+        super().__init__(
+            message,
+            context=context,
+            translated_message=translated_message,
+            precondition_failure=precondition_failure,
+        )
+        self._profile_precondition_verdict = profile_precondition_verdict
+
+    @property
+    @override
+    def terminal_precondition_verdict(self) -> PreconditionVerdict | None:
+        """Expose the leaf-scoped or profile-scoped decision to the generic boundary."""
+        failure = self.precondition_failure
+        return failure.verdict if failure is not None else self._profile_precondition_verdict
 
 
 class M303FilingEvidenceError(ModeloPreconditionErrorMixin, ModeloError):

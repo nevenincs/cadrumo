@@ -61,6 +61,8 @@ from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEv
 from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from ..auth.operator_probe_ports import OperatorProbePorts
+from ..cli_exception_preconditions import nested_terminal_precondition_verdict
+from ..operator_actions.models import PreconditionVerdict
 from ..state_projection_ports import StateProjectionReadError, StateProjectionReadPorts
 from .calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision
 from .calculation_action_ports import CalculationActionPorts
@@ -130,16 +132,21 @@ class QuickfileStageStatus(StrEnum):
 class QuickfileStageOutcome:
     """The typed result of one quickfile stage.
 
-    ``translated_message`` and ``context`` carry the originating
-    :class:`core.errors.hierarchy.CadrumoError` metadata verbatim so the transport layer
-    can localise the refusal without the application layer depending on i18n.
+    ``refusal`` retains the originating :class:`core.errors.hierarchy.CadrumoError`
+    of a REFUSED stage so the transport renders it through the canonical error
+    message resolver without the application layer depending on i18n;
+    ``context`` carries its structured metadata verbatim. ``precondition_verdict``
+    is that refusal's typed decision, when it carries one: the ONLY channel
+    through which a recovery action reaches the operator, because the refusal's
+    rendered prose may not name an executable command.
     """
 
     stage: QuickfileStage
     status: QuickfileStageStatus
     message: str = ""
-    translated_message: str | None = None
     context: Mapping[str, str] = field(default_factory=_empty_text_context)
+    refusal: CadrumoError | None = None
+    precondition_verdict: PreconditionVerdict | None = None
 
 
 @dataclass(frozen=True, slots=True)
@@ -204,14 +211,15 @@ class QuickfileCommand(BaseModel):
 
 
 def _refusal_outcome(stage: QuickfileStage, exc: CadrumoError) -> QuickfileStageOutcome:
-    """Build a REFUSED outcome carrying the error's localisation metadata."""
+    """Build a REFUSED outcome carrying the error and its typed decision, if any."""
     context = {str(key): str(value) for key, value in (exc.context or {}).items()}
     return QuickfileStageOutcome(
         stage=stage,
         status=QuickfileStageStatus.REFUSED,
         message=str(exc),
-        translated_message=exc.translated_message,
         context=context,
+        refusal=exc,
+        precondition_verdict=nested_terminal_precondition_verdict(exc),
     )
 
 

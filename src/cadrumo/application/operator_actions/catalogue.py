@@ -248,6 +248,10 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.profile.complete_setup",
+            target_command_key="config.profile.complete_setup",
+        ),
+        ActionCatalogueEntry(
             action_id="operator.profile.edit",
             target_command_key="config.profile.edit",
             argument_specifications=(

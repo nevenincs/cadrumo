@@ -9,10 +9,12 @@ import pytest
 
 from ....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ...workflow.profile_health import assess_active_profile_health
+from ..catalogue import lookup_action
 from ..preconditions import (
     active_profile_pointer_repair_verdict,
     corrupt_active_profile_pointer_verdict,
     no_action_precondition_verdict,
+    profile_setup_incomplete_verdict,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -125,3 +127,29 @@ def test_workflow_delegates_pointer_repair_action_construction_to_operator_actio
         and node.func.id == "active_profile_pointer_repair_verdict"
         for node in ast.walk(tree)
     )
+
+
+def test_profile_setup_incomplete_verdict_names_the_catalogued_completion_action() -> None:
+    verdict = profile_setup_incomplete_verdict(modelo="130", missing_required_field_count=2)
+
+    assert verdict.failed_condition_id == "profile.setup.declared_complete"
+    assert verdict.action is not None
+    assert verdict.action.action_id == "operator.profile.complete_setup"
+    assert lookup_action(verdict.action.action_id).target_command_key == "config.profile.complete_setup"
+    assert lookup_action(verdict.action.action_id).argument_specifications == ()
+    assert verdict.argument_bindings == ()
+    assert verdict.conditionality is ActionConditionality.IMMEDIATE
+    assert verdict.no_recovery_outcome is None
+    evidence = verdict.evidence[0]
+    assert evidence.evidence_id == "profile.setup.state"
+    assert evidence.provenance is ActionEvidenceProvenance.PERSISTED_STATE
+    assert evidence.values == {
+        "modelo": "130",
+        "setup_declared_complete": False,
+        "missing_required_field_count": 2,
+    }
+
+
+def test_profile_setup_incomplete_verdict_refuses_a_negative_missing_count() -> None:
+    with pytest.raises(ValueError, match="cannot be negative"):
+        profile_setup_incomplete_verdict(modelo="130", missing_required_field_count=-1)

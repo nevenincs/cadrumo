@@ -936,10 +936,9 @@ application:
         for Modelo 303: this is the first period and a zero prior compensation has
         no evidence behind it. Seed the opening balance explicitly, or pull the wallet
         from AEAT, so the zero is stated rather than assumed.'
-      iva_wallet_not_seeded: 'Modelo 303 calculation requires a seeded IVA compensation
-        history. For the first M303 filing of a fresh profile, seed the opening balance
-        with zero: `aeat app modelo iva-wallet seed --filing-year YEAR --period PERIOD
-        --amount 0 --confirm`.'
+      iva_wallet_not_seeded: Modelo 303 calculation requires a seeded IVA compensation
+        history. For the first M303 filing of a fresh profile, seed the IVA compensation
+        opening balance for the filing period with an amount of zero and confirm it.
       iva_wallet_registry_snapshot_unavailable: 'IVA wallet reconciliation is blocked
         for Modelo 303: the registry snapshot for this filing year and period could
         not be resolved, so a first-period zero cannot be proven. Confirm the modelo,
@@ -961,8 +960,8 @@ application:
       iva_wallet_unsupported_decision_type: 'Unsupported IVA wallet decision type:
         %{decision_type}.'
       ledger_preflight_blocked: 'ledger preflight blocks modelo calculation: transaction
-        %{transaction_id} %{reason}: %{detail}. Run `aeat app ledger preflight --period
-        %{period}` before calculating.'
+        %{transaction_id} %{reason}: %{detail}. Run the ledger preflight for period
+        %{period} and resolve its findings before calculating.'
       local_observation_actor_blank: A manual observation override must name the operator
         who records it.
       local_observation_override_missing: Modelo %{modelo} %{filing_year} %{period}
@@ -993,7 +992,7 @@ application:
       profile_readiness_profile_missing: No persisted active profile exists for this
         modelo work target; create or repair the profile before continuing.
       profile_readiness_setup_incomplete: Profile setup has not yet been declared
-        complete; run `aeat config profile complete-setup` before working on modelos.
+        complete; declare the profile setup complete before working on modelos.
       profile_readiness_setup_incomplete_missing: 'Profile setup is incomplete; finish
         the setup flow before working on modelos. Outstanding fields: %{missing}.'
       recipient_decryption_failed: The recipient-encrypted package could not be decrypted;
@@ -1202,6 +1201,10 @@ application:
           has unsupported value type %{value_type}.
         enum_boolean_invalid: Profile fact for enum-channel binding %{binding_id}
           resolved to a boolean; boolean facts are not valid enum dispatch keys.
+    quickfile:
+      stage_incomplete: The quickfile %{stage} stage finished with status %{status}.
+      stage_refused: 'Quickfile stopped at the %{stage} stage: the stage was refused
+        with %{error_code}.'
   overview:
     calendar:
       holiday_coverage:

@@ -988,9 +988,10 @@ application:
         van a 303-es nyomtatvány esetén: ez az első időszak, és a nulla korábbi kompenzáció
         mögött nincs bizonyíték. Töltse fel kifejezetten a nyitóegyenleget, vagy töltse
         le a tárcát az AEAT-tól, hogy a nulla kimondott legyen, ne feltételezett.'
-      iva_wallet_not_seeded: A 303-es nyomtatvány számításához feltöltött IVA-kompenzáció
-        előzmény szükséges. Egy friss profil első M303 benyújtásához töltse fel az
-        előzményt.
+      iva_wallet_not_seeded: A 303-es nyomtatvány számításához feltöltött IVA-kompenzációs
+        előzmény szükséges. Egy friss profil első M303 benyújtásához töltse fel nulla
+        összeggel a benyújtási időszak IVA-kompenzációs nyitóegyenlegét, és erősítse
+        meg.
       iva_wallet_registry_snapshot_unavailable: 'Az IVA-tárca egyeztetése blokkolva
         van a 303-es nyomtatvány esetén: a nyilvántartási pillanatkép nem oldható
         fel erre az adóévre és időszakra, ezért az első időszaki nulla nem bizonyítható.
@@ -1013,8 +1014,8 @@ application:
       iva_wallet_unsupported_decision_type: 'Nem támogatott IVA-tárca döntéstípus:
         %{decision_type}.'
       ledger_preflight_blocked: 'a főkönyvi előellenőrzés blokkolja a modell számítást:
-        %{transaction_id} tranzakció, %{reason}: %{detail}. Futtassa a `aeat app ledger
-        preflight --period %{period}` parancsot számítás előtt.'
+        %{transaction_id} tranzakció, %{reason}: %{detail}. Futtassa a főkönyvi előellenőrzést
+        a(z) %{period} időszakra, és oldja meg a feltárt problémákat számítás előtt.'
       local_observation_actor_blank: A kézi megfigyelés-felülírásnak meg kell neveznie
         a rögzítő kezelőt.
       local_observation_override_missing: A(z) %{modelo} nyomtatvány %{filing_year}
@@ -1046,8 +1047,8 @@ application:
       profile_readiness_profile_missing: Nincs perzisztált aktív profil ehhez a modell
         munkához; folytatás előtt hozza létre vagy javítsa a profilt.
       profile_readiness_setup_incomplete: A profil beállítását még nem nyilvánították
-        befejezettnek; a modellekkel végzett munka előtt futtasd az `aeat config profile
-        complete-setup` parancsot.
+        befejezettnek; a modellekkel végzett munka előtt nyilvánítsd befejezettnek
+        a profil beállítását.
       profile_readiness_setup_incomplete_missing: 'A profil beállítása nincs befejezve;
         fejezd be a beállítási folyamatot, mielőtt modelókkal dolgoznál. Hiányzó mezők:
         %{missing}.'
@@ -1273,6 +1274,11 @@ application:
           profiladata nem támogatott típusú: %{value_type}.'
         enum_boolean_invalid: A(z) %{binding_id} enumcsatornás kötés profiladata boolean
           értékre oldódott fel; a boolean adatok nem érvényes enum dispatch kulcsok.
+    quickfile:
+      stage_incomplete: A quickfile %{stage} szakasza %{status} állapottal fejeződött
+        be.
+      stage_refused: 'A quickfile a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
+        kóddal elutasították.'
   overview:
     calendar:
       holiday_coverage:

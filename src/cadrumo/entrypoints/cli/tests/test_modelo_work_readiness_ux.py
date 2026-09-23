@@ -120,7 +120,7 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
     readiness_payload = _payload(readiness.output)
     assert readiness_payload["profile_ready"] is False
     assert readiness_payload["ready"] is False
-    assert "aeat config profile complete-setup" in readiness_payload["profile_refusal"]
+    assert "declared complete" in readiness_payload["profile_refusal"]
 
     create = _invoke(
         [
@@ -134,7 +134,9 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
     assert create.exit_code != 0
     error = json.loads(create.output)["error"]
     assert error["code"] == "REFUSED_MODELO_PROFILE_READINESS"
-    assert "aeat config profile complete-setup" in error["message"]
+    assert "declared complete" in error["message"]
+    assert error["action"]["action"]["action_id"] == "operator.profile.complete_setup"
+    assert error["action"]["action"]["cli_path"] == ["config", "profile", "complete-setup"]
 
     completed = _invoke(["--format", "json", "config", "profile", "complete-setup"])
     assert completed.exit_code == 0, completed.output

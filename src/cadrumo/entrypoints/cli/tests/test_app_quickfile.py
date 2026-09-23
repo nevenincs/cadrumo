@@ -25,6 +25,7 @@ from collections.abc import Sequence
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import Result
@@ -105,7 +106,7 @@ def _invoke(args: Sequence[str], *, attempts: int = 8) -> Result:
     return result
 
 
-def _create_profile(*, activity_start_date: str = "2026-01-01") -> None:
+def _create_profile(*, activity_start_date: str = "2026-01-01", complete: bool = True) -> None:
     """Register the profile through the shared CLI registration door."""
     register_cli_profile(
         label="operator",
@@ -127,6 +128,7 @@ def _create_profile(*, activity_start_date: str = "2026-01-01") -> None:
             "iva.voluntary_sii_enrolled": "false",
             "iva.hydrocarbon_deposit_advance_payment_deduction_entitled": "false",
         },
+        complete=complete,
         log_in=False,
     )
 
@@ -721,3 +723,161 @@ def test_quickfile_result_payload_summarises_a_missing_binding_requirement() -> 
     assert payload.readiness is not None
     assert payload.readiness.binding_ready is False
     assert payload.readiness.missing_binding_count == 1
+
+
+def _stage_notice_for(output: str, stage: str) -> dict[str, Any]:
+    """Return the one notice the stage produced, re-validated through the production contract."""
+    from ....core.json_contract import Notice
+
+    matching = [notice for notice in _notices(output) if notice.get("code") == f"quickfile.stage.{stage}"]
+    assert len(matching) == 1, json.dumps(_notices(output), sort_keys=True)
+    notice = matching[0]
+    Notice.model_validate_json(json.dumps(notice))
+    message = notice["message"]
+    assert isinstance(message, str) and message
+    assert "aeat " not in message and "`aeat" not in message, message
+    return notice
+
+
+def _assert_stopped_at(output: str, stage: str) -> dict[str, Any]:
+    payload = _payload(output)
+    assert payload["completed"] is False, output
+    assert payload["stopped_at_stage"] == stage, json.dumps(payload, sort_keys=True)
+    assert payload["export"] is None
+    statuses = _stage_status(payload)
+    order = ("readiness", "create", "calculate", "verify", "export")
+    assert statuses[stage] == "refused"
+    assert all(statuses[later] == "skipped" for later in order[order.index(stage) + 1 :]), statuses
+    return payload
+
+
+def test_quickfile_setup_incomplete_refusal_reports_the_typed_completion_action(tmp_path: Path) -> None:
+    """An undeclared-complete profile stops quickfile at create with a typed recovery, not a crash.
+
+    The refusal's prose once named the completion command, which the notices
+    contract refuses, so quickfile exited 2 instead of reporting the stage. The
+    recovery now travels only on the notice's typed action.
+    """
+    _create_profile(complete=False)
+    out = tmp_path / "modelo-130.txt"
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "quickfile",
+            "--modelo", "130", "--year", "2026", "--period", "2T",
+            "--output", str(out),
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 1, result.output
+    assert "Traceback" not in result.output
+    _assert_stopped_at(result.output, "create")
+    notice = _stage_notice_for(result.output, "create")
+    action = notice["action"]
+    assert isinstance(action, dict), notice
+    assert action["failed_condition_id"] == "profile.setup.declared_complete"
+    resolved = action["action"]
+    assert isinstance(resolved, dict), action
+    assert resolved["action_id"] == "operator.profile.complete_setup"
+    assert resolved["target_command_key"] == "config.profile.complete_setup"
+    assert resolved["cli_path"] == ["config", "profile", "complete-setup"]
+    assert action["conditionality"] == "immediate"
+    assert not out.exists()
+
+
+def test_quickfile_create_stage_refusal_without_a_typed_action_reports_its_reason(tmp_path: Path) -> None:
+    """A create-stage refusal that carries no verdict still reports its own reason, with no action."""
+    _create_profile(activity_start_date="2026-01-01")
+    out = tmp_path / "modelo-130.txt"
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "quickfile",
+            "--modelo", "130", "--year", "2025", "--period", "1T",
+            "--output", str(out),
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 1, result.output
+    assert "Traceback" not in result.output
+    _assert_stopped_at(result.output, "create")
+    notice = _stage_notice_for(result.output, "create")
+    assert notice.get("action") is None, notice
+    assert "pre-activity period" in str(notice["message"])
+    assert "2026-01-01" in str(notice["message"])
+    assert not out.exists()
+
+
+def test_quickfile_refusal_whose_reason_names_a_command_is_still_reported(tmp_path: Path) -> None:
+    """A refusal with command prose and no typed decision is reported by stage and code, never crashed.
+
+    An unknown ``--binding`` id is refused at calculate with wording that names
+    the bindings listing command. The notices contract refuses that wording, so
+    the stage is reported with the channel's own sentence and the error code.
+    """
+    _create_profile(activity_start_date="2025-01-01")
+    out = tmp_path / "modelo-115.txt"
+
+    result = _invoke(
+        [
+            "--format", "json",
+            "app", "quickfile",
+            "--modelo", "115", "--year", "2025", "--period", "1T",
+            "--binding", "not-a-declared-binding=1",
+            "--output", str(out),
+        ],
+    )  # fmt: skip
+
+    assert result.exit_code == 1, result.output
+    assert "Traceback" not in result.output
+    _assert_stopped_at(result.output, "calculate")
+    notice = _stage_notice_for(result.output, "calculate")
+    assert notice.get("action") is None, notice
+    context = notice["context"]
+    assert isinstance(context, dict), notice
+    assert context["stage"] == "calculate"
+    assert context["status"] == "refused"
+    error_code = context["error_code"]
+    assert isinstance(error_code, str) and error_code
+    assert error_code in str(notice["message"])
+    assert "calculate" in str(notice["message"])
+    assert not out.exists()
+
+
+def test_notice_contract_refuses_the_command_prose_the_old_stage_projection_passed() -> None:
+    """Detector: the reason the old projection copied into a notice is refused by the contract.
+
+    Without this refusal, the fallback above would be dead code and the
+    stage notices would carry an executable command outside the typed action.
+    """
+    from pydantic import ValidationError
+
+    from ....application.modelo.action_errors import ModeloProfileReadinessError
+    from ....application.modelo.quickfile import QuickfileStage, QuickfileStageOutcome, QuickfileStageStatus
+    from ....core.i18n.render import tr
+    from ....core.json_contract import Notice, NoticeSeverity
+    from .._app_quickfile import _stage_notice
+
+    reason = tr(
+        "application.modelo.errors.calculate_binding_unknown",
+        key="not-a-declared-binding",
+        accepted="rent",
+    )
+    with pytest.raises(ValidationError, match="raw aeat command prose"):
+        Notice(severity=NoticeSeverity.WARNING, code="quickfile.stage.calculate", message=reason)
+
+    commanded = ModeloProfileReadinessError("run `aeat config profile complete-setup` first")
+    notice = _stage_notice(
+        QuickfileStageOutcome(
+            stage=QuickfileStage.CREATE,
+            status=QuickfileStageStatus.REFUSED,
+            message=str(commanded),
+            refusal=commanded,
+        ),
+    )
+    assert "aeat" not in notice.message
+    assert notice.context is not None
+    assert notice.context["error_code"] == "REFUSED_MODELO_PROFILE_READINESS"
+    assert notice.action is None

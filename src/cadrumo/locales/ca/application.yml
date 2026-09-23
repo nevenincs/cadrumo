@@ -1029,10 +1029,9 @@ application:
         anterior de zero no té cap evidència al darrere. Inicialitza el saldo d''obertura
         de manera explícita o descarrega la cartera des de l''AEAT, perquè el zero
         quedi declarat i no suposat.'
-      iva_wallet_not_seeded: 'El càlcul del Model 303 requereix un historial de compensació
-        IVA inicialitzat. Per a la primera declaració d''un perfil nou, inicialitza
-        el saldo d''obertura amb zero: `aeat app modelo iva-wallet seed --filing-year
-        YEAR --period PERIOD --amount 0 --confirm`.'
+      iva_wallet_not_seeded: El càlcul del Model 303 requereix un historial de compensació
+        IVA inicialitzat. Per a la primera declaració d'un perfil nou, inicialitza
+        amb import zero el saldo d'obertura de la compensació IVA del període i confirma'l.
       iva_wallet_registry_snapshot_unavailable: 'La conciliació de la cartera de compensació
         d''IVA està bloquejada per al Model 303: no s''ha pogut resoldre la instantània
         del registre per a aquest exercici i període, de manera que no es pot provar
@@ -1058,8 +1057,9 @@ application:
       iva_wallet_unsupported_decision_type: 'Tipus de decisió de la cartera de compensació
         d''IVA no admès: %{decision_type}.'
       ledger_preflight_blocked: 'la comprovació prèvia del llibre bloqueja el càlcul
-        del model: transacció %{transaction_id} %{reason}: %{detail}. Executa `aeat
-        app ledger preflight --period %{period}` abans de calcular.'
+        del model: transacció %{transaction_id} %{reason}: %{detail}. Executa la comprovació
+        prèvia del llibre per al període %{period} i resol-ne les incidències abans
+        de calcular.'
       local_observation_actor_blank: Una correcció manual d'una observació ha d'indicar
         l'operador que la registra.
       local_observation_override_missing: El model %{modelo} %{filing_year} %{period}
@@ -1091,7 +1091,7 @@ application:
       profile_readiness_profile_missing: No existeix cap perfil actiu persistit per
         a aquest treball de model; crea o repara el perfil abans de continuar.
       profile_readiness_setup_incomplete: La configuració del perfil encara no s'ha
-        declarat completa; executa `aeat config profile complete-setup` abans de treballar
+        declarat completa; declara completa la configuració del perfil abans de treballar
         amb models.
       profile_readiness_setup_incomplete_missing: 'La configuració del perfil està
         incompleta; acaba l''assistent de configuració abans de treballar amb models.
@@ -1313,6 +1313,10 @@ application:
           %{binding_id} té un tipus no suportat: %{value_type}.'
         enum_boolean_invalid: La dada de perfil per al binding enum %{binding_id}
           ha resolt a booleà; els booleans no són claus vàlides de dispatch enum.
+    quickfile:
+      stage_incomplete: L'etapa %{stage} de quickfile ha acabat amb l'estat %{status}.
+      stage_refused: 'Quickfile s''ha aturat a l''etapa %{stage}: l''etapa s''ha rebutjat
+        amb %{error_code}.'
   overview:
     calendar:
       holiday_coverage:

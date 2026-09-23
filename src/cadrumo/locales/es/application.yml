@@ -1030,10 +1030,10 @@ application:
         de cero no tiene respaldo. Inicializa el saldo de apertura de forma explícita
         o descarga la cartera desde la AEAT, para que el cero quede declarado y no
         supuesto.'
-      iva_wallet_not_seeded: 'El cálculo del Modelo 303 requiere un historial de compensación
+      iva_wallet_not_seeded: El cálculo del Modelo 303 requiere un historial de compensación
         IVA inicializado. Para la primera declaración de un perfil nuevo, inicializa
-        el saldo de apertura con cero: `aeat app modelo iva-wallet seed --filing-year
-        YEAR --period PERIOD --amount 0 --confirm`.'
+        con importe cero el saldo de apertura de la compensación IVA del periodo y
+        confírmalo.
       iva_wallet_registry_snapshot_unavailable: 'La conciliación del saldo IVA está
         bloqueada para el Modelo 303: no se ha podido resolver la instantánea del
         registro para este ejercicio y periodo, por lo que no puede probarse un cero
@@ -1056,8 +1056,9 @@ application:
       iva_wallet_unsupported_decision_type: 'Tipo de decisión de cartera de IVA no
         admitido: %{decision_type}.'
       ledger_preflight_blocked: 'la comprobación previa del libro bloquea el cálculo
-        del modelo: transacción %{transaction_id} %{reason}: %{detail}. Ejecuta `aeat
-        app ledger preflight --period %{period}` antes de calcular.'
+        del modelo: transacción %{transaction_id} %{reason}: %{detail}. Ejecuta la
+        comprobación previa del libro para el periodo %{period} y resuelve sus incidencias
+        antes de calcular.'
       local_observation_actor_blank: Una corrección manual de una observación debe
         indicar el operador que la registra.
       local_observation_override_missing: El modelo %{modelo} %{filing_year} %{period}
@@ -1089,7 +1090,7 @@ application:
       profile_readiness_profile_missing: No existe un perfil activo persistido para
         este trabajo de modelo; crea o repara el perfil antes de continuar.
       profile_readiness_setup_incomplete: La configuración del perfil aún no se ha
-        declarado completa; ejecuta `aeat config profile complete-setup` antes de
+        declarado completa; declara completa la configuración del perfil antes de
         trabajar con modelos.
       profile_readiness_setup_incomplete_missing: 'La configuración del perfil está
         incompleta; termina el asistente de configuración antes de trabajar con modelos.
@@ -1317,6 +1318,10 @@ application:
           %{binding_id} tiene un tipo no soportado: %{value_type}.'
         enum_boolean_invalid: El dato de perfil para el binding enum %{binding_id}
           resolvió a booleano; los booleanos no son claves válidas de despacho enum.
+    quickfile:
+      stage_incomplete: La etapa %{stage} de quickfile terminó con el estado %{status}.
+      stage_refused: 'Quickfile se detuvo en la etapa %{stage}: la etapa se rechazó
+        con %{error_code}.'
   overview:
     calendar:
       holiday_coverage:

@@ -1015,6 +1015,11 @@ def test_create_work_unit_service_refuses_a_setup_incomplete_profile(tmp_path: P
                 ),
             )
         assert excinfo.value.translated_message == "application.modelo.errors.profile_readiness_setup_incomplete"
+        verdict = excinfo.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.failed_condition_id == "profile.setup.declared_complete"
+        assert verdict.action is not None
+        assert verdict.action.action_id == "operator.profile.complete_setup"
 
 
 def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(tmp_path: Path) -> None:
@@ -1080,6 +1085,12 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
         assert (
             excinfo.value.translated_message == "application.modelo.errors.profile_readiness_setup_incomplete_missing"
         )
+        verdict = excinfo.value.terminal_precondition_verdict
+        assert verdict is not None
+        assert verdict.action is not None
+        assert verdict.action.action_id == "operator.profile.complete_setup"
+        missing_count = verdict.evidence[0].values["missing_required_field_count"]
+        assert isinstance(missing_count, int) and missing_count > 0
         assert excinfo.value.context is not None
         missing_text = excinfo.value.context["missing"]
         assert isinstance(missing_text, str)
