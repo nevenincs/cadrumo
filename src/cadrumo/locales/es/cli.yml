@@ -717,6 +717,18 @@ cli:
           {pos}.'
         json_validation_error: 'El valor de {flag} no es un objeto de observación
           válido: {details}.'
+        ledger_payment_withholding_exclusive: --ledger-payment-withholding no puede
+          combinarse con --received-invoice-retencion ni --retencion-observation.
+        ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
+          una asignación de nómina pagada por un movimiento del libro (solo Modelo
+          111).'
+        ledger_payment_withholding_period_mismatch: El periodo de reconocimiento del
+          pago no coincide con el periodo solicitado del Modelo 111.
+        ledger_payment_withholding_single_allocation: Envíe una sola asignación de
+          pago del libro por comando.
+        ledger_payment_withholding_wrong_modelo: --ledger-payment-withholding solo
+          registra retenciones del trabajo en el Modelo 111; no se admite el modelo
+          %{modelo}.
         modelo_help: Código de modelo soportado por el servicio backend de agregación
           (111, 115, 123, 180, 190, 193, 347, 349 o 720).
         period_help: 'Token de periodo de agregación: 0A anual, 1T-4T trimestres,

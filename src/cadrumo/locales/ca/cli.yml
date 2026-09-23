@@ -710,6 +710,17 @@ cli:
           {pos}.'
         json_validation_error: 'El valor de {flag} no és un objecte d''observació
           vàlid: {details}.'
+        ledger_payment_withholding_exclusive: --ledger-payment-withholding no es pot
+          combinar amb --received-invoice-retencion ni --retencion-observation.
+        ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
+          una assignació de nòmina pagada per un moviment del llibre (només Model
+          111).'
+        ledger_payment_withholding_period_mismatch: El període de reconeixement del
+          pagament no coincideix amb el període sol·licitat del Model 111.
+        ledger_payment_withholding_single_allocation: Envieu una sola assignació de
+          pagament del llibre per ordre.
+        ledger_payment_withholding_wrong_modelo: --ledger-payment-withholding només
+          registra retencions del treball al Model 111; no s'admet el model %{modelo}.
         modelo_help: Codi de model admès (111, 115, 123, 180, 190, 193, 347, 349 o
           720)
         period_help: 'Token de període d''agregació: 0A anual, 1T-4T trimestres, 01-12

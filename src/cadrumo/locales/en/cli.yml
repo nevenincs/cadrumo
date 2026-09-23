@@ -658,6 +658,16 @@ cli:
         json_parse_error: '{flag} must be a JSON object; invalid JSON at byte {pos}.'
         json_validation_error: 'The value of {flag} is not a valid observation object:
           {details}.'
+        ledger_payment_withholding_exclusive: --ledger-payment-withholding cannot
+          be combined with --received-invoice-retencion or --retencion-observation.
+        ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
+          one payroll allocation paid by a ledger transaction (Modelo 111 only).'
+        ledger_payment_withholding_period_mismatch: The payment's recognition period
+          does not match the requested Modelo 111 period.
+        ledger_payment_withholding_single_allocation: Submit one ledger payment allocation
+          per command.
+        ledger_payment_withholding_wrong_modelo: --ledger-payment-withholding records
+          work-income withholding for Modelo 111 only; modelo %{modelo} is not accepted.
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: 'Aggregation period token: 0A annual, 1T-4T quarters, 01-12 months.'

@@ -14,6 +14,12 @@ from ...application.aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceRequest,
     build_invoice_withholding_capture,
 )
+from ...application.aggregation.ledger_payment_withholding import (
+    LedgerPaymentWithholdingEvidenceError,
+    LedgerPaymentWithholdingEvidenceRequest,
+    build_ledger_payment_withholding_capture,
+    resolve_ledger_payment_transaction,
+)
 from ...application.aggregation.retenciones import RetencionObservation
 from ...application.aggregation.service import (
     PerModeloAggregationCommand,
@@ -45,6 +51,7 @@ from .state_projection_support import (
 )
 
 _INVOICE_WITHHOLDING_MODELOS = frozenset({"111", "115", "123"})
+_LEDGER_PAYMENT_WITHHOLDING_MODELO = "111"
 
 
 def _capture_invoice_withholding_into_command(
@@ -114,6 +121,77 @@ def _capture_invoice_withholding_into_command(
     return command.model_copy(
         update={"retencion_observations": ports.repository.load_observations(command.modelo, command.period)}
     )
+
+
+def _capture_ledger_payment_withholding_into_command(
+    ctx: typer.Context,
+    command: PerModeloAggregationCommand,
+    request: LedgerPaymentWithholdingEvidenceRequest,
+) -> PerModeloAggregationCommand:
+    """Capture one payroll allocation from its paying ledger transaction, then read the projection.
+
+    The transaction is read between two catalogue revision reads, so the
+    capture never rests on a row that changed while it was being read. The
+    write goes through the same shared producer as invoice evidence, and the
+    active encrypted projection is read back exactly as that path does.
+    """
+    from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
+    from ...application.aggregation.withholding_producer import WithholdingProducer
+
+    bucket_id = active_bucket_id_or_refuse()
+    ports = retencion_observation_ports_factory(ctx)(bucket_id=bucket_id)
+    transactions = TransactionCatalogueRepository(bucket_id=bucket_id)
+    try:
+        catalogue_revision_id = transactions.load_revision()
+        catalogue = transactions.load_by_ids((request.transaction_id,))
+        if catalogue_revision_id is None or transactions.load_revision() != catalogue_revision_id:
+            raise LedgerPaymentWithholdingEvidenceError("transaction_catalogue_revision_unavailable")
+        capture = build_ledger_payment_withholding_capture(
+            resolve_ledger_payment_transaction(catalogue, request.transaction_id),
+            catalogue_revision_id=catalogue_revision_id,
+            request=request,
+            applicable_year=command.period.filing_year,
+        )
+    except (LedgerPaymentWithholdingEvidenceError, ValueError) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    if capture.scope.modelo != command.modelo or capture.scope.period != command.period:
+        raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_period_mismatch"))
+
+    try:
+        WithholdingProducer(service=withholding_observation_service(ctx, bucket_id=bucket_id)).capture(capture.command)
+    except (
+        WithholdingProducerError,
+        WithholdingRecognitionError,
+        WithholdingObservationMutationError,
+        ValueError,
+    ) as exc:
+        raise typer.BadParameter(str(exc)) from exc
+    return command.model_copy(
+        update={"retencion_observations": ports.repository.load_observations(command.modelo, command.period)}
+    )
+
+
+def _refuse_misplaced_ledger_payment_withholding(
+    modelo: str,
+    *,
+    ledger_payment_withholding: list[str] | None,
+    received_invoice_retencion: list[str] | None,
+    retencion_observation: list[str] | None,
+) -> None:
+    """Refuse a payroll capture outside Modelo 111 or beside another retención transport.
+
+    One command writes one allocation from one kind of evidence; letting a
+    ledger payment and an invoice or a hand-typed row share a command would
+    make the resulting window depend on which write happened to land first.
+    """
+    if not ledger_payment_withholding:
+        return
+    if modelo != _LEDGER_PAYMENT_WITHHOLDING_MODELO:
+        raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_wrong_modelo", modelo=modelo))
+    if received_invoice_retencion or retencion_observation:
+        raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_exclusive"))
+    if len(ledger_payment_withholding) > 1:
+        raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_single_allocation"))
 
 
 def _clave_breakdown(command: PerModeloAggregationCommand) -> tuple[WithholdingClaveBreakdown, ...]:
@@ -207,10 +285,17 @@ def aggregate_modelo(
     foreign_asset_observation: list[str] | None = None,
     withholding_observation: list[str] | None = None,
     received_invoice_retencion: list[str] | None = None,
+    ledger_payment_withholding: list[str] | None = None,
 ) -> None:
     """Delegate per-modelo aggregation execution to the backend service."""
     operation = authority_operation(ctx)
     with validating_governed_facts(operation):
+        _refuse_misplaced_ledger_payment_withholding(
+            modelo,
+            ledger_payment_withholding=ledger_payment_withholding,
+            received_invoice_retencion=received_invoice_retencion,
+            retencion_observation=retencion_observation,
+        )
         if modelo == Modelo("123").value and (retencion_observation or received_invoice_retencion):
             raise typer.BadParameter(
                 "Modelo 123 public capture is incomplete: the current Número de rentas count and "
@@ -241,17 +326,25 @@ def aggregate_modelo(
                 withholding_observation, model=WithholdingObservation, flag="--withholding-observation"
             ),
         )
-        invoice_withholding_requests = _parse_typed_cli_observations(
-            received_invoice_retencion,
-            model=InvoiceWithholdingEvidenceRequest,
-            flag="--received-invoice-retencion",
+        ledger_payment_requests = _parse_typed_cli_observations(
+            ledger_payment_withholding,
+            model=LedgerPaymentWithholdingEvidenceRequest,
+            flag="--ledger-payment-withholding",
         )
-        command = _capture_invoice_withholding_into_command(
-            ctx,
-            command,
-            invoice_withholding_requests,
-            has_caller_authored_retenciones=bool(retencion_observation),
-        )
+        if ledger_payment_requests:
+            command = _capture_ledger_payment_withholding_into_command(ctx, command, ledger_payment_requests[0])
+        else:
+            invoice_withholding_requests = _parse_typed_cli_observations(
+                received_invoice_retencion,
+                model=InvoiceWithholdingEvidenceRequest,
+                flag="--received-invoice-retencion",
+            )
+            command = _capture_invoice_withholding_into_command(
+                ctx,
+                command,
+                invoice_withholding_requests,
+                has_caller_authored_retenciones=bool(retencion_observation),
+            )
     result = aggregate_per_modelo(command, operation=operation)
     clave_breakdown = _clave_breakdown(command)
     aggregate_result = ModeloAggregateResult.from_aggregation_result(
