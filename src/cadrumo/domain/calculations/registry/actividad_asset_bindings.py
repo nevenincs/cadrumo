@@ -48,6 +48,8 @@ _METHOD_ADMISSION_IDS = {
     DirectEstimationRegime.SIMPLIFIED: f"{_PREFIX}-simplificada-metodo-admitido",
 }
 _BUILDING_CLASS_ID = f"{_PREFIX}-clase-edificio"
+_MATERIAL_CLASS_ID = f"{_PREFIX}-clase-admite-material"
+_INTANGIBLE_CLASS_ID = f"{_PREFIX}-clase-admite-intangible"
 _FURNITURE_CLASS_ID = f"{_PREFIX}-clase-mobiliario-enseres"
 _WEIGHTING_ID = f"{_PREFIX}-porcentaje-constante-ponderacion"
 _MEDIUM_PERIOD_ID = f"{_PREFIX}-porcentaje-constante-umbral-periodo-medio"
@@ -237,7 +239,7 @@ def _table_bounds(parameters: _Parameters, asset_revision: ActivityAssetRevision
     class_key = election.authority_class_key
     if class_key is None:
         raise ActividadAssetIncompleteError(f"{election.method.value} requires a statutory table class")
-    _require_class_matches_kind(class_key, asset_revision.asset_kind)
+    kind_reference = _require_class_matches_kind(parameters, class_key, asset_revision.asset_kind)
     coefficient_id = _COEFFICIENT_IDS[election.regime]
     period_id = _PERIOD_IDS[election.regime]
     maximum_percent = parameters.keyed(coefficient_id, class_key)
@@ -251,17 +253,22 @@ def _table_bounds(parameters: _Parameters, asset_revision: ActivityAssetRevision
         maximum=maximum_percent / Decimal("100"),
         minimum=Decimal("1") / period_years,
         period_years=period_years,
-        references=(parameters.reference(coefficient_id, class_key), parameters.reference(period_id, class_key)),
+        references=(
+            parameters.reference(coefficient_id, class_key),
+            parameters.reference(period_id, class_key),
+            kind_reference,
+        ),
     )
 
 
-def _require_class_matches_kind(class_key: str, asset_kind: AssetKind) -> None:
-    exclusively_intangible = class_key.startswith("intangible-")
-    admits_intangible = exclusively_intangible or class_key == "equipo-informacion-software"
-    if asset_kind is AssetKind.INTANGIBLE and not admits_intangible:
-        raise ActividadAssetUnsupportedError("intangible asset requires an enrolled intangible authority class")
-    if asset_kind is AssetKind.MATERIAL and exclusively_intangible:
-        raise ActividadAssetUnsupportedError("material asset cannot use an exclusively intangible authority class")
+def _require_class_matches_kind(parameters: _Parameters, class_key: str, asset_kind: AssetKind) -> str:
+    """Refuse a table class the registry does not admit for the asset's kind."""
+    parameter_id = _INTANGIBLE_CLASS_ID if asset_kind is AssetKind.INTANGIBLE else _MATERIAL_CLASS_ID
+    if not _class_flag(parameters, parameter_id, class_key):
+        raise ActividadAssetUnsupportedError(
+            f"table class {class_key!r} does not classify {asset_kind.value} assets",
+        )
+    return parameters.reference(parameter_id, class_key)
 
 
 def _class_flag(parameters: _Parameters, parameter_id: str, class_key: str) -> bool:
@@ -274,7 +281,11 @@ def _class_flag(parameters: _Parameters, parameter_id: str, class_key: str) -> b
 
 
 def _is_used_for_amortization(parameters: _Parameters, asset_revision: ActivityAssetRevision, class_key: str) -> bool:
-    """Apply RIS art. 4.3: a building under the minimum age is not a used asset."""
+    """Apply RIS art. 4.3: a building under the minimum age is not a used asset.
+
+    Callers ask only where a used-asset multiplier is enrolled, so a used
+    building elsewhere never has to evidence its construction date.
+    """
     if asset_revision.acquired_condition is not AcquiredCondition.USED:
         return False
     if not _class_flag(parameters, _BUILDING_CLASS_ID, class_key):
@@ -301,24 +312,27 @@ def _resolve_linear(parameters: _Parameters, asset_revision: ActivityAssetRevisi
     bounds = _table_bounds(parameters, asset_revision)
     maximum = bounds.maximum
     references = list(bounds.references)
-    used = _is_used_for_amortization(parameters, asset_revision, bounds.class_key)
-    if used and election.shift_hours_per_day is not None:
-        raise ActividadAssetUnsupportedError(
-            "RIS art. 4 does not state how the multi-shift and used-asset coefficients combine",
-        )
-    if used and election.regime is DirectEstimationRegime.NORMAL:
-        maximum *= parameters.value(_USED_MULTIPLIER_ID)
-        references.append(parameters.reference(_USED_MULTIPLIER_ID))
+    used_key = f"{election.regime.value}:{asset_revision.asset_kind.value}"
+    used_multiplier = parameters.keyed(_USED_MULTIPLIER_ID, used_key)
+    if used_multiplier is not None and _is_used_for_amortization(parameters, asset_revision, bounds.class_key):
+        if election.shift_hours_per_day is not None:
+            raise ActividadAssetUnsupportedError(
+                "RIS art. 4 does not state how the multi-shift and used-asset coefficients combine",
+            )
+        maximum *= used_multiplier
+        references.append(parameters.reference(_USED_MULTIPLIER_ID, used_key))
     if election.small_enterprise is not None:
         maximum *= _small_enterprise_multiplier(parameters, asset_revision, references)
     if election.shift_hours_per_day is not None:
-        if election.regime is not DirectEstimationRegime.NORMAL:
-            raise ActividadAssetUnsupportedError("the RIS art. 4.2 multi-shift coefficient is a normal-modality rule")
-        shift_hours = parameters.value(_SHIFT_HOURS_ID)
+        shift_hours = parameters.keyed(_SHIFT_HOURS_ID, election.regime.value)
+        if shift_hours is None:
+            raise ActividadAssetUnsupportedError(
+                f"the RIS art. 4.2 multi-shift coefficient is not enrolled for the {election.regime.value} modality",
+            )
         if election.shift_hours_per_day <= shift_hours:
             raise ActividadAssetValidationError("a multi-shift coefficient requires more than one normal shift a day")
         maximum = bounds.minimum + (bounds.maximum - bounds.minimum) * election.shift_hours_per_day / shift_hours
-        references.append(parameters.reference(_SHIFT_HOURS_ID))
+        references.append(parameters.reference(_SHIFT_HOURS_ID, election.regime.value))
     coefficient = _elected_coefficient(election, minimum=bounds.minimum, maximum=maximum)
     return _Resolution(method_facts={"annual_rate": min(coefficient, Decimal("1"))}, references=tuple(references))
 

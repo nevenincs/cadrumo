@@ -7,8 +7,15 @@ from typing import Self
 from pydantic import BaseModel, model_validator
 
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.renta.actividad_asset.claims import AmortizationClaim, record_claim
+from ...core.money.rounding import round_to_cents
+from ...domain.renta.actividad_asset.claims import AmortizationClaim, asset_schedule_history, record_claim
+from ...domain.renta.actividad_asset.errors import (
+    ActividadAssetClaimConflictError,
+    ActividadAssetIncompleteError,
+    ActividadAssetValidationError,
+)
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+from ...domain.renta.actividad_asset.schedule import require_method_continuity, require_opening_method
 
 
 class ActivityAssetHistory(BaseModel):
@@ -59,13 +66,45 @@ class ActivityAssetHistory(BaseModel):
         return ActivityAssetHistory(revisions=(*self.revisions, revision), claims=self.claims)
 
     def record_claim(self, claim: AmortizationClaim) -> ActivityAssetHistoryClaimResult:
-        """Record a claim through the domain replay/conflict contract."""
+        """Record a claim through the domain replay/conflict contract.
+
+        A new claim must also keep the asset's method continuity and stay
+        within its remaining lawful basis.  The repository applies this inside
+        its compare-and-swap mutation, so two forecasts taken against the same
+        history can never both consume the same basis.
+        """
         result = record_claim(self.claims, claim)
+        if not result.reused_existing_claim:
+            self._require_claim_invariants(claim, result.claims)
         return ActivityAssetHistoryClaimResult(
             history=ActivityAssetHistory(revisions=self.revisions, claims=result.claims),
             claim=result.claim,
             reused_existing_claim=result.reused_existing_claim,
         )
+
+    def _require_claim_invariants(
+        self,
+        claim: AmortizationClaim,
+        claims_after: tuple[AmortizationClaim, ...],
+    ) -> None:
+        revision = next((item for item in self.revisions if item.revision_id == claim.asset_revision_id), None)
+        if revision is None:
+            raise ActividadAssetValidationError("activity asset claim references an unknown revision")
+        summary = asset_schedule_history(
+            claims_after,
+            self.revisions,
+            asset_id=claim.asset_id,
+            tax_year=claim.tax_year,
+        )
+        election = revision.amortization
+        require_method_continuity(election.method, election.fingerprint, summary)
+        require_opening_method(revision, election.method)
+        opening = revision.opening_history.accumulated_amount
+        if opening is None:
+            raise ActividadAssetIncompleteError("opening amortization history is missing")
+        consumed = opening + summary.accumulated_before_tax_year + summary.accumulated_in_tax_year
+        if consumed > round_to_cents(revision.amortizable_basis()):
+            raise ActividadAssetClaimConflictError("effective claims would exceed the asset's lawful amortizable basis")
 
 
 class ActivityAssetHistoryClaimResult(BaseModel):

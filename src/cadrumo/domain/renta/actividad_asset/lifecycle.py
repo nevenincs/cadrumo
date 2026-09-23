@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
-from .election import AcquiredCondition, ActivityAssetAmortizationElection
+from .election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
 
 
@@ -81,6 +81,8 @@ class OpeningAmortizationHistory(BaseModel):
 
     status: OpeningHistoryStatus
     accumulated_amount: Decimal | None = None
+    amortization_method: AmortizationMethod | None = None
+    """The method under which the opening amount was charged, when attested."""
 
     @field_validator("accumulated_amount")
     @classmethod
@@ -93,8 +95,10 @@ class OpeningAmortizationHistory(BaseModel):
     def _validate_status_shape(self) -> Self:
         if self.status is OpeningHistoryStatus.KNOWN and self.accumulated_amount is None:
             raise ValueError("known opening history requires accumulated_amount")
-        if self.status is OpeningHistoryStatus.MISSING and self.accumulated_amount is not None:
-            raise ValueError("missing opening history cannot declare accumulated_amount")
+        if self.status is OpeningHistoryStatus.MISSING and (
+            self.accumulated_amount is not None or self.amortization_method is not None
+        ):
+            raise ValueError("missing opening history cannot declare an amount or its method")
         return self
 
 

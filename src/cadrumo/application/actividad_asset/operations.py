@@ -17,7 +17,7 @@ from ...domain.renta.actividad_asset.claims import (
     project_m100,
     project_m130,
 )
-from ...domain.renta.actividad_asset.election import DirectEstimationRegime
+from ...domain.renta.actividad_asset.election import FREE_AMOUNT_METHODS, DirectEstimationRegime
 from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
@@ -103,6 +103,23 @@ class ActivityAssetOperations:
         requested_free_amount: Decimal | None = None,
     ) -> ScheduledAmortizationCharge:
         """Calculate a forecast under the current revision's election without recording it."""
+        return self._forecast(
+            asset_id=asset_id,
+            covered_from=covered_from,
+            covered_until=covered_until,
+            requested_free_amount=requested_free_amount,
+            excluding_claim_id=None,
+        )
+
+    def _forecast(
+        self,
+        *,
+        asset_id: str,
+        covered_from: date,
+        covered_until: date,
+        requested_free_amount: Decimal | None,
+        excluding_claim_id: str | None,
+    ) -> ScheduledAmortizationCharge:
         history = self._service.reopen()
         revision = self.inspect(asset_id)[-1]
         _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
@@ -115,6 +132,7 @@ class ActivityAssetOperations:
                 history.revisions,
                 asset_id=asset_id,
                 tax_year=covered_from.year,
+                excluding_claim_id=excluding_claim_id,
             ),
             requested_free_amount=requested_free_amount,
         )
@@ -126,7 +144,13 @@ class ActivityAssetOperations:
         creating_operation: str,
         supersedes_claim_id: str | None = None,
     ) -> ActivityAssetHistoryClaimResult:
-        """Explicitly materialize a forecast as one idempotent claim operation."""
+        """Explicitly materialize a forecast as one idempotent claim operation.
+
+        A forecast is caller-held data (the CLI receives it as JSON), so a new
+        claim is recorded only when recomputing the forecast against current
+        history, authority and profile reproduces it exactly.  An exact replay
+        of an already recorded claim returns that claim unchanged.
+        """
         revision = self.inspect(forecast.asset_id)[-1]
         if revision.revision_id != forecast.asset_revision_id:
             raise ActividadAssetValidationError("forecast does not reference the current asset revision")
@@ -136,6 +160,19 @@ class ActivityAssetOperations:
             creating_operation=creating_operation,
             supersedes_claim_id=supersedes_claim_id,
         )
+        if any(existing.claim_id == claim.claim_id for existing in self._service.reopen().claims):
+            return self._service.record_claim(claim)
+        recomputed = self._forecast(
+            asset_id=forecast.asset_id,
+            covered_from=forecast.covered_from,
+            covered_until=forecast.covered_until,
+            requested_free_amount=forecast.amount if forecast.method in FREE_AMOUNT_METHODS else None,
+            excluding_claim_id=supersedes_claim_id,
+        )
+        if recomputed != forecast:
+            raise ActividadAssetValidationError(
+                "the forecast no longer matches the schedule under current history and authority; forecast again",
+            )
         return self._service.record_claim(claim)
 
     def filing_handoff(self, *, tax_year: int, m130_period: Period) -> ActivityAssetFilingHandoff:

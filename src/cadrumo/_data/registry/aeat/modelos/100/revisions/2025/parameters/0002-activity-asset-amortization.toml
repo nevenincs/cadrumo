@@ -420,18 +420,19 @@ valid_to = 2025-12-31
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["El porcentaje constante así determinado no podrá ser inferior al 11 por 100."]
 
-# Used assets amortized on their used price may reach twice the maximum
-# table coefficient (RIS art. 4.3.a).
+# Used-asset multiplier of the maximum table coefficient, keyed by modality and
+# asset kind. RIS art. 4.3 covers inmovilizado material and inversiones
+# inmobiliarias priced as used; it states no intangible case, and the simplified
+# modality applies its own linear table (RIRPF art. 30.1a), so only
+# normal:material is enrolled and any other key applies no multiplier.
 [[revisions."2025".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-usado-multiplicador-coeficiente-maximo"
-data_type = "decimal"
+data_type = "keyed_bracket_table"
 unit = "factor"
-legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-4"]
-[[revisions."2025".parameters.values]]
-value = "2"
-date_axis = "filing_period"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+legal_refs = ["ley-27-2014:art-12", "rd-634-2015:art-4", "rd-439-2007:art-30"]
+keyed_brackets = [
+  { key = "normal:material", value = "2", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["el coeficiente máximo utilizable será el doble del coeficiente de amortización lineal"]
@@ -452,18 +453,19 @@ comparison = "inclusive"
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["edificios cuya antigüedad sea inferior a diez años."]
 
-# Hours of one normal working shift in the RIS art. 4.2 multi-shift coefficient.
+# Hours of one normal working shift in the RIS art. 4.2 multi-shift coefficient,
+# keyed by modality. RIS art. 4.2 adjusts the LIS table coefficient; the
+# simplified modality applies its own linear table (RIRPF art. 30.1a), so only
+# the normal modality is enrolled.
 [[revisions."2025".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-turno-normal-horas"
-data_type = "decimal"
+data_type = "keyed_bracket_table"
 unit = "hours"
-legal_refs = ["rd-634-2015:art-4"]
+legal_refs = ["rd-634-2015:art-4", "rd-439-2007:art-30"]
 source_refs = ["boe-ris-statutory-facts"]
-[[revisions."2025".parameters.values]]
-value = "8"
-date_axis = "filing_period"
-valid_from = 2025-01-01
-valid_to = 2025-12-31
+keyed_brackets = [
+  { key = "normal", value = "8", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "boe-ris-statutory-facts"
 required_text = ["se utilice diariamente en más de un turno normal de trabajo", "por el cociente entre las horas diarias habitualmente trabajadas y ocho horas"]
@@ -548,3 +550,112 @@ valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Que entren en funcionamiento en los períodos impositivos que se inicien en los años 2024 y 2025."]
+
+# Whether a table class can classify a material asset. The LIS table rows for
+# software and audiovisual productions are intangible only; the simplified
+# table's information-equipment and software group covers both kinds.
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-clase-admite-material"
+data_type = "keyed_bracket_table"
+unit = "flag"
+legal_refs = ["ley-27-2014:art-12", "rd-439-2007:art-30"]
+keyed_brackets = [
+  { key = "obra-civil-general", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-pavimentos", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-infraestructuras-mineras", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-hidraulica", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-nuclear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-carbon", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-renovable", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-otra", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-industrial", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "terreno-escombrera", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "almacen-deposito", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-subestacion-red", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-cables", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-resto", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "maquinaria", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-medico", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-locomotora-vagon-traccion", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-buque-aeronave", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-interno", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-externo", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-autocamion", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "mobiliario", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "lenceria", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "cristaleria", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "util-herramienta", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "molde-matriz-modelo", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "enseres-otros", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-electronico", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-proceso-informacion", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible-software", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible-audiovisual", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "otro-elemento", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-otra-construccion", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-informacion-software", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "ganado-equino-frutal-no-citrico", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "frutal-citrico-vinedo", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "olivar", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+]
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos"]
+
+# Whether a table class can classify an intangible asset: the LIS software and
+# audiovisual rows and the simplified information-equipment and software group.
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-clase-admite-intangible"
+data_type = "keyed_bracket_table"
+unit = "flag"
+legal_refs = ["ley-27-2014:art-12", "rd-439-2007:art-30"]
+keyed_brackets = [
+  { key = "obra-civil-general", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-pavimentos", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-infraestructuras-mineras", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-hidraulica", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-nuclear", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-carbon", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-renovable", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-otra", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-industrial", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "terreno-escombrera", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "almacen-deposito", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-subestacion-red", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-cables", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-resto", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "maquinaria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-medico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-locomotora-vagon-traccion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-buque-aeronave", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-interno", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-externo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-autocamion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "mobiliario", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "lenceria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "cristaleria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "util-herramienta", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "molde-matriz-modelo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "enseres-otros", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-electronico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-proceso-informacion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible-software", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible-audiovisual", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "otro-elemento", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-otra-construccion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-informacion-software", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "ganado-equino-frutal-no-citrico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "frutal-citrico-vinedo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "olivar", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+]
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Tabla de coeficientes de amortización lineal", "Sistemas y programas informáticos"]

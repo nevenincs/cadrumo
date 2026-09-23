@@ -254,15 +254,22 @@ def asset_schedule_history(
     *,
     asset_id: str,
     tax_year: int,
+    excluding_claim_id: str | None = None,
 ) -> AssetScheduleHistory:
     """Summarise effective history the schedule needs for one asset and tax year.
 
     Election fingerprints come from the revision each claim was recorded
     under.  A claim in a later tax year refuses, because the lawful charge of
     an earlier year cannot be recomputed after later basis was consumed.
+    ``excluding_claim_id`` removes one effective claim after supersession is
+    resolved, which is how a superseding claim is judged without its target.
     """
     elections = {revision.revision_id: revision.amortization.fingerprint for revision in revisions}
-    effective = tuple(claim for claim in effective_claims(claims) if claim.asset_id == asset_id)
+    effective = tuple(
+        claim
+        for claim in effective_claims(claims)
+        if claim.asset_id == asset_id and claim.claim_id != excluding_claim_id
+    )
     if any(claim.tax_year > tax_year for claim in effective):
         raise ActividadAssetValidationError("a later tax year already has recorded claims for this asset")
     before = tuple(claim for claim in effective if claim.tax_year < tax_year)
@@ -274,7 +281,11 @@ def asset_schedule_history(
         accumulated_before_tax_year=sum((claim.amount for claim in before), Decimal("0")),
         accumulated_in_tax_year=sum((claim.amount for claim in within), Decimal("0")),
         taxpayer_low_value_claimed_in_tax_year=sum(
-            (claim.amount for claim in effective_free_depreciation_claims(claims, tax_year=tax_year)),
+            (
+                claim.amount
+                for claim in effective_free_depreciation_claims(claims, tax_year=tax_year)
+                if claim.claim_id != excluding_claim_id
+            ),
             Decimal("0"),
         ),
         election_fingerprints_before_tax_year=tuple(

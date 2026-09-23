@@ -14,7 +14,6 @@ import argparse
 import hashlib
 import json
 import secrets
-import subprocess
 from collections.abc import Callable
 from dataclasses import asdict, dataclass
 from decimal import Decimal
@@ -31,9 +30,13 @@ from dev.acceptance.assets.installed_tui_child import (
 )
 from dev.acceptance.income_tax.cli_journey import command_result
 from dev.acceptance.installed_cli import InstalledCli
+from dev.packaging.command_execution import run_command
 
 _SCHEMA_VERSION = "assets-01-installed-method-proof-v1"
 _TUI_TIMEOUT_SECONDS = 300.0
+# InstalledCli sends the profile passphrase through --profile-secrets-stdin on
+# every command and never resumes a keychain session.
+_CLI_CREDENTIAL_CHANNEL = "profile_secrets_stdin"
 
 
 class InstalledMethodProofError(RuntimeError):
@@ -72,13 +75,13 @@ def _sha256(path: Path) -> str:
 
 def _installed_package(python: Path) -> tuple[Path, str]:
     """Locate the installed package and hash its ``__init__`` in a fresh interpreter."""
-    completed = subprocess.run(  # noqa: S603 - explicit acceptance interpreter
-        [str(python), "-I", "-c", "import cadrumo, pathlib; print(pathlib.Path(cadrumo.__file__).resolve())"],
-        check=True,
-        capture_output=True,
-        text=True,
-        timeout=120,
+    completed = run_command(
+        (str(python), "-I", "-c", "import cadrumo, pathlib; print(pathlib.Path(cadrumo.__file__).resolve())"),
+        cwd=python.parent,
+        timeout_seconds=120,
     )
+    if completed.returncode != 0:
+        raise InstalledMethodProofError("the installed interpreter could not import the product")
     init_path = Path(completed.stdout.strip())
     return init_path.parent, _sha256(init_path)
 
@@ -177,7 +180,7 @@ def _tui_first(
         "cli_revisions_read": 2,
         "cli_material_m100": _money(material_m100["amount"]),
         "cli_material_m130": _money(material_m130["amount"]),
-        "credential_path": "stdin",
+        "cli_credential_channel": _CLI_CREDENTIAL_CHANNEL,
     }
 
 
@@ -188,6 +191,7 @@ def _cli_first(
     workspace_root: Path,
     authority_root: Path,
     run_root: Path,
+    expected_generation: str,
 ) -> dict[str, object]:
     """The CLI creates, forecasts and claims; a fresh TUI process reads the asset back."""
     storage_root = run_root / "cli-first-store"
@@ -220,6 +224,10 @@ def _cli_first(
     )
     # The first revision's EUR 2,000 basis: 2,000 x 30% = 600.00.
     _require(_money(forecast["amount"]) == "600.00", "CLI constant-percentage forecast differs from the oracle")
+    _require(
+        forecast.get("authority_generation") == expected_generation,
+        "the CLI forecast was served by a different authority generation than the installed descriptor names",
+    )
     claim = command_result(
         cli.run(
             (
@@ -248,7 +256,8 @@ def _cli_first(
         "cli_forecast": _money(forecast["amount"]),
         "cli_claim_recorded": bool(cast("dict[str, object]", claim["claim"]).get("claim_id")),
         "tui_readback_status": readback.status,
-        "credential_path": "stdin",
+        "cli_forecast_authority_generation": str(forecast.get("authority_generation")),
+        "cli_credential_channel": _CLI_CREDENTIAL_CHANNEL,
     }
 
 
@@ -289,7 +298,12 @@ def run_installed_method_proof(
     )
     report("cli_first")
     stages["cli_first"] = _cli_first(
-        aeat=aeat, python=python, workspace_root=workspace_root, authority_root=authority_root, run_root=run_root
+        aeat=aeat,
+        python=python,
+        workspace_root=workspace_root,
+        authority_root=authority_root,
+        run_root=run_root,
+        expected_generation=identity.authority_logical_generation,
     )
     return InstalledMethodProofReceipt(
         schema_version=_SCHEMA_VERSION,

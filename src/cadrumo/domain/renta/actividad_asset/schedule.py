@@ -218,7 +218,8 @@ def schedule_charge(
         raise ActividadAssetIncompleteError("opening amortization history is missing")
     if covered_until <= covered_from:
         raise ActividadAssetValidationError("covered interval must be half-open and non-empty")
-    _require_method_continuity(authority, history)
+    require_method_continuity(authority.method, authority.election_fingerprint, history)
+    require_opening_method(revision, authority.method)
     _require_free_amount_shape(authority.method, requested_free_amount)
 
     year_start = date(authority.tax_year, 1, 1)
@@ -301,19 +302,44 @@ class _ChargeContext:
     interval_end: date
 
 
-def _require_method_continuity(authority: ScheduleAuthority, history: AssetScheduleHistory) -> None:
-    """Refuse a change of method inside a tax year or into a from-start method."""
-    current = authority.election_fingerprint
+def require_method_continuity(
+    method: AmortizationMethod,
+    election_fingerprint: str,
+    history: AssetScheduleHistory,
+) -> None:
+    """Refuse a change of method inside a tax year or into a from-start method.
+
+    Forecasts and the claim write both apply this one rule, so a claim can
+    never be persisted under an election its forecast would have refused.
+    """
+    current = election_fingerprint
     if any(fingerprint != current for fingerprint in history.election_fingerprints_in_tax_year):
         raise ActividadAssetValidationError(
             "an asset's amortization election can change only at a tax-year boundary",
         )
-    if authority.method in _FROM_START_METHODS and any(
+    if method in _FROM_START_METHODS and any(
         fingerprint != current for fingerprint in history.election_fingerprints_before_tax_year
     ):
         raise ActividadAssetUnsupportedError(
             "constant percentage and sum of digits run from the start of amortization (RIS arts. 5.1 and 6.1); "
             "an asset already charged under another election cannot adopt them",
+        )
+
+
+def require_opening_method(revision: ActivityAssetRevision, method: AmortizationMethod) -> None:
+    """Refuse a from-start method over an opening amount charged under another method.
+
+    Constant percentage and sum of digits run from the start of amortization,
+    so an amount amortized before onboarding counts only when it is attested
+    to have been charged under the same method (RIS arts. 5.1 and 6.1).
+    """
+    opening = revision.opening_history
+    if method not in _FROM_START_METHODS or not opening.accumulated_amount:
+        return
+    if opening.amortization_method is not method:
+        raise ActividadAssetUnsupportedError(
+            "a non-zero opening amount must attest the same from-start method before constant percentage or "
+            "sum of digits can continue it (RIS arts. 5.1 and 6.1)",
         )
 
 
@@ -389,19 +415,21 @@ def _constant_percentage_amount(context: _ChargeContext) -> Decimal:
     life_end = context.authority.useful_life_ends_on
     if life_end is None:  # defensive: authority validation proves unreachable
         raise ActividadAssetValidationError("constant-percentage authority lacks its useful-life conclusion")
-    days = Decimal((context.interval_end - context.interval_start).days)
     if life_end <= context.year_end:
         final_start = max(context.revision.in_service_date, context.year_start)
         final_days = Decimal((life_end - final_start).days)
-        return _cumulative_rounded(context.pending_at_year_start, days, final_days)
+        if final_days <= Decimal("0"):  # defensive: a non-empty interval proves a positive span
+            raise ActividadAssetValidationError("final constant-percentage window has no days")
+
+        def cumulative(point: date) -> Decimal:
+            return context.pending_at_year_start * Decimal((point - final_start).days) / final_days
+
+        # Rounding the cumulative curve, not each interval, lets contiguous
+        # final-year claims reach exactly the pending value.
+        return round_to_cents(cumulative(context.interval_end)) - round_to_cents(cumulative(context.interval_start))
+    days = Decimal((context.interval_end - context.interval_start).days)
     year_days = Decimal(calendar_days_in_tax_year(context.authority.tax_year))
     return round_to_cents(context.pending_at_year_start * _annual_rate(context) * days / year_days)
-
-
-def _cumulative_rounded(total: Decimal, part_days: Decimal, whole_days: Decimal) -> Decimal:
-    if whole_days <= Decimal("0"):  # defensive: a non-empty interval proves a positive span
-        raise ActividadAssetValidationError("allocation window has no days")
-    return round_to_cents(total * part_days / whole_days)
 
 
 def _approved_plan_amount(context: _ChargeContext) -> Decimal:
@@ -544,5 +572,7 @@ __all__ = [
     "add_fractional_years",
     "add_years",
     "calendar_days_in_tax_year",
+    "require_method_continuity",
+    "require_opening_method",
     "schedule_charge",
 ]

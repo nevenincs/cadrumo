@@ -11,6 +11,7 @@ from __future__ import annotations
 import re
 from datetime import date, timedelta
 from decimal import Decimal
+from itertools import pairwise
 
 import pytest
 
@@ -36,6 +37,7 @@ from cadrumo.domain.renta.actividad_asset.election import (
     SmallEnterpriseEvidence,
 )
 from cadrumo.domain.renta.actividad_asset.errors import (
+    ActividadAssetClaimConflictError,
     ActividadAssetIncompleteError,
     ActividadAssetUnsupportedError,
     ActividadAssetValidationError,
@@ -79,6 +81,7 @@ def _asset(
     condition: AcquiredCondition = AcquiredCondition.NEW,
     residual: str = "0",
     opening: str = "0",
+    opening_method: AmortizationMethod | None = None,
     built: date | None = None,
     asset_id: str = "asset",
 ) -> ActivityAssetRevision:
@@ -102,6 +105,7 @@ def _asset(
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal(opening),
+            amortization_method=opening_method,
         ),
         acquired_condition=condition,
         building_construction_date=built,
@@ -228,7 +232,7 @@ def test_multi_shift_coefficient_follows_the_hours_formula() -> None:
     assert charge.amount == Decimal("3320.00")  # 18,000 x 24% - 18,000/18 = 4,320 - 1,000
     with pytest.raises(ActividadAssetValidationError, match="more than one normal shift"):
         _charge(_asset(_linear("maquinaria", shift_hours_per_day=Decimal("8")), basis="18000"))
-    with pytest.raises(ActividadAssetUnsupportedError, match="normal-modality"):
+    with pytest.raises(ActividadAssetUnsupportedError, match="not enrolled for the simplified modality"):
         _charge(_asset(_linear("maquinaria", _SIMPLIFIED, shift_hours_per_day=Decimal("16")), basis="18000"))
 
 
@@ -276,6 +280,29 @@ def test_reduced_size_acceleration_doubles_the_maximum_for_a_new_element() -> No
         )
 
 
+def test_used_doubling_is_limited_to_material_assets_where_it_is_enrolled() -> None:
+    used_software = _charge(
+        _asset(
+            _linear("intangible-software"),
+            basis="3000",
+            kind=AssetKind.INTANGIBLE,
+            condition=AcquiredCondition.USED,
+        ),
+    )
+    simplified_used_building = _charge(
+        _asset(
+            _linear("edificio-otra-construccion", _SIMPLIFIED),
+            basis="100000",
+            condition=AcquiredCondition.USED,
+        ),
+    )
+
+    # RIS art. 4.3 covers material assets only: 3,000 x 33%, not 66%.
+    assert used_software.amount == Decimal("990.00")
+    # The simplified table applies no used multiplier, so no construction date is needed: 100,000 x 3%.
+    assert simplified_used_building.amount == Decimal("3000.00")
+
+
 # --- Constant percentage (LIS art. 12.1.b; RIS art. 5) ---------------------------------------
 
 
@@ -301,7 +328,13 @@ def test_constant_percentage_weights_the_elected_coefficient_by_period_band() ->
 def test_constant_percentage_applies_to_the_value_pending_at_the_start_of_the_year() -> None:
     first_partial = _charge(_asset(_constant("maquinaria"), basis="10000", in_service=date(2025, 7, 1)))
     second_year = _charge(
-        _asset(_constant("maquinaria"), basis="10000", in_service=date(2024, 1, 1), opening="3000"),
+        _asset(
+            _constant("maquinaria"),
+            basis="10000",
+            in_service=date(2024, 1, 1),
+            opening="3000",
+            opening_method=AmortizationMethod.CONSTANT_PERCENTAGE,
+        ),
     )
     with_residual = _charge(_asset(_constant("maquinaria"), basis="10000", residual="1000"))
     quarter_after_claim = _charge(
@@ -325,6 +358,7 @@ def test_constant_percentage_amortizes_everything_pending_in_the_final_year() ->
         basis="10000",
         in_service=date(2021, 7, 1),
         opening="8000",
+        opening_method=AmortizationMethod.CONSTANT_PERCENTAGE,
     )
 
     whole_year = _charge(asset)
@@ -335,6 +369,38 @@ def test_constant_percentage_amortizes_everything_pending_in_the_final_year() ->
     assert first_quarter.amount == Decimal("994.48")  # 2,000 x 90/181 = 994.4751
     with pytest.raises(ActividadAssetUnsupportedError, match="no amortizable"):
         _charge(asset, covered_from=date(2025, 8, 1))
+
+
+def test_constant_percentage_final_year_intervals_telescope_to_the_pending_value() -> None:
+    asset = _asset(
+        _constant("equipo-proceso-informacion", "0.25"),
+        basis="10000",
+        in_service=date(2021, 7, 1),
+        opening="9000",
+        opening_method=AmortizationMethod.CONSTANT_PERCENTAGE,
+    )
+    boundaries = (date(2025, 1, 1), date(2025, 1, 2), date(2025, 1, 3), date(2025, 7, 1))
+
+    amounts = [_charge(asset, covered_from=start, covered_until=end).amount for start, end in pairwise(boundaries)]
+
+    # 1,000 pending over 181 final-year days: 5.52 + 5.53 + 988.95, no stranded cent.
+    assert amounts == [Decimal("5.52"), Decimal("5.53"), Decimal("988.95")]
+    assert sum(amounts, Decimal("0")) == Decimal("1000.00")
+
+
+def test_a_from_start_method_refuses_an_unattested_opening_amount() -> None:
+    unattested = _asset(_constant("maquinaria"), basis="10000", in_service=date(2024, 1, 1), opening="3000")
+    other_method = _asset(
+        _constant("maquinaria"),
+        basis="10000",
+        in_service=date(2024, 1, 1),
+        opening="1200",
+        opening_method=AmortizationMethod.LINEAR,
+    )
+
+    for asset in (unattested, other_method):
+        with pytest.raises(ActividadAssetUnsupportedError, match="attest the same from-start method"):
+            _charge(asset)
 
 
 def test_constant_percentage_excludes_buildings_furniture_and_the_simplified_modality() -> None:
@@ -379,7 +445,13 @@ def test_sum_of_digits_period_lies_between_the_coefficient_and_the_maximum_perio
 
 
 def test_sum_of_digits_final_life_year_reaches_exactly_the_basis() -> None:
-    asset = _asset(_digits("maquinaria", 9), basis="45000", in_service=date(2017, 1, 1), opening="44000")
+    asset = _asset(
+        _digits("maquinaria", 9),
+        basis="45000",
+        in_service=date(2017, 1, 1),
+        opening="44000",
+        opening_method=AmortizationMethod.SUM_OF_DIGITS,
+    )
 
     # 2025 is the ninth life year, digit 1: 1,000, which leaves nothing pending.
     assert _charge(asset).amount == Decimal("1000.00")
@@ -594,9 +666,9 @@ def test_statutory_methods_the_product_cannot_validate_refuse_with_their_provisi
 
 
 def test_unknown_class_and_kind_mismatch_fail_closed() -> None:
-    with pytest.raises(ActividadAssetUnsupportedError, match="not enrolled"):
+    with pytest.raises(ActividadAssetUnsupportedError, match="no enrolled group classification"):
         _charge(_asset(_linear("caller-invented-class"), basis="1000"))
-    with pytest.raises(ActividadAssetUnsupportedError, match="intangible asset"):
+    with pytest.raises(ActividadAssetUnsupportedError, match="does not classify intangible assets"):
         _charge(_asset(_linear("mobiliario"), basis="1000", kind=AssetKind.INTANGIBLE))
 
 
@@ -696,7 +768,13 @@ def test_a_change_of_method_inside_a_claimed_tax_year_refuses() -> None:
 
 
 def test_constant_percentage_and_sum_of_digits_cannot_be_adopted_after_another_method() -> None:
-    constant = _asset(_constant("maquinaria"), basis="10000", in_service=date(2024, 1, 1), opening="1200")
+    constant = _asset(
+        _constant("maquinaria"),
+        basis="10000",
+        in_service=date(2024, 1, 1),
+        opening="1200",
+        opening_method=AmortizationMethod.CONSTANT_PERCENTAGE,
+    )
     earlier_linear = AssetScheduleHistory(election_fingerprints_before_tax_year=(_linear("maquinaria").fingerprint,))
     earlier_same = AssetScheduleHistory(election_fingerprints_before_tax_year=(constant.amortization.fingerprint,))
 
@@ -707,6 +785,68 @@ def test_constant_percentage_and_sum_of_digits_cannot_be_adopted_after_another_m
     linear = _asset(_linear("maquinaria"), basis="10000", in_service=date(2024, 1, 1), opening="3000")
     after_constant = AssetScheduleHistory(election_fingerprints_before_tax_year=(constant.amortization.fingerprint,))
     assert _charge(linear, history=after_constant).amount == Decimal("1200.00")  # 10,000 x 12%
+
+
+def test_two_forecasts_taken_before_recording_cannot_both_consume_the_basis() -> None:
+    operations, repository = _operations()
+    machine = _asset(
+        _election(
+            AmortizationMethod.RESEARCH_DEVELOPMENT_FREE,
+            authority_class_key="maquinaria",
+            research_development_evidence_reference="rnd-project-affectation",
+        ),
+        basis="10000",
+        asset_id="rnd-machine",
+    )
+    operations.create(machine)
+    first_half = operations.forecast(
+        asset_id=machine.asset_id,
+        covered_from=_YEAR_START,
+        covered_until=date(2025, 7, 1),
+        requested_free_amount=Decimal("10000"),
+    )
+    second_half = operations.forecast(
+        asset_id=machine.asset_id,
+        covered_from=date(2025, 7, 1),
+        covered_until=_YEAR_END,
+        requested_free_amount=Decimal("10000"),
+    )
+
+    operations.record_claim(first_half, creating_operation="test.rnd-first-half")
+    with pytest.raises(ActividadAssetValidationError, match="remaining lawful basis"):
+        operations.record_claim(second_half, creating_operation="test.rnd-second-half")
+    assert sum((claim.amount for claim in repository.history.claims), Decimal("0")) == Decimal("10000")
+
+
+def test_a_hand_edited_forecast_is_refused_at_record_time() -> None:
+    operations, _ = _operations()
+    machine = _asset(_linear("maquinaria"), basis="10000", asset_id="edited-machine")
+    operations.create(machine)
+    forecast = operations.forecast(asset_id=machine.asset_id, covered_from=_YEAR_START, covered_until=_YEAR_END)
+    inflated = forecast.model_copy(update={"amount": Decimal("5000.00")})
+
+    with pytest.raises(ActividadAssetValidationError, match="no longer matches"):
+        operations.record_claim(inflated, creating_operation="test.inflated")
+
+
+def test_the_history_write_refuses_a_claim_beyond_the_basis_even_without_operations() -> None:
+    machine = _asset(_linear("maquinaria"), basis="1000", asset_id="direct-write-machine")
+    first_half = _charge(machine, covered_until=date(2025, 7, 1))
+    second_half = _charge(machine, covered_from=date(2025, 7, 1))
+    history = ActivityAssetHistory(revisions=(machine,))
+    after_first = history.record_claim(
+        AmortizationClaim.from_schedule(first_half, asset_kind=machine.asset_kind, creating_operation="test.first"),
+    ).history
+    beyond = AmortizationClaim.from_schedule(
+        second_half.model_copy(update={"amount": Decimal("950.00")}),
+        asset_kind=machine.asset_kind,
+        creating_operation="test.beyond",
+    )
+
+    # First half: 1,000 x 12% x 181/365 = 59.51; adding 950.00 would reach 1,009.51 of a 1,000 basis.
+    assert first_half.amount == Decimal("59.51")
+    with pytest.raises(ActividadAssetClaimConflictError, match="lawful amortizable basis"):
+        after_first.record_claim(beyond)
 
 
 def test_low_value_free_real_authority_forecast_records_one_idempotent_claim() -> None:
