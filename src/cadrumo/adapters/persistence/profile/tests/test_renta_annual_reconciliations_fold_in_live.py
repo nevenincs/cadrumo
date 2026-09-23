@@ -63,7 +63,11 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 
-from .....application.aggregation.retenciones import RetencionObservation
+from .....application.aggregation.retenciones import (
+    Modelo180PropertyEvidence,
+    Modelo180StructuredAddress,
+    RetencionObservation,
+)
 from .....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from .....application.modelo.calculation_actions import (
     BucketAggregationCalculationResult,
@@ -379,18 +383,58 @@ _M115_C03_RETENCIONES = {
     "4T": Decimal("570.00"),
 }
 _M180_RETENCION_PERCEPTOR_NIFS: tuple[str, ...] = ("11111111H", "22222222J")
+# The per-perceptor rental detail M180 counts is the quarterly M115 detail; it is
+# filed under the quarter its accrual date falls in.
+_M180_DETAIL_SOURCE_MODELO = "115"
+_M180_DETAIL_QUARTER = "1T"
+_RETENCION_ACCRUED_ON = date(_YEAR, 3, 15)
+_RETENCION_TAXABLE_BASE = Decimal("1000.00")
+_RETENCION_AMOUNT = Decimal("190.00")
+# Supplied rental withholding percentage, consistent with 190.00 / 1000.00.
+_M180_WITHHOLDING_PERCENTAGE = Decimal("19.00")
 
 
-def _retencion_observation(nif: str, *, scheme: RetencionScheme, source_prefix: str) -> RetencionObservation:
+def _m180_property_evidence(index: int) -> Modelo180PropertyEvidence:
+    """Return synthetic, distinct urban-property evidence for one rental perceptor."""
+    return Modelo180PropertyEvidence(
+        property_key=f"property-{index}",
+        situation="1",
+        cadastral_reference=f"{index:07d}TS0000S0001ZZ",
+        recipient_province_code="28",
+        modality="1",
+        accrual_year=_YEAR,
+        withholding_percentage=_M180_WITHHOLDING_PERCENTAGE,
+        address=Modelo180StructuredAddress(
+            province_code="28",
+            municipality_code="079",
+            municipality="Madrid",
+            locality="Madrid",
+            postal_code="28001",
+            street_type="CL",
+            street_name="Ejemplo",
+            number_type="NUM",
+            house_number=str(index),
+        ),
+    )
+
+
+def _retencion_observation(
+    nif: str,
+    *,
+    scheme: RetencionScheme,
+    source_prefix: str,
+    modelo_180_property: Modelo180PropertyEvidence | None = None,
+) -> RetencionObservation:
     return RetencionObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=f"{source_prefix}-{nif}",
         perceptor_nif=nif,
         perceptor_name="Perceptor Ejemplo",
         scheme=scheme,
-        taxable_base=Decimal("1000.00"),
-        retencion_amount=Decimal("190.00"),
-        accrued_on=f"{_YEAR}-03-15",
+        taxable_base=_RETENCION_TAXABLE_BASE,
+        retencion_amount=_RETENCION_AMOUNT,
+        accrued_on=_RETENCION_ACCRUED_ON.isoformat(),
+        modelo_180_property=modelo_180_property,
     )
 
 
@@ -398,17 +442,19 @@ def _seed_retencion_perceptors(
     secure_objects: SecureObjectRepository,
     *,
     modelo: str,
-    scheme: RetencionScheme,
-    nifs: tuple[str, ...],
-) -> Decimal:
+    period_code: str,
+    observations: tuple[RetencionObservation, ...],
+) -> None:
+    """Persist one complete retenciones observation window."""
+    period = Period.from_year_and_code(_YEAR, period_code)
+    assert period.contains(_RETENCION_ACCRUED_ON), (period_code, _RETENCION_ACCRUED_ON)
     RetencionObservationRepositoryAdapter(objects=secure_objects).replace_observations(
         modelo=modelo,
         filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
-        observations=[_retencion_observation(nif, scheme=scheme, source_prefix=f"retencion-{modelo}") for nif in nifs],
+        period=period,
+        observations=list(observations),
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
-    return Decimal(len(set(nifs)))
 
 
 def workflow_profile() -> TaxpayerProfile:
@@ -422,17 +468,27 @@ def test_m180_folds_in_four_m115_quarters_on_live_calculate(
 
     The M180 monetary declarante casillas are ``copy`` formulas over
     annual_summary relations whose ``sum`` aggregation folds the four seeded M115
-    quarters. The perceptor count is resolved through ``retenciones_aggregation``.
-    With both sources supplied, the live resolution is clean.
+    quarters. The perceptor count is resolved through ``retenciones_aggregation``
+    over the quarterly M115 per-perceptor rental detail, each row carrying its
+    property evidence. With both sources supplied, the live resolution is clean.
     """
     obs_repo = CalculationObservationRepository()
     expected_base = _assert_distinct_positive(_M115_C02_BASE)
     expected_retenciones = _assert_distinct_positive(_M115_C03_RETENCIONES)
-    expected_perceptores = _seed_retencion_perceptors(
+    expected_perceptores = Decimal(len(set(_M180_RETENCION_PERCEPTOR_NIFS)))
+    _seed_retencion_perceptors(
         secure_objects,
-        modelo="180",
-        scheme=RetencionScheme("arrendamiento_urbano"),
-        nifs=_M180_RETENCION_PERCEPTOR_NIFS,
+        modelo=_M180_DETAIL_SOURCE_MODELO,
+        period_code=_M180_DETAIL_QUARTER,
+        observations=tuple(
+            _retencion_observation(
+                nif,
+                scheme=RetencionScheme("arrendamiento_urbano"),
+                source_prefix=f"retencion-{_M180_DETAIL_SOURCE_MODELO}",
+                modelo_180_property=_m180_property_evidence(index),
+            )
+            for index, nif in enumerate(_M180_RETENCION_PERCEPTOR_NIFS, start=1)
+        ),
     )
     for period in _QUARTERS:
         _seed_quarterly_filing(
@@ -481,6 +537,11 @@ _M190_IMPORTE_OUTPUTS: tuple[CasillaId, ...] = tuple(
 # Output 28 (M111 retenciones total) copies into decl.retenciones-total via the
 # retenciones relation (still summed over the four quarters per the binding).
 _M190_RETENCIONES_OUTPUT: CasillaId = validated_casilla_id("28", surface="_M190_RETENCIONES_OUTPUT")
+# The M190 percepciones count reads the quarterly M111 per-perceptor-clave detail;
+# the seeded row is filed under the quarter its transaction date falls in.
+_M190_DETAIL_SOURCE_MODELO = "111"
+_M190_DETAIL_QUARTER = "1T"
+_M190_DETAIL_TRANSACTION_DATE = date(_YEAR, 3, 15)
 
 
 def _m190_seed_value(output: CasillaId, period: str) -> Decimal:
@@ -503,10 +564,13 @@ def _seed_m190_withholding_detail(
     clave: str = "G",
     subclave: str = "01",
 ) -> None:
+    """Persist one per-perceptor-clave row as quarterly M111 detail, the M190 count's source."""
+    period = Period.from_year_and_code(_YEAR, _M190_DETAIL_QUARTER)
+    assert period.contains(_M190_DETAIL_TRANSACTION_DATE), (_M190_DETAIL_QUARTER, _M190_DETAIL_TRANSACTION_DATE)
     PercepcionObservationRepositoryAdapter(objects=secure_objects).replace_observations(
-        modelo="190",
+        modelo=_M190_DETAIL_SOURCE_MODELO,
         filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _ANNUAL_PERIOD),
+        period=period,
         observations=[
             WithholdingObservation(
                 source_id="m190-professional-row-001",
@@ -514,7 +578,7 @@ def _seed_m190_withholding_detail(
                 perceptor_legal_name="Profesional Ejemplo",
                 province_code="28",
                 territorial_deduction_clave=0,
-                transaction_date=date(_YEAR, 3, 15),
+                transaction_date=_M190_DETAIL_TRANSACTION_DATE,
                 clave=RetencionClave.from_registry(clave),
                 subclave=subclave,
                 percibido_dinerario=Decimal("1000.00"),
@@ -871,11 +935,15 @@ def test_m193_folds_in_four_m123_quarters_with_withholding_advisory(
     obs_repo = CalculationObservationRepository()
     expected_base = _assert_distinct_positive(_M123_C06_BASE)
     expected_retenciones = _assert_distinct_positive(_M123_C09_RETENCIONES)
-    expected_perceptores = _seed_retencion_perceptors(
+    expected_perceptores = Decimal(len(set(_M193_RETENCION_PERCEPTOR_NIFS)))
+    _seed_retencion_perceptors(
         secure_objects,
         modelo="193",
-        scheme=RetencionScheme("intereses"),
-        nifs=_M193_RETENCION_PERCEPTOR_NIFS,
+        period_code=_ANNUAL_PERIOD,
+        observations=tuple(
+            _retencion_observation(nif, scheme=RetencionScheme("intereses"), source_prefix="retencion-193")
+            for nif in _M193_RETENCION_PERCEPTOR_NIFS
+        ),
     )
     for period in _QUARTERS:
         _seed_quarterly_filing(
