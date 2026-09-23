@@ -4,7 +4,9 @@ from __future__ import annotations
 
 import asyncio
 import json
+from collections.abc import Sequence
 from pathlib import Path
+from typing import Any
 
 import pytest
 from textual.css.query import NoMatches
@@ -13,6 +15,7 @@ from dev.acceptance.income_tax.installed_tui_child import InstalledTuiChildError
 
 from ..installed_provenance import (
     _parse_child_receipt,
+    _tui_login_session_mode,
     _wait_with_deadline,
     assert_detail_provenance,
     assert_json_provenance,
@@ -187,3 +190,37 @@ def test_admission_wait_still_fails_when_the_surface_never_mounts() -> None:
 
     with pytest.raises(InstalledTuiChildError, match="did not expose one of"):
         asyncio.run(_wait_with_deadline(pilot, ("#field-passphrase", "#home-agenda"), seconds=0.0))
+
+
+class _ProbeCli:
+    """Pure-logic double returning one public envelope to the session probe."""
+
+    def __init__(self, document: dict[str, object]) -> None:
+        self.document = document
+        self.calls: list[dict[str, object]] = []
+
+    def run(
+        self, arguments: Sequence[str], /, *, command: str, authenticated: bool, allow_error: bool
+    ) -> dict[str, Any]:
+        self.calls.append({"arguments": arguments, "command": command, "authenticated": authenticated})
+        return self.document
+
+
+def test_the_session_probe_resumes_when_the_tui_login_persisted_its_session() -> None:
+    cli = _ProbeCli({"status": "success", "result": {"rows": []}})
+
+    assert _tui_login_session_mode(cli) == "resumed_tui_session"
+    assert cli.calls[0]["authenticated"] is False
+
+
+def test_the_session_probe_authenticates_when_the_host_had_no_usable_keychain() -> None:
+    cli = _ProbeCli({"status": "error", "error": {"code": "AUTH_STORAGE_KEYRING_UNAVAILABLE"}})
+
+    assert _tui_login_session_mode(cli) == "stdin_secret"
+
+
+def test_the_session_probe_refuses_any_other_error() -> None:
+    cli = _ProbeCli({"status": "error", "error": {"code": "REFUSED_CLI_BOUNDARY"}})
+
+    with pytest.raises(LedgerInstalledTuiError, match="unexpected code: REFUSED_CLI_BOUNDARY"):
+        _tui_login_session_mode(cli)

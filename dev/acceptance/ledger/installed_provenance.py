@@ -20,9 +20,10 @@ import hashlib
 import json
 import secrets
 import subprocess
+import sys
 from collections.abc import Mapping, Sequence
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Protocol
 
 from dev.acceptance.income_tax.installed_tui_child import (
     InstalledTuiChildError,
@@ -60,6 +61,7 @@ _SCHEMA = "ledger-01-installed-provenance-v2"
 _PATTERN_REVISION = "1.7"
 _BRIEF_REVISION = "0.1"
 _YEAR = 2025
+_KEYCHAIN_UNAVAILABLE = "AUTH_STORAGE_KEYRING_UNAVAILABLE"
 _TUI_IMPORT_KINDS = {"received": "invoices_received", "issued": "invoices_issued"}
 
 type ChildMode = Literal["import", "inspect"]
@@ -166,6 +168,61 @@ def _public_rows(
                 raise LedgerInstalledTuiError(f"{command} exposed a duplicate public {key}")
             indexed[row[key]] = row
     return indexed
+
+
+class _PublicCommandRunner(Protocol):
+    """The one installed-CLI call the session probe makes."""
+
+    def run(
+        self, arguments: Sequence[str], /, *, command: str, authenticated: bool, allow_error: bool
+    ) -> dict[str, Any]: ...
+
+
+def _tui_login_session_mode(cli: _PublicCommandRunner) -> Literal["resumed_tui_session", "stdin_secret"]:
+    """Ask the product whether the TUI login left a session the CLI can resume.
+
+    A TUI login persists its session only through a usable OS keychain; without
+    one the product keeps the login process-scoped and a later CLI call must
+    authenticate itself. Both are supported product states, so the readback
+    observes which one this host produced instead of assuming it.
+    """
+    try:
+        document = cli.run(("app", "ledger", "list"), command="ledger.list", authenticated=False, allow_error=True)
+    except InstalledCliError as error:
+        raise LedgerInstalledTuiError(f"TUI session probe: installed CLI {error}") from error
+    if document.get("status") != "error":
+        return "resumed_tui_session"
+    error = document.get("error")
+    code = error.get("code") if isinstance(error, dict) else None
+    if code == _KEYCHAIN_UNAVAILABLE:
+        return "stdin_secret"
+    raise LedgerInstalledTuiError(f"TUI session probe refused with an unexpected code: {code}")
+
+
+def _host_free_memory_gb() -> float | None:
+    """Report free physical memory, which bounds whether a run failed for the host's reasons."""
+    if sys.platform != "win32":
+        return None
+    import ctypes
+
+    class _MemoryStatus(ctypes.Structure):
+        _fields_ = [
+            ("length", ctypes.c_ulong),
+            ("memory_load", ctypes.c_ulong),
+            ("total_physical", ctypes.c_ulonglong),
+            ("available_physical", ctypes.c_ulonglong),
+            ("total_page_file", ctypes.c_ulonglong),
+            ("available_page_file", ctypes.c_ulonglong),
+            ("total_virtual", ctypes.c_ulonglong),
+            ("available_virtual", ctypes.c_ulonglong),
+            ("available_extended_virtual", ctypes.c_ulonglong),
+        ]
+
+    status = _MemoryStatus()
+    status.length = ctypes.sizeof(_MemoryStatus)
+    if not ctypes.windll.kernel32.GlobalMemoryStatusEx(ctypes.byref(status)):
+        return None
+    return round(status.available_physical / 2**30, 1)
 
 
 def _cli_readback(cli: InstalledCli, cases: Sequence[ProvenanceCase], *, authenticated: bool) -> dict[str, list[str]]:
@@ -454,6 +511,7 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
         json.dumps([case.manifest_entry(paths[case.case_id]) for case in cases], indent=2) + "\n", encoding="utf-8"
     )
 
+    host_free_memory_gb = _host_free_memory_gb()
     passphrase = secrets.token_urlsafe(32)
     cli = InstalledCli(cli_executable, storage_root=store, authority_root=authority_root, passphrase=passphrase)
     try:
@@ -478,8 +536,8 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
         passphrase=passphrase,
         expected=[f"tui_import:{case.case_id}" for case in tui_cases],
     )
-    # The TUI login leaves a resumable session, which the CLI resumes without a secret.
-    cli_surfaces.update(_cli_readback(cli, tui_cases, authenticated=False))
+    tui_readback_authentication = _tui_login_session_mode(cli)
+    cli_surfaces.update(_cli_readback(cli, tui_cases, authenticated=tui_readback_authentication == "stdin_secret"))
     inspected = _run_tui_child(
         args,
         mode="inspect",
@@ -512,13 +570,14 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
             {
                 **case.receipt_entry(),
                 "surfaces": [*cli_surfaces[case.case_id], "tui_detail"],
-                "cli_authentication": "resumed_tui_session" if case.import_frontend == "tui" else "stdin_secret",
+                "cli_authentication": tui_readback_authentication if case.import_frontend == "tui" else "stdin_secret",
             }
             for case in cases
         ],
         "cli_json_command_count": len(cli.commands),
         "cli_text_command_count": transaction_count,
         "tui_child_process_count": 2,
+        "host_free_memory_gb_at_start": host_free_memory_gb,
         "synthetic_store_retained": True,
     }
 
