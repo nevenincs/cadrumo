@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+import shutil
 import subprocess
 import sys
 import time
@@ -22,6 +23,9 @@ from typing import Any, Literal, cast
 from dev._paths import UTF_8
 
 _UTF_8 = UTF_8
+# How long a killed command's pipes may take to close. A tree kill closes them
+# at once; the bound only matters when a descendant escaped the kill.
+_POST_KILL_DRAIN_SECONDS = 10.0
 
 
 @dataclass(frozen=True)
@@ -148,8 +152,13 @@ async def _run_process(
     try:
         stdout_bytes, stderr_bytes = await asyncio.wait_for(process.communicate(encoded_input), timeout_seconds)
     except TimeoutError as exc:
-        process.kill()
-        stdout_bytes, stderr_bytes = await process.communicate()
+        await _terminate_tree(process)
+        try:
+            stdout_bytes, stderr_bytes = await asyncio.wait_for(process.communicate(), _POST_KILL_DRAIN_SECONDS)
+        except TimeoutError:
+            # A descendant the kill could not reach still holds the captured
+            # pipes; the timeout is reported without the output it withholds.
+            stdout_bytes, stderr_bytes = b"", b""
         if timeout_seconds is None:
             raise RuntimeError("process timed out without a configured timeout") from exc
         raise subprocess.TimeoutExpired(command, timeout_seconds, output=stdout_bytes, stderr=stderr_bytes) from exc
@@ -161,6 +170,38 @@ async def _run_process(
         _decode_output(stdout_bytes, errors=errors),
         _decode_output(stderr_bytes, errors=errors),
     )
+
+
+async def _terminate_tree(process: asyncio.subprocess.Process) -> None:
+    """Kill a timed-out command together with the processes it started.
+
+    A launcher such as LibreOffice's ``soffice`` hands the work to a child that
+    inherits the captured pipes. Killing only the launcher leaves that child
+    running and holding the pipes open, so draining them would wait for the
+    child to exit on its own. Windows walks the tree with ``taskkill /T``.
+    POSIX runs each command in the caller's process group so an interrupt still
+    reaches it, which leaves no group to signal here; there the bounded drain is
+    what ends the wait.
+    """
+    if process.returncode is not None:
+        return
+    taskkill = shutil.which("taskkill") if sys.platform == "win32" else None
+    if taskkill is not None:
+        killer = await asyncio.create_subprocess_exec(
+            taskkill,
+            "/F",
+            "/T",
+            "/PID",
+            str(process.pid),
+            stdout=asyncio.subprocess.DEVNULL,
+            stderr=asyncio.subprocess.DEVNULL,
+        )
+        await killer.communicate()
+    # Re-read after the await: the kill above may already have reaped it.
+    returncode: int | None = process.returncode
+    if returncode is None:
+        with suppress(ProcessLookupError):
+            process.kill()
 
 
 def _decode_output(payload: bytes, *, errors: Literal["strict", "replace"]) -> str:
