@@ -131,12 +131,18 @@ doctor-python:
 # typically needs root/apt access; a non-root Linux box may need
 # `google-chrome-stable` pre-installed by an administrator, or rerun this
 # recipe with elevation. Verify the result with `just doctor-browser`.
+#
+# The `chrome` install runs with `CI` removed from its environment. Under `CI`
+# Playwright reinstalls the channel even when Chrome is already present, which
+# needs root; a CI runner whose host provisions `google-chrome-stable` cannot
+# escalate, so the step failed there on every run. Without `CI` an installed
+# Chrome is left alone and a missing one is installed exactly as before.
 
 [doc('Provision optional Playwright Chromium and system Chrome browser channels.')]
 [group('setup')]
 setup-browser:
     uv run --no-sync playwright install chromium{{propagate}}
-    uv run --no-sync playwright install chrome{{propagate}}
+    uv run --no-sync python -c "import os, subprocess, sys; env = {k: v for k, v in os.environ.items() if k != 'CI'}; sys.exit(subprocess.call([sys.executable, '-m', 'playwright', 'install', 'chrome'], env=env))"{{propagate}}
 
 # Verify the local environment is correctly provisioned with the CONFIGURED
 # Playwright browser channel (per `cadrumo_browser_channel`, default `chrome`)
