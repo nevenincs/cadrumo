@@ -11,10 +11,7 @@ related:
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
 ---
 
-
-
 # `assets-core` adr: `IRPF asset cost-basis stages` | (**status:** `accepted`)
-
 
 ## Problem Statement
 

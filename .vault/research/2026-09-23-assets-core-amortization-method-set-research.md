@@ -10,9 +10,6 @@ related:
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
 ---
 
-
-
-
 # `assets-core` research: `IRPF activity amortization method set for 2025`
 
 The 2025 activity-asset engine enrols only the linear table and the EUR 300

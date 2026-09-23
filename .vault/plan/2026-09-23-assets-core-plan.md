@@ -10,15 +10,8 @@ related:
   - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
 modified: '2026-09-23'
 body_schema: body-v2
-body_hash: 'sha256:a8c5b69da20aa409fd094004e75924f8bbff34ab19e0634d440d41c161550754'
+body_hash: 'sha256:d719f95a0da5f22a0257af4eed1a7920483091239d6c697518f6815a67a0f5fe'
 ---
-
-
-
-
-
-
-
 
 # `assets-core` plan
 
@@ -32,20 +25,14 @@ Decision coverage: `2026-09-23-assets-core-amortization-method-set-adr` governs 
 
 ## Steps
 
-- [ ] `S01` - Enrol the 2025 method-admission, class-admission, weighting, threshold and incentive authority with legal entries and manual citations; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0002-activity-asset-amortization.toml`.
-- [ ] `S02` - Carry the amortization election and acquired condition on the immutable revision and implement every admitted method schedule; `src/cadrumo/domain/renta/actividad_asset/`.
-- [ ] `S03` - Resolve the revision election through registry authority and delete the per-call selector; `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`.
-- [ ] `S04` - Route forecasts through the revision election with claim-history summaries and method-continuity refusal; `src/cadrumo/application/actividad_asset/`.
-- [ ] `S05` - Project the election contract through the CLI and TUI adapters; `src/cadrumo/entrypoints/`.
-- [ ] `S06` - Prove each method with independent worked examples, boundaries and cited refusals; `src/cadrumo/domain/renta/actividad_asset/tests/`.
-- [ ] `S07` - Publish the authority once and prove a non-linear asset through installed CLI and TUI to M130, M100 and the 2025 XSD; `dev/acceptance/assets/`.
+- [x] `S01` - Enrol the 2025 method-admission, class-admission, weighting, threshold and incentive authority with legal entries and manual citations; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0002-activity-asset-amortization.toml`.
+- [x] `S02` - Carry the amortization election and acquired condition on the immutable revision and implement every admitted method schedule; `src/cadrumo/domain/renta/actividad_asset/`.
+- [x] `S03` - Resolve the revision election through registry authority and delete the per-call selector; `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`.
+- [x] `S04` - Route forecasts through the revision election with claim-history summaries and method-continuity refusal; `src/cadrumo/application/actividad_asset/`.
+- [x] `S05` - Project the election contract through the CLI and TUI adapters; `src/cadrumo/entrypoints/`.
+- [x] `S06` - Prove each method with independent worked examples, boundaries and cited refusals; `src/cadrumo/domain/renta/actividad_asset/tests/`.
+- [x] `S07` - Publish the authority once and prove a non-linear asset through installed CLI and TUI to M130, M100 and the 2025 XSD; `dev/acceptance/assets/`.
 - [ ] `S08` - Run the owning quality gates and write the checkpoint and handoff; `.agents/session-briefs/handoffs/`.
-
-
-
-
-
-
 
 ## Parallelization
 

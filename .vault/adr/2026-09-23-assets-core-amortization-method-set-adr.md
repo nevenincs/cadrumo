@@ -12,8 +12,6 @@ related:
   - "[[2026-08-23-amortization-casilla-mapping-adr]]"
 ---
 
-
-
 # `assets-core` adr: `IRPF activity amortization method set and election contract` | (**status:** `accepted`)
 
 ## Problem Statement

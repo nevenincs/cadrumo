@@ -6,7 +6,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:d99d006d6862f38e70ed328690f8d3fba8443b7947710cd648bc6aa1df2f5525'
+body_hash: 'sha256:a0ea717ada4404601084bf5574ef3b3be9007b793e3cb615a94a61d2091d729d'
 related:
   - '[[2026-09-21-assets-core-audit]]'
   - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
@@ -17,6 +17,8 @@ related:
   - '[[2026-09-21-assets-core-plan]]'
   - '[[2026-09-23-assets-core-amortization-method-set-adr]]'
   - '[[2026-09-23-assets-core-amortization-method-set-research]]'
+  - '[[2026-09-23-assets-core-ledger]]'
+  - '[[2026-09-23-assets-core-plan]]'
 ---
 
 # `assets-core` feature index
@@ -38,10 +40,12 @@ Auto-generated index of all documents tagged with `#assets-core`.
 ### exec
 
 - `2026-09-21-assets-core-ledger` - `assets-core` ledger
+- `2026-09-23-assets-core-ledger` - `assets-core` ledger
 
 ### plan
 
 - `2026-09-21-assets-core-plan` - `assets-core` plan
+- `2026-09-23-assets-core-plan` - `assets-core` plan
 
 ### reference
 

@@ -3,12 +3,14 @@ tags:
   - '#audit'
   - '#assets-core'
 date: '2026-09-21'
-modified: '2026-09-21'
+modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:ff31bf13887ea49474fb6b157decf375a0a85a2258f14f4fb7923756561a5cf3'
+body_hash: 'sha256:e454ef892a81e7847bf288a278b90910177397152cda24dc8cc27ffbb8acd0f4'
 related:
   - "[[2026-09-21-assets-core-plan]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
+  - '[[2026-09-23-assets-core-plan]]'
+  - '[[2026-09-23-assets-core-amortization-method-set-adr]]'
 ---
 
 # `assets-core` audit: `Integrated assets-core review`
@@ -138,6 +140,46 @@ IRPF export does not acquire an unrelated exonerado-390 dependency.
 Result: PASS. P04.S08 and P05.S11 are complete, and the final integrated review
 found no critical or high findings. AS1-AS12 are supported by their recorded
 domain, application, installed frontend, IVA source-mesh, and export evidence.
+
+### method-set-review | high | used doubling reached intangibles and claims skipped the new invariants
+
+The method-set plan was reviewed across commits `231bee9648` through `d30450a7cd`
+against its accepted decision and the bundled RIS, LIS and RIRPF texts, with two
+high findings. The used-asset multiplier applied to intangibles, although RIS
+art. 4.3 covers material assets only: a used software licence with a 3,000 basis
+was charged 1,980 instead of 990. The claim path stored a caller-held forecast
+after checking only interval overlap and the low-value cap, so two forecasts
+taken before recording could together claim twice an R&D machine's basis. Lower
+findings: modality gating for the used and multi-shift multipliers sat in Python;
+the constant-percentage final year could strand a cent; a simplified used
+building demanded a construction date; two receipt fields were asserted rather
+than measured; a new inline lint suppression; class and kind admission read a
+string prefix. The review confirmed every hand oracle, bracket, weighting and
+refusal citation.
+
+Result: REVISION REQUIRED. Every finding was fixed in `33129301ba` and
+`b630c0e93e`; the asset errors were rooted in the registered hierarchy in
+`58523f3fa7`.
+
+### method-set-re-review | medium | a superseding claim could never be forecast
+
+The re-review of `33129301ba` through `30d35de000` verified every earlier
+finding fixed, with the used multiplier keyed `normal:material` in the registry
+and each new claim recomputed at record time and rechecked inside the encrypted
+compare-and-swap. It found that the public forecast always counted the claim a
+correction would replace, so a correction near the basis cap could never match
+its recomputed forecast, and that the history write did not recheck the claim's
+revision was still current.
+
+Result: APPROVED with the two findings fixed in `f92721ce93`: forecast accepts
+the superseded claim through operations, CLI and TUI, and the history write
+refuses a new claim under a superseded revision. `2f97378e51` exposes each
+revision's identity in CLI inspection and adds a superseding-claim step to the
+TUI screen test and the installed CLI journey. The installed proof at
+`0d34b1534a` (wheel `16d5e13e`, authority generation `cadc37df`, store format
+`cadrumo-authority-sqlite-v2`) proved the constant-percentage lifecycle through
+installed CLI and TUI, M130, M100 and the pinned 2025 XSD; it predates the
+supersession fixes, which await the next installed run.
 
 ## Recommendations
 
