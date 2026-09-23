@@ -8,12 +8,13 @@ related:
   - '[[2026-08-23-cli-machine-secret-channel-unification-adr]]'
   - '[[2026-08-22-profile-registration-password-policy-canonical-credential-capability-adr]]'
   - '[[2026-08-13-cli-action-envelope-successor-adr]]'
+  - '[[2026-09-23-profile-password-custody-kdf-calibration-reachability-research]]'
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
-modified: '2026-08-24'
+modified: '2026-09-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:4fadda95a257413968b5b19cab6627f4261e2b9fc7e026c0d29cc13fa18796ca'
+body_hash: 'sha256:6212c9154fed46cc8a38e479c262adfbbdb20d162357ed59bee8ab18000e5a88'
 ---
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
 
@@ -63,7 +64,9 @@ Passwords contain 8 to 256 Unicode scalar values and at most 1,024 strict UTF-8 
 
 ### Bounded KDF and worker supervision
 
-Argon2id accepts only the versioned finite grid: memory `{19, 32, 64, 128, 256}` MiB, iterations `{2, 3, 4, 6, 8, 10}`, parallelism `{1, 2, 4}`, 16-byte salt, and 32-byte output. Validation precedes allocation. Enrollment calibration uses one discarded warm-up and five samples per eligible point, a two-second sample deadline, 15-second total deadline, the sample median, a 250 to 500 millisecond target, strongest-point ordering by memory, iterations, then parallelism, and fixed `64 MiB, t=3, p=1` fallback only when eligible. Unsupported local resources refuse; parameters never weaken.
+Argon2id accepts only the versioned finite grid: memory `{19, 32, 64, 128, 256}` MiB, iterations `{2, 3, 4, 6, 8, 10}`, parallelism `{1, 2, 4}`, 16-byte salt, and 32-byte output. Validation precedes allocation. Enrollment calibration selects the strongest point, ordered by memory, then iterations, then parallelism, whose five-sample median lies in the 250 to 500 millisecond target, among eligible points no weaker than the fixed fallback: memory at least 64 MiB and memory times iterations at least 192. The worker times the Argon2 derivation alone with its own monotonic clock and returns that duration in the calibrated frame; the parent still enforces a two-second wall-clock deadline on every sample and a 15-second total deadline, and treats a missing, malformed, negative or wall-clock-exceeding duration as a supervision refusal. The search visits memory from high to low and stops at the first memory level holding a confirmed point, because a lower memory never ranks higher. Within a memory level it finds, per parallelism, the largest in-band iteration count by probing, relying only on derivation time increasing with iterations at fixed memory and parallelism; once iteration count `t*` is in band at that memory, the remaining parallelism values there are probed only above `t*`. No point is skipped by a cost model or by comparison across parallelism, since lane threads can make a higher parallelism slower. A probe above the band maximum by at most 25 percent is probed once more before it counts as over the band, so that one transient on a loaded host cannot discard a stronger point; a timed-out probe, or one further over, counts at once. An in-band probe becomes the discarded warm-up of five confirming samples; a confirmation whose median leaves the band reclassifies the point and the search continues. When no point is confirmed, calibration adopts the fixed `64 MiB, t=3, p=1` fallback only when eligible. Unsupported local resources refuse; parameters never weaken.
+
+Amended 2026-09-23. The search and the worker-timed derivation replace a strongest-first scan that timed whole supervised samples, spawn included, with six spawns per point. That scan could not land in the band before its deadline on the measured host, so every enrollment spent 15 seconds and then adopted the fallback (`2026-09-23-profile-password-custody-kdf-calibration-reachability-research`). The amendment is chiefly a strength gain, a measured point near `256 MiB, t=4, p=4` instead of the fallback on that host, with profile creation expected to fall from about 23 to about 17 seconds, to be confirmed on a quiet host. Existing profiles keep the KDF record stored in their envelope and are unaffected. Accepted 2026-09-23 under the user's standing pre-approval of modifications, and flagged to the user as a security-sensitive change.
 
 Every Argon2 operation runs in a killable supervised child. The child performs Argon2 and password-wrap AEAD, then returns only a framed 32-byte DEK. The parent verifies the sentinel. The worker receives a minimal allowlisted environment, neutral working directory, and only bounded anonymous request and result pipes. No secret enters argv, environment, logs, or files.
 

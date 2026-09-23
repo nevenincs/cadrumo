@@ -4,9 +4,9 @@ tags:
   - '#index'
   - '#profile-password-custody'
 date: '2026-08-25'
-modified: '2026-08-27'
+modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:fea1f90d335a7bb5dcf526560f75a628d1c7b90850c405ab1327ccac185dd7b9'
+body_hash: 'sha256:bb70916009cbc3e3f2a1f4f941c27f95e8b0ca15568d3c07efcaedcb3eb88c76'
 related:
   - '[[2026-08-13-profile-password-custody-W03-P06-summary]]'
   - '[[2026-08-13-profile-password-custody-ledger]]'
@@ -83,6 +83,7 @@ related:
   - '[[2026-08-25-profile-password-custody-s260-m182-deadline-review-audit]]'
   - '[[2026-08-25-profile-password-custody-s262-localization-review-audit]]'
   - '[[2026-08-27-profile-password-custody-close-carry-forward-audit]]'
+  - '[[2026-09-23-profile-password-custody-kdf-calibration-reachability-research]]'
 ---
 
 # `profile-password-custody` feature index
@@ -180,3 +181,4 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 ### research
 
 - `2026-08-13-profile-password-custody-research` - `profile-password-custody` research: `custody authority incident and option space`
+- `2026-09-23-profile-password-custody-kdf-calibration-reachability-research` - `profile-password-custody` research: `KDF calibration reachability`
