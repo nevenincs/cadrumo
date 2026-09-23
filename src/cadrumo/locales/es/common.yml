@@ -828,6 +828,8 @@ sheets:
       base_imponible: Base imponible
       base_imponible_assigned: Base imponible atribuida
       base_retenciones: Base de retenciones e ingresos a cuenta
+      block: Bloque
+      cadastral_reference: Referencia catastral
       clave: Clave
       clave_codigo: Clave código
       clave_declarado: Clave de titularidad del inmueble
@@ -837,6 +839,7 @@ sheets:
       codigo_emisor: Código emisor
       codigo_provincia: Código de provincia
       compensaciones: Compensaciones
+      complement: Complemento del domicilio
       complemento_infancia_clave: Complemento de ayuda a la infancia
       complete_acquisition_cost: Coste total de adquisición
       contract_relation_clave: Contrato o relación
@@ -865,11 +868,13 @@ sheets:
       domicilio_fiscal: Domicilio fiscal del miembro
       donor_legal_name: Nombre o razón social del donante
       donor_tax_id: NIF del donante
+      door: Puerta
       emerging_stock_excess_clave: Excesos de entrega de acciones de empresas emergentes
       fecha_devengo: Fecha de devengo
       fecha_inicio_prestamo: Fecha de inicio del préstamo
       fecha_vencimiento_prestamo: Fecha de vencimiento del préstamo
       first_child_compute: Cómputo del 1.er hijo
+      floor: Planta
       foral_retention_araba: Retenciones e ingresos a cuenta ingresados a Araba/Álava
       foral_retention_bizkaia: Retenciones e ingresos a cuenta ingresados a Bizkaia
       foral_retention_estatal: Retenciones e ingresos a cuenta ingresados al Estado
@@ -878,6 +883,7 @@ sheets:
       garantias: Garantías
       gastos_deducibles: Gastos deducibles
       geographic_mobility_clave: Movilidad geográfica
+      house_number: Número de casa
       housing_loan_communication_clave: Comunicación de préstamos de vivienda habitual
       importe_gastos: Importe de gastos
       importe_q1: Importe 1T
@@ -896,14 +902,20 @@ sheets:
       ingreso_a_cuenta_repercutido: Ingresos a cuenta repercutidos
       is_recurrent: Donativo recurrente
       isin_code: Código ISIN
+      locality: Localidad
       member_legal_name: Razón social del miembro
       member_state_code: Estado miembro
       member_tax_id: NIF del miembro
       miembro_a_31_diciembre: Miembro a 31 de diciembre
+      modality: Modalidad
+      municipality: Municipio
+      municipality_code: Código de municipio
       naturaleza: Naturaleza
       naturaleza_declarante: Naturaleza del declarante
       naturaleza_inmueble: Naturaleza del inmueble
       nif_pagador_anterior: NIF del pagador anterior
+      number_qualifier: Calificador del número
+      number_type: Tipo de numeración
       numero_orden: Número de orden
       opening_minus_closing_positive: Diferencia positiva entre apertura y cierre
       operation_date: Fecha de la operación
@@ -922,13 +934,18 @@ sheets:
       perceptor_birth_year: Año de nacimiento
       perceptor_legal_name: Apellidos y nombre del perceptor
       perceptor_mediador_flag: Perceptor mediador
+      perceptor_name: Nombre del perceptor
+      perceptor_nif: NIF del perceptor
       perceptor_situacion_familiar: Situación familiar
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepciones dinerarias
       percibido_especie: Percepciones en especie
       porcentaje_retencion: '% Retención'
       porcentaje_titularidad_inmueble: Porcentaje de titularidad del inmueble
+      portal: Portal
+      postal_code: Código postal
       province_code: Provincia
+      recipient_province_code: Código de provincia del perceptor
       rectified_base_previous: Base imponible anterior (rectificación)
       rectified_period: Periodo rectificado
       rectified_year: Ejercicio rectificado
@@ -940,17 +957,24 @@ sheets:
       rendimiento_neto_minorado_agricola_eo: Rendimiento neto minorado agrícola (estimación
         objetiva)
       rendimiento_neto_previo_eo: Rendimiento neto previo (estimación objetiva)
+      representative_nif: NIF del representante
       representative_tax_id: NIF del representante legal
+      retencion_amount: Importe de la retención
       retencion_practicada: Retención practicada
       second_child_compute: Cómputo del 2.º hijo
       share_percentage: Porcentaje de participación
       situacion_inmueble: Situación del inmueble
+      situation: Situación del inmueble
       spouse_or_unit_titular_tax_id: NIF del cónyuge o del titular de la unidad de
         convivencia
+      staircase: Escalera
       startup_fund_rendimientos_clave: Rendimientos por la gestión de fondos vinculados
         al emprendimiento
+      street_name: Nombre de la vía pública
+      street_type: Tipo de vía
       subclave: Subclave
       supplier_tax_id: NIF del proveedor
+      taxable_base: Base de retención
       territorial_deduction_clave: Ceuta o Melilla / La Palma
       third_child_compute: Cómputo del 3.er hijo
       tipo_codigo: Tipo código
@@ -958,6 +982,7 @@ sheets:
       transfer_pricing_method_code: Método de valoración
       unit_convivencia_titular_clave: Titular de la unidad de convivencia
       valuation_amount: Valoración
+      withholding_percentage: Porcentaje de retención
 topic:
   authentication:
     body: La autenticación AEAT usa Cl@ve Móvil (push al móvil registrado) o certificado

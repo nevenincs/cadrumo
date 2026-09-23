@@ -809,6 +809,8 @@ sheets:
       base_imponible: Adóalap
       base_imponible_assigned: Hozzárendelt adóalap
       base_retenciones: Visszatartás alapja
+      block: Tömb
+      cadastral_reference: Kataszteri azonosító
       clave: Kulcs
       clave_codigo: Kódkulcs
       clave_declarado: Az ingatlan tulajdonjogi kódja
@@ -818,6 +820,7 @@ sheets:
       codigo_emisor: Kibocsátó kódja
       codigo_provincia: Tartomány kódja
       compensaciones: Kompenzációk
+      complement: Címkiegészítés
       complemento_infancia_clave: Gyermeknevelési kiegészítés
       complete_acquisition_cost: Teljes beszerzési költség
       contract_relation_clave: Szerződés vagy jogviszony
@@ -846,11 +849,13 @@ sheets:
       domicilio_fiscal: A tag adóügyi lakóhelye
       donor_legal_name: Adományozó neve
       donor_tax_id: Adományozó adóazonosítója
+      door: Ajtó
       emerging_stock_excess_clave: Startup részvényjuttatási többlet
       fecha_devengo: Keletkezés dátuma
       fecha_inicio_prestamo: Kölcsön kezdő dátuma
       fecha_vencimiento_prestamo: Kölcsön lejárati dátuma
       first_child_compute: 1. gyermek beszámítása
+      floor: Emelet
       foral_retention_araba: Araba/Álavának befizetett visszatartások és előlegek
       foral_retention_bizkaia: Bizkaiának befizetett visszatartások és előlegek
       foral_retention_estatal: Az államnak befizetett visszatartások és előlegek
@@ -859,6 +864,7 @@ sheets:
       garantias: Garancia
       gastos_deducibles: Levonható költségek
       geographic_mobility_clave: Földrajzi mobilitás
+      house_number: Házszám
       housing_loan_communication_clave: Lakáshitel-bevallás
       importe_gastos: Költség összege
       importe_q1: 1. negyedévi összeg
@@ -875,14 +881,20 @@ sheets:
       ingreso_a_cuenta_repercutido: Áthárított előleg
       is_recurrent: Ismétlődő adomány
       isin_code: ISIN kód
+      locality: Település
       member_legal_name: Tag neve
       member_state_code: Tagállam
       member_tax_id: Tag adóazonosítója
       miembro_a_31_diciembre: Tag december 31-én
+      modality: Módozat
+      municipality: Község
+      municipality_code: Községkód
       naturaleza: Jelleg
       naturaleza_declarante: A bevalló jellege
       naturaleza_inmueble: Az ingatlan jellege
       nif_pagador_anterior: Előző kifizető adóazonosítója
+      number_qualifier: Számminősítő
+      number_type: Számozás típusa
       numero_orden: Sorszám
       opening_minus_closing_positive: Pozitív nyitó mínusz záró különbözet
       operation_date: Művelet dátuma
@@ -901,13 +913,18 @@ sheets:
       perceptor_birth_year: Születési év
       perceptor_legal_name: Kedvezményezett neve
       perceptor_mediador_flag: Közvetítő kedvezményezett
+      perceptor_name: Kedvezményezett neve
+      perceptor_nif: Kedvezményezett NIF-je
       perceptor_situacion_familiar: Családi állapot
       perceptor_tax_id: Kedvezményezett adóazonosítója
       percibido_dinerario: Készpénzes bevétel
       percibido_especie: Természetbeni bevétel
       porcentaje_retencion: Visszatartás %
       porcentaje_titularidad_inmueble: Ingatlantulajdoni hányad százaléka
+      portal: Bejárat
+      postal_code: Irányítószám
       province_code: Tartomány
+      recipient_province_code: Kedvezményezett tartománykódja
       rectified_base_previous: Korábbi alap (helyesbítés)
       rectified_period: Helyesbített időszak
       rectified_year: Helyesbített év
@@ -919,16 +936,23 @@ sheets:
       rendimiento_neto_minorado_agricola_eo: Csökkentett nettó mezőgazdasági jövedelem
         (objektív becslés)
       rendimiento_neto_previo_eo: Előzetes nettó jövedelem (objektív becslés)
+      representative_nif: Képviselő NIF-je
       representative_tax_id: Törvényes képviselő adóazonosítója
+      retencion_amount: Visszatartott összeg
       retencion_practicada: Alkalmazott visszatartás
       second_child_compute: 2. gyermek beszámítása
       share_percentage: Részesedési arány
       situacion_inmueble: Az ingatlan elhelyezkedési státusza
+      situation: Ingatlan fekvése
       spouse_or_unit_titular_tax_id: Házastárs vagy együttélési egység vezetőjének
         adóazonosítója
+      staircase: Lépcsőház
       startup_fund_rendimientos_clave: Alapkezelési jövedelem
+      street_name: Közterület neve
+      street_type: Közterület jellege
       subclave: Alkulcs
       supplier_tax_id: Szállító adóazonosítója
+      taxable_base: Visszatartási alap
       territorial_deduction_clave: Ceuta vagy Melilla / La Palma
       third_child_compute: 3. gyermek beszámítása
       tipo_codigo: Kódtípus
@@ -936,6 +960,7 @@ sheets:
       transfer_pricing_method_code: Transzferár-módszer
       unit_convivencia_titular_clave: Együttélési egység vezetője
       valuation_amount: Értékelés
+      withholding_percentage: Visszatartási kulcs
 topic:
   authentication:
     body: 'Az AEAT-hitelesítés Cl@ve Móvil (push a regisztrált telefonra) vagy digitális

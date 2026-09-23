@@ -818,6 +818,8 @@ sheets:
       base_imponible: Base imposable
       base_imponible_assigned: Base imposable atribuïda
       base_retenciones: Base de retencions i ingressos a compte
+      block: Bloc
+      cadastral_reference: Referència cadastral
       clave: Clau
       clave_codigo: Clau codi
       clave_declarado: Clau de titularitat de l'immoble
@@ -827,6 +829,7 @@ sheets:
       codigo_emisor: Codi emissor
       codigo_provincia: Codi de província
       compensaciones: Compensacions
+      complement: Complement del domicili
       complemento_infancia_clave: Complement d'ajuda a la infància
       complete_acquisition_cost: Cost total d'adquisició
       contract_relation_clave: Contracte o relació
@@ -855,11 +858,13 @@ sheets:
       domicilio_fiscal: Domicili fiscal del membre
       donor_legal_name: Nom o raó social del donant
       donor_tax_id: NIF del donant
+      door: Porta
       emerging_stock_excess_clave: Excessos de lliurament d'accions d'empreses emergents
       fecha_devengo: Data de meritació
       fecha_inicio_prestamo: Data d'inici del préstec
       fecha_vencimiento_prestamo: Data de venciment del préstec
       first_child_compute: Còmput del 1r fill
+      floor: Pis
       foral_retention_araba: Retencions i ingressos a compte ingressats a Araba/Àlaba
       foral_retention_bizkaia: Retencions i ingressos a compte ingressats a Bizkaia
       foral_retention_estatal: Retencions i ingressos a compte ingressats a l'Estat
@@ -868,6 +873,7 @@ sheets:
       garantias: Garanties
       gastos_deducibles: Despeses deduïbles
       geographic_mobility_clave: Mobilitat geogràfica
+      house_number: Número de casa
       housing_loan_communication_clave: Comunicació de préstecs d'habitatge habitual
       importe_gastos: Import de despeses
       importe_q1: Import 1T
@@ -886,14 +892,20 @@ sheets:
       ingreso_a_cuenta_repercutido: Ingressos a compte repercutits
       is_recurrent: Donatiu recurrent
       isin_code: Codi ISIN
+      locality: Localitat
       member_legal_name: Raó social del membre
       member_state_code: Estat membre
       member_tax_id: NIF del membre
       miembro_a_31_diciembre: Membre a 31 de desembre
+      modality: Modalitat
+      municipality: Municipi
+      municipality_code: Codi de municipi
       naturaleza: Naturalesa
       naturaleza_declarante: Naturalesa del declarant
       naturaleza_inmueble: Naturalesa de l'immoble
       nif_pagador_anterior: NIF del pagador anterior
+      number_qualifier: Qualificador del número
+      number_type: Tipus de numeració
       numero_orden: Número d'ordre
       opening_minus_closing_positive: Diferència positiva entre obertura i tancament
       operation_date: Data de l'operació
@@ -912,13 +924,18 @@ sheets:
       perceptor_birth_year: Any de naixement
       perceptor_legal_name: Cognoms i nom del perceptor
       perceptor_mediador_flag: Perceptor mediador
+      perceptor_name: Nom del perceptor
+      perceptor_nif: NIF del perceptor
       perceptor_situacion_familiar: Situació familiar
       perceptor_tax_id: NIF del perceptor
       percibido_dinerario: Percepcions dineràries
       percibido_especie: Percepcions en espècie
       porcentaje_retencion: '% Retenció'
       porcentaje_titularidad_inmueble: Percentatge de titularitat de l'immoble
+      portal: Portal
+      postal_code: Codi postal
       province_code: Província
+      recipient_province_code: Codi de província del perceptor
       rectified_base_previous: Base imposable anterior (rectificació)
       rectified_period: Període rectificat
       rectified_year: Exercici rectificat
@@ -930,17 +947,24 @@ sheets:
       rendimiento_neto_minorado_agricola_eo: Rendiment net minorat agrícola (estimació
         objectiva)
       rendimiento_neto_previo_eo: Rendiment net previ (estimació objectiva)
+      representative_nif: NIF del representant
       representative_tax_id: NIF del representant legal
+      retencion_amount: Import de la retenció
       retencion_practicada: Retenció practicada
       second_child_compute: Còmput del 2n fill
       share_percentage: Percentatge de participació
       situacion_inmueble: Situació de l'immoble
+      situation: Situació de l'immoble
       spouse_or_unit_titular_tax_id: NIF del cònjuge o del titular de la unitat de
         convivència
+      staircase: Escala
       startup_fund_rendimientos_clave: Rendiments per la gestió de fons vinculats
         a l'emprenedoria
+      street_name: Nom de la via pública
+      street_type: Tipus de via
       subclave: Subclau
       supplier_tax_id: NIF del proveïdor
+      taxable_base: Base de retenció
       territorial_deduction_clave: Ceuta o Melilla / La Palma
       third_child_compute: Còmput del 3r fill
       tipo_codigo: Tipus codi
@@ -948,6 +972,7 @@ sheets:
       transfer_pricing_method_code: Mètode de valoració
       unit_convivencia_titular_clave: Titular de la unitat de convivència
       valuation_amount: Valoració
+      withholding_percentage: Percentatge de retenció
 topic:
   authentication:
     body: L'autenticació AEAT usa Cl@ve Mòbil (push al mòbil registrat) o un certificat

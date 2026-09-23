@@ -1254,8 +1254,10 @@ def _row_set_column_label(binding: BindingDefinition, selector: BindingRowSetSel
 
     Resolves the operator-facing label through the i18n translation
     catalogue keyed by ``selector.row_field``. Locale strings live
-    under ``sheets.detalle.headers.*``; missing keys fall back to the
-    binding id so the workbook still renders rather than 500-erroring.
+    under ``sheets.detalle.headers.*``. There is no runtime fallback: the
+    locale gate enumerates every ``row_field`` the bundled registry declares
+    and requires this key for each in every catalogue, so an unlabelled
+    column fails that gate instead of reaching a workbook.
     """
     return tr(
         f"sheets.detalle.headers.{selector.row_field}",

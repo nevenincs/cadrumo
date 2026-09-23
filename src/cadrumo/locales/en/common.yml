@@ -793,6 +793,8 @@ sheets:
       base_imponible: Tax base
       base_imponible_assigned: Tax base assigned
       base_retenciones: Withholding base
+      block: Block
+      cadastral_reference: Cadastral reference
       clave: Clave
       clave_codigo: Code key
       clave_declarado: Property ownership key
@@ -802,6 +804,7 @@ sheets:
       codigo_emisor: Issuer code
       codigo_provincia: Province code
       compensaciones: Compensations
+      complement: Address complement
       complemento_infancia_clave: Child support supplement
       complete_acquisition_cost: Total acquisition cost
       contract_relation_clave: Contract or relation
@@ -830,11 +833,13 @@ sheets:
       domicilio_fiscal: Member's tax domicile
       donor_legal_name: Donor legal name
       donor_tax_id: Donor tax id
+      door: Door
       emerging_stock_excess_clave: Emerging-company stock excess
       fecha_devengo: Accrual date
       fecha_inicio_prestamo: Loan start date
       fecha_vencimiento_prestamo: Loan maturity date
       first_child_compute: 1st child computation
+      floor: Floor
       foral_retention_araba: Withholdings and payments on account paid to Araba/Álava
       foral_retention_bizkaia: Withholdings and payments on account paid to Bizkaia
       foral_retention_estatal: Withholdings and payments on account paid to the State
@@ -843,6 +848,7 @@ sheets:
       garantias: Guarantees
       gastos_deducibles: Deductible expenses
       geographic_mobility_clave: Geographic mobility
+      house_number: House number
       housing_loan_communication_clave: Home loan communication
       importe_gastos: Expense amount
       importe_q1: Amount Q1
@@ -859,14 +865,20 @@ sheets:
       ingreso_a_cuenta_repercutido: Payments on account passed on
       is_recurrent: Recurrent donation
       isin_code: ISIN code
+      locality: Locality
       member_legal_name: Member legal name
       member_state_code: Member state
       member_tax_id: Member tax id
       miembro_a_31_diciembre: Member at 31 December
+      modality: Modality
+      municipality: Municipality
+      municipality_code: Municipality code
       naturaleza: Nature
       naturaleza_declarante: Declarant's nature
       naturaleza_inmueble: Property nature
       nif_pagador_anterior: Previous payer NIF
+      number_qualifier: Number qualifier
+      number_type: Number type
       numero_orden: Order number
       opening_minus_closing_positive: Positive opening-minus-closing difference
       operation_date: Operation date
@@ -885,13 +897,18 @@ sheets:
       perceptor_birth_year: Birth year
       perceptor_legal_name: Perceptor legal name
       perceptor_mediador_flag: Mediator perceptor
+      perceptor_name: Recipient name
+      perceptor_nif: Recipient NIF
       perceptor_situacion_familiar: Family situation
       perceptor_tax_id: Perceptor tax id
       percibido_dinerario: Cash income
       percibido_especie: In-kind income
       porcentaje_retencion: Withholding %
       porcentaje_titularidad_inmueble: Property ownership percentage
+      portal: Entrance
+      postal_code: Postal code
       province_code: Province
+      recipient_province_code: Recipient province code
       rectified_base_previous: Prior base (rectification)
       rectified_period: Rectified period
       rectified_year: Rectified year
@@ -903,15 +920,22 @@ sheets:
       rendimiento_neto_minorado_agricola_eo: Reduced agricultural net yield (estimación
         objetiva)
       rendimiento_neto_previo_eo: Prior net yield (estimación objetiva)
+      representative_nif: Representative NIF
       representative_tax_id: Legal representative NIF
+      retencion_amount: Withholding amount
       retencion_practicada: Withholding applied
       second_child_compute: 2nd child computation
       share_percentage: Share percentage
       situacion_inmueble: Property location status
+      situation: Property situation
       spouse_or_unit_titular_tax_id: Spouse or coexistence-unit holder NIF
+      staircase: Staircase
       startup_fund_rendimientos_clave: Fund-management income
+      street_name: Street name
+      street_type: Street type
       subclave: Subclave
       supplier_tax_id: Supplier tax id
+      taxable_base: Withholding base
       territorial_deduction_clave: Ceuta or Melilla / La Palma
       third_child_compute: 3rd child computation
       tipo_codigo: Code type
@@ -919,6 +943,7 @@ sheets:
       transfer_pricing_method_code: Transfer pricing method
       unit_convivencia_titular_clave: Coexistence unit holder
       valuation_amount: Valuation
+      withholding_percentage: Withholding rate
 topic:
   authentication:
     body: AEAT authentication uses Cl@ve Móvil (push to registered phone) or a digital
