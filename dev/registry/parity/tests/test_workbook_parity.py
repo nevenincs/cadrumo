@@ -16,6 +16,7 @@ from __future__ import annotations
 import re
 import shutil
 import subprocess
+import tempfile
 import zipfile
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -35,8 +36,10 @@ from dev.packaging.command_execution import CommandResult
 from ...conformance.registry_schema_support import committed_modelo as _committed_modelo
 from .._parity_tapes import ParityScenario
 from ..workbook_parity import (
+    LIBREOFFICE_FAILURE_CONTEXT_KEY,
+    LibreOfficeFailureCause,
     WorkbookScanOptions,
-    _BinaryXlsConversionError,
+    _LibreOfficeConversionError,
     _subprocess_failure_detail,
     assert_workbook_scan_clean,
     compare_registry_to_workbook,
@@ -58,6 +61,18 @@ from ..workbook_parity_models import (
 pytestmark = [pytest.mark.unit, pytest.mark.external_tool, pytest.mark.hex_domain]
 
 _M130_CASILLA_19: CasillaId = validated_casilla_id("19", surface="_M130_CASILLA_19")
+
+# The committed record-design workbooks cost about 4 s of scan CPU each on the
+# reference Windows host. These tests assert classification, not scan speed, so
+# the budget only has to stop a hung parse; it stays well clear of the real cost.
+_COMMITTED_WORKBOOK_SCAN_OPTIONS = WorkbookScanOptions(per_file_timeout_seconds=60)
+
+_COMMITTED_M303_RECORD_DESIGN = (
+    Path("disenos_registro")
+    / "modelo_303"
+    / "files"
+    / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
+)
 
 
 def _write_formula_workbook(path: Path) -> None:
@@ -131,16 +146,10 @@ def test_scan_workbook_classifies_static_layout_as_layout_authority(tmp_path: Pa
 
 def test_committed_record_design_xlsx_is_not_tax_formula_parity_oracle() -> None:
     root = bundled_path("corpus", "aeat_official")
-    workbook_path = (
-        root
-        / "disenos_registro"
-        / "modelo_303"
-        / "files"
-        / "01-303-ejercicio-2026-y-siguientes-actualizado-28-01-26-378-kb-xlsx.xlsx"
-    )
 
-    report = scan_workbook(workbook_path, root=root, options=WorkbookScanOptions(per_file_timeout_seconds=5))
+    report = scan_workbook(root / _COMMITTED_M303_RECORD_DESIGN, root=root, options=_COMMITTED_WORKBOOK_SCAN_OPTIONS)
 
+    assert report.scan_status == "scanned", report.error
     assert report.formula_cells > 0
     assert report.workbook_kind == "record_design_layout"
     assert report.evidence_tier == "layout_authority"
@@ -168,16 +177,30 @@ def test_committed_modelo_131_record_designs_cover_current_and_historical_layout
         / "01-131-ejercicios-2026-actualizado-04-03-26-180-kb-xlsx.xlsx",
     )
 
-    reports = tuple(
-        scan_workbook(path, root=root, options=WorkbookScanOptions(per_file_timeout_seconds=5))
-        for path in workbook_paths
-    )
+    reports = tuple(scan_workbook(path, root=root, options=_COMMITTED_WORKBOOK_SCAN_OPTIONS) for path in workbook_paths)
 
+    assert [report.error for report in reports if report.scan_status != "scanned"] == []
     assert {report.modelo for report in reports} == {"131"}
     assert all(report.workbook_kind == "record_design_layout" for report in reports)
     assert all(report.evidence_tier == "layout_authority" for report in reports)
     assert all("executable_parity_evidence" in report.not_evidence_for for report in reports)
     assert all(report.formula_cells > 0 for report in reports)
+
+
+def test_scan_budget_exhaustion_is_a_timeout_not_a_formula_free_workbook() -> None:
+    root = bundled_path("corpus", "aeat_official")
+
+    report = scan_workbook(
+        root / _COMMITTED_M303_RECORD_DESIGN,
+        root=root,
+        options=WorkbookScanOptions(per_file_timeout_seconds=0),
+    )
+
+    assert report.scan_status == "timeout"
+    assert "CPU budget" in (report.error or "")
+    assert report.workbook_kind == "unreadable"
+    assert report.evidence_tier is None
+    assert "layout_authority" in report.not_evidence_for
 
 
 def test_committed_binary_xls_converts_to_layout_evidence_only() -> None:
@@ -611,8 +634,47 @@ def test_libreoffice_runner_rejects_explicit_missing_executable(tmp_path: Path) 
         )
 
 
-def test_binary_xls_conversion_error_code_is_registered() -> None:
-    assert issubclass(_BinaryXlsConversionError, RuntimeError)
+def test_libreoffice_conversion_error_carries_its_cause_into_the_registry_error() -> None:
+    registry_error = _LibreOfficeConversionError(LibreOfficeFailureCause.NO_OUTPUT, "no workbook").as_registry_error()
+
+    assert isinstance(registry_error, RegistryValidationError)
+    assert str(registry_error) == "no workbook"
+    assert registry_error.context == {LIBREOFFICE_FAILURE_CONTEXT_KEY: "no_output"}
+
+
+def test_libreoffice_refuses_a_profile_root_too_deep_to_initialise(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """LibreOffice exits 0 and writes nothing when its profile root is too deep.
+
+    The runner must refuse before starting a process rather than report that
+    silent non-conversion. The stand-in executable fails whenever it is actually
+    run, so the profile-path cause proves no process was started.
+    """
+    workbook_path = tmp_path / "modelo_303" / "files" / "303-live.xlsx"
+    _write_formula_workbook(workbook_path)
+    xls_path = tmp_path / "modelo_111" / "files" / "111-layout.xls"
+    xls_path.parent.mkdir(parents=True)
+    xls_path.write_bytes(b"not a real binary XLS workbook")
+    fake_soffice = tmp_path / "soffice.exe"
+    shutil.copy(r"C:\Windows\System32\where.exe", fake_soffice)
+    deep_temp_root = tmp_path / ("t" * 150)
+    deep_temp_root.mkdir()
+    monkeypatch.setattr(tempfile, "tempdir", str(deep_temp_root))
+
+    with pytest.raises(RegistryValidationError, match="user profile root") as excinfo:
+        run_workbook_with_libreoffice(
+            workbook_path,
+            inputs={},
+            outputs={"total": WorkbookCellRef(sheet="Modelo", coordinate="B1")},
+            executable=str(fake_soffice),
+        )
+    report = convert_binary_xls_with_libreoffice(xls_path, root=tmp_path, executable=str(fake_soffice))
+
+    assert excinfo.value.context == {LIBREOFFICE_FAILURE_CONTEXT_KEY: "profile_path_too_long"}
+    assert report.conversion_status == "failed"
+    assert "user profile root" in (report.error or "")
 
 
 def test_convert_binary_xls_with_libreoffice_reports_failed_status_on_conversion_error(tmp_path: Path) -> None:
