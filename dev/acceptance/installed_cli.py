@@ -10,6 +10,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 from collections.abc import Sequence
 from dataclasses import dataclass
@@ -29,6 +30,12 @@ class CommandEvidence:
     returncode: int
     status: str
     notice_codes: tuple[str, ...]
+    refusal: str | None = None
+    """The error's typed category and reason, for example ``REFUSED/KDF_RESOURCE_LIMIT``.
+
+    Only enum-shaped tokens are kept, so a refusal names its cause in a receipt
+    without carrying any message text, path or value.
+    """
 
 
 def build_installed_cli_environment(*, storage_root: Path, authority_root: Path) -> dict[str, str]:
@@ -108,10 +115,13 @@ class InstalledCli:
                         if isinstance(notice, dict) and notice.get("code") is not None
                     )
                 ),
+                refusal=typed_refusal(document),
             )
         )
         if completed.returncode != 0 and not allow_error:
-            raise InstalledCliError(f"{command_identity}: command failed ({_error_code(document)})")
+            refusal = typed_refusal(document)
+            cause = _error_code(document) if refusal is None else f"{_error_code(document)}, {refusal}"
+            raise InstalledCliError(f"{command_identity}: command failed ({cause})")
         return document
 
     def run_text(self, args: Sequence[str], *, authenticated: bool = True, command: str | None = None) -> str:
@@ -266,6 +276,29 @@ def decode_cli_document(stdout: str, stderr: str) -> dict[str, Any]:
             if isinstance(document, dict):
                 return document
     raise json.JSONDecodeError("no CLI JSON envelope", stdout or stderr, 0)
+
+
+_ENUM_TOKEN = re.compile(r"[A-Z][A-Z0-9_]{1,63}")
+
+
+def typed_refusal(document: dict[str, Any]) -> str | None:
+    """Return an error envelope's ``category/reason`` when both are enum-shaped tokens.
+
+    The reason is the typed ``context.refusal`` a refusal carries -- for example
+    the custody refusal's ``KDF_RESOURCE_LIMIT`` -- which the error code alone
+    does not name. Anything that is not an enum token is dropped rather than
+    echoed, so free text or a value placed in the context can never reach
+    evidence.
+    """
+    error = document.get("error")
+    if not isinstance(error, dict):
+        return None
+    context = error.get("context")
+    reason = context.get("refusal") if isinstance(context, dict) else None
+    if not isinstance(reason, str) or not _ENUM_TOKEN.fullmatch(reason):
+        return None
+    category = error.get("category")
+    return f"{category}/{reason}" if isinstance(category, str) and _ENUM_TOKEN.fullmatch(category) else reason
 
 
 def _error_code(document: dict[str, Any]) -> str:
