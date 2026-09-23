@@ -17,7 +17,7 @@ from typing import Final
 
 from ....core.errors.hierarchy import CadrumoError
 from ....core.file_change_time import file_change_time_ns
-from ....core.hashing import reject_duplicate_json_members, reject_json_constant, sha256_hex
+from ....core.hashing import hash_file, reject_duplicate_json_members, reject_json_constant, sha256_hex
 from ....core.type_guards import is_str_keyed_dict
 from .authority_artifact import (
     AuthorityComponentQuery,
@@ -337,9 +337,16 @@ class SQLiteAuthorityReader:
             raise AuthorityStoreCorruptionError("authority database manifest disagrees with its descriptor")
 
     def _read_database_identity(self) -> _DatabaseIdentity:
+        """Hash the whole published database once per reader, streaming it.
+
+        The full digest is the integrity proof :meth:`_admit_database` relies on
+        instead of structural scans, so it runs on every admission. It is read
+        in chunks: holding the entire database in memory to hash it cost every
+        process its full size and failed outright under memory pressure.
+        """
         try:
             status = self._database_path.stat()
-            payload = self._database_path.read_bytes()
+            digest, hashed_length = hash_file(self._database_path)
         except OSError as exc:
             raise AuthorityStoreError(f"authority database is unavailable at {self._database_path}") from exc
         identity = _DatabaseIdentity(
@@ -348,9 +355,13 @@ class SQLiteAuthorityReader:
             size=status.st_size,
             modified_ns=status.st_mtime_ns,
             changed_ns=file_change_time_ns(self._database_path, status),
-            digest=sha256_hex(payload),
+            digest=digest,
         )
-        if identity.size != self._descriptor.database_size or identity.digest != self._descriptor.database_sha256:
+        if (
+            identity.size != self._descriptor.database_size
+            or hashed_length != identity.size
+            or identity.digest != self._descriptor.database_sha256
+        ):
             raise AuthorityStoreCorruptionError("authority database bytes disagree with the published descriptor")
         return identity
 
