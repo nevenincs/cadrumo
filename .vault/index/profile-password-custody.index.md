@@ -6,7 +6,7 @@ tags:
 date: '2026-08-25'
 modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:bb70916009cbc3e3f2a1f4f941c27f95e8b0ca15568d3c07efcaedcb3eb88c76'
+body_hash: 'sha256:0c4c2e8dbfd5eb3dd2010ed5c7d1496b7707612e2cbe3d9f17889ade2a529db4'
 related:
   - '[[2026-08-13-profile-password-custody-W03-P06-summary]]'
   - '[[2026-08-13-profile-password-custody-ledger]]'
@@ -84,6 +84,8 @@ related:
   - '[[2026-08-25-profile-password-custody-s262-localization-review-audit]]'
   - '[[2026-08-27-profile-password-custody-close-carry-forward-audit]]'
   - '[[2026-09-23-profile-password-custody-kdf-calibration-reachability-research]]'
+  - '[[2026-09-23-profile-password-custody-passphrase-reset-adr]]'
+  - '[[2026-09-23-profile-password-custody-passphrase-reset-reference]]'
 ---
 
 # `profile-password-custody` feature index
@@ -99,6 +101,7 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 - `2026-08-15-profile-password-custody-bucket-key-schedule-custody-mismatch-adr` - `profile-password-custody` adr: `the bucket key schedule must report enrolled custody, not capsule existence` | (**status:** `rejected`)
 - `2026-08-15-profile-password-custody-nested-persisted-format-boundary-adr` - `profile-password-custody` adr: `nested persisted format boundary` | (**status:** `accepted`)
 - `2026-08-15-profile-password-custody-per-profile-recovery-mnemonic-adr` - `profile-password-custody` adr: `per profile recovery mnemonic` | (**status:** `accepted`)
+- `2026-09-23-profile-password-custody-passphrase-reset-adr` - `profile-password-custody` adr: `Recovery passphrase reset` | (**status:** `proposed`)
 
 ### audit
 
@@ -177,6 +180,10 @@ Auto-generated index of all documents tagged with `#profile-password-custody`.
 ### plan
 
 - `2026-08-13-profile-password-custody-plan` - `profile-password-custody` plan
+
+### reference
+
+- `2026-09-23-profile-password-custody-passphrase-reset-reference` - `profile-password-custody` reference: `Recovery passphrase reset as implemented`
 
 ### research
 
