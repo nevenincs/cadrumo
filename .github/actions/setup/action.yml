@@ -53,6 +53,15 @@ runs:
         unset CADRUMO_AUTHORITY_ROOT
         just setup
 
+    # A first `uv sync` publishes the authority only as a side effect of the
+    # editable build, and a runner whose uv cache is shared across checkouts
+    # reuses that build instead of running it, so a fresh checkout reaches the
+    # registry gate with no descriptor. Publishing explicitly, and only when
+    # stale, makes the gate test the tree rather than the cache's history.
+    - name: Publish the registry authority
+      shell: bash
+      run: just registry-publish-authority-if-authority-stale
+
     - name: Provision Playwright Chromium
       if: inputs.browser == 'true'
       shell: bash
