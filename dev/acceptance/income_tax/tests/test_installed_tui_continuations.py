@@ -108,7 +108,7 @@ def test_cli_readback_uses_public_ledger_and_work_list_collections() -> None:
             }
 
     cli = Cli()
-    state = _cli_public_readback(cli, generation=_GENERATION, year=2025)  # type: ignore[arg-type]
+    state = _cli_public_readback(cast("InstalledCli", cli), generation=_GENERATION, year=2025)
 
     assert cli.calls == [
         ("app", "ledger", "list"),
@@ -145,7 +145,7 @@ def test_cli_readback_refuses_a_partial_public_work_list() -> None:
             }
 
     with pytest.raises(InstalledContinuationError, match="four-unit handoff"):
-        _cli_public_readback(Cli(), generation=_GENERATION, year=2025)  # type: ignore[arg-type]
+        _cli_public_readback(cast("InstalledCli", Cli()), generation=_GENERATION, year=2025)
 
 
 def test_cli_readback_refuses_when_q1_has_no_public_filing_pointers() -> None:
@@ -175,7 +175,7 @@ def test_cli_readback_refuses_when_q1_has_no_public_filing_pointers() -> None:
             }
 
     with pytest.raises(InstalledContinuationError, match="Q1 local filing"):
-        _cli_public_readback(Cli(), generation=_GENERATION, year=2025)  # type: ignore[arg-type]
+        _cli_public_readback(cast("InstalledCli", Cli()), generation=_GENERATION, year=2025)
 
 
 def test_cli_completion_reuses_public_handoff_work_ids(monkeypatch, tmp_path: Path) -> None:
