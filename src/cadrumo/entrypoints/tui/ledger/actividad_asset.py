@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import dataclass
 from datetime import date
+from decimal import Decimal, InvalidOperation
 from typing import override
 
 from textual.app import ComposeResult
@@ -13,12 +14,10 @@ from textual.widgets import Button, Input, Static
 from ....application.actividad_asset.history import ActivityAssetHistoryClaimResult
 from ....application.actividad_asset.operations import ActivityAssetFilingHandoff, ActivityAssetOperations
 from ....core.period import Period
-from ....domain.calculations.registry.actividad_asset_bindings import ActivityAssetAuthoritySelection
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen
 from .models_actividad_asset import (
-    ActivityAssetAuthorityInputV1,
     ActivityAssetClaimRequestV1,
     ActivityAssetCorrectionRequestV1,
     ActivityAssetCreationRequestV1,
@@ -34,6 +33,17 @@ class _ActivityAssetScreenResult:
 
     message: str
     current_revision_id: str | None = None
+
+
+def _optional_amount(value: str) -> Decimal | None:
+    """Parse the optional free-depreciation amount; an empty field elects none."""
+    stripped = value.strip()
+    if not stripped:
+        return None
+    try:
+        return Decimal(stripped)
+    except InvalidOperation as exc:
+        raise ValueError("free-depreciation amount must be a decimal euro amount") from exc
 
 
 class ActivityAssetTuiActionsV1:
@@ -61,9 +71,9 @@ class ActivityAssetTuiActionsV1:
         """Preview a schedule through the application boundary."""
         return self._operations.forecast(
             asset_id=request.asset_id,
-            selection=ActivityAssetAuthoritySelection.model_validate(request.selection.model_dump()),
             covered_from=request.covered_from,
             covered_until=request.covered_until,
+            requested_free_amount=request.requested_free_amount,
         )
 
     def record_claim(self, request: ActivityAssetClaimRequestV1) -> ActivityAssetHistoryClaimResult:
@@ -100,7 +110,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         yield Button("Inspeccionar", id="asset-inspect")
         yield Button("Corregir", id="asset-correct")
         yield Static("", id="asset-current-revision-id", markup=False)
-        yield Input(placeholder="Selección de autoridad (JSON)", id="asset-selection-json")
+        yield Input(placeholder="Importe de libertad de amortización (opcional)", id="asset-free-amount")
         yield Input(value="2025-01-01", id="asset-covered-from")
         yield Input(value="2026-01-01", id="asset-covered-until")
         yield Button("Calcular previsión", id="asset-forecast")
@@ -147,15 +157,12 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
             )
             return self._inspection_result(prefix="corrected", result=result)
         if button_id == "asset-forecast":
-            selection = ActivityAssetAuthorityInputV1.model_validate_json(
-                self.query_one("#asset-selection-json", Input).value,
-            )
             self._last_forecast = self._actions.forecast(
                 ActivityAssetForecastRequestV1(
                     asset_id=asset_id,
-                    selection=selection,
                     covered_from=date.fromisoformat(self.query_one("#asset-covered-from", Input).value),
                     covered_until=date.fromisoformat(self.query_one("#asset-covered-until", Input).value),
+                    requested_free_amount=_optional_amount(self.query_one("#asset-free-amount", Input).value),
                 ),
             )
             return _ActivityAssetScreenResult(

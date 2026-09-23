@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
+from .election import AcquiredCondition, ActivityAssetAmortizationElection
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
 
 
@@ -273,6 +274,9 @@ class ActivityAssetRevision(BaseModel):
     in_service_date: date
     out_of_service_date: date | None = None
     opening_history: OpeningAmortizationHistory
+    acquired_condition: AcquiredCondition
+    building_construction_date: date | None = None
+    amortization: ActivityAssetAmortizationElection
 
     @field_validator("asset_id")
     @classmethod
@@ -301,7 +305,16 @@ class ActivityAssetRevision(BaseModel):
             raise ValueError("out_of_service_date must be after in_service_date")
         if self.residual_value >= self.basis.deductible_basis():
             raise ValueError("residual_value must be below allocated depreciation basis")
+        if self.building_construction_date is not None:
+            if self.acquired_condition is not AcquiredCondition.USED:
+                raise ValueError("building_construction_date is only a fact of a used asset")
+            if self.building_construction_date > self.in_service_date:
+                raise ValueError("building_construction_date cannot follow in_service_date")
         return self
+
+    def amortizable_basis(self) -> Decimal:
+        """Return the allocated basis less residual value (RIS art. 3.2)."""
+        return self.basis.deductible_basis() - self.residual_value
 
     @property
     def revision_id(self) -> str:

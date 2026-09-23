@@ -784,9 +784,9 @@ def _ledger_generation_factory(
         from ...adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
         from ...application.actividad_asset.operations import ActivityAssetOperations
         from ...application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
-        from ...domain.calculations.registry.actividad_asset_bindings import ActivityAssetAuthoritySelection
+        from ...domain.renta.actividad_asset.election import DirectEstimationRegime
         from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
-        from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+        from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
         from .ledger.actividad_asset import ActivityAssetTuiActionsV1
         from .ledger_doors import (
             LedgerEvidenceDoor,
@@ -800,27 +800,34 @@ def _ledger_generation_factory(
         def forecast_asset(
             revision: ActivityAssetRevision,
             *,
-            selection: ActivityAssetAuthoritySelection,
             covered_from: date,
             covered_until: date,
-            accumulated_effective_claims: Decimal,
-            accumulated_effective_free_depreciation_claims: Decimal,
+            history: AssetScheduleHistory,
+            requested_free_amount: Decimal | None,
         ) -> ScheduledAmortizationCharge:
             return forecast_activity_asset_charge(
                 revision,
-                modelo_100_revision=operation.revision("100", "2025"),
-                selection=selection,
+                modelo_100_revision=operation.revision("100", str(covered_from.year)),
                 authority_generation=operation.pin().logical_generation,
                 covered_from=covered_from,
                 covered_until=covered_until,
-                accumulated_effective_claims=accumulated_effective_claims,
-                accumulated_effective_free_depreciation_claims=accumulated_effective_free_depreciation_claims,
+                history=history,
+                requested_free_amount=requested_free_amount,
             )
+
+        def taxpayer_modality() -> DirectEstimationRegime:
+            from ...application.actividad_asset.modality import direct_estimation_modality
+            from ..adapter_composition import build_profile_read_ports
+
+            values = build_profile_read_ports(bucket_id=profile_id).path_values.load_path_values(bucket_id=profile_id)
+            token = None if values is None else values.get("irpf.estimation_regime")
+            return direct_estimation_modality(token, authority=operation)
 
         activity_asset_actions = ActivityAssetTuiActionsV1(
             operations=ActivityAssetOperations(
                 repository=ActividadAssetHistoryRepository(bucket_id=profile_id),
                 forecast_operation=forecast_asset,
+                taxpayer_modality=taxpayer_modality,
             ),
         )
         return ledger_screen_factory(

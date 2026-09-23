@@ -8,7 +8,19 @@ from decimal import Decimal
 import pytest
 
 from ..claims import AmortizationClaim, effective_free_depreciation_claims, record_claim
-from ..errors import ActividadAssetClaimConflictError, ActividadAssetUnsupportedError, ActividadAssetValidationError
+from ..election import (
+    AcquiredCondition,
+    ActivityAssetAmortizationElection,
+    AmortizationMethod,
+    DirectEstimationRegime,
+    LowValueElection,
+)
+from ..errors import (
+    ActividadAssetClaimConflictError,
+    ActividadAssetIncompleteError,
+    ActividadAssetUnsupportedError,
+    ActividadAssetValidationError,
+)
 from ..lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -19,17 +31,30 @@ from ..lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from ..schedule import (
-    AmortizationMethod,
-    FreeDepreciationElection,
-    ScheduleAuthority,
-    schedule_charge,
-)
+from ..schedule import AssetScheduleHistory, ScheduleAuthority, ScheduledAmortizationCharge, schedule_charge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def _revision(asset_id: str = "low-value-tool", *, basis: Decimal = Decimal("300.00")) -> ActivityAssetRevision:
+def _election(unit_value: Decimal = Decimal("300.00")) -> ActivityAssetAmortizationElection:
+    return ActivityAssetAmortizationElection(
+        regime=DirectEstimationRegime.SIMPLIFIED,
+        method=AmortizationMethod.LOW_VALUE_FREE,
+        authority_class_key="util-herramienta",
+        low_value=LowValueElection(
+            election_reference="operator-election-1",
+            new_material_evidence_reference="invoice-confirms-new-material-item",
+            unit_acquisition_value=unit_value,
+        ),
+    )
+
+
+def _revision(
+    asset_id: str = "low-value-tool",
+    *,
+    basis: Decimal = Decimal("300.00"),
+    election: ActivityAssetAmortizationElection | None = None,
+) -> ActivityAssetRevision:
     return ActivityAssetRevision(
         asset_id=asset_id,
         revision_number=1,
@@ -50,42 +75,40 @@ def _revision(asset_id: str = "low-value-tool", *, basis: Decimal = Decimal("300
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
         ),
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=election or _election(),
     )
 
 
-def _authority(
-    *,
-    requested: Decimal = Decimal("300.00"),
-    cap: Decimal = Decimal("25000.00"),
-) -> ScheduleAuthority:
+def _authority(revision: ActivityAssetRevision, *, cap: Decimal = Decimal("25000.00")) -> ScheduleAuthority:
+    low_value = revision.amortization.low_value
     return ScheduleAuthority(
+        tax_year=2025,
         asset_kind=AssetKind.MATERIAL,
+        method=AmortizationMethod.LOW_VALUE_FREE,
+        election_fingerprint=revision.amortization.fingerprint,
         authority_generation="irpf-2025-published-test",
         source_reference="modelo-100:2025:low-value-free",
-        method=AmortizationMethod.LOW_VALUE_FREE,
         free_depreciation_unit_threshold=Decimal("300.00"),
         free_depreciation_annual_cap=cap,
-        free_depreciation_election=FreeDepreciationElection(
-            election_reference="operator-election-1",
-            new_material_evidence_reference="invoice-confirms-new-material-item",
-            unit_acquisition_value=Decimal("300.00"),
-            requested_amount=requested,
-        ),
+        low_value=low_value,
     )
 
 
 def _schedule(
     revision: ActivityAssetRevision,
     *,
-    authority: ScheduleAuthority | None = None,
-    accumulated_free: Decimal = Decimal("0"),
-):
+    requested: Decimal | None = Decimal("300.00"),
+    cap: Decimal = Decimal("25000.00"),
+    claimed_by_taxpayer: Decimal = Decimal("0"),
+) -> ScheduledAmortizationCharge:
     return schedule_charge(
         revision,
-        authority or _authority(),
+        _authority(revision, cap=cap),
         covered_from=date(2025, 1, 1),
         covered_until=date(2026, 1, 1),
-        accumulated_effective_free_depreciation_claims=accumulated_free,
+        history=AssetScheduleHistory(taxpayer_low_value_claimed_in_tax_year=claimed_by_taxpayer),
+        requested_free_amount=requested,
     )
 
 
@@ -96,8 +119,8 @@ def _claim(
     cap: Decimal = Decimal("500.00"),
     supersedes_claim_id: str | None = None,
 ) -> AmortizationClaim:
-    revision = _revision(asset_id, basis=amount)
-    schedule = _schedule(revision, authority=_authority(requested=amount, cap=cap))
+    revision = _revision(asset_id, basis=amount, election=_election(unit_value=amount))
+    schedule = _schedule(revision, requested=amount, cap=cap)
     return AmortizationClaim.from_schedule(
         schedule,
         asset_kind=AssetKind.MATERIAL,
@@ -121,22 +144,15 @@ def test_explicit_election_preserves_evidence_and_forecast_does_not_consume_annu
 
 def test_unit_threshold_new_material_and_explicit_amount_fail_closed() -> None:
     revision = _revision()
+    over_threshold = _revision(election=_election(unit_value=Decimal("300.01")))
     with pytest.raises(ActividadAssetUnsupportedError, match="unit acquisition value"):
-        _schedule(
-            revision,
-            authority=_authority(requested=Decimal("300.00")).model_copy(
-                update={
-                    "free_depreciation_election": FreeDepreciationElection(
-                        election_reference="over-threshold",
-                        new_material_evidence_reference="new-item-evidence",
-                        unit_acquisition_value=Decimal("300.01"),
-                        requested_amount=Decimal("300.00"),
-                    )
-                },
-            ),
-        )
+        _schedule(over_threshold)
     with pytest.raises(ActividadAssetValidationError, match="remaining lawful basis"):
-        _schedule(revision, authority=_authority(requested=Decimal("300.01")))
+        _schedule(revision, requested=Decimal("300.01"))
+    with pytest.raises(ActividadAssetIncompleteError, match="elected amount"):
+        _schedule(revision, requested=None)
+    with pytest.raises(ActividadAssetUnsupportedError, match="annual cap"):
+        _schedule(revision, cap=Decimal("500.00"), claimed_by_taxpayer=Decimal("200.01"))
     late = revision.model_copy(update={"in_service_date": date(2024, 1, 1)})
     with pytest.raises(ActividadAssetUnsupportedError, match="placed in service"):
         _schedule(late)
@@ -176,21 +192,40 @@ def test_correction_replaces_effective_free_claim_before_rechecking_cap() -> Non
     ) == Decimal("200.00")
 
 
-def test_linear_fallback_is_a_separate_operator_selection_not_an_implicit_cap_allocation() -> None:
-    revision = _revision()
+def test_a_linear_election_is_a_separate_revision_not_an_implicit_cap_allocation() -> None:
+    linear_revision = _revision(
+        election=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.SIMPLIFIED,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="util-herramienta",
+        ),
+    )
     linear = ScheduleAuthority(
+        tax_year=2025,
         asset_kind=AssetKind.MATERIAL,
+        method=AmortizationMethod.LINEAR,
+        election_fingerprint=linear_revision.amortization.fingerprint,
         annual_rate=Decimal("0.10"),
         authority_generation="irpf-2025-published-test",
         source_reference="modelo-100:2025:linear",
     )
 
     charge = schedule_charge(
-        revision,
+        linear_revision,
         linear,
         covered_from=date(2025, 1, 1),
         covered_until=date(2026, 1, 1),
+        history=AssetScheduleHistory(),
     )
 
     assert charge.method is AmortizationMethod.LINEAR
     assert charge.amount == Decimal("30.00")
+    with pytest.raises(ActividadAssetValidationError, match="only a free-depreciation method"):
+        schedule_charge(
+            linear_revision,
+            linear,
+            covered_from=date(2025, 1, 1),
+            covered_until=date(2026, 1, 1),
+            history=AssetScheduleHistory(),
+            requested_free_amount=Decimal("30.00"),
+        )

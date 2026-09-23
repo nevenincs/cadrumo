@@ -18,11 +18,13 @@ from textual.widgets import Button, Input, Static
 
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.application.actividad_asset.operations import ActivityAssetOperations
-from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
-    ActivityAssetAuthoritySelection,
+from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
+from cadrumo.domain.renta.actividad_asset.election import (
+    AcquiredCondition,
+    ActivityAssetAmortizationElection,
+    AmortizationMethod,
     DirectEstimationRegime,
 )
-from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -33,7 +35,12 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from cadrumo.domain.renta.actividad_asset.schedule import ScheduleAuthority, schedule_charge
+from cadrumo.domain.renta.actividad_asset.schedule import (
+    AssetScheduleHistory,
+    ScheduleAuthority,
+    ScheduledAmortizationCharge,
+    schedule_charge,
+)
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.ledger.actividad_asset import ActivityAssetScreen, ActivityAssetTuiActionsV1
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
@@ -47,6 +54,10 @@ from cadrumo.entrypoints.tui.ledger.workspace_injection import LedgerWorkspaceIn
 from .workspace_fixtures import ledger_context, ledger_projection, ledger_review_action
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
+
+
+def _simplified() -> DirectEstimationRegime:
+    return DirectEstimationRegime.SIMPLIFIED
 
 
 class _MemoryRepository:
@@ -84,43 +95,38 @@ def _revision(asset_id: str) -> ActivityAssetRevision:
         ),
         in_service_date=date(2025, 1, 1),
         opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0")),
-    )
-
-
-def _authority() -> ScheduleAuthority:
-    return ScheduleAuthority(
-        asset_kind=AssetKind.MATERIAL,
-        annual_rate=Decimal("0.26"),
-        authority_generation="irpf-2025-assets-test-v1",
-        source_reference="AEAT simplified direct-estimation table 2025",
-    )
-
-
-def _selection() -> ActivityAssetAuthoritySelection:
-    return ActivityAssetAuthoritySelection(
-        regime=DirectEstimationRegime.SIMPLIFIED,
-        asset_kind=AssetKind.MATERIAL,
-        authority_class_key="equipment-test-class",
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.SIMPLIFIED,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="equipo-informacion-software",
+        ),
     )
 
 
 def _forecast(
-    revision,
+    revision: ActivityAssetRevision,
     *,
-    selection,
-    covered_from,
-    covered_until,
-    accumulated_effective_claims,
-    accumulated_effective_free_depreciation_claims,
-):
-    assert selection == _selection()
+    covered_from: date,
+    covered_until: date,
+    history: AssetScheduleHistory,
+    requested_free_amount: Decimal | None,
+) -> ScheduledAmortizationCharge:
     return schedule_charge(
         revision,
-        _authority(),
+        ScheduleAuthority(
+            tax_year=2025,
+            asset_kind=AssetKind.MATERIAL,
+            method=AmortizationMethod.LINEAR,
+            election_fingerprint=revision.amortization.fingerprint,
+            annual_rate=Decimal("0.26"),
+            authority_generation="irpf-2025-assets-test-v1",
+            source_reference="AEAT simplified direct-estimation table 2025",
+        ),
         covered_from=covered_from,
         covered_until=covered_until,
-        accumulated_effective_claims=accumulated_effective_claims,
-        accumulated_effective_free_depreciation_claims=accumulated_effective_free_depreciation_claims,
+        history=history,
+        requested_free_amount=requested_free_amount,
     )
 
 
@@ -162,7 +168,9 @@ async def _activate_screen_button(*, pilot, screen: ActivityAssetScreen, selecto
 
 def test_shared_operations_and_tui_continue_each_others_assets() -> None:
     operations_repository = _MemoryRepository()
-    shared_operations = ActivityAssetOperations(repository=operations_repository, forecast_operation=_forecast)
+    shared_operations = ActivityAssetOperations(
+        repository=operations_repository, forecast_operation=_forecast, taxpayer_modality=_simplified
+    )
     tui_after_operations = ActivityAssetTuiActionsV1(operations=shared_operations)
     operations_revision = _revision("created-by-shared-operation")
 
@@ -170,7 +178,9 @@ def test_shared_operations_and_tui_continue_each_others_assets() -> None:
     assert tui_after_operations.inspect(operations_revision.asset_id).revisions == (operations_revision,)
 
     tui_repository = _MemoryRepository()
-    tui_operations = ActivityAssetOperations(repository=tui_repository, forecast_operation=_forecast)
+    tui_operations = ActivityAssetOperations(
+        repository=tui_repository, forecast_operation=_forecast, taxpayer_modality=_simplified
+    )
     tui = ActivityAssetTuiActionsV1(operations=tui_operations)
     tui_revision = _revision("created-by-tui")
 
@@ -180,7 +190,9 @@ def test_shared_operations_and_tui_continue_each_others_assets() -> None:
 
 
 def test_tui_route_composition_registers_the_shared_actions() -> None:
-    operations = ActivityAssetOperations(repository=_MemoryRepository(), forecast_operation=_forecast)
+    operations = ActivityAssetOperations(
+        repository=_MemoryRepository(), forecast_operation=_forecast, taxpayer_modality=_simplified
+    )
 
     actions = actividad_asset_tui_actions(operations=operations)
 
@@ -189,22 +201,21 @@ def test_tui_route_composition_registers_the_shared_actions() -> None:
 
 def test_tui_forecast_is_the_shared_non_consuming_operation() -> None:
     repository = _MemoryRepository()
-    operations = ActivityAssetOperations(repository=repository, forecast_operation=_forecast)
+    operations = ActivityAssetOperations(
+        repository=repository, forecast_operation=_forecast, taxpayer_modality=_simplified
+    )
     tui = ActivityAssetTuiActionsV1(operations=operations)
     revision = _revision("forecast-parity")
     operations.create(revision)
-    selection = _selection()
 
     shared_forecast = operations.forecast(
         asset_id=revision.asset_id,
-        selection=selection,
         covered_from=date(2025, 1, 1),
         covered_until=date(2026, 1, 1),
     )
     tui_forecast = tui.forecast(
         ActivityAssetForecastRequestV1(
             asset_id=revision.asset_id,
-            selection=selection,
             covered_from=date(2025, 1, 1),
             covered_until=date(2026, 1, 1),
         ),
@@ -219,7 +230,9 @@ def test_tui_forecast_is_the_shared_non_consuming_operation() -> None:
 async def test_interactive_tui_exposes_correction_claim_replay_and_filing_through_the_shared_door() -> None:
     repository = _MemoryRepository()
     actions = ActivityAssetTuiActionsV1(
-        operations=ActivityAssetOperations(repository=repository, forecast_operation=_forecast),
+        operations=ActivityAssetOperations(
+            repository=repository, forecast_operation=_forecast, taxpayer_modality=_simplified
+        ),
     )
     controller = LedgerWorkspaceController(
         ledger_context(),
@@ -263,7 +276,6 @@ async def test_interactive_tui_exposes_correction_claim_replay_and_filing_throug
         )
         assert await _wait_for_current_revision_id(pilot=pilot, screen=screen) == correction.revision_id
 
-        screen.query_one("#asset-selection-json", Input).value = _selection().model_dump_json()
         screen.query_one("#asset-covered-from", Input).value = "2025-01-01"
         screen.query_one("#asset-covered-until", Input).value = "2026-01-01"
         await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-forecast")
@@ -309,7 +321,9 @@ async def test_activity_asset_screen_clears_a_stale_public_result_before_worker_
     """A repeated public action cannot be observed as the prior claim result."""
     repository = _MemoryRepository()
     actions = ActivityAssetTuiActionsV1(
-        operations=ActivityAssetOperations(repository=repository, forecast_operation=_forecast),
+        operations=ActivityAssetOperations(
+            repository=repository, forecast_operation=_forecast, taxpayer_modality=_simplified
+        ),
     )
     controller = LedgerWorkspaceController(
         ledger_context(),

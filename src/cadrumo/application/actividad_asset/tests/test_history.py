@@ -9,6 +9,12 @@ import pytest
 from pydantic import ValidationError
 
 from ....domain.renta.actividad_asset.claims import AmortizationClaim, effective_claims
+from ....domain.renta.actividad_asset.election import (
+    AcquiredCondition,
+    ActivityAssetAmortizationElection,
+    AmortizationMethod,
+    DirectEstimationRegime,
+)
 from ....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from ....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
@@ -46,6 +52,12 @@ def _revision(*, number: int = 1, supersedes_revision_id: str | None = None) -> 
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
+        ),
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.NORMAL,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="equipo-proceso-informacion",
         ),
     )
 

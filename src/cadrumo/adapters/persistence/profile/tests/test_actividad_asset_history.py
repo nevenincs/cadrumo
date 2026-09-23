@@ -13,6 +13,12 @@ from .....domain.renta.actividad_asset.claims import (
     effective_claims,
     effective_free_depreciation_claims,
 )
+from .....domain.renta.actividad_asset.election import (
+    AcquiredCondition,
+    ActivityAssetAmortizationElection,
+    AmortizationMethod,
+    DirectEstimationRegime,
+)
 from .....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from .....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
@@ -24,7 +30,6 @@ from .....domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from .....domain.renta.actividad_asset.schedule import AmortizationMethod
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..actividad_asset import ActividadAssetHistoryRepository
 
@@ -57,6 +62,12 @@ def _revision(
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
+        ),
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.NORMAL,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="equipo-proceso-informacion",
         ),
     )
 

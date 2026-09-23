@@ -10,23 +10,19 @@ from pydantic import BaseModel
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...domain.calculations.registry.actividad_asset_bindings import (
-    ActivityAssetAuthoritySelection,
-    DirectEstimationRegime,
-)
 from ...domain.renta.actividad_asset.claims import (
     AmortizationClaim,
     ClaimProjection,
-    effective_claims,
-    effective_free_depreciation_claims,
+    asset_schedule_history,
     project_m100,
     project_m130,
 )
+from ...domain.renta.actividad_asset.election import DirectEstimationRegime
 from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
-from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
-from .ports import ActivityAssetHistoryRepository
+from .ports import ActivityAssetHistoryRepository, TaxpayerModalityReader
 from .service import ActivityAssetHistoryService
 
 
@@ -48,13 +44,12 @@ class ActivityAssetForecastOperation(Protocol):
         self,
         revision: ActivityAssetRevision,
         *,
-        selection: ActivityAssetAuthoritySelection,
         covered_from: date,
         covered_until: date,
-        accumulated_effective_claims: Decimal,
-        accumulated_effective_free_depreciation_claims: Decimal,
+        history: AssetScheduleHistory,
+        requested_free_amount: Decimal | None,
     ) -> ScheduledAmortizationCharge:
-        """Resolve authority and calculate one non-consuming forecast."""
+        """Resolve the revision's election and calculate one non-consuming forecast."""
         ...
 
 
@@ -66,10 +61,12 @@ class ActivityAssetOperations:
         *,
         repository: ActivityAssetHistoryRepository,
         forecast_operation: ActivityAssetForecastOperation,
+        taxpayer_modality: TaxpayerModalityReader,
     ) -> None:
-        """Bind the operations to one bucket-scoped history repository."""
+        """Bind the operations to one bucket-scoped history and taxpayer profile."""
         self._service = ActivityAssetHistoryService(repository=repository)
         self._forecast_operation = forecast_operation
+        self._taxpayer_modality = taxpayer_modality
 
     def create(self, revision: ActivityAssetRevision) -> ActivityAssetHistory:
         """Create an asset from its first immutable revision."""
@@ -101,56 +98,25 @@ class ActivityAssetOperations:
         self,
         *,
         asset_id: str,
-        selection: ActivityAssetAuthoritySelection,
         covered_from: date,
         covered_until: date,
+        requested_free_amount: Decimal | None = None,
     ) -> ScheduledAmortizationCharge:
-        """Calculate a forecast without mutating deductible-claim history."""
+        """Calculate a forecast under the current revision's election without recording it."""
         history = self._service.reopen()
         revision = self.inspect(asset_id)[-1]
-        consumed = sum(
-            (claim.amount for claim in effective_claims(history.claims) if claim.asset_id == asset_id),
-            Decimal("0"),
-        )
-        free_consumed = sum(
-            (
-                claim.amount
-                for claim in effective_free_depreciation_claims(
-                    history.claims,
-                    tax_year=covered_from.year,
-                )
-            ),
-            Decimal("0"),
-        )
+        _require_profile_modality(revision.amortization.regime, self._taxpayer_modality())
         return self._forecast_operation(
             revision,
-            selection=selection,
             covered_from=covered_from,
             covered_until=covered_until,
-            accumulated_effective_claims=consumed,
-            accumulated_effective_free_depreciation_claims=free_consumed,
-        )
-
-    def forecast_selected(
-        self,
-        *,
-        asset_id: str,
-        regime: str,
-        asset_kind: AssetKind,
-        authority_class_key: str,
-        covered_from: date,
-        covered_until: date,
-    ) -> ScheduledAmortizationCharge:
-        """Build the canonical authority selector from frontend transport fields."""
-        return self.forecast(
-            asset_id=asset_id,
-            selection=ActivityAssetAuthoritySelection(
-                regime=DirectEstimationRegime(regime),
-                asset_kind=asset_kind,
-                authority_class_key=authority_class_key,
+            history=asset_schedule_history(
+                history.claims,
+                history.revisions,
+                asset_id=asset_id,
+                tax_year=covered_from.year,
             ),
-            covered_from=covered_from,
-            covered_until=covered_until,
+            requested_free_amount=requested_free_amount,
         )
 
     def record_claim(
@@ -180,6 +146,14 @@ class ActivityAssetOperations:
             intangible_m100=project_m100(claims, asset_kind=AssetKind.INTANGIBLE, tax_year=tax_year),
             material_m130=project_m130(claims, period=m130_period, asset_kind=AssetKind.MATERIAL),
             intangible_m130=project_m130(claims, period=m130_period, asset_kind=AssetKind.INTANGIBLE),
+        )
+
+
+def _require_profile_modality(elected: DirectEstimationRegime, declared: DirectEstimationRegime) -> None:
+    """Refuse an election whose modality the taxpayer profile does not declare (RIRPF art. 28.3)."""
+    if declared is not elected:
+        raise ActividadAssetValidationError(
+            f"the asset elects the {elected.value} modality but the taxpayer profile declares {declared.value}",
         )
 
 

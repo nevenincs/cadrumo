@@ -11,6 +11,12 @@ import pytest
 from ....domain.bienes_inversion.register import BienInversionIvaRecord
 from ....domain.bienes_inversion.vocabulary import BienInversionKind
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ....domain.renta.actividad_asset.election import (
+    AcquiredCondition,
+    ActivityAssetAmortizationElection,
+    AmortizationMethod,
+    DirectEstimationRegime,
+)
 from ....domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
@@ -55,6 +61,12 @@ def _asset(*, transaction_id: str = _TRANSACTION_ID) -> ActivityAssetRevision:
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
+        ),
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.NORMAL,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="equipo-proceso-informacion",
         ),
     )
 

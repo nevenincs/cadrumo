@@ -9,6 +9,12 @@ import pytest
 
 from cadrumo.application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim
+from cadrumo.domain.renta.actividad_asset.election import (
+    AcquiredCondition,
+    ActivityAssetAmortizationElection,
+    AmortizationMethod,
+    DirectEstimationRegime,
+)
 from cadrumo.domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
     AcquisitionShape,
@@ -69,6 +75,12 @@ def test_activity_asset_claim_payload_includes_the_canonical_derived_claim_ident
         ),
         in_service_date=date(2025, 1, 1),
         opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.KNOWN, accumulated_amount=Decimal("0")),
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.NORMAL,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="equipo-proceso-informacion",
+        ),
     )
     claim = AmortizationClaim(
         asset_id=revision.asset_id,
@@ -103,7 +115,9 @@ def test_activity_asset_inspect_dispatches_to_profile_resolution() -> None:
     assert "No hay un perfil activo" in result.output
 
 
-def test_activity_asset_forecast_refuses_a_caller_authored_rate_envelope() -> None:
+@pytest.mark.parametrize("retired_option", ["--authority-json", "--selection-json"])
+def test_activity_asset_forecast_refuses_a_caller_authored_authority_envelope(retired_option: str) -> None:
+    """The election lives on the revision; a forecast accepts no rate or selector envelope."""
     result = invoke_cached_cli(
         [
             "app",
@@ -111,7 +125,7 @@ def test_activity_asset_forecast_refuses_a_caller_authored_rate_envelope() -> No
             "actividad-asset",
             "forecast",
             "asset-1",
-            "--authority-json",
+            retired_option,
             '{"annual_rate":"1"}',
             "--covered-from",
             "2025-01-01",
@@ -121,4 +135,12 @@ def test_activity_asset_forecast_refuses_a_caller_authored_rate_envelope() -> No
     )
 
     assert result.exit_code != 0
-    assert "--authority-json" in result.output
+    assert retired_option in result.output
+
+
+def test_activity_asset_forecast_exposes_only_the_optional_free_depreciation_amount() -> None:
+    result = invoke_cached_cli(["app", "ledger", "actividad-asset", "forecast", "--help"])
+
+    assert result.exit_code == 0
+    assert "--free-depreciation-amount" in result.output
+    assert "--selection-json" not in result.output

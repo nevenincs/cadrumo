@@ -11,9 +11,10 @@ from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
 from ....core.period import Period
+from .election import AmortizationMethod
 from .errors import ActividadAssetClaimConflictError, ActividadAssetValidationError
-from .lifecycle import AssetKind
-from .schedule import AmortizationMethod, ScheduledAmortizationCharge
+from .lifecycle import ActivityAssetRevision, AssetKind
+from .schedule import AssetScheduleHistory, ScheduledAmortizationCharge
 
 
 class AmortizationClaim(BaseModel):
@@ -30,7 +31,7 @@ class AmortizationClaim(BaseModel):
     amount: Decimal
     schedule_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
     authority_generation: str = Field(min_length=1, max_length=256)
-    source_reference: str = Field(min_length=1, max_length=512)
+    source_reference: str = Field(min_length=1, max_length=2048)
     creating_operation: str = Field(min_length=1, max_length=256)
     supersedes_claim_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
     calculation_revision_id: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
@@ -78,7 +79,7 @@ class AmortizationClaim(BaseModel):
                 self.free_depreciation_annual_cap,
             )
         ):
-            raise ValueError("linear claim cannot carry free-depreciation facts")
+            raise ValueError("only a low-value claim carries free-depreciation election facts")
         return self
 
     @property
@@ -247,6 +248,42 @@ def _require_free_depreciation_cap(
         raise ActividadAssetClaimConflictError("free-depreciation effective claims exceed the annual cap")
 
 
+def asset_schedule_history(
+    claims: tuple[AmortizationClaim, ...],
+    revisions: tuple[ActivityAssetRevision, ...],
+    *,
+    asset_id: str,
+    tax_year: int,
+) -> AssetScheduleHistory:
+    """Summarise effective history the schedule needs for one asset and tax year.
+
+    Election fingerprints come from the revision each claim was recorded
+    under.  A claim in a later tax year refuses, because the lawful charge of
+    an earlier year cannot be recomputed after later basis was consumed.
+    """
+    elections = {revision.revision_id: revision.amortization.fingerprint for revision in revisions}
+    effective = tuple(claim for claim in effective_claims(claims) if claim.asset_id == asset_id)
+    if any(claim.tax_year > tax_year for claim in effective):
+        raise ActividadAssetValidationError("a later tax year already has recorded claims for this asset")
+    before = tuple(claim for claim in effective if claim.tax_year < tax_year)
+    within = tuple(claim for claim in effective if claim.tax_year == tax_year)
+    missing = {claim.asset_revision_id for claim in effective} - elections.keys()
+    if missing:
+        raise ActividadAssetValidationError("an effective claim references a revision absent from history")
+    return AssetScheduleHistory(
+        accumulated_before_tax_year=sum((claim.amount for claim in before), Decimal("0")),
+        accumulated_in_tax_year=sum((claim.amount for claim in within), Decimal("0")),
+        taxpayer_low_value_claimed_in_tax_year=sum(
+            (claim.amount for claim in effective_free_depreciation_claims(claims, tax_year=tax_year)),
+            Decimal("0"),
+        ),
+        election_fingerprints_before_tax_year=tuple(
+            sorted({elections[claim.asset_revision_id] for claim in before}),
+        ),
+        election_fingerprints_in_tax_year=tuple(sorted({elections[claim.asset_revision_id] for claim in within})),
+    )
+
+
 def project_m100(claims: tuple[AmortizationClaim, ...], *, asset_kind: AssetKind, tax_year: int) -> ClaimProjection:
     """Project one effective claim set to its exclusive 2025 Modelo 100 destination."""
     selected = tuple(
@@ -288,6 +325,7 @@ __all__ = [
     "AmortizationClaim",
     "ClaimProjection",
     "ClaimRecordResult",
+    "asset_schedule_history",
     "effective_claims",
     "effective_free_depreciation_claims",
     "project_m100",

@@ -10,6 +10,12 @@ import pytest
 from ....core.casilla_id import validated_casilla_id
 from ....core.period import Period
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
+from ....domain.renta.actividad_asset.election import (
+    AcquiredCondition,
+    ActivityAssetAmortizationElection,
+    AmortizationMethod,
+    DirectEstimationRegime,
+)
 from ....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from ....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
@@ -68,6 +74,12 @@ def _asset() -> ActivityAssetRevision:
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
+        ),
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.NORMAL,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="equipo-proceso-informacion",
         ),
     )
 

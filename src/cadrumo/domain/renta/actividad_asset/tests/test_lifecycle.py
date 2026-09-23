@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from ..election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod, DirectEstimationRegime
 from ..errors import ActividadAssetIncompleteError
 from ..lifecycle import (
     AcquisitionLineageReference,
@@ -20,9 +21,21 @@ from ..lifecycle import (
     OpeningHistoryStatus,
     OwnershipMode,
 )
-from ..schedule import ScheduleAuthority, calendar_days_in_tax_year, schedule_charge
+from ..schedule import AssetScheduleHistory, ScheduleAuthority, calendar_days_in_tax_year, schedule_charge
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+
+_NO_HISTORY = AssetScheduleHistory()
+
+
+def _linear_election(
+    class_key: str = "edificio-comercial-administrativo-servicios-vivienda",
+) -> ActivityAssetAmortizationElection:
+    return ActivityAssetAmortizationElection(
+        regime=DirectEstimationRegime.NORMAL,
+        method=AmortizationMethod.LINEAR,
+        authority_class_key=class_key,
+    )
 
 
 def _property_basis(**overrides: object) -> ActivityAssetBasis:
@@ -69,14 +82,19 @@ def _revision(**overrides: object) -> ActivityAssetRevision:
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
         ),
+        "acquired_condition": AcquiredCondition.NEW,
+        "amortization": _linear_election(),
     }
     payload.update(overrides)
     return ActivityAssetRevision.model_validate(payload)
 
 
-def _authority(**overrides: object) -> ScheduleAuthority:
+def _authority(revision: ActivityAssetRevision, **overrides: object) -> ScheduleAuthority:
     payload: dict[str, object] = {
-        "asset_kind": AssetKind.MATERIAL,
+        "tax_year": 2025,
+        "asset_kind": revision.asset_kind,
+        "method": AmortizationMethod.LINEAR,
+        "election_fingerprint": revision.amortization.fingerprint,
         "annual_rate": Decimal("0.10"),
         "authority_generation": "2025.1",
         "source_reference": "tabla-material-2025",
@@ -164,39 +182,84 @@ def test_spousal_property_and_missing_opening_history_fail_closed() -> None:
         opening_history=OpeningAmortizationHistory(status=OpeningHistoryStatus.MISSING),
     )
     with pytest.raises(ActividadAssetIncompleteError, match="opening"):
-        schedule_charge(missing, _authority(), covered_from=date(2025, 1, 1), covered_until=date(2025, 4, 1))
+        schedule_charge(
+            missing,
+            _authority(missing),
+            covered_from=date(2025, 1, 1),
+            covered_until=date(2025, 4, 1),
+            history=_NO_HISTORY,
+        )
 
 
 def test_schedule_distinguishes_material_intangible_and_uses_actual_service_days() -> None:
+    material_revision = _revision(in_service_date=date(2025, 7, 1))
     material = schedule_charge(
-        _revision(in_service_date=date(2025, 7, 1)),
-        _authority(),
+        material_revision,
+        _authority(material_revision),
         covered_from=date(2025, 1, 1),
         covered_until=date(2026, 1, 1),
+        history=_NO_HISTORY,
     )
-    intangible_revision = _revision(asset_kind=AssetKind.INTANGIBLE, basis=_ordinary_basis())
-    intangible_authority = _authority(asset_kind=AssetKind.INTANGIBLE)
+    intangible_revision = _revision(
+        asset_kind=AssetKind.INTANGIBLE,
+        basis=_ordinary_basis(),
+        amortization=_linear_election("intangible-software"),
+    )
     intangible = schedule_charge(
         intangible_revision,
-        intangible_authority,
+        _authority(intangible_revision),
         covered_from=date(2025, 1, 1),
         covered_until=date(2026, 1, 1),
+        history=_NO_HISTORY,
     )
 
+    # 8,000 x 10% x 184/365 and 800 x 10% x 365/365, rounded half-up at emission.
     assert material.service_days == 184
     assert material.amount == Decimal("403.29")
     assert intangible.amount == Decimal("80.00")
 
 
-def test_leap_year_denominator_and_final_residual_cap_emit_cents() -> None:
-    revision = _revision(in_service_date=date(2025, 1, 1), residual_value=Decimal("7999.995"))
-    capped = schedule_charge(
-        revision,
-        _authority(),
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
+def test_rate_applies_to_the_basis_less_residual_value_and_is_capped_at_the_remaining_base() -> None:
+    residual = _revision(residual_value=Decimal("800"))
+    nearly_amortized = _revision(
+        residual_value=Decimal("800"),
+        opening_history=OpeningAmortizationHistory(
+            status=OpeningHistoryStatus.KNOWN,
+            accumulated_amount=Decimal("7100"),
+        ),
     )
 
+    charge = schedule_charge(
+        residual,
+        _authority(residual),
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+        history=_NO_HISTORY,
+    )
+    capped = schedule_charge(
+        nearly_amortized,
+        _authority(nearly_amortized),
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
+        history=_NO_HISTORY,
+    )
+
+    # RIS art. 3.2: (8,000 - 800) x 10% = 720; 7,200 - 7,100 leaves 100 to amortize.
+    assert charge.amount == Decimal("720.00")
+    assert capped.amount == Decimal("100.00")
     assert calendar_days_in_tax_year(2024) == 366
     assert calendar_days_in_tax_year(2025) == 365
-    assert capped.amount == Decimal("0.01")
+
+
+def test_an_authority_resolved_for_another_election_is_refused() -> None:
+    revision = _revision()
+    other = _revision(amortization=_linear_election("otro-elemento"))
+
+    with pytest.raises(ValueError, match="different amortization election"):
+        schedule_charge(
+            revision,
+            _authority(other),
+            covered_from=date(2025, 1, 1),
+            covered_until=date(2026, 1, 1),
+            history=_NO_HISTORY,
+        )

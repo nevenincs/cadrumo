@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Protocol
 
 from ...domain.renta.actividad_asset.claims import AmortizationClaim
+from ...domain.renta.actividad_asset.election import DirectEstimationRegime
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 
@@ -25,4 +26,12 @@ class ActivityAssetHistoryRepository(Protocol):
         ...
 
 
-__all__ = ["ActivityAssetHistoryRepository"]
+class TaxpayerModalityReader(Protocol):
+    """Read the taxpayer profile's direct-estimation modality."""
+
+    def __call__(self) -> DirectEstimationRegime:
+        """Return the declared modality, refusing an absent or non-direct regime."""
+        ...
+
+
+__all__ = ["ActivityAssetHistoryRepository", "TaxpayerModalityReader"]

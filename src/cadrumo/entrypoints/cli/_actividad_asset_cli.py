@@ -3,17 +3,19 @@
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 import typer
 
 from ...application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
+from ...application.actividad_asset.modality import direct_estimation_modality
 from ...application.actividad_asset.operations import ActivityAssetFilingHandoff, ActivityAssetOperations
 from ...application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from ...core.period import Period
-from ...domain.calculations.registry.actividad_asset_bindings import ActivityAssetAuthoritySelection
+from ...domain.renta.actividad_asset.election import DirectEstimationRegime
+from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
-from ...domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
+from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
 from ._actividad_asset_payloads import (
     ActivityAssetClaimPayload,
     ActivityAssetFilingHandoffPayload,
@@ -22,7 +24,7 @@ from ._actividad_asset_payloads import (
     ActivityAssetInspectionPayload,
 )
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .state_projection_support import authority_operation, calculation_action_ports_factory
+from .state_projection_support import authority_operation, calculation_action_ports_factory, profile_read_ports_factory
 
 
 class ActivityAssetCli:
@@ -47,15 +49,15 @@ class ActivityAssetCli:
         self,
         *,
         asset_id: str,
-        selection_json: str,
         covered_from: str,
         covered_until: str,
+        free_depreciation_amount: str | None = None,
     ) -> ScheduledAmortizationCharge:
         return self._operations.forecast(
             asset_id=asset_id,
-            selection=ActivityAssetAuthoritySelection.model_validate_json(selection_json),
             covered_from=date.fromisoformat(covered_from),
             covered_until=date.fromisoformat(covered_until),
+            requested_free_amount=_parse_free_amount(free_depreciation_amount),
         )
 
     def record_claim(
@@ -78,6 +80,15 @@ class ActivityAssetCli:
         )
 
 
+def _parse_free_amount(value: str | None) -> Decimal | None:
+    if value is None:
+        return None
+    try:
+        return Decimal(value)
+    except InvalidOperation as exc:
+        raise ActividadAssetValidationError("free-depreciation amount must be a decimal euro amount") from exc
+
+
 def _runtime_cli(ctx: typer.Context) -> ActivityAssetCli:
     bucket_id = active_bucket_id_or_refuse()
     authority = authority_operation(ctx)
@@ -86,27 +97,33 @@ def _runtime_cli(ctx: typer.Context) -> ActivityAssetCli:
     def _forecast(
         revision: ActivityAssetRevision,
         *,
-        selection: ActivityAssetAuthoritySelection,
         covered_from: date,
         covered_until: date,
-        accumulated_effective_claims: Decimal,
-        accumulated_effective_free_depreciation_claims: Decimal,
+        history: AssetScheduleHistory,
+        requested_free_amount: Decimal | None,
     ) -> ScheduledAmortizationCharge:
         return forecast_activity_asset_charge(
             revision,
-            modelo_100_revision=authority.revision("100", "2025"),
-            selection=selection,
+            modelo_100_revision=authority.revision("100", str(covered_from.year)),
             authority_generation=authority.pin().logical_generation,
             covered_from=covered_from,
             covered_until=covered_until,
-            accumulated_effective_claims=accumulated_effective_claims,
-            accumulated_effective_free_depreciation_claims=accumulated_effective_free_depreciation_claims,
+            history=history,
+            requested_free_amount=requested_free_amount,
         )
+
+    profile_values = profile_read_ports_factory(ctx)(bucket_id).path_values
+
+    def _taxpayer_modality() -> DirectEstimationRegime:
+        values = profile_values.load_path_values(bucket_id=bucket_id)
+        token = None if values is None else values.get("irpf.estimation_regime")
+        return direct_estimation_modality(token, authority=authority)
 
     return ActivityAssetCli(
         operations=ActivityAssetOperations(
             repository=ports.activity_asset_history_repository,
             forecast_operation=_forecast,
+            taxpayer_modality=_taxpayer_modality,
         ),
     )
 
@@ -149,16 +166,16 @@ def actividad_asset_correct(ctx: typer.Context, revision_json: str) -> None:
 def actividad_asset_forecast(
     ctx: typer.Context,
     asset_id: str,
-    selection_json: str,
     covered_from: str,
     covered_until: str,
+    free_depreciation_amount: str | None = None,
 ) -> None:
-    """Preview an asset charge without recording a claim."""
+    """Preview an asset charge under its revision's election without recording a claim."""
     result = _runtime_cli(ctx).forecast(
         asset_id=asset_id,
-        selection_json=selection_json,
         covered_from=covered_from,
         covered_until=covered_until,
+        free_depreciation_amount=free_depreciation_amount,
     )
     payload = ActivityAssetForecastPayload(root=result.model_dump(mode="json"))
     emit_envelope(ctx, command="ledger.actividad_asset.forecast", result=payload, lines=(f"amount\t{result.amount}",))

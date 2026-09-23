@@ -32,6 +32,12 @@ from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
+from ....domain.renta.actividad_asset.election import (
+    AcquiredCondition,
+    ActivityAssetAmortizationElection,
+    AmortizationMethod,
+    DirectEstimationRegime,
+)
 from ....domain.renta.actividad_asset.errors import ActividadAssetClaimConflictError
 from ....domain.renta.actividad_asset.lifecycle import (
     AcquisitionLineageReference,
@@ -1064,6 +1070,12 @@ def test_renta_source_mesh_refuses_acquisition_cost_competing_with_asset_claim()
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
         ),
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.NORMAL,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="equipo-proceso-informacion",
+        ),
     )
     claim = AmortizationClaim(
         asset_id=asset.asset_id,
@@ -1121,6 +1133,12 @@ def test_renta_source_mesh_projects_recorded_asset_claim_without_full_cost() -> 
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
+        ),
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.NORMAL,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="equipo-proceso-informacion",
         ),
     )
     claim = AmortizationClaim(
@@ -1185,6 +1203,12 @@ def test_m130_source_mesh_adds_recorded_claim_through_existing_expense_owner() -
         opening_history=OpeningAmortizationHistory(
             status=OpeningHistoryStatus.KNOWN,
             accumulated_amount=Decimal("0"),
+        ),
+        acquired_condition=AcquiredCondition.NEW,
+        amortization=ActivityAssetAmortizationElection(
+            regime=DirectEstimationRegime.NORMAL,
+            method=AmortizationMethod.LINEAR,
+            authority_class_key="equipo-proceso-informacion",
         ),
     )
     claim = AmortizationClaim(

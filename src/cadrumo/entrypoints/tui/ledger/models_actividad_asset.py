@@ -3,12 +3,12 @@
 from __future__ import annotations
 
 from datetime import date
+from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period
-from ....domain.calculations.registry.actividad_asset_bindings import ActivityAssetAuthoritySelection
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ....domain.renta.actividad_asset.schedule import ScheduledAmortizationCharge
 
@@ -28,19 +28,13 @@ class ActivityAssetCorrectionRequestV1(BaseModel):
 
 
 class ActivityAssetForecastRequestV1(BaseModel):
-    """Request for a non-consuming schedule preview."""
+    """Request for a non-consuming schedule preview under the revision's election."""
 
     model_config = STRICT_FROZEN_CONFIG
     asset_id: str = Field(min_length=1, max_length=128)
-    selection: ActivityAssetAuthoritySelection
     covered_from: date
     covered_until: date
-
-
-class ActivityAssetAuthorityInputV1(ActivityAssetAuthoritySelection):
-    """Strict TUI transport over the canonical rate-free authority selection."""
-
-    model_config = STRICT_FROZEN_CONFIG
+    requested_free_amount: Decimal | None = None
 
 
 class ActivityAssetClaimRequestV1(BaseModel):
@@ -69,7 +63,6 @@ class ActivityAssetInspectionV1(BaseModel):
 
 
 __all__ = [
-    "ActivityAssetAuthorityInputV1",
     "ActivityAssetClaimRequestV1",
     "ActivityAssetCorrectionRequestV1",
     "ActivityAssetCreationRequestV1",

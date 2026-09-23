@@ -124,9 +124,9 @@ LEDGER_ACTIVIDAD_ASSET_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         "actividad_asset_forecast",
         (
             _argument("asset_id"),
-            _option("selection_json", "--selection-json"),
             _option("covered_from", "--covered-from"),
             _option("covered_until", "--covered-until"),
+            _option("free_depreciation_amount", "--free-depreciation-amount", optional=True),
         ),
         schema_module="._actividad_asset_payloads",
         schema_name="ActivityAssetForecastPayload",
