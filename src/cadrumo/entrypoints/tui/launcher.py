@@ -48,7 +48,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.work_unit import WorkUnit
     from .account import AccountFactoriesV1
-    from .declarations.models import CalendarRecoveryHandoffV1
+    from .declarations.models import CalendarRecoveryHandoffV1, ModeloWorkCreateHandoffV1
     from .ledger.models import (
         LedgerClassificationSubmissionV1,
         LedgerClassificationSubmitterV1,
@@ -920,6 +920,13 @@ def _declarations_generation_factory(
             calendar_recovery_handoff=_calendar_work_create_handoff(
                 bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
                 actor=dependencies.account.profile_overview.label,
+                operation=operation_runtime.authority_operation,
+            ),
+            work_create_handoff=_declarations_work_create_handoff(
+                bucket_id=_required_projection(current[0].declarations, "Declarations").bucket_id,
+                actor=dependencies.account.profile_overview.label,
+                operation=operation_runtime.authority_operation,
+                refresh_after_success=refresh_generation,
             ),
         )(context)
 
@@ -1009,7 +1016,85 @@ def _modelo_lifecycle_door(
     )
 
 
-def _calendar_work_create_handoff(*, bucket_id: str, actor: str) -> CalendarRecoveryHandoffV1:
+def _declarations_work_create_handoff(
+    *,
+    bucket_id: str,
+    actor: str,
+    operation: PinnedAuthorityOperation,
+    refresh_after_success: Callable[[], object],
+) -> ModeloWorkCreateHandoffV1:
+    """Bind an operator-selected Modelo/year/period to the door ``modelo work create`` uses.
+
+    The entrypoint guards ``modelo work create`` runs before creation -- the
+    ceded-tax redirect, the foral-regime refusal and the profile applicability
+    refusal -- run here as well. Profile readiness, law-selected revision and
+    idempotent reuse stay inside the shared application command, so the two
+    frontends cannot drift. A refusal is raised as a typed error for the
+    Declarations screen to show as itself. The profile is read under the
+    session's pinned authority, never whichever generation is current now.
+    """
+    from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+    from .declarations.models import ModeloWorkCreateResultV1
+    from .modelo.lifecycle import ModeloLifecycleActionUnavailableError
+
+    def create(modelo: str, filing_year: int, period: Period, /) -> ModeloWorkCreateResultV1:
+        from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
+        from ...application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
+        from ...application.modelo.work_create_policy import (
+            guard_active_profile_foral_ccaa,
+            modelo_work_create_applicability_refusal,
+            modelo_work_create_refusal_locale_key,
+        )
+        from ..adapter_composition import build_work_lifecycle_ports
+
+        selected_modelo = modelo.strip()
+        if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
+            raise ModeloLifecycleActionUnavailableError(translated_message="tui.declarations.work_create.refusal.year")
+        if period.filing_year != filing_year:
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message="tui.declarations.work_create.refusal.period"
+            )
+        if locale_key := modelo_work_create_refusal_locale_key(selected_modelo):
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message=locale_key, context={"modelo": selected_modelo}
+            )
+        profile = load_modelo_work_profile(
+            bucket_id=bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        record = profile.record if profile is not None else None
+        guard_active_profile_foral_ccaa(record)
+        if refusal := modelo_work_create_applicability_refusal(
+            selected_modelo,
+            allow_not_applicable=False,
+            record=record,
+        ):
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message="tui.declarations.work_create.refusal.not_applicable",
+                context={"modelo": refusal.modelo, "reason": refusal.reason},
+            )
+        ports = build_work_lifecycle_ports(bucket_id=bucket_id)
+        result = ensure_modelo_work_unit_for_active_target(
+            bucket_id=bucket_id,
+            modelo=selected_modelo,
+            filing_year=filing_year,
+            period=period,
+            registry_revision_id=None,
+            actor=actor,
+            catalogue=ports.work_unit_repository.load(),
+            ports=ports,
+            operation=operation,
+            profile=profile,
+        )
+        refresh_after_success()
+        return ModeloWorkCreateResultV1(reused=result.reused)
+
+    return create
+
+
+def _calendar_work_create_handoff(
+    *, bucket_id: str, actor: str, operation: PinnedAuthorityOperation
+) -> CalendarRecoveryHandoffV1:
     """Bind the calendar's "create this declaration" action to the door ``modelo work create`` uses.
 
     The calendar controller has already refused an action whose bound
@@ -1023,29 +1108,28 @@ def _calendar_work_create_handoff(*, bucket_id: str, actor: str) -> CalendarReco
         from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
         from ...application.modelo.work_addressing import ensure_modelo_work_unit_for_active_target
         from ...application.modelo.work_create_policy import guard_active_profile_foral_ccaa
-        from ...domain.calculations.registry.authority import bundled_indexed_authority
         from ..adapter_composition import build_work_lifecycle_ports
 
         if action.action.action_id != "operator.modelo.work.create":
             raise ValueError("the calendar handoff only creates declarations")
-        with bundled_indexed_authority().operation() as operation:
-            profile = load_modelo_work_profile(
-                bucket_id=bucket_id,
-                profile_decode_context=operation.profile_decode_context(),
-            )
-            guard_active_profile_foral_ccaa(profile.record if profile is not None else None)
-            ports = build_work_lifecycle_ports(bucket_id=bucket_id)
-            ensure_modelo_work_unit_for_active_target(
-                bucket_id=bucket_id,
-                modelo=str(entry.modelo),
-                filing_year=entry.filing_year,
-                period=entry.period,
-                registry_revision_id=None,
-                actor=actor,
-                catalogue=ports.work_unit_repository.load(),
-                ports=ports,
-                profile=profile,
-            )
+        profile = load_modelo_work_profile(
+            bucket_id=bucket_id,
+            profile_decode_context=operation.profile_decode_context(),
+        )
+        guard_active_profile_foral_ccaa(profile.record if profile is not None else None)
+        ports = build_work_lifecycle_ports(bucket_id=bucket_id)
+        ensure_modelo_work_unit_for_active_target(
+            bucket_id=bucket_id,
+            modelo=str(entry.modelo),
+            filing_year=entry.filing_year,
+            period=entry.period,
+            registry_revision_id=None,
+            actor=actor,
+            catalogue=ports.work_unit_repository.load(),
+            ports=ports,
+            operation=operation,
+            profile=profile,
+        )
 
     return create
 

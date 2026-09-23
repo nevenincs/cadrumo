@@ -333,6 +333,7 @@ def run_modelo_quickfile(
             actor=command.actor,
             catalogue=calculation_action_ports.work_lifecycle_ports.work_unit_repository.load(),
             ports=calculation_action_ports.work_lifecycle_ports,
+            operation=operation,
         )
     except CadrumoError as exc:
         return _halted(

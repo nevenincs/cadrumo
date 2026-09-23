@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Literal, Protocol
 
@@ -17,6 +18,7 @@ from ....application.modelo.declarations_workspace import (
 )
 from ....application.operator_actions.models import DeclaredNextAction
 from ....core.models import STRICT_FROZEN_CONFIG
+from ....core.period import Period
 
 type DeclarationsDestinationIdV1 = Literal[
     "declarations.overview",
@@ -87,6 +89,21 @@ class CalendarRecoveryHandoffV1(Protocol):
         ...
 
 
+@dataclass(frozen=True, slots=True)
+class ModeloWorkCreateResultV1:
+    """The persisted outcome of one explicitly selected declaration address."""
+
+    reused: bool
+
+
+class ModeloWorkCreateHandoffV1(Protocol):
+    """Create or reopen work through the shared Modelo lifecycle command."""
+
+    def __call__(self, modelo: str, filing_year: int, period: Period, /) -> ModeloWorkCreateResultV1:
+        """Persist the selected work and report whether it already existed."""
+        ...
+
+
 __all__ = [
     "CalendarEntryHandoffV1",
     "CalendarRecoveryHandoffV1",
@@ -94,6 +111,8 @@ __all__ = [
     "DeclarationsDestinationIdV1",
     "DeclarationsRouteTargetV1",
     "FilingHandoffV1",
+    "ModeloWorkCreateHandoffV1",
+    "ModeloWorkCreateResultV1",
     "ModeloWorkspaceScreenFactoryV1",
     "RevisionHandoffV1",
 ]

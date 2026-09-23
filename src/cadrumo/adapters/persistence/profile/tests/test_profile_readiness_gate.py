@@ -956,7 +956,10 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
             revision_id=_M303_2026_REVISION,
         )
 
-        with pytest.raises(ModeloProfileReadinessError) as excinfo:
+        with (
+            _indexed_authority_for_test().operation() as operation,
+            pytest.raises(ModeloProfileReadinessError) as excinfo,
+        ):
             ensure_modelo_work_unit_for_active_target(
                 bucket_id=_OPERATOR_PROFILE_ID,
                 modelo=Modelo("303").value,
@@ -970,6 +973,7 @@ def test_visible_target_ensure_refuses_reused_pre_activity_m303_before_rename(tm
                     work_unit_repository=work_repository,
                     bucket_event_repository=BucketEventHistoryRepository(objects=profile.repository),
                 ),
+                operation=operation,
             )
 
         assert "pre-activity period" in str(excinfo.value)
