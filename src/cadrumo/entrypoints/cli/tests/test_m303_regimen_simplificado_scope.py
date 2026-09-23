@@ -27,7 +27,7 @@ from ....domain.deadlines.models import M303RegimeComposition
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.cli_envelope import unwrap_schema_envelope
-from ._m303_ordinary_cli_support import admit_ordinary_m303_secure_evidence
+from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -131,7 +131,6 @@ def _store_zero_prior_compensation(runtime_profile: TestRuntimeProfile) -> None:
 
 
 def _calculate(work_unit_id: str):
-    evidence = admit_ordinary_m303_secure_evidence()
     return invoke_cached_cli(
         [
             "--format",
@@ -141,7 +140,7 @@ def _calculate(work_unit_id: str):
             "work",
             "calculate",
             work_unit_id,
-            *evidence.calculate_options(joint_return_elected=False),
+            *joint_return_options(joint_return_elected=False),
         ]
     )
 

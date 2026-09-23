@@ -1256,13 +1256,11 @@ cli:
           or rectificativa)
         amendment_reason_help: Free-text reason for the amendment (operator audit
           trail)
-        annual_volume_nonzero_help: 'Modelo 303: state explicitly whether the annual
-          volume of operations (art. 121 LIVA) is other than zero; use --no-annual-volume-nonzero
-          for no. Required for Modelo 303 and never assumed.'
         app_help: Manage the lifecycle of modelo work units
         attest_m303_exonerado_390_help: Record in encrypted custody your attestation
           that the Modelo 390 exemption section does not apply to this Modelo 303
-          quarter, and print its identifier and SHA-256 for `work calculate`.
+          return for the last period of the year (12 or 4T), and print its identifier
+          and SHA-256 for `work calculate`. Other periods do not ask it.
         autoconsumo_promotor_base_help: 'Tax base for the real-estate developer self-supply
           (Art. 9.1.c + Art. 79.4 LISIVA): construction or renovation cost of properties
           converted to the rental estate. The assistant automatically applies 21%
@@ -1405,10 +1403,13 @@ cli:
           or Spanish-source ledger aggregation.'
         m210_plazo_resolved: 'Modelo 210 filing window resolved: voluntary filing
           closes on %{closes_on}.'
-        m303_exonerado_390_attachment_id_help: 'Modelo 303: identifier of the secure
-          Modelo 390 non-applicability attestation returned by `app modelo work attest-m303-exonerado-390`.'
-        m303_exonerado_390_sha256_help: 'Modelo 303: SHA-256 of that attestation,
-          exactly as `attest-m303-exonerado-390` returned it.'
+        m303_exonerado_390_attachment_id_help: 'Modelo 303, last period of the year
+          (12 or 4T) only: identifier of the secure Modelo 390 non-applicability attestation
+          returned by `app modelo work attest-m303-exonerado-390`. Refused in any
+          other period.'
+        m303_exonerado_390_sha256_help: 'Modelo 303, last period of the year (12 or
+          4T) only: SHA-256 of that attestation, exactly as `attest-m303-exonerado-390`
+          returned it.'
         m303_filing_evidence_help: Path to the complete typed Modelo 303 filing-evidence
           JSON document.
         m303_rectificativa_motive_help: 'Required for an applicable Modelo 303 rectificativa:

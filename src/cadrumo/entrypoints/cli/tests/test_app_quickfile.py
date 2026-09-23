@@ -54,14 +54,12 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope
 from ....domain.calculations.registry.m303_orden_resolution import resolve_m303_regimen_simplificado_snapshot
 from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource, published_snapshot
-from ....domain.filing_evidence import FilingEvidenceReference
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.regimen_simplificado_rows import (
     M303RegimenSimplificadoScopeDecision,
     RegimenSimplificadoFilingRows,
 )
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
-from ....domain.modelos.calculation_revision_m303_evidence import M303Exonerado390FilingEvidence
 from ....domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence, M303FilingInstanceEvidence
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
@@ -235,18 +233,9 @@ def _write_m303_filing_evidence(path: Path, *, operation: PinnedAuthorityOperati
         m303=M303FilingInstanceEvidence(
             period=period,
             joint_return_elected=False,
-            annual_volume_nonzero=False,
+            annual_volume_nonzero=None,
             insolvency=None,
-            exonerado_390=M303Exonerado390FilingEvidence(
-                applicable=False,
-                applicability_reference=FilingEvidenceReference(
-                    reference="test:quickfile:exonerado-390:not-applicable",
-                ),
-                endpoints=(),
-                activity_rows=(),
-                operaciones_terceros_declarables=None,
-                operaciones_terceros_reference=None,
-            ),
+            exonerado_390=None,
             regimen_simplificado=regimen_simplificado_filing_evidence(
                 period=period,
                 scope_decision=scope,
@@ -462,8 +451,8 @@ def test_quickfile_runs_full_chain_to_exported_fichero(
     assert out.stat().st_size > 0, "the exported fichero is empty"
 
 
-def test_quickfile_m303_2026_refuses_an_unadmitted_attestation_pair(tmp_path: Path) -> None:
-    """A well-formed attestation pair that custody never admitted cannot reach M303 calculate."""
+def test_quickfile_m303_2026_refuses_an_attestation_pair_the_period_does_not_ask(tmp_path: Path) -> None:
+    """1T does not ask the Modelo 390 exemption, so a supplied attestation pair stops quickfile at calculate."""
 
     _create_profile()
     out = tmp_path / "modelo-303-2026-1T.boe"
@@ -474,7 +463,6 @@ def test_quickfile_m303_2026_refuses_an_unadmitted_attestation_pair(tmp_path: Pa
             "app", "quickfile",
             "--modelo", "303", "--year", "2026", "--period", "1T",
             "--joint-return-elected",
-            "--annual-volume-nonzero",
             "--m303-exonerado-390-attachment-id", "a" * 64,
             "--m303-exonerado-390-sha256", "a" * 64,
             "--output", str(out),
@@ -494,6 +482,7 @@ def test_quickfile_m303_2026_refuses_an_unadmitted_attestation_pair(tmp_path: Pa
     assert statuses["export"] == "skipped"
     assert payload["export"] is None
     assert not out.exists()
+    assert "exonerado_390_attestation_outside_last_period" in result.output
 
 
 def test_quickfile_help_exposes_explicit_result_elections() -> None:

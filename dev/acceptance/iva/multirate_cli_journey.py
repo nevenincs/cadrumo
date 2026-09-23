@@ -202,29 +202,6 @@ def run_iva_multirate_cli_journey(
         ),
         result_keys=(),
     )
-    attestation = _result(
-        _run(
-            reopened,
-            receipts,
-            artifact,
-            (
-                "app",
-                "modelo",
-                "work",
-                "attest-m303-exonerado-390",
-                "--year",
-                str(_YEAR),
-                "--period",
-                _PERIOD,
-                "--observed-at",
-                "2025-03-31T12:00:00+00:00",
-            ),
-            result_keys=("attachment_id", "sha256"),
-        )
-    )
-    attachment_id = _required_id(attestation, "attachment_id")
-    attestation_sha256 = _required_id(attestation, "sha256")
-
     created = _result(
         _run(
             reopened,
@@ -247,11 +224,6 @@ def run_iva_multirate_cli_journey(
                 "calculate",
                 work_unit_id,
                 "--no-joint-return-elected",
-                "--no-annual-volume-nonzero",
-                "--m303-exonerado-390-attachment-id",
-                attachment_id,
-                "--m303-exonerado-390-sha256",
-                attestation_sha256,
             ),
             result_keys=("calculation_revision_id",),
         )

@@ -1341,14 +1341,13 @@ cli:
         amendment_kind_help: Classe legal de la modificació (complementària, substitutiva
           o rectificativa)
         amendment_reason_help: Motiu lliure de l'amendació (traça d'auditoria de l'operador)
-        annual_volume_nonzero_help: 'Model 303: indiqueu expressament si el volum
-          anual d''operacions (art. 121 LIVA) és diferent de zero; useu --no-annual-volume-nonzero
-          per a «no». Obligatori per al Model 303 i mai no es pressuposa.'
         app_help: Gestionar el cicle de vida de les unitats de treball d'un model
           tributari
         attest_m303_exonerado_390_help: Registra en custòdia xifrada la vostra atestació
-          que l'apartat d'exoneració del Model 390 no s'aplica a aquest trimestre
-          del Model 303, i imprimeix el seu identificador i SHA-256 per a `work calculate`.
+          que l'apartat d'exoneració del Model 390 no s'aplica a aquesta autoliquidació
+          del Model 303 de l'últim període de l'any (12 o 4T), i imprimeix el seu
+          identificador i SHA-256 per a `work calculate`. Els altres períodes no ho
+          pregunten.
         autoconsumo_promotor_base_help: 'Base imposable de l''autoconsum del promotor
           immobiliari (art. 9.1.c + art. 79.4 LISIVA): cost de construcció o rehabilitació
           d''immobles afectats al patrimoni d''arrendament. L''assistent aplica automàticament
@@ -1504,10 +1503,12 @@ cli:
           (predeterminada) o agregació de llibre major de font espanyola.'
         m210_plazo_resolved: 'S''ha resolt el termini de presentació del Model 210:
           la presentació voluntària finalitza el %{closes_on}.'
-        m303_exonerado_390_attachment_id_help: 'Model 303: identificador de l''atestació
-          segura de no aplicació del Model 390 que retorna `app modelo work attest-m303-exonerado-390`.'
-        m303_exonerado_390_sha256_help: 'Model 303: SHA-256 d''aquesta atestació,
-          tal com l''ha retornat `attest-m303-exonerado-390`.'
+        m303_exonerado_390_attachment_id_help: 'Model 303, només a l''últim període
+          de l''any (12 o 4T): identificador de l''atestació segura de no aplicació
+          del Model 390 que retorna `app modelo work attest-m303-exonerado-390`. Es
+          rebutja en qualsevol altre període.'
+        m303_exonerado_390_sha256_help: 'Model 303, només a l''últim període de l''any
+          (12 o 4T): SHA-256 d''aquesta atestació, tal com l''ha retornat `attest-m303-exonerado-390`.'
         m303_filing_evidence_help: Camí al document JSON complet d'evidències de presentació
           del model 303.
         m303_rectificativa_motive_help: 'Obligatori per a una rectificativa aplicable

@@ -7,6 +7,7 @@ from decimal import Decimal
 from typing import cast
 
 import pytest
+from click.testing import Result
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
@@ -31,7 +32,7 @@ from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import TransactionCatalogue
 from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
-from ._m303_ordinary_cli_support import admit_ordinary_m303_secure_evidence
+from ._m303_ordinary_cli_support import OrdinaryM303SecureEvidence, joint_return_options
 from ._modelo_work_ux_support import operator_profile_facts
 from .cli_runner import invoke_cached_cli
 from .modelo_profile_seed import ProfileSeeder, seed_profile
@@ -129,52 +130,34 @@ def _seed_2025_ledger_and_wallet(bucket_id: str) -> None:
         )
 
 
-def test_work_calculate_persists_ordinary_2025_m303_evidence_from_secure_attestation(
+def _create_2025_m303_work_unit(period: str) -> str:
+    created = invoke_cached_cli(
+        ["--format", "json", "app", "modelo", "work", "create", "--modelo", "303", "--year", "2025", "--period", period]
+    )
+    assert created.exit_code == 0, created.output
+    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
+    assert isinstance(work_unit_id, str)
+    return work_unit_id
+
+
+def _calculate(work_unit_id: str, *options: str) -> Result:
+    return invoke_cached_cli(["--format", "json", "app", "modelo", "work", "calculate", work_unit_id, *options])
+
+
+def test_work_calculate_persists_ordinary_2025_1t_evidence_from_the_joint_return_answer_alone(
     request: pytest.FixtureRequest,
 ) -> None:
-    """The installed CLI admits secure evidence then persists its authored envelope once."""
+    """1T asks only the joint-return election, so the CLI persists evidence without any attestation."""
     seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
     decrypts = cast(list[str], request.getfixturevalue(profile_decrypts.__name__))
     seeded_profile(label="operator", facts=_ordinary_m303_profile_facts())
     bucket_id = resolve_active_bucket_id()
     assert bucket_id is not None
     _seed_2025_ledger_and_wallet(bucket_id)
-
-    admitted = admit_ordinary_m303_secure_evidence()
-
-    created = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "create",
-            "--modelo",
-            "303",
-            "--year",
-            "2025",
-            "--period",
-            "1T",
-        ]
-    )
-    assert created.exit_code == 0, created.output
-    work_unit_id = unwrap_schema_envelope(created.output)["work_unit_id"]
-    assert isinstance(work_unit_id, str)
+    work_unit_id = _create_2025_m303_work_unit("1T")
 
     decrypts.clear()
-    calculated = invoke_cached_cli(
-        [
-            "--format",
-            "json",
-            "app",
-            "modelo",
-            "work",
-            "calculate",
-            work_unit_id,
-            *admitted.calculate_options(joint_return_elected=True, annual_volume_nonzero=True),
-        ]
-    )
+    calculated = _calculate(work_unit_id, *joint_return_options(joint_return_elected=True))
     assert calculated.exit_code == 0, calculated.output
     assert len(decrypts) == 1, decrypts
     revision_id = unwrap_schema_envelope(calculated.output)["calculation_revision_id"]
@@ -187,12 +170,36 @@ def test_work_calculate_persists_ordinary_2025_m303_evidence_from_secure_attesta
     assert evidence is not None
     assert evidence.m303.period == _PERIOD
     assert evidence.m303.joint_return_elected is True
-    assert evidence.m303.annual_volume_nonzero is True
+    assert evidence.m303.annual_volume_nonzero is None
     assert evidence.m303.insolvency is None
-    exonerado_390 = evidence.m303.exonerado_390
-    assert exonerado_390 is not None
-    assert exonerado_390.applicable is False
-    assert exonerado_390.applicability_reference.reference == (f"attachment:{admitted.attachment_id}:{admitted.sha256}")
+    assert evidence.m303.exonerado_390 is None
     assert evidence.m303.regimen_simplificado.scope_decision.is_not_claimed is True
     assert evidence.m303.regimen_simplificado.rows.activities == ()
     assert evidence.m303.regimen_simplificado.calculation_result.activities == ()
+
+
+def test_work_calculate_refuses_an_attestation_the_period_does_not_ask(request: pytest.FixtureRequest) -> None:
+    """A 1T calculation that supplies attestation identifiers is refused before custody, not silently ignored."""
+    seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
+    seeded_profile(label="operator", facts=_ordinary_m303_profile_facts())
+    work_unit_id = _create_2025_m303_work_unit("1T")
+
+    refused = _calculate(
+        work_unit_id,
+        *OrdinaryM303SecureEvidence(attachment_id="a" * 64, sha256="a" * 64).calculate_options(),
+    )
+
+    assert refused.exit_code == 2, refused.output
+    assert "exonerado_390_attestation_outside_last_period" in refused.output
+
+
+def test_work_calculate_refuses_the_last_quarter_without_an_attestation(request: pytest.FixtureRequest) -> None:
+    """4T asks the Modelo 390 exemption, so the joint-return answer alone is refused."""
+    seeded_profile = cast(ProfileSeeder, request.getfixturevalue(seed_profile.__name__))
+    seeded_profile(label="operator", facts=_ordinary_m303_profile_facts())
+    work_unit_id = _create_2025_m303_work_unit("4T")
+
+    refused = _calculate(work_unit_id, *joint_return_options(joint_return_elected=False))
+
+    assert refused.exit_code == 2, refused.output
+    assert "m303_filing_evidence.missing" in refused.output

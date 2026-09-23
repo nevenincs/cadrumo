@@ -15,7 +15,7 @@ from datetime import UTC, datetime
 from typing import Any
 
 import pytest
-from pydantic import ValidationError
+from pydantic import BaseModel, ValidationError
 
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationDurability, OperationEffect, OperationLifecycle
@@ -79,6 +79,35 @@ class _LegacyCalculateExecutor:
     """Unreachable historical executor used only to reproduce its public contract."""
 
     async def execute(self, request: OperationRequest[_LegacyCalculateRequestV1], context: object) -> str | None:
+        del request, context
+        return None
+
+
+class _SupersededOrdinaryM303EvidenceRequestV1(BaseModel):
+    """The nested ordinary evidence shape a pending v2 invocation carries."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    joint_return_elected: bool
+    annual_volume_nonzero: bool
+    m303_exonerado_390_attachment_id: str
+    m303_exonerado_390_sha256: str
+
+
+class _SupersededCalculateRequestV2(BaseModel):
+    """The secure request shape used by a pending v2 invocation."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    work_unit_id: str
+    actor: str
+    ordinary_m303_filing_evidence: _SupersededOrdinaryM303EvidenceRequestV1 | None = None
+
+
+class _SupersededCalculateExecutorV2:
+    """Unreachable historical executor used only to reproduce the v2 public contract."""
+
+    async def execute(self, request: OperationRequest[_SupersededCalculateRequestV2], context: object) -> str | None:
         del request, context
         return None
 
@@ -161,60 +190,78 @@ def test_each_enrolment_is_recorded_and_stores_its_request_safely(factory_name: 
     assert issubclass(definition.request_type, CredentialFreeOperationRequest)
 
 
-def test_calculate_request_requires_each_ordinary_m303_fact_and_preserves_explicit_false() -> None:
-    """Missing M303 declarations cannot be mistaken for a genuine false election."""
+def test_calculate_request_requires_the_joint_return_election_and_preserves_explicit_false() -> None:
+    """A missing election cannot be mistaken for a genuine false one; the attestation pair is optional."""
     values = {
         "work_unit_id": "a" * 64,
         "actor": "operator",
-        "ordinary_m303_filing_evidence": {
-            "joint_return_elected": False,
-            "annual_volume_nonzero": False,
-            "m303_exonerado_390_attachment_id": "b" * 64,
-            "m303_exonerado_390_sha256": "b" * 64,
-        },
+        "ordinary_m303_filing_evidence": {"joint_return_elected": False},
     }
 
     request = definitions_module.ModeloWorkCalculateRequest.model_validate(values)
 
-    assert request.ordinary_m303_filing_evidence is not None
-    assert request.ordinary_m303_filing_evidence.joint_return_elected is False
-    assert request.ordinary_m303_filing_evidence.annual_volume_nonzero is False
-    for missing in ("joint_return_elected", "annual_volume_nonzero"):
-        invalid = request.model_dump(mode="python")
-        del invalid["ordinary_m303_filing_evidence"][missing]
-        with pytest.raises(ValidationError):
-            definitions_module.ModeloWorkCalculateRequest.model_validate(invalid)
+    evidence = request.ordinary_m303_filing_evidence
+    assert evidence is not None
+    assert evidence.joint_return_elected is False
+    assert (evidence.m303_exonerado_390_attachment_id, evidence.m303_exonerado_390_sha256) == (None, None)
+    invalid = request.model_dump(mode="python")
+    del invalid["ordinary_m303_filing_evidence"]["joint_return_elected"]
+    with pytest.raises(ValidationError):
+        definitions_module.ModeloWorkCalculateRequest.model_validate(invalid)
 
 
-def test_calculate_request_schema_v2_declares_the_secure_m303_contract() -> None:
-    """The changed request cannot be replayed as the old journal-safe shape."""
+def test_calculate_request_no_longer_accepts_an_annual_volume_answer() -> None:
+    """The ordinary path never prints the art. 121 answer, so a request carrying one is refused, not ignored."""
+    with pytest.raises(ValidationError, match="annual_volume_nonzero"):
+        definitions_module.ModeloWorkCalculateRequest.model_validate(
+            {
+                "work_unit_id": "a" * 64,
+                "actor": "operator",
+                "ordinary_m303_filing_evidence": {"joint_return_elected": False, "annual_volume_nonzero": False},
+            }
+        )
+
+
+def test_calculate_request_schema_v3_declares_the_period_scoped_m303_contract() -> None:
+    """The changed request cannot be replayed as an earlier shape."""
     definition = _build(definitions_module.build_modelo_work_calculate_definition)
     registration = definitions_module.build_modelo_work_calculate_registration(definition)
 
     request_schema = registration.contract.request_schema
     assert request_schema.schema_id == "modelo.work.calculate.request"
-    assert request_schema.schema_version == 2
+    assert request_schema.schema_version == 3
 
 
-def test_current_calculate_contract_refuses_a_pending_v1_invocation() -> None:
-    """A recorded v1 request cannot resume under the secure v2 calculation contract."""
+def _pending_superseded_invocation(
+    *,
+    request_type: type[BaseModel],
+    executor_type: type[Any],
+    schema_version: int,
+    request_storage: OperationRequestStoragePolicy,
+    credential_free_request_json: str | None,
+) -> tuple[OperationSupervisor, OperationPersistedSnapshot]:
+    """Pin one invocation to a superseded calculate contract under the current supervisor."""
     current = _build(definitions_module.build_modelo_work_calculate_definition)
     current_registration = definitions_module.build_modelo_work_calculate_registration(current)
     legacy_definition = OperationDefinition(
         definition_id=current.definition_id,
-        request_type=_LegacyCalculateRequestV1,
+        request_type=request_type,
         result_type=current.result_type,
         executor_factory=OperationExecutorFactory(
-            request_type=_LegacyCalculateRequestV1,
-            executor_type=_LegacyCalculateExecutor,
-            build=_LegacyCalculateExecutor,
+            request_type=request_type,
+            executor_type=executor_type,
+            build=executor_type,
         ),
         phase_codes=current.phase_codes,
         interaction_kinds=current.interaction_kinds,
         capabilities=current.capabilities.model_copy(
             update={
-                "request_storage": OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
-                "sensitive_input": OperationSensitiveInputPolicy.NONE,
+                "request_storage": request_storage,
+                "sensitive_input": (
+                    OperationSensitiveInputPolicy.NONE
+                    if request_storage is OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
+                    else OperationSensitiveInputPolicy.SECURE_REFERENCE
+                ),
             }
         ),
         reconciliation_policy=current.reconciliation_policy,
@@ -224,8 +271,8 @@ def test_current_calculate_contract_refuses_a_pending_v1_invocation() -> None:
         definition=legacy_definition,
         request_schema=OperationSchemaBindingV1.bind(
             schema_id="modelo.work.calculate.request",
-            schema_version=1,
-            model_type=_LegacyCalculateRequestV1,
+            schema_version=schema_version,
+            model_type=request_type,
         ),
         result_schema=OperationSchemaBindingV1.bind(
             schema_id="modelo.work.calculate.result",
@@ -251,11 +298,9 @@ def test_current_calculate_contract_refuses_a_pending_v1_invocation() -> None:
             subject_ref="b" * 64,
         ),
         definition_contract_digest=legacy_registration.contract.definition_contract_digest,
-        request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+        request_storage=request_storage,
         request_reference="c" * 64,
-        credential_free_request_json=_LegacyCalculateRequestV1(
-            work_unit_id="b" * 64, actor="operator"
-        ).model_dump_json(),
+        credential_free_request_json=credential_free_request_json,
         revision=0,
         lifecycle=OperationLifecycle.CREATED,
         started_at=_M303_CLOCK,
@@ -265,6 +310,34 @@ def test_current_calculate_contract_refuses_a_pending_v1_invocation() -> None:
         cancellation_requested_at=None,
         cancellation_acknowledged_at=None,
         cancellation_deferred=False,
+    )
+    return supervisor, pending
+
+
+def test_current_calculate_contract_refuses_a_pending_v1_invocation() -> None:
+    """A recorded v1 request cannot resume under the current calculation contract."""
+    supervisor, pending = _pending_superseded_invocation(
+        request_type=_LegacyCalculateRequestV1,
+        executor_type=_LegacyCalculateExecutor,
+        schema_version=1,
+        request_storage=OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+        credential_free_request_json=_LegacyCalculateRequestV1(
+            work_unit_id="b" * 64, actor="operator"
+        ).model_dump_json(),
+    )
+
+    with pytest.raises(ValueError, match="definition contract no longer reproduces"):
+        supervisor._require_pinned_definition(pending)
+
+
+def test_current_calculate_contract_refuses_a_pending_v2_invocation_carrying_the_annual_volume_answer() -> None:
+    """A secure v2 request asked every period for the annual-volume answer and the attestation; it is refused."""
+    supervisor, pending = _pending_superseded_invocation(
+        request_type=_SupersededCalculateRequestV2,
+        executor_type=_SupersededCalculateExecutorV2,
+        schema_version=2,
+        request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE,
+        credential_free_request_json=None,
     )
 
     with pytest.raises(ValueError, match="definition contract no longer reproduces"):

@@ -33,6 +33,6 @@ def test_quickfile_runtime_preserves_explicit_m303_elections_without_plaintext_e
     assert "--casilla" in result.output and "--binding" in result.output
     assert "--refund-elect" in result.output
     assert "--joint-return" in result.output
-    assert "--annual-volum" in result.output
+    assert "--annual-volum" not in result.output
     assert "--m303-exonera" in result.output
     assert "--m303-filing-evidence" not in result.output

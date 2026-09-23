@@ -56,8 +56,11 @@ from cadrumo.domain.user_profile.values import UserProfileFact
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _M303_BUCKET_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
-_M303_PERIOD = Period.from_year_and_code(2025, "1T")
-_M303_CLOCK = datetime(2025, 4, 1, 10, tzinfo=UTC)
+#: DP30301 Nota 4 asks the Modelo 390 exemption only in the last settlement period, so the attestation cases use 4T.
+_M303_PERIOD = Period.from_year_and_code(2025, "4T")
+_M303_CLOCK = datetime(2026, 1, 2, 10, tzinfo=UTC)
+_M303_OBSERVED_AT = datetime(2025, 12, 31, 12, tzinfo=UTC)
+_OUTSIDE_LAST_PERIOD = "modelo.work.calculate.m303_filing_evidence.exonerado_390_attestation_outside_last_period"
 
 
 class _CalculateEvents:
@@ -139,7 +142,7 @@ def _calculation_ports_factory(work_unit: WorkUnit) -> CalculationActionPortsFac
 
 def _calculate_request(
     work_unit: WorkUnit,
-    evidence: definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1 | None,
+    evidence: definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None,
 ) -> OperationRequest[definitions_module.ModeloWorkCalculateRequest]:
     return OperationRequest(
         definition_id=definitions_module.MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
@@ -156,23 +159,22 @@ def _m303_attestation_input(
     *,
     operation: PinnedAuthorityOperation,
     store: AttachmentStore,
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1:
+) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     admission = admit_m303_exonerado_390_applicability_attestation(
         bucket_id=_M303_BUCKET_ID,
         request=M303Exonerado390ApplicabilityAttestationRequest(
             filing_year=2025,
             period=_M303_PERIOD,
             asserted_value=M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
-            observed_at=datetime(2025, 3, 31, 12, tzinfo=UTC),
+            observed_at=_M303_OBSERVED_AT,
         ),
         actor="operator",
         operation=operation,
         store=store,
         clock=lambda: _M303_CLOCK,
     )
-    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
+    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
-        annual_volume_nonzero=False,
         m303_exonerado_390_attachment_id=admission.attachment_id,
         m303_exonerado_390_sha256=admission.sha256,
     )
@@ -197,7 +199,7 @@ def _crafted_attestation(
     *,
     value: M303Exonerado390ApplicabilityAssertion = M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
     kind: AttachmentKind = AttachmentKind.M303_EXONERADO_390_APPLICABILITY_ATTESTATION,
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1:
+) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     """Ingest canonical attestation bytes under a deliberately chosen kind or assertion."""
     payload = M303Exonerado390ApplicabilityAttestation(
         schema_version=1,
@@ -205,7 +207,7 @@ def _crafted_attestation(
         asserted_value=value,
         filing_year=2025,
         period=_M303_PERIOD,
-        observed_at=datetime(2025, 3, 31, 12, tzinfo=UTC),
+        observed_at=_M303_OBSERVED_AT,
         profile_witness=M303Exonerado390ApplicabilityProfileWitness.from_profile_record(profiles.load(_M303_BUCKET_ID)),
     ).canonical_json_bytes()
     attachment = add_attachment(
@@ -214,7 +216,7 @@ def _crafted_attestation(
         request=AttachmentIngestionRequest(
             kind=kind,
             source=AttachmentSource.INLINE,
-            source_reference="m303-exonerado-390-applicability:2025:1T",
+            source_reference="m303-exonerado-390-applicability:2025:4T",
             mime_type="application/vnd.cadrumo.m303-exonerado-390-applicability+json",
             captured_at=_M303_CLOCK,
             bucket_id=_M303_BUCKET_ID,
@@ -222,9 +224,8 @@ def _crafted_attestation(
             source_command="test:crafted-attestation",
         ),
     )
-    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
+    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
-        annual_volume_nonzero=False,
         m303_exonerado_390_attachment_id=attachment.attachment_id,
         m303_exonerado_390_sha256=attachment.sha256,
     )
@@ -232,10 +233,9 @@ def _crafted_attestation(
 
 def _unknown_digest(
     _store: AttachmentStore, _profiles: ProfileRecordRepository, _operation: PinnedAuthorityOperation
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1:
-    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
+) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
+    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
-        annual_volume_nonzero=False,
         m303_exonerado_390_attachment_id="e" * 64,
         m303_exonerado_390_sha256="e" * 64,
     )
@@ -243,29 +243,28 @@ def _unknown_digest(
 
 def _wrong_role(
     store: AttachmentStore, profiles: ProfileRecordRepository, _operation: PinnedAuthorityOperation
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1:
+) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     return _crafted_attestation(store, profiles, kind=AttachmentKind.METADATA_BLOB)
 
 
 def _wrong_period(
     store: AttachmentStore, _profiles: ProfileRecordRepository, operation: PinnedAuthorityOperation
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1:
+) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     admission = admit_m303_exonerado_390_applicability_attestation(
         bucket_id=_M303_BUCKET_ID,
         request=M303Exonerado390ApplicabilityAttestationRequest(
             filing_year=2025,
-            period=Period.from_year_and_code(2025, "2T"),
+            period=Period.from_year_and_code(2025, "12"),
             asserted_value=M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
-            observed_at=datetime(2025, 6, 30, 12, tzinfo=UTC),
+            observed_at=_M303_OBSERVED_AT,
         ),
         actor="operator",
         operation=operation,
         store=store,
-        clock=lambda: datetime(2025, 7, 1, 10, tzinfo=UTC),
+        clock=lambda: _M303_CLOCK,
     )
-    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
+    return definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
-        annual_volume_nonzero=False,
         m303_exonerado_390_attachment_id=admission.attachment_id,
         m303_exonerado_390_sha256=admission.sha256,
     )
@@ -273,7 +272,7 @@ def _wrong_period(
 
 def _stale_profile_witness(
     store: AttachmentStore, profiles: ProfileRecordRepository, operation: PinnedAuthorityOperation
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1:
+) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     evidence = _m303_attestation_input(operation=operation, store=store)
     current = profiles.load(_M303_BUCKET_ID)
     profiles.apply_fact_changes(
@@ -293,7 +292,7 @@ def _stale_profile_witness(
 
 def _conflicting_assertion(
     store: AttachmentStore, profiles: ProfileRecordRepository, operation: PinnedAuthorityOperation
-) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1:
+) -> definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
     evidence = _m303_attestation_input(operation=operation, store=store)
     _crafted_attestation(store, profiles, value=M303Exonerado390ApplicabilityAssertion.APPLICABLE)
     return evidence
@@ -301,7 +300,7 @@ def _conflicting_assertion(
 
 _EvidenceBuilder = Callable[
     [AttachmentStore, ProfileRecordRepository, PinnedAuthorityOperation],
-    definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1,
+    definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
 ]
 
 _UNADMISSIBLE_EVIDENCE: dict[str, tuple[_EvidenceBuilder, type[CadrumoError]]] = {
@@ -362,7 +361,8 @@ def test_calculate_executor_authors_explicit_false_m303_evidence_before_delegati
     authored = cast(FilingInstanceEvidence, captured["filing_instance_evidence"])
     assert authored.m303.period == _M303_PERIOD
     assert authored.m303.joint_return_elected is False
-    assert authored.m303.annual_volume_nonzero is False
+    assert authored.m303.annual_volume_nonzero is None
+    assert authored.m303.exonerado_390 is not None
 
 
 def test_calculate_executor_refuses_missing_m303_evidence_without_entering_calculation(
@@ -397,9 +397,8 @@ def test_calculate_executor_refuses_mismatched_m303_attachment_pair_before_calcu
     """The split public attachment coordinates must still name one admitted object."""
     _refuse_calculation_entry(monkeypatch)
     work_unit = _m303_work_unit(operation)
-    evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
+    evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
-        annual_volume_nonzero=False,
         m303_exonerado_390_attachment_id="b" * 64,
         m303_exonerado_390_sha256="c" * 64,
     )
@@ -520,16 +519,15 @@ def test_calculate_executor_refuses_ordinary_evidence_outside_its_filing_context
     operation: PinnedAuthorityOperation,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """The executor derives axes from work; a monthly work unit cannot select the quarterly evidence branch."""
+    """The executor derives the period from the work unit; a month before 12 refuses a supplied attestation."""
     _refuse_calculation_entry(monkeypatch)
     work_unit = _m303_work_unit(
         operation,
         filing_year=2025,
         period=Period.from_year_and_code(2025, "01"),
     )
-    evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
+    evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
-        annual_volume_nonzero=False,
         m303_exonerado_390_attachment_id="b" * 64,
         m303_exonerado_390_sha256="b" * 64,
     )
@@ -537,8 +535,14 @@ def test_calculate_executor_refuses_ordinary_evidence_outside_its_filing_context
         calculation_action_ports_factory=_calculation_ports_factory(work_unit),
         attachment_store_factory=lambda _bucket_id: AttachmentStore(),
     )
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID), pytest.raises(M303FilingEvidenceError):
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID),
+        pytest.raises(M303FilingEvidenceError) as raised,
+    ):
         asyncio.run(executor.execute(_calculate_request(work_unit, evidence_input), _calculate_context(operation)))
+
+    assert raised.value.precondition_failure is not None
+    assert raised.value.precondition_failure.scenario_id == _OUTSIDE_LAST_PERIOD
 
 
 def test_calculate_executor_refuses_m303_evidence_for_another_modelo_before_calculation(
@@ -549,9 +553,8 @@ def test_calculate_executor_refuses_m303_evidence_for_another_modelo_before_calc
     """An ordinary M303 envelope has no meaning for another modelo's revision."""
     _refuse_calculation_entry(monkeypatch)
     work_unit = _m303_work_unit(operation, modelo="131")
-    evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
+    evidence_input = definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
-        annual_volume_nonzero=False,
         m303_exonerado_390_attachment_id="b" * 64,
         m303_exonerado_390_sha256="b" * 64,
     )
@@ -569,3 +572,77 @@ def test_calculate_executor_refuses_m303_evidence_for_another_modelo_before_calc
     assert (
         raised.value.precondition_failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.unsupported_modelo"
     )
+
+
+def test_calculate_executor_authors_a_period_before_the_last_from_the_joint_return_answer_alone(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """1T asks only the joint-return election; the executor authors it without opening attachment custody."""
+    first_quarter = Period.from_year_and_code(2025, "1T")
+    work_unit = _m303_work_unit(operation, period=first_quarter)
+    captured: dict[str, object] = {}
+
+    def calculate(work_unit_id: str, *, ports: object, actor: str, filing_instance_evidence: object) -> object:
+        del work_unit_id, ports, actor
+        captured["filing_instance_evidence"] = filing_instance_evidence
+        return SimpleNamespace(revision=SimpleNamespace(calculation_revision_id="d" * 64))
+
+    monkeypatch.setattr(
+        calculation_actions_module,
+        "calculate_modelo_revision_from_bucket_aggregation_with_diagnostics",
+        calculate,
+    )
+    executor = definitions_module.ModeloWorkCalculateExecutor(
+        calculation_action_ports_factory=_calculation_ports_factory(work_unit),
+        attachment_store_factory=lambda _bucket_id: AttachmentStore(),
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
+        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
+        with bound_test_profile_record(_M303_BUCKET_ID):
+            result = asyncio.run(
+                executor.execute(
+                    _calculate_request(
+                        work_unit,
+                        definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(joint_return_elected=True),
+                    ),
+                    _calculate_context(operation),
+                )
+            )
+
+    assert result == "d" * 64
+    authored = cast(FilingInstanceEvidence, captured["filing_instance_evidence"])
+    assert authored.m303.period == first_quarter
+    assert authored.m303.joint_return_elected is True
+    assert authored.m303.exonerado_390 is None
+    assert authored.m303.annual_volume_nonzero is None
+
+
+def test_calculate_executor_refuses_the_last_period_without_an_attestation(
+    tmp_path: Path,
+    operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """4T asks the exemption, so the joint-return answer alone is refused before the revision writer."""
+    _refuse_calculation_entry(monkeypatch)
+    work_unit = _m303_work_unit(operation)
+    executor = definitions_module.ModeloWorkCalculateExecutor(
+        calculation_action_ports_factory=_calculation_ports_factory(work_unit),
+        attachment_store_factory=lambda _bucket_id: AttachmentStore(),
+    )
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M303_BUCKET_ID):
+        seed_modelo_ready_profile_record(_M303_BUCKET_ID, clock=_M303_CLOCK)
+        with bound_test_profile_record(_M303_BUCKET_ID), pytest.raises(M303FilingEvidenceError) as raised:
+            asyncio.run(
+                executor.execute(
+                    _calculate_request(
+                        work_unit,
+                        definitions_module.ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(joint_return_elected=False),
+                    ),
+                    _calculate_context(operation),
+                )
+            )
+
+    assert raised.value.precondition_failure is not None
+    assert raised.value.precondition_failure.scenario_id == "modelo.work.calculate.m303_filing_evidence.missing"

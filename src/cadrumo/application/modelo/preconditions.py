@@ -301,6 +301,16 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.exonerado_390_attestation_outside_last_period",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
+        "modelo.work.calculate.m303_filing_evidence.period_outside_filing_schedule",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.m303_filing_evidence.valid",
         "modelo.work.calculate.m303_filing_evidence.regimen_snapshot_mismatch",
     ),
     _profile(

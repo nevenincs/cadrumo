@@ -137,11 +137,6 @@ QUICKFILE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "--joint-return-elected",
                 "cli.app.modelo.work.joint_return_elected_help",
             ),
-            _boolean_choice(
-                "annual_volume_nonzero",
-                "--annual-volume-nonzero",
-                "cli.app.modelo.work.annual_volume_nonzero_help",
-            ),
             _option(
                 "m303_exonerado_390_attachment_id",
                 ("--m303-exonerado-390-attachment-id",),

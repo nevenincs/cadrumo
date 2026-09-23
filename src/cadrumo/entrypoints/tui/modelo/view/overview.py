@@ -70,7 +70,7 @@ from .models import (
 from .technical_details import TechnicalDetailRowV1, mount_technical_details, producer_row
 
 if TYPE_CHECKING:
-    from .....application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV1
+    from .....application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
     from .models import ModeloWorkspaceDestinationIdV1
 
 _ADDRESS_ROW_KEYS: tuple[str, ...] = ("modelo", "filing_year", "period", "work_state")
@@ -241,10 +241,14 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
     def _collect_ordinary_m303_evidence(self) -> None:
         """Open one evidence form bound to the work unit selected on this immutable session."""
         work_unit_id = self._session.projection.target.work_unit_id
+        asks_modelo_390 = getattr(self._session.lifecycle_actions, "asks_modelo_390", None)
         if work_unit_id is None:
             return
+        if not isinstance(asks_modelo_390, bool):
+            self._notice(tr("tui.modelo.m303_evidence.admission_unavailable"))
+            return
         self.app.push_screen(
-            OrdinaryM303FilingEvidenceScreen(work_unit_id=str(work_unit_id)),
+            OrdinaryM303FilingEvidenceScreen(work_unit_id=str(work_unit_id), asks_modelo_390=asks_modelo_390),
             self._calculate_with_ordinary_m303_evidence,
         )
 
@@ -278,14 +282,13 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
             self._notice(tr("tui.modelo.m303_evidence.admission_unavailable"))
             return
         submit_calculation = cast("Callable[..., Awaitable[OperationController]]", calculate)
-        admit_evidence = cast("Callable[..., Awaitable[ModeloWorkCalculateOrdinaryM303EvidenceRequestV1]]", author)
+        admit_evidence = cast("Callable[..., Awaitable[ModeloWorkCalculateOrdinaryM303EvidenceRequestV2]]", author)
 
         async def submit() -> OperationController:
             evidence = existing_evidence
             if evidence is None:
                 evidence = await admit_evidence(
                     joint_return_elected=submission.joint_return_elected,
-                    annual_volume_nonzero=submission.annual_volume_nonzero,
                     observed_at=observed_at,
                 )
             return await submit_calculation(ordinary_m303_filing_evidence=evidence)
@@ -358,14 +361,18 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         if not isinstance(outcome, OperationModalSettledOutcomeV1):
             return
         condition = outcome.view_model.projection.terminal_condition
-        terminal_copy = {
-            OperationTerminalCondition.SUCCEEDED: tr("operation.modal.terminal.succeeded"),
-            OperationTerminalCondition.REFUSED: tr("operation.modal.terminal.refused"),
-            OperationTerminalCondition.FAILED: tr("operation.modal.terminal.failed"),
-            OperationTerminalCondition.CANCELLED: tr("operation.modal.terminal.cancelled"),
-            OperationTerminalCondition.TIMED_OUT: tr("operation.modal.terminal.timed_out"),
-            OperationTerminalCondition.INTERRUPTED: tr("operation.modal.terminal.interrupted"),
-        }.get(condition)
+        terminal_copy = (
+            None
+            if condition is None
+            else {
+                OperationTerminalCondition.SUCCEEDED: tr("operation.modal.terminal.succeeded"),
+                OperationTerminalCondition.REFUSED: tr("operation.modal.terminal.refused"),
+                OperationTerminalCondition.FAILED: tr("operation.modal.terminal.failed"),
+                OperationTerminalCondition.CANCELLED: tr("operation.modal.terminal.cancelled"),
+                OperationTerminalCondition.TIMED_OUT: tr("operation.modal.terminal.timed_out"),
+                OperationTerminalCondition.INTERRUPTED: tr("operation.modal.terminal.interrupted"),
+            }.get(condition)
+        )
         explanation = (
             public_refusal_explanation(outcome.view_model.receipt_ref)
             if outcome.view_model.receipt_kind == "refusal"

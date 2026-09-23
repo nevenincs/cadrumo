@@ -291,7 +291,6 @@ def run_iva_negative_4t_cli_journey(
                 "calculate",
                 work_unit_id,
                 "--no-joint-return-elected",
-                "--no-annual-volume-nonzero",
                 "--m303-exonerado-390-attachment-id",
                 attachment_id,
                 "--m303-exonerado-390-sha256",

@@ -220,7 +220,6 @@ _CALCULATE_PARAMETERS = (
     _o("sal_capital_social", "--sal-capital-social"),
     _o("autoconsumo_promotor_base", "--autoconsumo-promotor-base"),
     _boolean_choice("joint_return_elected", "--joint-return-elected", help_name="joint_return_elected"),
-    _boolean_choice("annual_volume_nonzero", "--annual-volume-nonzero", help_name="annual_volume_nonzero"),
     _o(
         "m303_exonerado_390_attachment_id",
         "--m303-exonerado-390-attachment-id",

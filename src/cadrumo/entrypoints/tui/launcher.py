@@ -956,6 +956,7 @@ def _modelo_lifecycle_door(
         M303Exonerado390ApplicabilityAttestationAdmission,
         M303Exonerado390ApplicabilityAttestationRequest,
         admit_m303_exonerado_390_applicability_attestation,
+        modelo_390_question_asked,
     )
     from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
     from ...application.modelo.work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
@@ -1020,6 +1021,8 @@ def _modelo_lifecycle_door(
         refresh_after_success=refresh_after_success,
         edit_baseline=admission.baseline if isinstance(admission, ModeloEditAdmittedV1) else None,
         m303_exonerado_390_attestation_admission=admit_attestation,
+        asks_modelo_390=str(target.modelo) == "303"
+        and modelo_390_question_asked(target.period, operation=operation_runtime.authority_operation),
     )
 
 

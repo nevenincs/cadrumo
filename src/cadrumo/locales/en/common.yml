@@ -1912,21 +1912,23 @@ tui:
     m303_evidence:
       admission_unavailable: A new attestation cannot be recorded for this declaration
         here. Nothing was calculated.
-      annual_volume_nonzero: Annual volume of operations other than zero (art. 121
-        LIVA)?
       attestation_attachment_id: Existing attestation identifier
       attestation_sha256: Existing attestation SHA-256
       cancel: Cancel
       cancelled: Calculation cancelled; no filing facts were recorded.
-      existing_attestation_hint: Answer both questions. Then either enter an existing
+      existing_attestation_hint: Answer the question. Then either enter an existing
         attestation that the Modelo 390 exemption section does not apply (its identifier
         and SHA-256), or leave those blank and enter when you confirmed it to record
         a new attestation.
       joint_return_elected: Joint self-assessment (autoliquidación conjunta)?
+      no_modelo_390_question_hint: Answer the question. This period's return does
+        not ask about the Modelo 390 exemption; only the last period of the year (12
+        or 4T) does.
       observed_at: Confirmed at, for a new attestation (ISO 8601 with UTC offset,
         for example 2025-04-01T12:00:00Z)
-      required: Answer both questions and give either a complete existing attestation
-        or a confirmation time with its UTC offset, not both.
+      required: Answer the joint self-assessment question. In the last period of the
+        year also give either a complete existing attestation or a confirmation time
+        with its UTC offset, not both.
       stale_context: The selected declaration changed while the form was open. Nothing
         was calculated; choose Calculate again.
       title: Modelo 303 filing facts

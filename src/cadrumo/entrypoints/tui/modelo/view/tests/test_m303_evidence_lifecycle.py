@@ -11,7 +11,7 @@ from ......application.modelo.m303_exonerado_390_applicability_attestation impor
     M303Exonerado390ApplicabilityAttestationAdmission,
 )
 from ......application.modelo.operation_definitions import (
-    ModeloWorkCalculateOrdinaryM303EvidenceRequestV1,
+    ModeloWorkCalculateOrdinaryM303EvidenceRequestV2,
     ModeloWorkCalculateRequest,
 )
 from ......application.operations.models import OperationRequest
@@ -43,9 +43,8 @@ async def test_calculate_passes_the_typed_ordinary_m303_evidence_without_coercin
         return expected
 
     monkeypatch.setattr(ModeloWorkspaceLifecycleDoor, "_submit", capture_submit)
-    evidence = ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
+    evidence = ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
-        annual_volume_nonzero=False,
         m303_exonerado_390_attachment_id=_ATTACHMENT_ID,
         m303_exonerado_390_sha256=_ATTACHMENT_ID,
     )
@@ -56,7 +55,6 @@ async def test_calculate_passes_the_typed_ordinary_m303_evidence_without_coercin
     payload = captured[0].payload
     assert payload.ordinary_m303_filing_evidence == evidence
     assert payload.ordinary_m303_filing_evidence.joint_return_elected is False
-    assert payload.ordinary_m303_filing_evidence.annual_volume_nonzero is False
 
 
 @pytest.mark.asyncio
@@ -97,12 +95,10 @@ async def test_attestation_admission_exposes_only_its_secure_coordinates_to_calc
 
     evidence = await door.author_ordinary_m303_filing_evidence(
         joint_return_elected=False,
-        annual_volume_nonzero=False,
         observed_at=datetime(2026, 9, 22, tzinfo=UTC),
     )
 
     assert evidence.joint_return_elected is False
-    assert evidence.annual_volume_nonzero is False
     assert evidence.m303_exonerado_390_attachment_id == _ATTACHMENT_ID
     assert evidence.m303_exonerado_390_sha256 == _ATTACHMENT_ID
 
@@ -115,7 +111,6 @@ async def test_attestation_admission_without_an_injected_door_refuses_instead_of
     with pytest.raises(ModeloLifecycleActionUnavailableError) as raised:
         await door.author_ordinary_m303_filing_evidence(
             joint_return_elected=False,
-            annual_volume_nonzero=False,
             observed_at=datetime(2026, 9, 22, tzinfo=UTC),
         )
 

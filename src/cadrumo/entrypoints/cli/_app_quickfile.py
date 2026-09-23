@@ -24,13 +24,7 @@ import typer
 from pydantic import ValidationError
 
 from ...application.modelo.action_errors import M303FilingEvidenceError
-from ...application.modelo.m303_exonerado_390_applicability_attestation import (
-    m303_exonerado_390_filing_evidence_reference,
-)
-from ...application.modelo.m303_ordinary_filing_evidence_authoring import (
-    OrdinaryM303FilingEvidenceRequest,
-    author_ordinary_m303_filing_instance_evidence,
-)
+from ...application.modelo.m303_ordinary_filing_evidence_authoring import author_ordinary_m303_evidence_for_work
 from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
 from ...application.modelo.quickfile import (
     QuickfileCommand,
@@ -113,7 +107,6 @@ def quickfile(
     payment_election: PaymentElection = PaymentElection.INGRESO,
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP,
     joint_return_elected: bool | None = None,
-    annual_volume_nonzero: bool | None = None,
     m303_exonerado_390_attachment_id: str | None = None,
     m303_exonerado_390_sha256: str | None = None,
     output_language: OutputLanguage | None = None,
@@ -151,7 +144,6 @@ def quickfile(
             modelo=modelo,
             work_unit=work_unit,
             joint_return_elected=joint_return_elected,
-            annual_volume_nonzero=annual_volume_nonzero,
             attachment_id=m303_exonerado_390_attachment_id,
             sha256=m303_exonerado_390_sha256,
             operation=operation,
@@ -223,7 +215,6 @@ def _m303_filing_instance_evidence(
     modelo: str,
     work_unit: WorkUnit,
     joint_return_elected: bool | None,
-    annual_volume_nonzero: bool | None,
     attachment_id: str | None,
     sha256: str | None,
     operation: PinnedAuthorityOperation,
@@ -233,25 +224,18 @@ def _m303_filing_instance_evidence(
     """Build ordinary M303 evidence from explicit elections and secure custody only."""
     if modelo != "303":
         return None
-    if joint_return_elected is None or annual_volume_nonzero is None or attachment_id is None or sha256 is None:
+    if joint_return_elected is None:
         raise M303FilingEvidenceError(
-            "Modelo 303 requires --joint-return-elected, --annual-volume-nonzero, "
-            "--m303-exonerado-390-attachment-id, and --m303-exonerado-390-sha256"
+            "Modelo 303 requires --joint-return-elected or --no-joint-return-elected; the Modelo 390 "
+            "attestation flags are required in the last period of the year (12 or 4T) and refused in any other"
         )
-    return author_ordinary_m303_filing_instance_evidence(
+    return author_ordinary_m303_evidence_for_work(
         work_unit=work_unit,
-        request=OrdinaryM303FilingEvidenceRequest(
-            filing_year=work_unit.filing_year,
-            period=work_unit.period,
-            joint_return_elected=joint_return_elected,
-            annual_volume_nonzero=annual_volume_nonzero,
-            exonerado_390_applicability_reference=m303_exonerado_390_filing_evidence_reference(
-                attachment_id=attachment_id,
-                sha256=sha256,
-            ),
-        ),
+        joint_return_elected=joint_return_elected,
+        exonerado_390_attachment_id=attachment_id,
+        exonerado_390_sha256=sha256,
         operation=operation,
-        attachment_store=attachment_store(ctx, bucket_id=work_unit.bucket_id),
+        open_attachment_store=lambda: attachment_store(ctx, bucket_id=work_unit.bucket_id),
         profile=profile,
     )
 

@@ -27,7 +27,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 from ....adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ....tests.cli_envelope import unwrap_schema_envelope
-from ._m303_ordinary_cli_support import admit_ordinary_m303_secure_evidence
+from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -87,7 +87,7 @@ def _seed_profile(runtime_profile: TestRuntimeProfile) -> None:
 
 
 def _filing_evidence_arg() -> tuple[str, ...]:
-    return admit_ordinary_m303_secure_evidence().calculate_options()
+    return joint_return_options()
 
 
 def _create_m303_work_unit() -> str:

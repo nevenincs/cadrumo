@@ -15,7 +15,7 @@ from ._iva_wallet_inspector_support import (
     _GUIDANCE_PROFILE,
     _seed_full_autonomo_profile_for_guidance,
 )
-from ._m303_ordinary_cli_support import admit_ordinary_m303_secure_evidence
+from ._m303_ordinary_cli_support import joint_return_options
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]
@@ -61,7 +61,7 @@ def test_m303_fresh_profile_binding_override_is_a_terminal_typed_refusal(
                 work_unit_id,
                 "--binding",
                 "modelo-303-compensacion-pendiente-anteriores=500",
-                *admit_ordinary_m303_secure_evidence(period="2T").calculate_options(),
+                *joint_return_options(),
             ],
             env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
@@ -112,7 +112,7 @@ def test_m303_in_scope_missing_wallet_surfaces_typed_terminal_refusal(
                 "work",
                 "calculate",
                 work_unit_id,
-                *admit_ordinary_m303_secure_evidence(period="2T").calculate_options(),
+                *joint_return_options(),
             ],
             env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )
@@ -169,7 +169,7 @@ def test_m303_fresh_profile_calculate_without_binding_override_does_not_raise_wa
                 "work",
                 "calculate",
                 work_unit_id,
-                *admit_ordinary_m303_secure_evidence().calculate_options(),
+                *joint_return_options(),
             ],
             env={"CADRUMO_OUTPUT_LANGUAGE": "en"},
         )

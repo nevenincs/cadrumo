@@ -39,12 +39,8 @@ _FOUNDATION_SALE_IVA: Final = Decimal("21.00")
 _FOUNDATION_PURCHASE_IVA: Final = Decimal("10.50")
 _FOUNDATION_EXPECTED_RESULT: Final = _FOUNDATION_SALE_IVA - _FOUNDATION_PURCHASE_IVA
 _QUARTERS: Final = ("1T", "2T", "3T", "4T")
-_QUARTER_OBSERVED_AT: Final = {
-    "1T": "2025-03-31T12:00:00+00:00",
-    "2T": "2025-06-30T12:00:00+00:00",
-    "3T": "2025-09-30T12:00:00+00:00",
-    "4T": "2025-12-31T12:00:00+00:00",
-}
+_FINAL_QUARTER: Final = "4T"
+_FINAL_QUARTER_OBSERVED_AT: Final = "2025-12-31T12:00:00+00:00"
 _PRIVATE_ARTIFACT_PLACEHOLDER: Final = "<synthetic-purchase-artifact>"
 
 
@@ -192,28 +188,6 @@ def run_iva_annual_foundation_cli_journey(
         ),
         result_keys=(),
     )
-    attestation = _result(
-        _run(
-            work_cli,
-            receipts,
-            artifact,
-            (
-                "app",
-                "modelo",
-                "work",
-                "attest-m303-exonerado-390",
-                "--year",
-                str(_YEAR),
-                "--period",
-                _FOUNDATION_PERIOD,
-                "--observed-at",
-                "2025-03-31T12:00:00+00:00",
-            ),
-            result_keys=("attachment_id", "sha256"),
-        )
-    )
-    attachment_id = _required_id(attestation, "attachment_id")
-    attachment_sha256 = _required_id(attestation, "sha256")
     created = _result(
         _run(
             work_cli,
@@ -247,11 +221,6 @@ def run_iva_annual_foundation_cli_journey(
                 "calculate",
                 work_unit_id,
                 "--no-joint-return-elected",
-                "--no-annual-volume-nonzero",
-                "--m303-exonerado-390-attachment-id",
-                attachment_id,
-                "--m303-exonerado-390-sha256",
-                attachment_sha256,
             ),
             result_keys=("calculation_revision_id",),
         )
@@ -638,46 +607,41 @@ def _file_quarter(
         )
     )
     work_id = _required_id(created, "work_unit_id")
-    attestation = _result(
-        _run(
-            cli,
-            receipts,
-            artifact,
-            (
-                "app",
-                "modelo",
-                "work",
-                "attest-m303-exonerado-390",
-                "--year",
-                str(_YEAR),
-                "--period",
-                period,
-                "--observed-at",
-                _QUARTER_OBSERVED_AT[period],
-            ),
-            result_keys=("attachment_id", "sha256"),
+    evidence_args: tuple[str, ...] = ("--no-joint-return-elected",)
+    if period == _FINAL_QUARTER:
+        attestation = _result(
+            _run(
+                cli,
+                receipts,
+                artifact,
+                (
+                    "app",
+                    "modelo",
+                    "work",
+                    "attest-m303-exonerado-390",
+                    "--year",
+                    str(_YEAR),
+                    "--period",
+                    period,
+                    "--observed-at",
+                    _FINAL_QUARTER_OBSERVED_AT,
+                ),
+                result_keys=("attachment_id", "sha256"),
+            )
         )
-    )
-    attachment_id = _required_id(attestation, "attachment_id")
-    attachment_sha256 = _required_id(attestation, "sha256")
+        evidence_args = (
+            *evidence_args,
+            "--m303-exonerado-390-attachment-id",
+            _required_id(attestation, "attachment_id"),
+            "--m303-exonerado-390-sha256",
+            _required_id(attestation, "sha256"),
+        )
     calculated = _result(
         _run(
             cli,
             receipts,
             artifact,
-            (
-                "app",
-                "modelo",
-                "work",
-                "calculate",
-                work_id,
-                "--no-joint-return-elected",
-                "--no-annual-volume-nonzero",
-                "--m303-exonerado-390-attachment-id",
-                attachment_id,
-                "--m303-exonerado-390-sha256",
-                attachment_sha256,
-            ),
+            ("app", "modelo", "work", "calculate", work_id, *evidence_args),
             result_keys=("calculation_revision_id",),
         )
     )

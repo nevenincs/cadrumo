@@ -1,20 +1,31 @@
 """Installed-wheel proof of ordinary Modelo 303 filing evidence through the TUI.
 
-Two isolated synthetic stores exercise the one ``modelo.work.calculate``
-operation from an installed wheel:
+DP30301 asks the joint-return election in every period and the Modelo 390
+exemption only in the last settlement period of the year (4T, or 12 for a
+monthly filer), so only those periods carry a secure attestation.  Four isolated
+synthetic stores exercise the one ``modelo.work.calculate`` operation from an
+installed wheel:
 
-* ``tui_led``: the installed CLI captures the 2025/1T ledger and creates the
-  work unit.  Installed CLI and TUI refusals come first (missing booleans,
-  mismatched attachment pair, wrong filing context) and must leave no
-  revision.  The TUI then admits a new attestation from an explicit
-  observation instant, calculates and verifies.  A fresh TUI process must list
-  that revision as current and verified; the installed CLI reads its values.
-* ``continuation``: the installed CLI attests and hands the attachment pair to
-  the TUI, which calculates (CLI to TUI).  The installed CLI then recalculates
-  with the same four inputs; revision identity is content-addressed over the
-  typed filing evidence, so the same revision id proves equivalent persisted
-  evidence.  The CLI verifies (TUI to CLI) and a fresh TUI process reads the
-  verified revision.  One changed boolean must produce a different revision id.
+* ``tui_led`` (2025/4T): the installed CLI captures the ledger and creates the
+  work unit.  Installed CLI and TUI refusals come first (no answers, no
+  attestation, mismatched attachment pair, another period's attestation) and
+  must leave no revision.  The TUI then admits a new attestation from an
+  explicit observation instant, calculates and verifies.  A fresh TUI process
+  must list that revision as current and verified; the installed CLI reads its
+  values.
+* ``continuation`` (2025/4T): the installed CLI attests and hands the attachment
+  pair to the TUI, which calculates (CLI to TUI).  The installed CLI then
+  recalculates with the same answers; revision identity is content-addressed
+  over the typed filing evidence, so the same revision id proves equivalent
+  persisted evidence.  The CLI verifies (TUI to CLI) and a fresh TUI process
+  reads the verified revision.  A changed joint-return answer must produce a
+  different revision id.
+* ``monthly`` (2025/12): a REDEME-registered profile, which settles monthly;
+  the installed CLI attests the last month, calculates and verifies, and a
+  fresh TUI process lists the verified revision.
+* ``first_quarter`` (2025/1T): the installed CLI refuses attestation flags the
+  period does not ask for; the TUI form offers only the joint-return question,
+  calculates and verifies without any attestation.
 
 Each fresh TUI process also opens the workspace Results destination.  A rendered
 ``iva.resultado`` must equal the independent oracle; a not-applicable page is
@@ -61,11 +72,18 @@ from dev.acceptance.installed_cli import InstalledCli, InstalledCliError
 _SCHEMA_VERSION: Final = "iva-01-installed-m303-evidence-journey-v1"
 _CHILD_MODULE: Final = "dev.acceptance.iva.installed_m303_evidence_journey"
 _YEAR: Final = 2025
-_PERIOD: Final = "1T"
-_WRONG_PERIOD: Final = "2T"
+_PERIOD: Final = "4T"
+_PRIOR_PERIOD: Final = "3T"
+_WRONG_PERIOD: Final = "12"
+_MONTH: Final = "12"
+_PRIOR_MONTH: Final = "11"
+_FIRST_QUARTER: Final = "1T"
 _ORACLE_RESULTADO: Final = Decimal("21.00") - Decimal("10.50")
-_OBSERVED_AT: Final = "2025-03-31T12:00:00+00:00"
-_WRONG_PERIOD_OBSERVED_AT: Final = "2025-06-30T12:00:00+00:00"
+_OBSERVED_AT: Final = "2025-12-31T12:00:00+00:00"
+_WRONG_PERIOD_OBSERVED_AT: Final = "2025-12-31T12:00:00+00:00"
+_OUTSIDE_LAST_PERIOD: Final = "exonerado_390_attestation_outside_last_period"
+_LAST_PERIOD_DATES: Final = ("2025-12-15", "2025-12-18")
+_FIRST_QUARTER_DATES: Final = ("2025-02-15", "2025-02-18")
 _MISMATCHED_ATTACHMENT_ID: Final = "a" * 64
 _MISMATCHED_SHA256: Final = "b" * 64
 _EXPORT_REFUSAL_CODE: Final = "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
@@ -76,7 +94,7 @@ _POSITION_KEYS: Final = ("record", "program_positions", "developer_positions")
 # The official 2025 Modelo 303 record design reserves these developer-owned header bytes.
 _OFFICIAL_DP30300_POSITIONS: Final = ("DP30300", "93-96", "101-109")
 
-type ChildMode = Literal["tui-led-calculate", "tui-continue-calculate", "tui-reopen"]
+type ChildMode = Literal["tui-led-calculate", "tui-continue-calculate", "tui-joint-only-calculate", "tui-reopen"]
 
 
 class IvaInstalledM303Error(RuntimeError):
@@ -150,7 +168,7 @@ class ChildHandle:
 class StoreEvidence:
     """Outcome of one isolated synthetic store."""
 
-    scenario: Literal["tui_led", "continuation"]
+    scenario: Literal["tui_led", "continuation", "monthly", "first_quarter"]
     work_unit_id: str
     calculation_revision_id: str
     revision_count: int
@@ -171,7 +189,7 @@ class JourneyReceipt:
     schema_version: str
     status: Literal["proven"]
     filing_year: int
-    period: str
+    periods: tuple[str, ...]
     source_commit: str
     wheel_filename: str
     wheel_sha256: str
@@ -181,7 +199,7 @@ class JourneyReceipt:
     authority_generation: str
     authority_descriptor_sha256: str
     bundled_authority_generation: str
-    stores: tuple[StoreEvidence, StoreEvidence]
+    stores: tuple[StoreEvidence, ...]
     unexercised: tuple[str, ...]
     retention: str
 
@@ -243,8 +261,11 @@ class _Cli:
         return _mapping(document.get("result"), label=evidence.command)
 
 
-def _cli_capture_and_create_work(cli: _Cli, *, artifact: Path) -> str:
-    """Capture the ordinary 2025/1T sale and purchase and create the M303 work unit."""
+def _cli_capture_and_create_work(
+    cli: _Cli, *, artifact: Path, period: str, wallet_period: str, dates: tuple[str, str]
+) -> str:
+    """Capture one ordinary 2025 sale and purchase inside ``period`` and create its M303 work unit."""
+    sale_date, purchase_date = dates
     evidence_id = _text(
         cli.run(("app", "ledger", "evidence", "add", str(artifact), "--supplier", "Synthetic supplier SL")).get(
             "evidence_id"
@@ -254,31 +275,31 @@ def _cli_capture_and_create_work(cli: _Cli, *, artifact: Path) -> str:
     sale = _text(
         cli.run(
             (
-                *("app", "ledger", "add", "--date", "2025-02-15", "--amount", "121.00", "--direction", "INCOMING"),
+                *("app", "ledger", "add", "--date", sale_date, "--amount", "121.00", "--direction", "INCOMING"),
                 *("--description", "Synthetic ordinary IVA sale", "--classification", "BUSINESS"),
                 *("--taxable-base", "100.00", "--iva-rate", "0.21", "--iva-amount", "21.00"),
                 *("--iva-category", "domestic_general", "--source-jurisdiction", "ES"),
-                *("--idempotency-key", "iva-m303-evidence-sale-2025-1t"),
+                *("--idempotency-key", f"iva-m303-evidence-sale-2025-{period.lower()}"),
             )
         ).get("transaction_id"),
         label="sale add",
     )
     sale_invoice = _text(
-        cli.run(_invoice_args(kind="issued", number="IVA-M303-ISS", subtotal="100.00", iva_amount="21.00")).get(
-            "invoice_id"
-        ),
+        cli.run(
+            _invoice_args(kind="issued", number="IVA-M303-ISS", subtotal="100.00", iva_amount="21.00", date=sale_date)
+        ).get("invoice_id"),
         label="sale invoice add",
     )
     cli.run(("app", "ledger", "link", sale, "--invoice-id", sale_invoice))
     purchase = _text(
         cli.run(
             (
-                *("app", "ledger", "add", "--date", "2025-02-18", "--amount", "60.50", "--direction", "OUTGOING"),
+                *("app", "ledger", "add", "--date", purchase_date, "--amount", "60.50", "--direction", "OUTGOING"),
                 *("--description", "Synthetic ordinary IVA purchase", "--classification", "BUSINESS"),
                 *("--category-id", "material_oficina", "--taxable-base", "50.00", "--iva-rate", "0.21"),
                 *("--iva-amount", "10.50", "--iva-category", "domestic_general"),
                 *("--purchase-invoice-evidence-id", evidence_id, "--source-jurisdiction", "ES"),
-                *("--idempotency-key", "iva-m303-evidence-purchase-2025-1t"),
+                *("--idempotency-key", f"iva-m303-evidence-purchase-2025-{period.lower()}"),
             )
         ).get("transaction_id"),
         label="purchase add",
@@ -290,23 +311,23 @@ def _cli_capture_and_create_work(cli: _Cli, *, artifact: Path) -> str:
         )
     )
     purchase_invoice = _text(
-        cli.run(_invoice_args(kind="received", number="IVA-M303-REC", subtotal="50.00", iva_amount="10.50")).get(
-            "invoice_id"
-        ),
+        cli.run(
+            _invoice_args(kind="received", number="IVA-M303-REC", subtotal="50.00", iva_amount="10.50", date=sale_date)
+        ).get("invoice_id"),
         label="purchase invoice add",
     )
     cli.run(("app", "ledger", "link", purchase, "--invoice-id", purchase_invoice))
     cli.run(
         (
-            *("app", "modelo", "iva-wallet", "seed", "--filing-year", str(_YEAR), "--period", _PERIOD),
+            *("app", "modelo", "iva-wallet", "seed", "--filing-year", str(_YEAR), "--period", wallet_period),
             *("--amount", "0.00", "--confirm"),
         )
     )
-    created = cli.run(("app", "modelo", "work", "create", "--modelo", "303", "--year", str(_YEAR), "--period", _PERIOD))
+    created = cli.run(("app", "modelo", "work", "create", "--modelo", "303", "--year", str(_YEAR), "--period", period))
     return _text(created.get("work_unit_id"), label="work create")
 
 
-def _invoice_args(*, kind: str, number: str, subtotal: str, iva_amount: str) -> tuple[str, ...]:
+def _invoice_args(*, kind: str, number: str, subtotal: str, iva_amount: str, date: str) -> tuple[str, ...]:
     line = json.dumps(
         {
             "description": f"Synthetic {kind} line",
@@ -321,7 +342,7 @@ def _invoice_args(*, kind: str, number: str, subtotal: str, iva_amount: str) -> 
     )
     return (
         *("app", "ledger", "invoice", "add", "--kind", kind, "--counterparty-name", "Synthetic party SL"),
-        *("--counterparty-nif", "A58818501", "--invoice-number", number, "--invoice-date", "2025-02-15"),
+        *("--counterparty-nif", "A58818501", "--invoice-number", number, "--invoice-date", date),
         *("--country-code", "ES", "--iva-category", "domestic_general", "--line", line),
     )
 
@@ -337,12 +358,17 @@ def _attest(cli: _Cli, *, period: str, observed_at: str) -> tuple[str, str]:
 
 
 def _calculate_args(
-    work_unit_id: str, *, attachment_id: str, sha256: str, annual_volume: bool = False
+    work_unit_id: str, *, attestation: tuple[str, str] | None, joint_return_elected: bool = False
 ) -> tuple[str, ...]:
+    """Answer the joint-return question, and supply the attestation pair only when given."""
     return (
-        *("app", "modelo", "work", "calculate", work_unit_id, "--no-joint-return-elected"),
-        "--annual-volume-nonzero" if annual_volume else "--no-annual-volume-nonzero",
-        *("--m303-exonerado-390-attachment-id", attachment_id, "--m303-exonerado-390-sha256", sha256),
+        *("app", "modelo", "work", "calculate", work_unit_id),
+        "--joint-return-elected" if joint_return_elected else "--no-joint-return-elected",
+        *(
+            ()
+            if attestation is None
+            else ("--m303-exonerado-390-attachment-id", attestation[0], "--m303-exonerado-390-sha256", attestation[1])
+        ),
     )
 
 
@@ -476,13 +502,20 @@ async def _open_evidence_form(pilot: Any, *, work_unit_id: str) -> None:
 
 
 def _fill_evidence_form(
-    pilot: Any, *, attachment_id: str = "", sha256: str = "", observed_at: str = "", answer: bool = True
+    pilot: Any,
+    *,
+    attachment_id: str = "",
+    sha256: str = "",
+    observed_at: str = "",
+    answer: bool = True,
+    asks_modelo_390: bool = True,
 ) -> None:
     from textual.widgets import Input, Select
 
     if answer:
         cast(Any, query_public_selector(pilot, "#m303-evidence-joint-return-elected", Select)).value = "false"
-        cast(Any, query_public_selector(pilot, "#m303-evidence-annual-volume-nonzero", Select)).value = "false"
+    if not asks_modelo_390:
+        return
     query_public_selector(pilot, "#m303-evidence-attachment-id", Input).value = attachment_id
     query_public_selector(pilot, "#m303-evidence-sha256", Input).value = sha256
     query_public_selector(pilot, "#m303-evidence-observed-at", Input).value = observed_at
@@ -601,7 +634,9 @@ async def _form_refusals(pilot: Any, *, work_unit_id: str) -> list[TuiOutcome]:
     return outcomes
 
 
-async def _calculate_and_verify(pilot: Any, *, work_unit_id: str, form: Mapping[str, str]) -> list[TuiOutcome]:
+async def _calculate_and_verify(
+    pilot: Any, *, work_unit_id: str, form: Mapping[str, str], asks_modelo_390: bool = True
+) -> list[TuiOutcome]:
     outcomes: list[TuiOutcome] = []
     await _open_evidence_form(pilot, work_unit_id=work_unit_id)
     _fill_evidence_form(
@@ -609,6 +644,7 @@ async def _calculate_and_verify(pilot: Any, *, work_unit_id: str, form: Mapping[
         attachment_id=form.get("attachment_id", ""),
         sha256=form.get("sha256", ""),
         observed_at=form.get("observed_at", ""),
+        asks_modelo_390=asks_modelo_390,
     )
     calculated = await _submit_evidence(pilot, step="calculate")
     outcomes.append(calculated)
@@ -843,6 +879,11 @@ def _run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
                     await _calculate_and_verify(pilot, work_unit_id=work_unit_id, form={"observed_at": _OBSERVED_AT})
                 )
                 outcomes.append(await _verify(pilot, work_unit_id=work_unit_id))
+            elif mode == "tui-joint-only-calculate":
+                outcomes.extend(
+                    await _calculate_and_verify(pilot, work_unit_id=work_unit_id, form={}, asks_modelo_390=False)
+                )
+                outcomes.append(await _verify(pilot, work_unit_id=work_unit_id))
             elif mode == "tui-continue-calculate":
                 outcomes.extend(
                     await _calculate_and_verify(
@@ -950,7 +991,15 @@ def _fresh_cli(args: argparse.Namespace, store: Path, passphrase: str) -> _Cli:
     return _Cli(InstalledCli(args.cli, storage_root=store, authority_root=args.authority_root, passphrase=passphrase))
 
 
-def _setup_store(args: argparse.Namespace, name: str) -> tuple[Path, str, _Cli, str]:
+def _setup_store(
+    args: argparse.Namespace,
+    name: str,
+    *,
+    period: str = _PERIOD,
+    wallet_period: str = _PRIOR_PERIOD,
+    dates: tuple[str, str] = _LAST_PERIOD_DATES,
+    monthly_filer: bool = False,
+) -> tuple[Path, str, _Cli, str]:
     store = cast(Path, args.output_root) / name
     store.mkdir(parents=True)
     artifact = args.output_root / f"{name}-synthetic-purchase.pdf"
@@ -961,7 +1010,12 @@ def _setup_store(args: argparse.Namespace, name: str) -> tuple[Path, str, _Cli, 
         cli.cli.create_profile(year=_YEAR)
     except InstalledCliError as error:
         raise IvaInstalledM303Error("installed CLI profile creation refused") from error
-    work_unit_id = _cli_capture_and_create_work(cli, artifact=artifact)
+    if monthly_filer:
+        # RD 1624/1992 art. 71: a REDEME-registered taxpayer settles Modelo 303 monthly.
+        cli.run(("config", "profile", "set", "iva.redeme_enrolled", "true"))
+    work_unit_id = _cli_capture_and_create_work(
+        cli, artifact=artifact, period=period, wallet_period=wallet_period, dates=dates
+    )
     artifact.unlink()
     return store, passphrase, cli, work_unit_id
 
@@ -988,11 +1042,12 @@ def _tui_led_store(args: argparse.Namespace) -> StoreEvidence:
     store, passphrase, cli, work_unit_id = _setup_store(args, "tui-led")
     wrong_id, wrong_sha = _attest(cli, period=_WRONG_PERIOD, observed_at=_WRONG_PERIOD_OBSERVED_AT)
     cli.run(("app", "modelo", "work", "calculate", work_unit_id), expect_refusal=True)
+    cli.run(_calculate_args(work_unit_id, attestation=None), expect_refusal=True)
     cli.run(
-        _calculate_args(work_unit_id, attachment_id=_MISMATCHED_ATTACHMENT_ID, sha256=_MISMATCHED_SHA256),
+        _calculate_args(work_unit_id, attestation=(_MISMATCHED_ATTACHMENT_ID, _MISMATCHED_SHA256)),
         expect_refusal=True,
     )
-    cli.run(_calculate_args(work_unit_id, attachment_id=wrong_id, sha256=wrong_sha), expect_refusal=True)
+    cli.run(_calculate_args(work_unit_id, attestation=(wrong_id, wrong_sha)), expect_refusal=True)
     if _revision_ids(cli, work_unit_id):
         raise IvaInstalledM303Error("an installed CLI refusal persisted a calculation revision")
 
@@ -1074,7 +1129,7 @@ def _continuation_store(args: argparse.Namespace) -> StoreEvidence:
     tui_revisions = _revision_ids(cli, work_unit_id)
     if len(tui_revisions) != 1:
         raise IvaInstalledM303Error("TUI continuation did not persist exactly one revision")
-    recalculated = cli.run(_calculate_args(work_unit_id, attachment_id=attachment_id, sha256=sha256))
+    recalculated = cli.run(_calculate_args(work_unit_id, attestation=(attachment_id, sha256)))
     same_revision = recalculated.get("calculation_revision_id") == tui_revisions[0]
     if not same_revision or _revision_ids(cli, work_unit_id) != tui_revisions:
         raise IvaInstalledM303Error("installed CLI recalculation with the same evidence produced another revision")
@@ -1091,7 +1146,7 @@ def _continuation_store(args: argparse.Namespace) -> StoreEvidence:
     )
     tui_reopen = require_reopen(readback, scenario="continuation")
     matches, verified = _read_revision(cli, tui_revisions[0])
-    changed = cli.run(_calculate_args(work_unit_id, attachment_id=attachment_id, sha256=sha256, annual_volume=True))
+    changed = cli.run(_calculate_args(work_unit_id, attestation=(attachment_id, sha256), joint_return_elected=True))
     distinct = changed.get("calculation_revision_id") not in {None, tui_revisions[0]}
     if not (matches and verified and distinct):
         raise IvaInstalledM303Error("continuation readback, verification or evidence-identity control failed")
@@ -1104,6 +1159,99 @@ def _continuation_store(args: argparse.Namespace) -> StoreEvidence:
         cli_revision_verified=verified,
         cli_recalculated_same_revision=same_revision,
         changed_evidence_produced_distinct_revision=distinct,
+        tui_reopen=tui_reopen,
+        commands=tuple(cli.outcomes),
+        children=(calculate_handle, reopen_handle),
+        child_outcomes=(*calculate_outcomes, *reopen_outcomes),
+    )
+
+
+def _monthly_store(args: argparse.Namespace) -> StoreEvidence:
+    """A REDEME-registered filer settles monthly and answers the Modelo 390 exemption in 12, as others do in 4T."""
+    store, passphrase, cli, work_unit_id = _setup_store(
+        args, "monthly", period=_MONTH, wallet_period=_PRIOR_MONTH, monthly_filer=True
+    )
+    attestation = _attest(cli, period=_MONTH, observed_at=_OBSERVED_AT)
+    calculated = cli.run(_calculate_args(work_unit_id, attestation=attestation))
+    revision_id = _text(calculated.get("calculation_revision_id"), label="monthly calculate")
+    verification = cli.run(("app", "modelo", "work", "verify", revision_id))
+    if verification.get("granted_verificado_completo") is not True:
+        raise IvaInstalledM303Error("installed CLI verification of the monthly revision was not granted")
+    reopen_handle, reopen_outcomes, readback = _child(
+        args=args,
+        store=store,
+        passphrase=passphrase,
+        mode="tui-reopen",
+        work_unit_id=work_unit_id,
+        extra=("--calculation-revision-id", revision_id),
+    )
+    tui_reopen = require_reopen(readback, scenario="monthly")
+    matches, verified = _read_revision(cli, revision_id)
+    if not (matches and verified):
+        raise IvaInstalledM303Error("installed CLI readback of the monthly revision failed the oracle or verification")
+    return StoreEvidence(
+        scenario="monthly",
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revision_id,
+        revision_count=len(_revision_ids(cli, work_unit_id)),
+        cli_resultado_matches_oracle=matches,
+        cli_revision_verified=verified,
+        cli_recalculated_same_revision=None,
+        changed_evidence_produced_distinct_revision=None,
+        tui_reopen=tui_reopen,
+        commands=tuple(cli.outcomes),
+        children=(reopen_handle,),
+        child_outcomes=tuple(reopen_outcomes),
+    )
+
+
+def _first_quarter_store(args: argparse.Namespace) -> StoreEvidence:
+    """1T asks only the joint-return election: attestation flags are refused and the TUI form asks one question."""
+    store, passphrase, cli, work_unit_id = _setup_store(
+        args, "first-quarter", period=_FIRST_QUARTER, wallet_period=_FIRST_QUARTER, dates=_FIRST_QUARTER_DATES
+    )
+    refused = cli.run(
+        _calculate_args(work_unit_id, attestation=(_MISMATCHED_ATTACHMENT_ID, _MISMATCHED_ATTACHMENT_ID)),
+        expect_refusal=True,
+    )
+    if _OUTSIDE_LAST_PERIOD not in json.dumps(refused, sort_keys=True):
+        raise IvaInstalledM303Error("installed CLI did not refuse an attestation the 1T return does not ask for")
+    if _revision_ids(cli, work_unit_id):
+        raise IvaInstalledM303Error("an installed CLI refusal persisted a calculation revision")
+    calculate_handle, calculate_outcomes, _ = _child(
+        args=args,
+        store=store,
+        passphrase=passphrase,
+        mode="tui-joint-only-calculate",
+        work_unit_id=work_unit_id,
+    )
+    require_outcomes(calculate_outcomes, {"calculate": ("succeeded", None), "verify": ("succeeded", None)})
+    revisions = _revision_ids(cli, work_unit_id)
+    if len(revisions) != 1:
+        raise IvaInstalledM303Error("the 1T TUI calculation did not persist exactly one revision")
+    recalculated = cli.run(_calculate_args(work_unit_id, attestation=None))
+    same_revision = recalculated.get("calculation_revision_id") == revisions[0]
+    reopen_handle, reopen_outcomes, readback = _child(
+        args=args,
+        store=store,
+        passphrase=passphrase,
+        mode="tui-reopen",
+        work_unit_id=work_unit_id,
+        extra=("--calculation-revision-id", revisions[0]),
+    )
+    tui_reopen = require_reopen(readback, scenario="first_quarter")
+    matches, verified = _read_revision(cli, revisions[0])
+    if not (matches and verified and same_revision):
+        raise IvaInstalledM303Error("1T readback, verification or CLI recalculation identity failed")
+    return StoreEvidence(
+        scenario="first_quarter",
+        work_unit_id=work_unit_id,
+        calculation_revision_id=revisions[0],
+        revision_count=len(_revision_ids(cli, work_unit_id)),
+        cli_resultado_matches_oracle=matches,
+        cli_revision_verified=verified,
+        cli_recalculated_same_revision=same_revision,
+        changed_evidence_produced_distinct_revision=None,
         tui_reopen=tui_reopen,
         commands=tuple(cli.outcomes),
         children=(calculate_handle, reopen_handle),
@@ -1137,19 +1285,19 @@ def _authority(authority_root: Path) -> tuple[str, str]:
 
 
 def run_journey(args: argparse.Namespace) -> JourneyReceipt:
-    """Run both isolated stores against one installed wheel and pinned authority."""
+    """Run every isolated store against one installed wheel and pinned authority."""
     if any(args.output_root.iterdir()):
         raise IvaInstalledM303Error("output root must be empty")
     version, init_path, init_sha256, bundled_generation = _installed_identity(args.python)
     generation, descriptor_sha256 = _authority(args.authority_root)
     if generation != bundled_generation:
         raise IvaInstalledM303Error("supplied authority generation differs from the one the installed wheel bundles")
-    stores = (_tui_led_store(args), _continuation_store(args))
+    stores = (_tui_led_store(args), _continuation_store(args), _monthly_store(args), _first_quarter_store(args))
     return JourneyReceipt(
         schema_version=_SCHEMA_VERSION,
         status="proven",
         filing_year=_YEAR,
-        period=_PERIOD,
+        periods=(_PERIOD, _MONTH, _FIRST_QUARTER),
         source_commit=args.source_commit,
         wheel_filename=args.wheel.name,
         wheel_sha256=_sha256_bytes(args.wheel.read_bytes()),
@@ -1179,7 +1327,9 @@ def run_journey(args: argparse.Namespace) -> JourneyReceipt:
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--child", choices=("tui-led-calculate", "tui-continue-calculate", "tui-reopen"))
+    parser.add_argument(
+        "--child", choices=("tui-led-calculate", "tui-continue-calculate", "tui-joint-only-calculate", "tui-reopen")
+    )
     parser.add_argument("--workspace-root", required=True, type=Path)
     parser.add_argument("--receipt", required=True, type=Path)
     parser.add_argument("--work-unit-id")

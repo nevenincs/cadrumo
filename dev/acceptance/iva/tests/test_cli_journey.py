@@ -12,6 +12,9 @@ from ..cli_journey import run_iva_m303_cli_journey
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
+# Measured on a quiet host on 2026-09-23: 195 s wheel build and install, then 402 s of fresh-process
+# authenticated CLI calls. The budget is about twice that; revisit it when CLI start-up gets faster.
+@pytest.mark.timeout(900)
 def test_installed_cli_records_product_identity_block_after_verifying_ordinary_2025_m303(
     tmp_path: Path, installed_wheel_aeat: Path
 ) -> None:
@@ -30,7 +33,8 @@ def test_installed_cli_records_product_identity_block_after_verifying_ordinary_2
     assert Decimal(receipt.iva_resultado) == Decimal("21.00") - Decimal("10.50")
     assert len(receipt.transaction_ids) == 2
     assert len(receipt.invoice_ids) == 2
-    assert receipt.attestation_attachment_id == receipt.attestation_sha256
+    assert not any("attest-m303-exonerado-390" in command.argv for command in receipt.commands)
+    assert not any("--m303-exonerado-390-attachment-id" in command.argv for command in receipt.commands)
     assert receipt.calculation_revision_id
     assert receipt.verification_report_id
     assert receipt.verification_granted is True
@@ -38,8 +42,9 @@ def test_installed_cli_records_product_identity_block_after_verifying_ordinary_2
     assert receipt.export_status == "verified_export_blocked"
     assert receipt.export_failure_code == "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
     assert receipt.export_failure_diagnostic is not None
-    assert '"Versión del Programa" (positions 93-96)' in receipt.export_failure_diagnostic
-    assert '"NIF del desarrollador" (positions 101-109)' in receipt.export_failure_diagnostic
+    # The journey itself refuses unless the typed refusal context locates these fields at DP30300 93-96 and 101-109.
+    assert '"Versión del Programa"' in receipt.export_failure_diagnostic
+    assert '"NIF del desarrollador"' in receipt.export_failure_diagnostic
     assert receipt.export_artifact is None
     assert receipt.export_size is None
     assert receipt.export_sha256 is None

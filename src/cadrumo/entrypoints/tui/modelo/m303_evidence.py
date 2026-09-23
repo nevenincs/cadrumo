@@ -13,7 +13,7 @@ from textual.containers import Horizontal, Vertical
 from textual.screen import ModalScreen
 from textual.widgets import Button, Input, Select, Static
 
-from ....application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV1
+from ....application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
 from ....core.i18n.render import tr
 from ..components.theme import tokenised
 
@@ -41,45 +41,57 @@ class OrdinaryM303FilingEvidenceSubmission:
 
     work_unit_id: str
     joint_return_elected: bool
-    annual_volume_nonzero: bool
-    existing_evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV1 | None = None
+    existing_evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None = None
     observed_at: datetime | None = None
 
 
 class OrdinaryM303FilingEvidenceScreen(ModalScreen[OrdinaryM303FilingEvidenceSubmission | None]):
-    """Collect the four operator-supplied values before the existing calculation action."""
+    """Collect the operator-supplied answers the work period asks before the existing calculation action.
+
+    Every period asks the joint-return election. Only the last settlement
+    period of the year (12 or 4T) asks the Modelo 390 exemption, so only that
+    form offers the attestation inputs.
+    """
 
     DEFAULT_CSS = _M303_EVIDENCE_CSS
     BINDINGS: ClassVar = [Binding("escape", "cancel", "", show=False)]
 
-    def __init__(self, *, work_unit_id: str) -> None:
-        """Bind the form to the work unit selected when Calculate was invoked."""
+    def __init__(self, *, work_unit_id: str, asks_modelo_390: bool) -> None:
+        """Bind the form to the work unit selected when Calculate was invoked and to what its period asks."""
         super().__init__()
         self._work_unit_id = work_unit_id
+        self._asks_modelo_390 = asks_modelo_390
 
     @override
     def compose(self) -> ComposeResult:
         with Vertical(id="m303-evidence-dialog"):
             yield Static(tr("tui.modelo.m303_evidence.title"), id="m303-evidence-title", markup=False)
             yield Static(
-                tr("tui.modelo.m303_evidence.existing_attestation_hint"), id="m303-evidence-hint", markup=False
+                tr(
+                    "tui.modelo.m303_evidence.existing_attestation_hint"
+                    if self._asks_modelo_390
+                    else "tui.modelo.m303_evidence.no_modelo_390_question_hint"
+                ),
+                id="m303-evidence-hint",
+                markup=False,
             )
             yield Static(
                 tr("tui.modelo.m303_evidence.joint_return_elected"), classes="m303-evidence-label", markup=False
             )
             yield Select[str](_yes_no_options(), id="m303-evidence-joint-return-elected")
-            yield Static(
-                tr("tui.modelo.m303_evidence.annual_volume_nonzero"), classes="m303-evidence-label", markup=False
-            )
-            yield Select[str](_yes_no_options(), id="m303-evidence-annual-volume-nonzero")
-            yield Static(
-                tr("tui.modelo.m303_evidence.attestation_attachment_id"), classes="m303-evidence-label", markup=False
-            )
-            yield Input(id="m303-evidence-attachment-id")
-            yield Static(tr("tui.modelo.m303_evidence.attestation_sha256"), classes="m303-evidence-label", markup=False)
-            yield Input(id="m303-evidence-sha256")
-            yield Static(tr("tui.modelo.m303_evidence.observed_at"), classes="m303-evidence-label", markup=False)
-            yield Input(id="m303-evidence-observed-at")
+            if self._asks_modelo_390:
+                yield Static(
+                    tr("tui.modelo.m303_evidence.attestation_attachment_id"),
+                    classes="m303-evidence-label",
+                    markup=False,
+                )
+                yield Input(id="m303-evidence-attachment-id")
+                yield Static(
+                    tr("tui.modelo.m303_evidence.attestation_sha256"), classes="m303-evidence-label", markup=False
+                )
+                yield Input(id="m303-evidence-sha256")
+                yield Static(tr("tui.modelo.m303_evidence.observed_at"), classes="m303-evidence-label", markup=False)
+                yield Input(id="m303-evidence-observed-at")
             yield Static(id="m303-evidence-notice", markup=False)
             with Horizontal(id="m303-evidence-actions"):
                 yield Button(tr("tui.modelo.m303_evidence.cancel"), id="m303-evidence-cancel")
@@ -109,22 +121,28 @@ class OrdinaryM303FilingEvidenceScreen(ModalScreen[OrdinaryM303FilingEvidenceSub
         self.dismiss(None)
 
     def _submission(self) -> OrdinaryM303FilingEvidenceSubmission | None:
-        """Build a request only when both declarations and both secure coordinates are explicit."""
+        """Build a request only when every answer the period asks is explicit."""
         joint_return_elected = _selected_boolean(self.query_one("#m303-evidence-joint-return-elected", Select))
-        annual_volume_nonzero = _selected_boolean(self.query_one("#m303-evidence-annual-volume-nonzero", Select))
+        if joint_return_elected is None:
+            return None
+        if not self._asks_modelo_390:
+            return OrdinaryM303FilingEvidenceSubmission(
+                work_unit_id=self._work_unit_id,
+                joint_return_elected=joint_return_elected,
+                existing_evidence=ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+                    joint_return_elected=joint_return_elected
+                ),
+            )
         attachment_id = self.query_one("#m303-evidence-attachment-id", Input).value.strip()
         sha256 = self.query_one("#m303-evidence-sha256", Input).value.strip()
         observed_at = self.query_one("#m303-evidence-observed-at", Input).value.strip()
-        if joint_return_elected is None or annual_volume_nonzero is None:
-            return None
         has_existing_coordinates = bool(attachment_id) and bool(sha256)
         if bool(attachment_id) != bool(sha256) or (has_existing_coordinates and observed_at):
             return None
         try:
             existing_evidence = (
-                ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
+                ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
                     joint_return_elected=joint_return_elected,
-                    annual_volume_nonzero=annual_volume_nonzero,
                     m303_exonerado_390_attachment_id=attachment_id,
                     m303_exonerado_390_sha256=sha256,
                 )
@@ -139,7 +157,6 @@ class OrdinaryM303FilingEvidenceScreen(ModalScreen[OrdinaryM303FilingEvidenceSub
         return OrdinaryM303FilingEvidenceSubmission(
             work_unit_id=self._work_unit_id,
             joint_return_elected=joint_return_elected,
-            annual_volume_nonzero=annual_volume_nonzero,
             existing_evidence=existing_evidence,
             observed_at=parsed_observed_at,
         )

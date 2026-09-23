@@ -29,7 +29,7 @@ from ....adapters.persistence.storage.tests.secure_sql import (
 )
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ._m303_ordinary_cli_support import admit_ordinary_m303_secure_evidence
+from ._m303_ordinary_cli_support import joint_return_options
 from ._modelo_work_ux_support import (
     _create_calculable_work_unit as _create_111_work_unit,
 )
@@ -76,8 +76,8 @@ _LEGAL_ENTITY_FACTS = {
 
 
 def _m303_filing_evidence_args() -> tuple[str, ...]:
-    """Admit ordinary secure evidence so the canonical-casilla gate is reached."""
-    return admit_ordinary_m303_secure_evidence().calculate_options()
+    """Answer the 1T ordinary Modelo 303 question so the canonical-casilla gate is reached."""
+    return joint_return_options()
 
 
 # ---------------------------------------------------------------------------

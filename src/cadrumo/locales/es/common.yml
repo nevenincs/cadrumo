@@ -1962,21 +1962,23 @@ tui:
     m303_evidence:
       admission_unavailable: Aquí no se puede registrar una atestación nueva para
         esta declaración. No se ha calculado nada.
-      annual_volume_nonzero: ¿Volumen anual de operaciones distinto de cero (art.
-        121 LIVA)?
       attestation_attachment_id: Identificador de la atestación existente
       attestation_sha256: SHA-256 de la atestación existente
       cancel: Cancelar
       cancelled: Cálculo cancelado; no se ha registrado ningún dato de la autoliquidación.
-      existing_attestation_hint: Responda a las dos preguntas. Después, indique una
-        atestación existente de que no procede el apartado de exoneración del modelo
-        390 (su identificador y SHA-256), o déjelos en blanco e indique cuándo lo
-        confirmó para registrar una atestación nueva.
+      existing_attestation_hint: Responda a la pregunta. Después, indique una atestación
+        existente de que no procede el apartado de exoneración del modelo 390 (su
+        identificador y SHA-256), o déjelos en blanco e indique cuándo lo confirmó
+        para registrar una atestación nueva.
       joint_return_elected: ¿Autoliquidación conjunta?
+      no_modelo_390_question_hint: Responda a la pregunta. La autoliquidación de este
+        período no pregunta por la exoneración del modelo 390; solo lo hace la del
+        último período del año (12 o 4T).
       observed_at: Confirmado el, para una atestación nueva (ISO 8601 con desfase
         UTC, por ejemplo 2025-04-01T12:00:00Z)
-      required: Responda a las dos preguntas e indique una atestación existente completa
-        o una hora de confirmación con su desfase UTC, pero no ambas.
+      required: Responda a la pregunta sobre la autoliquidación conjunta. En el último
+        período del año indique además una atestación existente completa o una hora
+        de confirmación con su desfase UTC, pero no ambas.
       stale_context: La declaración seleccionada cambió mientras el formulario estaba
         abierto. No se ha calculado nada; vuelva a elegir Calcular.
       title: Datos de la autoliquidación del modelo 303

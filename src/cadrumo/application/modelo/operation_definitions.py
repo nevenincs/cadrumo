@@ -125,11 +125,9 @@ from .export import ModeloExportCommand, export_modelo_revision
 from .export_ports import ModeloExportPortsFactory
 from .filing_action_ports import FilingActionPortsFactory
 from .filing_actions import file_modelo_revision
-from .m303_exonerado_390_applicability_attestation import m303_exonerado_390_filing_evidence_reference
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_ordinary_filing_evidence_authoring import (
-    OrdinaryM303FilingEvidenceRequest,
-    author_ordinary_m303_filing_instance_evidence,
+    author_ordinary_m303_evidence_for_work,
 )
 from .verification_actions import verify_modelo_revision
 from .work_lifecycle import discard_work_unit, get_work_unit, rename_work_unit
@@ -329,15 +327,19 @@ class ModeloWorkDiscardApprovalStaleError(CadrumoError):
     """Raised when the approved unit is no longer the unit on disk."""
 
 
-class ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(BaseModel):
-    """Operator-authored ordinary-M303 facts admitted only through secure request custody."""
+class ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(BaseModel):
+    """Operator-authored ordinary-M303 facts admitted only through secure request custody.
+
+    The joint-return election is asked in every period. The Modelo 390
+    attestation pair is supplied only for the last settlement period of the
+    year and refused for any other; the executor applies that rule.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     joint_return_elected: bool
-    annual_volume_nonzero: bool
-    m303_exonerado_390_attachment_id: Hex64Str
-    m303_exonerado_390_sha256: Hex64Str
+    m303_exonerado_390_attachment_id: Hex64Str | None = None
+    m303_exonerado_390_sha256: Hex64Str | None = None
 
 
 class ModeloWorkCalculateRequest(BaseModel):
@@ -352,7 +354,7 @@ class ModeloWorkCalculateRequest(BaseModel):
 
     work_unit_id: _WORK_UNIT_ID
     actor: Annotated[str, Field(min_length=1, max_length=128, pattern=r"\S")]
-    ordinary_m303_filing_evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV1 | None = None
+    ordinary_m303_filing_evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV2 | None = None
 
 
 class ModeloWorkCalculatePublicResultV1(BaseModel):
@@ -442,20 +444,13 @@ class ModeloWorkCalculateExecutor:
                     {"modelo": str(work_unit.modelo), "evidence_present": False},
                 )
             )
-        return author_ordinary_m303_filing_instance_evidence(
+        return author_ordinary_m303_evidence_for_work(
             work_unit=work_unit,
-            request=OrdinaryM303FilingEvidenceRequest(
-                filing_year=work_unit.filing_year,
-                period=work_unit.period,
-                joint_return_elected=supplied.joint_return_elected,
-                annual_volume_nonzero=supplied.annual_volume_nonzero,
-                exonerado_390_applicability_reference=m303_exonerado_390_filing_evidence_reference(
-                    attachment_id=supplied.m303_exonerado_390_attachment_id,
-                    sha256=supplied.m303_exonerado_390_sha256,
-                ),
-            ),
+            joint_return_elected=supplied.joint_return_elected,
+            exonerado_390_attachment_id=supplied.m303_exonerado_390_attachment_id,
+            exonerado_390_sha256=supplied.m303_exonerado_390_sha256,
             operation=operation,
-            attachment_store=self._attachment_store_factory(work_unit.bucket_id),
+            open_attachment_store=lambda: self._attachment_store_factory(work_unit.bucket_id),
         )
 
 
@@ -509,7 +504,7 @@ def build_modelo_work_calculate_registration(
         definition=definition,
         request_schema=OperationSchemaBindingV1.bind(
             schema_id="modelo.work.calculate.request",
-            schema_version=2,
+            schema_version=3,
             model_type=definition.request_type,
         ),
         result_schema=OperationSchemaBindingV1.bind(
@@ -2292,7 +2287,7 @@ __all__ = [
     "ModeloWorkAmendPublicResultV1",
     "ModeloWorkAmendRequest",
     "ModeloWorkCalculateExecutor",
-    "ModeloWorkCalculateOrdinaryM303EvidenceRequestV1",
+    "ModeloWorkCalculateOrdinaryM303EvidenceRequestV2",
     "ModeloWorkCalculatePublicResultV1",
     "ModeloWorkCalculateRequest",
     "ModeloWorkDiscardApprovalStaleError",

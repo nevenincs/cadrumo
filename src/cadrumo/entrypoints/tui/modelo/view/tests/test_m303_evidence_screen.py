@@ -10,7 +10,7 @@ import pytest
 from textual.app import App
 from textual.widgets import Button, Input, Select, Static
 
-from ......application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV1
+from ......application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV2
 from ......core.i18n.render import tr
 from ...m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from ..overview import ModeloWorkspaceOverviewScreen
@@ -21,13 +21,15 @@ _ATTACHMENT_ID = "a" * 64
 
 
 @pytest.mark.asyncio
-async def test_m303_evidence_screen_requires_two_explicit_booleans_and_a_complete_existing_pair() -> None:
+async def test_m303_evidence_screen_requires_an_explicit_answer_and_a_complete_existing_pair() -> None:
     """Blank selectors never become false, while selected false values remain filing facts."""
     app = App[None]()
     dismissed: list[OrdinaryM303FilingEvidenceSubmission | None] = []
 
     async with app.run_test() as pilot:
-        app.push_screen(OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303"), dismissed.append)
+        app.push_screen(
+            OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303", asks_modelo_390=True), dismissed.append
+        )
         await pilot.pause()
 
         app.screen.query_one("#m303-evidence-submit", Button).press()
@@ -35,7 +37,6 @@ async def test_m303_evidence_screen_requires_two_explicit_booleans_and_a_complet
         assert str(app.screen.query_one("#m303-evidence-notice", Static).content)
 
         app.screen.query_one("#m303-evidence-joint-return-elected", Select).value = "false"
-        app.screen.query_one("#m303-evidence-annual-volume-nonzero", Select).value = "false"
         app.screen.query_one("#m303-evidence-attachment-id", Input).value = _ATTACHMENT_ID
         app.screen.query_one("#m303-evidence-sha256", Input).value = _ATTACHMENT_ID
         app.screen.query_one("#m303-evidence-submit", Button).press()
@@ -46,7 +47,6 @@ async def test_m303_evidence_screen_requires_two_explicit_booleans_and_a_complet
         assert submission is not None
         assert submission.work_unit_id == "work-unit-303"
         assert submission.joint_return_elected is False
-        assert submission.annual_volume_nonzero is False
         assert submission.existing_evidence is not None
         assert submission.observed_at is None
         app.exit(None)
@@ -59,10 +59,11 @@ async def test_m303_evidence_screen_can_request_secure_admission_at_an_explicit_
     dismissed: list[OrdinaryM303FilingEvidenceSubmission | None] = []
 
     async with app.run_test() as pilot:
-        app.push_screen(OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303"), dismissed.append)
+        app.push_screen(
+            OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303", asks_modelo_390=True), dismissed.append
+        )
         await pilot.pause()
         app.screen.query_one("#m303-evidence-joint-return-elected", Select).value = "true"
-        app.screen.query_one("#m303-evidence-annual-volume-nonzero", Select).value = "false"
         app.screen.query_one("#m303-evidence-observed-at", Input).value = "2026-09-22T12:00:00Z"
         app.screen.query_one("#m303-evidence-submit", Button).press()
         await pilot.pause()
@@ -102,10 +103,9 @@ def _overview(
     return overview, notices, started
 
 
-def _existing_evidence() -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV1:
-    return ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
+def _existing_evidence() -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
+    return ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
         joint_return_elected=False,
-        annual_volume_nonzero=False,
         m303_exonerado_390_attachment_id=_ATTACHMENT_ID,
         m303_exonerado_390_sha256=_ATTACHMENT_ID,
     )
@@ -123,7 +123,6 @@ def test_overview_refuses_a_returned_evidence_form_for_a_different_work_unit(mon
     submission = OrdinaryM303FilingEvidenceSubmission(
         work_unit_id="different-work-unit",
         joint_return_elected=False,
-        annual_volume_nonzero=False,
         existing_evidence=_existing_evidence(),
     )
 
@@ -155,7 +154,6 @@ def test_overview_refuses_new_attestation_when_the_session_cannot_admit_one(monk
     submission = OrdinaryM303FilingEvidenceSubmission(
         work_unit_id="current-work-unit",
         joint_return_elected=True,
-        annual_volume_nonzero=False,
         observed_at=datetime(2025, 4, 1, 12, tzinfo=UTC),
     )
 
@@ -173,7 +171,7 @@ async def test_overview_admits_new_evidence_then_calculates_the_same_work_unit_i
     calls: list[tuple[str, dict[str, object]]] = []
     admitted = _existing_evidence().model_copy(update={"joint_return_elected": True})
 
-    async def author(**kwargs: object) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV1:
+    async def author(**kwargs: object) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV2:
         calls.append(("author", kwargs))
         return admitted
 
@@ -194,7 +192,6 @@ async def test_overview_admits_new_evidence_then_calculates_the_same_work_unit_i
         OrdinaryM303FilingEvidenceSubmission(
             work_unit_id="current-work-unit",
             joint_return_elected=True,
-            annual_volume_nonzero=False,
             observed_at=observed_at,
         )
     )
@@ -203,7 +200,7 @@ async def test_overview_admits_new_evidence_then_calculates_the_same_work_unit_i
     assert len(started) == 1
     assert await started[0]() == "controller"
     assert calls == [
-        ("author", {"joint_return_elected": True, "annual_volume_nonzero": False, "observed_at": observed_at}),
+        ("author", {"joint_return_elected": True, "observed_at": observed_at}),
         ("calculate", {"ordinary_m303_filing_evidence": admitted}),
     ]
 
@@ -259,10 +256,11 @@ async def test_m303_evidence_screen_refuses_partial_or_ambiguous_evidence(
     dismissed: list[OrdinaryM303FilingEvidenceSubmission | None] = []
 
     async with app.run_test() as pilot:
-        app.push_screen(OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303"), dismissed.append)
+        app.push_screen(
+            OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303", asks_modelo_390=True), dismissed.append
+        )
         await pilot.pause()
         app.screen.query_one("#m303-evidence-joint-return-elected", Select).value = "false"
-        app.screen.query_one("#m303-evidence-annual-volume-nonzero", Select).value = "false"
         app.screen.query_one("#m303-evidence-attachment-id", Input).value = attachment_id
         app.screen.query_one("#m303-evidence-sha256", Input).value = sha256
         app.screen.query_one("#m303-evidence-observed-at", Input).value = observed_at
@@ -282,10 +280,74 @@ async def test_m303_evidence_screen_escape_dismisses_without_a_submission() -> N
     dismissed: list[OrdinaryM303FilingEvidenceSubmission | None] = []
 
     async with app.run_test() as pilot:
-        app.push_screen(OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303"), dismissed.append)
+        app.push_screen(
+            OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303", asks_modelo_390=True), dismissed.append
+        )
         await pilot.pause()
         await pilot.press("escape")
         await pilot.pause()
 
         assert dismissed == [None]
         app.exit(None)
+
+
+@pytest.mark.asyncio
+async def test_a_period_that_does_not_ask_the_exemption_offers_only_the_joint_return_question() -> None:
+    """Before the last period the form has no attestation inputs and submits the joint-return answer alone."""
+    app = App[None]()
+    dismissed: list[OrdinaryM303FilingEvidenceSubmission | None] = []
+
+    async with app.run_test() as pilot:
+        app.push_screen(
+            OrdinaryM303FilingEvidenceScreen(work_unit_id="work-unit-303", asks_modelo_390=False), dismissed.append
+        )
+        await pilot.pause()
+        assert not app.screen.query("#m303-evidence-attachment-id")
+        assert not app.screen.query("#m303-evidence-observed-at")
+        assert str(app.screen.query_one("#m303-evidence-hint", Static).content) == tr(
+            "tui.modelo.m303_evidence.no_modelo_390_question_hint"
+        )
+
+        app.screen.query_one("#m303-evidence-submit", Button).press()
+        await pilot.pause()
+        assert dismissed == []
+
+        app.screen.query_one("#m303-evidence-joint-return-elected", Select).value = "true"
+        app.screen.query_one("#m303-evidence-submit", Button).press()
+        await pilot.pause()
+
+        submission = dismissed[0]
+        assert submission is not None
+        assert submission.observed_at is None
+        assert submission.existing_evidence == ModeloWorkCalculateOrdinaryM303EvidenceRequestV2(
+            joint_return_elected=True
+        )
+        app.exit(None)
+
+
+@pytest.mark.parametrize("asks", [False, True])
+def test_overview_opens_the_form_the_lifecycle_door_resolved_for_the_period(
+    monkeypatch: pytest.MonkeyPatch, asks: bool
+) -> None:
+    """The door answers under the pinned authority whether the period asks the exemption; the form follows it."""
+    pushed: list[object] = []
+    overview = object.__new__(ModeloWorkspaceOverviewScreen)
+    object.__setattr__(
+        overview,
+        "_session",
+        SimpleNamespace(
+            projection=SimpleNamespace(target=SimpleNamespace(work_unit_id="current-work-unit")),
+            lifecycle_actions=SimpleNamespace(asks_modelo_390=asks),
+        ),
+    )
+    monkeypatch.setattr(
+        ModeloWorkspaceOverviewScreen,
+        "app",
+        property(lambda _self: SimpleNamespace(push_screen=lambda screen, _callback: pushed.append(screen))),
+    )
+
+    overview._collect_ordinary_m303_evidence()
+
+    [screen] = pushed
+    assert isinstance(screen, OrdinaryM303FilingEvidenceScreen)
+    assert screen._asks_modelo_390 is asks

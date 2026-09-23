@@ -35,13 +35,7 @@ from ...application.modelo.action_errors import (
 from ...application.modelo.borrador_binding import Modelo100BorradorBindingError
 from ...application.modelo.calculate_input import calculate_modelo_work_revision
 from ...application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
-from ...application.modelo.m303_exonerado_390_applicability_attestation import (
-    m303_exonerado_390_filing_evidence_reference,
-)
-from ...application.modelo.m303_ordinary_filing_evidence_authoring import (
-    OrdinaryM303FilingEvidenceRequest,
-    author_ordinary_m303_filing_instance_evidence,
-)
+from ...application.modelo.m303_ordinary_filing_evidence_authoring import author_ordinary_m303_evidence_for_work
 from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
@@ -126,7 +120,6 @@ def _run_work_calculate(
     sal_capital_social: str | None,
     autoconsumo_promotor_base: str | None,
     joint_return_elected: bool | None,
-    annual_volume_nonzero: bool | None,
     m303_exonerado_390_attachment_id: str | None,
     m303_exonerado_390_sha256: str | None,
     output_language: OutputLanguage | None,
@@ -153,7 +146,6 @@ def _run_work_calculate(
     filing_instance_evidence = _m303_filing_instance_evidence(
         unit=unit,
         joint_return_elected=joint_return_elected,
-        annual_volume_nonzero=annual_volume_nonzero,
         attachment_id=m303_exonerado_390_attachment_id,
         sha256=m303_exonerado_390_sha256,
         operation=operation,
@@ -266,7 +258,6 @@ def _m303_filing_instance_evidence(
     *,
     unit: Any,
     joint_return_elected: bool | None,
-    annual_volume_nonzero: bool | None,
     attachment_id: str | None,
     sha256: str | None,
     operation: Any,
@@ -276,25 +267,18 @@ def _m303_filing_instance_evidence(
     """Author ordinary M303 evidence only from explicit typed CLI facts."""
     if str(unit.modelo) != "303":
         return None
-    if joint_return_elected is None or annual_volume_nonzero is None or attachment_id is None or sha256 is None:
+    if joint_return_elected is None:
         raise M303FilingEvidenceError(
-            "Modelo 303 requires --joint-return-elected, --annual-volume-nonzero, "
-            "--m303-exonerado-390-attachment-id, and --m303-exonerado-390-sha256"
+            "Modelo 303 requires --joint-return-elected or --no-joint-return-elected; the Modelo 390 "
+            "attestation flags are required in the last period of the year (12 or 4T) and refused in any other"
         )
-    return author_ordinary_m303_filing_instance_evidence(
+    return author_ordinary_m303_evidence_for_work(
         work_unit=unit,
-        request=OrdinaryM303FilingEvidenceRequest(
-            filing_year=unit.filing_year,
-            period=unit.period,
-            joint_return_elected=joint_return_elected,
-            annual_volume_nonzero=annual_volume_nonzero,
-            exonerado_390_applicability_reference=m303_exonerado_390_filing_evidence_reference(
-                attachment_id=attachment_id,
-                sha256=sha256,
-            ),
-        ),
+        joint_return_elected=joint_return_elected,
+        exonerado_390_attachment_id=attachment_id,
+        exonerado_390_sha256=sha256,
         operation=operation,
-        attachment_store=store,
+        open_attachment_store=lambda: store,
         profile=profile,
     )
 
@@ -383,7 +367,6 @@ def work_calculate(
     sal_capital_social: str | None = None,
     autoconsumo_promotor_base: str | None = None,
     joint_return_elected: bool | None = None,
-    annual_volume_nonzero: bool | None = None,
     m303_exonerado_390_attachment_id: str | None = None,
     m303_exonerado_390_sha256: str | None = None,
     output_language: OutputLanguage | None = None,
@@ -417,7 +400,6 @@ def work_calculate(
         sal_capital_social=sal_capital_social,
         autoconsumo_promotor_base=autoconsumo_promotor_base,
         joint_return_elected=joint_return_elected,
-        annual_volume_nonzero=annual_volume_nonzero,
         m303_exonerado_390_attachment_id=m303_exonerado_390_attachment_id,
         m303_exonerado_390_sha256=m303_exonerado_390_sha256,
         output_language=output_language,

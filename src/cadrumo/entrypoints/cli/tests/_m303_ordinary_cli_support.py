@@ -1,4 +1,8 @@
-"""Secure ordinary-2025 Modelo 303 input helpers for real CLI tests."""
+"""Secure ordinary-2025 Modelo 303 input helpers for real CLI tests.
+
+Every period asks the joint-return election; only the last settlement period of
+the year (4T or 12) asks the Modelo 390 exemption and so takes an attestation.
+"""
 
 from __future__ import annotations
 
@@ -8,12 +12,15 @@ from typing import Literal
 from ....tests.cli_envelope import unwrap_schema_envelope
 from .cli_runner import invoke_cached_cli
 
-_OBSERVED_AT_BY_PERIOD = {
-    "1T": "2025-03-31T12:00:00+00:00",
-    "2T": "2025-06-30T12:00:00+00:00",
-    "3T": "2025-09-30T12:00:00+00:00",
+_OBSERVED_AT_BY_LAST_PERIOD = {
     "4T": "2025-12-31T12:00:00+00:00",
+    "12": "2025-12-31T12:00:00+00:00",
 }
+
+
+def joint_return_options(*, joint_return_elected: bool = True) -> tuple[str, ...]:
+    """Return the one explicit answer every Modelo 303 period asks."""
+    return ("--joint-return-elected" if joint_return_elected else "--no-joint-return-elected",)
 
 
 @dataclass(frozen=True)
@@ -23,16 +30,10 @@ class OrdinaryM303SecureEvidence:
     attachment_id: str
     sha256: str
 
-    def calculate_options(
-        self,
-        *,
-        joint_return_elected: bool = True,
-        annual_volume_nonzero: bool = False,
-    ) -> tuple[str, ...]:
-        """Return the explicit ordinary-M303 choices and split secure identifiers."""
+    def calculate_options(self, *, joint_return_elected: bool = True) -> tuple[str, ...]:
+        """Return the last-period answers: the joint-return election and the split secure identifiers."""
         return (
-            "--joint-return-elected" if joint_return_elected else "--no-joint-return-elected",
-            "--annual-volume-nonzero" if annual_volume_nonzero else "--no-annual-volume-nonzero",
+            *joint_return_options(joint_return_elected=joint_return_elected),
             "--m303-exonerado-390-attachment-id",
             self.attachment_id,
             "--m303-exonerado-390-sha256",
@@ -40,10 +41,8 @@ class OrdinaryM303SecureEvidence:
         )
 
 
-def admit_ordinary_m303_secure_evidence(
-    *, period: Literal["1T", "2T", "3T", "4T"] = "1T"
-) -> OrdinaryM303SecureEvidence:
-    """Admit one real 2025 ordinary-path non-applicability attestation."""
+def admit_ordinary_m303_secure_evidence(*, period: Literal["4T", "12"] = "4T") -> OrdinaryM303SecureEvidence:
+    """Admit one real 2025 last-period non-applicability attestation."""
     result = invoke_cached_cli(
         [
             "--format",
@@ -57,7 +56,7 @@ def admit_ordinary_m303_secure_evidence(
             "--period",
             period,
             "--observed-at",
-            _OBSERVED_AT_BY_PERIOD[period],
+            _OBSERVED_AT_BY_LAST_PERIOD[period],
         ]
     )
     assert result.exit_code == 0, result.output
@@ -72,4 +71,4 @@ def admit_ordinary_m303_secure_evidence(
     return OrdinaryM303SecureEvidence(attachment_id=attachment_id, sha256=sha256)
 
 
-__all__ = ["OrdinaryM303SecureEvidence", "admit_ordinary_m303_secure_evidence"]
+__all__ = ["OrdinaryM303SecureEvidence", "admit_ordinary_m303_secure_evidence", "joint_return_options"]

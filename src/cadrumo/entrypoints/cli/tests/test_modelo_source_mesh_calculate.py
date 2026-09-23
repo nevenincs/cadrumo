@@ -36,7 +36,7 @@ from ....domain.usage_ratios.model import UsageRatioProfile
 from ....domain.user_profile.values import UserProfileFact
 from ....tests.cli_envelope import unwrap_envelope_notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ._m303_ordinary_cli_support import admit_ordinary_m303_secure_evidence
+from ._m303_ordinary_cli_support import joint_return_options
 from ._modelo_work_ux_support import _capture_m115_invoice_withholding
 from .cli_runner import invoke_cached_cli
 
@@ -779,7 +779,6 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
         )
         IvaWalletDecisionRepository().save_decision(decision)
 
-    evidence = admit_ordinary_m303_secure_evidence()
     result = invoke_cached_cli(
         [
             "--format",
@@ -789,7 +788,7 @@ def test_work_calculate_persists_ledger_source_mesh_observations(
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            *evidence.calculate_options(),
+            *joint_return_options(),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -997,7 +996,6 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
         )
     _seed_zero_iva_wallet_decision(bucket_id)
 
-    evidence = admit_ordinary_m303_secure_evidence()
     result = invoke_cached_cli(
         [
             "--format",
@@ -1007,7 +1005,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            *evidence.calculate_options(),
+            *joint_return_options(),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -1031,7 +1029,7 @@ def test_work_calculate_suppresses_advisory_for_cuota_less_intra_community_suppl
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            *evidence.calculate_options(),
+            *joint_return_options(),
         ],
     )
     assert text_result.exit_code == 0, text_result.output
@@ -1071,7 +1069,6 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
         )
     _seed_zero_iva_wallet_decision(bucket_id)
 
-    evidence = admit_ordinary_m303_secure_evidence()
     result = invoke_cached_cli(
         [
             "--format",
@@ -1081,7 +1078,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            *evidence.calculate_options(),
+            *joint_return_options(),
         ],
     )
     assert result.exit_code == 0, result.output
@@ -1100,7 +1097,7 @@ def test_work_calculate_emits_no_advisory_when_all_iva_consumed() -> None:
             "work",
             "calculate",
             str(work_unit["work_unit_id"]),
-            *evidence.calculate_options(),
+            *joint_return_options(),
         ],
     )
     assert text_result.exit_code == 0, text_result.output

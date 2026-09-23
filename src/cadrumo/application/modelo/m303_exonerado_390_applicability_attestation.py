@@ -24,8 +24,11 @@ from ...domain.attachments.m303_filing_evidence import (
 )
 from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ...domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
+from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.filing_evidence import FilingEvidenceReference
-from .action_errors import M303Exonerado390AttestationUnadmissibleError
+from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
+from .action_errors import M303Exonerado390AttestationUnadmissibleError, M303FilingEvidenceError
+from .m303_filing_evidence import m303_filing_evidence_failure
 from .m303_ordinary_evidence_coordinate import ordinary_m303_evidence_coordinate_supported
 from .profile_readiness_gate import load_modelo_work_profile
 
@@ -210,15 +213,38 @@ def _require_ordinary_not_applicable_request(
     request: M303Exonerado390ApplicabilityAttestationRequest, *, operation: PinnedAuthorityOperation
 ) -> None:
     _require_ordinary_coordinate(filing_year=request.filing_year, period=request.period, operation=operation)
+    require_modelo_390_question_in_period(request.period, operation=operation)
     if request.asserted_value is M303Exonerado390ApplicabilityAssertion.APPLICABLE:
         raise AttachmentValidationError("applicable Modelo 390 evidence is not supported by the ordinary path")
+
+
+def modelo_390_question_asked(period: Period, *, operation: PinnedAuthorityOperation) -> bool:
+    """Return whether the Modelo 303 return for ``period`` asks the Modelo 390 exemption.
+
+    DP30301 Nota 4 asks it only in the last settlement period of the year (12 or
+    4T); every other return prints ``0`` and carries no attestation. The last
+    period is a governed fact, so it is read under the caller's pinned authority.
+    """
+    with validating_governed_facts(operation):
+        return is_last_filing_period_of_year(period)
+
+
+def require_modelo_390_question_in_period(period: Period, *, operation: PinnedAuthorityOperation) -> None:
+    """Refuse a Modelo 390 exemption attestation for a period whose return does not ask it."""
+    if not modelo_390_question_asked(period, operation=operation):
+        raise M303FilingEvidenceError(
+            precondition_failure=m303_filing_evidence_failure(
+                "exonerado_390_attestation_outside_last_period",
+                {"period": period.registry_token, "is_last_filing_period": False},
+            )
+        )
 
 
 def _require_ordinary_coordinate(*, filing_year: int, period: Period, operation: PinnedAuthorityOperation) -> None:
     if not ordinary_m303_evidence_coordinate_supported(filing_year=filing_year, period=period, operation=operation):
         raise AttachmentValidationError(
-            "Modelo 390 applicability evidence supports only a quarterly Modelo 303 whose selected record "
-            "design declares the ordinary evidence header fields"
+            "Modelo 390 applicability evidence supports only a quarterly or monthly Modelo 303 whose selected "
+            "record design declares the ordinary evidence header fields"
         )
 
 
@@ -308,5 +334,7 @@ __all__ = [
     "M303Exonerado390ApplicabilityAttestationRequest",
     "admit_m303_exonerado_390_applicability_attestation",
     "m303_exonerado_390_filing_evidence_reference",
+    "modelo_390_question_asked",
+    "require_modelo_390_question_in_period",
     "resolve_m303_exonerado_390_not_applicable_attestation",
 ]

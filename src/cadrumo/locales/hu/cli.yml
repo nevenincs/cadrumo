@@ -1346,15 +1346,12 @@ cli:
         amendment_kind_help: A módosítás jogi típusa (complementaria, sustitutiva
           vagy rectificativa)
         amendment_reason_help: A módosítás szabad szöveges oka (üzemeltetői auditnaplóhoz).
-        annual_volume_nonzero_help: '303-as nyomtatvány: adja meg kifejezetten, hogy
-          az éves ügyletforgalom (LIVA 121. cikk) eltér-e nullától; nem esetén használja
-          a --no-annual-volume-nonzero kapcsolót. A 303-as nyomtatványhoz kötelező,
-          és soha nem feltételezett.'
         app_help: Nyomtatvány-munkaegységek életciklusának kezelése.
         attest_m303_exonerado_390_help: Titkosított őrzésben rögzíti a nyilatkozatát
           arról, hogy a 390-es nyomtatvány alóli mentesség szakasza nem alkalmazandó
-          erre a 303-as negyedévre, és kiírja az azonosítóját és SHA-256 értékét a
-          `work calculate` számára.
+          az év utolsó időszakára (12 vagy 4T) benyújtott 303-as bevallásra, és kiírja
+          az azonosítóját és SHA-256 értékét a `work calculate` számára. A többi időszak
+          ezt nem kérdezi.
         autoconsumo_promotor_base_help: 'Az ingatlanfejlesztő önadóztatásának adóalapja
           (LISIVA 9.1.c cikk + 79.4 cikk): bérbeadásra áttért saját fejlesztésű ingatlanok
           építési vagy felújítási költsége. Az asszisztens automatikusan alkalmazza
@@ -1506,11 +1503,13 @@ cli:
           (alapértelmezett) vagy spanyol forrású főkönyvi összesítés.'
         m210_plazo_resolved: 'A 210-es modell benyújtási időszaka meghatározva: az
           önkéntes benyújtás határideje %{closes_on}.'
-        m303_exonerado_390_attachment_id_help: '303-as nyomtatvány: a 390-es nyomtatvány
-          alkalmazhatatlanságáról szóló biztonságos nyilatkozat azonosítója, amelyet
-          az `app modelo work attest-m303-exonerado-390` ad vissza.'
-        m303_exonerado_390_sha256_help: '303-as nyomtatvány: a nyilatkozat SHA-256
-          értéke, pontosan úgy, ahogy az `attest-m303-exonerado-390` visszaadta.'
+        m303_exonerado_390_attachment_id_help: '303-as nyomtatvány, csak az év utolsó
+          időszakában (12 vagy 4T): a 390-es nyomtatvány alkalmazhatatlanságáról szóló
+          biztonságos nyilatkozat azonosítója, amelyet az `app modelo work attest-m303-exonerado-390`
+          ad vissza. Bármely más időszakban elutasításra kerül.'
+        m303_exonerado_390_sha256_help: '303-as nyomtatvány, csak az év utolsó időszakában
+          (12 vagy 4T): a nyilatkozat SHA-256 értéke, pontosan úgy, ahogy az `attest-m303-exonerado-390`
+          visszaadta.'
         m303_filing_evidence_help: A teljes, típusos 303-es nyomtatvány bevallási
           bizonyíték JSON-dokumentumának elérési útja.
         m303_rectificativa_motive_help: 'Alkalmazható 303-as rectificativa esetén
