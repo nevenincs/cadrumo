@@ -168,8 +168,13 @@ def _project_deadline_windows(
     The directory carries the metadata needed to select the owning revision;
     only revisions that canonically own a matching window are then hydrated.
     This mirrors the eager authority's ownership rule without reconstructing a
-    whole model graph.
+    whole model graph. Ownership is decided on the directory metadata by the
+    same selector :meth:`PinnedAuthorityOperation.revision_for_context` uses,
+    because that method hydrates the complete selected revision only for its
+    identity to be compared here.
     """
+    from ..calculations.registry.temporal import select_revision_metadata
+
     projected: list[tuple[str, ModeloRevision, DeadlineWindowDefinition]] = []
     for modelo_id in operation.modelo_ids():
         directory = operation.modelo_directory(modelo_id)
@@ -177,8 +182,8 @@ def _project_deadline_windows(
             for metadata_window in metadata.deadline_windows:
                 if metadata_window.filing_year != year:
                     continue
-                selected = operation.revision_for_context(
-                    modelo_id,
+                selected = select_revision_metadata(
+                    directory,
                     filing_year=metadata_window.filing_year,
                     period=metadata_window.period.registry_token,
                 )

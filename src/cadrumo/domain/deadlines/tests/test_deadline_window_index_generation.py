@@ -113,3 +113,67 @@ def test_the_index_stays_bounded(
         indexed_deadline_windows(cast("PinnedAuthorityOperation", repinned), _YEAR)
 
     assert len(deadline_engine._DEADLINE_WINDOW_INDEX) == deadline_engine._DEADLINE_WINDOW_INDEX_LIMIT
+
+
+def _hydrating_projection(operation: PinnedAuthorityOperation, year: int) -> set[tuple[str, str, object]]:
+    """Select every window's owner by hydrating the selected revision, as callers outside the index do."""
+    owned: set[tuple[str, str, object]] = set()
+    for modelo_id in operation.modelo_ids():
+        for metadata in operation.modelo_directory(modelo_id).revisions:
+            for window in metadata.deadline_windows:
+                if window.filing_year != year:
+                    continue
+                selected = operation.revision_for_context(
+                    modelo_id,
+                    filing_year=window.filing_year,
+                    period=window.period.registry_token,
+                )
+                if selected.id == metadata.id:
+                    owned.add((modelo_id, str(metadata.id), window))
+    return owned
+
+
+@pytest.mark.parametrize("year", [_YEAR - 1, _YEAR, _YEAR + 1])
+def test_metadata_selection_owns_the_same_windows_as_hydrated_selection(
+    operation: PinnedAuthorityOperation,
+    year: int,
+) -> None:
+    projected = indexed_deadline_windows(operation, year)
+    assert projected, f"the bundled generation must carry {year} deadline windows"
+
+    assert {(modelo, str(revision.id), window) for modelo, revision, window in projected} == _hydrating_projection(
+        operation,
+        year,
+    )
+
+
+@dataclass
+class _CountingOperation:
+    """The real operation, counting the complete revisions it hydrates."""
+
+    operation: PinnedAuthorityOperation
+    hydrated: list[tuple[str, str]]
+
+    def revision(self, modelo_id: str, revision_id: str) -> Any:
+        self.hydrated.append((str(modelo_id), revision_id))
+        return self.operation.revision(modelo_id, revision_id)
+
+    def revision_for_context(self, modelo_id: str, **selection: Any) -> Any:
+        revision = self.operation.revision_for_context(modelo_id, **selection)
+        self.hydrated.append((str(modelo_id), str(revision.id)))
+        return revision
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.operation, name)
+
+
+def test_projection_hydrates_only_revisions_that_own_a_window(operation: PinnedAuthorityOperation) -> None:
+    """TEETH: selecting an owner must not hydrate a complete revision per window."""
+    counting = _CountingOperation(operation=operation, hydrated=[])
+
+    # CAST-RATIONALE-COUNTING-OPERATION: the wrapper delegates every attribute
+    # to the leased operation and only records hydration, the axis under test.
+    projected = deadline_engine._project_deadline_windows(cast("PinnedAuthorityOperation", counting), _YEAR)
+
+    assert len(counting.hydrated) == len(projected)
+    assert set(counting.hydrated) == {(modelo, str(revision.id)) for modelo, revision, _window in projected}
