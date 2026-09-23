@@ -3,7 +3,7 @@ tags:
   - '#adr'
   - '#assets-core'
 date: '2026-09-21'
-modified: '2026-09-21'
+modified: '2026-09-23'
 body_schema: 'body-v2'
 body_hash: 'sha256:50e34a8963c58909a0b67d856a44dac625aa7c002b493f106ff8e74ee3a0a5a6'
 related:
@@ -11,6 +11,7 @@ related:
   - "[[2026-09-21-assets-core-lifecycle-and-integration-research]]"
   - "[[2026-08-23-amortization-casilla-mapping-adr]]"
   - "[[2026-07-01-iva-bienes-inversion-regularizacion-adr]]"
+  - '[[2026-09-23-assets-core-proration-and-incentive-scope-research]]'
 ---
 
 # `assets-core` adr: `IRPF asset identity, claim history, allocation, and filing projections` | (**status:** `accepted`)

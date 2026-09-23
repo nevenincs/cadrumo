@@ -10,7 +10,6 @@ related:
   - "[[2026-09-23-assets-core-plan]]"
 ---
 
-
 # `assets-core` ledger
 
 ## Changes
@@ -74,4 +73,3 @@ related:
 
 - `S06` day-count proration differs from AEAT month-based worked examples (EUR 733.81 vs EUR 720 for the LIS art. 103 example); recorded as an inconsistency for a lifecycle-ADR amendment
 - `S07` the superseding-claim fixes f92721ce93 and 2f97378e51 postdate wheel 16d5e13e; installed run 3 at 2f97378e51 is queued for the machine-wide installed-run slot
-

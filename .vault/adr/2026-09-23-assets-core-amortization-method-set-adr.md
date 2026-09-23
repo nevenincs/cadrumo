@@ -5,11 +5,13 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:11d21ce8068416883663dfdf88e6c34026d3931b3a2e33bcff86d7c01f69515b'
+body_hash: 'sha256:53afdcbd57f06d0c7e9bf6d03de746e2dea7ada31b51c7cbf702de82d7225d47'
 related:
   - "[[2026-09-23-assets-core-amortization-method-set-research]]"
   - "[[2026-09-21-assets-core-lifecycle-contract-adr]]"
   - "[[2026-08-23-amortization-casilla-mapping-adr]]"
+  - '[[2026-09-23-assets-core-vehicle-affectation-research]]'
+  - '[[2026-09-23-assets-core-proration-and-incentive-scope-research]]'
 ---
 
 # `assets-core` adr: `IRPF activity amortization method set and election contract` | (**status:** `accepted`)
@@ -147,3 +149,33 @@ change is data, not code.
   ADR rather than by this record.
 - Each refused incentive names the exact missing fact or conflicting source
   that would have to change before it can be enrolled.
+
+## Amendment 2026-09-23
+
+Authorized by the operator's coordinator on 2026-09-23 after further evidence
+in `2026-09-23-assets-core-proration-and-incentive-scope-research` and
+`2026-09-23-assets-core-vehicle-affectation-research`. The accepted body above
+is preserved; where it differs, this section governs.
+
+- Constant percentage and sum of digits are admitted for the intangible classes
+  the LIS art. 12.1.a table lists (software, audiovisual productions) in the
+  normal modality: LIS art. 12.1 applies both methods to intangible assets and
+  RIS arts. 5.2 and 6 exclude only buildings, furniture and fittings. In the
+  simplified modality they stay refused, the refusal naming the sources that
+  leave the weighted table undetermined.
+- Reduced-size acceleration of indefinite-life intangibles and goodwill is
+  admitted at 150% of the LIS art. 12.2 one-twentieth for elements acquired in
+  a period meeting LIS art. 101, new or used, as the binding DGT consultas and
+  the AEAT manuals read the stale art. 103.5 cross reference; the registry
+  parameter carries that reading as its provenance.
+- Electric-vehicle free depreciation (LIS DA 18a.1) is admitted for new
+  annex-II vehicles entering service in 2024 or 2025, on a vehicle affectation
+  declaration that `2026-09-23-assets-core-vehicle-affectation-adr` admits.
+- The day-count proration of the lifecycle decision is the unit binding
+  consulta V1978-24 states; the AEAT examples' month fractions are
+  illustrations, so the recorded inconsistency is resolved without amending
+  the lifecycle decision.
+- Job-creating ERD free depreciation (LIS art. 102) and renewable
+  self-consumption free depreciation (LIS DA 17a, 2025 entries only for the
+  2025 IRPF period) remain refused until the average-workforce profile fact
+  lands; that fact is scheduled in the taxpayer profile schema version 7.
