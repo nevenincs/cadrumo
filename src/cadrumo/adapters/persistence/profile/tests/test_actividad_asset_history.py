@@ -197,3 +197,37 @@ def test_cas_rechecks_effective_free_depreciation_cap_after_an_independent_write
 
         reopened = repository.load()
         assert effective_free_depreciation_claims(reopened.claims, tax_year=2025) == (second,)
+
+
+def test_cas_rechecks_the_remaining_basis_after_an_independent_write(tmp_path: Path) -> None:
+    """Two claims validated against the same history cannot both consume one basis."""
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="3c9d1f0e-5a2b-4f7c-8e6d-1b2a3c4d5e6f"):
+        repository = ActividadAssetHistoryRepository()
+        interloper = ActividadAssetHistoryRepository()
+        revision = _revision(asset_id="basis-race")
+        repository.append_revision(revision)
+        first_quarter = _claim(revision, amount=Decimal("600.00"))
+        second_quarter = _claim(
+            revision,
+            covered_from=date(2025, 4, 1),
+            covered_until=date(2025, 7, 1),
+            amount=Decimal("600.00"),
+        )
+        original_mutate = repository._storage.mutate
+        interloper_written = False
+
+        def mutate_after_interloper(callback):
+            nonlocal interloper_written
+            if not interloper_written:
+                interloper_written = True
+                interloper.record_claim(first_quarter)
+            return original_mutate(callback)
+
+        repository._storage.mutate = mutate_after_interloper
+
+        # 600 + 600 would reach 1,200 of a 1,000 amortizable basis.
+        with pytest.raises(ActividadAssetClaimConflictError, match="lawful amortizable basis"):
+            repository.record_claim(second_quarter)
+
+        reopened = repository.load()
+        assert effective_claims(reopened.claims) == (first_quarter,)
