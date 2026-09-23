@@ -34,17 +34,18 @@ import pytest
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     open_test_profile_session,
+    profile_authority_contexts,
     seed_test_profile_record,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
+from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.tests.cli_envelope import require_schema_envelope
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from .._models import GoldenScenario
 from .._runner import load_scenario, run_golden_scenario
@@ -77,16 +78,8 @@ def _seed_natural_person_profile(runtime_profile: TestRuntimeProfile) -> None:
     ``config profile create``, which would re-provision the already-present
     bucket manifest.
     """
-    # Both identity fields come from the loaded schema rather than from
-    # literals. The record pins each to exactly what the schema declares, so a
-    # literal is a copy of the authority that goes stale the moment the schema
-    # moves -- and reading them from one loaded object also keeps the pair
-    # self-consistent, since two literals can drift into naming different
-    # schemas.
-    schema = load_user_profile_schema()
-    record = UserProfileRecord(
-        schema_id=schema.id,
-        schema_version=schema.version,
+    record = create_user_profile_record(
+        context=profile_authority_contexts()[0],
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
@@ -123,50 +116,52 @@ def _seed_ledger_row(*, direction: TransactionDirection, amount: Decimal, filing
     to the ``entrypoints.cli.tests`` package) across a package boundary. Writes a
     genuine row through the real ``TransactionCatalogueRepository``.
     """
-    bucket_id = resolve_active_bucket_id()
-    assert bucket_id is not None, "test profile must install an active bucket pointer"
-    value_date = date(filing_year, 2, 15)
-    row = Transaction.model_validate(
-        {
-            "raw": RawTransaction(
-                provider_transaction_id=f"response-provenance-{label}-{filing_year}",
-                booked_date=value_date,
-                value_date=value_date,
-                amount=amount,
-                currency="EUR",
-                counterparty="Contraparte SA",
-                description=f"response-provenance golden eval {label}",
-                provenance=RawProvenance(
-                    source_path=Path(__file__),
-                    source_sha256=("d" if direction == TransactionDirection.INCOMING else "e") * 64,
-                    source_row_index=1,
-                    source_format=SourceFormat.MANUAL,
-                    ingested_at=datetime(filing_year, 2, 16, 12, 0, tzinfo=UTC),
-                    provider_name="manual-ledger",
+    # Transactions validate against registry facts, as they do under a CLI invocation's lease.
+    with bundled_indexed_authority().operation():
+        bucket_id = resolve_active_bucket_id()
+        assert bucket_id is not None, "test profile must install an active bucket pointer"
+        value_date = date(filing_year, 2, 15)
+        row = Transaction.model_validate(
+            {
+                "raw": RawTransaction(
+                    provider_transaction_id=f"response-provenance-{label}-{filing_year}",
+                    booked_date=value_date,
+                    value_date=value_date,
+                    amount=amount,
+                    currency="EUR",
+                    counterparty="Contraparte SA",
+                    description=f"response-provenance golden eval {label}",
+                    provenance=RawProvenance(
+                        source_path=Path(__file__),
+                        source_sha256=("d" if direction == TransactionDirection.INCOMING else "e") * 64,
+                        source_row_index=1,
+                        source_format=SourceFormat.MANUAL,
+                        ingested_at=datetime(filing_year, 2, 16, 12, 0, tzinfo=UTC),
+                        provider_name="manual-ledger",
+                    ),
+                    raw_fields={"source_kind": f"m130_response_provenance_{label}", "source_key": label},
                 ),
-                raw_fields={"source_kind": f"m130_response_provenance_{label}", "source_key": label},
-            ),
-            "direction": direction,
-            "group_label": None,
-            "business_classification": BusinessClassification.BUSINESS,
-            "source_jurisdiction": "ES",
-            "business_pct": None,
-            "category_id": None,
-            "taxable_base": amount,
-            "iva_rate": None,
-            "iva_amount": None,
-            "irpf_category": "actividad_economica",
-            "purchase_invoice_evidence_id": None,
-            "classified_at": datetime(filing_year, 2, 16, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
-    with open_test_profile_session(bucket_id):
-        existing = TransactionCatalogueRepository(bucket_id=bucket_id).load()
-        transactions = (*tuple(existing.transactions.values()), row)
-        TransactionCatalogueRepository(bucket_id=bucket_id).save(
-            TransactionCatalogue.from_transactions(transactions),
+                "direction": direction,
+                "group_label": None,
+                "business_classification": BusinessClassification.BUSINESS,
+                "source_jurisdiction": "ES",
+                "business_pct": None,
+                "category_id": None,
+                "taxable_base": amount,
+                "iva_rate": None,
+                "iva_amount": None,
+                "irpf_category": "actividad_economica",
+                "purchase_invoice_evidence_id": None,
+                "classified_at": datetime(filing_year, 2, 16, 13, 0, tzinfo=UTC),
+                "classified_by": "manual",
+            },
         )
+        with open_test_profile_session(bucket_id):
+            existing = TransactionCatalogueRepository(bucket_id=bucket_id).load()
+            transactions = (*tuple(existing.transactions.values()), row)
+            TransactionCatalogueRepository(bucket_id=bucket_id).save(
+                TransactionCatalogue.from_transactions(transactions),
+            )
 
 
 def _dispatch_real_m130_calculate(

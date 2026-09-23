@@ -42,13 +42,15 @@ from typing import Any
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    profile_authority_contexts,
+    seed_test_profile_record,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_cli_runtime_profile
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli
 from cadrumo.entrypoints.cli.tests.modelo_cli import create_modelo_work_unit_via_cli
 from cadrumo.tests.cli_envelope import parse_json_object, require_error_document, require_schema_envelope
-from dev.registry.tests.profile_schema_support import load_user_profile_schema
 
 from .._models import UnderDeclarationScenario
 from .._runner import check_under_declaration_scenario
@@ -87,16 +89,8 @@ def _seed_legal_entity_profile(runtime_profile: TestRuntimeProfile) -> None:
     does not fire - this scenario reproduces the free-standing-manual-input
     under-declaration, not the ledger-aggregation one.
     """
-    # Both identity fields come from the loaded schema rather than from
-    # literals. The record pins each to exactly what the schema declares, so a
-    # literal is a copy of the authority that goes stale the moment the schema
-    # moves -- and reading them from one loaded object also keeps the pair
-    # self-consistent, since two literals can drift into naming different
-    # schemas.
-    schema = load_user_profile_schema()
-    record = UserProfileRecord(
-        schema_id=schema.id,
-        schema_version=schema.version,
+    record = create_user_profile_record(
+        context=profile_authority_contexts()[0],
         profile_id=_PROFILE_ID,
         setup_state=ProfileSetupState.COMPLETE,
         facts=(
