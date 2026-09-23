@@ -325,8 +325,13 @@ def descendiente_add(
 
     from ....core.errors.hierarchy import ProfileAnswerTypeError
     from ....domain.contribuyente.descendant_facts import parse_descendiente_flag
+    from ..state_projection_support import authority_operation
 
     pointer = _active_profile_pointer()
+    # Stored rows and the flag's relationship and disability vocabularies are
+    # governed facts, so reading and parsing need the command's pinned
+    # authority, not only the write.
+    authority = authority_operation(ctx)
     existing = _load_descendientes(pointer.bucket_id)
 
     new_rows: list[DescendantInfo] = []
@@ -345,7 +350,7 @@ def descendiente_add(
         # existed and nobody saw it. Catching here also keeps the declared record
         # out of the error log, which the projection wrote in clear.
         try:
-            new_rows.append(parse_descendiente_flag(raw))
+            new_rows.append(parse_descendiente_flag(raw, authority=authority))
         except ProfileAnswerTypeError as exc:
             # The exception CLASS NAME is not operator-facing vocabulary: putting it
             # in context leaks "ValidationError" into the envelope the operator
@@ -379,12 +384,10 @@ def descendiente_add(
             ) from exc
 
     combined = (*existing, *new_rows)
-    from ..state_projection_support import authority_operation
-
     _write_descendientes(
         pointer.bucket_id,
         combined,
-        profile_decode_context=authority_operation(ctx).profile_decode_context(),
+        profile_decode_context=authority.profile_decode_context(),
     )
 
     from .._config_descendiente_payloads import ConfigProfileDescendienteAddResult
@@ -415,7 +418,12 @@ def descendiente_list(
 ) -> None:
     """List every ``DescendantInfo`` row declared on the active profile."""
     _activate_subcommand_output_language(ctx, output_language)
+    from ..state_projection_support import authority_operation
+
     pointer = _active_profile_pointer()
+    # Stored rows validate against governed vocabularies, so decoding them needs
+    # the command's pinned authority.
+    authority_operation(ctx)
     _emit_descendiente_list(ctx, pointer, _load_descendientes(pointer.bucket_id))
 
 
@@ -426,7 +434,12 @@ def descendiente_remove(
 ) -> None:
     """Remove the descendant at ``index`` and re-index the remaining rows."""
     _activate_subcommand_output_language(ctx, output_language)
+    from ..state_projection_support import authority_operation
+
     pointer = _active_profile_pointer()
+    # Stored rows validate against governed vocabularies, so decoding them needs
+    # the command's pinned authority, not only the write.
+    authority = authority_operation(ctx)
     existing = _load_descendientes(pointer.bucket_id)
     if index < 0 or index >= len(existing):
         raise _CliRefusedBoundaryError(
@@ -434,12 +447,10 @@ def descendiente_remove(
             context={"index": str(index), "total": str(len(existing))},
         )
     remaining = tuple(d for i, d in enumerate(existing) if i != index)
-    from ..state_projection_support import authority_operation
-
     _write_descendientes(
         pointer.bucket_id,
         remaining,
-        profile_decode_context=authority_operation(ctx).profile_decode_context(),
+        profile_decode_context=authority.profile_decode_context(),
     )
 
     from .._config_descendiente_payloads import ConfigProfileDescendienteRemoveResult

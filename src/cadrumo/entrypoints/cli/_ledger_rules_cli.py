@@ -48,6 +48,9 @@ def rule_add(
         raise bad(
             tr("cli.app.ledger.rule.empty_pattern"),
         )
+    # The spending-category catalogue is a governed fact; the command's pinned
+    # authority must be open before the category is validated against it.
+    authority_operation(ctx)
     validated_category_id = validate_category_id(category_id)
     rule = add_classification_rule(
         bucket_id=bucket_id,

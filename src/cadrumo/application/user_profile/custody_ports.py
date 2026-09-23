@@ -1531,9 +1531,15 @@ def profile_custody_record_session_material(
     *,
     root: Path | None = None,
 ) -> ProfileCustodyRecordSessionMaterial | None:
-    """Return record material only when the live session serves this profile."""
+    """Return record material only when the live session serves this profile and can still decrypt.
+
+    A session is sealed in place on logout: it keeps naming its bucket while its
+    key is zeroised, so serving the bucket alone does not make it usable. A
+    sealed session is therefore no session, and the caller sees the ordinary
+    not-logged-in absence instead of a locked-bucket failure.
+    """
     session = profile_current_bucket_session()
-    if session is None or not profile_session_serves_bucket(session, str(profile_id)):
+    if session is None or session.sealed or not profile_session_serves_bucket(session, str(profile_id)):
         return None
     material = load_profile_custody_password_material(profile_id, root=root)
     return ProfileCustodyRecordSessionMaterial(envelope=material.envelope, dek=session.dek)

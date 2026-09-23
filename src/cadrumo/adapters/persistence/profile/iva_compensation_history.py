@@ -70,9 +70,12 @@ class IvaCompensationHistoryRepository(
         return _call_storage("load", lambda: self._load_period(period))
 
     def _load_period(self, period: Period) -> IvaCompensationPeriodState | None:
-        state = self.load(iva_compensation_period_key(period))
-        if state is not None:
-            with bundled_indexed_authority().operation() as operation:
+        # A stored period validates its taxpayer identity against registry
+        # vocabulary, so the decode itself needs the authority, not only the
+        # coordinate check after it.
+        with bundled_indexed_authority().operation() as operation:
+            state = self.load(iva_compensation_period_key(period))
+            if state is not None:
                 require_iva_compensation_period_coordinates_current(state, operation=operation)
         return state
 
@@ -86,13 +89,13 @@ class IvaCompensationHistoryRepository(
         """Load and sort all persisted period states."""
 
         def _list() -> tuple[IvaCompensationPeriodState, ...]:
-            states = tuple(
-                sorted(
-                    self.iter_records(),
-                    key=lambda item: (item.filing_year, iva_compensation_period_sort_key(item.period)),
-                ),
-            )
             with bundled_indexed_authority().operation() as operation:
+                states = tuple(
+                    sorted(
+                        self.iter_records(),
+                        key=lambda item: (item.filing_year, iva_compensation_period_sort_key(item.period)),
+                    ),
+                )
                 for state in states:
                     require_iva_compensation_period_coordinates_current(state, operation=operation)
             return states
