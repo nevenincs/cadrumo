@@ -1108,8 +1108,8 @@ cli:
         benyújtására.
       reconcile:
         app_help: 'Egyeztet egy modell munkaegységet az AEAT igazolásával: a pull
-          letölti az igazolást az AEAT-tól és egyeztet; a file egy helyi PDF-et egyeztet;
-          a history a korábbi futtatásokat listázza.'
+          letölti az igazolást az AEAT-tól és egyeztet; az import egy helyi PDF-et
+          egyeztet; a list a korábbi futtatásokat listázza.'
         file_kind_help: 'Bizonyíték dokumentum típusa: justificante (AEAT igazolás,
           minden modell) vagy declaration (benyújtott bevallás PDF, rovat szintű egyeztetés,
           csak engedélyezett modellek). Alapértelmezetten justificante.'

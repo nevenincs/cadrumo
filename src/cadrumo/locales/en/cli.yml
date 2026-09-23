@@ -1039,8 +1039,8 @@ cli:
         / year / period.
       reconcile:
         app_help: 'Reconcile a modelo work unit against its AEAT justificante: pull
-          fetches the receipt from AEAT and reconciles; file reconciles a local PDF;
-          history lists past runs.'
+          fetches the receipt from AEAT and reconciles; import reconciles a local
+          PDF; list shows past runs.'
         file_kind_help: 'Evidence document kind: justificante (AEAT receipt, every
           modelo) or declaration (filed declaración PDF, casilla-level reconcile,
           enrolled modelos only). Defaults to justificante.'

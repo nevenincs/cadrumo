@@ -896,8 +896,8 @@ errors:
       a bevallások között. A folytatás előtt tekintse át az összegeket.
     reconciliation_evidence_invalid: A PDF nem olvasható. Ellenőrizze, hogy a fájl
       az AEAT justificante és nem más dokumentum, és hogy nem sérült. Futtassa újra
-      a(z) `aeat app modelo reconcile file WORK_UNIT_ID --file PATH` parancsot a helyes
-      fájllal.
+      a(z) `aeat app modelo reconcile import WORK_UNIT_ID --file PATH` parancsot a
+      helyes fájllal.
     refused_access_gate_live_read_not_enabled: Az AEAT élő olvasási hozzáférés le
       van tiltva. Ez a művelet az aktuális konfiguráció alatt nem léphet kapcsolatba
       az AEAT-tal.

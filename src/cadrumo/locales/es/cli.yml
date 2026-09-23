@@ -1123,8 +1123,8 @@ cli:
         modelo / ejercicio / periodo.
       reconcile:
         app_help: 'Concilia una unidad de trabajo de modelo con su justificante AEAT:
-          pull descarga el justificante de AEAT y concilia; file concilia un PDF local;
-          history lista las conciliaciones anteriores.'
+          pull descarga el justificante de AEAT y concilia; import concilia un PDF
+          local; list lista las conciliaciones anteriores.'
         file_kind_help: 'Tipo de documento de evidencia: justificante (recibo AEAT,
           todos los modelos) o declaration (PDF de declaración presentada, conciliación
           a nivel de casilla, solo modelos habilitados). Por defecto justificante.'

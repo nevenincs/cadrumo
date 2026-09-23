@@ -952,7 +952,7 @@ errors:
       d'identitat entre declaracions. Revisa els imports abans de continuar.
     reconciliation_evidence_invalid: No s'ha pogut llegir el PDF. Comproveu que el
       fitxer és el justificant de l'AEAT i no un altre document, i que no està malmès.
-      Torneu a executar `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
+      Torneu a executar `aeat app modelo reconcile import WORK_UNIT_ID --file PATH`
       amb el fitxer correcte.
     refused_access_gate_live_read_not_enabled: L'accés de lectura en viu a l'AEAT
       està desactivat. Aquesta operació no pot contactar amb l'AEAT amb la configuració

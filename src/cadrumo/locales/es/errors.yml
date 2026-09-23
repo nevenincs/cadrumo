@@ -945,7 +945,7 @@ errors:
       identidad entre declaraciones. Revisa los importes antes de continuar.
     reconciliation_evidence_invalid: No se ha podido leer el PDF. Compruebe que el
       archivo es el justificante de la AEAT y no otro documento, y que no está dañado.
-      Vuelva a ejecutar `aeat app modelo reconcile file WORK_UNIT_ID --file PATH`
+      Vuelva a ejecutar `aeat app modelo reconcile import WORK_UNIT_ID --file PATH`
       con el archivo correcto.
     refused_access_gate_live_read_not_enabled: El acceso de lectura en vivo a la AEAT
       está desactivado. Esta operación no puede contactar con la AEAT en la configuración
