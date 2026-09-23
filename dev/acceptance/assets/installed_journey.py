@@ -110,7 +110,8 @@ def read_receipt_progress(path: Path) -> tuple[str | None, str | None, tuple[str
     stage = payload.get("stage")
     status = payload.get("status")
     raw_stages = payload.get("completed_stages")
-    stages = tuple(item for item in raw_stages if isinstance(item, str)) if isinstance(raw_stages, list) else ()
+    candidate_stages = cast("list[object]", raw_stages) if isinstance(raw_stages, list) else []
+    stages = tuple(item for item in candidate_stages if isinstance(item, str))
     return (stage if isinstance(stage, str) else None, status if isinstance(status, str) else None, stages)
 
 
