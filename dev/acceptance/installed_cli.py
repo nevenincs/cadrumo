@@ -69,26 +69,8 @@ class InstalledCli:
         command: str | None = None,
     ) -> dict[str, Any]:
         """Run one JSON command and retain sanitized public status evidence."""
-        if authenticated and stdin_payload is not None:
-            raise ValueError("authenticated command cannot also supply a custom stdin payload")
-        argv = [str(self.executable), "--format", "json"]
-        input_text = stdin_payload
-        if authenticated:
-            argv.append("--profile-secrets-stdin")
-            input_text = json.dumps({"profile_passphrase": self.passphrase}, separators=(",", ":"))
-        argv.extend(args)
         command_identity = command or " ".join(args[:4])
-        completed = subprocess.run(  # noqa: S603 - executable is an explicit acceptance input
-            argv,
-            check=False,
-            capture_output=True,
-            cwd=self.storage_root,
-            env=build_installed_cli_environment(storage_root=self.storage_root, authority_root=self.authority_root),
-            input=input_text,
-            text=True,
-            timeout=180,
-            encoding="utf-8",
-        )
+        completed = self._execute(("--format", "json"), args, authenticated=authenticated, stdin_payload=stdin_payload)
         try:
             document = decode_cli_document(completed.stdout, completed.stderr)
         except json.JSONDecodeError as exc:
@@ -131,6 +113,44 @@ class InstalledCli:
         if completed.returncode != 0 and not allow_error:
             raise InstalledCliError(f"{command_identity}: command failed ({_error_code(document)})")
         return document
+
+    def run_text(self, args: Sequence[str], *, authenticated: bool = True, command: str | None = None) -> str:
+        """Run one command in its default text format and return its standard output."""
+        completed = self._execute((), args, authenticated=authenticated, stdin_payload=None)
+        if completed.returncode != 0:
+            raise InstalledCliError(
+                f"{command or ' '.join(args[:4])}: text command failed (exit_code={completed.returncode})"
+            )
+        return completed.stdout
+
+    def _execute(
+        self,
+        global_options: Sequence[str],
+        args: Sequence[str],
+        *,
+        authenticated: bool,
+        stdin_payload: str | None,
+    ) -> subprocess.CompletedProcess[str]:
+        """Run one fresh child with the isolated environment and stdin-only credential."""
+        if authenticated and stdin_payload is not None:
+            raise ValueError("authenticated command cannot also supply a custom stdin payload")
+        argv = [str(self.executable), *global_options]
+        input_text = stdin_payload
+        if authenticated:
+            argv.append("--profile-secrets-stdin")
+            input_text = json.dumps({"profile_passphrase": self.passphrase}, separators=(",", ":"))
+        argv.extend(args)
+        return subprocess.run(  # noqa: S603 - executable is an explicit acceptance input
+            argv,
+            check=False,
+            capture_output=True,
+            cwd=self.storage_root,
+            env=build_installed_cli_environment(storage_root=self.storage_root, authority_root=self.authority_root),
+            input=input_text if input_text is not None else "",
+            text=True,
+            timeout=180,
+            encoding="utf-8",
+        )
 
     def create_profile(self, *, year: int) -> None:
         """Create and complete the shared synthetic natural-person profile."""

@@ -21,7 +21,6 @@ import argparse
 import hashlib
 import json
 import secrets
-import subprocess
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date, datetime
@@ -46,7 +45,6 @@ from dev.acceptance.installed_cli import (
     InstalledCli,
     InstalledCliError,
     authority_generation,
-    build_installed_cli_environment,
 )
 
 _SCHEMA = "calendar-01-installed-parity-v1"
@@ -347,6 +345,24 @@ async def _create_work_from_calendar(pilot: Any, row_key: str) -> None:
     await pilot.press("escape")
 
 
+async def _wait_for_refreshed_workbench(pilot: Any, *, polls: int = 6000) -> None:
+    """Wait until the public Home is mounted and no workbench refresh is in progress."""
+    from textual.css.query import NoMatches
+    from textual.widgets import Static
+
+    for _ in range(polls):
+        try:
+            updating = query_public_selector(pilot, "#root-updating", Static)
+            pilot.app.screen.query_one("#home-agenda")
+        except NoMatches:
+            pass
+        else:
+            if not updating.display:
+                return
+        await pilot.pause()
+    raise CalendarParityError("installed TUI did not finish refreshing the workbench after the calendar write")
+
+
 def _run_child(*, workspace_root: Path, mode: ChildMode, write_row: str | None, passphrase: str) -> dict[str, object]:
     """Read, or create then read, the calendar through one fresh installed TUI process."""
     admit_existing_profile_for_headless_launcher(passphrase=passphrase)
@@ -359,8 +375,10 @@ def _run_child(*, workspace_root: Path, mode: ChildMode, write_row: str | None, 
                 raise CalendarParityError("installed TUI create child has no calendar row")
             await _open_calendar(pilot)
             await _create_work_from_calendar(pilot, write_row)
-            # Leave the calendar so the next read is rebuilt from the store.
+            # Leave the calendar and let the workbench rebuild from the store
+            # before the second read, or it would show the pre-write generation.
             await pilot.press("escape")
+            await _wait_for_refreshed_workbench(pilot)
         work_units.extend(await _open_calendar(pilot))
         observed.update(await _read_visible_rows(pilot))
         pilot.app.exit()
@@ -395,6 +413,27 @@ def _require_empty_directory(path: Path, *, label: str) -> Path:
     return path.resolve()
 
 
+def _resumed_cli_calendar(cli: InstalledCli, window: CalendarWindow) -> tuple[dict[str, CliCalendarRow], str]:
+    """Read the calendar after a TUI login, resuming its session where the OS keychain allows.
+
+    The product keeps a resumable session only in the OS keychain; without one it
+    refuses to resume and accepts the stdin credential instead.  Either way the
+    read is a fresh installed process over the same store the TUI wrote.
+    """
+    probe = cli.run(
+        ("app", "overview", "calendar", "--from", window.from_date.isoformat(), "--to", window.from_date.isoformat()),
+        command="overview.calendar.resume_probe",
+        authenticated=False,
+        allow_error=True,
+    )
+    error = probe.get("error")
+    if probe.get("status") != "error":
+        return _cli_calendar(cli, window, authenticated=False), "resumed_tui_session"
+    if isinstance(error, dict) and error.get("code") == "AUTH_STORAGE_KEYRING_UNAVAILABLE":
+        return _cli_calendar(cli, window, authenticated=True), "stdin_secret_os_keychain_unavailable"
+    raise CalendarParityError("installed CLI could neither resume the TUI session nor report the keychain refusal")
+
+
 def _cli_calendar(cli: InstalledCli, window: CalendarWindow, *, authenticated: bool) -> dict[str, CliCalendarRow]:
     """Read the calendar once as JSON and once as text through fresh installed processes."""
     arguments = (
@@ -411,21 +450,11 @@ def _cli_calendar(cli: InstalledCli, window: CalendarWindow, *, authenticated: b
         document = cli.run(arguments, command="overview.calendar", authenticated=authenticated)
     except InstalledCliError as error:
         raise CalendarParityError(f"installed CLI calendar JSON failed: {error}") from error
-    secret_flag = ("--profile-secrets-stdin",) if authenticated else ()
-    completed = subprocess.run(  # noqa: S603 - executable comes from explicit installed-wheel input
-        [str(cli.executable), *secret_flag, *arguments],
-        check=False,
-        capture_output=True,
-        cwd=cli.storage_root,
-        env=build_installed_cli_environment(storage_root=cli.storage_root, authority_root=cli.authority_root),
-        input=json.dumps({"profile_passphrase": cli.passphrase}, separators=(",", ":")) if authenticated else "",
-        text=True,
-        timeout=180,
-        encoding="utf-8",
-    )
-    if completed.returncode != 0:
-        raise CalendarParityError(f"installed CLI calendar text failed (exit_code={completed.returncode})")
-    return parse_cli_calendar(document, completed.stdout)
+    try:
+        text = cli.run_text(arguments, authenticated=authenticated, command="overview.calendar")
+    except InstalledCliError as error:
+        raise CalendarParityError(f"installed CLI calendar text failed: {error}") from error
+    return parse_cli_calendar(document, text)
 
 
 def _cli_create_work(cli: InstalledCli, *, modelo: str, year: int, period: str) -> None:
@@ -506,7 +535,7 @@ def _scenario(name: str, comparisons: list[dict[str, object]], **extra: object) 
     }
 
 
-def _run_outer(args: argparse.Namespace) -> dict[str, object]:
+def _run_outer(args: argparse.Namespace, progress: dict[str, object]) -> dict[str, object]:
     """Run the four store scenarios and compare every calendar row the two frontends state."""
     cli_executable = args.cli.resolve(strict=True)
     python_executable = args.python.resolve(strict=True)
@@ -541,6 +570,13 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
             write_row=write_row,
         )
 
+    completed: list[dict[str, object]] = []
+    progress["completed_scenarios"] = completed
+    progress["source_commit"] = args.source_commit
+    progress["wheel_sha256"] = hashlib.sha256(args.wheel.read_bytes()).hexdigest()
+    progress["authority_generation"] = authority_generation(authority_root)
+    progress["calendar_window"] = {"from": window.from_date.isoformat(), "to": window.to_date.isoformat()}
+
     # Independent stores: one frontend reads each.
     _, cli_only, _ = store("cli_only")
     cli_rows = _cli_calendar(cli_only, window, authenticated=True)
@@ -548,6 +584,7 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
     tui_only = child(tui_only_path, tui_only_secret, "tui_only", "inspect")
     labels = tui_only["labels"]
     independent = _scenario("independent_stores", compare_rows(cli_rows, _tui_fields(tui_only), labels))
+    completed.append(independent)
 
     # CLI -> TUI: the CLI writes local work, the TUI must state it.
     c2t_path, c2t_cli, c2t_secret = store("cli_to_tui")
@@ -565,18 +602,19 @@ def _run_outer(args: argparse.Namespace) -> dict[str, object]:
         written_row=cli_row,
         written_work_visible_in_other_frontend=cli_work in c2t_tui["work_units"],
     )
+    completed.append(cli_to_tui)
 
     # TUI -> CLI: the TUI calendar writes local work, the resumed CLI must state it.
     t2c_path, t2c_cli, t2c_secret = store("tui_to_cli")
     t2c_tui = child(t2c_path, t2c_secret, "tui_to_cli", "create_then_inspect", write_row=tui_row)
-    t2c_rows = _cli_calendar(t2c_cli, window, authenticated=False)
+    t2c_rows, t2c_authentication = _resumed_cli_calendar(t2c_cli, window)
     tui_work = t2c_rows[tui_row].work_unit_id
     tui_to_cli = _scenario(
         "tui_to_cli",
         compare_rows(t2c_rows, _tui_fields(t2c_tui), labels),
         written_row=tui_row,
         written_work_visible_in_other_frontend=tui_work is not None and tui_work in t2c_tui["work_units"],
-        cli_authentication="resumed_tui_session",
+        cli_authentication=t2c_authentication,
     )
 
     product_hashes = {document["product_init_sha256"] for document in (tui_only, c2t_tui, t2c_tui)}
@@ -630,20 +668,27 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
-def _failure_document(error: Exception) -> dict[str, object]:
-    """Reduce a failure to its type and, for driver-owned refusals, the value-free stage message."""
+def _failure_document(error: Exception, progress: Mapping[str, object] | None = None) -> dict[str, object]:
+    """Reduce a failure to its type, the value-free stage message and the progress already proven."""
     if isinstance(error, CalendarParityError):
         diagnostic = str(error)
     elif isinstance(error, (InstalledTuiChildError, InstalledCliError)):
         diagnostic = "installed frontend or command failed"
     else:
         diagnostic = "unexpected installed calendar parity failure"
-    return {"schema_version": _SCHEMA, "status": "failed", "error_type": type(error).__name__, "diagnostic": diagnostic}
+    return {
+        "schema_version": _SCHEMA,
+        "status": "failed",
+        "error_type": type(error).__name__,
+        "diagnostic": diagnostic,
+        **(progress or {}),
+    }
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     """Run the installed outer calendar parity or one stdin-credentialed TUI child."""
     args = _parser().parse_args(argv)
+    progress: dict[str, object] = {}
     try:
         if args.child is not None:
             document = _run_child(
@@ -656,15 +701,15 @@ def main(argv: Sequence[str] | None = None) -> int:
             required = (args.cli, args.python, args.wheel, args.authority_root, args.output_root, args.source_commit)
             if None in required:
                 raise CalendarParityError("installed calendar outer run lacks its wheel and source inputs")
-            document = _run_outer(args)
+            document = _run_outer(args, progress)
     except InstalledTuiChildError as error:
         if args.child is None:
-            document = _failure_document(error)
+            document = _failure_document(error, progress)
         else:
             write_installed_tui_failure_receipt(path=args.receipt, schema_version=_SCHEMA, error=error)
             return 2
     except Exception as error:
-        document = _failure_document(error)
+        document = _failure_document(error, progress)
     args.receipt.parent.mkdir(parents=True, exist_ok=True)
     args.receipt.write_text(json.dumps(document, indent=2, sort_keys=True) + "\n", encoding="utf-8")
     return 0 if document["status"] == "proven" else 2
