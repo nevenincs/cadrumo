@@ -33,6 +33,7 @@ from ....core.hashing import sha256_hex
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.iva.classification import InvoiceKind
 from ....domain.transactions.raw_transaction import SourceFormat
+from ....tests.xls_fixtures import XlsFormula, xls_workbook_bytes
 from ..bulk_import import BulkInvoiceImportRow, import_invoices_from_rows, read_bulk_invoice_import_source
 from ..catalogue_creation_ports import CatalogueCreationPorts
 from ._catalogue_creation_fakes import in_memory_catalogue_creation_ports
@@ -186,6 +187,7 @@ def test_the_amount_refusal_teaches_the_grammar_it_wants(tmp_path: Path) -> None
         assert "1.234" in reason, "the refusal must echo what the operator actually wrote"
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_import_still_accepts_the_canonical_euro_amount(tmp_path: Path) -> None:
     """The refusal above is specific: a canonical dot-decimal amount still imports.
 
@@ -283,6 +285,7 @@ def test_bulk_import_without_source_identity_keeps_manual_invoice_provenance_emp
     assert invoice.provenance is None
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_import_keeps_an_already_numeric_workbook_cell_unjudged(tmp_path: Path) -> None:
     """A numeric XLSX cell carries the workbook's representation, not the operator's grammar.
 
@@ -407,6 +410,7 @@ def test_read_bulk_invoice_import_rows_rejects_unknown_extension(tmp_path: Path)
         read_bulk_invoice_import_source(bad_path)
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_an_unrecognised_column_is_reported_and_the_file_still_imports(tmp_path: Path) -> None:
     """An unknown column is reported, never a refusal.
 
@@ -566,6 +570,7 @@ def test_import_refuses_a_file_that_can_state_no_country_at_all(tmp_path: Path) 
             import_invoices_from_rows(source, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, ports=ports)
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_a_declared_country_lets_a_book_without_the_column_import(tmp_path: Path) -> None:
     """Positive control: the same file imports once the operator states a country.
 
@@ -588,6 +593,7 @@ def test_a_declared_country_lets_a_book_without_the_column_import(tmp_path: Path
         assert result.refused == ()
 
 
+@pytest.mark.usefixtures("authority_operation")
 def test_a_blank_country_cell_refuses_only_its_own_row(tmp_path: Path) -> None:
     """A file that HAS the column is not refused whole; the blank row is.
 
@@ -602,3 +608,88 @@ def test_a_blank_country_cell_refuses_only_its_own_row(tmp_path: Path) -> None:
 
         assert result.created == 1
         assert [(f.row_number, f.field) for f in result.refused] == [(3, "country_code")]
+
+
+_XLS_HEADER: list[object] = [
+    "counterparty_nif",
+    "counterparty_name",
+    "invoice_number",
+    "invoice_date",
+    "taxable_base",
+    "iva_rate",
+]
+
+
+def test_a_legacy_xls_book_reads_and_imports_like_the_same_xlsx_book(
+    tmp_path: Path,
+    authority_operation: object,
+) -> None:
+    """An Excel 97-2003 book yields the XLSX reader's values, row identity and an accepted invoice."""
+    del authority_operation
+    rows: list[list[object]] = [_XLS_HEADER, [_CIF, "Papeleria Sol SL", "BULK-XLS-001", "2026-05-01", 100.0, 21]]
+    xls_path = tmp_path / "invoices.xls"
+    xls_path.write_bytes(xls_workbook_bytes([("Invoices", rows)]))
+    xlsx_path = tmp_path / "invoices.xlsx"
+    workbook = Workbook()
+    sheet = workbook.active
+    assert sheet is not None
+    for row in rows:
+        sheet.append(row)
+    workbook.save(xlsx_path)
+
+    xls_source = read_bulk_invoice_import_source(xls_path)
+    xlsx_source = read_bulk_invoice_import_source(xlsx_path)
+
+    assert [row.values for row in xls_source.rows] == [row.values for row in xlsx_source.rows]
+    provenance = xls_source.rows[0].provenance
+    assert provenance is not None
+    assert provenance.source_path == Path("invoices.xls")
+    assert provenance.source_sha256 == sha256_hex(xls_path.read_bytes())
+    assert provenance.source_row_index == 2
+    assert provenance.source_format is SourceFormat.XLS
+    with _in_memory_ports() as ports:
+        result = import_invoices_from_rows(
+            xls_source,
+            bucket_id=_BUCKET_ID,
+            kind=InvoiceKind.RECEIVED,
+            declared_country="ES",
+            ports=ports,
+        )
+        assert result.created == 1
+        invoice = next(iter(ports.invoice_repository.load().invoices.values()))
+    assert invoice.provenance == provenance
+    assert invoice.invoice_number == "BULK-XLS-001"
+
+
+def test_a_legacy_xls_formula_cell_refuses_the_book_like_xlsx(tmp_path: Path) -> None:
+    """A formula's cached result in an .xls book is refused, never read as the taxable base."""
+    xls_path = tmp_path / "formula.xls"
+    xls_path.write_bytes(
+        xls_workbook_bytes(
+            [
+                (
+                    "Invoices",
+                    [_XLS_HEADER, [_CIF, "Papeleria Sol SL", "BULK-XLS-002", "2026-05-01", XlsFormula(9000), 21]],
+                )
+            ]
+        )
+    )
+
+    with pytest.raises(InvoiceValidationError) as refused:
+        read_bulk_invoice_import_source(xls_path)
+
+    assert refused.value.translated_message == "application.invoices.bulk_import.errors.formula_cell"
+    context = refused.value.context
+    assert context is not None
+    assert (context["row"], context["column"]) == ("2", "5")
+
+
+def test_an_unreadable_legacy_xls_book_refuses_as_an_unreadable_table(tmp_path: Path) -> None:
+    """Bytes that are not an Excel 97-2003 workbook refuse before any row is read."""
+    xls_path = tmp_path / "broken.xls"
+    xls_path.write_bytes(b"not a workbook")
+
+    with pytest.raises(InvoiceValidationError) as refused:
+        read_bulk_invoice_import_source(xls_path)
+
+    assert refused.value.translated_message == "application.invoices.bulk_import.errors.unreadable_table"

@@ -57,7 +57,6 @@ if TYPE_CHECKING:
 
 #: The audit label an import written from this surface is recorded under.
 LEDGER_IMPORT_SOURCE_COMMAND: Final = "cadrumo-tui ledger import"
-_INVOICE_BOOK_SUFFIXES: Final = frozenset({".csv", ".tsv", ".xlsx", ".xlsm"})
 _ACTOR: Final = "operator"
 
 
@@ -73,9 +72,11 @@ def _invoice_book_files(path: Path) -> tuple[Path, ...]:
     A folder holding none yields nothing, which the outcome reports as zero
     files read rather than as a success with rows.
     """
+    from ...application.invoices.bulk_import import BULK_INVOICE_IMPORT_EXTENSIONS
+
     if not path.is_dir():
         return (path,)
-    return tuple(sorted(child for child in path.iterdir() if child.suffix.lower() in _INVOICE_BOOK_SUFFIXES))
+    return tuple(sorted(child for child in path.iterdir() if child.suffix.lower() in BULK_INVOICE_IMPORT_EXTENSIONS))
 
 
 @dataclass(frozen=True, slots=True)

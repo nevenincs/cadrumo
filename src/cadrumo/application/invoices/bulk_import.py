@@ -47,8 +47,9 @@ from ...core.country_code import CountryCodeAlpha2
 from ...core.decimal.coercion import coerce_decimal, normalize_decimal_separators
 from ...core.decimal.grammar import DecimalSeparator, DecimalSeparatorValue, try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
-from ...core.external_constants import DEFAULT_CURRENCY
+from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION
 from ...core.hashing import sha256_hex
+from ...core.legacy_workbook import read_legacy_workbook
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
 from ...core.parsing.dates import parse_iso8601_date
@@ -67,6 +68,7 @@ from .catalogue_creation import build_catalogue_invoice, create_catalogue_invoic
 from .catalogue_creation_ports import CatalogueCreationPorts
 
 __all__ = [
+    "BULK_INVOICE_IMPORT_EXTENSIONS",
     "BULK_INVOICE_IMPORT_REQUIRED_COLUMNS",
     "BulkImportSourceRow",
     "BulkInvoiceImportResult",
@@ -76,6 +78,9 @@ __all__ = [
     "import_invoices_from_rows",
     "read_bulk_invoice_import_source",
 ]
+
+#: The invoice-book file kinds the importer reads, in every frontend.
+BULK_INVOICE_IMPORT_EXTENSIONS: frozenset[str] = frozenset({".csv", ".tsv", ".xlsx", ".xlsm", XLS_EXTENSION})
 
 BULK_INVOICE_IMPORT_REQUIRED_COLUMNS: frozenset[str] = frozenset(
     {
@@ -600,6 +605,7 @@ def _workbook_source_rows(
     path: Path,
     field_by_index: Mapping[int, str],
     source_sha256: str,
+    source_format: SourceFormat,
     ingested_at: datetime,
 ) -> tuple[BulkImportSourceRow, ...]:
     rows: list[BulkImportSourceRow] = []
@@ -619,7 +625,7 @@ def _workbook_source_rows(
                 provenance=_bulk_row_provenance(
                     path,
                     source_sha256=source_sha256,
-                    source_format=SourceFormat.XLSX,
+                    source_format=source_format,
                     ingested_at=ingested_at,
                     row_number=row_number,
                 ),
@@ -634,6 +640,7 @@ def _workbook_source_from_rows(
     path: Path,
     mapper: ColumnRoleMapper | None,
     source_sha256: str,
+    source_format: SourceFormat,
     ingested_at: datetime,
 ) -> BulkInvoiceImportSource:
     try:
@@ -652,6 +659,7 @@ def _workbook_source_from_rows(
             path=path,
             field_by_index=resolution.field_by_index,
             source_sha256=source_sha256,
+            source_format=source_format,
             ingested_at=ingested_at,
         ),
         resolution=resolution,
@@ -697,10 +705,43 @@ def _read_workbook_source(
             path=path,
             mapper=mapper,
             source_sha256=source_sha256,
+            source_format=SourceFormat.XLSX,
             ingested_at=ingested_at,
         )
     finally:
         workbook.close()
+
+
+def _read_legacy_workbook_source(
+    path: Path,
+    *,
+    mapper: ColumnRoleMapper | None,
+    source_bytes: bytes,
+    source_sha256: str,
+    ingested_at: datetime,
+) -> BulkInvoiceImportSource:
+    """Read a legacy Excel 97-2003 invoice book exactly as :func:`_read_workbook_source` reads ``.xlsx``.
+
+    :func:`~core.legacy_workbook.read_legacy_workbook` marks each formula cell
+    the way ``openpyxl`` does, so the same first worksheet is read under the
+    same formula refusal, header resolution and row numbering.
+    """
+    try:
+        worksheets = read_legacy_workbook(source_bytes)
+    except TabularSourceError as exc:
+        raise InvoiceValidationError(
+            "bulk invoice import file carries no readable table",
+            translated_message="application.invoices.bulk_import.errors.unreadable_table",
+            context={"path_name": path.name, "detail": str(exc)},
+        ) from exc
+    return _workbook_source_from_rows(
+        iter(worksheets[0].rows if worksheets else ()),
+        path=path,
+        mapper=mapper,
+        source_sha256=source_sha256,
+        source_format=SourceFormat.XLS,
+        ingested_at=ingested_at,
+    )
 
 
 def read_bulk_invoice_import_source(
@@ -708,7 +749,7 @@ def read_bulk_invoice_import_source(
     *,
     mapper: ColumnRoleMapper | None = None,
 ) -> BulkInvoiceImportSource:
-    """Read a CSV, TSV or XLSX invoice book into rows keyed by importer field.
+    """Read a CSV, TSV, XLSX/XLSM or legacy XLS invoice book into rows keyed by importer field.
 
     A column whose header already names an importer field binds to it outright.
     Anything left over is put to ``mapper`` once for the whole file, and a column
@@ -731,9 +772,9 @@ def read_bulk_invoice_import_source(
             read, or no column supplies a required field.
     """
     suffix = path.suffix.lower()
-    if suffix not in {".csv", ".tsv", ".xlsx", ".xlsm"}:
+    if suffix not in BULK_INVOICE_IMPORT_EXTENSIONS:
         raise InvoiceValidationError(
-            "bulk invoice import file must be .csv, .tsv or .xlsx",
+            "bulk invoice import file must be .csv, .tsv, .xlsx, .xlsm or .xls",
             translated_message="application.invoices.bulk_import.errors.unsupported_extension",
             context={"path_name": path.name, "extension": suffix},
         )
@@ -755,7 +796,8 @@ def read_bulk_invoice_import_source(
             source_sha256=source_sha256,
             ingested_at=ingested_at,
         )
-    return _read_workbook_source(
+    read_workbook = _read_legacy_workbook_source if suffix == XLS_EXTENSION else _read_workbook_source
+    return read_workbook(
         path,
         mapper=mapper,
         source_bytes=source_bytes,

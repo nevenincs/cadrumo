@@ -15,7 +15,7 @@ typed workbook cell values for dates and amounts until the parse boundary.
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, override
@@ -30,22 +30,18 @@ from .....core.workbook import FORMULA_CELL_REFUSAL, first_formula_cell_column
 from .....domain.transactions.raw_transaction import SourceFormat
 from .base import (
     FinancialProvider,
-    FinancialValidationError,
     InvalidFinancialSourceError,
     ParsedLedgerRow,
     ProviderValidation,
-    archive_cell_text,
     default_currency,
 )
-from .csv import (
-    CSV_LAYOUTS,
-    CsvBankLayout,
-    build_provider_row,
-    find_column,
-    header_lookup,
-    layout_score,
-    parse_tabular_transaction_row,
-    row_is_blank,
+from .csv import CsvBankLayout, find_column, header_lookup
+from .workbook_layout import (
+    LAYOUT_SAMPLE_ROWS,
+    MIN_LAYOUT_SCORE,
+    WorksheetLayoutMatch,
+    best_layout_match,
+    iter_worksheet_rows,
 )
 
 _logger = get_logger(__name__)
@@ -153,41 +149,18 @@ class XlsxProvider(FinancialProvider):
         if layout is None or headers is None or lookup is None:
             workbook.close()
             raise InvalidFinancialSourceError("Workbook does not contain a supported bank-statement header row")
+        match = WorksheetLayoutMatch(
+            score=MIN_LAYOUT_SCORE, header_index=header_index, headers=headers, lookup=lookup, layout=layout
+        )
         try:
-            for source_row_index, row in enumerate(rows[header_index + 1 :], start=header_index + 2):
-                raw_fields = _row_to_mapping(headers, row)
-                cell_lookup = _row_to_cells(headers, row)
-                if row_is_blank(raw_fields):
-                    continue
-                try:
-                    parsed = parse_tabular_transaction_row(
-                        layout=layout,
-                        lookup=lookup,
-                        raw_fields=raw_fields,
-                        typed_fields=cell_lookup,
-                        synthetic_provider_name=f"{layout.bank_name}-{sheet_name}",
-                        source_sha256=source_sha256,
-                        source_row_index=source_row_index,
-                        required_field_context="worksheet row",
-                    )
-                except (ValueError, FinancialValidationError) as exc:
-                    _logger.warning(
-                        "xlsx_provider: parse error row=%d file=%s",
-                        source_row_index,
-                        path.name,
-                        exc_info=True,
-                    )
-                    raise InvalidFinancialSourceError(
-                        f"worksheet row {source_row_index} could not be parsed: {exc}",
-                    ) from exc
-                yield build_provider_row(
-                    provider=self,
-                    path=path,
-                    source_sha256=source_sha256,
-                    source_row_index=source_row_index,
-                    parsed=parsed,
-                    raw_fields=raw_fields,
-                )
+            yield from iter_worksheet_rows(
+                provider=self,
+                path=path,
+                source_sha256=source_sha256,
+                rows=rows,
+                match=match,
+                sheet_name=sheet_name,
+            )
         finally:
             workbook.close()
 
@@ -206,7 +179,7 @@ class XlsxProvider(FinancialProvider):
             )
             self._last_sheet_name = best.sheet_name
             self._last_header_index = best.header_index + 1
-            if best.score < _MIN_LAYOUT_SCORE:
+            if best.score < MIN_LAYOUT_SCORE:
                 return workbook, best_rows, best.sheet_name, None, None, None, best.header_index
             return (
                 workbook,
@@ -226,9 +199,6 @@ class XlsxProvider(FinancialProvider):
         except Exception:
             _close_workbook_during_teardown(workbook)
             raise
-
-
-_MIN_LAYOUT_SCORE = 3
 
 
 @dataclass(frozen=True, slots=True)
@@ -269,18 +239,19 @@ def _select_best_layout_across_worksheets(workbook: Workbook) -> _BestLayoutMatc
         score=-1,
     )
     for worksheet in workbook.worksheets:
-        candidate = _best_layout_match_for_worksheet(worksheet)
-        if candidate is None or candidate[0] <= best.score:
+        candidate = best_layout_match(
+            worksheet.iter_rows(min_row=1, max_row=LAYOUT_SAMPLE_ROWS, values_only=True),
+        )
+        if candidate is None or candidate.score <= best.score:
             continue
-        score, index, row, lookup, layout = candidate
         best = _BestLayoutMatch(
             worksheet=worksheet,
             sheet_name=worksheet.title,
-            layout=layout,
-            headers=row,
-            lookup=lookup,
-            header_index=index,
-            score=score,
+            layout=candidate.layout,
+            headers=candidate.headers,
+            lookup=candidate.lookup,
+            header_index=candidate.header_index,
+            score=candidate.score,
         )
     return best
 
@@ -332,33 +303,3 @@ def _materialize_selected_rows_or_refuse_formula_cells(
                 )
         rows.append([cell.value for cell in cells])
     return rows
-
-
-def _best_layout_match_for_worksheet(
-    worksheet: Worksheet,
-) -> tuple[int, int, list[str], dict[str, str], CsvBankLayout] | None:
-    """Return the best (score, header_index, row, lookup, layout) the worksheet matches, or ``None``."""
-    sample_rows = [
-        [archive_cell_text(cell) for cell in row]
-        for row in worksheet.iter_rows(min_row=1, max_row=10, values_only=True)
-    ]
-    best: tuple[int, int, list[str], dict[str, str], CsvBankLayout] | None = None
-    for index, row in enumerate(sample_rows):
-        if not any(cell.strip() for cell in row):
-            continue
-        lookup = header_lookup(row)
-        for layout in CSV_LAYOUTS:
-            score = layout_score(lookup, layout)
-            if best is None or score > best[0]:
-                best = (score, index, row, lookup, layout)
-    return best
-
-
-def _row_to_mapping(headers: Sequence[str], row: Sequence[object]) -> dict[str, str]:
-    """Convert one worksheet row into the stored raw-field mapping."""
-    return {header: archive_cell_text(row[index]) if index < len(row) else "" for index, header in enumerate(headers)}
-
-
-def _row_to_cells(headers: Sequence[str], row: Sequence[object]) -> dict[str, object]:
-    """Map worksheet headers to the original cell values for typed parsing."""
-    return {header: row[index] if index < len(row) else "" for index, header in enumerate(headers)}

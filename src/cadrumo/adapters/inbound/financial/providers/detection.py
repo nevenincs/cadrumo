@@ -12,7 +12,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from .....core.external_constants import PDF_EXTENSION, XLSX_EXTENSION
+from .....core.external_constants import PDF_EXTENSION, XLS_EXTENSION, XLSX_EXTENSION
 from .....core.logging import get_logger
 from ._constants import CSV_EXTENSIONS, OFX_EXTENSIONS
 from ._mapped_tabular import MappedTabularProvider
@@ -20,35 +20,43 @@ from .base import FinancialProvider
 from .csv import CsvProvider
 from .ofx import OfxProvider
 from .pdf_n26 import PdfN26Provider
+from .xls import XlsProvider
 from .xlsx import XlsxProvider
 
 _logger = get_logger(__name__)
+
+#: Every legacy ``.xls`` workbook is an OLE2 compound document.
+_OLE2_SIGNATURE = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
 
 
 def _exact_layout_candidates(path: Path) -> tuple[FinancialProvider, ...]:
     """Order the exact fixed-layout providers by extension and content hint."""
     suffix = path.suffix.lower()
     if suffix == PDF_EXTENSION:
-        return (PdfN26Provider(), CsvProvider(), XlsxProvider(), OfxProvider())
+        return (PdfN26Provider(), CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider())
     if suffix == XLSX_EXTENSION:
-        return (XlsxProvider(), CsvProvider(), OfxProvider(), PdfN26Provider())
+        return (XlsxProvider(), XlsProvider(), CsvProvider(), OfxProvider(), PdfN26Provider())
+    if suffix == XLS_EXTENSION:
+        return (XlsProvider(), XlsxProvider(), CsvProvider(), OfxProvider(), PdfN26Provider())
     if suffix in OFX_EXTENSIONS:
-        return (OfxProvider(), CsvProvider(), XlsxProvider(), PdfN26Provider())
+        return (OfxProvider(), CsvProvider(), XlsxProvider(), XlsProvider(), PdfN26Provider())
     if suffix in CSV_EXTENSIONS:
-        return (CsvProvider(), OfxProvider(), XlsxProvider(), PdfN26Provider())
+        return (CsvProvider(), OfxProvider(), XlsxProvider(), XlsProvider(), PdfN26Provider())
     try:
         head = path.read_bytes()[:256]
     except OSError:
         _logger.warning("detect_provider: cannot read file header for sniffing path=%s", path, exc_info=True)
-        return (CsvProvider(), XlsxProvider(), OfxProvider(), PdfN26Provider())
+        return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider(), PdfN26Provider())
     upper_head = head.upper()
     if head.startswith(b"%PDF"):
-        return (PdfN26Provider(), CsvProvider(), XlsxProvider(), OfxProvider())
+        return (PdfN26Provider(), CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider())
     if head.startswith(b"PK"):
-        return (XlsxProvider(), CsvProvider(), OfxProvider(), PdfN26Provider())
+        return (XlsxProvider(), CsvProvider(), OfxProvider(), XlsProvider(), PdfN26Provider())
+    if head.startswith(_OLE2_SIGNATURE):
+        return (XlsProvider(), CsvProvider(), XlsxProvider(), OfxProvider(), PdfN26Provider())
     if b"<OFX>" in upper_head or b"<BANKTRANLIST>" in upper_head:
-        return (OfxProvider(), CsvProvider(), XlsxProvider(), PdfN26Provider())
-    return (CsvProvider(), XlsxProvider(), OfxProvider(), PdfN26Provider())
+        return (OfxProvider(), CsvProvider(), XlsxProvider(), XlsProvider(), PdfN26Provider())
+    return (CsvProvider(), XlsxProvider(), XlsProvider(), OfxProvider(), PdfN26Provider())
 
 
 def detect_provider(path: Path) -> FinancialProvider | None:

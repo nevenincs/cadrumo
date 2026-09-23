@@ -15,6 +15,7 @@ from __future__ import annotations
 import csv
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 from typing import Literal
@@ -276,6 +277,26 @@ def invoice_delimited_writer(rows: tuple[InvoiceRow, ...], *, delimiter: str) ->
     return lambda path: _write_delimited(path, _INVOICE_COLUMNS, [row.values() for row in rows], delimiter)
 
 
+def _write_legacy_workbook(path: Path, header: tuple[str, ...], rows: list[tuple[object, ...]]) -> None:
+    from cadrumo.tests.xls_fixtures import xls_workbook_bytes
+
+    path.write_bytes(xls_workbook_bytes([("Sheet1", [list(header), *(list(row) for row in rows)])]))
+
+
+def statement_legacy_workbook_writer(rows: tuple[StatementRow, ...]) -> Callable[[Path], None]:
+    """Write an N26-layout Excel 97-2003 statement with typed date and amount cells."""
+
+    def cells(row: StatementRow) -> tuple[object, ...]:
+        return (date(_YEAR, 3, row.day), row.payee, row.description, float(row.amount), "EUR", row.external_id)
+
+    return lambda path: _write_legacy_workbook(path, _N26_HEADER, [cells(row) for row in rows])
+
+
+def invoice_legacy_workbook_writer(rows: tuple[InvoiceRow, ...]) -> Callable[[Path], None]:
+    """Write an Excel 97-2003 invoice book with the header on worksheet row 1."""
+    return lambda path: _write_legacy_workbook(path, _INVOICE_COLUMNS, [row.values() for row in rows])
+
+
 def invoice_workbook_writer(rows: tuple[InvoiceRow, ...]) -> Callable[[Path], None]:
     """Write an XLSX/XLSM invoice book with the header on worksheet row 1."""
     return lambda path: _write_workbook(path, _INVOICE_COLUMNS, [row.values() for row in rows])
@@ -296,6 +317,8 @@ def _statement_case(
         writer, locator_kind, locator = statement_delimited_writer(rows), "physical_row", target_position + 1
     elif file_format == "xlsx":
         writer, locator_kind, locator = statement_workbook_writer(rows), "physical_row", target_position + 1
+    elif file_format == "xls":
+        writer, locator_kind, locator = statement_legacy_workbook_writer(rows), "physical_row", target_position + 1
     elif file_format in {"ofx", "qfx"}:
         writer, locator_kind, locator = statement_ofx_writer(rows), "transaction_ordinal", target_position
     elif file_format == "pdf":
@@ -335,6 +358,8 @@ def _invoice_case(
         writer = invoice_delimited_writer(rows, delimiter="\t")
     elif file_format in {"xlsx", "xlsm"}:
         writer = invoice_workbook_writer(rows)
+    elif file_format == "xls":
+        writer = invoice_legacy_workbook_writer(rows)
     else:
         raise ValueError(f"unsupported synthetic invoice-book format {file_format}")
     return ProvenanceCase(
@@ -357,9 +382,9 @@ def provenance_cases() -> tuple[ProvenanceCase, ...]:
     """Return every supported import combination the installed matrix proves.
 
     CLI statements use explicit provider tokens except ``auto``, which covers
-    detection for the ``.txt`` and ``.qfx`` aliases.  The TUI exposes
-    ``auto``, ``csv``, ``ofx``, ``xlsx`` and ``pdf-n26``; invoice books take no
-    provider in either frontend.
+    detection for the ``.txt``, ``.qfx`` and legacy ``.xls`` files.  The TUI
+    exposes ``auto``, ``csv``, ``ofx``, ``xlsx`` and ``pdf-n26``; invoice books
+    take no provider in either frontend.
     """
     return (
         _statement_case(
@@ -379,6 +404,9 @@ def provenance_cases() -> tuple[ProvenanceCase, ...]:
         ),
         _statement_case(
             "cli-pdf", frontend="cli", file_format="pdf", provider="pdf-n26", target_position=2, count=2, base="-60.00"
+        ),
+        _statement_case(
+            "cli-xls", frontend="cli", file_format="xls", provider="auto", target_position=2, count=3, base="55.00"
         ),
         _invoice_case(
             "cli-inv-csv",
@@ -416,6 +444,15 @@ def provenance_cases() -> tuple[ProvenanceCase, ...]:
             count=1,
             base="130.00",
         ),
+        _invoice_case(
+            "cli-inv-xls",
+            frontend="cli",
+            file_format="xls",
+            invoice_kind="received",
+            target_position=2,
+            count=3,
+            base="135.00",
+        ),
         _statement_case(
             "tui-csv", frontend="tui", file_format="csv", provider="csv", target_position=1, count=2, base="70.00"
         ),
@@ -430,6 +467,9 @@ def provenance_cases() -> tuple[ProvenanceCase, ...]:
         ),
         _statement_case(
             "tui-pdf", frontend="tui", file_format="pdf", provider="pdf-n26", target_position=3, count=3, base="-66.00"
+        ),
+        _statement_case(
+            "tui-xls", frontend="tui", file_format="xls", provider="auto", target_position=3, count=3, base="97.00"
         ),
         _invoice_case(
             "tui-inv-csv",
@@ -466,6 +506,15 @@ def provenance_cases() -> tuple[ProvenanceCase, ...]:
             target_position=1,
             count=1,
             base="170.00",
+        ),
+        _invoice_case(
+            "tui-inv-xls",
+            frontend="tui",
+            file_format="xls",
+            invoice_kind="issued",
+            target_position=1,
+            count=2,
+            base="175.00",
         ),
     )
 
