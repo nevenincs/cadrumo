@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#assets-core'
 date: '2026-09-23'
-modified: '2026-09-23'
+modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:0de15a399b9eb719ff2f6cc9f7fb4048fad886c497d7253b5b3b0fca3f8315ad'
+body_hash: 'sha256:289b23d8cdef5a7acae3bc9b612b7d562d90c06d3c98b9ed43582f710ea70f9a'
 related:
   - "[[2026-09-23-assets-core-plan]]"
 ---
@@ -78,8 +78,28 @@ related:
 - `S09` `M` `dev/quality/metadata/import_load_targets.json`
 - `S09` `verify:` `asset suites 112 tests` -> `pass`
 - `S09` `by:` `assets-core`
+- `S10` `M` `src/cadrumo/application/operator_actions/catalogue.py`
+- `S10` `M` `src/cadrumo/application/calculations/actividad_asset_schedule.py`
+- `S10` `M` `src/cadrumo/domain/renta/actividad_asset/errors.py`
+- `S10` `M` `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/ledger/actividad_asset.py`
+- `S10` `M` `src/cadrumo/entrypoints/tui/ledger/tests/test_actividad_asset_parity.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/tests/test_actividad_asset_commands.py`
+- `S10` `verify:` `asset suites 110 tests` -> `pass`
+- `S10` `by:` `assets-core`
+- `S12` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
+- `S12` `D` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0002-activity-asset-amortization.toml`
+- `S12` `verify:` `authoring inspection 0 findings; publish-authority generation dc950e46 sqlite-v3 current` -> `pass`
+- `S12` `by:` `assets-core`
+- `S11` `A` `src/cadrumo/domain/renta/actividad_asset/workforce.py`
+- `S11` `A` `src/cadrumo/domain/renta/actividad_asset/tests/test_workforce.py`
+- `S11` `verify:` `workforce unit tests 5` -> `pass`
+- `S11` `by:` `assets-core`
 
 ## Notes
 
 - `S06` day-count proration differs from AEAT month-based worked examples (EUR 733.81 vs EUR 720 for the LIS art. 103 example); recorded as an inconsistency for a lifecycle-ADR amendment
 - `S07` the superseding-claim fixes f92721ce93 and 2f97378e51 postdate wheel 16d5e13e; installed run 3 at 2f97378e51 is queued for the machine-wide installed-run slot
+- `S12` installed run 5 at 150f306c8b proves the tree before S10; the final installed proof of HEAD remains open
+- `S11` resolver wiring waits for the profile schema version 7 field irpf.plantilla_media
+

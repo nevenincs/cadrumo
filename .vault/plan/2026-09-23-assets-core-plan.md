@@ -11,7 +11,7 @@ related:
   - '[[2026-09-23-assets-core-vehicle-affectation-adr]]'
 modified: '2026-09-23'
 body_schema: body-v2
-body_hash: 'sha256:5e8a60449186249311feb4c14f1112aeccd9f11cbbec66163e223d94ef300acd'
+body_hash: 'sha256:94766532cdd3625619fe59c702c16b1d4c2b5cdc078b545cf16e6af8f783ecf7'
 ---
 
 # `assets-core` plan
@@ -37,7 +37,7 @@ S09-S12 were added on 2026-09-23 under the operator's instruction that every cri
 - [x] `S07` - Publish the authority once and prove a non-linear asset through installed CLI and TUI to M130, M100 and the 2025 XSD; `dev/acceptance/assets/`.
 - [ ] `S08` - Run the owning quality gates and write the checkpoint and handoff; `.agents/session-briefs/handoffs/`.
 - [x] `S09` - Admit the table-listed intangible methods, reduced-size acceleration of indefinite-life intangibles and goodwill, and vehicles on a typed affectation declaration with electric-vehicle free depreciation; `src/cadrumo/domain/renta/actividad_asset/vehicle_affectation.py`.
-- [ ] `S10` - Give the undeclared-vehicle refusal a typed recovery action to the CLI and TUI correction; `src/cadrumo/application/actividad_asset/`.
+- [x] `S10` - Give the undeclared-vehicle refusal a typed recovery action to the CLI and TUI correction; `src/cadrumo/application/actividad_asset/`.
 - [ ] `S11` - Consume the average-workforce profile fact for job-creating and renewable self-consumption free depreciation; `src/cadrumo/domain/renta/actividad_asset/workforce.py`.
 - [ ] `S12` - Republish the authority once after the format cutover and prove the final tree through one installed run; `dev/acceptance/assets/`.
 
