@@ -8,7 +8,7 @@ related:
   - '[[2026-09-21-iva-workflow-m303-filing-evidence-authoring-adr]]'
 modified: '2026-09-23'
 body_schema: body-v2
-body_hash: 'sha256:0f300d543530d8cb80b41a2bb9283ae7cee482471a7b39d062a8157604c4f62f'
+body_hash: 'sha256:d35e2132b7e61c4b146380a7df3a60dca97ecff04df91130968e7647b3fd7adc'
 ---
 
 <!-- LINK RULES:
@@ -126,7 +126,7 @@ Scope: persisted evidence shape (S01), coordinate and authoring (S02), the calcu
 - [x] `S03` - version the calculate request: nested ordinary request without the annual-volume answer and with an optional attestation pair, schema version 3, previous pending invocations refused; `src/cadrumo/application/modelo/operation_definitions.py and its conformance tests`.
 - [x] `S04` - align the CLI and quickfile flags with the period rule and regenerate the CLI reference and locale keys; `src/cadrumo/entrypoints/cli/_modelo_work_calculate_cli.py, _app_quickfile.py, command specs, locales`.
 - [x] `S05` - align the TUI evidence form: no annual-volume question, attestation only in the last period; `src/cadrumo/entrypoints/tui/modelo/m303_evidence.py, view/overview.py, lifecycle.py, locales`.
-- [ ] `S07` - update the Modelo 303 and 390 docs sequence contracts to the period rule and regenerate their goldens through the sequence runner; `docs/_sequences/contracts/how-to/modelo-303, modelo-390 and the other contracts that calculate Modelo 303`.
+- [x] `S07` - update the Modelo 303 and 390 docs sequence contracts to the period rule and regenerate their goldens through the sequence runner; `docs/_sequences/contracts/how-to/modelo-303, modelo-390 and the other contracts that calculate Modelo 303`.
 - [ ] `S06` - prove the attestation contract at 4T and a monthly coordinate on an installed wheel built from a committed source; `dev/acceptance/iva/installed_m303_evidence_journey.py`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
