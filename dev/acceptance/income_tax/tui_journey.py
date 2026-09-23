@@ -655,6 +655,19 @@ def write_tui_journey_receipt(*, evidence: TuiJourneyEvidence, path: Path) -> No
     path.write_text(f"{rendered}\n", encoding="utf-8", newline="\n")
 
 
+def settled_notice_terminal[TerminalT](notice: str, terminal_copies: Mapping[str, TerminalT]) -> TerminalT | None:
+    """Classify the notice a workspace leaves after its operation modal dismissed itself.
+
+    The modal closes as soon as the operation is terminal, and the workspace then
+    shows the terminal copy alone or followed by ``": "`` and the registry's public
+    explanation. Only those two shapes settle; any other text is not a terminal.
+    """
+    for copy, terminal in terminal_copies.items():
+        if notice == copy or notice.startswith(f"{copy}: "):
+            return terminal
+    return None
+
+
 def _require_operation_binding(binding: TuiOperationBinding) -> None:
     """Refuse to drive an incomplete public control contract."""
     missing = binding.missing(label=binding.operation_id)
@@ -738,7 +751,7 @@ async def _observe_operation_terminal(
                     settled_notice = _rendered_text(_query_visible_tui_control(pilot, refusal_notice_id))
                 except NoMatches:
                     settled_notice = ""
-                terminal = expected.get(settled_notice)
+                terminal = settled_notice_terminal(settled_notice, expected)
                 if terminal is not None:
                     condition, outcome = terminal
                     return TuiTerminalEvidence(
@@ -767,7 +780,7 @@ async def _observe_operation_terminal(
                     settled_notice = _rendered_text(_query_visible_tui_control(pilot, refusal_notice_id))
                 except NoMatches:
                     settled_notice = ""
-                terminal = expected.get(settled_notice)
+                terminal = settled_notice_terminal(settled_notice, expected)
                 if terminal is not None:
                     condition, outcome = terminal
                     return TuiTerminalEvidence(

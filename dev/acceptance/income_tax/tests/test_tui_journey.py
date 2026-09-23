@@ -6,6 +6,7 @@ import asyncio
 from datetime import date
 from pathlib import Path
 from types import SimpleNamespace
+from typing import Any, cast
 
 import pytest
 
@@ -19,12 +20,14 @@ from ..tui_journey import (
     LocalXsdValidationEvidence,
     TuiJourneyError,
     TuiOperationBinding,
+    _observe_operation_terminal,
     blocked_tui_journey_evidence,
     build_tui_journey_evidence,
     canonical_financial_value_fingerprint,
     create_continuation_checkpoint,
     installed_lifecycle_contract,
     prove_continuation,
+    settled_notice_terminal,
     validate_modelo_100_xsd,
     wait_for_tui_refresh,
 )
@@ -99,6 +102,82 @@ def test_refresh_destination_must_be_the_current_installed_screen() -> None:
             maximum_polls=1,
         )
     )
+
+
+@pytest.mark.parametrize(
+    ("notice", "expected"),
+    [
+        ("Refused", "refused"),
+        ("Refused: the attestation belongs to another quarter", "refused"),
+        ("Succeeded", "succeeded"),
+        ("Partly succeeded: one row was skipped", "partial"),
+        ("Refusedly", None),
+        ("Refused - no separator", None),
+        ("", None),
+    ],
+)
+def test_a_settled_notice_is_a_terminal_copy_alone_or_followed_by_its_explanation(
+    notice: str, expected: str | None
+) -> None:
+    copies = {"Succeeded": "succeeded", "Partly succeeded": "partial", "Refused": "refused"}
+
+    assert settled_notice_terminal(notice, copies) == expected
+
+
+@pytest.mark.parametrize(
+    ("copy_key", "explanation", "condition"),
+    [
+        ("operation.modal.terminal.refused", "the attestation belongs to another quarter", "refused"),
+        ("operation.modal.terminal.succeeded", None, "succeeded"),
+    ],
+)
+def test_a_modal_that_dismissed_itself_settles_from_the_workspace_notice(
+    copy_key: str, explanation: str | None, condition: str
+) -> None:
+    """The modal closes the moment its operation is terminal; the lasting notice carries the result."""
+    from textual.css.query import NoMatches
+
+    from cadrumo.core.i18n.render import tr
+
+    copy = tr(copy_key)
+    notice = copy if explanation is None else f"{copy}: {explanation}"
+
+    class Notice:
+        def render(self) -> str:
+            return notice
+
+    class DismissedModal:
+        is_mounted = False
+
+        def query_one(self, selector: str) -> object:
+            raise NoMatches(selector)
+
+    class App:
+        def query_one(self, selector: str) -> object:
+            assert selector == "#modelo-lifecycle-notice"
+            return Notice()
+
+    class Pilot:
+        app = App()
+
+        async def pause(self) -> None:
+            raise AssertionError("a settled notice must classify on the first poll")
+
+    terminal = asyncio.run(
+        _observe_operation_terminal(
+            cast("Any", Pilot()),
+            modal=cast("Any", DismissedModal()),
+            binding=TuiOperationBinding(
+                "modelo.work.calculate",
+                terminal_result_id="#operation-modal-status",
+                refusal_notice_id="#modelo-lifecycle-notice",
+            ),
+            maximum_polls=1,
+        )
+    )
+
+    assert terminal.terminal_condition == condition
+    assert terminal.receipt_present is False
 
 
 def test_xsd_validation_records_original_and_effective_schema_identities(tmp_path: Path) -> None:
