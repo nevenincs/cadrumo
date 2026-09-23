@@ -73,31 +73,61 @@ Run 2, source `0d34b1534a9c58efb934f3e2f02dbd3ee1e5518b`, status proven (20:29-2
 - CLI first: forecast 600.00 and claim; a fresh TUI reads it back;
 - credential channel `--profile-secrets-stdin` on every installed CLI command.
 
-Not in wheel `16d5e13e`: the superseding-claim forecast and the revision-currency
-recheck (`f92721ce93`), CLI inspect `revision_id` and the installed superseding-claim
-step (`2f97378e51`), and the child's receipt replace retry (`30d35de000`). Run 3 at
-`2f97378e51` (wheel `6b21f168`, generation `d77f0117`) covers them; its result is
-appended below.
+Run 3 was cancelled by the coordinator in favour of one final run after the
+follow-ups below.
+
+Final run 5, source `150f306c8b51ab0bf5ca27c997464d6f1ee3a340`, status proven:
+
+- wheel sha256 `f934c5a55bb535298fb2afd89f862a8b5b502e1ef5d19f2ac48871ce3d41a669`;
+  installed `__init__` sha256 `930e3f61c79bd2e3ff1f8aa11d1abd5d16bfbaab360ea739ae41f519f71b0ae7`;
+- served generation `df190686044cfd783b5a597490ff0dc2ddb26c2698db7d1278dd35143ee120c2`,
+  store format `cadrumo-authority-sqlite-v2`, republished from that checkout's committed
+  source; the CLI forecast's generation matches;
+- CLI export as in run 2 (300.00, M130 Q4 2,700.00, M100 300.00/0.00, XSD valid);
+- TUI first: the lifecycle now also replaces its claim through the supersession control;
+  M100/M130 540.00 count one claim;
+- CLI first: after the 600.00 claim, inspect names the revision identity, a correction
+  and a superseding claim leave M100 at 540.00;
+- run 4 at the same build failed before any asset stage with
+  `REFUSED_STORAGE_PROFILE_CUSTODY / KDF_RESOURCE_LIMIT` under host memory exhaustion;
+  run 5 re-ran the journey on the unchanged wheel.
+
+Not in wheel `f934c5a5`: the undeclared-vehicle recovery action (S10), committed after it.
+
+## Follow-ups actioned after the first handoff
+
+- Vehicles (`f1901758b1`, decision `2026-09-23-assets-core-vehicle-affectation-adr`): the
+  transport classes charged any vehicle without an affectation test. A typed declaration
+  on the revision now admits exclusive use, an RIRPF art. 22.4 listed use or accessory
+  use of a non-restricted vehicle, and refuses shared, unlisted or off-book vehicles with
+  their provisions. DA 18a electric-vehicle free depreciation is enrolled (2024-2025).
+- LIS 103.5 is admitted at 150% of the art. 12.2 one-twentieth for reduced-size
+  acquisitions, on the DGT's binding consultas and the AEAT manuals.
+- Constant percentage and sum of digits are admitted for the table-listed intangibles in
+  the normal modality; the simplified modality refuses them, naming the sources that
+  leave the weighted table open.
+- Proration stays day-count over the year's days, grounded in binding consulta
+  V1978-24 (`2026-09-23-assets-core-proration-and-incentive-scope-research`); the
+  manual's month fractions are illustrations.
+- The undeclared-vehicle refusal names the asset and carries the catalogue action
+  `operator.ledger.actividad_asset.correct_revision` to the CLI correct command and the
+  TUI correction control (S10).
+- CLI receipts moved to the public `actividad_asset_receipts`; acceptance oracles replace
+  a hard-coded status table; brief identifiers left the harness.
 
 ## Remaining targets
 
-- Other tax years: the method set is enrolled for 2025 only. No Modelo 100 2026
-  revision exists to carry the parameters, and `ScheduleAuthority` and claims are
-  locked to tax year 2025.
+- Job-creating ERD free depreciation (LIS art. 102) and renewable self-consumption free
+  depreciation (LIS DA 17a, 2025 entries only): the average-workforce field
+  `irpf.plantilla_media` is queued in CALENDAR's profile schema version 7; the resolver
+  consumer (S11) follows its cutover, with the cross-asset investment caps (EUR 120,000 per
+  unit of increase; EUR 500,000) and the DA 17a.6 documentation evidence.
+- Authority republish of these registry changes after CALENDAR's v3 format cutover (S12).
+- Other tax years: no Modelo 100 2026 revision exists, and `ScheduleAuthority` and claims
+  are locked to tax year 2025.
 - Mixed-use home facts end to end.
-- Day-count versus month proration: the accepted lifecycle ADR prorates by days/365,
-  while AEAT worked examples prorate by months (EUR 733.81 against EUR 720 for the
-  LIS art. 103 example). This needs a lifecycle-ADR amendment.
-- Refused incentives, each with its named blocker:
-  - small-enterprise employment: workforce-average facts are absent;
-  - electric vehicles: vehicle scope facts are absent;
-  - reduced-size acceleration of indefinite-life intangibles and goodwill: LIS 103.5
-    conflicts with the AEAT manual;
-  - justified amount: needs a proof-of-depreciation evidence contract.
-- Ambiguous admissions left unsupported: constant percentage and sum of digits for
-  intangibles, and used doubling in the simplified modality.
-- Authority currency goes stale whenever any lane edits a compiler input, because
-  the compiler identity hashes every non-test module under core, domain,
-  application and the registry compiler and pipeline.
-- The installed TUI journey proves supersession only through the screen test, not
-  the installed child; the installed CLI journey carries the step.
+- Used-asset doubling in the simplified modality stays unenrolled until a source states
+  whether RIRPF art. 30.1a's simplified table admits it.
+- Justified amount (LIS art. 12.1.e) stays refused: no evidence contract can validate a
+  caller amount. Entity regimes (LIS art. 12.3.a/d) do not apply to individuals.
+- Authority currency goes stale whenever any lane edits a compiler input.
