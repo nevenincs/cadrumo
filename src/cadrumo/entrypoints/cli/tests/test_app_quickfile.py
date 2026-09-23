@@ -816,13 +816,13 @@ def test_quickfile_create_stage_refusal_without_a_typed_action_reports_its_reaso
     assert not out.exists()
 
 
-def test_quickfile_refusal_whose_reason_names_a_command_is_still_reported(tmp_path: Path) -> None:
-    """A refusal whose reason names a command is reported by stage and code, never crashed.
+def test_quickfile_calculate_refusal_reports_its_reason_and_typed_recovery(tmp_path: Path) -> None:
+    """An unknown ``--binding`` stops quickfile at calculate with its own reason and a typed recovery.
 
-    An unknown ``--binding`` id is refused at calculate with wording that names
-    the bindings listing command. The notices contract refuses that wording, so
-    the stage is reported with the channel's own sentence and the error code,
-    while the recovery still reaches the operator as the refusal's typed action.
+    The refusal's reason names the rejected binding and the accepted ones, and
+    no command: the bindings listing reaches the operator only as the typed
+    action. (A reason that still named a command would fall back to the
+    stage-and-code sentence; the detector below proves that path.)
     """
     _create_profile(activity_start_date="2025-01-01")
     out = tmp_path / "modelo-115.txt"
@@ -849,10 +849,7 @@ def test_quickfile_refusal_whose_reason_names_a_command_is_still_reported(tmp_pa
     assert isinstance(context, dict), notice
     assert context["stage"] == "calculate"
     assert context["status"] == "refused"
-    error_code = context["error_code"]
-    assert isinstance(error_code, str) and error_code
-    assert error_code in str(notice["message"])
-    assert "calculate" in str(notice["message"])
+    assert "not-a-declared-binding" in str(notice["message"])
     assert not out.exists()
 
 
@@ -866,15 +863,12 @@ def test_notice_contract_refuses_the_command_prose_the_old_stage_projection_pass
 
     from ....application.modelo.action_errors import ModeloProfileReadinessError
     from ....application.modelo.quickfile import QuickfileStage, QuickfileStageOutcome, QuickfileStageStatus
-    from ....core.i18n.render import tr
     from ....core.json_contract import Notice, NoticeSeverity
     from .._app_quickfile import _stage_notice
 
-    reason = tr(
-        "application.modelo.errors.calculate_binding_unknown",
-        key="not-a-declared-binding",
-        accepted="rent",
-    )
+    # Catalogued refusals no longer name commands, so the specimen is the shape
+    # the old projection used to copy: a reason ending in an executable command.
+    reason = "--binding not-a-declared-binding is unknown. Use `aeat app modelo bindings list 115` to list them."
     with pytest.raises(ValidationError, match="raw aeat command prose"):
         Notice(severity=NoticeSeverity.WARNING, code="quickfile.stage.calculate", message=reason)
 
