@@ -2115,8 +2115,14 @@ cli:
         NÉV' paranccsal a jelszó módosítása előtt.
       reset_code_prompt: 'Helyreállítási kód: '
       reset_help: Új jelszót állít be egy profilhoz a helyreállítási kód igazolásával;
-        elfelejtett jelszó esetén használd.
+        elfelejtett jelszó esetén használd. A helyreállítási kód érvényes marad, és
+        a visszaállítás előtt exportált lezárt archívumok továbbra is azzal a jelszóval
+        nyithatók meg, amellyel titkosították őket.
       reset_name_help: Annak a profilnak a neve, amelynek a jelszavát visszaállítod.
+      reset_scope_notice: 'A helyreállítási kód továbbra is működik; a cseréjéhez
+        kapcsold ki, majd kapcsold be újra a helyreállítást. A visszaállítás semmit
+        sem von vissza: az előtte exportált lezárt archívumok továbbra is azzal a
+        jelszóval nyithatók meg, amellyel titkosították őket.'
     profile:
       add_row:
         duplicate_field: A(z) %{field} mező többször szerepelt; nem történt írás.

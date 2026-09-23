@@ -2140,8 +2140,14 @@ cli:
         login NOMBRE' antes de cambiar su contraseña.
       reset_code_prompt: 'Código de recuperación: '
       reset_help: Establece una nueva contraseña para un perfil demostrando su código
-        de recuperación; úsalo cuando hayas olvidado la contraseña.
+        de recuperación; úsalo cuando hayas olvidado la contraseña. El código de recuperación
+        sigue siendo válido, y los archivos sellados exportados antes del restablecimiento
+        se siguen abriendo con la contraseña con la que se cifraron.
       reset_name_help: Nombre del perfil cuya contraseña se restablece.
+      reset_scope_notice: 'El código de recuperación sigue funcionando; para sustituirlo,
+        desactiva y vuelve a activar la recuperación. Un restablecimiento no revoca
+        nada: los archivos sellados exportados antes siguen abriéndose con la contraseña
+        con la que se cifraron.'
     profile:
       add_row:
         duplicate_field: El campo %{field} se indicó más de una vez; no se escribió

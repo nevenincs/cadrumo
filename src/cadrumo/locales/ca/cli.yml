@@ -2122,8 +2122,14 @@ cli:
         login NOM' abans de canviar-ne la contrasenya.
       reset_code_prompt: 'Codi de recuperació: '
       reset_help: Estableix una contrasenya nova per a un perfil demostrant-ne el
-        codi de recuperació; fes-ho servir quan hagis oblidat la contrasenya.
+        codi de recuperació; fes-ho servir quan hagis oblidat la contrasenya. El codi
+        de recuperació continua sent vàlid, i els arxius segellats exportats abans
+        del restabliment s'obren encara amb la contrasenya amb què es van xifrar.
       reset_name_help: Nom del perfil la contrasenya del qual es restableix.
+      reset_scope_notice: 'El codi de recuperació continua funcionant; per substituir-lo,
+        desactiva i torna a activar la recuperació. Un restabliment no revoca res:
+        els arxius segellats exportats abans s''obren encara amb la contrasenya amb
+        què es van xifrar.'
     profile:
       add_row:
         duplicate_field: El camp %{field} s'ha indicat més d'una vegada; no s'ha escrit

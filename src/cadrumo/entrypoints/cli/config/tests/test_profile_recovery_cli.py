@@ -412,6 +412,11 @@ def test_reset_replaces_a_forgotten_passphrase_with_the_captured_code(tmp_path: 
         assert document["result"]["dek_epoch_preserved"] is True
         assert document["result"]["recovery_enrollment_retained"] is True
         assert document["result"]["password_generation"] == 2
+        # The reset says what it did not do: the code survives it and older
+        # archives still open under the old passphrase.
+        assert [(notice["code"], notice["message"]) for notice in document["notices"]] == [
+            ("config.passphrase.reset_scope", tr("cli.config.passphrase.reset_scope_notice")),
+        ]
         combined = reset.stdout + reset.stderr
         assert code not in combined
         assert _ROTATED_CREDENTIAL_INPUT not in combined

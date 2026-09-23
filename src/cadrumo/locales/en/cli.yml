@@ -1972,8 +1972,13 @@ cli:
         before changing its passphrase.
       reset_code_prompt: 'Recovery code: '
       reset_help: Set a new passphrase for a profile by proving its recovery code;
-        use it when the passphrase is forgotten.
+        use it when the passphrase is forgotten. The recovery code stays valid, and
+        archives exported before the reset still open with the passphrase they were
+        sealed under.
       reset_name_help: Name of the profile whose passphrase is being reset.
+      reset_scope_notice: 'The recovery code still works; replace it by disabling
+        and re-enabling recovery. A reset revokes nothing: archives exported before
+        it still open with the passphrase they were sealed under.'
     profile:
       add_row:
         duplicate_field: Field %{field} was supplied more than once; nothing was written.
