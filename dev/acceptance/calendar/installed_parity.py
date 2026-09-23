@@ -345,7 +345,7 @@ async def _create_work_from_calendar(pilot: Any, row_key: str) -> None:
     await pilot.press("escape")
 
 
-async def _wait_for_refreshed_workbench(pilot: Any, *, polls: int = 6000) -> None:
+async def _wait_for_refreshed_workbench(pilot: Any, *, polls: int = 180) -> None:
     """Wait until the public Home is mounted and no workbench refresh is in progress."""
     from textual.css.query import NoMatches
     from textual.widgets import Static
@@ -383,7 +383,7 @@ def _run_child(*, workspace_root: Path, mode: ChildMode, write_row: str | None, 
         observed.update(await _read_visible_rows(pilot))
         pilot.app.exit()
 
-    run_admitted_installed_launcher(passphrase=passphrase, drive_after_home=drive, admission_polls=6000)
+    run_admitted_installed_launcher(passphrase=passphrase, drive_after_home=drive)
     if not observed:
         raise CalendarParityError("installed TUI calendar child did not finish")
     product = installed_product_evidence(workspace_root=workspace_root)
