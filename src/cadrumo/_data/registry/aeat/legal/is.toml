@@ -2228,6 +2228,26 @@ required_text = [
     "del Reglamento General de Vehículos, aprobado por el Real Decreto 2822/1998",
 ]
 
+[legal."ley-27-2014:da-17"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-27-2014.html#dadecimoseptima"
+document_id = "BOE-A-2014-12328"
+article = "DA-17"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2014-12328#dadecimoseptima"
+published_at = 2014-11-28
+effective_from = 2022-10-20
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-23
+reviewed_by = "agent-prepared; BOE anchors this disposicion as #da-2, which collides with another unit, so the compact ordinal form #dadecimoseptima reaches it through the resolver's structural-title fallback; verified to resolve to exactly one unit through resolve_anchored_extracted_unit with every required_text phrase present; pending operator re-stamp"
+notes = "LIS disposicion adicional decimoseptima (added by RDL 18/2022): libertad de amortizacion en instalaciones de autoconsumo electrico y de uso termico de consumo propio con energia renovable que sustituyan instalaciones fosiles, condicionada a mantener la plantilla media total de los 24 meses siguientes al inicio del periodo impositivo respecto de la de los doce meses anteriores. Excluye edificios; inversion maxima 500.000 euros. The consolidated text carries a chain of RDL amendments and derogations (RDL 9/2024, 16/2025, 2/2026 derogated; RDL 7/2026 for periods not concluded at 22 March 2026) that governs which entry-into-service years apply to a given period."
+required_text = [
+    "Libertad de amortización en inversiones que utilicen energía procedente de fuentes renovables",
+    "la plantilla media total de la entidad se mantenga respecto de la plantilla media de los doce meses anteriores",
+    "Los edificios no podrán acogerse a la libertad de amortización regulada en esta disposición.",
+]
+
 [legal."ley-27-2014:art-102"]
 evidence_tier = "legal_authority"
 authority = "boe"

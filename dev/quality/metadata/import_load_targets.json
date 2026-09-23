@@ -1784,6 +1784,7 @@
         "cadrumo.domain.renta.actividad_asset.errors",
         "cadrumo.domain.renta.actividad_asset.lifecycle",
         "cadrumo.domain.renta.actividad_asset.schedule",
+        "cadrumo.domain.renta.actividad_asset.vehicle_affectation",
         "cadrumo.domain.renta.errors",
         "cadrumo.domain.renta.first_slice_routing_integrity",
         "cadrumo.domain.renta.ledger_expenses",

@@ -190,8 +190,11 @@ required_text = ["valor unitario no exceda de", "25.000 euros referido al perío
 
 # Methods the normal direct-estimation modality admits, keyed by asset kind and
 # method token. 1 admits; an absent key is unsupported, never a nearby default.
-# Intangible constant-percentage and sum-of-digits keys are deliberately absent:
-# after the 2016 redraft of LIS art. 12.2 their admission is not stated.
+# LIS art. 12.1 applies the constant-percentage (b) and sum-of-digits (c)
+# methods to intangible as well as material assets, and its table lists the
+# software and audiovisual intangibles; RIS arts. 5.2 and 6 exclude only
+# buildings, furniture and fittings. The table-class check limits both methods
+# to the intangible classes the table lists.
 [[revisions."2025".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-normal-metodo-admitido"
 data_type = "keyed_bracket_table"
@@ -206,7 +209,10 @@ keyed_brackets = [
   { key = "material:research_development_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "material:research_development_building", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "material:charging_infrastructure_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "material:electric_vehicle_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:linear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible:constant_percentage", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible:sum_of_digits", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:approved_plan", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:intangible_useful_life", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:intangible_indefinite_life", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
@@ -215,7 +221,7 @@ keyed_brackets = [
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
-required_text = ["Otros sistemas de amortización son:", "Se ajuste a un plan formulado por el contribuyente y aceptado por la", "Con carácter general, el inmovilizado intangible se amortizará atendiendo a su vida útil."]
+required_text = ["Otros sistemas de amortización son:", "Se ajuste a un plan formulado por el contribuyente y aceptado por la", "Con carácter general, el inmovilizado intangible se amortizará atendiendo a su vida útil.", "Sistemas y programas informáticos 33 por 100 6 años", "Los edificios, el mobiliario y los enseres no podrán acogerse a la amortización mediante números dígitos."]
 
 # Methods the simplified modality admits. RIRPF art. 30.1a restricts material
 # assets to the linear simplified table, so the other LIS art. 12.1 methods are
@@ -235,6 +241,7 @@ keyed_brackets = [
   { key = "material:research_development_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "material:research_development_building", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "material:charging_infrastructure_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "material:electric_vehicle_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:linear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:intangible_useful_life", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:intangible_indefinite_life", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
@@ -503,6 +510,26 @@ valid_to = 2025-12-31
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["multiplicar por 2 el coeficiente lineal máximo previsto en las tablas de amortización"]
 
+# Reduced-size multiplier of the LIS art. 12.2 one-twentieth for intangibles
+# whose useful life cannot be reliably estimated and for goodwill acquired in a
+# period meeting LIS art. 101 (LIS art. 103.5). The consolidated text still
+# cites the pre-2016 art. 13.3; the AEAT 2025 manual and the DGT's binding
+# consultas V3057-19, V0539-20 and V0976-24 read it as 150% of the art. 12.2
+# amount, which this parameter carries as that administrative reading.
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-erd-intangible-indefinido-multiplicador"
+data_type = "decimal"
+unit = "factor"
+legal_refs = ["ley-27-2014:art-103", "ley-27-2014:art-12"]
+[[revisions."2025".parameters.values]]
+value = "1.5"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["podrán aplicar el porcentaje del 150 por 100 al importe que resulte deducible"]
+
 # Buildings affected to R&D amortize linearly over this period (LIS art. 12.3.b).
 [[revisions."2025".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-idi-edificio-periodo"
@@ -550,6 +577,95 @@ valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Que entren en funcionamiento en los períodos impositivos que se inicien en los años 2024 y 2025."]
+
+# First and last tax periods whose entry into service admits free depreciation
+# of new FCV, FCHV, BEV, REEV or PHEV vehicles (LIS DA 18a.1). The AEAT 2025
+# manual states 2024 and 2025 for this revision.
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-vehiculo-electrico-primer-ejercicio"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-27-2014:da-18"]
+[[revisions."2025".parameters.values]]
+value = "2024"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Inversiones en vehículos nuevos FCV, FCHV, BEV, REEV o PHEV"]
+
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-vehiculo-electrico-ultimo-ejercicio"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-27-2014:da-18"]
+[[revisions."2025".parameters.values]]
+value = "2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Que entren en funcionamiento en los períodos impositivos que se inicien en 2024 y 2025."]
+
+# Whether a table class can hold a vehicle RIRPF art. 22.4 denies the accessory
+# private-use allowance (passenger cars and their trailers, mopeds,
+# motorcycles, aircraft, leisure boats, all-terrain and mixed vehicles): the
+# LIS table's external-transport and ships-and-aircraft rows and the simplified
+# table's transport group. An asset in a flagged class is charged only on a
+# vehicle affectation declaration that admits it.
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-clase-vehiculo-restringido"
+data_type = "keyed_bracket_table"
+unit = "flag"
+legal_refs = ["rd-439-2007:art-22", "ley-35-2006:art-29"]
+keyed_brackets = [
+  { key = "obra-civil-general", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-pavimentos", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "obra-civil-infraestructuras-mineras", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-hidraulica", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-nuclear", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-carbon", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-renovable", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "central-otra", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-industrial", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "terreno-escombrera", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "almacen-deposito", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-comercial-administrativo-servicios-vivienda", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-subestacion-red", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-cables", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-resto", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "maquinaria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-medico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-locomotora-vagon-traccion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-buque-aeronave", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-interno", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-externo", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte-autocamion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "mobiliario", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "lenceria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "cristaleria", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "util-herramienta", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "molde-matriz-modelo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "enseres-otros", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-electronico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-proceso-informacion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible-software", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible-audiovisual", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "otro-elemento", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "edificio-otra-construccion", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "instalacion-mobiliario-enseres-resto-material", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "transporte", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "equipo-informacion-software", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "ganado-vacuno-porcino-ovino-caprino", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "ganado-equino-frutal-no-citrico", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "frutal-citrico-vinedo", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "olivar", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+]
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Esta excepción no es aplicable a los automóviles de turismo y sus remolques, las"]
 
 # Whether a table class can classify a material asset. The LIS table rows for
 # software and audiovisual productions are intangible only; the simplified

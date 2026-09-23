@@ -33,9 +33,10 @@ class DirectEstimationRegime(StrEnum):
 class AmortizationMethod(StrEnum):
     """Every depreciation method or incentive an asset can elect.
 
-    The last five members are statutory methods the product refuses with a
-    cited reason; they are typed so the refusal is explicit rather than an
-    unknown token.
+    Justified amount, small-enterprise employment, renewable self-consumption
+    and entity-regime free depreciation are statutory methods the product
+    refuses with a cited reason; they are typed so the refusal is explicit
+    rather than an unknown token.
     """
 
     LINEAR = "linear"
@@ -49,10 +50,10 @@ class AmortizationMethod(StrEnum):
     RESEARCH_DEVELOPMENT_FREE = "research_development_free"
     RESEARCH_DEVELOPMENT_BUILDING = "research_development_building"
     CHARGING_INFRASTRUCTURE_FREE = "charging_infrastructure_free"
+    ELECTRIC_VEHICLE_FREE = "electric_vehicle_free"
     JUSTIFIED_AMOUNT = "justified_amount"
     SMALL_ENTERPRISE_EMPLOYMENT_FREE = "small_enterprise_employment_free"
     RENEWABLE_SELF_CONSUMPTION_FREE = "renewable_self_consumption_free"
-    ELECTRIC_VEHICLE_FREE = "electric_vehicle_free"
     ENTITY_REGIME_FREE = "entity_regime_free"
 
 
@@ -61,6 +62,7 @@ FREE_AMOUNT_METHODS: frozenset[AmortizationMethod] = frozenset(
         AmortizationMethod.LOW_VALUE_FREE,
         AmortizationMethod.RESEARCH_DEVELOPMENT_FREE,
         AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE,
+        AmortizationMethod.ELECTRIC_VEHICLE_FREE,
     },
 )
 """Methods whose per-period amount is the taxpayer's bounded choice."""
@@ -285,6 +287,7 @@ class ActivityAssetAmortizationElection(BaseModel):
             AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE: (
                 ("charging_infrastructure", self.charging_infrastructure),
             ),
+            AmortizationMethod.ELECTRIC_VEHICLE_FREE: (("authority_class_key", self.authority_class_key),),
         }
         for field_name, value in required.get(method, ()):
             if value is None:

@@ -29,6 +29,7 @@ from ...renta.actividad_asset.errors import (
 )
 from ...renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...renta.actividad_asset.schedule import ScheduleAuthority, add_fractional_years, add_years
+from ...renta.actividad_asset.vehicle_affectation import require_vehicle_affected
 from .formula_runtime_ops import resolve_dated_value, resolve_keyed_bracket
 from .schema import ModeloRevision
 from .schema_base import ThresholdComparison
@@ -60,9 +61,13 @@ _USED_BUILDING_AGE_ID = f"{_PREFIX}-edificio-usado-antiguedad-minima"
 _SHIFT_HOURS_ID = f"{_PREFIX}-turno-normal-horas"
 _ERD_TURNOVER_ID = f"{_PREFIX}-erd-cifra-negocios-umbral"
 _ERD_MULTIPLIER_ID = f"{_PREFIX}-erd-multiplicador-coeficiente-maximo"
+_ERD_INDEFINITE_MULTIPLIER_ID = f"{_PREFIX}-erd-intangible-indefinido-multiplicador"
 _RND_BUILDING_PERIOD_ID = f"{_PREFIX}-idi-edificio-periodo"
 _CHARGING_FIRST_YEAR_ID = f"{_PREFIX}-infraestructura-recarga-primer-ejercicio"
 _CHARGING_LAST_YEAR_ID = f"{_PREFIX}-infraestructura-recarga-ultimo-ejercicio"
+_ELECTRIC_VEHICLE_FIRST_YEAR_ID = f"{_PREFIX}-vehiculo-electrico-primer-ejercicio"
+_ELECTRIC_VEHICLE_LAST_YEAR_ID = f"{_PREFIX}-vehiculo-electrico-ultimo-ejercicio"
+_RESTRICTED_VEHICLE_CLASS_ID = f"{_PREFIX}-clase-vehiculo-restringido"
 _INDEFINITE_LIFE_RATE_ID = "renta-actividad-inmovilizado-intangible-vida-util-no-estimable-limite-anual"
 _GOODWILL_RATE_ID = "renta-actividad-fondo-comercio-amortizacion-limite-anual"
 _LOW_VALUE_THRESHOLD_ID = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-umbral-unitario"
@@ -81,19 +86,27 @@ _REFUSED_METHODS: dict[AmortizationMethod, str] = {
         "LIS DA 17a depends on maintaining the average workforce for 24 months, and no canonical "
         "average-workforce fact exists"
     ),
-    AmortizationMethod.ELECTRIC_VEHICLE_FREE: (
-        "LIS DA 18a.1 covers vehicles, whose IRPF affectation is outside the enrolled activity-asset scope"
-    ),
     AmortizationMethod.ENTITY_REGIME_FREE: (
         "LIS art. 12.3.a and 12.3.d apply to sociedades laborales and explotaciones asociativas prioritarias, "
         "which are entities rather than individual taxpayers"
     ),
 }
-_INDEFINITE_ACCELERATION_REFUSAL = (
-    "reduced-size acceleration of indefinite-life intangibles and goodwill is refused: LIS art. 103.5 in the "
-    "consolidated text cross-refers to the pre-2016 art. 13.3 regime while the AEAT 2025 manual applies 150% "
-    "to the art. 12.2 amount, so the two official sources disagree on its scope"
+_SIMPLIFIED_INTANGIBLE_TABLE_METHOD_REFUSAL = (
+    "is not admitted for intangible assets in the simplified modality because the official sources do not "
+    "settle which table it weights: RIRPF art. 30.1a restricts only material assets to the simplified linear "
+    "table; the simplified table (Orden of 27 March 1998) lists information systems and programs at 26% over "
+    "10 years; RIS arts. 5.1 and 6.1 derive the constant percentage and the digit period from the LIS art. "
+    "12.1.a table (33% over 6 years); and the AEAT 2025 manual's simplified-modality section and its "
+    "normal-modality method section give no simplified intangible example"
 )
+_UNDETERMINED_ADMISSIONS: dict[tuple[DirectEstimationRegime, AssetKind, AmortizationMethod], str] = {
+    (DirectEstimationRegime.SIMPLIFIED, AssetKind.INTANGIBLE, AmortizationMethod.CONSTANT_PERCENTAGE): (
+        _SIMPLIFIED_INTANGIBLE_TABLE_METHOD_REFUSAL
+    ),
+    (DirectEstimationRegime.SIMPLIFIED, AssetKind.INTANGIBLE, AmortizationMethod.SUM_OF_DIGITS): (
+        _SIMPLIFIED_INTANGIBLE_TABLE_METHOD_REFUSAL
+    ),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -159,11 +172,12 @@ def resolve_activity_asset_schedule_authority(
     if refusal is not None:
         raise ActividadAssetUnsupportedError(refusal)
     parameters = _Parameters(
-        by_id={str(parameter.id): parameter for parameter in modelo_revision.parameters},
+        by_id={parameter.id: parameter for parameter in modelo_revision.parameters},
         revision_id=modelo_revision.id,
         tax_year=tax_year,
     )
     admission_reference = _require_method_admitted(parameters, asset_revision)
+    vehicle_references = _require_vehicle_affectation(parameters, asset_revision)
     resolution = _resolve_method(parameters, asset_revision)
     return ScheduleAuthority.model_validate(
         {
@@ -172,7 +186,7 @@ def resolve_activity_asset_schedule_authority(
             "method": election.method,
             "election_fingerprint": election.fingerprint,
             "authority_generation": authority_generation,
-            "source_reference": ";".join((admission_reference, *resolution.references)),
+            "source_reference": ";".join((admission_reference, *vehicle_references, *resolution.references)),
             **resolution.method_facts,
         },
     )
@@ -183,6 +197,9 @@ def _require_method_admitted(parameters: _Parameters, asset_revision: ActivityAs
     parameter_id = _METHOD_ADMISSION_IDS[election.regime]
     key = f"{asset_revision.asset_kind.value}:{election.method.value}"
     admitted = parameters.keyed(parameter_id, key)
+    undetermined = _UNDETERMINED_ADMISSIONS.get((election.regime, asset_revision.asset_kind, election.method))
+    if admitted is None and undetermined is not None:
+        raise ActividadAssetUnsupportedError(f"{election.method.value} {undetermined}")
     if admitted is None:
         raise ActividadAssetUnsupportedError(
             f"{election.method.value} is not enrolled for {asset_revision.asset_kind.value} assets in the "
@@ -221,6 +238,8 @@ def _resolve_method(parameters: _Parameters, asset_revision: ActivityAssetRevisi
         return _resolve_research_development_building(parameters, asset_revision)
     if method is AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE:
         return _resolve_charging_infrastructure(parameters, asset_revision)
+    if method is AmortizationMethod.ELECTRIC_VEHICLE_FREE:
+        return _resolve_electric_vehicle(parameters, asset_revision)
     raise ActividadAssetUnsupportedError(f"{method.value} has no enrolled authority resolver")
 
 
@@ -479,16 +498,30 @@ def _resolve_useful_life(asset_revision: ActivityAssetRevision) -> _Resolution:
 
 
 def _resolve_twentieth_limit(parameters: _Parameters, asset_revision: ActivityAssetRevision) -> _Resolution:
-    """Apply the LIS art. 12.2 one-twentieth ceiling to its two intangible cases."""
-    if asset_revision.amortization.small_enterprise is not None:
-        raise ActividadAssetUnsupportedError(_INDEFINITE_ACCELERATION_REFUSAL)
-    parameter_id = (
-        _GOODWILL_RATE_ID
-        if asset_revision.amortization.method is AmortizationMethod.GOODWILL
-        else _INDEFINITE_LIFE_RATE_ID
-    )
+    """Apply the LIS art. 12.2 one-twentieth ceiling to its two intangible cases.
+
+    An element acquired in a reduced-size period deducts the LIS art. 103.5
+    multiple of that amount.  Unlike art. 103.1, that paragraph does not
+    require the element to be new.
+    """
+    election = asset_revision.amortization
+    parameter_id = _GOODWILL_RATE_ID if election.method is AmortizationMethod.GOODWILL else _INDEFINITE_LIFE_RATE_ID
     rate = parameters.value(parameter_id) / Decimal("100")
-    return _Resolution(method_facts={"annual_rate": rate}, references=(parameters.reference(parameter_id),))
+    references = [parameters.reference(parameter_id)]
+    evidence = election.small_enterprise
+    if evidence is not None:
+        if evidence.made_available_on > asset_revision.in_service_date:
+            raise ActividadAssetValidationError("an asset cannot enter service before it is made available")
+        threshold, comparison = parameters.scalar(_ERD_TURNOVER_ID)
+        if _reaches(evidence.prior_period_net_turnover, threshold, comparison):
+            raise ActividadAssetUnsupportedError(
+                "prior-period net turnover reaches the reduced-size threshold (LIS art. 101.1)",
+            )
+        rate *= parameters.value(_ERD_INDEFINITE_MULTIPLIER_ID)
+        references.extend(
+            (parameters.reference(_ERD_TURNOVER_ID), parameters.reference(_ERD_INDEFINITE_MULTIPLIER_ID)),
+        )
+    return _Resolution(method_facts={"annual_rate": rate}, references=tuple(references))
 
 
 def _resolve_low_value(parameters: _Parameters, asset_revision: ActivityAssetRevision) -> _Resolution:
@@ -551,6 +584,56 @@ def _resolve_charging_infrastructure(parameters: _Parameters, asset_revision: Ac
     return _Resolution(
         method_facts={},
         references=(parameters.reference(_CHARGING_FIRST_YEAR_ID), parameters.reference(_CHARGING_LAST_YEAR_ID)),
+    )
+
+
+def _require_vehicle_affectation(parameters: _Parameters, asset_revision: ActivityAssetRevision) -> tuple[str, ...]:
+    """Charge a vehicle only on a declaration that proves it affected (RIRPF art. 22).
+
+    A material asset in a class that can hold a restricted vehicle, and every
+    electric-vehicle election, requires the declaration; a declaration given
+    elsewhere is still held to the same test.
+    """
+    election = asset_revision.amortization
+    class_key = election.authority_class_key
+    affectation = asset_revision.vehicle_affectation
+    references: tuple[str, ...] = ()
+    restricted = False
+    if class_key is not None and asset_revision.asset_kind is AssetKind.MATERIAL:
+        restricted = _class_flag(parameters, _RESTRICTED_VEHICLE_CLASS_ID, class_key)
+        references = (parameters.reference(_RESTRICTED_VEHICLE_CLASS_ID, class_key),)
+    if affectation is None:
+        if restricted:
+            raise ActividadAssetIncompleteError(
+                f"table class {class_key!r} can hold a vehicle RIRPF art. 22.4 restricts, so it requires a "
+                "vehicle affectation declaration",
+            )
+        if election.method is AmortizationMethod.ELECTRIC_VEHICLE_FREE:
+            raise ActividadAssetIncompleteError("electric-vehicle free depreciation requires a vehicle declaration")
+        return references
+    require_vehicle_affected(affectation)
+    return references
+
+
+def _resolve_electric_vehicle(parameters: _Parameters, asset_revision: ActivityAssetRevision) -> _Resolution:
+    """Apply LIS DA 18a.1: new electric vehicles entering service in the enrolled periods."""
+    if asset_revision.acquired_condition is not AcquiredCondition.NEW:
+        raise ActividadAssetUnsupportedError("electric-vehicle free depreciation applies only to new vehicles")
+    affectation = asset_revision.vehicle_affectation
+    if affectation is None or affectation.electric_propulsion is None:
+        raise ActividadAssetIncompleteError(
+            "electric-vehicle free depreciation requires the vehicle's annex II propulsion type",
+        )
+    first_year = parameters.value(_ELECTRIC_VEHICLE_FIRST_YEAR_ID)
+    last_year = parameters.value(_ELECTRIC_VEHICLE_LAST_YEAR_ID)
+    if not first_year <= Decimal(asset_revision.in_service_date.year) <= last_year:
+        raise ActividadAssetUnsupportedError("the vehicle must enter service in a tax period LIS DA 18a.1 enrols")
+    return _Resolution(
+        method_facts={},
+        references=(
+            parameters.reference(_ELECTRIC_VEHICLE_FIRST_YEAR_ID),
+            parameters.reference(_ELECTRIC_VEHICLE_LAST_YEAR_ID),
+        ),
     )
 
 

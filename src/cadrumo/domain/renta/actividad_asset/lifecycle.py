@@ -14,6 +14,7 @@ from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from .election import AcquiredCondition, ActivityAssetAmortizationElection, AmortizationMethod
 from .errors import ActividadAssetUnsupportedError, ActividadAssetValidationError
+from .vehicle_affectation import VehicleAffectation
 
 
 class AssetKind(StrEnum):
@@ -283,6 +284,7 @@ class ActivityAssetRevision(BaseModel):
     acquired_condition: AcquiredCondition
     building_construction_date: date | None = None
     amortization: ActivityAssetAmortizationElection
+    vehicle_affectation: VehicleAffectation | None = None
 
     @field_validator("asset_id")
     @classmethod
@@ -317,6 +319,8 @@ class ActivityAssetRevision(BaseModel):
                 raise ValueError("building_construction_date is only a fact of a used asset")
             if self.building_construction_date > self.in_service_date:
                 raise ValueError("building_construction_date cannot follow in_service_date")
+        if self.vehicle_affectation is not None and self.asset_kind is not AssetKind.MATERIAL:
+            raise ValueError("vehicle_affectation is only a fact of a material asset")
         return self
 
     def amortizable_basis(self) -> Decimal:

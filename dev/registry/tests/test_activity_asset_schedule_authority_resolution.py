@@ -53,6 +53,13 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
 )
 from cadrumo.domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
+from cadrumo.domain.renta.actividad_asset.vehicle_affectation import (
+    ElectricPropulsion,
+    VehicleAffectation,
+    VehicleCategory,
+    VehicleListedUse,
+    VehiclePrivateUse,
+)
 
 from ..compiler.loader import load_modelo_directory
 
@@ -84,6 +91,7 @@ def _asset(
     opening_method: AmortizationMethod | None = None,
     built: date | None = None,
     asset_id: str = "asset",
+    vehicle: VehicleAffectation | None = None,
 ) -> ActivityAssetRevision:
     return ActivityAssetRevision(
         asset_id=asset_id,
@@ -110,6 +118,7 @@ def _asset(
         acquired_condition=condition,
         building_construction_date=built,
         amortization=election,
+        vehicle_affectation=vehicle,
     )
 
 
@@ -246,8 +255,9 @@ def _small_enterprise(turnover: str, made_available: date = date(2025, 11, 15)) 
 
 def test_reduced_size_acceleration_doubles_the_maximum_for_a_new_element() -> None:
     # The AEAT 2025 manual's LIS art. 103 example: a EUR 36,000 machine in service on
-    # 1 December. The manual prorates by month (x 1/12 = EUR 720); the accepted
-    # day-count contract prorates 31/365: 36,000 x 24% x 31/365 = 733.8082.
+    # 1 December. The manual illustrates with a month fraction (x 1/12 = EUR 720); the
+    # only official unit, binding DGT consulta V1978-24, prorates by days in service over
+    # the days of the year: 36,000 x 24% x 31/365 = 733.8082.
     charge = _charge(
         _asset(
             _linear("maquinaria", small_enterprise=_small_enterprise("2800000")),
@@ -409,8 +419,33 @@ def test_constant_percentage_excludes_buildings_furniture_and_the_simplified_mod
             _charge(_asset(_constant(class_key), basis="1000"))
     with pytest.raises(ActividadAssetUnsupportedError, match=r"excluded by law.*rd-439-2007:art-30"):
         _charge(_asset(_constant("maquinaria", regime=_SIMPLIFIED), basis="1000"))
-    with pytest.raises(ActividadAssetUnsupportedError, match="not enrolled for intangible"):
-        _charge(_asset(_constant("intangible-software"), basis="1000", kind=AssetKind.INTANGIBLE))
+
+
+def test_constant_percentage_and_sum_of_digits_admit_the_intangibles_the_table_lists() -> None:
+    constant = _charge(_asset(_constant("intangible-software"), basis="3000", kind=AssetKind.INTANGIBLE))
+    digits = _charge(_asset(_digits("intangible-software", 4), basis="3000", kind=AssetKind.INTANGIBLE))
+
+    # LIS art. 12.1.a lists software at 33%: 3.03 years is under 5, so RIS art. 5.1.a weights it
+    # 1.5 to 49.5%, and 3,000 x 49.5% = 1,485.00.
+    assert constant.amount == Decimal("1485.00")
+    # Whole-year periods run from ceil(1 / 0.33) = 4 to the 6-year maximum; four years descending
+    # gives the first year 4 of 10 digits: 3,000 x 4/10 = 1,200.00.
+    assert digits.amount == Decimal("1200.00")
+
+
+def test_simplified_intangible_table_methods_refuse_with_the_sources_that_leave_them_open() -> None:
+    for election in (
+        _constant("equipo-informacion-software", regime=_SIMPLIFIED),
+        _election(
+            AmortizationMethod.SUM_OF_DIGITS,
+            _SIMPLIFIED,
+            authority_class_key="equipo-informacion-software",
+            sum_of_digits_period_years=4,
+            digit_order=DigitOrder.DESCENDING,
+        ),
+    ):
+        with pytest.raises(ActividadAssetUnsupportedError, match=r"RIRPF art\. 30\.1a.*Orden of 27 March 1998"):
+            _charge(_asset(election, basis="3000", kind=AssetKind.INTANGIBLE))
 
 
 # --- Sum of digits (LIS art. 12.1.c; RIS art. 6) ---------------------------------------------
@@ -525,6 +560,42 @@ def test_definite_life_intangible_amortizes_over_its_evidenced_life() -> None:
         )
 
 
+def test_reduced_size_goodwill_and_indefinite_life_intangibles_deduct_150_percent_of_the_twentieth() -> None:
+    evidence = _small_enterprise("2800000", made_available=_YEAR_START)
+    goodwill = _charge(
+        _asset(
+            _election(AmortizationMethod.GOODWILL, small_enterprise=evidence),
+            basis="40000",
+            kind=AssetKind.INTANGIBLE,
+            condition=AcquiredCondition.USED,
+        ),
+    )
+    indefinite = _charge(
+        _asset(
+            _election(AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE, _SIMPLIFIED, small_enterprise=evidence),
+            basis="20000",
+            kind=AssetKind.INTANGIBLE,
+        ),
+    )
+
+    # LIS art. 103.5 as the AEAT manual and DGT V0976-24 read it: 150% of the 5% art. 12.2
+    # amount is 7.5%, so 40,000 x 7.5% = 3,000.00 and 20,000 x 7.5% = 1,500.00. Unlike
+    # art. 103.1, the element need not be new, so acquired goodwill qualifies.
+    assert goodwill.amount == Decimal("3000.00")
+    assert indefinite.amount == Decimal("1500.00")
+    with pytest.raises(ActividadAssetUnsupportedError, match="reduced-size threshold"):
+        _charge(
+            _asset(
+                _election(
+                    AmortizationMethod.GOODWILL,
+                    small_enterprise=_small_enterprise("10000000", made_available=_YEAR_START),
+                ),
+                basis="40000",
+                kind=AssetKind.INTANGIBLE,
+            ),
+        )
+
+
 def test_indefinite_life_and_goodwill_are_limited_to_one_twentieth_in_both_modalities() -> None:
     indefinite = _charge(
         _asset(_election(AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE), basis="20000", kind=AssetKind.INTANGIBLE),
@@ -535,16 +606,6 @@ def test_indefinite_life_and_goodwill_are_limited_to_one_twentieth_in_both_modal
 
     assert indefinite.amount == Decimal("1000.00")  # 20,000 / 20
     assert goodwill.amount == Decimal("2000.00")  # 40,000 / 20
-    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("art. 103.5")):
-        _charge(
-            _asset(
-                _election(
-                    AmortizationMethod.GOODWILL, small_enterprise=_small_enterprise("100", made_available=_YEAR_START)
-                ),
-                basis="40000",
-                kind=AssetKind.INTANGIBLE,
-            ),
-        )
     with pytest.raises(ActividadAssetUnsupportedError, match="not enrolled for material"):
         _charge(_asset(_election(AmortizationMethod.GOODWILL), basis="40000"))
 
@@ -653,7 +714,6 @@ def test_charging_infrastructure_free_depreciation_window() -> None:
         (AmortizationMethod.JUSTIFIED_AMOUNT, "LIS art. 12.1.e"),
         (AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE, "LIS art. 102"),
         (AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE, "LIS DA 17a"),
-        (AmortizationMethod.ELECTRIC_VEHICLE_FREE, "LIS DA 18a.1"),
         (AmortizationMethod.ENTITY_REGIME_FREE, "LIS art. 12.3.a and 12.3.d"),
     ],
 )
@@ -663,6 +723,96 @@ def test_statutory_methods_the_product_cannot_validate_refuse_with_their_provisi
 ) -> None:
     with pytest.raises(ActividadAssetUnsupportedError, match=provision):
         _charge(_asset(_election(method), basis="1000"))
+
+
+# --- Vehicles (LIRPF art. 29; RIRPF art. 22; LIS DA 18a.1) ------------------------------------
+
+
+def _vehicle(
+    category: VehicleCategory = VehicleCategory.PASSENGER_CAR,
+    private_use: VehiclePrivateUse = VehiclePrivateUse.NONE,
+    listed_use: VehicleListedUse | None = None,
+    *,
+    in_books: bool = True,
+    propulsion: ElectricPropulsion | None = None,
+) -> VehicleAffectation:
+    return VehicleAffectation(
+        category=category,
+        private_use=private_use,
+        listed_use=listed_use,
+        recorded_in_activity_books=in_books,
+        evidence_reference="vehicle-use-log",
+        electric_propulsion=propulsion,
+    )
+
+
+def test_a_vehicle_class_charges_only_on_a_declaration_that_proves_affectation() -> None:
+    car = _linear("transporte-externo")
+
+    with pytest.raises(ActividadAssetIncompleteError, match="requires a vehicle affectation declaration"):
+        _charge(_asset(car, basis="20000"))
+    # External transport is 16%: 20,000 x 16% = 3,200.00 for a car used only for the activity.
+    assert _charge(_asset(car, basis="20000", vehicle=_vehicle())).amount == Decimal("3200.00")
+    # A taxi keeps its accessory rest-day use under RIRPF art. 22.4 (b).
+    taxi = _vehicle(
+        private_use=VehiclePrivateUse.ACCESSORY_NON_WORKING_TIME, listed_use=VehicleListedUse.PAID_PASSENGER_TRANSPORT
+    )
+    assert _charge(_asset(car, basis="20000", vehicle=taxi)).amount == Decimal("3200.00")
+    # A delivery van outside the restricted categories keeps the general accessory-use allowance.
+    van = _vehicle(VehicleCategory.OTHER_VEHICLE, VehiclePrivateUse.ACCESSORY_NON_WORKING_TIME)
+    assert _charge(_asset(car, basis="20000", vehicle=van)).amount == Decimal("3200.00")
+    # A truck's table class cannot hold a restricted vehicle, so no declaration is needed: 20,000 x 20%.
+    assert _charge(_asset(_linear("transporte-autocamion"), basis="20000")).amount == Decimal("4000.00")
+
+
+def test_a_vehicle_not_proven_affected_refuses_with_its_provision() -> None:
+    car = _linear("transporte-externo")
+    refusals = (
+        (_vehicle(private_use=VehiclePrivateUse.SHARED), "22.2.1"),
+        (_vehicle(private_use=VehiclePrivateUse.ACCESSORY_NON_WORKING_TIME), "22.4"),
+        (_vehicle(VehicleCategory.MOTORCYCLE, VehiclePrivateUse.ACCESSORY_NON_WORKING_TIME), "22.4"),
+        (_vehicle(in_books=False), "22.2.2"),
+    )
+    for declaration, provision in refusals:
+        with pytest.raises(ActividadAssetUnsupportedError, match=re.escape(provision)):
+            _charge(_asset(car, basis="20000", vehicle=declaration))
+    # Simplified modality: the transport group is flagged too.
+    with pytest.raises(ActividadAssetIncompleteError, match="requires a vehicle affectation declaration"):
+        _charge(_asset(_linear("transporte", _SIMPLIFIED), basis="20000"))
+
+
+def test_the_goods_transport_use_belongs_to_a_mixed_vehicle_only() -> None:
+    with pytest.raises(ValueError, match="mixed vehicle"):
+        _vehicle(listed_use=VehicleListedUse.MIXED_VEHICLE_GOODS_TRANSPORT)
+    assert (
+        _vehicle(
+            VehicleCategory.MIXED_VEHICLE,
+            VehiclePrivateUse.ACCESSORY_NON_WORKING_TIME,
+            VehicleListedUse.MIXED_VEHICLE_GOODS_TRANSPORT,
+        ).listed_use
+        is VehicleListedUse.MIXED_VEHICLE_GOODS_TRANSPORT
+    )
+
+
+def test_electric_vehicle_free_depreciation_needs_an_affected_new_vehicle_in_the_window() -> None:
+    election = _election(AmortizationMethod.ELECTRIC_VEHICLE_FREE, authority_class_key="transporte-externo")
+    electric = _vehicle(propulsion=ElectricPropulsion.BEV)
+
+    charged = _charge(_asset(election, basis="30000", vehicle=electric), free_amount="30000")
+
+    assert charged.amount == Decimal("30000.00")
+    with pytest.raises(ActividadAssetIncompleteError, match="annex II propulsion"):
+        _charge(_asset(election, basis="30000", vehicle=_vehicle()), free_amount="100")
+    with pytest.raises(ActividadAssetUnsupportedError, match="new vehicles"):
+        _charge(
+            _asset(election, basis="30000", vehicle=electric, condition=AcquiredCondition.USED),
+            free_amount="100",
+        )
+    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("DA 18a.1")):
+        _charge(_asset(election, basis="30000", vehicle=electric, in_service=date(2023, 6, 1)), free_amount="100")
+    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("22.2.1")):
+        shared = _vehicle(private_use=VehiclePrivateUse.SHARED, propulsion=ElectricPropulsion.BEV)
+        _charge(_asset(election, basis="30000", vehicle=shared), free_amount="100")
 
 
 def test_unknown_class_and_kind_mismatch_fail_closed() -> None:
