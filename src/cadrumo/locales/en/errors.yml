@@ -537,6 +537,8 @@ errors:
       component closure changed unexpectedly.
     canonical_authority_store_cutover: The authority store pin refers to a different
       reader generation.
+    canonical_authority_store_format: The published authority store is in a format
+      this version does not read; republish the authority.
     canonical_declarations_calendar_projection: The supplied calendar authorities
       cannot form one coherent safe view.
     canonical_declarations_workspace_projection: The supplied authorities cannot form

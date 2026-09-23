@@ -548,6 +548,8 @@ errors:
       komponenskészlet váratlanul megváltozott.
     canonical_authority_store_cutover: A hatósági tároló rögzített hivatkozása más
       olvasógenerációra mutat.
+    canonical_authority_store_format: A közzétett hatósági tároló formátumát ez a
+      verzió nem olvassa; tegye közzé újra a hatóságot.
     canonical_declarations_calendar_projection: A megadott naptári forrásokból nem
       állítható össze koherens, biztonságos nézet.
     canonical_declarations_workspace_projection: A megadott forrásokból nem állítható

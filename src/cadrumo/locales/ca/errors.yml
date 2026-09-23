@@ -588,6 +588,8 @@ errors:
       el conjunt declarat dels seus components ha canviat inesperadament.
     canonical_authority_store_cutover: La referència fixada del magatzem d'autoritat
       apunta a una altra generació del lector.
+    canonical_authority_store_format: El magatzem d'autoritat publicat té un format
+      que aquesta versió no llegeix; torna a publicar l'autoritat.
     canonical_declarations_calendar_projection: Les autoritats del calendari proporcionades
       no poden formar una vista segura i coherent.
     canonical_declarations_workspace_projection: Les autoritats proporcionades no

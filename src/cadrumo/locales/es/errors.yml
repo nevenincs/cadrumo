@@ -582,6 +582,8 @@ errors:
       el conjunto declarado de sus componentes cambió inesperadamente.
     canonical_authority_store_cutover: La referencia fijada del almacén de autoridad
       apunta a otra generación del lector.
+    canonical_authority_store_format: El almacén de autoridad publicado tiene un formato
+      que esta versión no lee; vuelve a publicar la autoridad.
     canonical_declarations_calendar_projection: Las autoridades de calendario proporcionadas
       no pueden formar una vista segura y coherente.
     canonical_declarations_workspace_projection: Las autoridades proporcionadas no
