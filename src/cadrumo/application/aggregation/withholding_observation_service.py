@@ -14,6 +14,7 @@ from typing import Literal, Protocol
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.hashing import sha256_hex
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
@@ -40,13 +41,13 @@ class WithholdingProjectionRole(StrEnum):
     PERCEPCION = "percepcion"
 
 
-class WithholdingObservationMutationError(ValueError):
+class WithholdingObservationMutationError(CadrumoError):
     """A safe, payload-free refusal at the withholding mutation boundary."""
 
-    def __init__(self, code: str) -> None:
+    def __init__(self, refusal_code: str) -> None:
         """Build a payload-free stable refusal."""
-        self.code = code
-        super().__init__(f"withholding observation mutation refused: {code}")
+        super().__init__(f"withholding observation mutation refused: {refusal_code}")
+        self.refusal_code = refusal_code
 
 
 class WithholdingWindowScope(BaseModel):
@@ -331,7 +332,7 @@ class WithholdingObservationService:
                 )
                 return WithholdingMutationResult(baseline=baseline)
             except WithholdingObservationMutationError as exc:
-                if exc.code != "concurrent_write":
+                if exc.refusal_code != "concurrent_write":
                     raise
                 if attempt + 1 == attempts:
                     raise

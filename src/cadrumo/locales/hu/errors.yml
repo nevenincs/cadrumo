@@ -746,10 +746,14 @@ errors:
       elutasított a jelenlegi hozzáférési hatókörben.
     canonical_inventory_closing_authority_conflict: Már rögzítve van egy másik, megváltoztathatatlan
       készletzárási hatóság.
+    canonical_invoice_withholding_evidence: A számla bizonyítékai alapján a forrásadó-levonás
+      nem rögzíthető.
     canonical_m036_declaration_ambiguous: A 036-os nyomtatvány-bevallás azonosítójának
       előtagja több rekordra illeszkedik.
     canonical_m036_declaration_not_found: A kért azonosítónak megfelelő 036-os nyomtatvány-bevallás
       nem található.
+    canonical_m193_phase_materialization: Az aktív tőkebizonyítékok alapján nem vezethető
+      le a 193-as nyomtatvány közzétételi szakasza.
     canonical_modelo_workspace_stale_cursor: A rögzített kurzor már nem egyezik az
       aktuális alappal; indítsa újra a lekérdezést.
     canonical_modelo_workspace_unresolved_work: A munkaterület olvasása feloldatlan
@@ -781,6 +785,12 @@ errors:
     canonical_tui_unknown_destination: A kért TUI-célállomás nincs a támogatott katalógusban.
     canonical_tui_unresolved_action_candidate: A TUI-műveletjelöltnek nincs megfelelő
       katalógusdeklarációja.
+    canonical_withholding_observation_mutation: Az időszak forrásadó-levonási bizonyítékainak
+      módosítása elutasítva.
+    canonical_withholding_producer: A forrásadó-levonási bizonyítékok nem felelnek
+      meg egyetlen támogatott nyomtatvány-útvonalnak sem.
+    canonical_withholding_recognition: A megadott bizonyítékokból nem határozható
+      meg a forrásadó-levonás elszámolási időpontja.
     censal_read_identity: A nyilvántartási olvasás nem ehhez a profilhoz tartozó adózóé.
     clave_credentials_incomplete: A kiválasztott Cl@ve hitelesítési módból hiányzik
       egy szükséges hitelesítő adat.

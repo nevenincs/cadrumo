@@ -12,6 +12,7 @@ from enum import StrEnum
 
 from pydantic import BaseModel, Field
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG
 
 
@@ -57,13 +58,13 @@ class WithholdingOperationKind(StrEnum):
     FORMALIZATION = "formalization"
 
 
-class WithholdingRecognitionError(ValueError):
+class WithholdingRecognitionError(CadrumoError):
     """A stable, payload-free refusal at the recognition boundary."""
 
-    def __init__(self, code: str) -> None:
+    def __init__(self, refusal_code: str) -> None:
         """Build a refusal that never echoes financial source evidence."""
-        self.code = code
-        super().__init__(f"withholding recognition refused: {code}")
+        super().__init__(f"withholding recognition refused: {refusal_code}")
+        self.refusal_code = refusal_code
 
 
 class WithholdingDatedEvent(BaseModel):

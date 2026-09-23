@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import date
 from decimal import Decimal, InvalidOperation
-from typing import TYPE_CHECKING, ClassVar, Literal, cast, override
+from typing import TYPE_CHECKING, ClassVar, cast, override
 
 from textual.app import ComposeResult
 from textual.containers import VerticalScroll
@@ -22,6 +22,7 @@ from ....application.aggregation.invoice_retencion import InvoiceWithholdingEvid
 from ....application.aggregation.retenciones import Modelo180PropertyEvidence, Modelo180StructuredAddress
 from ....application.aggregation.withholding_observation_service import (
     WithholdingMutationMode,
+    WithholdingObservationMutationError,
     WithholdingWindowScope,
 )
 from ....application.aggregation.withholding_recognition import (
@@ -165,7 +166,7 @@ class WithholdingEvidenceScreen(Screen[None]):
                 period=Period.from_year_and_code(int(year_text), period_code),
             )
             state = self._door.read_window(scope)
-        except ValueError:
+        except (WithholdingObservationMutationError, ValueError):
             self._baseline = None
             self._inspected_scope = None
             self._set_status("refused: invalid_inspection_scope")
@@ -254,7 +255,7 @@ class WithholdingEvidenceScreen(Screen[None]):
             raise ValueError("invalid property modality")
         return Modelo180PropertyEvidence(
             property_key=self._text("property-key"),
-            situation=cast(Literal["1", "2", "3", "4"], situation),
+            situation=situation,
             cadastral_reference=self._text("cadastral-reference") or None,
             address=Modelo180StructuredAddress(
                 province_code=self._text("province"),
@@ -268,7 +269,7 @@ class WithholdingEvidenceScreen(Screen[None]):
                 house_number="1",
             ),
             recipient_province_code=self._text("province"),
-            modality=cast(Literal["1", "2"], modality),
+            modality=modality,
             accrual_year=self._filing_year,
             withholding_percentage=Decimal(self._text("annual-percentage")),
         )

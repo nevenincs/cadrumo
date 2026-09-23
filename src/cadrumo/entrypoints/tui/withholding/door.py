@@ -31,6 +31,7 @@ from ....application.aggregation.withholding_producer import (
     WithholdingProducer,
     WithholdingProducerError,
 )
+from ....application.aggregation.withholding_recognition import WithholdingRecognitionError
 from ....core.models import STRICT_FROZEN_CONFIG
 
 if TYPE_CHECKING:
@@ -97,11 +98,11 @@ class TuiWithholdingDoor:
             WithholdingProducerError,
             WithholdingObservationMutationError,
         ) as error:
-            return TuiWithholdingCaptureOutcome(status="refused", refusal_code=error.code)
-        except ValueError:
-            # Pydantic and validation-boundary errors have useful developer
-            # messages but may include caller evidence.  They are deliberately
-            # collapsed before they cross the presentation boundary.
+            return TuiWithholdingCaptureOutcome(status="refused", refusal_code=error.refusal_code)
+        except (WithholdingRecognitionError, ValueError):
+            # Pydantic, validation-boundary and recognition errors have useful
+            # developer messages but may include caller evidence.  They are
+            # deliberately collapsed before they cross the presentation boundary.
             return TuiWithholdingCaptureOutcome(status="refused", refusal_code="invalid_withholding_evidence")
         if captured is None:  # pragma: no cover - the prepared command is never omitted
             raise AssertionError("prepared TUI invoice capture must mutate or replay")

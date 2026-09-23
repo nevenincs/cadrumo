@@ -20,7 +20,12 @@ from ...application.aggregation.service import (
     PerModeloAggregationResult,
     aggregate_per_modelo,
 )
-from ...application.aggregation.withholding_observation_service import WithholdingWindowScope
+from ...application.aggregation.withholding_observation_service import (
+    WithholdingObservationMutationError,
+    WithholdingWindowScope,
+)
+from ...application.aggregation.withholding_producer import WithholdingProducerError
+from ...application.aggregation.withholding_recognition import WithholdingRecognitionError
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice
 from ...core.modelo import Modelo
@@ -90,7 +95,7 @@ def _capture_invoice_withholding_into_command(
             request=requests[0],
             applicable_year=command.period.filing_year,
         )
-    except (InvoiceWithholdingEvidenceError, ValueError) as exc:
+    except (InvoiceWithholdingEvidenceError, WithholdingRecognitionError, ValueError) as exc:
         raise typer.BadParameter(str(exc)) from exc
     if capture.scope.modelo != command.modelo or capture.scope.period != command.period:
         raise typer.BadParameter("derived recognition period does not match the requested modelo period")
@@ -99,7 +104,12 @@ def _capture_invoice_withholding_into_command(
         from ...application.aggregation.withholding_producer import WithholdingProducer
 
         WithholdingProducer(service=withholding_observation_service(ctx, bucket_id=bucket_id)).capture(capture.command)
-    except ValueError as exc:
+    except (
+        WithholdingProducerError,
+        WithholdingRecognitionError,
+        WithholdingObservationMutationError,
+        ValueError,
+    ) as exc:
         raise typer.BadParameter(str(exc)) from exc
     return command.model_copy(
         update={"retencion_observations": ports.repository.load_observations(command.modelo, command.period)}

@@ -64,6 +64,56 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.aggregation.invoice_retencion.InvoiceWithholdingEvidenceError",
+        ErrorCode(
+            code="REFUSED_INVOICE_WITHHOLDING_EVIDENCE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_invoice_withholding_evidence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.aggregation.m193_phase_materialization.Modelo193PhaseMaterializationError",
+        ErrorCode(
+            code="REFUSED_M193_PHASE_MATERIALIZATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_m193_phase_materialization",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.aggregation.withholding_observation_service.WithholdingObservationMutationError",
+        ErrorCode(
+            code="REFUSED_WITHHOLDING_OBSERVATION_MUTATION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_withholding_observation_mutation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.aggregation.withholding_producer.WithholdingProducerError",
+        ErrorCode(
+            code="REFUSED_WITHHOLDING_PRODUCER",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_withholding_producer",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.aggregation.withholding_recognition.WithholdingRecognitionError",
+        ErrorCode(
+            code="REFUSED_WITHHOLDING_RECOGNITION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_withholding_recognition",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.auth.diagnostics_ports.AuthDiagnosticPersistenceError",
         ErrorCode(
             code="FAIL_AUTH_DIAGNOSTIC_PERSISTENCE",

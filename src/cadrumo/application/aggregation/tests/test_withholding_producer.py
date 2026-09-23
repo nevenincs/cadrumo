@@ -32,6 +32,7 @@ from cadrumo.application.aggregation.withholding_observation_service import (
     ABSENT_WITHHOLDING_GENERATION_ID,
     SourceLiabilitySnapshot,
     WithholdingMutationMode,
+    WithholdingObservationMutationError,
     WithholdingObservationService,
     WithholdingWindowScope,
 )
@@ -46,6 +47,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingOperationKind,
     WithholdingRecipientTaxRegime,
     WithholdingRecipientTaxStatus,
+    WithholdingRecognitionError,
     WithholdingRecognitionEvidence,
 )
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave, RetencionScheme
@@ -450,7 +452,7 @@ def test_unpaid_exigible_capital_reopens_and_later_settlement_does_not_duplicate
                 "idempotency_key": "capital-stale-settlement-capture",
             }
         )
-        with pytest.raises(ValueError, match="stale_baseline"):
+        with pytest.raises(WithholdingObservationMutationError, match="stale_baseline"):
             reopened_producer.capture(stale)
         assert len(reopened_service.read_window(unpaid.scope).entries) == 1
 
@@ -517,7 +519,7 @@ def test_capital_exigibility_is_required_before_a_123_window_is_mutated(tmp_path
             update={"recognition_evidence": command.recognition_evidence.model_copy(update={"exigibility": None})}
         )
 
-        with pytest.raises(ValueError, match="missing_exigibility_evidence"):
+        with pytest.raises(WithholdingRecognitionError, match="missing_exigibility_evidence"):
             producer.capture(missing_exigibility)
 
         scope = WithholdingWindowScope(modelo="123", period=Period.from_year_and_code(2025, "4T"))
@@ -546,7 +548,7 @@ def test_invalid_recognition_refuses_before_any_encrypted_projection_write(tmp_p
         producer, service = _producer_for(profile.repository)
         command = _command(recipient_status=WithholdingRecipientTaxStatus.NONRESIDENT)
 
-        with pytest.raises(ValueError, match="irnr_unsupported"):
+        with pytest.raises(WithholdingRecognitionError, match="irnr_unsupported"):
             producer.capture(command)
 
         scope = Period.from_year_and_code(2025, "2T")
@@ -655,6 +657,19 @@ def test_income_scheme_mismatch_refuses_without_choosing_another_modelo(tmp_path
         )
 
 
+def _amounts_command(
+    amounts: dict[str, str], *, allocation_id: str = "allocation-1", payment_id: str = "payment-1"
+) -> WithholdingEvidenceCaptureCommand:
+    """Build one capture from a parametrised base/withholding/settlement triple."""
+    return _command(
+        allocation_id=allocation_id,
+        payment_id=payment_id,
+        taxable_base=amounts["taxable_base"],
+        retencion_amount=amounts["retencion_amount"],
+        settlement_amount=amounts["settlement_amount"],
+    )
+
+
 @pytest.mark.parametrize(
     ("first", "second", "expected"),
     (
@@ -684,10 +699,10 @@ def test_liability_dimensions_refuse_before_a_second_projection_write(
     """Each monetary dimension is bounded independently at the atomic boundary."""
     with isolated_runtime_profile(tmp_path=tmp_path) as profile:
         producer, service = _producer_for(profile.repository)
-        producer.capture(_command(**first))
+        producer.capture(_amounts_command(first))
 
-        with pytest.raises(ValueError, match=expected):
-            producer.capture(_command(allocation_id="allocation-2", payment_id="payment-2", **second))
+        with pytest.raises(WithholdingObservationMutationError, match=expected):
+            producer.capture(_amounts_command(second, allocation_id="allocation-2", payment_id="payment-2"))
 
         scope = WithholdingWindowScope(modelo="111", period=Period.from_year_and_code(2025, "2T"))
         assert len(service.read_window(scope).entries) == 2

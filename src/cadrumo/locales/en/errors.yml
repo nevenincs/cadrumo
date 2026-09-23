@@ -729,10 +729,14 @@ errors:
       under the current access scope.
     canonical_inventory_closing_authority_conflict: A different immutable inventory
       closing authority is already recorded.
+    canonical_invoice_withholding_evidence: The invoice evidence cannot support a
+      withholding capture.
     canonical_m036_declaration_ambiguous: The Modelo 036 declaration identifier prefix
       matches multiple records.
     canonical_m036_declaration_not_found: No Modelo 036 declaration matches the requested
       identifier.
+    canonical_m193_phase_materialization: The active capital evidence cannot support
+      a Modelo 193 disclosure phase.
     canonical_modelo_workspace_stale_cursor: The pinned cursor no longer matches the
       current baseline; restart the query.
     canonical_modelo_workspace_unresolved_work: The workspace read reached an unresolved
@@ -765,6 +769,12 @@ errors:
       supported catalogue.
     canonical_tui_unresolved_action_candidate: The TUI action candidate has no matching
       catalogue declaration.
+    canonical_withholding_observation_mutation: The withholding evidence change was
+      refused for this filing window.
+    canonical_withholding_producer: The withholding evidence does not match a supported
+      modelo route.
+    canonical_withholding_recognition: The withholding recognition date cannot be
+      derived from the supplied evidence.
     censal_read_identity: The censal read does not belong to this profile's taxpayer.
     clave_credentials_incomplete: The selected Cl@ve authentication mode is missing
       a credential it needs.

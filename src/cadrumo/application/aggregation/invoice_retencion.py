@@ -54,7 +54,7 @@ from typing import TYPE_CHECKING, Final, Self
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import BindingSourceKind, RetencionScheme
-from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.i18n.translatable import Translatable as tr
@@ -224,12 +224,13 @@ class InvoiceRetencionRouteRequest(BaseModel):
     scheme: RetencionScheme
 
 
-class InvoiceWithholdingEvidenceError(ValueError):
+class InvoiceWithholdingEvidenceError(CadrumoError):
     """Payload-free refusal while making invoice evidence capture-ready."""
 
-    def __init__(self, code: str) -> None:
-        self.code = code
-        super().__init__(f"invoice withholding evidence refused: {code}")
+    def __init__(self, refusal_code: str) -> None:
+        """Build a refusal that carries only its stable reason token."""
+        super().__init__(f"invoice withholding evidence refused: {refusal_code}")
+        self.refusal_code = refusal_code
 
 
 class InvoiceWithholdingEvidenceRequest(BaseModel):

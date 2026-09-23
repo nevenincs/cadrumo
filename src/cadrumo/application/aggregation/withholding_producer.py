@@ -14,6 +14,7 @@ from decimal import Decimal
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import BindingSourceKind, RetencionScheme, counterpart_source_kind
+from ...core.errors.hierarchy import CadrumoError
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
@@ -45,13 +46,13 @@ from .withholding_recognition import (
 )
 
 
-class WithholdingProducerError(ValueError):
+class WithholdingProducerError(CadrumoError):
     """Payload-free refusal for an unsupported producer-to-modelo route."""
 
-    def __init__(self, code: str) -> None:
+    def __init__(self, refusal_code: str) -> None:
         """Keep public errors stable without echoing financial evidence."""
-        self.code = code
-        super().__init__(f"withholding producer refused: {code}")
+        super().__init__(f"withholding producer refused: {refusal_code}")
+        self.refusal_code = refusal_code
 
 
 class WithholdingEvidenceCaptureCommand(BaseModel):

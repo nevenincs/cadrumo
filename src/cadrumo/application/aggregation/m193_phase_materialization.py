@@ -17,6 +17,7 @@ from typing import Literal
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.aggregation import BindingSourceKind
+from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.withholding_bindings import WithholdingObservation
 from .retenciones import Modelo193CapitalDetail, RetencionObservation
@@ -32,13 +33,13 @@ class Modelo193DisclosurePhase(StrEnum):
     SETTLED_PRIOR_ACCRUAL = "settled_prior_accrual"
 
 
-class Modelo193PhaseMaterializationError(ValueError):
+class Modelo193PhaseMaterializationError(CadrumoError):
     """Payload-free refusal when active capital evidence cannot support a phase."""
 
-    def __init__(self, code: str) -> None:
+    def __init__(self, refusal_code: str) -> None:
         """Keep corrupted or incomplete evidence out of a filing-facing view."""
-        self.code = code
-        super().__init__(f"Modelo 193 phase materialization refused: {code}")
+        super().__init__(f"Modelo 193 phase materialization refused: {refusal_code}")
+        self.refusal_code = refusal_code
 
 
 class Modelo193PhaseRow(BaseModel):

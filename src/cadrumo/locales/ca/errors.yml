@@ -798,10 +798,14 @@ errors:
       un fitxer dins l'àmbit d'accés concedit.
     canonical_inventory_closing_authority_conflict: Ja consta una altra autoritat
       immutable de tancament de l'inventari.
+    canonical_invoice_withholding_evidence: L'evidència de la factura no permet registrar
+      la retenció.
     canonical_m036_declaration_ambiguous: El prefix de l'identificador de la declaració
       del Model 036 coincideix amb més d'un registre.
     canonical_m036_declaration_not_found: Cap declaració del Model 036 coincideix
       amb l'identificador sol·licitat.
+    canonical_m193_phase_materialization: L'evidència de capital activa no permet
+      derivar una fase de declaració del Model 193.
     canonical_modelo_workspace_stale_cursor: El cursor fixat ja no coincideix amb
       la referència actual; reinicieu la consulta.
     canonical_modelo_workspace_unresolved_work: La lectura de l'espai de treball ha
@@ -836,6 +840,12 @@ errors:
       catàleg compatible.
     canonical_tui_unresolved_action_candidate: El candidat d'acció del TUI no té cap
       declaració de catàleg coincident.
+    canonical_withholding_observation_mutation: S'ha rebutjat el canvi en l'evidència
+      de retencions d'aquest període.
+    canonical_withholding_producer: L'evidència de retencions no correspon a cap via
+      de model admesa.
+    canonical_withholding_recognition: No es pot determinar la data de reconeixement
+      de la retenció amb l'evidència aportada.
     censal_read_identity: La lectura censal no correspon al contribuent d'aquest perfil.
     clave_credentials_incomplete: Al mode d'autenticació Cl@ve seleccionat li falta
       una credencial que necessita.

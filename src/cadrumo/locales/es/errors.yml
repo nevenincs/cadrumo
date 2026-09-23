@@ -790,10 +790,14 @@ errors:
       un archivo dentro del ámbito de acceso concedido.
     canonical_inventory_closing_authority_conflict: Ya consta otra autoridad inmutable
       de cierre del inventario.
+    canonical_invoice_withholding_evidence: La evidencia de la factura no permite
+      registrar la retención.
     canonical_m036_declaration_ambiguous: El prefijo del identificador de la declaración
       del Modelo 036 coincide con varios registros.
     canonical_m036_declaration_not_found: Ninguna declaración del Modelo 036 coincide
       con el identificador solicitado.
+    canonical_m193_phase_materialization: La evidencia de capital activa no permite
+      derivar una fase de declaración del Modelo 193.
     canonical_modelo_workspace_stale_cursor: El cursor fijado ya no coincide con la
       referencia actual; reinicia la consulta.
     canonical_modelo_workspace_unresolved_work: La lectura del espacio de trabajo
@@ -827,6 +831,12 @@ errors:
       compatible.
     canonical_tui_unresolved_action_candidate: El candidato de acción del TUI no tiene
       una declaración de catálogo coincidente.
+    canonical_withholding_observation_mutation: Se rechazó el cambio en la evidencia
+      de retenciones de este periodo.
+    canonical_withholding_producer: La evidencia de retenciones no corresponde a ninguna
+      vía de modelo admitida.
+    canonical_withholding_recognition: No se puede determinar la fecha de reconocimiento
+      de la retención con la evidencia aportada.
     censal_read_identity: La lectura censal no corresponde al contribuyente de este
       perfil.
     clave_credentials_incomplete: Al modo de autenticación Cl@ve seleccionado le falta
