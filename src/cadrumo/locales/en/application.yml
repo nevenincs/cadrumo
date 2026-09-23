@@ -775,12 +775,10 @@ application:
         it cannot be supplied through --binding, which carries only decimal and enum
         values. Set it as a profile fact and recalculate.
       calculate_binding_unknown: '--binding %{key} does not match any binding id in
-        this revision. Accepted binding ids: %{accepted}. Use `aeat app modelo bindings
-        list <MODELO>` to list valid binding ids.'
+        this revision. Accepted binding ids: %{accepted}.'
       calculate_boolean_binding_encoding_invalid: 'Binding value for %{key} is a decimal-encoded
         boolean flag and must be one of: %{accepted}. Received %{value}. Accepted
-        encoding: %{mapping}. Run ''aeat app modelo bindings list <MODELO>'' to see
-        each binding''s decimal encoding.'
+        encoding: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} is not a canonical
         casilla.id and is ambiguous. Candidate casilla.id values: %{accepted}. Supply
         the exact canonical casilla.id'
@@ -788,16 +786,13 @@ application:
         number or form number or export reference, not a canonical casilla.id. Use
         the canonical casilla.id instead: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} is not a canonical casilla.id in
-        this revision. Use `aeat app modelo casillas <MODELO>` to list valid casilla.id
-        values.
+        this revision.
       calculate_decimal_input_invalid: '%{flag} value for %{key} is not a decimal:
         %{value}'
       calculate_detail_casilla_unsupported: Casilla %{key} names a Modelo 180 perceptor/property
         detail field, not a scalar decimal casilla input. The local work --casilla
         channel only accepts scalar decimal casillas; Modelo 180 perceptor/property
-        detail rows are not supported on the public --row surface yet. Use aeat app
-        modelo aggregate --modelo 180 --retencion-observation for the supported annual
-        perceptor count/base/retenciones source.
+        detail comes from the recorded withholding evidence, not from a casilla override.
       calculate_m184_share_sum_invalid: Modelo 184 member-row share percentages must
         sum to exactly 100%; got %{total} across %{count} rows.
       calculate_m210_tipo_renta_fetch_gated: 'Modelo 210 tipo de renta code %{value}

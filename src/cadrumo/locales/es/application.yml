@@ -856,12 +856,10 @@ application:
         valores decimales y de enumeración. Definelo como dato del perfil y vuelve
         a calcular.
       calculate_binding_unknown: '--binding %{key} no coincide con ningún binding
-        de esta revisión. Bindings aceptados: %{accepted}. Use `aeat app modelo bindings
-        list <MODELO>` para listar los bindings válidos.'
+        de esta revisión. Bindings aceptados: %{accepted}.'
       calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} es
         un indicador booleano codificado como decimal y debe ser uno de: %{accepted}.
-        Se recibió %{value}. Codificación aceptada: %{mapping}. Ejecuta ''aeat app
-        modelo bindings list <MODELO>'' para ver la codificación decimal de cada binding.'
+        Se recibió %{value}. Codificación aceptada: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no es un casilla.id
         canónico y es ambiguo. Valores casilla.id candidatos: %{accepted}. Especifica
         el casilla.id canónico exacto'
@@ -869,16 +867,14 @@ application:
         impreso o de formulario, o una referencia de exportación, no un casilla.id
         canónico. Usa el casilla.id canónico en su lugar: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} no es un casilla.id canónico de
-        esta revisión. Usa `aeat app modelo casillas <MODELO>` para listar los casilla.id
-        válidos.
+        esta revisión.
       calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no es decimal:
         %{value}'
       calculate_detail_casilla_unsupported: La casilla %{key} nombra un campo de detalle
         de perceptor/inmueble del Modelo 180, no una casilla decimal escalar. El canal
-        local --casilla solo acepta casillas decimales escalares; las filas de detalle
-        de perceptor/inmueble del Modelo 180 aún no están soportadas en la superficie
-        pública --row. Usa aeat app modelo aggregate --modelo 180 --retención-observation
-        para la fuente soportada de número de perceptores/base/retenciones anual.
+        local --casilla solo acepta casillas decimales escalares; el detalle de perceptor/inmueble
+        del Modelo 180 procede de la evidencia de retenciones registrada, no de una
+        casilla indicada a mano.
       calculate_m184_share_sum_invalid: Los porcentajes de participación de las filas
         de miembro del modelo 184 deben sumar exactamente 100%; se obtuvo %{total}
         en %{count} filas.

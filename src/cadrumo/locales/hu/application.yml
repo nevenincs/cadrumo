@@ -819,31 +819,25 @@ application:
         értékeket fogad. Állítsd be profiladatként (pl. aeat config profile create
         ... --taxpayer-birth-date ÉÉÉÉ-HH-NN), majd számolj újra.
       calculate_binding_unknown: '--binding %{key} egyik binding azonosítónak sem
-        felel meg ebben a revízióban. Elfogadott binding azonosítók: %{accepted}.
-        Használja a `aeat app modelo bindings list <MODELO>` parancsot az érvényes
-        azonosítók listázásához.'
+        felel meg ebben a revízióban. Elfogadott binding azonosítók: %{accepted}.'
       calculate_boolean_binding_encoding_invalid: 'A(z) %{key} kötés értéke decimálisként
         kódolt logikai jelző, és a következők egyike kell legyen: %{accepted}. Beérkezett:
-        %{value}. Elfogadott kódolás: %{mapping}. Futtassa a ''aeat app modelo bindings
-        list <MODELO>'' parancsot az egyes kötések decimális kódolásának megtekintéséhez.'
+        %{value}. Elfogadott kódolás: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: 'A --casilla %{key} nem kanonikus
         casilla.id, és nem egyértelmű. Jelölt casilla.id értékek: %{accepted}. Adja
         meg a pontos kanonikus casilla.id-t'
       calculate_casilla_noncanonical_refused: 'A --casilla %{key} egy nyomtatott mezőszám,
         nyomtatványszám vagy exportreferencia, nem kanonikus casilla.id. Használja
         helyette a kanonikus casilla.id-t: %{accepted}'
-      calculate_casilla_unknown: 'A --casilla %{key} nem kanonikus casilla.id ebben
-        a revízióban. Érvényes casilla.id értékekhez futtassa: `aeat app modelo casillas
-        <MODELO>`.'
+      calculate_casilla_unknown: A --casilla %{key} nem kanonikus casilla.id ebben
+        a revízióban.
       calculate_decimal_input_invalid: 'A(z) %{flag} érték %{key} kulcshoz nem decimális
         szám: %{value}'
       calculate_detail_casilla_unsupported: A(z) %{key} rovat a 180-as nyomtatvány
-        perceptor/ingatlan részletsor mezőjét nevezi meg, nem skaláris decimális rovat
-        bemenetet. A helyi --casilla csatorna csak skaláris decimális rovatokat fogad;
-        a 180-as nyomtatvány perceptor/ingatlan részletsorai még nem támogatottak
-        a nyilvános --row felületen. Használd a aeat app modelo aggregate --modelo
-        180 --retencion-observation parancsot a támogatott éves perceptor-szám/base/retenciones
-        forráshoz.
+        kedvezményezett/ingatlan részletsor mezőjét nevezi meg, nem skaláris decimális
+        rovat bemenetet. A helyi --casilla csatorna csak skaláris decimális rovatokat
+        fogad; a 180-as nyomtatvány kedvezményezett/ingatlan részletei a rögzített
+        visszatartási bizonylatokból származnak, nem kézzel megadott rovatból.
       calculate_m184_share_sum_invalid: 'A 184-es modell tag sorainak részesedési
         százalékai pontosan 100%-ot kell adjanak; kapott érték: %{total}, sorok: %{count}.'
       calculate_m210_tipo_renta_fetch_gated: 'A(z) %{value} 210-es nyomtatvány jövedelemtípus-kód

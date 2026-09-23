@@ -688,8 +688,14 @@ def test_work_calculate_modelo_180_refuses_string_perceptor_casilla_with_detail_
     envelope = json.loads(calculated.output)
     assert envelope["error"]["code"] == "REFUSED_MODELO_CALCULATE_CASILLA_INPUT"
     assert envelope["error"]["context"]["key"] == "perc.nif"
-    assert "perceptor/property detail rows are not supported" in envelope["error"]["message"]
-    assert "--retencion-observation" in envelope["error"]["message"]
+    assert "recorded withholding evidence" in envelope["error"]["message"]
+    # The detail comes from evidence no single command can bind, so the
+    # refusal is a typed operator decision rather than prose naming a command.
+    action = envelope["error"]["action"]
+    assert action["failed_condition_id"] == "modelo.work.calculate.caller_overrides.casilla_scalar"
+    assert action["no_recovery_outcome"] == "operator_decision"
+    assert action["action"] is None
+    assert "aeat" not in envelope["error"]["message"]
 
 
 def test_work_calculate_persists_ledger_source_mesh_observations(

@@ -854,12 +854,10 @@ application:
         de naixement); no es pot aportar mitjançant --binding, que només admet valors
         decimals i d'enumeració. Defineix-lo com a dada del perfil i torna a calcular.
       calculate_binding_unknown: '--binding %{key} no coincideix amb cap binding d''aquesta
-        revisió. Bindings acceptats: %{accepted}. Useu `aeat app modelo bindings list
-        <MODELO>` per llistar els bindings vàlids.'
+        revisió. Bindings acceptats: %{accepted}.'
       calculate_boolean_binding_encoding_invalid: 'El valor del binding %{key} és
         un indicador booleà codificat com a decimal i ha de ser un de: %{accepted}.
-        S''ha rebut %{value}. Codificació acceptada: %{mapping}. Executa ''aeat app
-        modelo bindings list <MODELO>'' per veure la codificació decimal de cada binding.'
+        S''ha rebut %{value}. Codificació acceptada: %{mapping}.'
       calculate_casilla_noncanonical_ambiguous: '--casilla %{key} no és un casilla.id
         canònic i és ambigu. Valors casilla.id candidats: %{accepted}. Indica el casilla.id
         canònic exacte'
@@ -867,16 +865,14 @@ application:
         imprès o de formulari, o una referència d''exportació, no un casilla.id canònic.
         Usa el casilla.id canònic en el seu lloc: %{accepted}'
       calculate_casilla_unknown: --casilla %{key} no és un casilla.id canònic d'aquesta
-        revisió. Usa `aeat app modelo casillas <MODELO>` per llistar els casilla.id
-        vàlids.
+        revisió.
       calculate_decimal_input_invalid: 'El valor %{flag} de %{key} no és decimal:
         %{value}'
       calculate_detail_casilla_unsupported: La casella %{key} identifica un camp de
         detall de perceptor/immoble del Model 180, no una casella decimal escalar.
-        El canal local --casilla només accepta caselles decimals escalars; les files
-        de detall de perceptor/immoble del Model 180 encara no estan suportades a
-        la superfície pública --row. Usa aeat app modelo aggregate --modelo 180 --retencion-observation
-        per a la font suportada de nombre de perceptors/base/retencions anual.
+        El canal local --casilla només accepta caselles decimals escalars; el detall
+        de perceptor/immoble del Model 180 prové de l'evidència de retencions registrada,
+        no d'una casella indicada a mà.
       calculate_m184_share_sum_invalid: Els percentatges de participació de les files
         de membre del model 184 han de sumar exactament 100%; s'ha obtingut %{total}
         en %{count} files.
