@@ -71,7 +71,11 @@ import keyring.core
 from click.testing import Result
 from pydantic import BaseModel, Field, JsonValue
 
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.master_key.active_session import (
+    active_session,
+    close_active_bucket_session,
+    current_active_bucket_session,
+)
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
     composed_profile_persistence_ports,
 )
@@ -1011,6 +1015,25 @@ def _drop_handlers_bound_to_a_dead_stream() -> None:
         configure_logging()
 
 
+@contextmanager
+def _next_process_session_view() -> Generator[None]:
+    """Show a frame the session state a fresh ``aeat`` process would see.
+
+    Every documented command is its own process, but the sandbox runs them in
+    one: the capsule session opened for the whole span is what lets each frame
+    reach the bucket. Logout seals that session in place, and a real next
+    process would then find no session at all -- so once it is sealed, the
+    following frames run with the session masked as absent rather than
+    observing a sealed object no separate process could ever hold.
+    """
+    live = current_active_bucket_session()
+    if live is None or not live.sealed:
+        yield
+        return
+    with active_session.override(None):
+        yield
+
+
 def _invoke_frame(args: tuple[str, ...]) -> Result:
     """Invoke the cached CLI, retrying only on the transient registry-write race.
 
@@ -1028,7 +1051,7 @@ def _invoke_frame(args: tuple[str, ...]) -> Result:
     # field for this exact leaf; every sibling retains the normal sandbox span.
     is_profile_delete = any(args[index : index + 3] == ("config", "profile", "delete") for index in range(len(args)))
     settings_context = override_settings(cadrumo_active_profile=None) if is_profile_delete else nullcontext()
-    with settings_context:
+    with settings_context, _next_process_session_view():
         result = invoke_cached_cli(list(args))
     if os.environ.get("CI"):
         return result

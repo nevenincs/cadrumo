@@ -70,12 +70,38 @@
             "filing_year": 2026
           },
           "readiness_issue_count": 2,
+          "readiness_issues": [
+            {
+              "business_classification": "NOT_YET_PROCESSED",
+              "category_id": null,
+              "detail": "business classification 'NOT_YET_PROCESSED' is not ready for modelo calculation",
+              "iva_amount": null,
+              "iva_rate": null,
+              "reason": "missing_business_classification",
+              "taxable_base": null,
+              "transaction_id": "71a5db2bb891df295bee72544c40497d24d5c8cfc7edab745ce7339dcf8d6518",
+              "transaction_present": true
+            },
+            {
+              "business_classification": "NOT_YET_PROCESSED",
+              "category_id": null,
+              "detail": "business classification 'NOT_YET_PROCESSED' is not ready for modelo calculation",
+              "iva_amount": null,
+              "iva_rate": null,
+              "reason": "missing_business_classification",
+              "taxable_base": null,
+              "transaction_id": "e3eeac5e306efe4e82a72896e92e7c236245ec85348834b2c10b120c67fe087d",
+              "transaction_present": true
+            }
+          ],
           "ready": false,
           "reviewed_count": 0,
           "skipped_count": 0,
           "split_count": 0,
+          "stale_filings": [],
           "stashed_count": 0,
-          "total_count": 2
+          "total_count": 2,
+          "unconverted_currency_count": 0
         },
         "schema_version": "2",
         "status": "success"

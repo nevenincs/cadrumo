@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 09:40+0200\n"
+"POT-Creation-Date: 2026-09-23 17:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -108,7 +108,12 @@ msgid ""
 "publication writes to the configured authority root and refuses rather "
 "than guessing a location when none is configured. There is no facts-only "
 "publication command and no component-selective reuse: every successful "
-"publication is a fresh, full generation."
+"publication is a fresh, full generation. `--if-stale` publishes only when"
+" the existing artifact no longer records the live registry and source "
+"evidence, and prints `published=skipped-current` when it already does. "
+"Asking that question reads content without compiling, so it costs seconds"
+" where a publication costs minutes, which makes the paired recipe safe to"
+" run after every registry edit:"
 msgstr ""
 "A parancs minden modelót, profildeklarációt, katalógust, tényt, "
 "exportkiosztást, valamint jogi és forrásbizonyíték-projekciót egyetlen "
@@ -126,9 +131,14 @@ msgstr ""
 "autoritásgyökérbe ír, és inkább elutasít, mint helyet találgatna, ha "
 "nincs beállítva. Nincs csak tényeket közzétevő parancs és nincs "
 "komponensenkénti újrahasznosítás sem: minden sikeres közzététel friss, "
-"teljes generáció."
+"teljes generáció. A `--if-stale` csak akkor tesz közzé, ha a meglévő "
+"artefaktum már nem az élő nyilvántartást és forrásbizonyítékokat rögzíti,"
+" és `published=skipped-current` üzenetet ír ki, ha igen. Ennek eldöntése "
+"fordítás nélkül olvassa a tartalmat, így másodpercekbe kerül ott, ahol "
+"egy közzététel perceket vesz igénybe, ezért a hozzá tartozó recept minden"
+" nyilvántartás-szerkesztés után biztonságosan futtatható:"
 
-#: ../../how-to/publish-runtime-authority.md:49
+#: ../../how-to/publish-runtime-authority.md:58
 msgid ""
 "Do not commit the result. The descriptor and its content-addressed "
 "database are generated output, and the directory they are published into "
@@ -143,11 +153,11 @@ msgstr ""
 "teszi közzé belőle a saját autoritását. Ne nevezzen át adatbázist, és ne "
 "szerkessze kézzel a leírót."
 
-#: ../../how-to/publish-runtime-authority.md:55
+#: ../../how-to/publish-runtime-authority.md:64
 msgid "Where the authority lives"
 msgstr "Hol lakik az autoritás"
 
-#: ../../how-to/publish-runtime-authority.md:57
+#: ../../how-to/publish-runtime-authority.md:66
 msgid ""
 "The published authority is generated output, so a checkout keeps it "
 "outside the packaged tree, in `.authority/` at the repository root. That "
@@ -160,7 +170,7 @@ msgstr ""
 "nyilvántartásból újratermelhető, nagy, és minden nyilvántartási "
 "szerkesztéssel változik."
 
-#: ../../how-to/publish-runtime-authority.md:62
+#: ../../how-to/publish-runtime-authority.md:71
 msgid ""
 "`CADRUMO_AUTHORITY_ROOT` names the directory to resolve it from. Whether "
 "you set it depends on how you start the process:"
@@ -203,7 +213,7 @@ msgstr "Az `aeat` parancs telepített Cadrumóból"
 msgid "Never set. The distribution carries the authority."
 msgstr "Soha nincs beállítva. Az autoritást a terjesztés hordozza."
 
-#: ../../how-to/publish-runtime-authority.md:71
+#: ../../how-to/publish-runtime-authority.md:80
 msgid ""
 "The seeding is deliberate rather than incidental: the development tooling"
 " knows where a repository is, and the product does not. Cadrumo's runtime"
@@ -219,7 +229,7 @@ msgstr ""
 " `.authority/` könyvtárát. Ha az `aeat` parancsot egy munkamásolat saját "
 "autoritásával szeretné futtatni, nevezze meg a környezetben:"
 
-#: ../../how-to/publish-runtime-authority.md:82
+#: ../../how-to/publish-runtime-authority.md:91
 msgid ""
 "An explicit value always wins, so a release verification pointed at "
 "another authority tree is never overridden by the checkout's own."
@@ -227,7 +237,7 @@ msgstr ""
 "A kifejezett érték mindig győz, így egy másik autoritásfára állított "
 "kiadás-ellenőrzést soha nem írja felül a munkamásolat sajátja."
 
-#: ../../how-to/publish-runtime-authority.md:85
+#: ../../how-to/publish-runtime-authority.md:94
 msgid ""
 "An installed Cadrumo needs no variable at all. The distribution carries "
 "the descriptor and the exact database it names at "
@@ -239,11 +249,11 @@ msgstr ""
 "`cadrumo/_data/registry/authority/` útvonalon hordozza, és a beállítás "
 "nélküli `CADRUMO_AUTHORITY_ROOT` oda oldódik fel."
 
-#: ../../how-to/publish-runtime-authority.md:90
+#: ../../how-to/publish-runtime-authority.md:99
 msgid "The candidate directory is not the runtime location"
 msgstr "A jelöltkönyvtár nem a futtatási hely"
 
-#: ../../how-to/publish-runtime-authority.md:92
+#: ../../how-to/publish-runtime-authority.md:101
 msgid ""
 "For an isolated package or installed-cohort check, set "
 "`CADRUMO_AUTHORITY_CANDIDATE_DIR` to the directory holding an accepted "
@@ -260,7 +270,7 @@ msgstr ""
 "módosítják, és ha a változó be van állítva, soha nem esnek vissza "
 "előléptetett párra."
 
-#: ../../how-to/publish-runtime-authority.md:99
+#: ../../how-to/publish-runtime-authority.md:108
 msgid ""
 "This is a development and release-verification variable. A product "
 "operator never sets it, and it is deliberately not part of the "
@@ -271,7 +281,7 @@ msgstr ""
 "nem állítja be, és szándékosan nem része az alkalmazás konfigurációjának,"
 " ezért a környezeti hivatkozásban sem szerepel."
 
-#: ../../how-to/publish-runtime-authority.md:103
+#: ../../how-to/publish-runtime-authority.md:112
 msgid ""
 "It is not an alternative spelling of `CADRUMO_AUTHORITY_ROOT`, and the "
 "two must not be pointed at the same directory. `CADRUMO_AUTHORITY_ROOT` "
@@ -290,7 +300,7 @@ msgstr ""
 "állítani pontosan az a félreértés, amelynek elkerülésére a második "
 "változó létezik."
 
-#: ../../how-to/publish-runtime-authority.md:111
+#: ../../how-to/publish-runtime-authority.md:120
 msgid ""
 "Publication holds the destination lock while it captures the input "
 "receipt, validates and serializes the complete component set, stages and "
@@ -313,7 +323,7 @@ msgstr ""
 "fut, és az előző leírót bájtazonosan a helyén hagyja. Javítsa a "
 "bemenetet, majd tegye közzé újra."
 
-#: ../../how-to/publish-runtime-authority.md:121
+#: ../../how-to/publish-runtime-authority.md:130
 msgid ""
 "Publication also projects the shared `floor`, `horizon`, and optional "
 "`hard_ceiling` support envelope and the typed runtime catalogues for IVA "
@@ -332,11 +342,11 @@ msgstr ""
 "érvényesített hatósághoz tartozik; a közzétett szókészletből hiányzó "
 "azonosító nem kerül be csendben."
 
-#: ../../how-to/publish-runtime-authority.md:129
+#: ../../how-to/publish-runtime-authority.md:138
 msgid "Verify a release candidate"
 msgstr "Kiadásjelölt ellenőrzése"
 
-#: ../../how-to/publish-runtime-authority.md:131
+#: ../../how-to/publish-runtime-authority.md:140
 msgid ""
 "Verify the descriptor-selected SQLite generation directly. The "
 "publication must admit every component through the indexed reader, match "
@@ -349,7 +359,7 @@ msgstr ""
 "csomagolási határellenőrzéseken. Nincs mindent betöltő JSON futtatási "
 "háttér és nincs futtatási tartalék sem."
 
-#: ../../how-to/publish-runtime-authority.md:136
+#: ../../how-to/publish-runtime-authority.md:145
 msgid ""
 "The packaging checks stage only the descriptor and its selected database "
 "into their private cohort. Superseded content-addressed files retained by"
@@ -360,7 +370,7 @@ msgstr ""
 "megtartott, meghaladott tartalomcímzett fájlok nem tagjai a "
 "jelöltcsomagnak."
 
-#: ../../how-to/publish-runtime-authority.md:140
+#: ../../how-to/publish-runtime-authority.md:149
 msgid ""
 "The development-only paired benchmark accepts that same isolated "
 "descriptor and an explicit JSON baseline produced from the same validated"
@@ -380,7 +390,7 @@ msgstr ""
 "keletkező fájlt tartsa a szállított csomagerőforrásokon kívül. A páros "
 "mérést így futtassa:"
 
-#: ../../how-to/publish-runtime-authority.md:155
+#: ../../how-to/publish-runtime-authority.md:164
 msgid ""
 "The baseline is development evidence only: it is generated from the exact"
 " validated in-memory authority, eagerly decodes the complete graph, and "
@@ -402,15 +412,15 @@ msgstr ""
 " kontextus szerinti küszöbök addig nyitva maradnak, amíg a C "
 "ellenőrzőpont le nem fut egy stabil jelöltkohorszon."
 
-#: ../../how-to/publish-runtime-authority.md:164
+#: ../../how-to/publish-runtime-authority.md:173
 msgid "Check that the publication is current"
 msgstr "Ellenőrizze, hogy a közzététel aktuális"
 
-#: ../../how-to/publish-runtime-authority.md:166
+#: ../../how-to/publish-runtime-authority.md:175
 msgid "Run the registry gate:"
 msgstr "Futtassa a nyilvántartási ellenőrzést:"
 
-#: ../../how-to/publish-runtime-authority.md:172
+#: ../../how-to/publish-runtime-authority.md:181
 msgid ""
 "Its authority step admits the descriptor and its named database in read-"
 "only mode. It exits 1 with a refusal on standard error when either "
@@ -425,7 +435,7 @@ msgstr ""
 "Az elutasítás megnevezi a rögzített és az elvárt identitáslenyomatot, "
 "valamint azt a parancsot, amely újra közzéteszi az autoritást."
 
-#: ../../how-to/publish-runtime-authority.md:178
+#: ../../how-to/publish-runtime-authority.md:187
 msgid ""
 "The source receipt depends on file content and paths relative to the "
 "registry and source roots, including manually maintained evidence "
@@ -454,11 +464,11 @@ msgstr ""
 "komponensbetöltés a saját tartalomlenyomatát és függőségi zárványát is "
 "ellenőrzi."
 
-#: ../../how-to/publish-runtime-authority.md:190
+#: ../../how-to/publish-runtime-authority.md:199
 msgid "Recover from an invalid authority"
 msgstr "Érvénytelen hatóság helyreállítása"
 
-#: ../../how-to/publish-runtime-authority.md:192
+#: ../../how-to/publish-runtime-authority.md:201
 msgid ""
 "When an installed workflow refuses an unavailable, malformed, altered, or"
 " unreadable authority, stop the workflow. The "
@@ -479,7 +489,7 @@ msgstr ""
 "szűkített értékeket tart; a leíró lecserélése új autoritásgenerációt "
 "indít, miközben a meglévő műveletek megtartják a beengedett olvasójukat."
 
-#: ../../how-to/publish-runtime-authority.md:201
+#: ../../how-to/publish-runtime-authority.md:210
 msgid ""
 "On Windows, publication removes an older content-addressed database only "
 "after it can acquire an exclusive handle, so an in-flight reader defers "
@@ -497,7 +507,7 @@ msgstr ""
 "folyamatok közti bérletjelzést. A változtathatatlan fájlnév "
 "megakadályozza, hogy a megtartott bájtokat a jelenlegi leíró válassza ki."
 
-#: ../../how-to/publish-runtime-authority.md:208
+#: ../../how-to/publish-runtime-authority.md:217
 msgid ""
 "Preserve the failed descriptor/database pair when present, plus the "
 "package version, logical and physical digests, error class, and redacted "
@@ -507,7 +517,7 @@ msgstr ""
 "logikai és fizikai lenyomatokkal, a hibaosztállyal és a névtelenített "
 "naplókkal együtt."
 
-#: ../../how-to/publish-runtime-authority.md:210
+#: ../../how-to/publish-runtime-authority.md:219
 msgid ""
 "Republish from a validated registry, and confirm that `just check-"
 "registry` passes."
@@ -515,7 +525,7 @@ msgstr ""
 "Tegye közzé újra egy érvényesített nyilvántartásból, majd erősítse meg, "
 "hogy a `just check-registry` sikeresen lefut."
 
-#: ../../how-to/publish-runtime-authority.md:212
+#: ../../how-to/publish-runtime-authority.md:221
 msgid ""
 "Rebuild the package so it contains the replacement descriptor and the "
 "exact database named by it. The package must not contain the authored "
@@ -525,7 +535,7 @@ msgstr ""
 "adatbázist tartalmazza. A csomag nem tartalmazhatja a szerkesztett "
 "nyilvántartást, a profilséma-TOML-t vagy a visszavont JSON-keretet."
 
-#: ../../how-to/publish-runtime-authority.md:216
+#: ../../how-to/publish-runtime-authority.md:225
 msgid ""
 "Escalate through the [project issue "
 "tracker](https://github.com/nevenincs/cadrumo/issues) with the release "

@@ -23,6 +23,8 @@ means 21 %:
 
 The command prints the evidence ID. Note the full ID down - later commands need it. Add what you know now; update the rest later.
 
+The stored record keeps the invoice number you typed, but `evidence add`, `view`, `list`, `update`, and `remove` show only a short digest of it (`sha256:` followed by eight hexadecimal characters), not the number itself.
+
 ## Attach an evidence record to a transaction
 
 Attach the evidence record to the transaction it supports. The sequence records

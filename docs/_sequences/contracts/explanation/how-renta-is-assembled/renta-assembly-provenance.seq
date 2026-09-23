@@ -1,6 +1,6 @@
 :seed: renta-2025
 @setup aeat --format json app modelo work create --modelo 100 --year 2025 --period 0A
-@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-2025-certificado-trabajo-retenciones=2400 --binding renta-2025-base-liquidable-negativa-general-anterior=0
+@setup aeat --format json app modelo work calculate --modelo 100 --year 2025 --period 0A --casilla 0003=24000 --binding renta-certificado-trabajo-retenciones=2400 --binding renta-base-liquidable-negativa-general-anterior=0
 @step Read the saved observations behind the calculated figures.
 aeat --format json app modelo work observations --modelo 100 --year 2025 --period 0A
 @step Show the saved revision's persisted values.

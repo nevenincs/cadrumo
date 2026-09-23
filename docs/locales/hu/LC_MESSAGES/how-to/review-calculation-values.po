@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-23 18:31+0200\n"
+"POT-Creation-Date: 2026-09-23 17:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -471,22 +471,28 @@ msgid "Use one of these record types:"
 msgstr "Használja e rekordtípusok egyikét:"
 
 #: ../../how-to/review-calculation-values.md:197
-msgid "`miembro` - an attribution member (Modelo 184)."
-msgstr "`miembro`: egy hozzárendelési tag (Modelo 184)."
+msgid ""
+"`miembro` - an attribution member (Modelo 184). Each row names the income"
+" `clave` it attributes, such as `C` for rendimientos del capital "
+"inmobiliario."
+msgstr ""
+"`miembro`: egy hozzárendelési tag (Modelo 184). Minden sor megnevezi az "
+"általa hozzárendelt jövedelem `clave` kódját, például `C` a rendimientos "
+"del capital inmobiliario esetén."
 
-#: ../../how-to/review-calculation-values.md:198
+#: ../../how-to/review-calculation-values.md:199
 msgid "`vinculada` - a related-party operation (Modelo 232)."
 msgstr "`vinculada`: egy kapcsolt ügylet (Modelo 232)."
 
-#: ../../how-to/review-calculation-values.md:199
+#: ../../how-to/review-calculation-values.md:200
 msgid "`contraparte` - a declared counterparty (Modelo 347)."
 msgstr "`contraparte`: egy bejelentett partner (Modelo 347)."
 
-#: ../../how-to/review-calculation-values.md:200
+#: ../../how-to/review-calculation-values.md:201
 msgid "`operador` - an intra-community operator (Modelo 349)."
 msgstr "`operador`: egy közösségen belüli szereplő (Modelo 349)."
 
-#: ../../how-to/review-calculation-values.md:202
+#: ../../how-to/review-calculation-values.md:203
 msgid ""
 "Cadrumo validates each row against the modelo's rules and refuses an "
 "incomplete set:"
@@ -494,15 +500,15 @@ msgstr ""
 "A Cadrumo minden sort a modelo szabályaival szemben érvényesít, és "
 "elutasít egy hiányos készletet:"
 
-#: ../../how-to/review-calculation-values.md:205
+#: ../../how-to/review-calculation-values.md:206
 msgid "Modelo 184 - the members' `porcentaje` values must sum to 100."
 msgstr "Modelo 184: a tagok `porcentaje` értékeinek összege 100 kell hogy legyen."
 
-#: ../../how-to/review-calculation-values.md:206
+#: ../../how-to/review-calculation-values.md:207
 msgid "Modelo 347 - a counterparty's annual total must exceed 3,005.06 euros."
 msgstr "Modelo 347: egy partner éves összegének meg kell haladnia a 3005,06 eurót."
 
-#: ../../how-to/review-calculation-values.md:207
+#: ../../how-to/review-calculation-values.md:208
 msgid ""
 "Modelo 349 - the operator's intra-community NIF must match its country "
 "format."
@@ -510,7 +516,7 @@ msgstr ""
 "Modelo 349: a szereplő közösségen belüli NIF-jének meg kell egyeznie az "
 "országformátumával."
 
-#: ../../how-to/review-calculation-values.md:209
+#: ../../how-to/review-calculation-values.md:210
 msgid ""
 "The saved rows appear in the calculation output as `detail_row` lines. "
 "Check them to confirm what was recorded."
@@ -518,7 +524,7 @@ msgstr ""
 "A mentett sorok a számítás kimenetében `detail_row` sorokként jelennek "
 "meg. Ellenőrizze őket a rögzített adatok megerősítéséhez."
 
-#: ../../how-to/review-calculation-values.md:212
+#: ../../how-to/review-calculation-values.md:213
 msgid ""
 "Direct `--row` support is only one way repeating data can reach a "
 "calculation. Modelo 720 foreign assets already use registry row-field "
@@ -532,11 +538,11 @@ msgstr ""
 "a Modelo 720 nincs a fenti közvetlen `--row` engedélyezési listán. Ne "
 "tekintsd a közvetlen sorkommandó hiányát a forrásintegráció hiányának."
 
-#: ../../how-to/review-calculation-values.md:218
+#: ../../how-to/review-calculation-values.md:219
 msgid "Special calculation tools (IRPF comparison and exemptions)"
 msgstr "Különleges számítási eszközök (IRPF-összehasonlítás és mentességek)"
 
-#: ../../how-to/review-calculation-values.md:220
+#: ../../how-to/review-calculation-values.md:221
 msgid ""
 "For specialized calculations, the CLI provides evaluation and comparison "
 "commands:"
@@ -544,7 +550,7 @@ msgstr ""
 "A specializált számításokhoz a CLI értékelő és összehasonlító parancsokat"
 " biztosít:"
 
-#: ../../how-to/review-calculation-values.md:222
+#: ../../how-to/review-calculation-values.md:223
 msgid ""
 "**Joint vs. individual Impuesto sobre la Renta de las Personas Físicas "
 "(IRPF) comparison (`compare-taxation`)**: Compare filing jointly as a "
@@ -558,7 +564,7 @@ msgstr ""
 "piszkozatot, különben a parancs elutasít a `Ninguna unidad de trabajo "
 "activa` üzenettel:"
 
-#: ../../how-to/review-calculation-values.md:236
+#: ../../how-to/review-calculation-values.md:237
 msgid ""
 "This check does not save a draft. It shows the tax difference and a "
 "recommendation so you can decide which filing option costs less."
@@ -567,7 +573,7 @@ msgstr ""
 "egy ajánlást, hogy eldönthesse, melyik benyújtási lehetőség kerül "
 "kevesebbe."
 
-#: ../../how-to/review-calculation-values.md:239
+#: ../../how-to/review-calculation-values.md:240
 #, python-format
 msgid ""
 "**Maritime worker exemption preview (`preview-maritime-exemption`)**: "
@@ -579,7 +585,7 @@ msgstr ""
 " Tekintse meg a tengerészdolgozók IRPF-mentességét (a LIRPF 7.p cikke "
 "vagy a REBECA 50%):"
 
-#: ../../how-to/review-calculation-values.md:247
+#: ../../how-to/review-calculation-values.md:248
 msgid ""
 "The command shows which tax boxes are affected by the exemption and the "
 "amounts, with references to the applicable law and the Régimen Especial "
@@ -591,11 +597,11 @@ msgstr ""
 "tengerészdolgozókra vonatkozik. A legtöbb bevalló kihagyhatja ezt a "
 "szakaszt."
 
-#: ../../how-to/review-calculation-values.md:253
+#: ../../how-to/review-calculation-values.md:254
 msgid "Correct an already filed local record"
 msgstr "Javítson egy már benyújtott helyi rekordot"
 
-#: ../../how-to/review-calculation-values.md:255
+#: ../../how-to/review-calculation-values.md:256
 msgid ""
 "If a filing was already uploaded and later needs correction, use the "
 "amendment command. Do not recalculate the same period. That would not "
@@ -605,7 +611,7 @@ msgstr ""
 " a módosítási parancsot. Ne számítsa újra ugyanazt az időszakot. Az nem "
 "hozná létre a helyes complementaria (kiegészítő bevallás) rekordot:"
 
-#: ../../how-to/review-calculation-values.md:262
+#: ../../how-to/review-calculation-values.md:263
 #, python-brace-format
 msgid ""
 "Before using this command, import the {term}`justificante` for the filing"
@@ -616,33 +622,33 @@ msgstr ""
 "{term}`justificante`-ját. A módosítási parancs nem nyújt be semmit az "
 "AEAT-hoz."
 
-#: ../../how-to/review-calculation-values.md:265
+#: ../../how-to/review-calculation-values.md:266
 msgid "Where to go next"
 msgstr "Merre tovább"
 
-#: ../../how-to/review-calculation-values.md:267
+#: ../../how-to/review-calculation-values.md:268
 msgid "[Quickstart: produce a modelo file](quickstart.md)"
 msgstr "[Gyorsindító: állítson elő egy modelo-fájlt](quickstart.md)"
 
-#: ../../how-to/review-calculation-values.md:268
+#: ../../how-to/review-calculation-values.md:269
 msgid "[The filing workflow](filing-spine.md)"
 msgstr "[A benyújtási munkafolyamat](filing-spine.md)"
 
-#: ../../how-to/review-calculation-values.md:269
+#: ../../how-to/review-calculation-values.md:270
 msgid "[How to prepare a Modelo 303 quarterly filing](modelo-303.md)"
 msgstr "[Hogyan készítsen elő egy Modelo 303 negyedéves benyújtást](modelo-303.md)"
 
-#: ../../how-to/review-calculation-values.md:270
+#: ../../how-to/review-calculation-values.md:271
 msgid "[How to prepare the annual Modelo 390 summary](modelo-390.md)"
 msgstr "[Hogyan készítse elő az éves Modelo 390 összesítőt](modelo-390.md)"
 
-#: ../../how-to/review-calculation-values.md:271
+#: ../../how-to/review-calculation-values.md:272
 msgid "[Review calculations with Google Sheets](review-with-google-sheets.md)"
 msgstr ""
 "[Számítások felülvizsgálata Google Táblázatokkal](review-with-google-"
 "sheets.md)"
 
-#: ../../how-to/review-calculation-values.md:272
+#: ../../how-to/review-calculation-values.md:273
 msgid "[CLI reference](../cli/index.rst)"
 msgstr "[CLI-referencia](../cli/index.rst)"
 

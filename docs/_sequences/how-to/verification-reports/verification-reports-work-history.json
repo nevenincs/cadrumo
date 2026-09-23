@@ -134,7 +134,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "C-2026-0087",
+          "invoice_number": "sha256:17853e99",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -283,7 +283,7 @@
               "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d",
               "work_unit_state": "borrador"
             },
-            "message": "Status calculate summary",
+            "message": "This active work unit can be calculated.",
             "severity": "info"
           }
         ],
@@ -366,7 +366,7 @@
               "continuation_outcome": "action_available",
               "work_unit_id": "fa4ee17ff5b5641ee42af2d464c9e468397c41f78e1cccf742c0af6b2264dd9d"
             },
-            "message": "History next action summary",
+            "message": "Review this work unit's current state.",
             "severity": "info"
           }
         ],

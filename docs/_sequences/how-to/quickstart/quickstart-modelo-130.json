@@ -119,6 +119,7 @@
             "description": "compra",
             "direction": "OUTGOING",
             "fx_rate": null,
+            "invoice_id": null,
             "irpf_category": null,
             "iva_amount": "105",
             "iva_category": null,
@@ -190,7 +191,7 @@
           "created_at": "2026-04-01T09:00:00Z",
           "evidence_id": "9a075f52dad08e80",
           "invoice_date": "2026-02-11",
-          "invoice_number": "C-2026-0087",
+          "invoice_number": "sha256:17853e99",
           "iva_amount": "105",
           "iva_rate": "0.21",
           "media_kind": "pdf",
@@ -315,7 +316,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "fda84cfe91994369fc8e01fd68f319498869f325c1e8ebfc9f6b96594e8af035"
+          "value": "3a61188424119a738f36405a23757e455ca1f9aeeb4f6ee401f92bffd3fbe8ba"
         }
       ],
       "envelope": {
@@ -334,7 +335,7 @@
             "modelo-130-pagos-fraccionados-anteriores": "0",
             "modelo-130-resultados-negativos-anteriores": "0"
           },
-          "calculation_revision_id": "fda84cfe91994369fc8e01fd68f319498869f325c1e8ebfc9f6b96594e8af035",
+          "calculation_revision_id": "3a61188424119a738f36405a23757e455ca1f9aeeb4f6ee401f92bffd3fbe8ba",
           "casilla_values": {
             "01": "1000",
             "02": "500",
@@ -885,6 +886,12 @@
             }
           ],
           "operation": "modelo.work.calculate",
+          "registry_snapshot_ref": {
+            "modelo": "130",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2019-y-siguientes"
+          },
           "relation_overrides": {},
           "result_summary": [
             {
@@ -949,27 +956,39 @@
             }
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision fda84cfe91994369fc8e01fd68f319498869f325c1e8ebfc9f6b96594e8af035 (state: draft). It is persisted and can be resumed later; list revisions with `aeat app modelo work revisions --modelo 130 --year 2026 --period 1T` and re-inspect this one with `aeat app modelo work revision fda84cfe91994369fc8e01fd68f319498869f325c1e8ebfc9f6b96594e8af035`.",
+          "saved_confirmation": "Saved as draft calculation revision 3a61188424119a738f36405a23757e455ca1f9aeeb4f6ee401f92bffd3fbe8ba (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
-              "binding_source": "ledger_renta_income_aggregation",
+              "contributor_binding_source": "ledger_renta_income_aggregation",
+              "contributor_source_kind": "ledger_renta_income_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "ledger_renta_income_aggregation",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_renta_income_aggregation",
+              "resolver_id": "ledger_renta_income_aggregation",
               "source_ref": "transaction:5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303"
             },
             {
-              "binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "contributor_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "contributor_source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
               "dependency_treatment": "",
               "fingerprint": null,
-              "source_kind": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "ledger_renta_gastos_pago_fraccionado_aggregation",
+              "resolver_id": "ledger_renta_gastos_pago_fraccionado_aggregation",
               "source_ref": "transaction:e28390f0817dac6833a309cae6ddca6eeba53fd963c2ceb65168a5ee123341d6"
             },
             {
-              "binding_source": "previous_filing",
+              "contributor_binding_source": "previous_filing",
+              "contributor_source_kind": "previous_filing",
               "dependency_treatment": "factual_evidence",
               "fingerprint": null,
-              "source_kind": "previous_filing",
+              "lineage_role": "primary",
+              "parent_source_ref": null,
+              "resolved_binding_source": "previous_filing",
+              "resolver_id": "previous_filing",
               "source_ref": "100:2025:0A:irpf.previous_year_economic_activity_net_income"
             }
           ],
@@ -998,7 +1017,7 @@
         "modelo",
         "work",
         "verify",
-        "fda84cfe91994369fc8e01fd68f319498869f325c1e8ebfc9f6b96594e8af035"
+        "3a61188424119a738f36405a23757e455ca1f9aeeb4f6ee401f92bffd3fbe8ba"
       ],
       "captures": [],
       "envelope": {
@@ -1019,7 +1038,7 @@
               "source_period": "0A",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding).",
+            "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
             "severity": "warning"
           },
           {
@@ -1034,12 +1053,12 @@
               "source_kind_code": "output_iva_evidence",
               "source_refs": "aeat-dr-130-2019-v12, aeat-modelo-130-instructions"
             },
-            "message": "An output transaction has no supporting evidence.",
+            "message": "An output transaction has no supporting evidence (binding 5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303, source output_iva_evidence, reason missing_transaction_evidence).",
             "severity": "warning"
           }
         ],
         "result": {
-          "calculation_revision_id": "fda84cfe91994369fc8e01fd68f319498869f325c1e8ebfc9f6b96594e8af035",
+          "calculation_revision_id": "3a61188424119a738f36405a23757e455ca1f9aeeb4f6ee401f92bffd3fbe8ba",
           "completeness_status": "complete",
           "findings": [
             {
@@ -1050,7 +1069,7 @@
               "legal_refs": [
                 "rd-1065-2007:art-9"
               ],
-              "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding).",
+              "message": "Modelo 100 2025 0A is suppressed by operator declaration (previous_filing_binding), with declared activity start date 2026-01-01.",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -1066,7 +1085,7 @@
                 "ley-37-1992:art-97",
                 "rd-1619-2012:art-2"
               ],
-              "message": "An output transaction has no supporting evidence.",
+              "message": "An output transaction has no supporting evidence (binding 5e530ccb8059c3819f61c3257961f6cb67c1d8654830c318d303d4bc53149303, source output_iva_evidence, reason missing_transaction_evidence).",
               "severity": "warning",
               "source_refs": [
                 "aeat-dr-130-2019-v12",
@@ -1077,9 +1096,15 @@
           "granted_verificado_completo": true,
           "missing_required_casilla_ids": [],
           "operation": "modelo.work.verify",
+          "registry_snapshot_ref": {
+            "modelo": "130",
+            "modelo_year": 2026,
+            "period": "1T",
+            "revision_id": "2019-y-siguientes"
+          },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "4389f6e7d147e99fe3bfc25b42bb92b6bbd0e943a01973f0dcbd2b281c7f2022",
+          "verification_report_id": "bf438b1e9a9e29e96aa5c6491ff99ff541ee2589be7d5c799b6f01e97cc4a545",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",

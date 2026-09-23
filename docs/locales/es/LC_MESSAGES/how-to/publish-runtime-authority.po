@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.5.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-19 09:40+0200\n"
+"POT-Creation-Date: 2026-09-23 17:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -110,7 +110,12 @@ msgid ""
 "publication writes to the configured authority root and refuses rather "
 "than guessing a location when none is configured. There is no facts-only "
 "publication command and no component-selective reuse: every successful "
-"publication is a fresh, full generation."
+"publication is a fresh, full generation. `--if-stale` publishes only when"
+" the existing artifact no longer records the live registry and source "
+"evidence, and prints `published=skipped-current` when it already does. "
+"Asking that question reads content without compiling, so it costs seconds"
+" where a publication costs minutes, which makes the paired recipe safe to"
+" run after every registry edit:"
 msgstr ""
 "El comando compila cada modelo, declaración de perfil, catálogo, hecho, "
 "diseño de exportación y proyección de evidencias jurídicas y de origen en"
@@ -130,9 +135,14 @@ msgstr ""
 "lugar de adivinar una ubicación cuando no hay ninguna configurada. No "
 "existe un comando de publicación solo de hechos ni reutilización "
 "selectiva de componentes: toda publicación correcta es una generación "
-"completa y nueva."
+"completa y nueva. `--if-stale` solo publica cuando el artefacto existente"
+" ya no registra el registro y las evidencias de origen vigentes, e "
+"imprime `published=skipped-current` cuando sí lo hace. Responder a esa "
+"pregunta lee el contenido sin compilar, por lo que cuesta segundos donde "
+"una publicación cuesta minutos, lo que hace que la receta asociada sea "
+"segura de ejecutar tras cada edición del registro:"
 
-#: ../../how-to/publish-runtime-authority.md:49
+#: ../../how-to/publish-runtime-authority.md:58
 msgid ""
 "Do not commit the result. The descriptor and its content-addressed "
 "database are generated output, and the directory they are published into "
@@ -147,11 +157,11 @@ msgstr ""
 "publica su propia autoridad a partir de él. No renombres una base de "
 "datos ni edites el descriptor a mano."
 
-#: ../../how-to/publish-runtime-authority.md:55
+#: ../../how-to/publish-runtime-authority.md:64
 msgid "Where the authority lives"
 msgstr "Dónde vive la autoridad"
 
-#: ../../how-to/publish-runtime-authority.md:57
+#: ../../how-to/publish-runtime-authority.md:66
 msgid ""
 "The published authority is generated output, so a checkout keeps it "
 "outside the packaged tree, in `.authority/` at the repository root. That "
@@ -164,7 +174,7 @@ msgstr ""
 "versiones: se regenera a partir del registro confirmado, es grande y "
 "cambia con cada edición del registro."
 
-#: ../../how-to/publish-runtime-authority.md:62
+#: ../../how-to/publish-runtime-authority.md:71
 msgid ""
 "`CADRUMO_AUTHORITY_ROOT` names the directory to resolve it from. Whether "
 "you set it depends on how you start the process:"
@@ -206,7 +216,7 @@ msgstr "El comando `aeat` desde un Cadrumo instalado"
 msgid "Never set. The distribution carries the authority."
 msgstr "Nunca se define. La distribución lleva la autoridad."
 
-#: ../../how-to/publish-runtime-authority.md:71
+#: ../../how-to/publish-runtime-authority.md:80
 msgid ""
 "The seeding is deliberate rather than incidental: the development tooling"
 " knows where a repository is, and the product does not. Cadrumo's runtime"
@@ -223,7 +233,7 @@ msgstr ""
 "Para ejecutar el comando `aeat` contra la autoridad propia de una copia "
 "de trabajo, indícala en el entorno:"
 
-#: ../../how-to/publish-runtime-authority.md:82
+#: ../../how-to/publish-runtime-authority.md:91
 msgid ""
 "An explicit value always wins, so a release verification pointed at "
 "another authority tree is never overridden by the checkout's own."
@@ -232,7 +242,7 @@ msgstr ""
 "apuntada a otro árbol de autoridad nunca queda sustituida por la propia "
 "de la copia de trabajo."
 
-#: ../../how-to/publish-runtime-authority.md:85
+#: ../../how-to/publish-runtime-authority.md:94
 msgid ""
 "An installed Cadrumo needs no variable at all. The distribution carries "
 "the descriptor and the exact database it names at "
@@ -244,11 +254,11 @@ msgstr ""
 "`cadrumo/_data/registry/authority/`, y un `CADRUMO_AUTHORITY_ROOT` sin "
 "definir resuelve ahí."
 
-#: ../../how-to/publish-runtime-authority.md:90
+#: ../../how-to/publish-runtime-authority.md:99
 msgid "The candidate directory is not the runtime location"
 msgstr "El directorio de candidatos no es la ubicación del entorno de ejecución"
 
-#: ../../how-to/publish-runtime-authority.md:92
+#: ../../how-to/publish-runtime-authority.md:101
 msgid ""
 "For an isolated package or installed-cohort check, set "
 "`CADRUMO_AUTHORITY_CANDIDATE_DIR` to the directory holding an accepted "
@@ -265,7 +275,7 @@ msgstr ""
 "nunca modifican la copia de trabajo y nunca recurren a un par promovido "
 "cuando la variable está definida."
 
-#: ../../how-to/publish-runtime-authority.md:99
+#: ../../how-to/publish-runtime-authority.md:108
 msgid ""
 "This is a development and release-verification variable. A product "
 "operator never sets it, and it is deliberately not part of the "
@@ -277,7 +287,7 @@ msgstr ""
 "la configuración de la aplicación, por lo que no aparece en la referencia"
 " de entorno."
 
-#: ../../how-to/publish-runtime-authority.md:103
+#: ../../how-to/publish-runtime-authority.md:112
 msgid ""
 "It is not an alternative spelling of `CADRUMO_AUTHORITY_ROOT`, and the "
 "two must not be pointed at the same directory. `CADRUMO_AUTHORITY_ROOT` "
@@ -296,7 +306,7 @@ msgstr ""
 "de versión es exactamente la confusión que la segunda variable existe "
 "para evitar."
 
-#: ../../how-to/publish-runtime-authority.md:111
+#: ../../how-to/publish-runtime-authority.md:120
 msgid ""
 "Publication holds the destination lock while it captures the input "
 "receipt, validates and serializes the complete component set, stages and "
@@ -319,7 +329,7 @@ msgstr ""
 "compilador o dependencia, el comando falla y deja el descriptor anterior "
 "intacto byte a byte. Corrige la entrada y vuelve a publicar."
 
-#: ../../how-to/publish-runtime-authority.md:121
+#: ../../how-to/publish-runtime-authority.md:130
 msgid ""
 "Publication also projects the shared `floor`, `horizon`, and optional "
 "`hard_ceiling` support envelope and the typed runtime catalogues for IVA "
@@ -338,11 +348,11 @@ msgstr ""
 "pertenencia corresponde a esta autoridad validada; un identificador "
 "ausente de su vocabulario publicado no se admite de forma silenciosa."
 
-#: ../../how-to/publish-runtime-authority.md:129
+#: ../../how-to/publish-runtime-authority.md:138
 msgid "Verify a release candidate"
 msgstr "Verifica una versión candidata"
 
-#: ../../how-to/publish-runtime-authority.md:131
+#: ../../how-to/publish-runtime-authority.md:140
 msgid ""
 "Verify the descriptor-selected SQLite generation directly. The "
 "publication must admit every component through the indexed reader, match "
@@ -356,7 +366,7 @@ msgstr ""
 "de carga total para el entorno de ejecución ni una vía alternativa en "
 "ejecución."
 
-#: ../../how-to/publish-runtime-authority.md:136
+#: ../../how-to/publish-runtime-authority.md:145
 msgid ""
 "The packaging checks stage only the descriptor and its selected database "
 "into their private cohort. Superseded content-addressed files retained by"
@@ -367,7 +377,7 @@ msgstr ""
 "direccionados por contenido superados que conserve una copia de trabajo "
 "no son miembros del paquete candidato."
 
-#: ../../how-to/publish-runtime-authority.md:140
+#: ../../how-to/publish-runtime-authority.md:149
 msgid ""
 "The development-only paired benchmark accepts that same isolated "
 "descriptor and an explicit JSON baseline produced from the same validated"
@@ -387,7 +397,7 @@ msgstr ""
 "exacto y mantén el archivo resultante fuera de los recursos del paquete "
 "distribuido. Ejecuta la medición comparada con:"
 
-#: ../../how-to/publish-runtime-authority.md:155
+#: ../../how-to/publish-runtime-authority.md:164
 msgid ""
 "The baseline is development evidence only: it is generated from the exact"
 " validated in-memory authority, eagerly decodes the complete graph, and "
@@ -410,15 +420,15 @@ msgstr ""
 "memoria incremental y de contexto caliente siguen pendientes hasta que el"
 " punto de control C se ejecute sobre una cohorte de candidatos estable."
 
-#: ../../how-to/publish-runtime-authority.md:164
+#: ../../how-to/publish-runtime-authority.md:173
 msgid "Check that the publication is current"
 msgstr "Comprueba que la publicación está actualizada"
 
-#: ../../how-to/publish-runtime-authority.md:166
+#: ../../how-to/publish-runtime-authority.md:175
 msgid "Run the registry gate:"
 msgstr "Ejecuta el control del registro:"
 
-#: ../../how-to/publish-runtime-authority.md:172
+#: ../../how-to/publish-runtime-authority.md:181
 msgid ""
 "Its authority step admits the descriptor and its named database in read-"
 "only mode. It exits 1 with a refusal on standard error when either "
@@ -434,7 +444,7 @@ msgstr ""
 "de identidad registrado y esperado y el comando que vuelve a publicar la "
 "autoridad."
 
-#: ../../how-to/publish-runtime-authority.md:178
+#: ../../how-to/publish-runtime-authority.md:187
 msgid ""
 "The source receipt depends on file content and paths relative to the "
 "registry and source roots, including manually maintained evidence "
@@ -464,11 +474,11 @@ msgstr ""
 "mientras que cada carga de componente bajo demanda comprueba su propio "
 "resumen de carga útil y su cierre de dependencias."
 
-#: ../../how-to/publish-runtime-authority.md:190
+#: ../../how-to/publish-runtime-authority.md:199
 msgid "Recover from an invalid authority"
 msgstr "Recuperación ante una autoridad no válida"
 
-#: ../../how-to/publish-runtime-authority.md:192
+#: ../../how-to/publish-runtime-authority.md:201
 msgid ""
 "When an installed workflow refuses an unavailable, malformed, altered, or"
 " unreadable authority, stop the workflow. The "
@@ -489,7 +499,7 @@ msgstr ""
 "el reemplazo de un descriptor inicia una nueva generación de autoridad "
 "mientras las operaciones existentes conservan su lector admitido."
 
-#: ../../how-to/publish-runtime-authority.md:201
+#: ../../how-to/publish-runtime-authority.md:210
 msgid ""
 "On Windows, publication removes an older content-addressed database only "
 "after it can acquire an exclusive handle, so an in-flight reader defers "
@@ -508,7 +518,7 @@ msgstr ""
 "archivo inmutable impide que esos bytes conservados sean seleccionados "
 "por el descriptor actual."
 
-#: ../../how-to/publish-runtime-authority.md:208
+#: ../../how-to/publish-runtime-authority.md:217
 msgid ""
 "Preserve the failed descriptor/database pair when present, plus the "
 "package version, logical and physical digests, error class, and redacted "
@@ -518,7 +528,7 @@ msgstr ""
 "junto con la versión del paquete, los resúmenes lógico y físico, la clase"
 " de error y los registros anonimizados."
 
-#: ../../how-to/publish-runtime-authority.md:210
+#: ../../how-to/publish-runtime-authority.md:219
 msgid ""
 "Republish from a validated registry, and confirm that `just check-"
 "registry` passes."
@@ -526,7 +536,7 @@ msgstr ""
 "Vuelve a publicar desde un registro validado y confirma que `just check-"
 "registry` pasa."
 
-#: ../../how-to/publish-runtime-authority.md:212
+#: ../../how-to/publish-runtime-authority.md:221
 msgid ""
 "Rebuild the package so it contains the replacement descriptor and the "
 "exact database named by it. The package must not contain the authored "
@@ -537,7 +547,7 @@ msgstr ""
 "registro de autoría, el TOML del esquema de perfiles ni el marco JSON "
 "retirado."
 
-#: ../../how-to/publish-runtime-authority.md:216
+#: ../../how-to/publish-runtime-authority.md:225
 msgid ""
 "Escalate through the [project issue "
 "tracker](https://github.com/nevenincs/cadrumo/issues) with the release "

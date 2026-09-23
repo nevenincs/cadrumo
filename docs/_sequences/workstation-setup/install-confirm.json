@@ -148,9 +148,9 @@
               "available": true,
               "facts": {
                 "accelerator_kind": "nvidia_cuda",
-                "free_memory_bytes": 72571240448,
+                "free_memory_bytes": 74386649088,
                 "free_memory_measured": true,
-                "free_vram_bytes": 11915329536,
+                "free_vram_bytes": 12755324928,
                 "free_vram_measured": true,
                 "total_memory_bytes": 137341362176,
                 "total_memory_measured": true,
@@ -163,7 +163,7 @@
             {
               "available": true,
               "facts": {
-                "binding_free_bytes": 11915329536,
+                "binding_free_bytes": 12755324928,
                 "model": "qwen3-vl:2b",
                 "required_bytes": 2973741824,
                 "shortfall_bytes": 0

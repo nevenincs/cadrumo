@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-08-25 11:19+0200\n"
+"POT-Creation-Date: 2026-09-23 17:16+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -193,13 +193,13 @@ msgstr "Export és benyújtás"
 
 #: ../../how-to/modelo-349.md:81
 msgid ""
-"Attempt the verified declaration export. The current authoritative layout"
-" cannot encode every applicable required casilla, so the command refuses "
-"rather than producing a partial file:"
+"Export the verified declaration. The command writes a local file in the "
+"official layout, including the per-operator detail rows, for you to "
+"upload through the AEAT channel:"
 msgstr ""
-"Kíséreld meg az ellenőrzött bevallás exportját. A jelenlegi hiteles "
-"elrendezés nem képes minden alkalmazandó kötelező mezőt kódolni, ezért a "
-"parancs részleges fájl előállítása helyett visszautasítja a kérést:"
+"Exportálja az ellenőrzött bevallást. A parancs a hivatalos kiosztásban "
+"helyi fájlt ír, az operátoronkénti részletező sorokkal együtt, hogy azt "
+"az AEAT csatornáján feltölthesse:"
 
 #: ../../how-to/modelo-349.md:89
 msgid ""
@@ -216,16 +216,12 @@ msgstr ""
 #: ../../how-to/modelo-349.md:98
 msgid ""
 "The marker is optional and only applies while the obligation window is "
-"open. Until the required-casilla layout is complete, read the verified "
-"values and present them through the AEAT portal; do not treat a partial "
-"export as a finish line."
+"open."
 msgstr ""
-"A jelölő választható, és csak addig alkalmazható, amíg a kötelezettségi "
-"időablak nyitva van. Amíg a kötelező mezők elrendezése nem teljes, olvasd"
-" vissza az ellenőrzött értékeket és nyújtsd be őket az AEAT portálján; a "
-"részleges exportot ne tekintsd célvonalnak."
+"A jelölő nem kötelező, és csak addig érvényes, amíg a kötelezettség "
+"határideje nyitva van."
 
-#: ../../how-to/modelo-349.md:103
+#: ../../how-to/modelo-349.md:100
 msgid ""
 "Modelo 349 runs alongside your periodic Modelo 303: the same intra-"
 "community operations that appear here also feed the 303's intra-community"
@@ -239,27 +235,27 @@ msgstr ""
 "számla- és főkönyvi rekordok javításával, ne a bevallásokéval. Lásd: "
 "[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md)."
 
-#: ../../how-to/modelo-349.md:108
+#: ../../how-to/modelo-349.md:105
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/modelo-349.md:110
+#: ../../how-to/modelo-349.md:107
 msgid "[Manage invoices](manage-invoices.md)"
 msgstr "[Számlák kezelése](manage-invoices.md)"
 
-#: ../../how-to/modelo-349.md:111
+#: ../../how-to/modelo-349.md:108
 msgid "[Prepare a Modelo 303 IVA filing](modelo-303.md)"
 msgstr "[Modelo 303 IVA-benyújtás előkészítése](modelo-303.md)"
 
-#: ../../how-to/modelo-349.md:112
+#: ../../how-to/modelo-349.md:109
 msgid "[Plan your filing calendar](filing-calendar.md)"
 msgstr "[Tervezze meg a benyújtási naptárát](filing-calendar.md)"
 
-#: ../../how-to/modelo-349.md:113
+#: ../../how-to/modelo-349.md:110
 msgid "[File your modelo at the AEAT portal](file-at-aeat.md)"
 msgstr "[Töltse fel exportált modelóját az AEAT-portálon](file-at-aeat.md)"
 
-#: ../../how-to/modelo-349.md:114
+#: ../../how-to/modelo-349.md:111
 msgid "[Reconcile a filing](reconcile.md)"
 msgstr "[Benyújtás egyeztetése](reconcile.md)"
 
