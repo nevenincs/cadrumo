@@ -61,6 +61,7 @@ entries = [
   { key = "setup.field.ley_49_2002_renunciation_declared", value = "taxpayer_type.ley_49_2002_special_regime_renunciation_declared|bool|" },
   { key = "setup.field.llm_vision", value = "capabilities.llm_vision|bool|true" },
   { key = "setup.field.modelo_111_no_retenciones_periods", value = "withholding.modelo_111_no_retenciones_periods|str|" },
+  { key = "setup.field.modelo_115_no_relevant_payment_periods", value = "withholding.modelo_115_no_relevant_payment_periods|str|" },
   { key = "setup.field.monedas_virtuales_extranjero_above_threshold", value = "obligations.monedas_virtuales_extranjero_above_threshold|bool|false" },
   { key = "setup.field.name", value = "identity.name|str|" },
   { key = "setup.field.new_entity_first_two_profit_periods", value = "taxpayer_type.new_entity_first_two_profit_periods|bool|" },
