@@ -103,6 +103,7 @@ def test_calendar_rendering_round_trips_the_canonical_coverage_partition() -> No
     )
     calendar = OverviewCalendar(
         range=calendar_range,
+        evaluated_on=date(2026, 1, 1),
         entries=(),
         generated_at=datetime(2026, 1, 1, tzinfo=UTC),
         coverage=coverage,
@@ -150,6 +151,7 @@ def test_calendar_projection_resolves_the_history_pull_action() -> None:
     calendar_range = OverviewCalendarRange(from_date=date(2026, 1, 1), to_date=date(2026, 3, 31))
     calendar = OverviewCalendar(
         range=calendar_range,
+        evaluated_on=date(2026, 1, 1),
         entries=(),
         generated_at=datetime(2026, 1, 1, tzinfo=UTC),
     )
@@ -178,6 +180,7 @@ def test_every_calendar_derived_renderer_retains_coverage() -> None:
     )
     calendar = OverviewCalendar(
         range=calendar_range,
+        evaluated_on=date(2026, 1, 1),
         entries=(),
         generated_at=datetime(2026, 1, 1, tzinfo=UTC),
         coverage=coverage,
