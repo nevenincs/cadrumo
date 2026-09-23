@@ -23,7 +23,7 @@ from .. import (
     acquire_homebrew,
     acquire_pypi,
 )
-from .._acquire_common import (
+from ..acquire_common import (
     AcquisitionError,
     refuse_unavailable,
     require_command_succeeded,
@@ -133,7 +133,7 @@ def _release_download_dir(cohort: LoadedReleaseCohort, tmp_path: Path) -> Path:
 
 
 # ---------------------------------------------------------------------------
-# _acquire_common: refusals
+# acquire_common: refusals
 # ---------------------------------------------------------------------------
 
 
@@ -183,7 +183,7 @@ def test_require_command_succeeded_refuses_on_nonzero() -> None:
 
 
 # ---------------------------------------------------------------------------
-# _acquire_common: digest verification
+# acquire_common: digest verification
 # ---------------------------------------------------------------------------
 
 

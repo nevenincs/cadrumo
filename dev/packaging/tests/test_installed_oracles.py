@@ -932,7 +932,7 @@ def test_owned_server_launch_capture_is_a_clean_real_subprocess(installed_cohort
     as ``cadrumo``, and a clean exit (a killed server would be non-zero and could
     never sit in a passing distribution-evidence record).
     """
-    from .._acquire_common import capture_owned_server_launch
+    from ..acquire_common import capture_owned_server_launch
     from ..installed_mcp_oracle import isolated_mcp_environment
 
     work = installed_cohort.work_dir / "owned-launch-capture"

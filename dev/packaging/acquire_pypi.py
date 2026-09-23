@@ -21,7 +21,7 @@ from typing import Final
 
 from dev._paths import UTF_8
 
-from ._acquire_common import (
+from .acquire_common import (
     PYTHON_COHORT_WHEEL_NAMES,
     AcquisitionError,
     require_command_succeeded,

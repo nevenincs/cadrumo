@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from dev.packaging._acquire_common import venv_executable
-from dev.packaging._installed_wheel_binding import (
+from dev.packaging.acquire_common import venv_executable
+from dev.packaging.installed_wheel_binding import (
     assert_installed_console_entry_point,
     installed_wheel_payload_sha256,
 )

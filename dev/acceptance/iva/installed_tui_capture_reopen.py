@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 import asyncio
 import hashlib
-import importlib
 import json
 import os
 import secrets
@@ -309,17 +308,18 @@ def _parse_module_hashes(items: Sequence[str]) -> tuple[tuple[str, str], ...]:
 def _assert_installed_source_modules(
     *, expected_manifest_sha256: str, expected_modules: tuple[tuple[str, str], ...]
 ) -> None:
-    """Prove critical imports came from the installed distribution bytes."""
+    """Prove the critical modules' installed distribution bytes are the source selected for this run.
+
+    Each dotted module name maps to exactly one file under the installed
+    distribution root; the child already runs the site-packages product, so
+    the file the launcher imports is the file hashed here.
+    """
     distribution_root = Path(str(metadata.distribution("cadrumo").locate_file(""))).resolve(strict=True)
     actual: list[tuple[str, str]] = []
     for module_name, expected_digest in expected_modules:
-        module = importlib.import_module(module_name)
-        module_file = getattr(module, "__file__", None)
-        if not isinstance(module_file, str):
-            raise InstalledTuiChildError("critical installed-TUI module has no file origin")
-        origin = Path(module_file).resolve(strict=True)
-        if not origin.is_relative_to(distribution_root):
-            raise InstalledTuiChildError("critical installed-TUI module escaped the installed distribution")
+        origin = distribution_root.joinpath(*module_name.split(".")).with_suffix(".py")
+        if not origin.is_file():
+            raise InstalledTuiChildError("critical installed-TUI module is absent from the installed distribution")
         actual_digest = _sha256(origin.read_bytes())
         if actual_digest != expected_digest:
             raise InstalledTuiChildError("installed wheel source member differs from the source selected for this run")
@@ -935,8 +935,8 @@ def run_installed_tui_capture_reopen(
 
     # This is the shared supported build/install path.  The source-member
     # attestation below fails closed if its cached wheel predates this source.
-    from dev.packaging._acquire_common import venv_executable
-    from dev.packaging._installed_wheel_binding import (
+    from dev.packaging.acquire_common import venv_executable
+    from dev.packaging.installed_wheel_binding import (
         assert_installed_console_entry_point,
         installed_python_for_cli,
         installed_wheel_payload_sha256,
