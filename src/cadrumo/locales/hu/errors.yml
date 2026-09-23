@@ -752,6 +752,8 @@ errors:
       készletzárási hatóság.
     canonical_invoice_withholding_evidence: A számla bizonyítékai alapján a forrásadó-levonás
       nem rögzíthető.
+    canonical_ledger_payment_withholding_evidence: A főkönyvi kifizetés alapján a
+      forrásadó-levonás nem rögzíthető.
     canonical_m036_declaration_ambiguous: A 036-os nyomtatvány-bevallás azonosítójának
       előtagja több rekordra illeszkedik.
     canonical_m036_declaration_not_found: A kért azonosítónak megfelelő 036-os nyomtatvány-bevallás

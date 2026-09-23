@@ -416,6 +416,7 @@
         "cadrumo.application.aggregation.irnr_income_ledger",
         "cadrumo.application.aggregation.iva_ledger",
         "cadrumo.application.aggregation.ledger_filing_snapshot",
+        "cadrumo.application.aggregation.ledger_payment_withholding",
         "cadrumo.application.aggregation.m193_phase_materialization",
         "cadrumo.application.aggregation.m303_arrivals",
         "cadrumo.application.aggregation.modelo_bindings",

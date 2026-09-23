@@ -74,6 +74,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.aggregation.ledger_payment_withholding.LedgerPaymentWithholdingEvidenceError",
+        ErrorCode(
+            code="REFUSED_LEDGER_PAYMENT_WITHHOLDING_EVIDENCE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_ledger_payment_withholding_evidence",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.aggregation.m193_phase_materialization.Modelo193PhaseMaterializationError",
         ErrorCode(
             code="REFUSED_M193_PHASE_MATERIALIZATION",

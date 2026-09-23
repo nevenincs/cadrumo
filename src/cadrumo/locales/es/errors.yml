@@ -796,6 +796,8 @@ errors:
       de cierre del inventario.
     canonical_invoice_withholding_evidence: La evidencia de la factura no permite
       registrar la retención.
+    canonical_ledger_payment_withholding_evidence: El pago del libro no permite registrar
+      la retención.
     canonical_m036_declaration_ambiguous: El prefijo del identificador de la declaración
       del Modelo 036 coincide con varios registros.
     canonical_m036_declaration_not_found: Ninguna declaración del Modelo 036 coincide

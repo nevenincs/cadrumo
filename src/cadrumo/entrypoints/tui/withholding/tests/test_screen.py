@@ -20,6 +20,7 @@ from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_perce
 from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.iva.classification import InvoiceKind
 from cadrumo.domain.iva.schema import IvaCategory
+from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.withholding.door import TuiWithholdingDoor
 from cadrumo.entrypoints.tui.withholding.screen import WithholdingEvidenceScreen
@@ -75,6 +76,11 @@ def _invoice(*, number: str, base: str, withholding: str) -> Invoice:
     )
 
 
+def _no_ledger_read(transaction_id: str) -> tuple[TransactionCatalogue, str | None]:
+    """Invoice-backed income must never reach the ledger payment lookup."""
+    raise AssertionError(f"invoice-backed capture read the ledger for {transaction_id}")
+
+
 def _set(screen: WithholdingEvidenceScreen, field: str, value: str) -> None:
     screen.query_one(f"#withholding-{field}", Input).value = value
 
@@ -87,7 +93,7 @@ def _status(screen: WithholdingEvidenceScreen) -> str:
     return str(screen.query_one("#withholding-status", Static).render())
 
 
-async def _click(pilot: Pilot, screen: WithholdingEvidenceScreen, control: str) -> None:
+async def _click(pilot: Pilot[None], screen: WithholdingEvidenceScreen, control: str) -> None:
     """Press the rendered control after Pilot has entered the form values.
 
     Textual's headless mouse driver cannot address an off-screen button inside
@@ -102,7 +108,14 @@ async def _click(pilot: Pilot, screen: WithholdingEvidenceScreen, control: str) 
     await pilot.pause()
 
 
-def _fill_common(screen: WithholdingEvidenceScreen, invoice: Invoice, *, base: str, withholding: str) -> None:
+def _fill_common(
+    screen: WithholdingEvidenceScreen,
+    invoice: Invoice,
+    *,
+    base: str,
+    withholding: str,
+    scheme: str = "actividades_profesionales",
+) -> None:
     _set(screen, "invoice-id", str(invoice.invoice_id))
     _set(screen, "payment-id", f"payment-{invoice.invoice_number}")
     _set(screen, "payment-date", "2025-04-02")
@@ -113,6 +126,15 @@ def _fill_common(screen: WithholdingEvidenceScreen, invoice: Invoice, *, base: s
     _set(screen, "idempotency-key", f"replay-{invoice.invoice_number}")
     _set(screen, "annual-percentage", "19.00")
     _set(screen, "territorial-deduction", "0")
+    # Payer facts are entered explicitly; the form prefills none of them.
+    _set(screen, "scheme", scheme)
+    _set(screen, "clave", "G")
+    _set(screen, "province", "28")
+    _set(screen, "property-situation", "1")
+    _set(screen, "municipality-code", "079")
+    _set(screen, "municipality", "Madrid")
+    _set(screen, "postal-code", "28001")
+    _set(screen, "property-modality", "1")
 
 
 @pytest.mark.asyncio
@@ -125,6 +147,7 @@ async def test_pilot_enters_professional_evidence_replays_and_refuses_stale_clea
             invoice_lookup=lambda supplied: (
                 (invoice, "catalogue-revision") if supplied == str(invoice.invoice_id) else None
             ),
+            ledger_payment_lookup=_no_ledger_read,
             filing_year=2025,
         )
         async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
@@ -170,13 +193,13 @@ async def test_pilot_enters_rent_property_detail_and_inspects_the_shared_project
             invoice_lookup=lambda supplied: (
                 (invoice, "catalogue-revision") if supplied == str(invoice.invoice_id) else None
             ),
+            ledger_payment_lookup=_no_ledger_read,
             filing_year=2025,
         )
         async with ScreenHostApp(screen).run_test(size=(160, 60)) as pilot:
             await pilot.pause()
             _choice(screen, "income-kind", "urban_rent")
-            _set(screen, "scheme", "arrendamiento_urbano")
-            _fill_common(screen, invoice, base="3000.00", withholding="570.00")
+            _fill_common(screen, invoice, base="3000.00", withholding="570.00", scheme="arrendamiento_urbano")
             _set(screen, "property-key", "office-a")
             _set(screen, "cadastral-reference", "1234567VK4713S0001AA")
             _set(screen, "street-name", "Synthetic")

@@ -1,10 +1,11 @@
 """Typed TUI application door for shared withholding evidence capture.
 
-This module deliberately owns no Textual widgets, invoice repository, or tax
-arithmetic.  A caller supplies the canonical invoice it read through the
-encrypted catalogue and this door turns that evidence into the established
-invoice capture command before calling the shared producer.  Composition stays
-with the TUI host so this module can be exercised without a launcher.
+This module deliberately owns no Textual widgets, invoice or ledger repository,
+or tax arithmetic.  A caller supplies the canonical invoice, or the addressed
+ledger transaction read, that it obtained through the encrypted catalogue, and
+this door turns that evidence into the established capture command before
+calling the shared producer.  Composition stays with the TUI host so this
+module can be exercised without a launcher.
 """
 
 from __future__ import annotations
@@ -18,6 +19,12 @@ from ....application.aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceError,
     InvoiceWithholdingEvidenceRequest,
     build_invoice_withholding_capture,
+)
+from ....application.aggregation.ledger_payment_withholding import (
+    LedgerPaymentWithholdingEvidenceError,
+    LedgerPaymentWithholdingEvidenceRequest,
+    build_ledger_payment_withholding_capture,
+    resolve_ledger_payment_transaction,
 )
 from ....application.aggregation.withholding_observation_service import (
     WithholdingGenerationAudit,
@@ -36,6 +43,7 @@ from ....core.models import STRICT_FROZEN_CONFIG
 
 if TYPE_CHECKING:
     from ....domain.invoices.models import Invoice
+    from ....domain.transactions.models import TransactionCatalogue
 
 
 @dataclass(frozen=True, slots=True)
@@ -51,6 +59,24 @@ class TuiInvoiceWithholdingCaptureRequest:
     invoice: Invoice
     catalogue_revision_id: str
     evidence: InvoiceWithholdingEvidenceRequest
+    filing_year: int
+
+
+@dataclass(frozen=True, slots=True)
+class TuiLedgerPaymentWithholdingCaptureRequest:
+    """Addressed ledger read plus the explicitly declared payroll evidence.
+
+    The host reads ``transactions`` for the one requested id through the
+    encrypted ledger catalogue, between two reads of the catalogue revision.
+    ``catalogue_revision_id`` is ``None`` when no stable revision could be
+    stated or it changed during the read; the door then refuses before any
+    command exists.  An id the catalogue does not hold is simply absent from
+    ``transactions`` and is refused by the shared resolver.
+    """
+
+    transactions: TransactionCatalogue
+    catalogue_revision_id: str | None
+    evidence: LedgerPaymentWithholdingEvidenceRequest
     filing_year: int
 
 
@@ -108,6 +134,40 @@ class TuiWithholdingDoor:
             raise AssertionError("prepared TUI invoice capture must mutate or replay")
         return _capture_outcome(captured)
 
+    def capture_ledger_payment(
+        self,
+        request: TuiLedgerPaymentWithholdingCaptureRequest | None,
+    ) -> TuiWithholdingCaptureOutcome:
+        """Capture work-income evidence anchored to its paying ledger transaction.
+
+        This is the TUI transport over the same builder and producer the
+        aggregate CLI uses for a ledger payment; refusals surface only their
+        bounded code, exactly as invoice capture does.
+        """
+        if request is None:
+            return TuiWithholdingCaptureOutcome(status="omitted")
+        try:
+            if request.catalogue_revision_id is None:
+                raise LedgerPaymentWithholdingEvidenceError("transaction_catalogue_revision_unavailable")
+            prepared = build_ledger_payment_withholding_capture(
+                resolve_ledger_payment_transaction(request.transactions, request.evidence.transaction_id),
+                catalogue_revision_id=request.catalogue_revision_id,
+                request=request.evidence,
+                applicable_year=request.filing_year,
+            )
+            captured = self._producer.capture(prepared.command)
+        except (
+            LedgerPaymentWithholdingEvidenceError,
+            WithholdingProducerError,
+            WithholdingObservationMutationError,
+        ) as error:
+            return TuiWithholdingCaptureOutcome(status="refused", refusal_code=error.refusal_code)
+        except (WithholdingRecognitionError, ValueError):
+            return TuiWithholdingCaptureOutcome(status="refused", refusal_code="invalid_withholding_evidence")
+        if captured is None:  # pragma: no cover - the prepared command is never omitted
+            raise AssertionError("prepared TUI ledger payment capture must mutate or replay")
+        return _capture_outcome(captured)
+
     def read_window(self, scope: WithholdingWindowScope) -> WithholdingWindowState:
         """Inspect the persisted active evidence and its exact baseline."""
         return self._service.read_window(scope)
@@ -132,6 +192,7 @@ def _capture_outcome(captured: WithholdingEvidenceCaptureResult) -> TuiWithholdi
 
 __all__ = [
     "TuiInvoiceWithholdingCaptureRequest",
+    "TuiLedgerPaymentWithholdingCaptureRequest",
     "TuiWithholdingCaptureOutcome",
     "TuiWithholdingDoor",
 ]

@@ -1,18 +1,20 @@
 """Compose the existing withholding screen for an admitted installed bucket.
 
-The launcher supplies the active bucket and filing year.  Invoice lookup is a
-read of that bucket's encrypted catalogue; all mutations remain in the shared
-withholding observation service used by the CLI.
+The launcher supplies the active bucket and filing year.  Invoice and ledger
+payment lookups are reads of that bucket's encrypted catalogues; all mutations
+remain in the shared withholding observation service used by the CLI.
 """
 
 from __future__ import annotations
 
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ....application.invoices.catalogue_lifecycle import resolve_catalogue_invoice
 from ....core.errors.hierarchy import CadrumoError
 from ....domain.invoices.errors import InvoiceNotFoundError
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
+from ....domain.transactions.models import TransactionCatalogue
 from ...adapter_composition import build_withholding_observation_service
 from .door import TuiWithholdingDoor
 from .screen import WithholdingEvidenceScreen
@@ -23,10 +25,9 @@ def compose_installed_withholding_screen(*, bucket_id: str, filing_year: int) ->
     normalized_bucket = bucket_id.strip()
     if not normalized_bucket or filing_year < 1:
         raise ValueError("an admitted bucket and filing year are required")
-    invoices = InvoiceCatalogueRepository(
-        bucket_id=normalized_bucket,
-        objects=secure_object_repository_for_bucket(normalized_bucket),
-    )
+    objects = secure_object_repository_for_bucket(normalized_bucket)
+    invoices = InvoiceCatalogueRepository(bucket_id=normalized_bucket, objects=objects)
+    transactions = TransactionCatalogueRepository(bucket_id=normalized_bucket, objects=objects)
 
     def lookup(invoice_id: str):
         catalogue, revision_id = invoices.load_revisioned()
@@ -35,9 +36,13 @@ def compose_installed_withholding_screen(*, bucket_id: str, filing_year: int) ->
             return None
         return invoice, revision_id
 
+    def ledger_payment_lookup(transaction_id: str) -> tuple[TransactionCatalogue, str | None]:
+        return _read_ledger_payment(transactions, transaction_id)
+
     return WithholdingEvidenceScreen(
         door=TuiWithholdingDoor(service=build_withholding_observation_service(bucket_id=normalized_bucket)),
         invoice_lookup=lookup,
+        ledger_payment_lookup=ledger_payment_lookup,
         filing_year=filing_year,
     )
 
@@ -55,6 +60,24 @@ def _resolve_visible_invoice(catalogue: InvoiceCatalogue, supplied: str) -> Invo
         return matches[0] if len(matches) == 1 else None
     except CadrumoError:
         return None
+
+
+def _read_ledger_payment(
+    transactions: TransactionCatalogueRepository,
+    transaction_id: str,
+) -> tuple[TransactionCatalogue, str | None]:
+    """Read one addressed transaction between two catalogue revision reads.
+
+    The revision is withheld (``None``) when it cannot be stated or moved
+    during the read, so a capture never rests on a row that changed under it.
+    Only the exact id is read: a payroll payment is addressed, never guessed
+    from a prefix or a visible description.
+    """
+    revision_id = transactions.load_revision()
+    catalogue = transactions.load_by_ids((transaction_id,))
+    if revision_id is None or transactions.load_revision() != revision_id:
+        return catalogue, None
+    return catalogue, revision_id
 
 
 __all__ = ["compose_installed_withholding_screen"]

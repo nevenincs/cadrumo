@@ -804,6 +804,8 @@ errors:
       immutable de tancament de l'inventari.
     canonical_invoice_withholding_evidence: L'evidència de la factura no permet registrar
       la retenció.
+    canonical_ledger_payment_withholding_evidence: El pagament del llibre no permet
+      registrar la retenció.
     canonical_m036_declaration_ambiguous: El prefix de l'identificador de la declaració
       del Model 036 coincideix amb més d'un registre.
     canonical_m036_declaration_not_found: Cap declaració del Model 036 coincideix

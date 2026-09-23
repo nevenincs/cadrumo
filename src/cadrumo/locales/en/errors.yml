@@ -734,6 +734,8 @@ errors:
       closing authority is already recorded.
     canonical_invoice_withholding_evidence: The invoice evidence cannot support a
       withholding capture.
+    canonical_ledger_payment_withholding_evidence: The ledger payment cannot support
+      a withholding capture.
     canonical_m036_declaration_ambiguous: The Modelo 036 declaration identifier prefix
       matches multiple records.
     canonical_m036_declaration_not_found: No Modelo 036 declaration matches the requested
