@@ -34,6 +34,7 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
     BienesInversionRegularizacionParameters,
 )
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
+from ...domain.iva.refund_eligibility import is_last_filing_period_of_year
 from ...domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
@@ -870,9 +871,9 @@ class M303FilingFacts(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     joint_return_elected: bool
-    annual_volume_nonzero: bool
+    annual_volume_nonzero: bool | None
     insolvency: M303InsolvencyFilingFact | None
-    exonerado_390: M303Exonerado390FilingEvidence
+    exonerado_390: M303Exonerado390FilingEvidence | None
     regimen_simplificado: M303RegimenSimplificadoFilingEvidence
     regimen_simplificado_result: M303RegimenSimplificadoCalculationResult
     period: Period
@@ -900,6 +901,8 @@ class M303FilingFacts(BaseModel):
 
 def _validate_m303_filing_periods(facts: M303FilingFacts) -> None:
     _require_m303_official_filing_period(facts.period)
+    if facts.exonerado_390 is None and is_last_filing_period_of_year(facts.period):
+        raise ValueError("M303 last-period filing facts require the Modelo 390 exemption evidence")
     if facts.period != facts.supplier_regime.period or facts.period != facts.prorrata_transition.period:
         raise ValueError("M303 filing facts and arrivals must share one filing period")
     if facts.regularisation_result.regularizacion_year != facts.period.filing_year:

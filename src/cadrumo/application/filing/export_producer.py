@@ -1151,13 +1151,17 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
     transition = m303_facts.prorrata_transition
     insolvency = m303_facts.insolvency
     transition_applicable = transition.is_applicable
+    # DP30301 Nota 4: the exemption is a question only in the last period; every other period prints "0".
+    final_exonerado = m303_facts.exonerado_390 if is_last_filing_period_of_year(m303_facts.period) else None
     return M303FilingLexicals(
         joint_return_elected=yes_no(m303_facts.joint_return_elected),
         # DP30301 Nota 3: the art. 121 answer is printed only by a filer exempt from Modelo 390, and only in the
         # last period; every other filing carries "0" whatever the operator answered.
         annual_volume_nonzero=(
             yes_no(m303_facts.annual_volume_nonzero)
-            if is_last_filing_period_of_year(m303_facts.period) and m303_facts.exonerado_390.applicable
+            if final_exonerado is not None
+            and final_exonerado.applicable
+            and m303_facts.annual_volume_nonzero is not None
             else "0"
         ),
         recipient_of_cash_accounting_operations=yes_no(
@@ -1181,9 +1185,7 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
             if insolvency is not None
             else None
         ),
-        exonerado_390_applicable=(
-            yes_no(m303_facts.exonerado_390.applicable) if is_last_filing_period_of_year(m303_facts.period) else "0"
-        ),
+        exonerado_390_applicable="0" if final_exonerado is None else yes_no(final_exonerado.applicable),
         prorrata_transition_applicable=transition_applicable,
     )
 

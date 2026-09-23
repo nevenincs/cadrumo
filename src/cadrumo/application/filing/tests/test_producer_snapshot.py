@@ -1373,3 +1373,38 @@ def test_m303_filing_facts_refuse_transition_arrival_evidence_from_another_regis
 
     with pytest.raises(ValidationError, match="transition arrival evidence must belong to the supplied register"):
         M303FilingFacts.model_validate(payload)
+
+
+@pytest.mark.parametrize(("period_code", "required"), [("1T", False), ("3T", False), ("4T", True)])
+def test_m303_evidence_requires_the_modelo_390_exemption_only_in_the_last_period(
+    period_code: str, required: bool
+) -> None:
+    """DP30301 Nota 4 asks for the exemption in 12 and 4T only; any other period may omit it."""
+    payload = _m303_instance_evidence(Period.from_year_and_code(2026, period_code)).model_dump(mode="python")
+    payload["exonerado_390"] = None
+    payload["annual_volume_nonzero"] = None
+
+    if required:
+        with pytest.raises(ValidationError, match="Modelo 390 exemption"):
+            M303FilingInstanceEvidence.model_validate(payload)
+    else:
+        assert M303FilingInstanceEvidence.model_validate(payload).exonerado_390 is None
+
+
+def test_m303_filing_facts_without_the_exemption_question_print_zero_for_both_marks() -> None:
+    """Outside the last period both DP30301 fields 23 and 24 carry "0", whether or not evidence was stored."""
+    facts = _m303_filing_facts(period_code="2T").model_copy(
+        update={"exonerado_390": None, "annual_volume_nonzero": None}
+    )
+
+    lexicals = m303_filing_lexicals(facts)
+
+    assert (lexicals.exonerado_390_applicable, lexicals.annual_volume_nonzero) == ("0", "0")
+
+
+def test_m303_last_period_filing_facts_refuse_a_missing_exemption_question() -> None:
+    payload = _m303_filing_facts(period_code="4T").model_dump(mode="python")
+    payload["exonerado_390"] = None
+
+    with pytest.raises(ValidationError, match="Modelo 390 exemption"):
+        M303FilingFacts.model_validate(payload)

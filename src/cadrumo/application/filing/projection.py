@@ -426,11 +426,15 @@ def _project_exonerado_record(
 ) -> tuple[tuple[FilingRecordRenderContext, ...], tuple[FilingProjectionValue, ...]]:
     _require_nonrepeated_projection_record(record)
     evidence = facts.regimen_simplificado.regimen_snapshot
-    projected = project_m303_exonerado_390_value_arrival(
-        registry_snapshot=registry_snapshot,
-        projection_refs=tuple(ref for ref in refs if isinstance(ref, _EXONERADO_REF_TYPES)),
-        evidence=facts.exonerado_390,
-        record_design=evidence.record_design,
+    projected = (
+        None
+        if facts.exonerado_390 is None
+        else project_m303_exonerado_390_value_arrival(
+            registry_snapshot=registry_snapshot,
+            projection_refs=tuple(ref for ref in refs if isinstance(ref, _EXONERADO_REF_TYPES)),
+            evidence=facts.exonerado_390,
+            record_design=evidence.record_design,
+        )
     )
     return _single_occurrence_projection(
         registry_snapshot,
