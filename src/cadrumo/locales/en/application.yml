@@ -1183,6 +1183,8 @@ application:
       file_confirm_title: Record a local filing?
       refusal:
         calculation_required: Calculate this declaration before continuing.
+        edit_unavailable: This declaration offers no editable values right now; recalculate
+          or reopen it before editing.
         export_destination_required: Enter an export destination path.
         verification_required: Verify this calculation before recording a local filing.
       verify: Verify

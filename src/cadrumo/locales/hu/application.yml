@@ -1253,6 +1253,8 @@ application:
       file_confirm_title: Rögzíti a helyi bevallást?
       refusal:
         calculation_required: A folytatás előtt számítsa ki ezt a bevallást.
+        edit_unavailable: Ez a bevallás jelenleg nem kínál szerkeszthető értékeket;
+          szerkesztés előtt számítsa újra, vagy nyissa meg újra.
         export_destination_required: Adjon meg export célútvonalat.
         verification_required: A helyi bevallás rögzítése előtt ellenőrizze ezt a
           számítást.

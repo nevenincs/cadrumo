@@ -1297,6 +1297,8 @@ application:
       file_confirm_title: ¿Registrar una presentación local?
       refusal:
         calculation_required: Calcula esta declaración antes de continuar.
+        edit_unavailable: Esta declaración no ofrece valores editables en este momento;
+          vuelva a calcularla o ábrala de nuevo antes de editar.
         export_destination_required: Introduce una ruta de destino para la exportación.
         verification_required: Verifica este cálculo antes de registrar una presentación
           local.

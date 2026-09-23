@@ -719,6 +719,14 @@ operation:
         Update Cadrumo.
     status:
       running: Running
+    terminal:
+      cancelled: Cancelled
+      failed: Failed
+      interrupted: Interrupted
+      refused: Refused
+      succeeded: Succeeded
+      succeeded_partial: Partly succeeded
+      timed_out: Timed out
 overview:
   no_aeat_history: This profile holds no filing evidence AEAT confirmed.
   no_aeat_history_sociedades: This profile holds no filing evidence AEAT confirmed.

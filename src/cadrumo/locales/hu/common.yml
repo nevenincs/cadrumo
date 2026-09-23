@@ -729,6 +729,14 @@ operation:
         műveletre. Frissítsd a Cadrumót.
     status:
       running: Folyamatban
+    terminal:
+      cancelled: Megszakítva
+      failed: Sikertelen
+      interrupted: Félbeszakadt
+      refused: Elutasítva
+      succeeded: Sikeres
+      succeeded_partial: Részben sikeres
+      timed_out: Időtúllépés
 overview:
   no_aeat_history: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.
   no_aeat_history_sociedades: Ehhez a profilhoz nincs az AEAT által megerősített benyújtás.

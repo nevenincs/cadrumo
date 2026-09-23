@@ -738,6 +738,14 @@ operation:
         operació. Actualitza Cadrumo.
     status:
       running: En curs
+    terminal:
+      cancelled: Cancel·lada
+      failed: Fallida
+      interrupted: Interrompuda
+      refused: Rebutjada
+      succeeded: Completada
+      succeeded_partial: Completada en part
+      timed_out: Temps esgotat
 overview:
   no_aeat_history: Aquest perfil no té cap presentació confirmada per l'AEAT.
   no_aeat_history_sociedades: Aquest perfil no té cap presentació confirmada per l'AEAT.

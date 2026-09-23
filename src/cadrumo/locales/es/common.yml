@@ -748,6 +748,14 @@ operation:
         operación. Actualiza Cadrumo.
     status:
       running: En curso
+    terminal:
+      cancelled: Cancelada
+      failed: Fallida
+      interrupted: Interrumpida
+      refused: Rechazada
+      succeeded: Completada
+      succeeded_partial: Completada en parte
+      timed_out: Tiempo agotado
 overview:
   no_aeat_history: Este perfil no tiene ninguna presentación confirmada por la AEAT.
   no_aeat_history_sociedades: Este perfil no tiene ninguna presentación confirmada

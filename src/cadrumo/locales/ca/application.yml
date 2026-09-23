@@ -1293,6 +1293,8 @@ application:
       file_confirm_title: Voleu registrar una presentació local?
       refusal:
         calculation_required: Calculeu aquesta declaració abans de continuar.
+        edit_unavailable: Aquesta declaració no ofereix valors editables ara mateix;
+          torneu-la a calcular o torneu-la a obrir abans d'editar.
         export_destination_required: Introduïu un camí de destinació per a l'exportació.
         verification_required: Verifiqueu aquest càlcul abans de registrar una presentació
           local.
