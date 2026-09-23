@@ -826,6 +826,7 @@ def binding_schema_records(
     for binding_id in sorted(binding_ids):
         binding = bindings_by_id.get(binding_id)
         legal_refs = tuple(binding.legal_refs) if binding is not None else None
+        source_refs = tuple(binding.source_refs) if binding is not None else ()
         records.append(
             ModeloWorkspaceSchemaRecordV1(
                 reference=ModeloWorkspaceBindingReferenceV1(binding_id=binding_id),
@@ -835,6 +836,7 @@ def binding_schema_records(
                 classification=ModeloWorkspaceSchemaClassification.PROJECTED,
                 family_disposition=RegistrySchemaFamilyDisposition.POPULATED,
                 legal_refs=legal_refs,
+                source_refs=source_refs,
                 constraints=(),
                 relation_endpoints=relation_target_endpoints_for_binding(bindings, binding_id),
             )

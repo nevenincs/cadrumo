@@ -66,24 +66,51 @@ _OUTSTANDING: frozenset[str] = frozenset(
         "ModeloWorkspaceCapabilityV1.facts",
         "ModeloWorkspaceCapabilityV1.recovery_action",
         "ModeloWorkspaceCapabilityV1.source_disposition",
-        # Refusal explanation surface. All three are CORRECTLY absent, and it
-        # is one cause rather than three: every production refusal is built at
-        # boundary="admission" -- measured, all three construction sites -- and
-        # these fields belong to the capability and schema boundaries. A
-        # capability name, a schema-evidence reference and a registry family
-        # disposition have nothing to say about a target that was not found or
-        # a calculation that does not exist yet.
-        #
-        # Note what that implies about the `boundary` union itself: it declares
-        # five values and production emits ONE. The other four advertise
-        # refusal shapes nothing constructs, which is the closed-union finding
-        # the gate-integrity audit already collects, and these three fields are
-        # its downstream symptom rather than an independent gap. They become
-        # fillable exactly when a non-admission refusal is first produced, and
-        # not before.
+        # The refused result arm. No production site constructs a domain
+        # refusal at all: its only producer was graded-snapshot admission,
+        # which was removed because nothing in production reached it, and
+        # static inspection raises instead of refusing. So every refusal field
+        # beyond the required ones is unfilled for ONE cause. They return with
+        # graded admission and its launcher reader; capability, evidence and
+        # source disposition additionally need a refusal outside the admission
+        # boundary, which even the graded path never built.
         "ModeloWorkspaceDomainRefusalV1.capability",
         "ModeloWorkspaceDomainRefusalV1.evidence",
+        "ModeloWorkspaceDomainRefusalV1.facts",
+        "ModeloWorkspaceDomainRefusalV1.recovery_action",
+        "ModeloWorkspaceDomainRefusalV1.selected_target",
         "ModeloWorkspaceDomainRefusalV1.source_disposition",
+        # Graded-only projection facets. Static inspection deliberately carries
+        # no calculation, no readiness read and no provenance: those are what
+        # the calculation-grade admission adds, and that admission has no
+        # production caller until the launcher admits calculated units through
+        # it. The readiness record and the profile requirements inside it are
+        # built only there, so every field below has the same single source.
+        # Remove them in the change that restores graded admission.
+        "ModeloWorkspaceProjectionV1.materialization_facet",
+        "ModeloWorkspaceProjectionV1.provenance_facet",
+        "ModeloWorkspaceProjectionV1.readiness",
+        "ModeloWorkspaceReadinessV1.binding_ready",
+        "ModeloWorkspaceReadinessV1.ledger_checked_transaction_count",
+        "ModeloWorkspaceReadinessV1.ledger_issues",
+        "ModeloWorkspaceReadinessV1.ledger_period",
+        "ModeloWorkspaceReadinessV1.ledger_preflight_required",
+        "ModeloWorkspaceReadinessV1.ledger_ready",
+        "ModeloWorkspaceReadinessV1.missing",
+        "ModeloWorkspaceReadinessV1.missing_bindings",
+        "ModeloWorkspaceReadinessV1.profile_refusal",
+        "ModeloWorkspaceReadinessV1.registry_ready",
+        "ModeloWorkspaceReadinessV1.registry_refusal",
+        "ModeloWorkspaceProfileRequirementV1.legal_refs",
+        "ModeloWorkspaceProfileRequirementV1.modelos",
+        # Casilla-definition facts. A casilla's continuity identity and export
+        # references live on its full definition, which static inspection does
+        # not carry -- it is bounded to casilla identity, which is also why its
+        # casilla records set legal_refs and constraints to None. Bindings
+        # carry neither fact. The graded builder read the full definition and
+        # filled both, so they return with graded admission.
+        "ModeloWorkspaceSchemaRecordV1.continuity",
+        "ModeloWorkspaceSchemaRecordV1.export_exposure",
         # Not populatable, and the reason is structural rather than a missing
         # field. Applicability is declared on the REVISION and expressed against
         # TAXPAYER conditions -- entity types, income categories, estimation

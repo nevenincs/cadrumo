@@ -654,6 +654,13 @@ def test_static_inspection_binding_schema_records_use_the_real_binding_definitio
         assert record.legal_refs is not None  # BindingDefinition is retained whole
         assert record.constraints == ()
     assert binding_ids == sorted(inspection.binding_ids)
+    definitions = {binding.id: binding for binding in inspection.bindings}
+    # Every binding declares at least one source reference, so an empty tuple
+    # here would mean the record dropped it rather than that none exists.
+    for record in records:
+        definition = definitions[record.reference.binding_id]
+        assert record.source_refs == tuple(definition.source_refs)
+        assert record.source_refs
 
     by_id = dict(zip(binding_ids, records, strict=True))
     assert any(
