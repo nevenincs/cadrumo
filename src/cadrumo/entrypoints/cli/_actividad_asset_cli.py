@@ -11,19 +11,18 @@ from ...application.actividad_asset.history import ActivityAssetHistory, Activit
 from ...application.actividad_asset.modality import direct_estimation_modality
 from ...application.actividad_asset.operations import ActivityAssetFilingHandoff, ActivityAssetOperations
 from ...application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
-from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
 from ...domain.renta.actividad_asset.election import DirectEstimationRegime
 from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
 from ._actividad_asset_payloads import (
-    ActivityAssetClaimPayload,
     ActivityAssetFilingHandoffPayload,
     ActivityAssetForecastPayload,
     ActivityAssetHistoryPayload,
     ActivityAssetInspectionPayload,
 )
+from .actividad_asset_receipts import claim_receipt, inspection_receipt
 from .common import active_bucket_id_or_refuse, emit_envelope
 from .state_projection_support import authority_operation, calculation_action_ports_factory, profile_read_ports_factory
 
@@ -38,7 +37,7 @@ class ActivityAssetCli:
         return self._operations.create(ActivityAssetRevision.model_validate_json(revision_json))
 
     def inspect(self, asset_id: str) -> ActivityAssetInspectionPayload:
-        return _inspection_payload(asset_id, self._operations.inspect(asset_id))
+        return inspection_receipt(asset_id, self._operations.inspect(asset_id))
 
     def correct(self, revision_json: str) -> ActivityAssetHistory:
         return self._operations.correct(ActivityAssetRevision.model_validate_json(revision_json))
@@ -198,41 +197,9 @@ def actividad_asset_record_claim(
     emit_envelope(
         ctx,
         command="ledger.actividad_asset.claim",
-        result=_claim_payload(result),
+        result=claim_receipt(result),
         lines=(f"claim_id\t{result.claim.claim_id}", f"reused\t{str(result.reused_existing_claim).lower()}"),
     )
-
-
-def _inspection_payload(
-    asset_id: str,
-    revisions: tuple[ActivityAssetRevision, ...],
-) -> ActivityAssetInspectionPayload:
-    """Project each revision with its derived identity into the strict CLI receipt.
-
-    ``revision_id`` is a derived domain property, so Pydantic's serialized
-    record omits it, yet an operator correction must name the exact revision
-    it supersedes.
-    """
-    return ActivityAssetInspectionPayload(
-        asset_id=asset_id,
-        revisions=[{**revision.model_dump(mode="json"), "revision_id": revision.revision_id} for revision in revisions],
-    )
-
-
-def _claim_payload(result: ActivityAssetHistoryClaimResult) -> ActivityAssetClaimPayload:
-    """Project the computed canonical claim identity into the strict CLI receipt.
-
-    ``claim_id`` deliberately remains a derived domain property, so Pydantic's
-    serialized record does not include it by default. An operator receipt must
-    nevertheless name the exact immutable claim that a later correction or
-    filing handoff references.
-    """
-    document = result.model_dump(mode="json")
-    claim_document = document["claim"]
-    if not isinstance(claim_document, dict):  # pragma: no cover - domain result invariant
-        raise InternalInvariantError("activity-asset claim result must serialize a claim object")
-    document["claim"] = {**claim_document, "claim_id": result.claim.claim_id}
-    return ActivityAssetClaimPayload(root=document)
 
 
 def actividad_asset_filing_handoff(ctx: typer.Context, tax_year: int, m130_period: str) -> None:

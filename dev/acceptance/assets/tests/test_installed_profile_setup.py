@@ -1,4 +1,4 @@
-"""Focused safety checks for ASSETS-01 installed CLI profile setup."""
+"""Focused safety checks for activity-asset installed CLI profile setup."""
 
 from __future__ import annotations
 

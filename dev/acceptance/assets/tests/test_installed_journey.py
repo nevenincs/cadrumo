@@ -1,4 +1,4 @@
-"""Regression coverage for ASSETS-01 installed-TUI process supervision."""
+"""Regression coverage for activity-asset installed-TUI process supervision."""
 
 from __future__ import annotations
 
@@ -121,6 +121,8 @@ def test_full_asset_lifecycle_requires_public_correction_and_filing_stages() -> 
         "asset_forecast",
         "asset_claim",
         "asset_claim_replay",
+        "asset_superseding_forecast",
+        "asset_superseding_claim",
         "asset_filing_handoff",
         "launcher_exit",
     )

@@ -1,4 +1,4 @@
-"""Staged installed-TUI child for the ASSETS-01 acceptance journey.
+"""Staged installed-TUI child for the activity-asset acceptance journey.
 
 The child stays outside the product package so it can prove that the product
 imports from an installed wheel.  Its receipt deliberately contains public
@@ -16,11 +16,14 @@ import re
 import sys
 from collections.abc import Callable
 from dataclasses import dataclass
+from decimal import Decimal
 from pathlib import Path
 from time import monotonic, sleep
 from typing import Any, Literal, cast
 
-_SCHEMA_VERSION = "assets-01-installed-tui-child-v2"
+from dev.acceptance.assets.oracles import first_year_machinery_constant_percentage
+
+_SCHEMA_VERSION = "activity-asset-installed-tui-child-v3"
 _RECEIPT_REPLACE_SECONDS = 2.0
 _RECEIPT_REPLACE_RETRY_SECONDS = 0.02
 type InstalledAssetTuiJourney = Literal[
@@ -36,9 +39,8 @@ type InstalledAssetTuiJourney = Literal[
 ]
 
 METHOD_ASSET_ID = "assets-tui-constant-percentage-machine-2025"
-# Machinery, normal modality: the 12% maximum implies 8.33 years, weighted 2.5
-# (RIS art. 5.1.c) to a 30% constant percentage; 1,800 x 30% = 540.00.
-METHOD_CORRECTED_FORECAST_AMOUNT = "540.00"
+# The corrected EUR 1,800 machinery basis at a 30% constant percentage.
+METHOD_CORRECTED_FORECAST_AMOUNT = str(first_year_machinery_constant_percentage(Decimal("1800.00")))
 METHOD_REVISION_JSON = json.dumps(
     {
         "asset_id": METHOD_ASSET_ID,
@@ -683,6 +685,48 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
     _claim_result_reused(rendered=replayed_claim, expected=True, stage="asset_claim_replay")
     progress("asset_claim_replay")
 
+    # Replace the recorded claim through the public supersession control.  The
+    # superseding forecast leaves the replaced claim out, so it reproduces the
+    # same amount, and the filing handoff below must still count one claim.
+    superseded_claim_id = first_claim.split("\t")[1]
+    await _set_public_input(
+        pilot=pilot,
+        selector="#asset-supersedes-claim-id",
+        value=superseded_claim_id,
+        stage="asset_superseding_forecast",
+    )
+    superseding_forecast_action = await _activate_public_button(
+        pilot=pilot,
+        selector="#asset-forecast",
+        stage="asset_superseding_forecast",
+    )
+    await _wait_for_asset_result(
+        pilot=pilot,
+        expected_prefix=f"forecast\t{METHOD_CORRECTED_FORECAST_AMOUNT}\t",
+        stage="asset_superseding_forecast",
+        transition=superseding_forecast_action,
+    )
+    progress("asset_superseding_forecast")
+    superseding_claim_action = await _activate_public_button(
+        pilot=pilot,
+        selector="#asset-claim",
+        stage="asset_superseding_claim",
+    )
+    superseding_claim = await _wait_for_asset_result(
+        pilot=pilot,
+        expected_prefix="claim\t",
+        expected_suffix="reused=false",
+        stage="asset_superseding_claim",
+        transition=superseding_claim_action,
+    )
+    _claim_result_reused(rendered=superseding_claim, expected=False, stage="asset_superseding_claim")
+    if superseding_claim.split("\t")[1] == superseded_claim_id:
+        raise InstalledAssetTuiError(
+            "installed TUI superseding claim did not record a new claim identity",
+            stage="asset_superseding_claim",
+        )
+    progress("asset_superseding_claim")
+
     await _set_public_input(
         pilot=pilot,
         selector="#asset-filing-tax-year",
@@ -726,6 +770,7 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
         "forecast_amount": METHOD_CORRECTED_FORECAST_AMOUNT,
         "forecast_provenance_present": True,
         "claim_replay_reused": True,
+        "superseding_claim_replaced_the_first": True,
         "filing_handoff_material_m100": METHOD_CORRECTED_FORECAST_AMOUNT,
         "filing_handoff_material_m130": METHOD_CORRECTED_FORECAST_AMOUNT,
         "inspection_revision_identity_exposed": True,
@@ -1028,7 +1073,7 @@ def _run_probe(
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Run a staged ASSETS-01 installed TUI child.")
+    parser = argparse.ArgumentParser(description="Run a staged activity-asset installed TUI child.")
     parser.add_argument("--workspace-root", required=True, type=Path)
     parser.add_argument("--receipt", required=True, type=Path)
     parser.add_argument("--profile-label", default="assets-installed-tui")

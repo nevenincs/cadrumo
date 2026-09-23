@@ -29,11 +29,12 @@ from dev.acceptance.assets.installed_tui_child import (
     METHOD_REVISION_JSON,
     method_correction_json,
 )
+from dev.acceptance.assets.oracles import first_year_machinery_constant_percentage
 from dev.acceptance.income_tax.cli_journey import command_result
 from dev.acceptance.installed_cli import InstalledCli
 from dev.packaging.command_execution import run_command
 
-_SCHEMA_VERSION = "assets-01-installed-method-proof-v1"
+_SCHEMA_VERSION = "activity-asset-installed-method-proof-v2"
 _TUI_TIMEOUT_SECONDS = 300.0
 # InstalledCli sends the profile passphrase through --profile-secrets-stdin on
 # every command and never resumes a keychain session.
@@ -223,8 +224,11 @@ def _cli_first(
             )
         )
     )
-    # The first revision's EUR 2,000 basis: 2,000 x 30% = 600.00.
-    _require(_money(forecast["amount"]) == "600.00", "CLI constant-percentage forecast differs from the oracle")
+    # The first revision's EUR 2,000 basis at a 30% constant percentage.
+    first_year_charge = str(first_year_machinery_constant_percentage(Decimal("2000.00")))
+    _require(
+        _money(forecast["amount"]) == first_year_charge, "CLI constant-percentage forecast differs from the oracle"
+    )
     _require(
         forecast.get("authority_generation") == expected_generation,
         "the CLI forecast was served by a different authority generation than the installed descriptor names",

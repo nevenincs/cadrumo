@@ -17,6 +17,7 @@ from decimal import Decimal
 from pathlib import Path
 from typing import cast
 
+from dev.acceptance.assets.oracles import first_year_machinery_constant_percentage
 from dev.acceptance.income_tax.cli_journey import (
     JourneyError,
     command_result,
@@ -27,7 +28,7 @@ from dev.acceptance.income_tax.tui_journey import LocalXsdValidationEvidence, va
 from dev.acceptance.installed_cli import InstalledCli
 
 _YEAR = 2025
-_ASSET_AMOUNT = Decimal("300.00")
+_ASSET_AMOUNT = first_year_machinery_constant_percentage(Decimal("1000.00"))
 
 
 @dataclass(frozen=True, slots=True)
@@ -40,7 +41,7 @@ class AssetOverlayOracle:
     m100_control_total_expenses: str
     m100_asset_total_expenses: str
     m100_control_material: str = "0.00"
-    m100_asset_material: str = "300.00"
+    m100_asset_material: str = str(_ASSET_AMOUNT)
     m100_intangible: str = "0.00"
 
 
@@ -321,7 +322,7 @@ def run_asset_export_journey(
             )
         )
     )
-    if _money(forecast.get("amount")) != "300.00":
+    if _money(forecast.get("amount")) != str(_ASSET_AMOUNT):
         raise JourneyError("published constant-percentage authority did not produce the EUR 300 charge")
     report_stage("asset.claim")
     claim = command_result(
@@ -352,7 +353,7 @@ def run_asset_export_journey(
     m130_amount = m130_projection.get("amount")
     if m100_amount is None or m130_amount is None:
         raise JourneyError("asset filing handoff did not return material claim amounts")
-    if _money(m100_amount) != "300.00" or _money(m130_amount) != "300.00":
+    if _money(m100_amount) != str(_ASSET_AMOUNT) or _money(m130_amount) != str(_ASSET_AMOUNT):
         raise JourneyError("asset filing handoff did not preserve the single effective claim")
     if m100_projection.get("claim_ids") != [claim_id] or m130_projection.get("claim_ids") != [claim_id]:
         raise JourneyError("asset filing handoff did not reference the recorded claim exactly once")
@@ -387,7 +388,7 @@ def run_asset_export_journey(
         storage_root=str(cli.storage_root),
         asset_id=asset_id,
         claim_id=claim_id,
-        forecast_amount="300.00",
+        forecast_amount=str(_ASSET_AMOUNT),
         m130_q4_income=q4_income,
         m130_q4_expenses=q4_expenses,
         m100_activity_income=annual_income,

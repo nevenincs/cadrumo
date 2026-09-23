@@ -1,4 +1,4 @@
-"""Supervise one ASSETS-01 installed-TUI child without false success on a hang."""
+"""Supervise one activity-asset installed-TUI child without false success on a hang."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, cast
 
-_SCHEMA_VERSION = "assets-01-installed-tui-supervisor-v2"
+_SCHEMA_VERSION = "activity-asset-installed-tui-supervisor-v3"
 type InstalledAssetTuiJourney = Literal[
     "probe",
     "home",
@@ -160,6 +160,8 @@ def required_installed_tui_stages(
                 "asset_forecast",
                 "asset_claim",
                 "asset_claim_replay",
+                "asset_superseding_forecast",
+                "asset_superseding_claim",
                 "asset_filing_handoff",
             )
         )
@@ -379,7 +381,7 @@ def _read_passphrase_from_stdin() -> str:
 
 
 def _parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Supervise a staged ASSETS-01 installed-TUI probe.")
+    parser = argparse.ArgumentParser(description="Supervise a staged activity-asset installed-TUI probe.")
     parser.add_argument("--python", required=True, type=Path)
     parser.add_argument("--workspace-root", required=True, type=Path)
     parser.add_argument("--storage-root", required=True, type=Path)

@@ -1,4 +1,4 @@
-"""Sanitized installed-CLI profile setup for the ASSETS-01 TUI journey."""
+"""Sanitized installed-CLI profile setup for the activity-asset TUI journey."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from typing import Literal, cast
 
 from dev.acceptance.assets.installed_journey import build_assets_installed_environment
 
-_SCHEMA_VERSION = "assets-01-installed-cli-profile-setup-v1"
+_SCHEMA_VERSION = "activity-asset-installed-cli-profile-setup-v2"
 
 type ProfileSetupCommandId = Literal["profile_create", "profile_login", "profile_complete_setup", "profile_status"]
 type CleanupStatus = Literal["not_needed", "terminated", "failed"]
@@ -106,7 +106,7 @@ def _public_response_metadata(stdout: bytes, stderr: bytes) -> tuple[str | None,
             response_status = status
         error = document.get("error")
         if isinstance(error, dict):
-            code = error.get("code")
+            code = cast("dict[str, object]", error).get("code")
             if isinstance(code, str):
                 error_code = code
         result = document.get("result")
