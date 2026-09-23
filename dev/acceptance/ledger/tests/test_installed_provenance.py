@@ -58,6 +58,8 @@ def test_detail_provenance_requires_the_row_beside_the_filename() -> None:
 
     with pytest.raises(LedgerInstalledTuiError, match="detail did not display"):
         assert_detail_provenance(f"Source  {_FILE}", filename=_FILE, row=2, stage="detail")
+    with pytest.raises(LedgerInstalledTuiError, match=r"shown: ledger-prov-cli-ofx\.ofx:3\)"):
+        assert_detail_provenance("Source  ledger-prov-cli-ofx.ofx:3", filename=_FILE, row=2, stage="detail")
 
 
 def test_child_receipt_requires_every_expected_case_observation(tmp_path: Path) -> None:

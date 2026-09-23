@@ -84,3 +84,19 @@ def test_case_sources_refuse_to_overwrite_an_existing_file(tmp_path: Path) -> No
         case.write(tmp_path)
 
     assert (tmp_path / case.filename).read_text(encoding="utf-8") == "synthetic"
+
+
+def test_no_target_key_is_contained_in_another_case_s_key() -> None:
+    """The installed TUI finds a record by its visible text, so no key may appear inside another.
+
+    ``ledger-prov-cli-xls`` inside ``ledger-prov-cli-xlsx`` once made the TUI
+    see two matching rows for one case.
+    """
+    keys = {case.case_id: case.target_key for case in _CASES}
+    clashes = [
+        (case_id, other_id)
+        for case_id, key in keys.items()
+        for other_id, other in keys.items()
+        if case_id != other_id and key in other
+    ]
+    assert clashes == []

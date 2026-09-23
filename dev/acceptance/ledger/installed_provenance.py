@@ -18,6 +18,7 @@ import argparse
 import asyncio
 import hashlib
 import json
+import re
 import secrets
 import subprocess
 import sys
@@ -69,6 +70,8 @@ type ChildMode = Literal["import", "inspect"]
 # The installed root is built on a worker thread before Login or Home mounts;
 # on a loaded host that outlasts a fixed count of event-loop pauses.
 _ADMISSION_SURFACE_SECONDS = 300.0
+_DETAIL_IDENTITY_SECONDS = 60.0
+_PROVENANCE_TOKEN = re.compile(r"[\w.-]+\.(?:csv|txt|tsv|xlsx|xlsm|xls|ofx|qfx|pdf):\d+")
 
 
 def assert_json_provenance(payload: Mapping[str, Any], *, filename: str, row: int, stage: str) -> None:
@@ -85,9 +88,15 @@ def assert_track_text_provenance(text: str, *, filename: str, row: int) -> None:
 
 
 def assert_detail_provenance(rendered: str, *, filename: str, row: int, stage: str) -> None:
-    """Require the ``filename:row`` provenance token in one rendered TUI detail."""
+    """Require the ``filename:row`` provenance token in one rendered TUI detail.
+
+    A failure names the provenance tokens the detail did show. They are the
+    synthetic source filenames and rows, so a stale or different record is
+    told apart from a missing token without exposing any other detail value.
+    """
     if f"{filename}:{row}" not in rendered:
-        raise LedgerInstalledTuiError(f"{stage} did not display the imported filename and row")
+        shown = ", ".join(sorted(set(_PROVENANCE_TOKEN.findall(rendered)))) or "none"
+        raise LedgerInstalledTuiError(f"{stage} did not display the imported filename and row (shown: {shown})")
 
 
 def _cli_track_text(cli: InstalledCli, transaction_id: str, *, authenticated: bool) -> str:
@@ -312,8 +321,6 @@ async def _import_through_tui(pilot: Any, entry: Mapping[str, Any]) -> None:
 
 async def _inspect_through_tui(pilot: Any, entry: Mapping[str, Any]) -> None:
     """Open one record's installed TUI detail and require its provenance token."""
-    from textual.widgets import Static
-
     if entry["record"] == "invoice":
         await _open_invoice_detail(pilot, invoice_number=entry["target_key"])
         stage = f"{entry['case_id']} installed TUI invoice detail"
@@ -321,11 +328,36 @@ async def _inspect_through_tui(pilot: Any, entry: Mapping[str, Any]) -> None:
         await _open_transaction_detail(pilot, description=entry["target_key"])
         stage = f"{entry['case_id']} installed TUI transaction detail"
     assert_detail_provenance(
-        str(query_public_selector(pilot, "#ledger-record-detail", Static).render()),
+        await _opened_record_detail(pilot, entry, stage=stage),
         filename=entry["filename"],
         row=entry["locator"],
         stage=stage,
     )
+
+
+async def _opened_record_detail(pilot: Any, entry: Mapping[str, Any], *, stage: str) -> str:
+    """Return the rendered detail once it shows the requested record rather than the previous one.
+
+    Opening a detail mounts its controls before the record read finishes, so
+    the first render can still belong to the record opened before it. The
+    record's own public identity -- its invoice number, or its description in
+    the edit field -- decides when the requested record is on screen.
+    """
+    from textual.widgets import Input, Static
+
+    loop = asyncio.get_running_loop()
+    deadline = loop.time() + _DETAIL_IDENTITY_SECONDS
+    while True:
+        rendered = str(query_public_selector(pilot, "#ledger-record-detail", Static).render())
+        if entry["record"] == "invoice":
+            opened = entry["target_key"] in rendered
+        else:
+            opened = query_public_selector(pilot, "#ledger-transaction-description", Input).value == entry["target_key"]
+        if opened:
+            return rendered
+        if loop.time() >= deadline:
+            raise LedgerInstalledTuiError(f"{stage} never showed the requested record")
+        await pilot.pause(0.2)
 
 
 async def _wait_with_deadline(

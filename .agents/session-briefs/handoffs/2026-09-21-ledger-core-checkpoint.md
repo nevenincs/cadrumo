@@ -232,3 +232,38 @@ Attempts, all against the same wheel and fresh output roots `<root>/matrix-N`:
 - 5: `status=proven`, exit 0. Command: `uv run --no-sync python -m dev.acceptance.ledger.installed_provenance --cli <root>/venv-ofx/Scripts/aeat.exe --python <root>/venv-ofx/Scripts/python.exe --wheel <root>/wheels/cadrumo-0.5.1-py3-none-any.whl --workspace-root Y:/code/cadrumo-worktrees/tui-modelo --authority-root <root>/source/.authority --output-root <root>/matrix-5 --source-commit 83dcd72d79849eed08f57c2ab84341cdcd847106 --receipt <root>/matrix-5-receipt.json`. It covers 19 cases, 35 JSON and 11 text CLI commands, and 2 fresh TUI child processes. The sanitized receipt is `artifacts/ledger-01/installed-ledger-provenance-matrix-wheel-cc29-receipt.json`, SHA-256 `b3035b59e86c74722cc4fc5dee8ce138927fe0801cfd59538b735f72c931bee8`.
 
 Failed receipts 1–4 stay in the temp root as failed records. `<root>` is `C:/Users/hello/AppData/Local/Temp/ledger-01-provenance-e446258b3817431ba32200b43774e2b8`; its synthetic stores, sources and both venvs are retained under the standing cleanup-policy rejection. No product defect was found, so no product code changed and the receipt names `83dcd72d79`. The global import gate was not run. The operator has since named legacy `.xls` import and PDF/XLS export as implementation targets; none of them exists at `83dcd72d79`, and that is follow-on work outside this receipt.
+
+## 2026-09-23 `.xls` import, authority memory, evidence masking and redaction contract
+
+Commits by this lane, each by explicit pathspec, with `show --stat` checked:
+- `67d31eb81b`, `.xls` import. `core/legacy_workbook.py` reads BIFF8 through `xlrd`, which is already a core dependency, so no new dependency and no ADR. It scans the workbook's FORMULA records so formula cells are refused exactly as for `.xlsx`, and it suppresses `xlrd`'s stdout warnings. The new `providers/xls.py` and `xlsx.py` share `providers/workbook_layout.py`. Detection routes on the `.xls` suffix and the OLE2 signature, which makes `.xls` reachable through `auto` in both frontends. `bulk_import` reads `.xls` invoice books, and the TUI door uses the shared `BULK_INVOICE_IMPORT_EXTENSIONS`. `SourceFormat.XLS` is new. Five `test_bulk_import` tests lacked the declared `authority_operation` lease and already failed at `328b4d190d`, reproduced on a clean detached baseline; they now opt in. 218 owning tests passed, exit 0, log `20260923T133220.818600Z-pytest-39928-19efec9b`.
+- `74d8653aad`, locales. `unsupported_extension` now lists `.csv, .tsv, .xlsx, .xlsm, .xls` in en/es/ca/hu, written through `dev.locales set-batch`, with no other key moved.
+- `dbbcba9bc8`, authority memory. `_read_database_identity` streams the full-file SHA-256 through `core.hashing.hash_file` instead of `read_bytes()`. The digest stays, because `_admit_database` relies on it instead of structural scans. Tests: tracemalloc peak < size/8 on the real 83 MB database, where the unfixed reader peaked at 83,058,415 bytes, and a one-byte tamper is refused. 17 authority tests passed, log `20260923T160159.686568Z-pytest-67888-a41b6f5e`.
+- `c7198c95ad`, evidence invoice number. `ledger evidence` output had rewritten every `invoice_number` to `sha256:` since `ed2d13aea5`, pinned by a `10d599986d` test on a false premise. It now shows the recorded number, matching `evidence confirm` and `invoice view`. 90 evidence CLI tests passed, log `20260923T161417.028995Z-pytest-2752-99dcd415`.
+- `d0cbb0f31b`, redaction contract tests. With the registry admission bound, separator-bearing invoice, expediente and batch references survive and Member State numbers are hashed; with the gate suspended, the fail-safe still hashes. The unbound lexical fallback over-redacts by design and is unchanged. 426 redaction, NIF-IVA and output-contract tests passed, log `20260923T165030.421734Z-pytest-29492-1b139f25`.
+- `ff2fd4a7f1`, installed driver. It probes the session a TUI login left and reads back through the stdin secret when the OS keychain is unavailable, recording the path and the host's free memory.
+
+Installed `.xls` matrix on wheel `bda32e7d…e887`, built from `ff2fd4a7f1` in a detached checkout with its own v2 authority `5a700ac0…eb05`, `ofx` extra: `status=proven`, 23 cases. Receipt `artifacts/ledger-01/installed-ledger-provenance-matrix-wheel-bda3-receipt.json`, SHA-256 `710c9c3b…11f7`. Failed attempts kept as failures:
+- on the `67d31eb81b` wheel: `MemoryError` twice, while reading the whole authority under host memory pressure, which is the defect `dbbcba9bc8` fixes; and once `AUTH_STORAGE_KEYRING_UNAVAILABLE`, where the host keychain was unavailable after a TUI login and the driver had wrongly assumed a resumable session;
+- on the HEAD wheel: a detail-pane race, where the driver read the previous record's render (it now waits for the requested record's identity), and a fixture key clash, where `ledger-prov-cli-xls` sat inside `ledger-prov-cli-xlsx` (now guarded by a unit test).
+51 ledger acceptance unit tests passed, log `20260923T175910.639532Z-pytest-69540-3c041462`.
+
+Startup measurement (item 5): three installed wheels, interleaved rounds, peak working set over the launcher and all descendants.
+
+| Wheel | Authority admission | Admission peak alloc | CLI peak | TUI peak |
+| --- | --- | --- | --- | --- |
+| `67d31eb81b` | 0.09 s | 79.2 MB | 170 MB | 539 MB |
+| `dbbcba9bc8` | 0.10 s | 0.1 MB | 138 MB | 539 MB |
+| HEAD `ff2fd4a7f1` | 0.11 s | 0.1 MB | 139 MB | 507 MB |
+
+The memory defect is fixed. The hash was never the latency, since admission takes about 0.1 s either way. TUI Home took 37–91 s and CLI 6–27 s under host contention, which cannot be attributed from these runs.
+
+Still open, all in this lane's queue:
+- the no-work-unit TUI root-build latency (cProfile per phase);
+- the intermittent `REFUSED_STORAGE_PROFILE_CUSTODY` at profile creation; its typed reason (`KDF_RESOURCE_LIMIT` or `KDF_SUPERVISION_UNAVAILABLE`) was dropped by the shared runner and needs a contended reproduction;
+- mapped-tabular proof;
+- the PDF page-number provenance decision (`record_views.py` is IVA's until T2 returns);
+- `.xls` and PDF export;
+- installed proofs of the OFX-without-extra, non-N26 PDF and unsupported-extension refusals.
+
+The driver keeps its 300 s admission budget until the latency is fixed. Temp roots remain under the cleanup-policy rejection.

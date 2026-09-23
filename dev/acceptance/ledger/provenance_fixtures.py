@@ -140,7 +140,7 @@ def _statement_rows(case_id: str, *, target_position: int, count: int, base: Dec
     rows = []
     for position in range(1, count + 1):
         is_target = position == target_position
-        description = f"ledger-prov-{case_id}" if is_target else f"filler-{case_id}-{position}"
+        description = f"ledger-prov-{case_id}-target" if is_target else f"filler-{case_id}-{position}"
         rows.append(
             StatementRow(
                 day=10 + position,
@@ -158,7 +158,7 @@ def _invoice_rows(case_id: str, *, target_position: int, count: int, base: Decim
     return tuple(
         InvoiceRow(
             day=10 + position,
-            invoice_number=f"PROV-{case_id}".upper()
+            invoice_number=f"PROV-{case_id}-T".upper()
             if position == target_position
             else f"FILL-{case_id}-{position}".upper(),
             taxable_base=base + Decimal(position),
@@ -333,7 +333,7 @@ def _statement_case(
         filename=f"ledger-prov-{case_id}.{file_format}",
         provider=provider,
         invoice_kind=None,
-        target_key=f"ledger-prov-{case_id}",
+        target_key=f"ledger-prov-{case_id}-target",
         locator=locator,
         locator_kind=locator_kind,
         row_count=count,
