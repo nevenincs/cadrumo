@@ -91,11 +91,18 @@ def build_assets_installed_environment(*, storage_root: Path) -> dict[str, str]:
     return environment
 
 
-def _receipt_progress(path: Path) -> tuple[str | None, str | None, tuple[str, ...]]:
-    """Read only the controlled progress fields from a child receipt."""
+def read_receipt_progress(path: Path) -> tuple[str | None, str | None, tuple[str, ...]]:
+    """Read only the controlled progress fields from a child receipt.
+
+    The child rewrites its receipt while the supervisor polls it, and Windows
+    refuses a read that meets that write with a sharing violation.  An
+    unreadable receipt is therefore "no progress yet"; the terminal status is
+    still taken from the read after the child exits, and a receipt that stays
+    unreadable leaves the run failed.
+    """
     try:
         raw: object = json.loads(path.read_text(encoding="utf-8"))
-    except (FileNotFoundError, json.JSONDecodeError):
+    except (OSError, json.JSONDecodeError):
         return None, None, ()
     if not isinstance(raw, dict):
         return None, None, ()
@@ -295,11 +302,11 @@ def run_installed_tui_probe(
     cleanup: Literal["not_needed", "terminated", "failed"] = "not_needed"
     deadline = time.monotonic() + timeout_seconds
     while process.poll() is None and time.monotonic() < deadline:
-        last_stage, child_status, completed_stages = _receipt_progress(receipt_path)
+        last_stage, child_status, completed_stages = read_receipt_progress(receipt_path)
         time.sleep(0.1)
     if process.poll() is None:
         timed_out = True
-        last_stage, child_status, completed_stages = _receipt_progress(receipt_path)
+        last_stage, child_status, completed_stages = read_receipt_progress(receipt_path)
         try:
             process.terminate()
             process.wait(timeout=10.0)
@@ -314,7 +321,7 @@ def run_installed_tui_probe(
         else:
             cleanup = "terminated"
     stdout, stderr = process.communicate(timeout=10.0)
-    last_stage, child_status, completed_stages = _receipt_progress(receipt_path)
+    last_stage, child_status, completed_stages = read_receipt_progress(receipt_path)
     required_stage_missing = _first_missing_required_stage(
         completed_stages,
         journey=journey,
@@ -431,6 +438,7 @@ __all__ = [
     "InstalledTuiProcessReceipt",
     "build_assets_installed_environment",
     "main",
+    "read_receipt_progress",
     "required_installed_tui_stages",
     "run_installed_tui_probe",
 ]

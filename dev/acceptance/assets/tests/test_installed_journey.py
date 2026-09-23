@@ -11,6 +11,7 @@ import pytest
 
 from dev.acceptance.assets.installed_journey import (
     InstalledTuiProcessError,
+    read_receipt_progress,
     required_installed_tui_stages,
     run_installed_tui_probe,
 )
@@ -123,3 +124,12 @@ def test_full_asset_lifecycle_requires_public_correction_and_filing_stages() -> 
         "asset_filing_handoff",
         "launcher_exit",
     )
+
+
+def test_an_unreadable_receipt_is_no_progress_rather_than_a_supervisor_crash(tmp_path: Path) -> None:
+    """A receipt the child is rewriting can refuse a read; the poll must not crash."""
+    unreadable = tmp_path / "receipt.json"
+    unreadable.mkdir()
+
+    assert read_receipt_progress(unreadable) == (None, None, ())
+    assert read_receipt_progress(tmp_path / "absent.json") == (None, None, ())
