@@ -841,13 +841,13 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
     installed_cohort: InstalledCohort,
 ) -> None:
     """Only republishing and rebuilding can carry authoring changes into runtime."""
-    from dev.registry.pipeline.authority_publication import authority_candidate_identity
+    from dev.registry.pipeline.authority_publication import authority_source_identity
 
     cohort = installed_cohort
     clean_repo = cohort.work_dir / "clean-repository"
     registry_root = clean_repo / "src" / "cadrumo" / "_data" / "registry" / "aeat"
     authored = registry_root / "modelos" / "200" / "manifest.toml"
-    before_candidate = authority_candidate_identity(registry_root=registry_root, source_root=clean_repo)
+    before_candidate = authority_source_identity(registry_root=registry_root, source_root=clean_repo)
     installed_descriptor, installed_descriptor_digest, installed_database, installed_database_digest = (
         _installed_authority_resource(
             cohort.venv,
@@ -880,7 +880,7 @@ def test_post_build_source_mutation_cannot_change_an_existing_installation(
     original = authored.read_bytes()
     try:
         authored.write_bytes(original + b"\n# post-build isolation probe\n")
-        after_candidate = authority_candidate_identity(registry_root=registry_root, source_root=clean_repo)
+        after_candidate = authority_source_identity(registry_root=registry_root, source_root=clean_repo)
         assert after_candidate != before_candidate
         assert sha256_path(installed_descriptor) == installed_descriptor_digest
         assert sha256_path(installed_database) == installed_database_digest

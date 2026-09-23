@@ -541,6 +541,7 @@ def root_eligibility(modelo_dir: Path) -> tuple[Mapping[str, object], ...]:
                         "valid_to": raw_revision.get("valid_to"),
                         "period_selector": raw_revision.get("period_selector"),
                         "deadline_windows": raw_revision.get("deadline_windows", ()),
+                        "filing_schedules": raw_revision.get("filing_schedules", ()),
                     }
                 )
             )

@@ -142,6 +142,11 @@ def _authority_root(build_root: Path) -> Path:
     from there, because the sdist carries no ``.authority/``. When a real source
     tree has no publication yet, the canonical compiler publishes one to its
     repo-root ``.authority/`` before packaging continues.
+
+    A source tree counts as published only when its descriptor exists. A
+    publication that died after creating the directory leaves it without one,
+    and treating that directory as published would refuse every later build
+    instead of completing the publication it interrupted.
     """
     override = os.environ.get(_AUTHORITY_ROOT_ENV)
     if override:
@@ -150,7 +155,7 @@ def _authority_root(build_root: Path) -> Path:
             raise FileNotFoundError(f"configured ${_AUTHORITY_ROOT_ENV} directory is unavailable: {candidate}")
         return candidate
     source_tree = build_root / _SOURCE_TREE_DIRECTORY
-    if source_tree.is_dir():
+    if (source_tree / _DESCRIPTOR_NAME).is_file():
         return source_tree
     embedded = build_root / _SDIST_DESTINATION
     if embedded.is_dir():

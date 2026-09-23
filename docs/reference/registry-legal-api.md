@@ -45,7 +45,7 @@ refusal naming the publication command, not an empty authority. See
 | --- | --- |
 | Validated candidate | The registry and source-evidence inputs accepted by the development compiler. |
 | Source receipt | Root-relative registry and source-evidence content, including manually maintained evidence sidecars. |
-| Compiler receipt | Relevant Cadrumo and compiler code, dependency manifests, Python major/minor, and Pydantic versions. |
+| Compiler receipt | The Cadrumo and compiler source files the canonical compiler process loaded, dependency manifests, Python major/minor, and Pydantic versions. |
 | Component receipt | The source and compiler receipts bound to one fresh, complete-authority generation. |
 | Identity digest | The content-addressed combination of those receipts, recorded so a stale artifact can be detected. |
 | Authority descriptor | The atomically replaced selector containing the database basename, byte count, physical SHA-256, and logical generation. |
@@ -54,8 +54,10 @@ refusal naming the publication command, not an empty authority. See
 The descriptor format is `cadrumo-authority-descriptor-v1`; its exact members
 are `format`, `database`, `database_size`, `database_sha256`, and
 `logical_generation`. The database format is
-`cadrumo-authority-sqlite-v1`. Its manifest binds the logical generation and
-the complete component directory. The physical database digest is both the
+`cadrumo-authority-sqlite-v3`. Its manifest binds the logical generation and
+the complete component directory, and it records the compiler source closure
+and environment the compiler receipt is computed from. A database in an older
+format is refused rather than read. The physical database digest is both the
 descriptor's admission check and the content-addressed filename, so a changed
 or colliding payload is refused before runtime work begins.
 
@@ -70,9 +72,16 @@ this publication.
 
 The source receipt folds each registry and source-evidence file's root-relative
 path and content digest. Registry files fold CRLF to LF; source evidence is
-byte-exact. The compiler receipt also changes with relevant source code,
-`pyproject.toml`, `uv.lock`, Python major/minor, or the installed `pydantic` and
-`pydantic-core` versions. A fresh clone in the same declared environment is
+byte-exact. The compiler receipt hashes the portable path and content of every
+non-test `cadrumo` and `dev/registry` source file loaded to compile, validate
+and project the authority, together with `pyproject.toml`, `uv.lock`, Python
+major/minor, and the installed `pydantic` and `pydantic-core` versions. Every
+publication, whether started from the command above or by the package build,
+compiles in one fresh interpreter running the same module, so the recorded
+files do not depend on the launching tool. The currency check re-hashes exactly
+those recorded files without compiling: an edit to a recorded file, or its
+removal, makes the publication stale, while an edit to a module the compiler
+never loaded does not. A fresh clone in the same declared environment is
 stable, without promising identity across incompatible build environments.
 
 Each component payload is a compact canonical projection of one typed authority

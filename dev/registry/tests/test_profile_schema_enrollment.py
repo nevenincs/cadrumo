@@ -15,7 +15,7 @@ from ..compiler.profile_schema import (
     parse_captured_profile_schema,
     validate_captured_profile_schema,
 )
-from ..pipeline.authority_publication import authority_candidate_identity
+from ..pipeline.authority_publication import authority_source_identity
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -70,10 +70,10 @@ def test_profile_source_bytes_participate_in_candidate_identity(tmp_path: Path) 
         "source_root": bundled_path(),
         "profile_schema_path": profile,
     }
-    before = authority_candidate_identity(**inputs)
+    before = authority_source_identity(**inputs)
     profile.write_bytes(_SCHEMA.replace(b"Synthetic profile schema", b"Changed synthetic profile schema"))
 
-    assert authority_candidate_identity(**inputs) != before
+    assert authority_source_identity(**inputs) != before
 
 
 def test_captured_profile_source_survives_a_to_b_to_a_path_mutation(tmp_path: Path) -> None:

@@ -18,9 +18,10 @@ flag. The service also enumerates the profile keys the answer depends
 on so the operator can audit them. Local-only: never contacts AEAT.
 
 See Also:
-    :class:`ModeloRevision`
-        Compiled revision whose deadline windows are matched against the
-        taxpayer profile to build the scheduling rationale.
+    :class:`RevisionSelectionMetadata`
+        Directory metadata of the owning revision, whose deadline windows and
+        filing schedules are matched against the taxpayer profile to build the
+        scheduling rationale.
 """
 
 from __future__ import annotations
@@ -50,8 +51,8 @@ from .errors import OverviewExplainError
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.calculations.registry.schema import ModeloRevision
     from ...domain.calculations.registry.schema_deadlines import DeadlineWindowDefinition
+    from ...domain.calculations.registry.temporal import RevisionSelectionMetadata
 
 _ProfileFactValue = str | bool | int
 """Closed value type for the explain payload's ``profile_facts`` map.
@@ -428,7 +429,7 @@ def _out_of_plazo_warning(
 def _deadline_window_matches(
     deadline_engine: DeadlineEngine,
     profile: TaxpayerProfile,
-    revision: ModeloRevision,
+    revision: RevisionSelectionMetadata,
     window: DeadlineWindowDefinition,
 ) -> bool:
     if not deadline_engine.schedule_applies(profile, revision, window):

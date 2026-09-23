@@ -23,7 +23,6 @@ from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
-    AuthorityBuildIdentity,
     AuthorityComponentCodecError,
     AuthorityEvidenceProjection,
     ModeloDirectoryComponentQuery,
@@ -42,6 +41,7 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_catalogues,
     minimal_modelo,
     minimal_revision,
+    synthetic_build_receipts,
 )
 from cadrumo.domain.modelos.perceptor_clave_scope import PERCEPTOR_CLAVE_SCOPE_FACT_ID
 from cadrumo.domain.user_profile.schema import ProfileSchemaDefinition
@@ -184,7 +184,7 @@ def test_publication_foreign_key_check_refuses_an_unenforced_dangling_dependency
 
 
 def _artifact() -> AuthorityArtifact:
-    build_identity = AuthorityBuildIdentity.from_inputs(sha256_hex(b"source"), sha256_hex(b"compiler"))
+    build_identity, compiler_closure = synthetic_build_receipts("source")
     profile_schema = capture_profile_schema(bundled_path("registry", "cadrumo", "user_profile", "schema.toml"))[1]
     catalogues = minimal_catalogues()
     # Snapshot validation resolves this declaration even when the miniature
@@ -262,6 +262,7 @@ def _artifact() -> AuthorityArtifact:
         catalogues=catalogues,
         identity_digest=build_identity.identity_digest,
         build_identity=build_identity,
+        compiler_closure=compiler_closure,
         evidence=AuthorityEvidenceProjection(),
         profile_schema=profile_schema,
     )
@@ -441,6 +442,49 @@ def test_digest_consistent_unused_component_refuses_only_when_requested(tmp_path
         reader.close()
 
 
+def test_a_directory_without_revision_filing_schedules_fails_to_decode(tmp_path: Path) -> None:
+    """The directory carries every revision's filing schedules; one that omits them is not admitted."""
+    descriptor_path = _published_candidate(tmp_path)
+    original = AuthorityDescriptor.read(descriptor_path)
+    database = tmp_path / original.database
+    with closing(sqlite3.connect(database)) as connection:
+        (encoded,) = connection.execute(
+            "SELECT payload FROM components WHERE kind = ? AND key = ?",
+            ("modelo_directory", "130"),
+        ).fetchone()
+        frame = json.loads(encoded)
+        revisions = frame["payload"]["revisions"]
+        assert revisions
+        assert all("filing_schedules" in revision for revision in revisions)
+        for revision in revisions:
+            del revision["filing_schedules"]
+        malformed = json.dumps(frame).encode("utf-8")
+        connection.execute(
+            "UPDATE components SET payload = ?, payload_sha256 = ?, retained_weight = ? WHERE kind = ? AND key = ?",
+            (malformed, sha256_hex(malformed), len(malformed), "modelo_directory", "130"),
+        )
+        connection.commit()
+    payload = database.read_bytes()
+    physical_digest = sha256_hex(payload)
+    renamed = tmp_path / f"authority-{physical_digest}.sqlite3"
+    database.replace(renamed)
+    descriptor_path.write_bytes(
+        AuthorityDescriptor(
+            database=renamed.name,
+            database_size=len(payload),
+            database_sha256=physical_digest,
+            logical_generation=original.logical_generation,
+        ).to_bytes()
+    )
+
+    reader = SQLiteAuthorityReader(descriptor_path)
+    try:
+        with reader.lease() as pin, pytest.raises(AuthorityComponentCodecError, match="failed typed decoding"):
+            reader.load(ModeloDirectoryComponentQuery("130"), pin=pin)
+    finally:
+        reader.close()
+
+
 def test_failed_currentness_check_preserves_the_previous_descriptor(tmp_path: Path) -> None:
     descriptor_path = tmp_path / "authority.current.json"
     descriptor_path.write_bytes(b"previous descriptor bytes")
@@ -499,12 +543,13 @@ def test_promotion_copies_the_exact_accepted_bytes_without_recompiling(tmp_path:
 
 def test_public_installers_serialize_different_generations(tmp_path: Path) -> None:
     first = _artifact()
-    second_build = AuthorityBuildIdentity.from_inputs("3" * 64, "4" * 64)
+    second_build, second_closure = synthetic_build_receipts("second source", "second compiler")
     second = first.__class__(
         modelos=first.modelos,
         catalogues=first.catalogues,
         identity_digest=second_build.identity_digest,
         build_identity=second_build,
+        compiler_closure=second_closure,
         profile_schema=first.profile_schema,
         evidence=first.evidence,
     )
@@ -533,7 +578,7 @@ def test_candidate_preparation_does_not_hold_the_destination_lock(
     """A barrier-held validation leaves the publication lock available to another publisher."""
     preparation_started = Event()
     finish_preparation = Event()
-    prepared_candidate = SimpleNamespace(artifact=object())
+    prepared_candidate = SimpleNamespace(descriptor_path=tmp_path / "staged" / "authority.current.json")
     published_descriptor = object()
 
     def prepare_candidate(**_kwargs: object) -> object:
@@ -541,12 +586,17 @@ def test_candidate_preparation_does_not_hold_the_destination_lock(
         assert finish_preparation.wait(timeout=5)
         return prepared_candidate
 
-    monkeypatch.setattr(authority_publication, "validate_authority_candidate", prepare_candidate)
+    monkeypatch.setattr(authority_publication, "prepare_authority_candidate", prepare_candidate)
     monkeypatch.setattr(authority_publication, "_require_candidate_receipt", lambda candidate: None)
     monkeypatch.setattr(
+        authority_publication.AuthorityDescriptor,
+        "read",
+        lambda _path: SimpleNamespace(database="staged.sqlite3", logical_generation="0" * 64),
+    )
+    monkeypatch.setattr(
         authority_publication,
-        "_install_validated_authority_database",
-        lambda artifact, *, destination, require_current: published_descriptor,
+        "_install_authority_database",
+        lambda staged_database, logical_generation, *, destination, require_current: published_descriptor,
     )
     destination = tmp_path / "published"
     descriptor_path = destination / "authority.current.json"
@@ -576,20 +626,19 @@ def test_receipt_drift_after_preparation_refuses_before_installation(
     accepted_descriptor = b"previously accepted descriptor"
     descriptor_path.write_bytes(accepted_descriptor)
     prepared_candidate = SimpleNamespace(
-        artifact=object(),
         registry_root=tmp_path / "registry",
         source_root=tmp_path / "source",
         profile_schema_path=tmp_path / "schema.toml",
         receipt=object(),
     )
 
-    monkeypatch.setattr(authority_publication, "validate_authority_candidate", lambda **_kwargs: prepared_candidate)
+    monkeypatch.setattr(authority_publication, "prepare_authority_candidate", lambda **_kwargs: prepared_candidate)
     monkeypatch.setattr(authority_publication, "_capture_receipt", lambda *_args, **_kwargs: object())
 
     def unexpected_install(*_args: object, **_kwargs: object) -> None:
         pytest.fail("receipt drift must refuse before database installation")
 
-    monkeypatch.setattr(authority_publication, "_install_validated_authority_database", unexpected_install)
+    monkeypatch.setattr(authority_publication, "_install_authority_database", unexpected_install)
 
     with pytest.raises(RegistryValidationError, match="input receipt changed") as refusal:
         authority_publication.publish_sqlite_authority_candidate(

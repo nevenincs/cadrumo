@@ -167,13 +167,37 @@ class _CountingOperation:
         return getattr(self.operation, name)
 
 
-def test_projection_hydrates_only_revisions_that_own_a_window(operation: PinnedAuthorityOperation) -> None:
-    """TEETH: selecting an owner must not hydrate a complete revision per window."""
+def test_projection_hydrates_no_revision(operation: PinnedAuthorityOperation) -> None:
+    """TEETH: the directory metadata answers ownership and filing schedules; no revision is hydrated."""
     counting = _CountingOperation(operation=operation, hydrated=[])
 
     # CAST-RATIONALE-COUNTING-OPERATION: the wrapper delegates every attribute
     # to the leased operation and only records hydration, the axis under test.
     projected = deadline_engine._project_deadline_windows(cast("PinnedAuthorityOperation", counting), _YEAR)
 
-    assert len(counting.hydrated) == len(projected)
-    assert set(counting.hydrated) == {(modelo, str(revision.id)) for modelo, revision, _window in projected}
+    assert projected, "the bundled generation must carry deadline windows, or a zero count proves nothing"
+    assert counting.hydrated == []
+
+
+def test_each_window_carries_the_filing_schedules_of_its_hydrated_owner(operation: PinnedAuthorityOperation) -> None:
+    """Every projected window answers filing-schedule applicability exactly as its hydrated owner does.
+
+    A year the generation carries no window for must project none, exactly as
+    the hydrating derivation owns none.
+    """
+    compared = 0
+    for year in range(2024, 2028):
+        projected = indexed_deadline_windows(operation, year)
+        assert {(modelo, str(metadata.id), window) for modelo, metadata, window in projected} == (
+            _hydrating_projection(operation, year)
+        )
+        for modelo, metadata, window in projected:
+            hydrated = operation.revision_for_context(
+                modelo,
+                filing_year=window.filing_year,
+                period=window.period.registry_token,
+            )
+            assert hydrated.id == metadata.id
+            assert metadata.filing_schedules == hydrated.filing_schedules, (modelo, str(metadata.id), window.id)
+            compared += 1
+    assert compared, "the bundled generation must carry deadline windows in 2024-2027, or equality proves nothing"

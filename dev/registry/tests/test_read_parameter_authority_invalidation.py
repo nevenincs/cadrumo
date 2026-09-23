@@ -9,12 +9,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.core.classification.policies import SensitivityClass
-from cadrumo.core.hashing import sha256_hex
 from cadrumo.domain.calculations.registry import formula_runtime_ops
 from cadrumo.domain.calculations.registry.authority import IndexedRegistryAuthority
 from cadrumo.domain.calculations.registry.authority_artifact import (
     AuthorityArtifact,
-    AuthorityBuildIdentity,
     AuthorityEvidenceProjection,
     ModeloRevisionComponentQuery,
 )
@@ -25,6 +23,7 @@ from cadrumo.domain.calculations.registry.tests.artifact_runtime_support import 
     minimal_catalogues,
     minimal_modelo,
     minimal_revision,
+    synthetic_build_receipts,
 )
 from cadrumo.domain.user_profile.schema import (
     ProfileFieldDefinition,
@@ -91,15 +90,13 @@ def _artifact(value: str) -> AuthorityArtifact:
         source_refs=(source_id,),
     )
     revision = minimal_revision().model_copy(update={"parameters": (parameter,)})
-    build_identity = AuthorityBuildIdentity.from_inputs(
-        sha256_hex(f"fixture-source:{value}".encode()),
-        sha256_hex(b"fixture-authority-compiler"),
-    )
+    build_identity, compiler_closure = synthetic_build_receipts(f"fixture-source:{value}")
     return AuthorityArtifact(
         modelos=(minimal_modelo(revision),),
         catalogues=catalogues,
         identity_digest=build_identity.identity_digest,
         build_identity=build_identity,
+        compiler_closure=compiler_closure,
         profile_schema=_profile_schema(),
         evidence=AuthorityEvidenceProjection(),
     )

@@ -32,8 +32,9 @@ from .authority_cache import (
     AuthorityCacheTelemetry,
     RetainedAuthorityValue,
 )
+from .authority_compiler_closure import AuthorityCompilerClosure, AuthorityCompilerEnvironment
 
-AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v2"
+AUTHORITY_DATABASE_FORMAT: Final = "cadrumo-authority-sqlite-v3"
 AUTHORITY_DESCRIPTOR_FORMAT: Final = "cadrumo-authority-descriptor-v1"
 _DESCRIPTOR_MEMBERS: Final = frozenset({"format", "database", "database_size", "database_sha256", "logical_generation"})
 _DATABASE_NAME = re.compile(r"authority-([0-9a-f]{64})\.sqlite3")
@@ -188,6 +189,7 @@ class SQLiteAuthorityReader:
         self._closed = False
         self._component_queries: tuple[AuthorityComponentQuery, ...] | None = None
         self._build_identity: AuthorityBuildIdentity
+        self._compiler_closure: AuthorityCompilerClosure
         for _ in range(max_connections):
             connection = self._open_connection()
             self._all_connections.append(connection)
@@ -336,8 +338,10 @@ class SQLiteAuthorityReader:
         re-prove what the digest guarantees.
 
         The recorded source, compiler and dependency receipts must recompute the
-        logical generation; an older format that never recorded them is refused
-        rather than admitted with receipts it cannot state.
+        logical generation, and the recorded compiler source closure and
+        environment must recompute the compiler receipt; an older format that
+        never recorded them is refused rather than admitted with receipts it
+        cannot state.
         """
         with self._checkout() as connection:
             format_row = connection.execute("SELECT format FROM authority_manifest WHERE singleton = 1").fetchone()
@@ -350,6 +354,11 @@ class SQLiteAuthorityReader:
                 "SELECT logical_generation, source_identity_digest, compiler_identity_digest, "
                 "component_dependency_digest FROM authority_manifest WHERE singleton = 1"
             ).fetchone()
+            source_rows = connection.execute("SELECT path, sha256 FROM compiler_sources ORDER BY path").fetchall()
+            environment_row = connection.execute(
+                "SELECT python, pyproject_sha256, uv_lock_sha256, pydantic, pydantic_core "
+                "FROM compiler_environment WHERE singleton = 1"
+            ).fetchone()
         if row is None or row[0] != self._descriptor.logical_generation:
             raise AuthorityStoreCorruptionError("authority database manifest disagrees with its descriptor")
         try:
@@ -358,12 +367,31 @@ class SQLiteAuthorityReader:
             raise AuthorityStoreCorruptionError("authority database build receipts are malformed") from exc
         if build_identity.identity_digest != row[0]:
             raise AuthorityStoreCorruptionError("authority database build receipts do not recompute its generation")
+        if environment_row is None:
+            raise AuthorityStoreCorruptionError("authority database records no compiler environment")
+        try:
+            compiler_closure = AuthorityCompilerClosure(
+                tuple((str(path), str(digest)) for path, digest in source_rows),
+                AuthorityCompilerEnvironment(*(str(value) for value in environment_row)),
+            )
+        except (TypeError, ValueError) as exc:
+            raise AuthorityStoreCorruptionError("authority database compiler closure is malformed") from exc
+        if compiler_closure.identity_digest != build_identity.compiler_identity_digest:
+            raise AuthorityStoreCorruptionError(
+                "authority database compiler closure does not recompute its compiler identity"
+            )
         self._build_identity = build_identity
+        self._compiler_closure = compiler_closure
 
     def build_identity(self) -> AuthorityBuildIdentity:
         """Return the source, compiler and dependency receipts this generation was built from."""
         self._require_open()
         return self._build_identity
+
+    def compiler_closure(self) -> AuthorityCompilerClosure:
+        """Return the compiler source closure and environment behind the compiler receipt."""
+        self._require_open()
+        return self._compiler_closure
 
     def _read_database_identity(self) -> _DatabaseIdentity:
         """Hash the whole published database once per reader, streaming it.

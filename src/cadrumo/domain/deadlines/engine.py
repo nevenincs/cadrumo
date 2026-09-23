@@ -3,8 +3,9 @@
 Takes an :class:`TaxpayerProfile` and a year and produces a deterministic,
 typed :class:`Schedule`. Filing windows and applicability conditions are
 read from validated calculation registry data supplied by
-:class:`ValidatedRegistryAuthority`. Each window is described by a
-:class:`ModeloRevision` paired with its deadline window definitions.
+:class:`ValidatedRegistryAuthority`. Each window is described by the
+selection metadata of its owning revision paired with its deadline window
+definition.
 """
 
 from __future__ import annotations
@@ -29,9 +30,12 @@ from ..contribuyente.entity_type import EntityType, entity_type_legal_entity_tok
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
     from ..calculations.registry.authority_artifact import AuthorityGenerationPin
-    from ..calculations.registry.schema import ModeloRevision
     from ..calculations.registry.schema_deadlines import DeadlineWindowDefinition
     from ..calculations.registry.schema_verification import ProfilePredicateDefinition
+    from ..calculations.registry.temporal import RevisionSelectionMetadata
+
+    type DeadlineWindowProjection = tuple[str, RevisionSelectionMetadata, DeadlineWindowDefinition]
+    """One projected window: modelo code, its owning revision's selection metadata, and the window."""
 
 from .errors import (
     DeadlineValidationError,
@@ -126,10 +130,10 @@ def _window_outside_activity_period(
 #: key is the authority's own content identity (logical generation plus reader
 #: incarnation), never a path or an object address, so a different generation --
 #: or the same content behind a fresh reader -- projects again. Bounded because
-#: each entry retains that year's hydrated revisions.
+#: each entry retains that year's projected windows.
 _DEADLINE_WINDOW_INDEX: OrderedDict[
     tuple[AuthorityGenerationPin, int],
-    tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...],
+    tuple[DeadlineWindowProjection, ...],
 ] = OrderedDict()
 _DEADLINE_WINDOW_INDEX_LIMIT: Final = 32
 _DEADLINE_WINDOW_INDEX_LOCK: Final = Lock()
@@ -138,7 +142,7 @@ _DEADLINE_WINDOW_INDEX_LOCK: Final = Lock()
 def indexed_deadline_windows(
     operation: PinnedAuthorityOperation,
     year: int,
-) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+) -> tuple[DeadlineWindowProjection, ...]:
     """Project one filing year's deadline windows from a pinned operation.
 
     Reused for a generation already projected for this year; see
@@ -162,20 +166,18 @@ def indexed_deadline_windows(
 def _project_deadline_windows(
     operation: PinnedAuthorityOperation,
     year: int,
-) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
-    """Walk the directory and hydrate the revisions that own this year's windows.
+) -> tuple[DeadlineWindowProjection, ...]:
+    """Walk the directory and project the windows their owning revisions declare for ``year``.
 
-    The directory carries the metadata needed to select the owning revision;
-    only revisions that canonically own a matching window are then hydrated.
-    This mirrors the eager authority's ownership rule without reconstructing a
-    whole model graph. Ownership is decided on the directory metadata by the
-    same selector :meth:`PinnedAuthorityOperation.revision_for_context` uses,
-    because that method hydrates the complete selected revision only for its
-    identity to be compared here.
+    Ownership is decided on the directory metadata by the same selector
+    :meth:`PinnedAuthorityOperation.revision_for_context` uses, which mirrors the
+    eager authority's ownership rule. The metadata also carries the owner's
+    filing schedules, the only other revision member any consumer of the
+    projection reads, so no revision is hydrated.
     """
     from ..calculations.registry.temporal import select_revision_metadata
 
-    projected: list[tuple[str, ModeloRevision, DeadlineWindowDefinition]] = []
+    projected: list[DeadlineWindowProjection] = []
     for modelo_id in operation.modelo_ids():
         directory = operation.modelo_directory(modelo_id)
         for metadata in directory.revisions:
@@ -189,9 +191,7 @@ def _project_deadline_windows(
                 )
                 if selected.id != metadata.id:
                     continue
-                revision = operation.revision(modelo_id, str(metadata.id))
-                matching = tuple(window for window in revision.deadline_windows if window == metadata_window)
-                if len(matching) != 1:
+                if metadata.deadline_windows.count(metadata_window) != 1:
                     raise ScheduleComputationError(
                         translated_message=_SCHEDULE_COMPUTATION_MESSAGE_KEY,
                         context={
@@ -201,7 +201,7 @@ def _project_deadline_windows(
                             "filing_year": year,
                         },
                     )
-                projected.append((modelo_id, revision, matching[0]))
+                projected.append((modelo_id, metadata, metadata_window))
     projected.sort(
         key=lambda item: (
             item[2].closes_on,
@@ -315,7 +315,7 @@ class DeadlineEngine:
         *,
         profile: TaxpayerProfile,
         modelo: str,
-        revision: ModeloRevision,
+        revision: RevisionSelectionMetadata,
         window: DeadlineWindowDefinition,
         reference_today: date,
         operation: PinnedAuthorityOperation,
@@ -450,7 +450,7 @@ class DeadlineEngine:
         year: int,
         *,
         operation: PinnedAuthorityOperation | None = None,
-    ) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+    ) -> tuple[DeadlineWindowProjection, ...]:
         from ..calculations.registry.errors import RegistryError
 
         try:
@@ -468,7 +468,7 @@ class DeadlineEngine:
                 },
             ) from exc
 
-    def deadline_windows(self, year: int) -> tuple[tuple[str, ModeloRevision, DeadlineWindowDefinition], ...]:
+    def deadline_windows(self, year: int) -> tuple[DeadlineWindowProjection, ...]:
         """Return validated registry deadline windows for ``year``.
 
         This read-only facade lets application projections inspect the same
@@ -479,7 +479,11 @@ class DeadlineEngine:
             return self._deadline_windows(year, operation=operation)
 
     @staticmethod
-    def _schedule_applies(profile: TaxpayerProfile, revision: ModeloRevision, window: DeadlineWindowDefinition) -> bool:
+    def _schedule_applies(
+        profile: TaxpayerProfile,
+        revision: RevisionSelectionMetadata,
+        window: DeadlineWindowDefinition,
+    ) -> bool:
         from ..calculations.registry.schedules import applicable_filing_schedules
 
         if not revision.filing_schedules:
@@ -489,7 +493,7 @@ class DeadlineEngine:
     def schedule_applies(
         self,
         profile: TaxpayerProfile,
-        revision: ModeloRevision,
+        revision: RevisionSelectionMetadata,
         window: DeadlineWindowDefinition,
     ) -> bool:
         """Return whether a validated filing schedule applies to ``profile``.
@@ -497,8 +501,8 @@ class DeadlineEngine:
         Args:
             profile: The :class:`TaxpayerProfile` whose declared facts are
                 checked against the schedule.
-            revision: The :class:`ModeloRevision` whose filing schedules are
-                consulted.
+            revision: The owning revision's selection metadata, whose filing
+                schedules are consulted.
             window: The deadline window under evaluation.
         """
         return self._schedule_applies(profile, revision, window)

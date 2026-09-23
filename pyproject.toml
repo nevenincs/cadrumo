@@ -777,6 +777,18 @@ convention = "google"
 # plus the caller's own arguments. The digest check is the trust boundary, and
 # it happens before anything is executed.
 "dev/actionlint.py" = ["S603"]
+# Compiles every authority candidate in a FRESH interpreter: the compiler
+# closure a publication records is what that process imports, so running the
+# compile in the launcher would record the launcher's imports too. argv is
+# `sys.executable`, a literal module name, and the resolved registry, source,
+# profile and staging paths of the publication itself; no operator text is
+# interpreted as a command. The module holds only this spawn, and a test fails
+# if the spawn leaves it.
+"dev/registry/pipeline/candidate_compile_process.py" = ["S603"]
+# Proves the candidate compiler's parent-lifetime watchdog in a real child
+# interpreter: only a separate process can observe its own pipe closing. argv
+# is `sys.executable` plus a literal probe source defined in the test.
+"dev/registry/pipeline/tests/test_candidate_compile_process.py" = ["S603"]
 # Runs a real `pytest --collect-only` in a child interpreter: collectability is
 # a property of a fresh import, so an in-process check would read modules this
 # process already imported. The command is built from `sys.executable` plus

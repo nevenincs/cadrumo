@@ -1,23 +1,24 @@
 """Filing schedule selection from registry profile predicates.
 
-Evaluates the profile conditions declared on filing schedules of a
-:class:`ModeloRevision` against a profile facts mapping and returns only
-the schedules whose predicates are satisfied.
+Evaluates the profile conditions declared on the filing schedules of a
+:class:`ModeloRevision`, or of the revision selection metadata that carries
+the same schedules, against a profile facts mapping and returns only the
+schedules whose predicates are satisfied.
 """
 
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Final
+from typing import Final, Protocol
 
 from pydantic import ConfigDict, TypeAdapter, ValidationError
 
 from .errors import RegistryValidationError
-from .schema import ModeloRevision
 from .schema_deadlines import ModeloScheduleDefinition
 from .schema_verification import ProfilePredicateDefinition, ProfilePredicateOp
 
 __all__ = [
+    "FilingScheduleCarrier",
     "applicable_filing_schedules",
     "evaluate_profile_conditions",
     "profile_condition_matches",
@@ -37,8 +38,17 @@ _PROFILE_FACT_MAPPING_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
 )
 
 
+class FilingScheduleCarrier(Protocol):
+    """A revision, or its selection metadata, declaring the revision's filing schedules."""
+
+    @property
+    def filing_schedules(self) -> tuple[ModeloScheduleDefinition, ...]:
+        """Return the declared filing schedules in authored order."""
+        ...
+
+
 def applicable_filing_schedules(
-    revision: ModeloRevision,
+    revision: FilingScheduleCarrier,
     profile_facts: Mapping[str, object] | object,
     *,
     period: str | None = None,
@@ -46,7 +56,8 @@ def applicable_filing_schedules(
     """Return :class:`ModeloScheduleDefinition` items whose profile predicates match the supplied facts.
 
     Args:
-        revision: The :class:`ModeloRevision` whose filing schedules to evaluate.
+        revision: The revision, or its selection metadata, whose filing
+            schedules to evaluate.
         profile_facts: Profile facts (mapping or aggregate) consulted by each
             schedule's :class:`ProfilePredicateDefinition` set.
         period: Optional period token; when supplied, schedules whose

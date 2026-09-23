@@ -42,6 +42,45 @@ def test_fresh_source_tree_bootstraps_repo_root_authority(
     assert calls == [(tmp_path, expected)]
 
 
+def test_a_published_source_tree_is_read_without_publishing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    hook = _hook_module()
+    published = tmp_path / ".authority"
+    published.mkdir()
+    (published / "authority.current.json").write_text("{}", encoding="utf-8")
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(
+        hook,
+        "_publish_source_tree_authority",
+        lambda *_args: pytest.fail("a published source tree must be read, not republished"),
+    )
+
+    assert hook._authority_root(tmp_path) == published
+
+
+def test_an_interrupted_publication_is_completed_rather_than_read(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A directory a failed publication created, holding no descriptor, is not a publication."""
+    hook = _hook_module()
+    interrupted = tmp_path / ".authority"
+    (interrupted / "authority-candidate-left-behind").mkdir(parents=True)
+    calls: list[tuple[Path, Path]] = []
+
+    def publish(build_root: Path, destination: Path) -> Path:
+        calls.append((build_root, destination))
+        return destination
+
+    monkeypatch.delenv("CADRUMO_AUTHORITY_ROOT", raising=False)
+    monkeypatch.setattr(hook, "_publish_source_tree_authority", publish)
+
+    assert hook._authority_root(tmp_path) == interrupted
+    assert calls == [(tmp_path, interrupted)]
+
+
 def test_embedded_sdist_authority_never_runs_source_bootstrap(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,

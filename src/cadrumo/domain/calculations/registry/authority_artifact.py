@@ -36,6 +36,7 @@ from ....core.hashing import (
 )
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT
 from ....core.type_guards import is_object_mapping
+from .authority_compiler_closure import AuthorityCompilerClosure
 from .facts.resolution import GovernedFactQuery, ResolvedGovernedFact
 from .facts.schema import (
     TAGGED_FACT_ATOM_CONTEXT,
@@ -626,6 +627,7 @@ class AuthorityArtifact:
     catalogues: RegistryCatalogues
     identity_digest: str
     build_identity: AuthorityBuildIdentity
+    compiler_closure: AuthorityCompilerClosure
     profile_schema: ProfileSchemaDefinition
     evidence: AuthorityEvidenceProjection = AuthorityEvidenceProjection()
 
@@ -643,6 +645,10 @@ class AuthorityArtifact:
             raise TypeError("authority artifact requires typed build identity")
         if self.identity_digest != self.build_identity.identity_digest:
             raise ValueError("authority generation identity does not match its build receipts")
+        if not isinstance(self.compiler_closure, AuthorityCompilerClosure):
+            raise TypeError("authority artifact requires a typed compiler closure")
+        if self.compiler_closure.identity_digest != self.build_identity.compiler_identity_digest:
+            raise ValueError("authority compiler closure does not recompute its compiler identity receipt")
         if not isinstance(self.evidence, AuthorityEvidenceProjection):
             raise TypeError("authority artifact evidence must be an AuthorityEvidenceProjection")
         from ...user_profile.schema import ProfileSchemaDefinition
