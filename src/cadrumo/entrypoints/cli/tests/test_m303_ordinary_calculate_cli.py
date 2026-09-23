@@ -18,7 +18,7 @@ from ....adapters.persistence.storage.tests.profile_capsule_runtime import open_
 from ....adapters.persistence.storage.tests.secure_sql import (
     isolated_cli_backend as _isolated_cli_backend,
 )
-from ....application.aggregation.tests.test_modelo_source_mesh_ledger import _iva_transaction
+from ....application.aggregation.tests.ledger_transaction_support import iva_transaction
 from ....application.invoices.catalogue_creation import build_catalogue_invoice
 from ....application.modelo.tests.profile_fixture_values import MODELO_READY_PROFILE_FACTS
 from ....core.bucket_pointer import resolve_active_bucket_id
@@ -74,7 +74,7 @@ def _seed_2025_ledger_and_wallet(bucket_id: str) -> None:
         currency="EUR",
         rate_provider=recorded_ecb_rate_provider(),
     )
-    sale = _iva_transaction(
+    sale = iva_transaction(
         "ordinary-2025-sale",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("121.00"),
@@ -82,7 +82,7 @@ def _seed_2025_ledger_and_wallet(bucket_id: str) -> None:
         iva_amount=Decimal("21.00"),
         booked_date=date(2025, 2, 15),
     )
-    purchase = _iva_transaction(
+    purchase = iva_transaction(
         "ordinary-2025-purchase",
         direction=TransactionDirection.OUTGOING,
         amount=Decimal("60.50"),

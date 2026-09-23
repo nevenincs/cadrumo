@@ -6,7 +6,7 @@ from collections.abc import Iterable
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from functools import cache
-from pathlib import Path
+from typing import override
 
 import pytest
 
@@ -16,7 +16,6 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....application.actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ....core.aggregation import BindingSourceKind
-from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.operator_action_enums import NoRecoveryOutcome
 from ....core.period import Period
 from ....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
@@ -29,7 +28,6 @@ from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine
 from ....domain.iva.classification import InvoiceKind as CatalogueInvoiceKind
 from ....domain.iva.classification import InvoiceKind as IvaInvoiceKind
 from ....domain.iva.classification import TransactionKind
-from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import EUMemberState, IvaCategory, IvaRateKind
 from ....domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
@@ -54,7 +52,6 @@ from ....domain.transactions.models import (
     Transaction,
     TransactionCatalogue,
 )
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
 from .._preconditions import AggregationPreconditionCondition
 from ..errors import (
@@ -76,6 +73,7 @@ from ..source_mesh import (
     CalculationSourceResolution,
 )
 from .iva_authority_support import aggregate_iva_ledger_observations
+from .ledger_transaction_support import iva_transaction, ledger_raw_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -113,6 +111,7 @@ class _StaticActivityAssetHistoryRepository(_EmptyActivityAssetHistoryRepository
     def __init__(self, history: ActivityAssetHistory) -> None:
         self._history = history
 
+    @override
     def load(self) -> ActivityAssetHistory:
         return self._history
 
@@ -271,70 +270,6 @@ def _m303_revision() -> ModeloRevision:
     return published_snapshot("303", filing_year=2025, period="1T").revision
 
 
-def _raw_transaction(
-    provider_id: str,
-    *,
-    booked_date: date,
-    amount: Decimal,
-) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=booked_date,
-        value_date=booked_date,
-        amount=amount,
-        currency="EUR",
-        counterparty="Cliente o proveedor",
-        description=f"ledger row {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="e" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 2, 11, 12, 0, tzinfo=UTC),
-            provider_name="manual-ledger",
-        ),
-        raw_fields={"source_kind": "ledger_transaction"},
-    )
-
-
-def _iva_transaction(
-    provider_id: str,
-    *,
-    direction: TransactionDirection,
-    amount: Decimal,
-    taxable_base: Decimal,
-    iva_amount: Decimal,
-    booked_date: date = date(2026, 2, 10),
-    iva_category: IvaCategory | None = None,
-    counterparty_country: str | None = None,
-) -> Transaction:
-    fields: dict[str, object] = {
-        "raw": _raw_transaction(provider_id, booked_date=booked_date, amount=amount),
-        "direction": direction,
-        "business_classification": BusinessClassification.BUSINESS,
-        "source_jurisdiction": "ES",
-        "group_label": None,
-        "category_id": "material_oficina",
-        "taxable_base": taxable_base,
-        "iva_rate": Decimal("0.21"),
-        "iva_amount": iva_amount,
-        "classified_at": datetime(2026, 2, 11, 13, 0, tzinfo=UTC),
-        "classified_by": "manual",
-    }
-    if iva_category is not None:
-        fields["iva_category"] = iva_category
-    if counterparty_country is not None:
-        fields["counterparty_country"] = counterparty_country
-    if direction is TransactionDirection.OUTGOING:
-        fields["deduction_fact_kind"] = IvaDeductionFactKind.from_registry("domestic_current")
-        fields["deduction_provenance"] = IvaDeductionClassificationProvenance(
-            authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
-            source_locator=f"invoice:{provider_id}",
-            evidence_digest="a" * 64,
-        )
-    return Transaction.model_validate(fields)
-
-
 def _renta_transaction(
     provider_id: str,
     *,
@@ -344,7 +279,7 @@ def _renta_transaction(
 ) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": _raw_transaction(
+            "raw": ledger_raw_transaction(
                 provider_id,
                 booked_date=date(2025, 4, 5),
                 amount=amount,
@@ -479,14 +414,14 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
     tx_repo = _InMemoryTransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
     )
-    incoming = _iva_transaction(
+    incoming = iva_transaction(
         "sale-general",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("121.00"),
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
     )
-    outgoing = _iva_transaction(
+    outgoing = iva_transaction(
         "purchase-general",
         direction=TransactionDirection.OUTGOING,
         amount=Decimal("60.50"),
@@ -525,7 +460,7 @@ def test_iva_source_mesh_resolver_carries_prorrata_apportionment_provenance() ->
     revision = _revision("303", "2022")
     tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
     prorrata_repo = _InMemoryProrrataRegisterRepository(bucket_id=_BUCKET_ID)
-    outgoing = _iva_transaction(
+    outgoing = iva_transaction(
         "purchase-prorrata-general",
         direction=TransactionDirection.OUTGOING,
         amount=Decimal("60.50"),
@@ -711,7 +646,7 @@ def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transac
     revision = _m303_revision()
     tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
-    transaction = _iva_transaction(
+    transaction = iva_transaction(
         "laura-1t-sale",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("12100.00"),
@@ -764,7 +699,7 @@ def test_iva_source_mesh_resolver_raises_no_devengo_advisory_when_the_operation_
     revision = _m303_revision()
     tx_repo = _InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET_ID)
     invoice_repo = _InMemoryInvoiceCatalogueRepository()
-    transaction = _iva_transaction(
+    transaction = iva_transaction(
         "laura-1t-sale",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("12100.00"),
@@ -824,7 +759,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
         bucket_id=_BUCKET_ID,
     )
     # A consumed domestic sale (matches the repercutido-general binding) ...
-    domestic_sale = _iva_transaction(
+    domestic_sale = iva_transaction(
         "sale-general",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("121.00"),
@@ -843,7 +778,7 @@ def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_3
     # so both sides collapsed onto the recipient's treatment. Once direction is
     # honoured the two stop being interchangeable and the fixture has to name
     # which side it means.
-    reverse_charge = _iva_transaction(
+    reverse_charge = iva_transaction(
         "domestic-reverse-charge",
         direction=TransactionDirection.OUTGOING,
         amount=Decimal("200.00"),
@@ -902,14 +837,14 @@ def test_iva_source_mesh_resolver_does_not_flag_cuota_less_by_law_observation() 
     tx_repo = _InMemoryTransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
     )
-    domestic_sale = _iva_transaction(
+    domestic_sale = iva_transaction(
         "sale-general",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("121.00"),
         taxable_base=Decimal("100.00"),
         iva_amount=Decimal("21.00"),
     )
-    exempt_supply = _iva_transaction(
+    exempt_supply = iva_transaction(
         "intra-community-supply",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("242.00"),
@@ -954,7 +889,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
     tx_repo = _InMemoryTransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
     )
-    domestic_sale = _iva_transaction(
+    domestic_sale = iva_transaction(
         "sale-general",
         direction=TransactionDirection.INCOMING,
         amount=Decimal("121.00"),
@@ -986,7 +921,7 @@ def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagn
     tx_repo = _InMemoryTransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
     )
-    personal_q2 = _iva_transaction(
+    personal_q2 = iva_transaction(
         "personal-q2",
         direction=TransactionDirection.OUTGOING,
         amount=Decimal("121.00"),
@@ -1031,7 +966,7 @@ def test_iva_source_mesh_resolver_keeps_in_period_missing_fact_diagnostic() -> N
     tx_repo = _InMemoryTransactionCatalogueRepository(
         bucket_id=_BUCKET_ID,
     )
-    missing_rate = _iva_transaction(
+    missing_rate = iva_transaction(
         "business-missing-rate",
         direction=TransactionDirection.OUTGOING,
         amount=Decimal("121.00"),
@@ -1221,7 +1156,7 @@ def test_renta_source_mesh_projects_recorded_asset_claim_without_full_cost() -> 
         binding
         for binding in revision.bindings
         if str(binding.source) == "ledger_renta_gastos_estimacion_directa_aggregation"
-        and str(binding.provider.target_casilla_id) == "0208"
+        and str(getattr(binding.provider, "target_casilla_id", None)) == "0208"
     )
 
     assert resolution.binding_values[target_binding.id] == Decimal("500.00")

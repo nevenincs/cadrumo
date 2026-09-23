@@ -41,7 +41,7 @@ from cadrumo.application.calculations.iva_compensation_history_ports import IvaC
 from cadrumo.core.iva_compensation_provenance import IvaCompensationStateProvenance
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
-from cadrumo.domain.calculations.registry.governed_fact_scope import _VALIDATING_GOVERNED_FACTS
+from cadrumo.domain.calculations.registry.governed_fact_scope import outside_governed_fact_validation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
@@ -105,7 +105,7 @@ def test_app_filing_history_round_trips_through_list_and_load_under_a_bundled_au
     """A local 2025 filing must decode through the repository's own authority lease.
 
     The profile-persistence package scopes its tests to a session authority
-    operation.  Clearing only that test-only context variable preserves the
+    operation.  Leaving only that validation scope preserves the
     real isolated storage runtime while making this a regression for the
     adapter boundary rather than an accidental consumer of its caller's lease.
     """
@@ -114,12 +114,9 @@ def test_app_filing_history_round_trips_through_list_and_load_under_a_bundled_au
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = IvaCompensationHistoryRepository()
         repository.save_period(original)
-        scope_token = _VALIDATING_GOVERNED_FACTS.set(None)
-        try:
+        with outside_governed_fact_validation():
             listed = repository.list_periods()
             loaded = repository.load_period(original.period)
-        finally:
-            _VALIDATING_GOVERNED_FACTS.reset(scope_token)
 
     assert listed == (original,)
     assert loaded == original
