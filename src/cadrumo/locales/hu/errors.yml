@@ -760,6 +760,10 @@ errors:
       nem található.
     canonical_m193_phase_materialization: Az aktív tőkebizonyítékok alapján nem vezethető
       le a 193-as nyomtatvány közzétételi szakasza.
+    canonical_modelo_123_count_authority_unresolved: 'A 123-as nyomtatvány továbbra
+      is elutasított: ehhez az időszakhoz forrásadó-adat van rögzítve, de hivatalos
+      szabály nem határozza meg a „Número de rentas” számolását, ezért nem számítható
+      ki, nem ellenőrizhető és nem nyújtható be.'
     canonical_modelo_workspace_stale_cursor: A rögzített kurzor már nem egyezik az
       aktuális alappal; indítsa újra a lekérdezést.
     canonical_modelo_workspace_unresolved_work: A munkaterület olvasása feloldatlan

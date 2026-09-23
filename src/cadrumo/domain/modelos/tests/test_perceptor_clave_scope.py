@@ -7,13 +7,15 @@ the revision bindings are the shipped authority, not fixtures restating them.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import date
 
 import pytest
 
-from ....core.casilla_id import validated_casilla_id
+from ....core.authority_grade import RegistryAuthorityGrade
+from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.errors import RegistryValidationError
+from ...calculations.registry.ids import BindingId
 from ..perceptor_clave_scope import (
     ClaveScopeToken,
     PerceptorClaveScope,
@@ -38,7 +40,7 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
 
 
 def _scope(operation: PinnedAuthorityOperation, year: int) -> PerceptorClaveScope:
-    return resolve_perceptor_clave_scope(effective_date=date(year, 12, 31), authority=operation)
+    return resolve_perceptor_clave_scope(period=Period.from_year_and_code(year, "0A"), authority=operation)
 
 
 @pytest.mark.parametrize(
@@ -132,5 +134,67 @@ def test_the_snapshot_check_claims_only_revisions_carrying_perceptor_records(
 ) -> None:
     del operation  # the leased operation scopes the check's governed-fact read
     revision_bindings = frozenset({"modelo-190-perceptor-row-clave", "modelo-190-perceptor-row-subclave"})
-    assert check_perceptor_clave_scope("111", frozenset(), frozenset(), revision_bindings) == []
-    assert check_perceptor_clave_scope("190", frozenset(), frozenset(), frozenset()) == []
+    assert check_perceptor_clave_scope("111", frozenset(), frozenset(), revision_bindings, filing_year=2025) == []
+    assert check_perceptor_clave_scope("190", frozenset(), frozenset(), frozenset(), filing_year=2025) == []
+
+
+def _revision_surface(
+    operation: PinnedAuthorityOperation, filing_year: int
+) -> tuple[frozenset[CasillaId], frozenset[BindingId]]:
+    # The 2022 and 2023 revisions are applicability grade; the lowest rung admits every revision.
+    revision = operation.snapshot(
+        "190", filing_year=filing_year, period="0A", grade=RegistryAuthorityGrade.APPLICABILITY
+    ).revision
+    casillas = frozenset(casilla.id for casilla in revision.casillas)
+    return casillas, frozenset(binding.id for binding in revision.bindings)
+
+
+@pytest.mark.parametrize("filing_year", [2022, 2023, 2024, 2025])
+def test_every_revision_passes_the_check_under_its_own_year(
+    operation: PinnedAuthorityOperation,
+    filing_year: int,
+) -> None:
+    """Each committed Modelo 190 revision satisfies the scope governing its own year."""
+    casillas, bindings = _revision_surface(operation, filing_year)
+    assert check_perceptor_clave_scope("190", casillas, frozenset(), bindings, filing_year=filing_year) == []
+
+
+def test_a_revision_judged_by_a_later_edition_reports_the_casillas_it_lacks(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The 2024 revision is judged by the 2024 design, never by a later edition.
+
+    The 2025 design introduced the B.01 pension-type indicators (positions
+    390-394) where the 2024 design leaves 389-500 blank, so the 2024 revision
+    declares none of them. Judged by the 2025 edition, the same revision
+    surface reports exactly those five casillas.
+    """
+    casillas, bindings = _revision_surface(operation, 2024)
+    assert check_perceptor_clave_scope("190", casillas, frozenset(), bindings, filing_year=2025) == [
+        f"perceptor clave scope names casilla {casilla_id!r}, which the revision does not declare"
+        for casilla_id in (
+            "perc.prestacion-incapacidad",
+            "perc.prestacion-jubilacion",
+            "perc.prestacion-no-contributiva",
+            "perc.prestacion-resto",
+            "perc.prestacion-viudedad",
+        )
+    ]
+
+
+def test_a_year_without_a_scope_edition_is_refused_once_the_revision_declares_bindings(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A binding-free revision has no perceptor rows; a binding-bearing one needs an edition.
+
+    The 2023 revision declares no binding, so it carries no perceptor record
+    for the scope to govern, and no scope edition covers 2023. Give the same
+    year the 2024 revision's bindings and the missing edition is a finding,
+    not a pass.
+    """
+    casillas_2023, bindings_2023 = _revision_surface(operation, 2023)
+    _, bindings_2024 = _revision_surface(operation, 2024)
+    assert bindings_2023 == frozenset()
+
+    (failure,) = check_perceptor_clave_scope("190", casillas_2023, frozenset(), bindings_2024, filing_year=2023)
+    assert failure.startswith("no perceptor clave scope edition governs filing year 2023")

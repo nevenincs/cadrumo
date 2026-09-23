@@ -85,8 +85,11 @@ def check_m130_retenciones_output_casilla(
     casilla_ids: frozenset[CasillaId],
     renta_first_slice_binding_targets: frozenset[CasillaId],  # shared Protocol shape, unused here
     revision_binding_ids: frozenset[BindingId] = frozenset(),
+    *,
+    filing_year: int,
 ) -> list[str]:
     """Assert a selected route output endpoint exists when its binding is declared."""
+    del filing_year
     route = _registry_m130_retenciones_route()
     if modelo_id != route.modelo_id:
         return []

@@ -26,12 +26,14 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_bucket,
     secure_object_repository_for_cold_bootstrap_state,
 )
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from cadrumo.application.bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from cadrumo.application.calculations.observations_repository import (
     CalculationObservationRepositoryProtocol,
@@ -105,6 +107,9 @@ def _compose_modelo_export_ports(
         bienes_inversion=BienesInversionIvaRegisterRepository(bucket_id=bucket_id, objects=objects),
         transaction=TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
         draft_review_ports=_draft_review_ports_for_test(bucket_id=bucket_id, objects=objects),
+        retencion_observation_ports=RetencionObservationPorts(
+            repository=RetencionObservationRepositoryAdapter(objects=objects),
+        ),
     )
 
 

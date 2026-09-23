@@ -94,6 +94,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.m123_count_authority_gate.Modelo123CountAuthorityUnresolvedError",
+        ErrorCode(
+            code="REFUSED_MODELO_123_COUNT_AUTHORITY_UNRESOLVED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.canonical_modelo_123_count_authority_unresolved",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.aggregation.withholding_observation_service.WithholdingObservationMutationError",
         ErrorCode(
             code="REFUSED_WITHHOLDING_OBSERVATION_MUTATION",

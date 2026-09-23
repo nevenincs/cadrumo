@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 
 from cadrumo.core.casilla_id import validated_casilla_id
+from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority
 from cadrumo.domain.modelos.perceptor_clave_scope import (
@@ -35,7 +34,7 @@ def test_2025_pension_indicators_are_required_for_b01_not_professional_g_rows(
         candidate.components.catalogues.facts,
         candidate.components.catalogues.require_supported_filing_years(),
     )
-    scope = resolve_perceptor_clave_scope(effective_date=date(2025, 12, 31), authority=authority)
+    scope = resolve_perceptor_clave_scope(period=Period.from_year_and_code(2025, "0A"), authority=authority)
     revision = next(modelo for modelo in candidate.components.modelos if modelo.id == "190").revisions[
         "2025-y-siguientes"
     ]

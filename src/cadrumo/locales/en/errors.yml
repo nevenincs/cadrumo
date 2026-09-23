@@ -742,6 +742,10 @@ errors:
       identifier.
     canonical_m193_phase_materialization: The active capital evidence cannot support
       a Modelo 193 disclosure phase.
+    canonical_modelo_123_count_authority_unresolved: 'Modelo 123 stays refused: withholding
+      evidence is stored for this period, but no official rule defines how the ''Número
+      de rentas'' recipient count is made, so it cannot be calculated, verified or
+      filed.'
     canonical_modelo_workspace_stale_cursor: The pinned cursor no longer matches the
       current baseline; restart the query.
     canonical_modelo_workspace_unresolved_work: The workspace read reached an unresolved

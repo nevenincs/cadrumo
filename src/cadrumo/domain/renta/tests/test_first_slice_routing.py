@@ -33,6 +33,9 @@ from .._first_slice_routing import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+# The routing check reads no dated authority, so any snapshot year serves.
+_FILING_YEAR = 2025
+
 
 def _first_slice_expense_routing(operation: PinnedAuthorityOperation) -> dict[SpendingCategory, CasillaId]:
     return resolve_first_slice_expense_routing(
@@ -152,17 +155,19 @@ def test_registered_check_fires_through_the_snapshot_build_gate() -> None:
 
     representative_targets = frozenset({"0183", "0195"})
     # A casilla set missing every routing target must report them all.
-    failures = check_first_slice_routing("100", frozenset(), representative_targets)
+    failures = check_first_slice_routing("100", frozenset(), representative_targets, filing_year=_FILING_YEAR)
     assert len(failures) == 1
     for target in representative_targets:
         assert target in failures[0]
     # A complete casilla set reports nothing.
-    assert check_first_slice_routing("100", representative_targets, representative_targets) == []
+    assert (
+        check_first_slice_routing("100", representative_targets, representative_targets, filing_year=_FILING_YEAR) == []
+    )
     # A revision with no first-slice bindings has an empty required set --
     # reports nothing even with an empty casilla set (the 2020-2022 shape).
-    assert check_first_slice_routing("100", frozenset(), frozenset()) == []
+    assert check_first_slice_routing("100", frozenset(), frozenset(), filing_year=_FILING_YEAR) == []
     # A non-100 modelo is outside the first slice -- no check.
-    assert check_first_slice_routing("303", frozenset(), representative_targets) == []
+    assert check_first_slice_routing("303", frozenset(), representative_targets, filing_year=_FILING_YEAR) == []
 
 
 def test_renta_first_slice_binding_target_casillas_is_revision_scoped(

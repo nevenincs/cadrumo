@@ -517,6 +517,7 @@ def build_modelo_export_ports(
             objects=objects,
         ),
         draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
     )
 
 
@@ -938,7 +939,7 @@ def build_percepcion_observation_ports(*, bucket_id: str) -> PercepcionObservati
     )
 
 
-def build_withholding_observation_service(*, bucket_id: str):
+def build_withholding_observation_service(*, bucket_id: str) -> WithholdingObservationService:
     """Compose the one atomic withholding-window mutation service for a bucket."""
     from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
     from ..adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
@@ -1229,6 +1230,7 @@ def build_filing_action_ports(*, bucket_id: str) -> FilingActionPorts:
         workflow_run_repository=WorkflowRunRepository(objects=objects),
         draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
         workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
     )
 
 
@@ -1407,6 +1409,7 @@ def build_verification_repository_bundle(bucket_id: str) -> VerificationReposito
         justificante=JustificanteRepository(objects=objects),
         draft_review_ports=build_draft_review_ports(bucket_id=normalized_bucket_id),
         workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id),
+        retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id),
     )
 
 

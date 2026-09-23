@@ -157,6 +157,7 @@ from .calculation_route import CALCULATION_ROUTE_ENROLLED_SOURCES
 from .calculation_route import CalculationRouteStage as _CalculationRouteStage
 from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
 from .calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
+from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
@@ -497,6 +498,11 @@ def _calculate_modelo_revision_with_trusted_mesh_sources(
     work_units = prepared.work_units
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
+    require_modelo_123_count_authority(
+        work_unit,
+        retencion_ports=ports.retencion_observation_ports,
+        stage=Modelo123CountAuthorityStage.CALCULATE,
+    )
     _require_m303_regimen_simplificado_annual_summary_handoff(
         revision=snapshot.revision,
         profile=prepared.profile,

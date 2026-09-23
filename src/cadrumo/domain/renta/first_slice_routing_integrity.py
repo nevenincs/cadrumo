@@ -44,13 +44,18 @@ def check_first_slice_routing(
     casilla_ids: frozenset[CasillaId],
     renta_first_slice_binding_targets: frozenset[CasillaId],
     revision_binding_ids: frozenset[str] = frozenset(),  # shared Protocol shape, unused here
+    *,
+    filing_year: int,
 ) -> list[str]:
     """Assert every casilla a revision's own first-slice bindings target exists on it.
 
     Returns a list of failure strings (empty when consistent). The
     registry validator prefixes each failure with the snapshot
-    coordinates and raises a single ``RegistryValidationError``.
+    coordinates and raises a single ``RegistryValidationError``. The
+    routing is derived from the revision's own bindings, so the shared
+    ``filing_year`` selects nothing here.
     """
+    del filing_year
     if modelo_id != Modelo("100"):
         return []
     missing = renta_first_slice_binding_targets - casilla_ids

@@ -174,6 +174,7 @@ from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .preconditions import ModeloPreconditionFailure
 from .pulled_filing_reconcile import pulled_filing_divergence_findings
 from .revision_persistence import (
@@ -881,6 +882,13 @@ def verify_modelo_revision_with_preconditions(
         work_unit=work_unit,
         calculation_revision_id=calculation_revision_id,
         operation=RevisionParentOperation.VERIFY,
+    )
+    # Before the idempotent no-op below: a revision granted before evidence was
+    # captured must not be reported as verified beside that evidence either.
+    require_modelo_123_count_authority(
+        work_unit,
+        retencion_ports=repos.retencion_observation_ports,
+        stage=Modelo123CountAuthorityStage.VERIFY,
     )
     if target.state is not CalculationRevisionState.BORRADOR:
         # Idempotent re-verify (aeat-cli-contract): a
@@ -1637,10 +1645,7 @@ def _perceptor_clave_scope(work_unit: WorkUnit, *, operation: PinnedAuthorityOpe
     from ...domain.calculations.registry.errors import RegistryValidationError
 
     try:
-        return resolve_perceptor_clave_scope(
-            effective_date=date(work_unit.filing_year, 12, 31),
-            authority=operation,
-        )
+        return resolve_perceptor_clave_scope(period=work_unit.period, authority=operation)
     except RegistryValidationError:
         # An ejercicio no scope variant covers keeps every per-record casilla required.
         return None

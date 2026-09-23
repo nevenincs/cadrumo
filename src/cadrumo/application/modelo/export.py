@@ -152,6 +152,7 @@ from .calculation_revision_gate import require_calculation_revision_coordinates_
 from .export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from .export_ports import ModeloExportPorts
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
+from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies,
     m303_regimen_simplificado_scope_for_profile,
@@ -1504,6 +1505,11 @@ def _prepare_modelo_export(
         active_bucket_id=active_bucket_id,
         export_ports=export_ports,
         operation=operation,
+    )
+    require_modelo_123_count_authority(
+        work_unit,
+        retencion_ports=export_ports.retencion_observation_ports,
+        stage=Modelo123CountAuthorityStage.EXPORT,
     )
     amendment_evidence = resolve_persisted_amendment_export_evidence(
         command,

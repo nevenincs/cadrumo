@@ -80,6 +80,7 @@ from .filing_action_ports import FilingActionPorts
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
 )
+from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
@@ -275,6 +276,13 @@ def file_modelo_revision(
         work_unit=work_unit,
         calculation_revision_id=calculation_revision_id,
         operation=RevisionParentOperation.FILE,
+    )
+    # Before the idempotent re-file no-op: a revision verified before evidence
+    # was captured must not be returned as the filed answer beside it.
+    require_modelo_123_count_authority(
+        work_unit,
+        retencion_ports=ports.retencion_observation_ports,
+        stage=Modelo123CountAuthorityStage.FILE,
     )
     if profile is None:
         from .profile_readiness_gate import load_modelo_work_profile

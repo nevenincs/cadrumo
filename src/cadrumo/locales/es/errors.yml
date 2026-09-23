@@ -804,6 +804,10 @@ errors:
       con el identificador solicitado.
     canonical_m193_phase_materialization: La evidencia de capital activa no permite
       derivar una fase de declaración del Modelo 193.
+    canonical_modelo_123_count_authority_unresolved: 'El modelo 123 sigue rechazado:
+      hay retenciones registradas en este periodo, pero ninguna norma oficial define
+      cómo se cuenta el «Número de rentas», por lo que no puede calcularse, verificarse
+      ni presentarse.'
     canonical_modelo_workspace_stale_cursor: El cursor fijado ya no coincide con la
       referencia actual; reinicia la consulta.
     canonical_modelo_workspace_unresolved_work: La lectura del espacio de trabajo

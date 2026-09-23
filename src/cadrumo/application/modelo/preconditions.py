@@ -277,6 +277,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.m390.reconciliation.complete",
         "modelo.work.calculate.m390.reconciliation.clean_m303_observations_missing",
     ),
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.m123_count_authority.resolved",
+            f"{leaf}.m123_count_authority.unresolved",
+        )
+        for leaf in ("modelo.work.calculate", "modelo.work.verify", "modelo.work.file", "modelo.export")
+    ),
     _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.ledger_preflight.ready",

@@ -28,6 +28,7 @@ from ...domain.modelos.protocols import (
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..filing.draft_review_ports import DraftReviewPorts
 
@@ -53,6 +54,7 @@ class ModeloExportPorts:
     bienes_inversion: BienesInversionIvaRegisterRepositoryProtocol
     transaction: TransactionCatalogueRepositoryProtocol
     draft_review_ports: DraftReviewPorts
+    retencion_observation_ports: RetencionObservationPorts
 
 
 class ModeloExportPortsFactory(Protocol):

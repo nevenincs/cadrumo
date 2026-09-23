@@ -32,6 +32,7 @@ from cadrumo.application.aggregation.withholding_recognition import (
     WithholdingRecognitionRule,
 )
 from cadrumo.core.aggregation import BindingSourceKind, RetencionClave, RetencionScheme
+from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.transactions.enums import TransactionDirection, TransactionLifecycleState
@@ -281,15 +282,58 @@ def test_unknown_transaction_id_is_refused_by_the_catalogue_lookup() -> None:
     (
         WithholdingIncomeKind.PROFESSIONAL,
         WithholdingIncomeKind.URBAN_RENT,
-        WithholdingIncomeKind.ORDINARY_MOVABLE_CAPITAL,
+        WithholdingIncomeKind.INVESTMENT_FUND,
     ),
 )
-def test_request_accepts_work_income_only(income_kind: WithholdingIncomeKind) -> None:
-    """A salary payment is never evidence for professional, rent or capital income."""
+def test_request_refuses_income_a_ledger_payment_cannot_prove(income_kind: WithholdingIncomeKind) -> None:
+    """A bank payment is never evidence for professional, rent or fund income."""
     transaction = _payroll_payment()
 
-    with pytest.raises(ValidationError, match="work income only"):
+    with pytest.raises(ValidationError, match="work or ordinary movable capital income only"):
         _request(transaction, income_kind=income_kind)
+
+
+@pytest.mark.parametrize(
+    ("request_update", "message"),
+    (
+        (
+            {"exigibility_event_id": "payroll-due", "exigibility_occurred_on": _PAID_ON},
+            "work income is recognised when paid and takes no exigibility evidence",
+        ),
+        ({"perceptor_nif": _EMPLOYEE_NIF}, "work income takes its perceptor from the Modelo 190 annual detail"),
+        ({"modelo_190_detail": None}, "work income requires Modelo 190 annual detail"),
+    ),
+)
+def test_payroll_request_refuses_capital_evidence_and_requires_its_annual_detail(
+    request_update: dict[str, object],
+    message: str,
+) -> None:
+    """Work income keeps its single perceptor source and its paid-or-satisfied timing."""
+    transaction = _payroll_payment()
+
+    with pytest.raises(ValidationError, match=message):
+        _request(transaction, **request_update)
+
+
+def test_payroll_source_revision_keeps_its_liability_fact_set() -> None:
+    """Capital support must not re-key payroll captures already stored against this revision."""
+    transaction = _payroll_payment()
+    capture = build_ledger_payment_withholding_capture(
+        transaction, catalogue_revision_id="a" * 64, request=_request(transaction), applicable_year=2025
+    )
+
+    assert capture.command.source_revision_id == content_hash_hex(
+        {
+            "transaction_id": transaction.transaction_id,
+            "currency": "EUR",
+            "paid_amount": str(_NET),
+            "paid_on": _PAID_ON.isoformat(),
+            "gross_base": str(_GROSS),
+            "withholding": str(_IRPF),
+            "settlement": str(_NET),
+            "perceptor_nif": _EMPLOYEE_NIF,
+        }
+    )
 
 
 def test_request_refuses_a_caller_authored_recognition_date() -> None:
