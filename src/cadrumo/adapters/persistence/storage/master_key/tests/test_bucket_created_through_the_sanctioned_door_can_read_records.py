@@ -3,9 +3,10 @@
 This module exists because the same wrong claim was measured twice, and both
 times the measurement stopped one step short. A probe created a profile, read
 a record *without authenticating*, saw a refusal, and reported it as "the door
-creates a bucket the storage layer will never open". Registration closes its
-record session in a ``finally`` and returns ``ProfileSetupState.INCOMPLETE``,
-so a freshly created profile is LOCKED. That is the contract, not a defect.
+creates a bucket the storage layer will never open". Registration leaves the
+new profile unlocked only in the process that created it, and mints no
+acceleration receipt, so every other process finds it LOCKED until it
+authenticates. That is the contract, not a defect.
 
 The property worth holding is therefore the WHOLE door and nothing shorter:
 create, **authenticate**, then decrypt what is actually on disk. The two reads
@@ -39,12 +40,15 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 
 from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from ......application.user_profile.login_session import login_profile
+from ......application.user_profile.profile_record_repository import close_active_profile_record_session
 from ......application.user_profile.registration import register_profile_with_credentials
 from ......application.workflow.persistence import workflow_state_repository
+from ......core.bucket_pointer import resolve_active_bucket_id
 from ......domain.user_profile.values import ProfileSetupState
 from ...custody.errors import ProfileCustodyRecordError
 from ...errors import StorageValidationError
 from ...runtime_repository import secure_object_repository_for_active_bucket
+from ..active_session import close_active_bucket_session
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -102,6 +106,10 @@ def test_the_same_reads_refuse_before_authentication(tmp_path: Path) -> None:
     refusal is what makes the login step load-bearing, and pinning the shared
     ``not_ready`` key is what shows the pre-login observation was a routine
     lock rather than evidence about key material.
+
+    The creating process keeps the session it just opened, so this releases
+    that process's authorities first: what remains is exactly what any other
+    process sees, a selected profile with no key in memory.
     """
     _profile_create_context_for_test, _profile_decode_context_for_test = _profile_contexts_for_test()
     with isolated_profile_storage_root(tmp_path=tmp_path):
@@ -111,6 +119,9 @@ def test_the_same_reads_refuse_before_authentication(tmp_path: Path) -> None:
             profile_create_context=_profile_create_context_for_test,
             profile_decode_context=_profile_decode_context_for_test,
         )
+        close_active_profile_record_session()
+        close_active_bucket_session()
+        assert resolve_active_bucket_id() is not None, "the profile must stay selected, or the refusal proves nothing"
 
         with pytest.raises(StorageValidationError, match=_NOT_READY):
             secure_object_repository_for_active_bucket()
