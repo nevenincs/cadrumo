@@ -284,14 +284,13 @@ async def test_interactive_tui_exposes_correction_claim_replay_and_filing_throug
         )
 
         await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-claim")
-        assert (
-            await _wait_for_screen_result(
-                pilot=pilot,
-                screen=screen,
-                expected_prefix="claim\t",
-                expected_suffix="reused=false",
-            )
-        ).endswith("reused=false")
+        first_claim = await _wait_for_screen_result(
+            pilot=pilot,
+            screen=screen,
+            expected_prefix="claim\t",
+            expected_suffix="reused=false",
+        )
+        first_claim_id = first_claim.split("\t")[1]
         await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-claim")
         assert (
             await _wait_for_screen_result(
@@ -312,6 +311,45 @@ async def test_interactive_tui_exposes_correction_claim_replay_and_filing_throug
                 expected_prefix="filing_handoff\t",
             )
         ) == "filing_handoff\tm100_material=468.00\tm100_intangible=0.00\tm130_material=468.00\tm130_intangible=0.00"
+
+        second_correction = correction.model_copy(
+            update={
+                "revision_number": 3,
+                "supersedes_revision_id": correction.revision_id,
+                "basis": ActivityAssetBasis(
+                    stage=AssetBasisStage.BUSINESS_ALLOCATED,
+                    basis_amount=Decimal("1500.00"),
+                    prior_allocation_provenance="second corrected ledger allocation source",
+                ),
+            }
+        )
+        screen.query_one("#asset-revision-json", Input).value = second_correction.model_dump_json()
+        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-correct")
+        assert await _wait_for_screen_result(
+            pilot=pilot, screen=screen, expected_prefix="corrected\tinteractive-tui\trevisions=3"
+        )
+        screen.query_one("#asset-supersedes-claim-id", Input).value = first_claim_id
+        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-forecast")
+        # The replaced 468.00 is left out, so the corrected 1,500 basis yields 1,500 x 26% = 390.00.
+        assert (await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="forecast\t")).startswith(
+            "forecast\t390.00\t"
+        )
+        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-claim")
+        superseding_claim = await _wait_for_screen_result(
+            pilot=pilot,
+            screen=screen,
+            expected_prefix="claim\t",
+            expected_suffix="reused=false",
+        )
+        assert superseding_claim.split("\t")[1] != first_claim_id
+        await _activate_screen_button(pilot=pilot, screen=screen, selector="#asset-filing-handoff")
+        assert (
+            await _wait_for_screen_result(
+                pilot=pilot,
+                screen=screen,
+                expected_prefix="filing_handoff\t",
+            )
+        ) == "filing_handoff\tm100_material=390.00\tm100_intangible=0.00\tm130_material=390.00\tm130_intangible=0.00"
 
 
 @pytest.mark.asyncio

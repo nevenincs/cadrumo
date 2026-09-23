@@ -27,6 +27,7 @@ from dev.acceptance.assets.installed_tui_child import (
     METHOD_ASSET_ID,
     METHOD_CORRECTED_FORECAST_AMOUNT,
     METHOD_REVISION_JSON,
+    method_correction_json,
 )
 from dev.acceptance.income_tax.cli_journey import command_result
 from dev.acceptance.installed_cli import InstalledCli
@@ -193,7 +194,7 @@ def _cli_first(
     run_root: Path,
     expected_generation: str,
 ) -> dict[str, object]:
-    """The CLI creates, forecasts and claims; a fresh TUI process reads the asset back."""
+    """The CLI creates, forecasts and claims; a fresh TUI reads it back; the CLI then supersedes the claim."""
     storage_root = run_root / "cli-first-store"
     passphrase = secrets.token_urlsafe(32)
     label = "assets-cli-first"
@@ -252,13 +253,78 @@ def _cli_first(
         profile_bootstrap="existing",
         timeout_seconds=_TUI_TIMEOUT_SECONDS,
     )
+    superseding = _supersede_after_correction(
+        cli, first_claim_id=str(cast("dict[str, object]", claim["claim"])["claim_id"])
+    )
     return {
         "cli_forecast": _money(forecast["amount"]),
         "cli_claim_recorded": bool(cast("dict[str, object]", claim["claim"]).get("claim_id")),
         "tui_readback_status": readback.status,
+        **superseding,
         "cli_forecast_authority_generation": str(forecast.get("authority_generation")),
         "cli_credential_channel": _CLI_CREDENTIAL_CHANNEL,
     }
+
+
+def _supersede_after_correction(cli: InstalledCli, *, first_claim_id: str) -> dict[str, object]:
+    """Correct the claimed asset's basis and replace its claim through the public CLI."""
+    inspected = command_result(cli.run(("app", "ledger", "actividad-asset", "inspect", METHOD_ASSET_ID)))
+    revisions = cast("list[dict[str, object]]", inspected["revisions"])
+    command_result(
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "actividad-asset",
+                "correct",
+                method_correction_json(supersedes_revision_id=str(revisions[-1]["revision_id"])),
+            )
+        )
+    )
+    forecast = command_result(
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "actividad-asset",
+                "forecast",
+                METHOD_ASSET_ID,
+                "--covered-from",
+                "2025-01-01",
+                "--covered-until",
+                "2026-01-01",
+                "--supersedes-claim-id",
+                first_claim_id,
+            )
+        )
+    )
+    # The corrected EUR 1,800 basis, judged without the claim it replaces: 1,800 x 30% = 540.00.
+    _require(
+        _money(forecast["amount"]) == METHOD_CORRECTED_FORECAST_AMOUNT,
+        "CLI superseding forecast differs from the oracle",
+    )
+    command_result(
+        cli.run(
+            (
+                "app",
+                "ledger",
+                "actividad-asset",
+                "claim",
+                json.dumps(forecast, separators=(",", ":")),
+                "--creating-operation",
+                "assets-acceptance.cli-first-superseding-claim",
+                "--supersedes-claim-id",
+                first_claim_id,
+            )
+        )
+    )
+    handoff = command_result(
+        cli.run(("app", "ledger", "actividad-asset", "filing-handoff", "--tax-year", "2025", "--m130-period", "4T"))
+    )
+    material_m100 = _money(cast("dict[str, object]", handoff["material_m100"])["amount"])
+    # Only the superseding claim is effective, so the replaced 600.00 no longer reaches Modelo 100.
+    _require(material_m100 == METHOD_CORRECTED_FORECAST_AMOUNT, "the superseded claim still reaches Modelo 100")
+    return {"cli_superseding_forecast": _money(forecast["amount"]), "cli_superseded_material_m100": material_m100}
 
 
 def run_installed_method_proof(

@@ -38,10 +38,7 @@ class ActivityAssetCli:
         return self._operations.create(ActivityAssetRevision.model_validate_json(revision_json))
 
     def inspect(self, asset_id: str) -> ActivityAssetInspectionPayload:
-        return ActivityAssetInspectionPayload(
-            asset_id=asset_id,
-            revisions=[revision.model_dump(mode="json") for revision in self._operations.inspect(asset_id)],
-        )
+        return _inspection_payload(asset_id, self._operations.inspect(asset_id))
 
     def correct(self, revision_json: str) -> ActivityAssetHistory:
         return self._operations.correct(ActivityAssetRevision.model_validate_json(revision_json))
@@ -203,6 +200,22 @@ def actividad_asset_record_claim(
         command="ledger.actividad_asset.claim",
         result=_claim_payload(result),
         lines=(f"claim_id\t{result.claim.claim_id}", f"reused\t{str(result.reused_existing_claim).lower()}"),
+    )
+
+
+def _inspection_payload(
+    asset_id: str,
+    revisions: tuple[ActivityAssetRevision, ...],
+) -> ActivityAssetInspectionPayload:
+    """Project each revision with its derived identity into the strict CLI receipt.
+
+    ``revision_id`` is a derived domain property, so Pydantic's serialized
+    record omits it, yet an operator correction must name the exact revision
+    it supersedes.
+    """
+    return ActivityAssetInspectionPayload(
+        asset_id=asset_id,
+        revisions=[{**revision.model_dump(mode="json"), "revision_id": revision.revision_id} for revision in revisions],
     )
 
 

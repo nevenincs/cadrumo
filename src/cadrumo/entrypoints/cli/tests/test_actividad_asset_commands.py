@@ -25,7 +25,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from cadrumo.entrypoints.cli._actividad_asset_cli import _claim_payload
+from cadrumo.entrypoints.cli._actividad_asset_cli import _claim_payload, _inspection_payload
 from cadrumo.entrypoints.cli.command_schema import command_schema_type
 
 from .cli_runner import invoke_cached_cli
@@ -56,9 +56,8 @@ def test_activity_asset_commands_resolve_strict_registered_output_schemas() -> N
         assert command_schema_type(f"ledger.actividad_asset.{command}").__name__ == schema_name
 
 
-def test_activity_asset_claim_payload_includes_the_canonical_derived_claim_identity() -> None:
-    """A machine receipt must retain the ID needed for correction/replay tracing."""
-    revision = ActivityAssetRevision(
+def _revision() -> ActivityAssetRevision:
+    return ActivityAssetRevision(
         asset_id="asset-1",
         revision_number=1,
         acquisition=AcquisitionLineageReference(
@@ -82,6 +81,21 @@ def test_activity_asset_claim_payload_includes_the_canonical_derived_claim_ident
             authority_class_key="equipo-proceso-informacion",
         ),
     )
+
+
+def test_activity_asset_inspection_payload_names_each_revision_a_correction_can_supersede() -> None:
+    first = _revision()
+    correction = first.model_copy(update={"revision_number": 2, "supersedes_revision_id": first.revision_id})
+
+    payload = _inspection_payload(first.asset_id, (first, correction))
+
+    assert [revision["revision_id"] for revision in payload.revisions] == [first.revision_id, correction.revision_id]
+    assert payload.revisions[1]["supersedes_revision_id"] == first.revision_id
+
+
+def test_activity_asset_claim_payload_includes_the_canonical_derived_claim_identity() -> None:
+    """A machine receipt must retain the ID needed for correction/replay tracing."""
+    revision = _revision()
     claim = AmortizationClaim(
         asset_id=revision.asset_id,
         asset_revision_id=revision.revision_id,

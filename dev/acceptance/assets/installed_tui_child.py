@@ -68,7 +68,7 @@ METHOD_REVISION_JSON = json.dumps(
 )
 
 
-def _method_correction_json(*, supersedes_revision_id: str) -> str:
+def method_correction_json(*, supersedes_revision_id: str) -> str:
     """Build a synthetic correction only after public inspection supplied its ID."""
     raw_document: object = json.loads(METHOD_REVISION_JSON)
     if not isinstance(raw_document, dict):  # pragma: no cover - static fixture invariant
@@ -607,7 +607,7 @@ async def _exercise_method_asset_lifecycle(*, pilot: Any, progress: Callable[[st
     await _set_public_input(
         pilot=pilot,
         selector="#asset-revision-json",
-        value=_method_correction_json(supersedes_revision_id=first_revision_id),
+        value=method_correction_json(supersedes_revision_id=first_revision_id),
         stage="asset_correction",
     )
     correction_action = await _activate_public_button(pilot=pilot, selector="#asset-correct", stage="asset_correction")
