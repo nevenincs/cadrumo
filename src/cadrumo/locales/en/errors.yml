@@ -1052,7 +1052,7 @@ errors:
       be re-bundled because the contributing ledger rows have changed since it was
       sealed. Recalculate the return instead; recapture only picks up evidence attached
       to unchanged rows.
-    refused_modelo_m303_applicability_attestation_unadmissible: 'The Modelo 390 applicability
+    refused_modelo_m303_exonerado_390_attestation_unadmissible: 'The Modelo 390 applicability
       attestation cannot be used for this Modelo 303: its identifier and SHA-256 are
       malformed or do not match, or the attestation is unknown to this profile, belongs
       to another quarter, no longer matches the current profile, or conflicts with

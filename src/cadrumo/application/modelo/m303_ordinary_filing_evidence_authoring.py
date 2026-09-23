@@ -23,7 +23,7 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from .action_errors import (
-    M303ApplicabilityAttestationUnadmissibleError,
+    M303Exonerado390AttestationUnadmissibleError,
     M303FilingEvidenceError,
     ModeloProfileReadinessError,
 )
@@ -94,7 +94,7 @@ def author_ordinary_m303_filing_instance_evidence(
             profile=profile,
         )
     except (AttachmentNotFoundError, AttachmentValidationError) as exc:
-        raise M303ApplicabilityAttestationUnadmissibleError(
+        raise M303Exonerado390AttestationUnadmissibleError(
             "Modelo 390 applicability attestation cannot back this Modelo 303 work unit",
             context={"reason": type(exc).__name__},
         ) from exc

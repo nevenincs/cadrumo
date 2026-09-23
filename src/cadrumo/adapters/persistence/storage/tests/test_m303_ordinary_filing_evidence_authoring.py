@@ -7,8 +7,14 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.storage.attachment import AttachmentStore
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    bound_test_profile_record,
+    seed_modelo_ready_profile_record,
+)
+from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import (
-    M303ApplicabilityAttestationUnadmissibleError,
+    M303Exonerado390AttestationUnadmissibleError,
     M303FilingEvidenceError,
     ModeloProfileReadinessError,
 )
@@ -20,6 +26,7 @@ from cadrumo.application.modelo.m303_ordinary_filing_evidence_authoring import (
     OrdinaryM303FilingEvidenceRequest,
     author_ordinary_m303_filing_instance_evidence,
 )
+from cadrumo.core.period import Period
 from cadrumo.domain.attachments.errors import AttachmentValidationError
 from cadrumo.domain.attachments.m303_filing_evidence import M303Exonerado390ApplicabilityAssertion
 from cadrumo.domain.buckets.event import BucketEventType
@@ -28,15 +35,7 @@ from cadrumo.domain.filing_evidence import FilingEvidenceReference
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from cadrumo.domain.user_profile.values import UserProfileFact
 
-from ....adapters.persistence.storage.attachment import AttachmentStore
-from ....adapters.persistence.storage.tests.profile_capsule_runtime import (
-    bound_test_profile_record,
-    seed_modelo_ready_profile_record,
-)
-from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....core.period import Period
-
-pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
 _BUCKET_ID = "3a1f0b2c-4d5e-4f60-8a71-92b3c4d5e6f7"
 _PERIOD = Period.from_year_and_code(2025, "1T")
@@ -103,7 +102,9 @@ def test_authors_general_scope_evidence_from_current_profile_and_authority(
     assert evidence.m303.joint_return_elected is True
     assert evidence.m303.annual_volume_nonzero is True
     assert evidence.m303.insolvency is None
-    assert evidence.m303.exonerado_390.applicable is False
+    exonerado_390 = evidence.m303.exonerado_390
+    assert exonerado_390 is not None
+    assert exonerado_390.applicable is False
     assert evidence.m303.regimen_simplificado.scope_decision.is_not_claimed is True
     assert evidence.m303.regimen_simplificado.rows.activities == ()
     assert evidence.m303.regimen_simplificado.calculation_result.activities == ()
@@ -171,7 +172,9 @@ def test_authors_every_quarter_whose_record_design_declares_the_ordinary_evidenc
     assert evidence.m303.period == period
     assert evidence.m303.joint_return_elected is False
     assert evidence.m303.annual_volume_nonzero is False
-    assert evidence.m303.exonerado_390.applicable is False
+    exonerado_390 = evidence.m303.exonerado_390
+    assert exonerado_390 is not None
+    assert exonerado_390.applicable is False
 
 
 def test_refuses_a_monthly_coordinate_before_admitting_any_attestation(
@@ -218,7 +221,7 @@ def test_refuses_an_unresolved_secure_applicability_reference(
 ) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         seed_modelo_ready_profile_record(_BUCKET_ID, clock=_CLOCK)
-        with bound_test_profile_record(_BUCKET_ID), pytest.raises(M303ApplicabilityAttestationUnadmissibleError):
+        with bound_test_profile_record(_BUCKET_ID), pytest.raises(M303Exonerado390AttestationUnadmissibleError):
             author_ordinary_m303_filing_instance_evidence(
                 work_unit=_work_unit(operation),
                 request=OrdinaryM303FilingEvidenceRequest(

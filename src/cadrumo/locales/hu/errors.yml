@@ -1074,7 +1074,7 @@ errors:
       újra, mert a mögöttes főkönyvi tételek a lezárás óta megváltoztak. Számold újra
       a bevallást; az újrarögzítés csak a változatlan tételekhez csatolt bizonyítékot
       veszi fel.
-    refused_modelo_m303_applicability_attestation_unadmissible: 'A 390-es nyomtatvány
+    refused_modelo_m303_exonerado_390_attestation_unadmissible: 'A 390-es nyomtatvány
       alkalmazhatóságáról szóló nyilatkozat nem használható ehhez a 303-as nyomtatványhoz:
       az azonosítója és SHA-256 értéke hibás formátumú vagy nem egyezik, vagy a nyilatkozat
       nem szerepel ebben a profilban, másik negyedévhez tartozik, már nem egyezik

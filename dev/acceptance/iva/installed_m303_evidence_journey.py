@@ -70,6 +70,8 @@ _MISMATCHED_ATTACHMENT_ID: Final = "a" * 64
 _MISMATCHED_SHA256: Final = "b" * 64
 _EXPORT_REFUSAL_CODE: Final = "REFUSED_MODELO_EXPORT_PRODUCT_IDENTITY_UNAVAILABLE"
 _EXPORT_REFUSAL_KEY: Final = "errors.refused.refused_modelo_export_product_identity_unavailable"
+_EVIDENCE_SUBMIT_ID: Final = "#m303-evidence-submit"
+_ATTESTATION_REFUSAL_KEY: Final = "errors.refused.refused_modelo_m303_exonerado_390_attestation_unadmissible"
 _POSITION_KEYS: Final = ("record", "program_positions", "developer_positions")
 # The official 2025 Modelo 303 record design reserves these developer-owned header bytes.
 _OFFICIAL_DP30300_POSITIONS: Final = ("DP30300", "93-96", "101-109")
@@ -503,11 +505,63 @@ def _notice_key(pilot: Any, selector: str, candidates: Sequence[str]) -> str | N
 
 _EVIDENCE_SUBMIT: Final = TuiOperationBinding(
     "modelo.work.calculate",
-    activation_id="#m303-evidence-submit",
+    activation_id=_EVIDENCE_SUBMIT_ID,
     terminal_result_id="#operation-modal-status",
     refresh_result_id="#declarations-list",
     refusal_notice_id="#modelo-lifecycle-notice",
 )
+
+
+async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str, refusal_key: str) -> TuiOutcome:
+    """Drive one operation the product must refuse and read the refusal where the product leaves it.
+
+    The operation modal dismisses itself as soon as the operation is terminal, so
+    a refusal settled after Apply is observed on the workspace notice: the
+    terminal copy followed by the registry's public explanation.
+    """
+    import time
+
+    from textual.css.query import NoMatches
+    from textual.widgets import Button, Static
+
+    from cadrumo.core.i18n.render import tr
+    from cadrumo.entrypoints.tui.operations.modal import OperationModal
+
+    refused = tr("operation.modal.terminal.refused")
+    query_public_selector(pilot, activation_id, Button).focus()
+    await pilot.press("enter")
+    applied = False
+    notice = ""
+    deadline = time.monotonic() + 300.0
+    while time.monotonic() < deadline:
+        screen = pilot.app.screen
+        if isinstance(screen, OperationModal):
+            if not applied:
+                try:
+                    apply = screen.query_one("#btn-operation-apply", Button)
+                except NoMatches:
+                    apply = None
+                if apply is not None and not apply.disabled:
+                    apply.focus()
+                    await pilot.press("enter")
+                    applied = True
+        else:
+            try:
+                notice = _rendered(screen.query_one("#modelo-lifecycle-notice", Static))
+            except NoMatches:
+                notice = ""
+            if notice:
+                break
+        await pilot.pause(0.2)
+    if not notice:
+        raise InstalledTuiChildError(
+            f"installed TUI {step} left no workspace notice", diagnostic=public_surface_diagnostic(pilot)
+        )
+    return TuiOutcome(
+        step=step,
+        terminal_condition="refused" if notice == refused or notice.startswith(f"{refused}: ") else "other",
+        visible_notice_key=refusal_key if notice == f"{refused}: {tr(refusal_key)}" else None,
+    )
 
 
 async def _submit_evidence(pilot: Any, *, step: str) -> TuiOutcome:
@@ -661,21 +715,15 @@ async def _listed_revision(pilot: Any, *, calculation_revision_id: str) -> tuple
 
 async def _attempt_export(pilot: Any, *, work_unit_id: str, output_path: str) -> TuiOutcome:
     """Try the official export; its lasting workspace notice must carry the registry explanation."""
-    from textual.widgets import Input, Static
+    from textual.widgets import Input
 
-    from cadrumo.core.i18n.render import tr
-
-    export = installed_lifecycle_contract().export
+    activation_id = installed_lifecycle_contract().export.activation_id
+    if activation_id is None:
+        raise InstalledTuiChildError("installed export binding declares no activation control")
     await _open_work(pilot, work_unit_id=work_unit_id)
     query_public_selector(pilot, "#modelo-lifecycle-export-path", Input).value = output_path
-    terminal = await activate_tui_operation(pilot, binding=export)
-    await _close_modals(pilot)
-    await _await_selector(pilot, "#modelo-lifecycle-notice")
-    notice = _rendered(query_public_selector(pilot, "#modelo-lifecycle-notice", Static))
-    return TuiOutcome(
-        step="export",
-        terminal_condition=terminal.terminal_condition,
-        visible_notice_key=_EXPORT_REFUSAL_KEY if tr(_EXPORT_REFUSAL_KEY) in notice else None,
+    return await _settle_expected_refusal(
+        pilot, activation_id=activation_id, step="export", refusal_key=_EXPORT_REFUSAL_KEY
     )
 
 
@@ -783,7 +831,14 @@ def _run_child(args: argparse.Namespace, *, passphrase: str) -> ChildReceipt:
                 ):
                     await _open_evidence_form(pilot, work_unit_id=work_unit_id)
                     _fill_evidence_form(pilot, attachment_id=attachment_id, sha256=sha256)
-                    outcomes.append(await _submit_evidence(pilot, step=step))
+                    outcomes.append(
+                        await _settle_expected_refusal(
+                            pilot,
+                            activation_id=_EVIDENCE_SUBMIT_ID,
+                            step=step,
+                            refusal_key=_ATTESTATION_REFUSAL_KEY,
+                        )
+                    )
                 outcomes.extend(
                     await _calculate_and_verify(pilot, work_unit_id=work_unit_id, form={"observed_at": _OBSERVED_AT})
                 )
@@ -954,14 +1009,12 @@ def _tui_led_store(args: argparse.Namespace) -> StoreEvidence:
         {
             "missing_booleans": ("form_refused", "tui.modelo.m303_evidence.required"),
             "cancelled": ("cancelled_without_request", "tui.modelo.m303_evidence.cancelled"),
+            "mismatched_pair": ("refused", _ATTESTATION_REFUSAL_KEY),
+            "wrong_filing_context": ("refused", _ATTESTATION_REFUSAL_KEY),
             "calculate": ("succeeded", None),
             "verify": ("succeeded", None),
         },
     )
-    refused = {item.step: item.terminal_condition for item in calculate_outcomes}
-    for step in ("mismatched_pair", "wrong_filing_context"):
-        if refused.get(step) != "refused":
-            raise IvaInstalledM303Error(f"installed TUI {step} was not refused: {refused.get(step)}")
 
     revisions = _revision_ids(cli, work_unit_id)
     if len(revisions) != 1:

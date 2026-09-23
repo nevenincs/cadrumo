@@ -845,11 +845,11 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
-        "cadrumo.application.modelo.action_errors.M303ApplicabilityAttestationUnadmissibleError",
+        "cadrumo.application.modelo.action_errors.M303Exonerado390AttestationUnadmissibleError",
         ErrorCode(
-            code="REFUSED_MODELO_M303_APPLICABILITY_ATTESTATION_UNADMISSIBLE",
+            code="REFUSED_MODELO_M303_EXONERADO_390_ATTESTATION_UNADMISSIBLE",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.refused_modelo_m303_applicability_attestation_unadmissible",
+            message_key="errors.refused.refused_modelo_m303_exonerado_390_attestation_unadmissible",
             retryable=False,
             public_message_from_registry=True,
             runbook_id=None,

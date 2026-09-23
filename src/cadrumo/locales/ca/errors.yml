@@ -1140,7 +1140,7 @@ errors:
       d'aquesta declaració perquè els assentaments comptables que la sustenten han
       canviat des que es va segellar. Torna a calcular la declaració; la recaptura
       només recull evidència adjuntada a assentaments sense canvis.
-    refused_modelo_m303_applicability_attestation_unadmissible: 'L''atestació d''aplicabilitat
+    refused_modelo_m303_exonerado_390_attestation_unadmissible: 'L''atestació d''aplicabilitat
       del Model 390 no es pot fer servir per a aquest Model 303: el seu identificador
       i el seu SHA-256 estan mal formats o no coincideixen, o l''atestació no consta
       en aquest perfil, pertany a un altre trimestre, ja no coincideix amb el perfil

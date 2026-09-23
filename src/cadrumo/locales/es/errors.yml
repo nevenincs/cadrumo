@@ -1133,7 +1133,7 @@ errors:
       de esta declaración porque los apuntes contables que la sustentan han cambiado
       desde que se selló. Vuelve a calcular la declaración; la recaptura solo recoge
       evidencia adjuntada a apuntes sin cambios.
-    refused_modelo_m303_applicability_attestation_unadmissible: 'La atestación de
+    refused_modelo_m303_exonerado_390_attestation_unadmissible: 'La atestación de
       aplicabilidad del modelo 390 no puede usarse para este modelo 303: su identificador
       y su SHA-256 están mal formados o no coinciden, o la atestación no consta en
       este perfil, pertenece a otro trimestre, ya no coincide con el perfil actual

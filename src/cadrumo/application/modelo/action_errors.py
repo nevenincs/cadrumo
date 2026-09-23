@@ -365,7 +365,7 @@ class M303FilingEvidenceError(ModeloPreconditionErrorMixin, ModeloError):
     """
 
 
-class M303ApplicabilityAttestationUnadmissibleError(M303FilingEvidenceError):
+class M303Exonerado390AttestationUnadmissibleError(M303FilingEvidenceError):
     """Raised when the supplied Modelo 390 applicability attestation cannot back this Modelo 303.
 
     The identifier pair may be malformed, or the attestation it names may be
