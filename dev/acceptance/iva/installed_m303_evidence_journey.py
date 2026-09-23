@@ -564,11 +564,13 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
     query_public_selector(pilot, activation_id, Button).focus()
     await pilot.press("enter")
     applied = False
+    modal_seen = False
     notice = ""
     deadline = time.monotonic() + 300.0
     while time.monotonic() < deadline:
         screen = pilot.app.screen
         if isinstance(screen, OperationModal):
+            modal_seen = True
             if not applied:
                 try:
                     apply = screen.query_one("#btn-operation-apply", Button)
@@ -587,8 +589,20 @@ async def _settle_expected_refusal(pilot: Any, *, activation_id: str, step: str,
                 break
         await pilot.pause(0.2)
     if not notice:
+        # Which screen held which notice, and whether the modal was ever seen,
+        # separates "the operation never started" from "its notice landed on a
+        # screen below the top one" -- the two causes need opposite fixes.
+        stack: list[str] = []
+        for layer in pilot.app.screen_stack:
+            try:
+                layer_notice = _rendered(layer.query_one("#modelo-lifecycle-notice", Static))
+            except NoMatches:
+                layer_notice = None
+            stack.append(f"{type(layer).__name__}:{layer_notice!r}")
         raise InstalledTuiChildError(
-            f"installed TUI {step} left no workspace notice", diagnostic=public_surface_diagnostic(pilot)
+            f"installed TUI {step} left no workspace notice (modal_seen={modal_seen}, applied={applied}, "
+            f"stack={stack})",
+            diagnostic=public_surface_diagnostic(pilot),
         )
     if notice != f"{refused}: {tr(refusal_key)}":
         # The notice is the only place the product explains a non-refusal; a
