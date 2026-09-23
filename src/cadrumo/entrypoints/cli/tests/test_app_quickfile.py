@@ -783,6 +783,12 @@ def test_quickfile_setup_incomplete_refusal_reports_the_typed_completion_action(
     assert resolved["target_command_key"] == "config.profile.complete_setup"
     assert resolved["cli_path"] == ["config", "profile", "complete-setup"]
     assert action["conditionality"] == "immediate"
+    # The readiness warning is where the incomplete setup is first seen; it
+    # carries the same typed recovery rather than a bare warning.
+    readiness = _stage_notice_for(result.output, "readiness")
+    readiness_action = readiness["action"]
+    assert isinstance(readiness_action, dict), readiness
+    assert readiness_action["action"]["action_id"] == "operator.profile.complete_setup"
     assert not out.exists()
 
 
@@ -811,11 +817,12 @@ def test_quickfile_create_stage_refusal_without_a_typed_action_reports_its_reaso
 
 
 def test_quickfile_refusal_whose_reason_names_a_command_is_still_reported(tmp_path: Path) -> None:
-    """A refusal with command prose and no typed decision is reported by stage and code, never crashed.
+    """A refusal whose reason names a command is reported by stage and code, never crashed.
 
     An unknown ``--binding`` id is refused at calculate with wording that names
     the bindings listing command. The notices contract refuses that wording, so
-    the stage is reported with the channel's own sentence and the error code.
+    the stage is reported with the channel's own sentence and the error code,
+    while the recovery still reaches the operator as the refusal's typed action.
     """
     _create_profile(activity_start_date="2025-01-01")
     out = tmp_path / "modelo-115.txt"
@@ -834,7 +841,10 @@ def test_quickfile_refusal_whose_reason_names_a_command_is_still_reported(tmp_pa
     assert "Traceback" not in result.output
     _assert_stopped_at(result.output, "calculate")
     notice = _stage_notice_for(result.output, "calculate")
-    assert notice.get("action") is None, notice
+    action = notice.get("action")
+    assert isinstance(action, dict), notice
+    assert action["failed_condition_id"] == "modelo.work.calculate.caller_overrides.binding_declared"
+    assert action["action"]["action_id"] == "operator.modelo.bindings.list"
     context = notice["context"]
     assert isinstance(context, dict), notice
     assert context["stage"] == "calculate"

@@ -202,6 +202,32 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.source_inputs.casilla_override_rejected",
     ),
     _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.caller_overrides.binding_declared",
+        "modelo.work.calculate.caller_overrides.binding_unknown",
+        action_id="operator.modelo.bindings.list",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.caller_overrides.binding_encoding_valid",
+        "modelo.work.calculate.caller_overrides.boolean_binding_encoding_invalid",
+        action_id="operator.modelo.bindings.list",
+    ),
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.caller_overrides.casilla_declared",
+        "modelo.work.calculate.caller_overrides.casilla_unknown",
+        action_id="operator.modelo.casillas",
+    ),
+    # No action: the supported source for detail-field amounts takes
+    # operator-authored observation data that a refusal cannot bind, so the
+    # operator must drop the detail key and choose how to supply that data.
+    _profile(
+        "modelo.work.calculate",
+        "modelo.work.calculate.caller_overrides.casilla_scalar",
+        "modelo.work.calculate.caller_overrides.detail_casilla_unsupported",
+    ),
+    _profile(
         "modelo.work.verify",
         "modelo.work.verify.lifecycle_path.required",
         "modelo.work.verify.lifecycle_path.direct_cross_period_promotion_refused",

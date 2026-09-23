@@ -451,6 +451,27 @@ OPERATOR_ACTION_CATALOGUE = build_action_catalogue(
             ),
         ),
         ActionCatalogueEntry(
+            action_id="operator.modelo.casillas",
+            target_command_key="modelo.casillas",
+            argument_specifications=(
+                ActionArgumentBindingSpecification(
+                    argument_name="modelo",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="modelo",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="year",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="year",
+                ),
+                ActionArgumentBindingSpecification(
+                    argument_name="period",
+                    source=ActionArgumentSource.VERDICT_CONTEXT,
+                    source_key="period",
+                ),
+            ),
+        ),
+        ActionCatalogueEntry(
             action_id="operator.modelo.describe",
             target_command_key="modelo.describe",
             argument_specifications=(

@@ -592,6 +592,9 @@ def _readiness_outcome(readiness: ProjectionModeloReadiness | None) -> Quickfile
             "binding_ready": str(readiness.binding_ready).lower(),
             "missing_bindings": str(len(readiness.missing_bindings)),
         },
+        # The readiness warning is where an incomplete setup is first seen, so
+        # its typed recovery rides here as well as on any later refusal.
+        precondition_verdict=readiness.profile_precondition_verdict,
     )
 
 
