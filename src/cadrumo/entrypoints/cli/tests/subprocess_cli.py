@@ -169,9 +169,9 @@ def subprocess_cli_env(
             # The in-process suite declines KDF calibration measurement
             # session-wide; a child interpreter never sees that override, so a
             # passphrase create or rotation there sampled the grid with one
-            # supervised worker per warmup and sample. The fixed point it falls
-            # back to is stronger than the measured floor, and the module that
-            # owns calibration proves measurement separately.
+            # supervised worker per probe and sample. The fixed point it falls
+            # back to is the floor measurement never selects below, and the
+            # module that owns calibration proves measurement separately.
             "CADRUMO_PROFILE_KDF_MEASURE_CALIBRATION": "false",
         }
     )

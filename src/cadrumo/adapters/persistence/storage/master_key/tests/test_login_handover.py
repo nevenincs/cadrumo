@@ -26,6 +26,7 @@ from uuid import UUID
 import pytest
 from sqlalchemy.exc import DatabaseError as SqlDatabaseError
 
+from cadrumo.adapters.persistence.storage.custody import filesystem as custody_filesystem
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import (
     profile_session_path,
     resume_profile_session,
@@ -68,7 +69,6 @@ from cadrumo.application.user_profile.registration import register_profile_with_
 from cadrumo.core import config as config_module
 from cadrumo.core.bucket_pointer import BucketPointer, read_pointer, write_pointer
 from cadrumo.core.config import Settings
-from cadrumo.core.directory_scan import iter_directory
 from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo.core.time.clock import now as _now
 from cadrumo.domain.buckets.event_repository import BucketEventHistoryPersistenceError
@@ -215,27 +215,6 @@ def _replace_journal_in_child(path_text: str, payload: bytes, result_queue: Queu
     replacement.write_bytes(payload)
     os.replace(replacement, path)
     result_queue.put("replaced")
-
-
-def _replace_journal_after_cas_stage_appears(
-    path_text: str,
-    payload: bytes,
-    ready: Event,
-    result_queue: Queue[str],
-) -> None:
-    """Replace the real leaf after the custody CAS has captured its expected bytes."""
-    path = Path(path_text)
-    stage_prefix = f".{path.name}.cas-stage."
-    ready.set()
-    deadline = time.monotonic() + 30
-    while time.monotonic() < deadline:
-        if any(entry.name.startswith(stage_prefix) for entry in iter_directory(path.parent)):
-            replacement = path.with_name(f".{path.name}.interleaving-replacement")
-            replacement.write_bytes(payload)
-            os.replace(replacement, path)
-            result_queue.put("replaced-after-capture")
-            return
-    result_queue.put("missed-cas-stage")
 
 
 def _block_idempotent_journal_cleanup_after_publication(
@@ -896,8 +875,17 @@ def test_handover_journal_refuses_a_fresh_canonical_replacement_from_another_pro
             child.join(timeout=30)
 
 
-def test_handover_journal_cas_replace_restores_a_valid_sibling_substitute(tmp_path: Path) -> None:
-    """A sibling leaf swap after CAS capture survives instead of being overwritten."""
+def test_handover_journal_cas_replace_restores_a_valid_sibling_substitute(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A sibling leaf swap after CAS capture survives instead of being overwritten.
+
+    The swap has to land after the compare-and-replace has staged its bytes and
+    before it replaces the leaf: a window of microseconds that a second process
+    polling for the stage misses on a loaded host. Wrapping the staging write
+    lands the swap in that window every time, on either platform's staging path.
+    """
     storage_root = tmp_path / "handover-root"
     storage_root.mkdir()
     prepared = _prepared_handover_journal()
@@ -909,29 +897,42 @@ def test_handover_journal_cas_replace_restores_a_valid_sibling_substitute(tmp_pa
         pointer_after=BucketPointer.selected(bucket_id="interleaved-profile-b", transition_revision=31),
         activation_at=datetime(2026, 8, 14, 9, 32, tzinfo=UTC),
     )
-    context = get_context("spawn")
-    ready = context.Event()
-    result_queue: Queue[str] = Queue(ctx=context)
-    child = context.Process(
-        target=_replace_journal_after_cas_stage_appears,
-        args=(str(handover_journal_path(storage_root)), substitute.canonical_json_bytes(), ready, result_queue),
-    )
-    child.start()
-    try:
-        assert ready.wait(30)
-        with pytest.raises(ActiveProfilePointerTransactionError):
-            save_handover_journal(
-                storage_root=storage_root,
-                journal=prepared.at_phase(HandoverPhase.POINTER_PUBLISHED),
-            )
-        assert result_queue.get(timeout=30) == "replaced-after-capture"
-        child.join(timeout=30)
-        assert child.exitcode == 0
-        assert load_handover_journal(storage_root=storage_root) == substitute
-    finally:
-        if child.is_alive():
-            child.terminate()
-            child.join(timeout=30)
+    journal_path = handover_journal_path(storage_root)
+    swapped: list[bool] = []
+
+    def swap_in_the_sibling() -> None:
+        if swapped:
+            return
+        replacement = journal_path.with_name(f".{journal_path.name}.interleaving-replacement")
+        replacement.write_bytes(substitute.canonical_json_bytes())
+        os.replace(replacement, journal_path)
+        swapped.append(True)
+
+    if os.name == "nt":
+        stage_windows = custody_filesystem.write_windows_local_stage
+
+        def stage_then_swap_windows(path: Path, payload: bytes) -> None:
+            stage_windows(path, payload)
+            swap_in_the_sibling()
+
+        monkeypatch.setattr(custody_filesystem, "write_windows_local_stage", stage_then_swap_windows)
+    else:
+        stage_posix = custody_filesystem.write_descriptor_fsynced
+
+        def stage_then_swap_posix(descriptor: int, payload: bytes) -> None:
+            stage_posix(descriptor, payload)
+            swap_in_the_sibling()
+
+        monkeypatch.setattr(custody_filesystem, "write_descriptor_fsynced", stage_then_swap_posix)
+
+    with pytest.raises(ActiveProfilePointerTransactionError):
+        save_handover_journal(
+            storage_root=storage_root,
+            journal=prepared.at_phase(HandoverPhase.POINTER_PUBLISHED),
+        )
+
+    assert swapped == [True], "the swap must land inside the compare-and-replace, or nothing was raced"
+    assert load_handover_journal(storage_root=storage_root) == substitute
 
 
 def test_handover_journal_cas_clear_refuses_and_preserves_a_valid_sibling_substitute(tmp_path: Path) -> None:
