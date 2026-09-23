@@ -385,7 +385,13 @@ def run_git(repo_root: Path, *arguments: str) -> subprocess.CompletedProcess[byt
     executable = shutil.which("git")
     if executable is None:
         raise RuntimeError("git executable is required for edition round-trip checks")
-    command = (str(Path(executable).resolve(strict=True)), "-c", "core.autocrlf=false", *arguments)
+    command = (
+        str(Path(executable).resolve(strict=True)),
+        "--no-optional-locks",
+        "-c",
+        "core.autocrlf=false",
+        *arguments,
+    )
     returncode, stdout, stderr = asyncio.run(
         _run_git_process(command, repo_root=repo_root, environment=environment),
     )

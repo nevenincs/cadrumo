@@ -407,8 +407,10 @@ def _git(repo_root: Path, *arguments: str) -> str:
     executable = shutil.which("git")
     if executable is None:
         raise SystemExit("git is not on PATH, so the worktree cannot be enumerated")
+    # --no-optional-locks: `status` would otherwise take the shared index lock to
+    # refresh stat data, and an interrupted run leaves it behind for every writer.
     completed = run_command(
-        [executable, *arguments],
+        [executable, "--no-optional-locks", *arguments],
         cwd=repo_root,
         errors="replace",
         timeout_seconds=GIT_TIMEOUT_SECONDS,
