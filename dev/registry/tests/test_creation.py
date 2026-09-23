@@ -707,7 +707,7 @@ def test_a_supplied_line_set_persists_per_rate_instead_of_collapsing_to_one_line
                 counterparty_country="ES",
                 invoice_number="F-2026-MIXED-001",
                 issued_at=date(2026, 4, 1),
-                taxable_base=Decimal("1500.00"),
+                taxable_base=None,
                 iva_rate=None,
                 currency="EUR",
                 lines=_mixed_rate_lines(),
@@ -729,15 +729,26 @@ def test_a_supplied_line_set_persists_per_rate_instead_of_collapsing_to_one_line
     assert restored.grand_total == Decimal("1760.00")
 
 
-def test_a_supplied_line_set_refuses_a_taxable_base_that_disagrees_with_it() -> None:
-    """Two disagreeing sources of truth for the base must refuse, not resolve.
+@pytest.mark.parametrize(
+    ("taxable_base", "iva_rate"),
+    [
+        (Decimal("1400.00"), None),
+        (Decimal("1500.00"), None),
+        (None, Decimal("21")),
+    ],
+    ids=["disagreeing-base", "agreeing-base", "scalar-rate"],
+)
+def test_a_supplied_line_set_refuses_any_scalar_base_or_rate(
+    taxable_base: Decimal | None, iva_rate: Decimal | None
+) -> None:
+    """A line set is the whole statement of the base and rates; a scalar beside it is refused.
 
-    With a line set supplied the caller states the base twice: once as the
-    summed subtotals and once as ``taxable_base``. Silently preferring either
-    would let a caller believe the other was recorded, and on this field that
-    means declaring a base the operator never entered.
+    Accepting a second statement would need a precedence rule, and even an
+    agreeing one would let a caller believe the scalar was what got recorded.
+    Refusing the mixed representation keeps the mutation deterministic, so the
+    refusal holds when the scalar happens to match the summed lines too.
     """
-    with pytest.raises(InvoiceValidationError, match="summed line subtotals"):
+    with pytest.raises(InvoiceValidationError, match="structured lines cannot be combined"):
         _build_catalogue_invoice(
             bucket_id=None,
             kind=InvoiceKind.ISSUED,
@@ -746,8 +757,8 @@ def test_a_supplied_line_set_refuses_a_taxable_base_that_disagrees_with_it() -> 
             counterparty_country="ES",
             invoice_number="F-2026-MIXED-002",
             issued_at=date(2026, 4, 1),
-            taxable_base=Decimal("1400.00"),
-            iva_rate=None,
+            taxable_base=taxable_base,
+            iva_rate=iva_rate,
             currency="EUR",
             lines=_mixed_rate_lines(),
         )
