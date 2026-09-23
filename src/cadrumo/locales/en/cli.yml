@@ -661,13 +661,18 @@ cli:
         ledger_payment_withholding_exclusive: --ledger-payment-withholding cannot
           be combined with --received-invoice-retencion or --retencion-observation.
         ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
-          one payroll allocation paid by a ledger transaction (Modelo 111 only).'
-        ledger_payment_withholding_period_mismatch: The payment's recognition period
-          does not match the requested Modelo 111 period.
+          one payroll (Modelo 111) or movable-capital income (Modelo 123) allocation
+          paid by a ledger transaction.'
+        ledger_payment_withholding_period_mismatch: The payment's income kind and
+          recognition period do not match the requested modelo and period.
         ledger_payment_withholding_single_allocation: Submit one ledger payment allocation
           per command.
         ledger_payment_withholding_wrong_modelo: --ledger-payment-withholding records
-          work-income withholding for Modelo 111 only; modelo %{modelo} is not accepted.
+          work income for Modelo 111 and movable-capital income for Modelo 123 only;
+          modelo %{modelo} is not accepted.
+        m123_ledger_payment_only: Modelo 123 accepts withholding evidence only from
+          its paying ledger transaction through --ledger-payment-withholding; invoice
+          and hand-typed retenciones are refused, and nothing was written.
         modelo_help: Supported modelo code for the backend aggregation service (111,
           115, 123, 180, 190, 193, 347, 349, or 720).
         period_help: 'Aggregation period token: 0A annual, 1T-4T quarters, 01-12 months.'

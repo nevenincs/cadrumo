@@ -711,14 +711,19 @@ cli:
         ledger_payment_withholding_exclusive: A --ledger-payment-withholding nem kombinálható
           a --received-invoice-retencion vagy a --retencion-observation kapcsolóval.
         ledger_payment_withholding_help: 'JSON LedgerPaymentWithholdingEvidenceRequest:
-          egy főkönyvi tétellel kifizetett bérfelosztás (csak 111-es nyomtatvány).'
-        ledger_payment_withholding_period_mismatch: A kifizetés elszámolási időszaka
-          nem egyezik a kért 111-es nyomtatvány időszakával.
+          egy főkönyvi tétellel kifizetett bér- (111-es nyomtatvány) vagy ingó tőkejövedelem-felosztás
+          (123-as nyomtatvány).'
+        ledger_payment_withholding_period_mismatch: A kifizetés jövedelemtípusa és
+          elszámolási időszaka nem egyezik a kért nyomtatvánnyal és időszakkal.
         ledger_payment_withholding_single_allocation: Parancsonként egy főkönyvi kifizetési
           felosztást adjon meg.
         ledger_payment_withholding_wrong_modelo: A --ledger-payment-withholding csak
-          a 111-es nyomtatványhoz rögzít munkajövedelem-levonást; a(z) %{modelo} nyomtatvány
-          nem elfogadott.
+          a 111-es nyomtatványhoz munkajövedelmet és a 123-as nyomtatványhoz ingó
+          tőkejövedelmet rögzít; a(z) %{modelo} nyomtatvány nem elfogadott.
+        m123_ledger_payment_only: A 123-as nyomtatvány forrásadó-adatot csak a kifizető
+          főkönyvi tételből fogad el a --ledger-payment-withholding kapcsolóval; a
+          számlából vagy kézzel megadott levonásokat elutasítja, és semmi sem lett
+          rögzítve.
         modelo_help: A háttéraggregálási szolgáltatás által támogatott nyomtatványkód
           (111, 115, 123, 180, 190, 193, 347, 349 vagy 720).
         period_help: 'Aggregációs időszaktoken: 0A éves, 1T-4T negyedévek, 01-12 hónapok.'

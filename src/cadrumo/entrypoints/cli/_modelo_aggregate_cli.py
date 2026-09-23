@@ -51,7 +51,7 @@ from .state_projection_support import (
 )
 
 _INVOICE_WITHHOLDING_MODELOS = frozenset({"111", "115", "123"})
-_LEDGER_PAYMENT_WITHHOLDING_MODELO = "111"
+_LEDGER_PAYMENT_WITHHOLDING_MODELOS = frozenset({"111", "123"})
 
 
 def _capture_invoice_withholding_into_command(
@@ -128,7 +128,7 @@ def _capture_ledger_payment_withholding_into_command(
     command: PerModeloAggregationCommand,
     request: LedgerPaymentWithholdingEvidenceRequest,
 ) -> PerModeloAggregationCommand:
-    """Capture one payroll allocation from its paying ledger transaction, then read the projection.
+    """Capture one payroll or capital allocation from its paying ledger transaction, then read the projection.
 
     The transaction is read between two catalogue revision reads, so the
     capture never rests on a row that changed while it was being read. The
@@ -178,7 +178,7 @@ def _refuse_misplaced_ledger_payment_withholding(
     received_invoice_retencion: list[str] | None,
     retencion_observation: list[str] | None,
 ) -> None:
-    """Refuse a payroll capture outside Modelo 111 or beside another retención transport.
+    """Refuse a ledger-payment capture outside Modelos 111 and 123 or beside another retención transport.
 
     One command writes one allocation from one kind of evidence; letting a
     ledger payment and an invoice or a hand-typed row share a command would
@@ -186,7 +186,7 @@ def _refuse_misplaced_ledger_payment_withholding(
     """
     if not ledger_payment_withholding:
         return
-    if modelo != _LEDGER_PAYMENT_WITHHOLDING_MODELO:
+    if modelo not in _LEDGER_PAYMENT_WITHHOLDING_MODELOS:
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_wrong_modelo", modelo=modelo))
     if received_invoice_retencion or retencion_observation:
         raise typer.BadParameter(tr("cli.app.modelo.aggregate.ledger_payment_withholding_exclusive"))
@@ -297,10 +297,7 @@ def aggregate_modelo(
             retencion_observation=retencion_observation,
         )
         if modelo == Modelo("123").value and (retencion_observation or received_invoice_retencion):
-            raise typer.BadParameter(
-                "Modelo 123 public capture is incomplete: the current Número de rentas count and "
-                "Modelo 193 annual disclosure cannot yet be verified; no withholding evidence was written"
-            )
+            raise typer.BadParameter(tr("cli.app.modelo.aggregate.m123_ledger_payment_only"))
         if modelo == Modelo("190").value and withholding_observation:
             raise typer.BadParameter(
                 "--withholding-observation is not accepted for Modelo 190; "
