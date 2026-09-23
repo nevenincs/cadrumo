@@ -9,7 +9,7 @@ related:
   - '[[2026-08-24-tui-registry-api-gate-adr]]'
 modified: '2026-09-23'
 body_schema: body-v2
-body_hash: 'sha256:c9a94f7a9d47eb6ed58125748c5080a84d1b41f628e2ca221fa09e8d3dcbdce5'
+body_hash: 'sha256:70d7416c135eb8d32a7a0ae100d095c28a5ac345017cb4b4d5b79378c2945319'
 ---
 
 # `tui-registry-api-gate` plan
@@ -43,8 +43,8 @@ Decision coverage: the reconciliation decision governs S01 through S05.
 - [ ] `S02` - Reinstate the second-pass currentness read for every workspace contributor and apply it to static admission; `src/cadrumo/application/modelo/workspace_producers.py`.
 - [ ] `S03` - Restore the calculation, bounded-review and readiness workspace ports on the current producer contract; `src/cadrumo/application/modelo/workspace_producers.py`.
 - [ ] `S04` - Restore graded snapshot assembly over seven contributors and four capabilities, with its refusals, baseline and conformance tests; `src/cadrumo/application/modelo/workspace.py`.
-- [ ] `S05` - Admit calculated units by graded snapshot and uncalculated units by static inspection in the launcher reader, carrying refusals and disclosing the grade; `src/cadrumo/entrypoints/tui/launcher.py`.
-- [ ] `S06` - Prove through the production reader that Results, Inputs and Verification render a calculated unit's values, and retire the field-register entries the graded path fills; `src/cadrumo/entrypoints/tui/modelo/view/tests/`.
+- [ ] `S05` - Admit calculated units by graded snapshot and uncalculated units by static inspection in the launcher reader, produce ModeloWorkspaceDomainRefusalV1 for graded refusals and carry them to the destinations, disclose the grade, and remove the six DomainRefusalV1 field-register entries; `src/cadrumo/entrypoints/tui/launcher.py`.
+- [ ] `S06` - Prove through the production reader that Results, Inputs and Verification render a calculated unit's values, and remove the eighteen graded-facet and casilla-definition field-register entries the graded path fills; `src/cadrumo/entrypoints/tui/modelo/view/tests/`.
 
 ## Parallelization
 
