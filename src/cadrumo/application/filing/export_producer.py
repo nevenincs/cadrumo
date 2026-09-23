@@ -1034,6 +1034,7 @@ def _apply_foral_m303_overrides(
             FilingProducerKey.M303_INSOLVENCY_FILING_SUBTYPE: None,
             FilingProducerKey.M303_VOLUNTARY_SII_ENROLLED: "2",
             FilingProducerKey.M303_EXONERADO_390_APPLICABLE: "2",
+            FilingProducerKey.M303_ANNUAL_VOLUME_NONZERO: "2",
             FilingProducerKey.M303_HYDROCARBON_DEPOSIT_ADVANCE_PAYMENT_DEDUCTION_ENTITLED: "2",
         },
     )
@@ -1152,7 +1153,13 @@ def m303_filing_lexicals(m303_facts: M303FilingFacts | None) -> M303FilingLexica
     transition_applicable = transition.is_applicable
     return M303FilingLexicals(
         joint_return_elected=yes_no(m303_facts.joint_return_elected),
-        annual_volume_nonzero="1" if m303_facts.annual_volume_nonzero else None,
+        # DP30301 Nota 3: the art. 121 answer is printed only by a filer exempt from Modelo 390, and only in the
+        # last period; every other filing carries "0" whatever the operator answered.
+        annual_volume_nonzero=(
+            yes_no(m303_facts.annual_volume_nonzero)
+            if is_last_filing_period_of_year(m303_facts.period) and m303_facts.exonerado_390.applicable
+            else "0"
+        ),
         recipient_of_cash_accounting_operations=yes_no(
             m303_facts.supplier_regime.recipient_of_cash_accounting_operations,
         ),
