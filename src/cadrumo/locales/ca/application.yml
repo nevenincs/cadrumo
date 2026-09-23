@@ -555,7 +555,7 @@ application:
         unreadable_table: 'El fitxer d''importació massiva de factures no conté cap
           taula llegible: {detail}'
         unsupported_extension: El fitxer d'importació massiva de factures ha de ser
-          .csv o .xlsx (s'ha rebut {extension}).
+          .csv, .tsv, .xlsx, .xlsm o .xls (s'ha rebut {extension}).
     creation:
       errors:
         duplicate_invoice: 'Ja existeix una factura amb la mateixa identitat al catàleg:

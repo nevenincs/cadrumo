@@ -499,8 +499,8 @@ application:
           {missing_columns}'
         unreadable_table: 'The bulk invoice import file carries no readable table:
           {detail}'
-        unsupported_extension: The bulk invoice import file must be .csv or .xlsx
-          (got {extension}).
+        unsupported_extension: The bulk invoice import file must be .csv, .tsv, .xlsx,
+          .xlsm or .xls (got {extension}).
     creation:
       errors:
         duplicate_invoice: 'An invoice with the same identity already exists in the

@@ -554,7 +554,7 @@ application:
         unreadable_table: 'El archivo de importación masiva de facturas no contiene
           ninguna tabla legible: {detail}'
         unsupported_extension: El archivo de importación masiva de facturas debe ser
-          .csv o .xlsx (se recibió {extension}).
+          .csv, .tsv, .xlsx, .xlsm o .xls (se recibió {extension}).
     creation:
       errors:
         duplicate_invoice: 'Ya existe una factura con la misma identidad en el catálogo:

@@ -536,8 +536,8 @@ application:
           oszlopok: {missing_columns}'
         unreadable_table: 'A számlák tömeges importálási fájlja nem tartalmaz olvasható
           táblázatot: {detail}'
-        unsupported_extension: 'A számlák tömeges importálási fájljának .csv vagy
-          .xlsx kiterjesztésűnek kell lennie (kapott: {extension}).'
+        unsupported_extension: 'A számlák tömeges importálási fájljának .csv, .tsv,
+          .xlsx, .xlsm vagy .xls kiterjesztésűnek kell lennie (kapott: {extension}).'
     creation:
       errors:
         duplicate_invoice: 'A katalógusban már létezik azonos azonosságú számla: %{invoice_id}.'
