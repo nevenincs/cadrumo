@@ -7,6 +7,7 @@ Core types:
 from __future__ import annotations
 
 import secrets
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, timedelta
 from pathlib import Path
@@ -97,6 +98,7 @@ from ..domain.deadlines.models import TaxpayerProfile
 from .adapter_composition import (
     build_active_work_lifecycle_ports,
     build_amendment_action_ports,
+    build_attachment_store,
     build_calculation_action_ports,
     build_censal_fetch_port,
     build_filing_action_ports,
@@ -165,6 +167,7 @@ async def _typed_pull_filed_history_with_shared_composition(
 
 
 if TYPE_CHECKING:
+    from ..domain.attachments.protocols import AttachmentStoreProtocol
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 
 
@@ -253,6 +256,7 @@ def build_production_operation_registry(
     google_export_definition: OperationDefinition | None = None,
     modelo_export_ports_factory: ModeloExportPortsFactory = build_modelo_export_ports,
     calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
+    attachment_store_factory: Callable[[str], AttachmentStoreProtocol] = build_attachment_store,
     amendment_action_ports_factory: AmendmentActionPortsFactory = build_amendment_action_ports,
     filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory = build_active_work_lifecycle_ports,
@@ -274,6 +278,7 @@ def build_production_operation_registry(
         operator_scope_ports=resolved_operator_scope_ports,
         export_ports_factory=modelo_export_ports_factory,
         calculation_action_ports_factory=calculation_action_ports_factory,
+        attachment_store_factory=attachment_store_factory,
         amendment_action_ports_factory=amendment_action_ports_factory,
         filing_action_ports_factory=filing_action_ports_factory,
         work_lifecycle_ports_factory=work_lifecycle_ports_factory,
@@ -344,6 +349,7 @@ def compose_operation_dependencies(
     settings: Settings | None = None,
     modelo_export_ports_factory: ModeloExportPortsFactory = build_modelo_export_ports,
     calculation_action_ports_factory: CalculationActionPortsFactory = build_calculation_action_ports,
+    attachment_store_factory: Callable[[str], AttachmentStoreProtocol] = build_attachment_store,
     amendment_action_ports_factory: AmendmentActionPortsFactory = build_amendment_action_ports,
     filing_action_ports_factory: FilingActionPortsFactory = build_filing_action_ports,
     work_lifecycle_ports_factory: ActiveWorkLifecyclePortsFactory = build_active_work_lifecycle_ports,
@@ -367,6 +373,7 @@ def compose_operation_dependencies(
         settings=resolved_settings,
         modelo_export_ports_factory=modelo_export_ports_factory,
         calculation_action_ports_factory=calculation_action_ports_factory,
+        attachment_store_factory=attachment_store_factory,
         amendment_action_ports_factory=amendment_action_ports_factory,
         filing_action_ports_factory=filing_action_ports_factory,
         work_lifecycle_ports_factory=work_lifecycle_ports_factory,

@@ -62,6 +62,11 @@ def _unreachable_capability_factory(**_kwargs: object) -> NoReturn:
     raise AssertionError("workspace refresh target resolution must not execute lifecycle capabilities")
 
 
+def _unreachable_attachment_store_factory(_bucket_id: str) -> NoReturn:
+    """Fail if this refresh-target test opens encrypted attachment custody."""
+    raise AssertionError("workspace refresh target resolution must not open attachment custody")
+
+
 def _work_unit_id() -> str:
     """Derive a real work-unit identifier from the live registry authority."""
     period = Period.from_year_and_code(2025, "1T")
@@ -82,6 +87,7 @@ def _registry() -> OperationRegistry:
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         export_ports_factory=_unreachable_capability_factory,
         calculation_action_ports_factory=_unreachable_capability_factory,
+        attachment_store_factory=_unreachable_attachment_store_factory,
         amendment_action_ports_factory=_unreachable_capability_factory,
         filing_action_ports_factory=_unreachable_capability_factory,
         work_lifecycle_ports_factory=_unreachable_capability_factory,

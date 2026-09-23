@@ -56,6 +56,7 @@ from ...components.dialogs import ConfirmScreen
 from ...components.theme import toggle_appearance
 from ...components.widgets import ContentDataTable, ContentScroll, DisclosureGroup
 from ...operations.controller import OperationController
+from ..m303_evidence import OrdinaryM303FilingEvidenceScreen, OrdinaryM303FilingEvidenceSubmission
 from .controller import ModeloWorkspaceReadSession
 from .models import (
     assertion_label,
@@ -68,6 +69,7 @@ from .models import (
 from .technical_details import TechnicalDetailRowV1, mount_technical_details, producer_row
 
 if TYPE_CHECKING:
+    from .....application.modelo.operation_definitions import ModeloWorkCalculateOrdinaryM303EvidenceRequestV1
     from .models import ModeloWorkspaceDestinationIdV1
 
 _ADDRESS_ROW_KEYS: tuple[str, ...] = ("modelo", "filing_year", "period", "work_state")
@@ -169,6 +171,9 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         actions = self._session.lifecycle_actions
         if actions is None:
             return
+        if event.button.id == "modelo-lifecycle-calculate" and self._is_m303_calculation():
+            self._collect_ordinary_m303_evidence()
+            return
         method_name = {
             "modelo-edit-apply": "apply_edits",
             "modelo-lifecycle-calculate": "calculate",
@@ -209,6 +214,64 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         if output_path is not None:
             keyword_arguments["output_path"] = output_path
         self._start_lifecycle_action(submit, keyword_arguments=keyword_arguments)
+
+    def _is_m303_calculation(self) -> bool:
+        """Return whether Calculate must collect the ordinary Modelo 303 evidence form."""
+        return str(self._session.projection.target.modelo) == "303"
+
+    def _collect_ordinary_m303_evidence(self) -> None:
+        """Open one evidence form bound to the work unit selected on this immutable session."""
+        work_unit_id = self._session.projection.target.work_unit_id
+        if work_unit_id is None:
+            return
+        self.app.push_screen(
+            OrdinaryM303FilingEvidenceScreen(work_unit_id=str(work_unit_id)),
+            self._calculate_with_ordinary_m303_evidence,
+        )
+
+    def _calculate_with_ordinary_m303_evidence(self, submission: OrdinaryM303FilingEvidenceSubmission | None) -> None:
+        """Submit only evidence returned for the same selected work unit, never a stale screen result.
+
+        Cancelling, a changed selection and a missing admission door each end
+        with a visible notice and no request: none of them may fall through to
+        a calculation that the operator did not complete.
+        """
+        if submission is None:
+            self._notice(tr("tui.modelo.m303_evidence.cancelled"))
+            return
+        actions = self._session.lifecycle_actions
+        target_work_unit_id = self._session.projection.target.work_unit_id
+        action_work_unit_id = None if actions is None else getattr(actions, "work_unit_id", None)
+        if (
+            target_work_unit_id is None
+            or str(target_work_unit_id) != submission.work_unit_id
+            or str(action_work_unit_id) != submission.work_unit_id
+        ):
+            self._notice(tr("tui.modelo.m303_evidence.stale_context"))
+            return
+        calculate = getattr(actions, "calculate", None)
+        author = getattr(actions, "author_ordinary_m303_filing_evidence", None)
+        existing_evidence = submission.existing_evidence
+        observed_at = submission.observed_at
+        if not isinstance(calculate, Callable) or (
+            existing_evidence is None and (observed_at is None or not isinstance(author, Callable))
+        ):
+            self._notice(tr("tui.modelo.m303_evidence.admission_unavailable"))
+            return
+        submit_calculation = cast("Callable[..., Awaitable[OperationController]]", calculate)
+        admit_evidence = cast("Callable[..., Awaitable[ModeloWorkCalculateOrdinaryM303EvidenceRequestV1]]", author)
+
+        async def submit() -> OperationController:
+            evidence = existing_evidence
+            if evidence is None:
+                evidence = await admit_evidence(
+                    joint_return_elected=submission.joint_return_elected,
+                    annual_volume_nonzero=submission.annual_volume_nonzero,
+                    observed_at=observed_at,
+                )
+            return await submit_calculation(ordinary_m303_filing_evidence=evidence)
+
+        self._start_lifecycle_action(submit)
 
     def _confirm_local_filing(self) -> None:
         """Require an explicit acknowledgement before recording a local filing."""

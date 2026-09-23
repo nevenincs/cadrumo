@@ -8,8 +8,10 @@ success.
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 
 from pydantic import BaseModel
 
@@ -24,6 +26,9 @@ from ....application.modelo.edit_models import (
     ModeloEditSubmissionV1,
     ModeloScalarEditIntentV1,
 )
+from ....application.modelo.m303_exonerado_390_applicability_attestation import (
+    M303Exonerado390ApplicabilityAttestationAdmission,
+)
 from ....application.modelo.operation_definitions import (
     MODELO_EDIT_APPLY_OPERATION_DEFINITION_ID,
     MODELO_EXPORT_OPERATION_DEFINITION_ID,
@@ -33,6 +38,7 @@ from ....application.modelo.operation_definitions import (
     ModeloEditApplyOperationRequestV1,
     ModeloEditApplySubmissionV1,
     ModeloExportRequest,
+    ModeloWorkCalculateOrdinaryM303EvidenceRequestV1,
     ModeloWorkCalculateRequest,
     ModeloWorkFileApproval,
     ModeloWorkFileRequest,
@@ -60,15 +66,49 @@ class ModeloWorkspaceLifecycleDoor:
     verification_report_id: str | None = None
     refresh_after_success: Callable[[], object] | None = None
     edit_baseline: ModeloEditBaselineV1 | None = None
+    m303_exonerado_390_attestation_admission: (
+        Callable[[datetime], M303Exonerado390ApplicabilityAttestationAdmission] | None
+    ) = None
 
-    async def calculate(self) -> OperationController:
+    async def calculate(
+        self,
+        *,
+        ordinary_m303_filing_evidence: ModeloWorkCalculateOrdinaryM303EvidenceRequestV1 | None = None,
+    ) -> OperationController:
         """Calculate the selected work unit from its canonical persisted ledger."""
+        payload: dict[str, object] = {
+            "work_unit_id": self.work_unit_id,
+            "actor": _ACTOR_REF,
+        }
+        if ordinary_m303_filing_evidence is not None:
+            payload["ordinary_m303_filing_evidence"] = ordinary_m303_filing_evidence
         return await self._submit(
             OperationRequest(
                 definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
                 subject_ref=self.work_unit_id,
-                payload=ModeloWorkCalculateRequest(work_unit_id=self.work_unit_id, actor=_ACTOR_REF),
+                payload=ModeloWorkCalculateRequest(**payload),
             )
+        )
+
+    async def author_ordinary_m303_filing_evidence(
+        self,
+        *,
+        joint_return_elected: bool,
+        annual_volume_nonzero: bool,
+        observed_at: datetime,
+    ) -> ModeloWorkCalculateOrdinaryM303EvidenceRequestV1:
+        """Admit a new secure attestation, then expose only its typed coordinates to calculation."""
+        admit = self.m303_exonerado_390_attestation_admission
+        if admit is None:
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message="tui.modelo.m303_evidence.admission_unavailable"
+            )
+        admission = await asyncio.to_thread(admit, observed_at)
+        return ModeloWorkCalculateOrdinaryM303EvidenceRequestV1(
+            joint_return_elected=joint_return_elected,
+            annual_volume_nonzero=annual_volume_nonzero,
+            m303_exonerado_390_attachment_id=admission.attachment_id,
+            m303_exonerado_390_sha256=admission.sha256,
         )
 
     async def apply_edits(

@@ -7,6 +7,7 @@ import asyncio
 from dataclasses import fields
 from datetime import timedelta
 from pathlib import Path
+from typing import cast
 
 import pytest
 
@@ -15,6 +16,7 @@ from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRep
 from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...adapters.persistence.storage.master_key.active_session import current_active_bucket_session
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root, isolated_runtime_profile
+from ...application.modelo.operation_definitions import ModeloWorkCalculateExecutor
 from ...application.operations.composition import (
     OperationComposedServices,
     OperationSubmission,
@@ -32,6 +34,7 @@ from ...application.operations.projection_services import (
 )
 from ...application.operations.tests.authority_test_support import unread_authority_operation
 from ...core.time.clock import now
+from ...domain.attachments.protocols import AttachmentStoreProtocol
 from ..operation_composition import build_production_operation_registry, compose_operation_dependencies
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -65,6 +68,19 @@ def test_production_composition_reaches_the_owner_registry_fixed_point(tmp_path:
         assert dependencies.observation.registry is dependencies.cancellation.registry
         assert dependencies.observation.registry is dependencies.detach.registry
         asyncio.run(dependencies.shutdown())
+
+
+def test_production_registry_injects_the_secure_attachment_store_into_m303_calculation() -> None:
+    """M303 evidence resolves through composition-owned encrypted attachment custody."""
+
+    def attachment_store_factory(_bucket_id: str) -> AttachmentStoreProtocol:
+        return cast(AttachmentStoreProtocol, object())
+
+    registry = build_production_operation_registry(attachment_store_factory=attachment_store_factory)
+    definition = registry.lookup("modelo.work.calculate")
+    executor = cast(ModeloWorkCalculateExecutor, definition.executor_factory.build())
+
+    assert executor._attachment_store_factory is attachment_store_factory
 
 
 def test_production_composition_is_available_before_profile_login(tmp_path: Path) -> None:

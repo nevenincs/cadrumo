@@ -1883,6 +1883,26 @@ tui:
       informational: Csak tájékoztató
       manual: Ön adja meg
       projection_only: Megjelenik, de nem kerül benyújtásra
+    m303_evidence:
+      admission_unavailable: Itt nem rögzíthető új nyilatkozat ehhez a bevalláshoz.
+        Semmi sem lett kiszámítva.
+      annual_volume_nonzero: Az éves ügyletforgalom eltér nullától (LIVA 121. cikk)?
+      attestation_attachment_id: A meglévő nyilatkozat azonosítója
+      attestation_sha256: A meglévő nyilatkozat SHA-256 értéke
+      cancel: Mégse
+      cancelled: A számítás megszakítva; nem került rögzítésre bevallási adat.
+      existing_attestation_hint: Válaszoljon mindkét kérdésre. Ezután adjon meg egy
+        meglévő nyilatkozatot arról, hogy a 390-es nyomtatvány alóli mentesség szakasza
+        nem alkalmazandó (azonosítóját és SHA-256 értékét), vagy hagyja ezeket üresen,
+        és adja meg, mikor erősítette meg, hogy új nyilatkozat jöjjön létre.
+      joint_return_elected: Közös önbevallás (autoliquidación conjunta)?
+      observed_at: Megerősítés időpontja új nyilatkozathoz (ISO 8601 UTC-eltolással,
+        például 2025-04-01T12:00:00Z)
+      required: Válaszoljon mindkét kérdésre, és adjon meg vagy egy teljes meglévő
+        nyilatkozatot, vagy egy megerősítési időpontot UTC-eltolással, de ne mindkettőt.
+      stale_context: A kiválasztott bevallás megváltozott, miközben az űrlap nyitva
+        volt. Semmi sem lett kiszámítva; válassza újra a Számítást.
+      title: A 303-es nyomtatvány bevallási adatai
     record_family:
       bindings: Értékek a nyilvántartásából
       casillas: Mezők

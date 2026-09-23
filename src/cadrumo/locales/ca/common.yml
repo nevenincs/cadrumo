@@ -1895,6 +1895,26 @@ tui:
       informational: Només informatiu
       manual: L'introdueixes tu
       projection_only: Es mostra, no es presenta
+    m303_evidence:
+      admission_unavailable: Aquí no es pot registrar una atestació nova per a aquesta
+        declaració. No s'ha calculat res.
+      annual_volume_nonzero: Volum anual d'operacions diferent de zero (art. 121 LIVA)?
+      attestation_attachment_id: Identificador de l'atestació existent
+      attestation_sha256: SHA-256 de l'atestació existent
+      cancel: Cancel·la
+      cancelled: Càlcul cancel·lat; no s'ha registrat cap dada de l'autoliquidació.
+      existing_attestation_hint: Responeu les dues preguntes. Després, indiqueu una
+        atestació existent que no escau l'apartat d'exoneració del Model 390 (el seu
+        identificador i SHA-256), o deixeu-los en blanc i indiqueu quan ho vau confirmar
+        per registrar una atestació nova.
+      joint_return_elected: Autoliquidació conjunta?
+      observed_at: Confirmat el, per a una atestació nova (ISO 8601 amb desplaçament
+        UTC, per exemple 2025-04-01T12:00:00Z)
+      required: Responeu les dues preguntes i indiqueu una atestació existent completa
+        o una hora de confirmació amb el seu desplaçament UTC, però no totes dues.
+      stale_context: La declaració seleccionada ha canviat mentre el formulari era
+        obert. No s'ha calculat res; torneu a triar Calcula.
+      title: Dades de l'autoliquidació del Model 303
     record_family:
       bindings: Valors dels teus registres
       casillas: Caselles

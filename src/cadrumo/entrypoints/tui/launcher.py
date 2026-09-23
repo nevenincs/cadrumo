@@ -934,11 +934,21 @@ def _modelo_lifecycle_door(
     refresh_after_success: Callable[[], object] | None = None,
 ) -> object:
     """Bind one lifecycle read to the session's operation services without repository access."""
+    from datetime import datetime
+
     from ...application.modelo.edit_admission import admit_modelo_edit_baseline
     from ...application.modelo.edit_models import ModeloEditAdmittedV1
+    from ...application.modelo.m303_exonerado_390_applicability_attestation import (
+        M303Exonerado390ApplicabilityAttestationAdmission,
+        M303Exonerado390ApplicabilityAttestationRequest,
+        admit_m303_exonerado_390_applicability_attestation,
+    )
+    from ...application.modelo.profile_readiness_gate import load_modelo_work_profile
+    from ...application.modelo.work_lifecycle import ActiveWorkUnitUse, require_active_work_unit
     from ...application.modelo.workspace_models import ModeloWorkspaceLifecycleProjectionV1
-    from ..adapter_composition import build_calculation_action_ports
-    from .modelo.lifecycle import ModeloWorkspaceLifecycleDoor
+    from ...domain.attachments.m303_filing_evidence import M303Exonerado390ApplicabilityAssertion
+    from ..adapter_composition import build_attachment_store, build_calculation_action_ports
+    from .modelo.lifecycle import ModeloLifecycleActionUnavailableError, ModeloWorkspaceLifecycleDoor
 
     if not isinstance(lifecycle, ModeloWorkspaceLifecycleProjectionV1) or lifecycle.target.work_unit_id is None:
         raise ValueError("Modelo lifecycle actions require an admitted work-unit lifecycle projection")
@@ -953,6 +963,41 @@ def _modelo_lifecycle_door(
         operation=operation_runtime.authority_operation,
         operation_contracts=operation_runtime.public_contracts,
     )
+
+    target = lifecycle.target
+
+    def admit_attestation(observed_at: datetime) -> M303Exonerado390ApplicabilityAttestationAdmission:
+        """Admit evidence only for the still-active selected M303 work coordinate."""
+        if str(target.modelo) != "303":
+            raise ModeloLifecycleActionUnavailableError(
+                translated_message="tui.modelo.m303_evidence.admission_unavailable"
+            )
+        current = require_active_work_unit(
+            ports.work_unit_repository.load(),
+            work_unit_id=str(target.work_unit_id),
+            repository_bucket_id=ports.work_unit_repository.bucket_id,
+            use=ActiveWorkUnitUse.CALCULATE,
+        )
+        if current.filing_year != target.filing_year or current.period != target.period:
+            raise ModeloLifecycleActionUnavailableError(translated_message="tui.modelo.m303_evidence.stale_context")
+        profile = load_modelo_work_profile(
+            bucket_id=bucket_id,
+            profile_decode_context=operation_runtime.authority_operation.profile_decode_context(),
+        )
+        return admit_m303_exonerado_390_applicability_attestation(
+            bucket_id=bucket_id,
+            request=M303Exonerado390ApplicabilityAttestationRequest(
+                filing_year=target.filing_year,
+                period=target.period,
+                asserted_value=M303Exonerado390ApplicabilityAssertion.NOT_APPLICABLE,
+                observed_at=observed_at,
+            ),
+            actor="operator:tui-modelo",
+            operation=operation_runtime.authority_operation,
+            store=build_attachment_store(bucket_id),
+            profile=profile,
+        )
+
     return ModeloWorkspaceLifecycleDoor(
         services=operation_runtime.services,
         work_unit_id=str(lifecycle.target.work_unit_id),
@@ -960,6 +1005,7 @@ def _modelo_lifecycle_door(
         verification_report_id=lifecycle.verification_report_id,
         refresh_after_success=refresh_after_success,
         edit_baseline=admission.baseline if isinstance(admission, ModeloEditAdmittedV1) else None,
+        m303_exonerado_390_attestation_admission=admit_attestation,
     )
 
 
