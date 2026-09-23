@@ -21,7 +21,13 @@ import pytest
 from ......core.config import override_settings
 from ...crypto.aead import EncryptedBlob, decrypt_record
 from ...crypto.aes_gcm import open_sealed
-from .._kdf_codec import KDF_CALIBRATED_FRAME, KDF_FAILED_FRAME, KDF_FRAME_CONTROL, write_kdf_frame
+from .._kdf_codec import (
+    KDF_FAILED_FRAME,
+    KDF_FRAME_CONTROL,
+    calibration_frame_bytes,
+    parse_calibration_frame,
+    write_kdf_frame,
+)
 from .._kdf_records import (
     KDF_PARAMETER_FIELDS,
     WRAPPED_DEK_FIELDS,
@@ -55,12 +61,10 @@ def test_baseline_aead_blobs_decrypt_through_both_layers(index: int) -> None:
     )
 
 
-@pytest.mark.parametrize("name", ["KDF_CALIBRATED_FRAME", "KDF_FAILED_FRAME"])
-def test_control_frames_are_byte_identical_to_the_baseline(name: str) -> None:
-    value = {"KDF_CALIBRATED_FRAME": KDF_CALIBRATED_FRAME, "KDF_FAILED_FRAME": KDF_FAILED_FRAME}[name]
+def test_the_failed_control_frame_is_byte_identical_to_the_baseline() -> None:
     reader, writer = os.pipe()
     try:
-        write_kdf_frame(writer, value, kind=KDF_FRAME_CONTROL)
+        write_kdf_frame(writer, KDF_FAILED_FRAME, kind=KDF_FRAME_CONTROL)
         os.close(writer)
         writer = -1
         framed = os.read(reader, 1024)
@@ -69,7 +73,67 @@ def test_control_frames_are_byte_identical_to_the_baseline(name: str) -> None:
         if writer >= 0:
             os.close(writer)
 
-    assert framed == _b64(_BASELINE["frames"][name])
+    assert framed == _b64(_BASELINE["frames"]["KDF_FAILED_FRAME"])
+
+
+@pytest.mark.parametrize("derivation_ns", [0, 1, 447_000_000, 2**53])
+def test_a_calibration_frame_round_trips_its_worker_timing(derivation_ns: int) -> None:
+    assert parse_calibration_frame(calibration_frame_bytes(derivation_ns=derivation_ns)) == derivation_ns
+
+
+@pytest.mark.parametrize(
+    "frame",
+    [
+        b'{"derivation_ns":-1,"protocol":"profile-kdf-calibrated/v2"}',
+        b'{"derivation_ns":0.5,"protocol":"profile-kdf-calibrated/v2"}',
+        b'{"derivation_ns":true,"protocol":"profile-kdf-calibrated/v2"}',
+        b'{"derivation_ns":"5","protocol":"profile-kdf-calibrated/v2"}',
+        b'{"derivation_ns":5,"protocol":"profile-kdf-calibrated/v1"}',
+        b'{"derivation_ns":5}',
+        b'{"derivation_ns":5,"extra":1,"protocol":"profile-kdf-calibrated/v2"}',
+        b'{"protocol":"profile-kdf-calibrated/v2","derivation_ns":5}',
+        b'{"derivation_ns": 5,"protocol":"profile-kdf-calibrated/v2"}',
+        b"[5]",
+        b"cadrumo-profile-kdf-calibrated-v1",
+        b"\xff",
+    ],
+    ids=[
+        "negative",
+        "float",
+        "bool",
+        "string",
+        "old-protocol",
+        "missing-protocol",
+        "extra-field",
+        "non-canonical-order",
+        "non-canonical-spacing",
+        "not-an-object",
+        "retired-constant-frame",
+        "not-utf8",
+    ],
+)
+def test_a_calibration_frame_of_any_other_shape_is_refused(frame: bytes) -> None:
+    with pytest.raises(ValueError):
+        parse_calibration_frame(frame)
+
+
+def test_a_profile_wrapped_at_the_fallback_point_still_opens(tmp_path: Path) -> None:
+    kdf = ProfileCustodyKdfParameters.model_validate(_BASELINE["fallback_kdf"])
+    wrapped = ProfileCustodyWrappedDek.model_validate(_BASELINE["fallback_wrapped_dek"])
+    dek, associated_data = _b64(_BASELINE["dek_b64"]), _b64(_BASELINE["associated_data_b64"])
+
+    with (
+        override_settings(cadrumo_local_storage_root=tmp_path),
+        _SupervisedKdfWorker(deadline=time.monotonic() + 120) as worker,
+    ):
+        opened = worker.unwrap(
+            password=encode_profile_password(_BASELINE["password"]),
+            kdf=kdf,
+            wrapped_dek=wrapped,
+            associated_data=associated_data,
+        )
+
+    assert opened == dek
 
 
 @pytest.mark.parametrize("label", ["password", "recovery"])

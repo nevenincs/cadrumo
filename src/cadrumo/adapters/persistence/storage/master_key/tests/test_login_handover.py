@@ -149,8 +149,8 @@ def _child_settings(storage_root: Path) -> tuple[Settings, Token[Settings | None
     # registration, for the answer the parent already has.
     #
     # Declining adopts the fixed fallback `calibrate_profile_kdf` also returns
-    # on deadline, which is stronger than the measured band's floor, so the
-    # custody envelope these children write is wrapped no more weakly.
+    # on deadline, the floor a measured point never falls below, so the custody
+    # envelope these children write is wrapped at a strength production accepts.
     settings = Settings(
         _env_file=None,
         cadrumo_local_storage_root=storage_root,

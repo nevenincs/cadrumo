@@ -16,7 +16,7 @@ from uuid import UUID
 
 import pytest
 
-from ......core.config import Settings
+from ......core.config import Settings, override_settings
 from .._kdf_attestation import parse_ready_attestation
 from .._kdf_codec import KDF_FRAME_CONTROL, KDF_FRAME_HEADER, KDF_FRAME_MAGIC, KDF_FRAME_VERSION, read_kdf_frame
 from .._kdf_process import apply_posix_worker_limits, worker_environment
@@ -31,15 +31,14 @@ from ..errors import (
 )
 from ..kdf_supervision import (
     PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
-    ProfileCustodyKdfCalibration,
     ProfileCustodyKdfResources,
     _posix_memory_bytes,
-    _select_profile_kdf_calibration,
     calibrate_profile_kdf,
     fixed_profile_kdf_fallback,
     profile_kdf_grid,
     profile_kdf_is_eligible,
     profile_kdf_lease,
+    profile_kdf_meets_fallback_floor,
     unlock_profile_custody,
     unlock_profile_custody_recovery_material,
     wrap_profile_custody_password_material,
@@ -49,6 +48,13 @@ from ..records import ProfileCustodyEnvelope, ProfileCustodyKdfParameters, parse
 from ..sentinel_contract import ProfileCustodySentinelRecord, parse_profile_custody_sentinel_record
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
+
+# No case here is about how fast a worker starts; they prove what a ready worker
+# holds, and what happens when it fails or goes silent. Spawning under a loaded
+# parallel run measured past five seconds, so the ready handshake gets a
+# deadline no loaded host misses, and any short deadline a case needs is set
+# only after the worker is ready.
+_READY_DEADLINE_SECONDS = 120.0
 
 _PROFILE_ID = UUID("06648eb9-e60e-46d2-bd35-9aaf55a92e24")
 _PASSPHRASE = "profile " + "password" + " 123"
@@ -137,34 +143,6 @@ def test_fallback_eligibility_requires_the_same_memory_and_cpu_gate() -> None:
     )
 
 
-def test_deterministic_selector_chooses_first_strongest_complete_target_median() -> None:
-    strongest = _kdf(memory_mib=128, iterations=8, parallelism=1)
-    eligible_target = _kdf(memory_mib=64, iterations=6, parallelism=1)
-    weaker_target = _kdf(memory_mib=32, iterations=4, parallelism=1)
-
-    selected = _select_profile_kdf_calibration(
-        [
-            (strongest, None),
-            (eligible_target, (0.34, 0.29, 0.31, 0.30, 0.33)),
-            (weaker_target, (0.26, 0.28, 0.27, 0.29, 0.30)),
-        ],
-    )
-
-    assert selected == ProfileCustodyKdfCalibration(
-        version=PROFILE_CUSTODY_KDF_CALIBRATION_VERSION,
-        parameters=eligible_target,
-        source="measured",
-        median_seconds=0.31,
-    )
-
-
-def test_incomplete_point_cannot_be_selected() -> None:
-    candidate = _kdf(memory_mib=64, iterations=6, parallelism=1)
-
-    with pytest.raises(ValueError, match="five non-negative samples"):
-        _select_profile_kdf_calibration([(candidate, (0.3, 0.3, 0.3, 0.3))])
-
-
 @pytest.mark.asyncio
 async def test_os_released_lease_blocks_another_real_process_then_recovers_after_death(tmp_path: Path) -> None:
     hold_script = """
@@ -221,7 +199,7 @@ def test_strict_frame_reader_refuses_oversized_wire_length() -> None:
 
 
 def test_ready_without_a_secret_then_failure_reaps_the_real_worker_tree() -> None:
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 5.0)
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
     process: subprocess.Popen[bytes] | None = None
 
     with pytest.raises(RuntimeError, match="test containment cleanup"), worker:
@@ -235,7 +213,7 @@ def test_ready_without_a_secret_then_failure_reaps_the_real_worker_tree() -> Non
 
 
 def test_ready_attestation_proves_the_real_os_containment_environment_and_handle_boundary() -> None:
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 5.0)
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
 
     with worker:
         process = worker._process
@@ -344,7 +322,7 @@ def test_real_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready
         _assert_posix_worker_sheds_extra_inherited_pty_and_pipe_descriptors_before_ready()
         return
 
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 5.0)
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
     with worker:
         assert worker._process is not None
         assert worker._job is not None
@@ -431,12 +409,14 @@ time.sleep(30)
 
 
 def test_ready_then_deadline_terminates_and_reaps_the_real_worker() -> None:
-    worker = _SupervisedKdfWorker(deadline=time.monotonic() + 5.0)
+    worker = _SupervisedKdfWorker(deadline=time.monotonic() + _READY_DEADLINE_SECONDS)
     process: subprocess.Popen[bytes] | None = None
 
     with pytest.raises(TimeoutError, match="did not respond"), worker:
         process = worker._process
         assert process is not None
+        # Only now, with the worker proven ready, does the deadline become short.
+        worker._deadline = time.monotonic() + 0.5
         worker._read_response_frame()
 
     assert process is not None
@@ -481,12 +461,23 @@ def test_real_supervised_calibration_returns_only_the_versioned_grid_or_fixed_fa
 
     assert calibration.version == PROFILE_CUSTODY_KDF_CALIBRATION_VERSION
     assert calibration.parameters in profile_kdf_grid(salt=b"c" * 16)
+    assert profile_kdf_meets_fallback_floor(calibration.parameters), "calibration selected below the fallback"
     if calibration.source == "fallback":
         assert calibration.parameters == fixed_profile_kdf_fallback(salt=b"c" * 16)
         assert calibration.median_seconds is None
     else:
         assert calibration.median_seconds is not None
         assert 0.250 <= calibration.median_seconds <= 0.500
+
+
+def test_real_worker_times_the_derivation_alone_inside_the_sample(tmp_path: Path) -> None:
+    with override_settings(cadrumo_local_storage_root=tmp_path):
+        started = time.monotonic()
+        with _SupervisedKdfWorker(deadline=time.monotonic() + 60) as worker:
+            derivation = worker.calibrate(_kdf(memory_mib=19, iterations=2, parallelism=1))
+        sample = time.monotonic() - started
+
+    assert 0 < derivation < sample, "the worker's own timing must exclude its start-up and fit inside the sample"
 
 
 def test_real_child_unwrap_returns_only_a_parent_sentinel_proven_dek(tmp_path: Path) -> None:

@@ -167,7 +167,7 @@ def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
     """Stop every profile registration re-benchmarking this host's KDF grid.
 
     ``calibrate_profile_kdf`` MEASURES the parameter grid to pick the strongest
-    point inside the operator latency band: one supervised child per warmup and
+    point inside the operator latency band: one supervised child per probe and
     per sample. Profiled here, that is 16.1s of the 19.1s a registration costs,
     and it is repeated for every registration, on the same machine, for the same
     answer. Registration doors are reached from 102 direct call sites across 31
@@ -176,9 +176,10 @@ def _skip_profile_kdf_grid_measurement() -> Iterator[None]:
     The seam and its reasoning are the shipped function's own: measuring is
     "the right price for an operator's one-off enrolment and the wrong one for a
     host that enrols constantly". Declining adopts the FIXED fallback point,
-    which that function also returns whenever the grid cannot be measured before
-    its deadline, and which is STRONGER than the measured band's floor -- so
-    every custody envelope a test opens is wrapped no more weakly than before.
+    which that function also returns whenever no point is confirmed before its
+    deadline, and which is the floor a measured point never falls below -- so
+    every custody envelope a test opens is wrapped at a strength production
+    also accepts.
 
     Session-scoped and outermost, which is what makes it survive: a nested
     ``override_settings`` setting other fields keeps this value (checked), so

@@ -37,6 +37,8 @@ class KdfWireBaseline(TypedDict):
     aead: list[AeadSample]
     associated_data_b64: str
     dek_b64: str
+    fallback_kdf: KdfParameters
+    fallback_wrapped_dek: WrappedDek
     frames: dict[str, str]
     kdf: KdfParameters
     password: str
@@ -67,8 +69,24 @@ KDF_WIRE_BASELINE: Final[KdfWireBaseline] = {
     ],
     "associated_data_b64": "Y2FkcnVtby13aXJlLWZpeHR1cmUtYWQ=",
     "dek_b64": "ZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXp7fH1+f4CBgoM=",
+    # A password wrap at the fixed fallback point, written by the worker that
+    # every enrollment fell back to before calibration could confirm a measured
+    # point; profiles wrapped this way must keep opening.
+    "fallback_kdf": {
+        "algorithm": "argon2id",
+        "iterations": 3,
+        "memory_mib": 64,
+        "output_bytes": 32,
+        "parallelism": 1,
+        "salt_b64": "AAECAwQFBgcICQoLDA0ODw==",
+        "version": 19,
+    },
+    "fallback_wrapped_dek": {
+        "ciphertext_b64": "1qHYdfBMuwGH3/TBx2wuTNlbiWkZWWtU6yxCE1bFtGk=",
+        "nonce_b64": "FXgwVrK30F5/NJR0",
+        "tag_b64": "JnUxLH/qJ/WTweUk1AsYQw==",
+    },
     "frames": {
-        "KDF_CALIBRATED_FRAME": "Q0tERgEBAAAAAAAhY2FkcnVtby1wcm9maWxlLWtkZi1jYWxpYnJhdGVkLXYx",
         "KDF_FAILED_FRAME": "Q0tERgEBAAAAAAAdY2FkcnVtby1wcm9maWxlLWtkZi1mYWlsZWQtdjE=",
     },
     "kdf": {
