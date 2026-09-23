@@ -16,7 +16,7 @@ from collections.abc import Sequence
 from dataclasses import asdict, dataclass
 from decimal import Decimal
 from pathlib import Path
-from typing import Any, Final
+from typing import Any, Final, cast
 
 from dev.acceptance.installed_cli import CommandEvidence, InstalledCli, InstalledCliError, authority_generation
 
@@ -72,7 +72,7 @@ class CliJourneyEvidence:
 
     def to_dict(self) -> dict[str, object]:
         """Return a JSON-safe representation."""
-        return asdict(self)
+        return dict[str, object](asdict(self))
 
 
 @dataclass(frozen=True, slots=True)
@@ -121,7 +121,7 @@ class CliControlsEvidence:
 
     def to_dict(self) -> dict[str, object]:
         """Return a JSON-safe representation."""
-        return asdict(self)
+        return dict[str, object](asdict(self))
 
 
 def command_result(document: dict[str, Any]) -> dict[str, Any]:
@@ -130,6 +130,14 @@ def command_result(document: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(result, dict):
         raise JourneyError(f"command result is not an object: {document!r}")
     return result
+
+
+def _annual_casilla(outcome: dict[str, object], casilla_id: str) -> str:
+    """Read an optional annual observation without masking a blocked outcome."""
+    casillas = outcome.get("casillas")
+    if not isinstance(casillas, dict):
+        return ""
+    return str(cast("dict[str, object]", casillas).get(casilla_id, ""))
 
 
 def _money(value: Decimal) -> str:
@@ -150,7 +158,7 @@ def ingest_income_fixture(
     transaction_ids: list[str] = []
     invoice_ids: list[str] = []
     issued_pairs: list[LinkedLedgerPair] = []
-    for income in income_items:
+    for issued in income_items:
         income_tx = command_result(
             cli.run(
                 (
@@ -158,21 +166,21 @@ def ingest_income_fixture(
                     "ledger",
                     "add",
                     "--date",
-                    income.transaction_date.isoformat(),
+                    issued.transaction_date.isoformat(),
                     "--amount",
-                    _money(income.net_receipt),
+                    _money(issued.net_receipt),
                     "--direction",
                     "INCOMING",
                     "--description",
-                    f"Synthetic income {income.period}",
+                    f"Synthetic income {issued.period}",
                     "--classification",
                     "BUSINESS",
                     "--taxable-base",
-                    _money(income.taxable_base),
+                    _money(issued.taxable_base),
                     "--iva-rate",
-                    str(income.iva_rate),
+                    str(issued.iva_rate),
                     "--iva-amount",
-                    _money(income.iva),
+                    _money(issued.iva),
                     "--iva-category",
                     "domestic_general",
                     "--irpf-category",
@@ -180,7 +188,7 @@ def ingest_income_fixture(
                     "--source-jurisdiction",
                     "ES",
                     "--idempotency-key",
-                    income.transaction_id,
+                    issued.transaction_id,
                 )
             )
         )
@@ -198,19 +206,19 @@ def ingest_income_fixture(
                     "--counterparty-nif",
                     _CLIENT_NIF,
                     "--invoice-number",
-                    income.invoice_id.upper(),
+                    issued.invoice_id.upper(),
                     "--invoice-date",
-                    income.invoice_date.isoformat(),
+                    issued.invoice_date.isoformat(),
                     "--taxable-base",
-                    _money(income.taxable_base),
+                    _money(issued.taxable_base),
                     "--iva-rate",
                     "21",
                     "--country-code",
                     "ES",
                     "--retention-rate",
-                    str(income.withholding_rate),
+                    str(issued.withholding_rate),
                     "--retention-amount",
-                    _money(income.withholding),
+                    _money(issued.withholding),
                     "--iva-category",
                     "domestic_general",
                 )
@@ -223,7 +231,7 @@ def ingest_income_fixture(
         invoice_ids.append(income_invoice_id)
         issued_pairs.append(
             LinkedLedgerPair(
-                fixture_invoice_id=income.invoice_id,
+                fixture_invoice_id=issued.invoice_id,
                 transaction_id=income_tx_id,
                 invoice_id=income_invoice_id,
             )
@@ -631,7 +639,7 @@ def _a2_retention_mutation_case(
         "baseline_q4_payment": before["19"],
         "corrected_q4_payment": after["19"],
         "corrected_annual_withholding_oracle": _money(mutation.corrected_annual.activity_withholding),
-        "corrected_annual_m130_payments": str(annual.get("casillas", {}).get("0604", "")),
+        "corrected_annual_m130_payments": _annual_casilla(annual, "0604"),
     }
     return (
         AcceptanceControlEvidence(
@@ -689,8 +697,8 @@ def _a4_boundary_case(
                 "q1_income": observed["1T"]["01"],
                 "q2_income": observed["2T"]["01"],
                 "q2_expenses": observed["2T"]["02"],
-                "annual_income": str(annual.get("casillas", {}).get("0171", "")),
-                "annual_expenses": str(annual.get("casillas", {}).get("0218", "")),
+                "annual_income": _annual_casilla(annual, "0171"),
+                "annual_expenses": _annual_casilla(annual, "0218"),
                 "prior_year_excluded_invoice_count": str(len(controls.excluded_income_ids)),
             },
         ),

@@ -26,9 +26,9 @@ from .cli_journey import (
     _calculate_m100,
     _calculate_m130_work,
     _create_m130_work,
-    _ingest,
-    _result,
     _verify_and_file_m130,
+    command_result,
+    ingest_income_fixture,
 )
 from .installed_tui_child import (
     InstalledTuiChildError,
@@ -245,7 +245,7 @@ def _parse_child_state(document: dict[str, object], key: str) -> ContinuationSta
 
 def _public_work_units(cli: InstalledCli, *, year: int) -> dict[str, dict[str, object]]:
     """Read the four partial work units from the installed CLI list surface."""
-    listing = _result(cli.run(("app", "modelo", "work", "list")))
+    listing = command_result(cli.run(("app", "modelo", "work", "list")))
     units = listing.get("work_units")
     if not isinstance(units, list):
         raise InstalledContinuationError("installed CLI work list returned no public work-unit collection")
@@ -269,11 +269,11 @@ def _public_work_units(cli: InstalledCli, *, year: int) -> dict[str, dict[str, o
 
 
 def _cli_public_readback(cli: InstalledCli, *, generation: str, year: int) -> ContinuationStateEvidence:
-    ledger = _result(cli.run(("app", "ledger", "list")))
+    ledger = command_result(cli.run(("app", "ledger", "list")))
     rows = ledger.get("rows")
     if not isinstance(rows, list) or len(rows) != 8:
         raise InstalledContinuationError("installed CLI ledger list did not publicly reproduce eight transactions")
-    invoices = _result(cli.run(("app", "ledger", "invoice", "list")))
+    invoices = command_result(cli.run(("app", "ledger", "invoice", "list")))
     invoice_rows = invoices.get("rows")
     if (
         invoices.get("count") != 8
@@ -633,7 +633,7 @@ def run_installed_tui_continuations(
     cli_passphrase = secrets.token_urlsafe(32)
     cli = InstalledCli(cli_executable, storage_root=cli_store, authority_root=authority_root, passphrase=cli_passphrase)
     cli.create_profile(year=year)
-    _ingest(cli, year=year)
+    ingest_income_fixture(cli, year=year)
     work_ids = {period: _create_m130_work(cli, year=year, period=period) for period in ("1T", "2T", "3T", "4T")}
     q1 = build_scenario(year).quarter_oracle[0]
     q1_work = work_ids["1T"]
