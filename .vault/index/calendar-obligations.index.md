@@ -4,13 +4,16 @@ tags:
   - '#index'
   - '#calendar-obligations'
 date: '2026-09-21'
-modified: '2026-09-21'
+modified: '2026-09-23'
 body_schema: 'body-v2'
-body_hash: 'sha256:9193a24022a68a4842f2f64c781fba581623ef9f75e8b56d9b47bf8cf43e6c61'
+body_hash: 'sha256:9e1603b67c0fed16d57a1694e3358d81410a38b48ed589d404a4ad3dd72ce447'
 related:
   - '[[2026-09-21-calendar-obligations-audit]]'
   - '[[2026-09-21-calendar-obligations-ledger]]'
   - '[[2026-09-21-calendar-obligations-plan]]'
+  - '[[2026-09-23-calendar-obligations-holiday-jurisdiction-adr]]'
+  - '[[2026-09-23-calendar-obligations-holiday-jurisdiction-research]]'
+  - '[[2026-09-23-calendar-obligations-plan]]'
 ---
 
 # `calendar-obligations` feature index
@@ -18,6 +21,10 @@ related:
 Auto-generated index of all documents tagged with `#calendar-obligations`.
 
 ## Documents
+
+### adr
+
+- `2026-09-23-calendar-obligations-holiday-jurisdiction-adr` - `calendar-obligations` adr: `Deadline holiday jurisdiction` | (**status:** `accepted`)
 
 ### audit
 
@@ -30,3 +37,8 @@ Auto-generated index of all documents tagged with `#calendar-obligations`.
 ### plan
 
 - `2026-09-21-calendar-obligations-plan` - `calendar-obligations` plan
+- `2026-09-23-calendar-obligations-plan` - `calendar-obligations` plan
+
+### research
+
+- `2026-09-23-calendar-obligations-holiday-jurisdiction-research` - `calendar-obligations` research: `Deadline holiday jurisdiction grounding`

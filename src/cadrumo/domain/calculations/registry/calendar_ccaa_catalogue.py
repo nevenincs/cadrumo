@@ -28,6 +28,7 @@ _FACT_ID = "deadline-calendar-territory-catalogue"
 _ORDER_KEY = "calendar_ccaa.order"
 _PREFIX = "calendar_ccaa."
 _RELATION_PREFIX = "calendar_ccaa.relation."
+_TAX_RESIDENCE_PREFIX = f"{_RELATION_PREFIX}tax_residence."
 
 
 @dataclass(frozen=True, slots=True)
@@ -49,6 +50,7 @@ class CalendarCcaaCatalogue:
     tax_residence_common_regime_count: int
     includes_foral_territories: bool
     includes_autonomous_cities: bool
+    tax_residence_territories: Mapping[str, CalendarCCAA]
 
     @property
     def choices(self) -> tuple[CalendarCCAA, ...]:
@@ -94,6 +96,19 @@ class CalendarCcaaCatalogue:
         """Return the selected territory's registry-owned metadata."""
         token = self.require(value)
         return next(definition for definition in self.definitions if definition.token == token)
+
+    def territory_for_tax_residence(self, tax_residence: str) -> CalendarCCAA:
+        """Return the calendar territory the registry relates to one tax-residence token.
+
+        The relation is declared per token rather than matched by member name,
+        because the two vocabularies name some communities differently.
+        """
+        try:
+            return self.tax_residence_territories[tax_residence]
+        except KeyError as exc:
+            raise RegistryValidationError(
+                f"tax residence {tax_residence!r} has no calendar territory in fact {_FACT_ID!r}",
+            ) from exc
 
 
 def _boolean(entries: Mapping[str, str], key: str) -> bool:
@@ -206,7 +221,46 @@ def _catalogue(entries: Mapping[str, str]) -> CalendarCcaaCatalogue:
         tax_residence_common_regime_count=tax_residence_common_regime_count,
         includes_foral_territories=includes_foral_territories,
         includes_autonomous_cities=includes_autonomous_cities,
+        tax_residence_territories=_tax_residence_territories(
+            entries,
+            definitions=definitions,
+            expected_count=tax_residence_common_regime_count,
+        ),
     )
+
+
+def _tax_residence_territories(
+    entries: Mapping[str, str],
+    *,
+    definitions: list[CalendarCcaaDefinition],
+    expected_count: int,
+) -> Mapping[str, CalendarCCAA]:
+    """Project the declared tax-residence relation and require it to be complete and unambiguous."""
+    communities = {
+        definition.token: definition
+        for definition in definitions
+        if definition.territory_kind == "autonomous_community"
+    }
+    relation: dict[str, CalendarCCAA] = {}
+    for key, value in entries.items():
+        if not key.startswith(_TAX_RESIDENCE_PREFIX):
+            continue
+        tax_residence = key.removeprefix(_TAX_RESIDENCE_PREFIX)
+        if not tax_residence or tax_residence != tax_residence.strip().lower():
+            raise RegistryValidationError(f"calendar CCAA relation key {key!r} is not a canonical tax-residence token")
+        territory = CalendarCCAA.from_registry(value)
+        if territory not in communities:
+            raise RegistryValidationError(
+                f"tax residence {tax_residence!r} relates to {value!r}, which is not a declared autonomous community",
+            )
+        relation[tax_residence] = territory
+    if len(relation) != expected_count:
+        raise RegistryValidationError(
+            "calendar CCAA tax-residence relation does not cover the declared common-regime count",
+        )
+    if len(set(relation.values())) != len(relation):
+        raise RegistryValidationError("calendar CCAA tax-residence relation maps two residences to one territory")
+    return MappingProxyType(relation)
 
 
 @cache_governed_projection(maxsize=64)

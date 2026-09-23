@@ -30,6 +30,24 @@ required_text = [
     "Cuando el último día del plazo sea inhábil, se entenderá prorrogado al primer día hábil siguiente",
 ]
 
+[legal."ley-39-2015:art-30.6"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-39-2015.html#a30"
+document_id = "BOE-A-2015-10565"
+article = "30.6"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a30"
+published_at = 2015-10-02
+effective_from = 2016-10-02
+review_status = "agent_reviewed"
+reviewed_at = 2026-09-23
+reviewed_by = "agent-authored from bundled ley-39-2015.html#a30; operator to re-stamp"
+notes = "Grounds the taxpayer-residence territory whose non-working days extend a filing deadline."
+required_text = [
+    "Cuando un día fuese hábil en el municipio o Comunidad Autónoma en que residiese el interesado, e inhábil en la sede del órgano administrativo, o a la inversa, se considerará inhábil en todo caso",
+]
+
 [legal."ley-39-2015:art-43.2"]
 evidence_tier = "legal_authority"
 authority = "boe"

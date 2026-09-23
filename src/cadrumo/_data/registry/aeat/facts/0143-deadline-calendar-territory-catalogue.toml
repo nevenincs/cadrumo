@@ -6,7 +6,7 @@ family = "mapping"
 variant_id = "deadline-calendar-territory-catalogue:2000-01-01"
 date_axis = "filing_period"
 valid_from = 2000-01-01
-legal_refs = ["ley-39-2015:art-30.5"]
+legal_refs = ["ley-39-2015:art-30.5", "ley-39-2015:art-30.6"]
 source_refs = ["aeat-calendario-contribuyente-2024"]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -24,6 +24,21 @@ entries = [
   { key = "calendar_ccaa.relation.calendar_territory_count", value = "19" },
   { key = "calendar_ccaa.relation.includes_foral_territories", value = "true" },
   { key = "calendar_ccaa.relation.includes_autonomous_cities", value = "true" },
+  { key = "calendar_ccaa.relation.tax_residence.andalucia", value = "ES-AN" },
+  { key = "calendar_ccaa.relation.tax_residence.aragon", value = "ES-AR" },
+  { key = "calendar_ccaa.relation.tax_residence.asturias", value = "ES-AS" },
+  { key = "calendar_ccaa.relation.tax_residence.baleares", value = "ES-IB" },
+  { key = "calendar_ccaa.relation.tax_residence.canarias", value = "ES-CN" },
+  { key = "calendar_ccaa.relation.tax_residence.cantabria", value = "ES-CB" },
+  { key = "calendar_ccaa.relation.tax_residence.castilla_la_mancha", value = "ES-CM" },
+  { key = "calendar_ccaa.relation.tax_residence.castilla_y_leon", value = "ES-CL" },
+  { key = "calendar_ccaa.relation.tax_residence.cataluna", value = "ES-CT" },
+  { key = "calendar_ccaa.relation.tax_residence.comunidad_valenciana", value = "ES-VC" },
+  { key = "calendar_ccaa.relation.tax_residence.extremadura", value = "ES-EX" },
+  { key = "calendar_ccaa.relation.tax_residence.galicia", value = "ES-GA" },
+  { key = "calendar_ccaa.relation.tax_residence.la_rioja", value = "ES-RI" },
+  { key = "calendar_ccaa.relation.tax_residence.madrid", value = "ES-MD" },
+  { key = "calendar_ccaa.relation.tax_residence.murcia", value = "ES-MC" },
 
   { key = "calendar_ccaa.ES-AN.value", value = "ES-AN" },
   { key = "calendar_ccaa.ES-AN.member_name", value = "ANDALUCIA" },
