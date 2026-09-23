@@ -22,13 +22,27 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 
 def _actionable_coverage() -> LeafConditionScenario:
-    """Return a live action profile whose canonical declaration needs no values."""
+    """Return one live production profile that declares a recovery action."""
     return next(
         coverage
         for coverage in production_leaf_condition_scenario_matrix().rows
         if coverage.profile.resolved_action is not None
-        and not coverage.profile.resolved_action.declaration.argument_specifications
     )
+
+
+def _synthetic_action_argument_values(coverage: LeafConditionScenario) -> dict[str, str]:
+    """Supply one synthetic value per argument the catalogue declares for the profile's action.
+
+    Observation compares condition, action and outcome identities only, so the
+    values carry no expectation; they exist because the production verdict
+    builder refuses a binding set that differs from the catalogue declaration.
+    """
+    resolved_action = coverage.profile.resolved_action
+    assert resolved_action is not None
+    return {
+        specification.argument_name: f"agent-eval-{specification.argument_name}"
+        for specification in resolved_action.declaration.argument_specifications
+    }
 
 
 def _terminal_coverage() -> LeafConditionScenario:
@@ -54,6 +68,7 @@ def test_observed_action_assertion_uses_a_live_profile_not_a_scenario_authored_a
         evidence_values={"observed": True},
         provenance=ActionEvidenceProvenance.APPLICATION_STATE,
         action_id=declared_action.action_id,
+        action_argument_values=_synthetic_action_argument_values(coverage),
     )
 
     assertion = observe_production_action(coverage, failure.verdict)

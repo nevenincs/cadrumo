@@ -511,16 +511,13 @@ def _canonical_action_arguments(
 
 def _invoke_canonical_cli(argv: Sequence[str]):
     """Run the live CLI command tree once, requesting its canonical JSON envelope."""
-    from click.core import Command
-    from click.testing import CliRunner
-    from typer.main import get_command
+    # Typer materializes its tree on its vendored Click, so the Typer runner is
+    # the one that accepts that tree without a cross-fork cast.
+    from typer.testing import CliRunner
 
     from cadrumo.entrypoints.cli.main import app
 
-    command = get_command(app)
-    if not isinstance(command, Command):
-        raise TypeError("Typer application did not produce a Click command")
-    return CliRunner().invoke(command, ["--format", "json", *argv])
+    return CliRunner().invoke(app, ["--format", "json", *argv])
 
 
 def _decoded_envelope(output: str) -> Mapping[str, object] | None:
