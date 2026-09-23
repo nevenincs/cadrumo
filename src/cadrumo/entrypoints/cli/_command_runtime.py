@@ -355,9 +355,22 @@ def _invoke_bound_behavior(
                     arguments=bound.arguments,
                 )
                 return _invoke_deferred_target(target_ref, bound.arguments)
+        except Exception as error:
+            _capture_refusal_spine(error)
+            raise
         finally:
             clear_staged_machine_secret_payloads()
-    return _invoke_deferred_target(target_ref, bound.arguments)
+    try:
+        return _invoke_deferred_target(target_ref, bound.arguments)
+    except Exception as error:
+        _capture_refusal_spine(error)
+        raise
+
+
+def _capture_refusal_spine(error: Exception) -> None:
+    from .errors import capture_refusal_spine
+
+    capture_refusal_spine(error)
 
 
 def _wrapper_parameters(spec: CommandSpec) -> list[inspect.Parameter]:

@@ -632,8 +632,54 @@ def write_stderr(text: str, *, stream: io.TextIOBase | None = None) -> None:
         target.flush()
 
 
-def active_profile_label_for_error() -> str | None:
+@dataclass(frozen=True, slots=True)
+class _RefusalSpine:
+    """The profile label and sandbox notice a refusal carries, observed while they were resolvable."""
+
+    active_profile: str | None
+    sandbox_notice: Notice | None
+
+
+_REFUSAL_SPINE_ATTRIBUTE: Final = "_cadrumo_refusal_spine"
+
+
+def capture_refusal_spine(error: BaseException) -> None:
+    """Observe the refusal's profile label and sandbox notice while the command's composition is live.
+
+    A command's custody composition is a resource of its Click invocation and
+    closes as the error unwinds, before the process boundary renders the
+    refusal. Resolving the label and notice there finds no custody port and
+    silently drops both. Capturing them here, on the error path only, keeps
+    composition at its owning boundary and costs a successful command nothing.
+
+    The observation rides on the error itself, so it lives exactly as long as
+    that error and can never answer for a later, unrelated one.
+    """
+    if isinstance(error, Exception) and _is_click_control_flow(error):
+        return
+    spine = _RefusalSpine(active_profile=_resolve_active_profile_label(), sandbox_notice=_resolve_sandbox_notice())
+    with contextlib.suppress(AttributeError, TypeError):
+        setattr(error, _REFUSAL_SPINE_ATTRIBUTE, spine)
+
+
+def _captured_refusal_spine(error: BaseException | None) -> _RefusalSpine | None:
+    """Return the spine captured on ``error`` or on an error it was projected from."""
+    seen: set[int] = set()
+    current = error
+    while current is not None and id(current) not in seen:
+        seen.add(id(current))
+        spine = getattr(current, _REFUSAL_SPINE_ATTRIBUTE, None)
+        if isinstance(spine, _RefusalSpine):
+            return spine
+        current = current.__cause__ or current.__context__
+    return None
+
+
+def active_profile_label_for_error(error: BaseException | None = None) -> str | None:
     """Return the active-profile label for the error-document spine, best-effort.
+
+    A label captured on ``error`` while the failing command was still composed
+    wins; see :func:`capture_refusal_spine`.
 
     The error boundary is the one place that must never be disrupted by
     identity resolution: a failure resolving the active-profile label must
@@ -644,6 +690,13 @@ def active_profile_label_for_error() -> str | None:
     null identity anchor. The import is function-local to avoid a module
     cycle with :mod:`_common`, which imports this module.
     """
+    spine = _captured_refusal_spine(error)
+    if spine is not None:
+        return spine.active_profile
+    return _resolve_active_profile_label()
+
+
+def _resolve_active_profile_label() -> str | None:
     try:
         from .common import active_profile_label
 
@@ -653,7 +706,7 @@ def active_profile_label_for_error() -> str | None:
         return None
 
 
-def sandbox_notice_for_error() -> Notice | None:
+def sandbox_notice_for_error(error: BaseException | None = None) -> Notice | None:
     """Return the sandbox-active :class:`Notice` for an error document, best-effort.
 
     The success envelope carries this indicator on both its JSON ``notices``
@@ -666,6 +719,13 @@ def sandbox_notice_for_error() -> Notice | None:
     :func:`active_profile_label_for_error` does: resolving a purely-advisory
     indicator must never mask the original error being reported.
     """
+    spine = _captured_refusal_spine(error)
+    if spine is not None:
+        return spine.sandbox_notice
+    return _resolve_sandbox_notice()
+
+
+def _resolve_sandbox_notice() -> Notice | None:
     try:
         from ...application.operator_output.sandbox_notice import sandbox_notice_for_active_bucket
 
@@ -734,7 +794,7 @@ def render_error_payload(
     member, while text serializes that exact DTO beneath the localized error
     line without reconstructing a command or recovery sentence.
     """
-    notice = sandbox_notice_for_error()
+    notice = sandbox_notice_for_error(error)
     from ._profile_authentication_notice import drain_profile_authentication_notices
 
     authentication_notices = drain_profile_authentication_notices()
@@ -742,7 +802,7 @@ def render_error_payload(
         return render_error_json(
             error,
             action=action,
-            active_profile=active_profile_label_for_error(),
+            active_profile=active_profile_label_for_error(error),
             command=command,
             notices=(*(() if notice is None else (notice,)), *authentication_notices),
         )
@@ -1181,7 +1241,7 @@ def _storage_session_failure_verdict(error: CadrumoError) -> PreconditionVerdict
         "REFUSED_STORAGE_MASTER_KEY_NO_ACTIVE_SESSION",
         "REFUSED_STORAGE_SESSION_EXPIRED",
     }:
-        profile_name = active_profile_label_for_error()
+        profile_name = active_profile_label_for_error(error)
         if profile_name is not None:
             from ...application.profile_preconditions import profile_session_failure_verdict
             from ...core.profile_session import ProfileSessionRefusalReason
