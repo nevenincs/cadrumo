@@ -2314,6 +2314,7 @@
         "dev.acceptance.iva",
         "dev.acceptance.iva.annual_cli_journey",
         "dev.acceptance.iva.cli_journey",
+        "dev.acceptance.iva.installed_m303_evidence_journey",
         "dev.acceptance.iva.installed_tui_capture_reopen",
         "dev.acceptance.iva.multirate_cli_journey",
         "dev.acceptance.iva.negative_4t_cli_journey",
