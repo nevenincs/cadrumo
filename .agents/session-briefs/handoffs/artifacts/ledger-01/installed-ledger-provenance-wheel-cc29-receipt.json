@@ -1,0 +1,32 @@
+{
+  "authority_generation": "b7b9175f1b9dd4cd7f776d251ccdc944dca3196def13a4a226d864a18ebfac0f",
+  "brief_revision": "0.1",
+  "cli_json_command_count": 7,
+  "cli_observations": [
+    "installed_cli_invoice_view_json_source_filename_and_row",
+    "installed_cli_transaction_track_json_source_filename_and_row",
+    "installed_cli_transaction_track_text_source_filename_and_row"
+  ],
+  "cli_text_command_count": 1,
+  "pattern_revision": "1.7",
+  "product_init_path": "C:\\Users\\hello\\AppData\\Local\\Temp\\ledger-01-provenance-e446258b3817431ba32200b43774e2b8\\venv\\Lib\\site-packages\\cadrumo\\__init__.py",
+  "product_init_sha256": "930e3f61c79bd2e3ff1f8aa11d1abd5d16bfbaab360ea739ae41f519f71b0ae7",
+  "product_origin": "site-packages",
+  "schema_version": "ledger-01-installed-provenance-v1",
+  "source_commit": "83dcd72d79849eed08f57c2ab84341cdcd847106",
+  "source_files": [
+    "ledger-provenance-invoice.csv",
+    "ledger-provenance-statement.csv"
+  ],
+  "source_row_index": 2,
+  "status": "proven",
+  "synthetic_store_retained": true,
+  "tui_child_process_count": 1,
+  "tui_observations": [
+    "installed_tui_invoice_source_filename_and_row",
+    "installed_tui_transaction_source_filename_and_row"
+  ],
+  "wheel_filename": "cadrumo-0.5.1-py3-none-any.whl",
+  "wheel_sha256": "cc29223858b49afa669778f1d7eb33b37362ce53eda1b21f0c253696a0b0509c",
+  "year": 2025
+}
