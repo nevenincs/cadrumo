@@ -537,6 +537,8 @@ def test_modelo_303_readiness_reports_pre_activity_period_refusal(state_projecti
     assert "Modelo 303 2026 1T is before the profile activity-start date 2026-05-01" in readiness.profile_refusal
     assert "filing period ends on 2026-03-31" in readiness.profile_refusal
     assert "pre-activity period" in readiness.profile_refusal
+    # A pre-activity period is a fact no catalogued action repairs.
+    assert readiness.profile_precondition_verdict is None
     assert projection.workspace.work_units == 0
 
 
@@ -586,6 +588,7 @@ def test_modelo_349_readiness_uses_applicability_for_attribution_entity(state_pr
     assert readiness.registry_ready is True
     assert readiness.profile_ready is True
     assert readiness.profile_refusal == ""
+    assert readiness.profile_precondition_verdict is None
     assert readiness.binding_ready is False
     assert readiness.missing_bindings
     assert readiness.ready is False

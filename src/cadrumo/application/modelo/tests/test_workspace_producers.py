@@ -209,6 +209,50 @@ def test_workspace_epoch_currentness_requires_an_exact_same_domain_coordinate() 
         captured.require_current(_epoch("calculation.owner", 11))
 
 
+def test_readiness_capture_carries_the_typed_profile_refusal_verdict() -> None:
+    """The Workspace readiness contributor keeps the refusal's recovery verdict typed.
+
+    The readiness projection is captured verbatim, so a setup-incomplete
+    refusal must reach the Workspace with its catalogue action identity and
+    survive the JSON round trip the capture contract relies on.
+    """
+    from ....core.period import Period
+    from ...operator_actions.preconditions import profile_setup_incomplete_verdict
+    from ...state_projection import ProjectionModeloReadiness
+    from ..workspace_producers import (
+        MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1,
+        ModeloWorkspaceReadinessProjectionV1,
+    )
+
+    verdict = profile_setup_incomplete_verdict(modelo="130", missing_required_field_count=2)
+    report = ProjectionModeloReadiness(
+        profile_id="00000000-0000-4000-8000-000000000130",
+        modelo="130",
+        revision_id="2019-y-siguientes",
+        filing_year=2026,
+        period=Period.from_year_and_code(2026, "2T"),
+        profile_ready=False,
+        per_operation_requirements_assessed=True,
+        profile_refusal="setup not declared complete",
+        profile_precondition_verdict=verdict,
+        ready=False,
+    )
+    contract = MODELO_WORKSPACE_READINESS_PRODUCER_CONTRACT_V1
+    capture = ModeloWorkspaceContributingProjectionV1(
+        projection=ModeloWorkspaceReadinessProjectionV1(reports=(report,)),
+        stamp=ModeloWorkspaceProducerStampV1.from_contract(contract),
+        epoch=_epoch(contract.contributor.owner, 1),
+    )
+
+    assert capture.require_contract(contract) is capture
+    round_tripped = ModeloWorkspaceReadinessProjectionV1.model_validate_json(capture.projection.model_dump_json())
+    (carried,) = round_tripped.reports
+    assert carried.profile_precondition_verdict == verdict
+    assert carried.profile_precondition_verdict is not None
+    assert carried.profile_precondition_verdict.action is not None
+    assert carried.profile_precondition_verdict.action.action_id == "operator.profile.complete_setup"
+
+
 def test_registry_port_captures_the_admission_specific_projection() -> None:
     """REGISTRY's port must expose exactly the admitted shape, never both at once."""
     from ....domain.calculations.registry.authority import bundled_indexed_authority

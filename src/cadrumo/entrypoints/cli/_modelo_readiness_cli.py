@@ -14,11 +14,12 @@ from ...application.state_projection import (
     build_operator_state_projection,
 )
 from ...application.state_projection_ports import StateProjectionReadPorts
-from ...core.json_contract import Notice, NoticeSeverity
+from ...core.json_contract import Notice, NoticeSeverity, ResolvedPreconditionAction
 from ...core.period import Period, PeriodError
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.user_profile.errors import ProfileNotFoundError
+from ._action_rendering import resolved_precondition_action_json_cell
 from ._modelo_cli_support import unsupported_local_work_period_refusal
 from ._modelo_payloads import (
     LedgerIssuePayload,
@@ -84,6 +85,7 @@ def modelo_readiness(
         revision_id=revision_id,
         filing_year=filing_year,
     )
+    profile_action = _profile_refusal_action(report)
     emit_envelope(
         ctx,
         command="modelo.readiness",
@@ -94,8 +96,9 @@ def modelo_readiness(
             revision_id=revision_id,
             filing_year=filing_year,
             period=period,
+            profile_action=profile_action,
         ),
-        notices=_readiness_notices(report),
+        notices=_readiness_notices(report, profile_action=profile_action),
     )
     if not report.ready:
         raise typer.Exit(code=2)
@@ -225,6 +228,7 @@ def _readiness_lines(
     revision_id: RevisionId,
     filing_year: int,
     period: str | None,
+    profile_action: ResolvedPreconditionAction | None,
 ) -> list[str]:
     export_refusal = modelo_export_readiness_refusal(
         modelo=report.modelo,
@@ -243,6 +247,11 @@ def _readiness_lines(
         f"ready\t{report.ready}",
         f"profile_ready\t{report.profile_ready}",
         f"profile_refusal\t{report.profile_refusal}",
+        *(
+            ()
+            if profile_action is None
+            else (f"profile_refusal_action\t{resolved_precondition_action_json_cell(profile_action)}",)
+        ),
         f"registry_ready\t{report.registry_ready}",
         f"registry_refusal\t{report.registry_refusal}",
         f"binding_ready\t{report.binding_ready}",
@@ -295,8 +304,28 @@ def _readiness_detail_lines(report: ProjectionModeloReadiness) -> list[str]:
     return lines
 
 
-def _readiness_notices(report: ProjectionModeloReadiness) -> tuple[Notice, ...]:
+def _profile_refusal_action(report: ProjectionModeloReadiness) -> ResolvedPreconditionAction | None:
+    """Resolve the profile refusal's typed recovery verdict against the live catalogue."""
+    verdict = report.profile_precondition_verdict
+    return None if verdict is None else resolve_cli_precondition_action(verdict)
+
+
+def _readiness_notices(
+    report: ProjectionModeloReadiness,
+    *,
+    profile_action: ResolvedPreconditionAction | None,
+) -> tuple[Notice, ...]:
     notices: list[Notice] = []
+    if profile_action is not None:
+        notices.append(
+            Notice(
+                severity=NoticeSeverity.WARNING,
+                code="modelo.readiness.profile_refusal",
+                message=report.profile_refusal,
+                action=profile_action,
+                context={"modelo": report.modelo},
+            ),
+        )
     if not report.per_operation_requirements_assessed:
         notices.append(
             Notice(

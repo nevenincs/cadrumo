@@ -121,6 +121,37 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
     assert readiness_payload["profile_ready"] is False
     assert readiness_payload["ready"] is False
     assert "declared complete" in readiness_payload["profile_refusal"]
+    assert "aeat" not in readiness_payload["profile_refusal"].lower()
+    profile_notices = [
+        notice
+        for notice in json.loads(readiness.output)["notices"]
+        if notice["code"] == "modelo.readiness.profile_refusal"
+    ]
+    assert len(profile_notices) == 1
+    profile_action = profile_notices[0]["action"]
+    assert profile_action["failed_condition_id"] == "profile.setup.declared_complete"
+    (evidence,) = profile_action["evidence"]
+    assert evidence["values"]["modelo"] == Modelo("130").value
+    assert evidence["values"]["setup_declared_complete"] is False
+    assert profile_action["action"]["action_id"] == "operator.profile.complete_setup"
+    assert profile_action["action"]["target_command_key"] == "config.profile.complete_setup"
+    assert profile_action["action"]["cli_path"] == ["config", "profile", "complete-setup"]
+    assert profile_notices[0]["message"] == readiness_payload["profile_refusal"]
+
+    readiness_text = _invoke(
+        [
+            "app", "modelo", "readiness",
+            "--modelo", Modelo("130").value,
+            "--revision-id", "2019-y-siguientes",
+            "--year", "2026",
+            "--period", "2T",
+        ],
+    )  # fmt: skip
+    assert readiness_text.exit_code == 2, readiness_text.output
+    action_lines = [line for line in readiness_text.output.splitlines() if line.startswith("profile_refusal_action\t")]
+    assert len(action_lines) == 1
+    text_action = json.loads(action_lines[0].split("\t", 1)[1])
+    assert text_action == profile_action
 
     create = _invoke(
         [
@@ -153,6 +184,8 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
     )  # fmt: skip
     assert after.exit_code == 2, after.output
     assert _payload(after.output)["profile_ready"] is True
+    assert _payload(after.output)["profile_refusal"] == ""
+    assert all(notice["code"] != "modelo.readiness.profile_refusal" for notice in json.loads(after.output)["notices"])
 
 
 def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:
@@ -202,6 +235,7 @@ def test_modelo_readiness_reports_pre_activity_m303_before_work_create() -> None
     assert "profile_refusal\tModelo 303 2026 1T is before the profile activity-start date 2026-05-01" in result.output
     assert "filing period ends on 2026-03-31" in result.output
     assert "pre-activity period" in result.output
+    assert "profile_refusal_action\t" not in result.output
 
     listed = _invoke(["--format", "json", "app", "modelo", "work", "list"])
     assert listed.exit_code == 0, listed.output
