@@ -1,4 +1,9 @@
-"""CLI/TUI parity over the shared activity-asset application operations."""
+"""TUI parity with the shared activity-asset application operations.
+
+The CLI adapter delegates every command to the same operations object; the
+installed acceptance journeys prove the real CLI and TUI processes against
+one encrypted store in both continuation directions.
+"""
 
 from __future__ import annotations
 
@@ -29,7 +34,6 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningHistoryStatus,
 )
 from cadrumo.domain.renta.actividad_asset.schedule import ScheduleAuthority, schedule_charge
-from cadrumo.entrypoints.cli._actividad_asset_cli import ActivityAssetCli
 from cadrumo.entrypoints.tui.components.host import ScreenHostApp
 from cadrumo.entrypoints.tui.ledger.actividad_asset import ActivityAssetScreen, ActivityAssetTuiActionsV1
 from cadrumo.entrypoints.tui.ledger.controller import LedgerWorkspaceController
@@ -156,26 +160,23 @@ async def _activate_screen_button(*, pilot, screen: ActivityAssetScreen, selecto
     await pilot.pause()
 
 
-def test_each_frontend_creates_and_the_other_frontend_continues() -> None:
-    cli_created_repository = _MemoryRepository()
-    cli_created_operations = ActivityAssetOperations(repository=cli_created_repository, forecast_operation=_forecast)
-    cli = ActivityAssetCli(operations=cli_created_operations)
-    tui_after_cli = ActivityAssetTuiActionsV1(operations=cli_created_operations)
-    cli_revision = _revision("created-by-cli")
+def test_shared_operations_and_tui_continue_each_others_assets() -> None:
+    operations_repository = _MemoryRepository()
+    shared_operations = ActivityAssetOperations(repository=operations_repository, forecast_operation=_forecast)
+    tui_after_operations = ActivityAssetTuiActionsV1(operations=shared_operations)
+    operations_revision = _revision("created-by-shared-operation")
 
-    cli.create(cli_revision.model_dump_json())
-    assert tui_after_cli.inspect(cli_revision.asset_id).revisions == (cli_revision,)
+    shared_operations.create(operations_revision)
+    assert tui_after_operations.inspect(operations_revision.asset_id).revisions == (operations_revision,)
 
-    tui_created_repository = _MemoryRepository()
-    tui_created_operations = ActivityAssetOperations(repository=tui_created_repository, forecast_operation=_forecast)
-    tui = ActivityAssetTuiActionsV1(operations=tui_created_operations)
-    cli_after_tui = ActivityAssetCli(operations=tui_created_operations)
+    tui_repository = _MemoryRepository()
+    tui_operations = ActivityAssetOperations(repository=tui_repository, forecast_operation=_forecast)
+    tui = ActivityAssetTuiActionsV1(operations=tui_operations)
     tui_revision = _revision("created-by-tui")
 
     tui.create(ActivityAssetCreationRequestV1(revision=tui_revision))
-    cli_readback = cli_after_tui.inspect(tui_revision.asset_id)
-    assert cli_readback.asset_id == tui_revision.asset_id
-    assert cli_readback.revisions == [tui_revision.model_dump(mode="json")]
+    assert tui_operations.inspect(tui_revision.asset_id) == (tui_revision,)
+    assert tui_repository.history.revisions == (tui_revision,)
 
 
 def test_tui_route_composition_registers_the_shared_actions() -> None:
@@ -186,20 +187,19 @@ def test_tui_route_composition_registers_the_shared_actions() -> None:
     assert isinstance(actions, ActivityAssetTuiActionsV1)
 
 
-def test_cli_and_tui_forecasts_are_the_same_non_consuming_operation() -> None:
+def test_tui_forecast_is_the_shared_non_consuming_operation() -> None:
     repository = _MemoryRepository()
     operations = ActivityAssetOperations(repository=repository, forecast_operation=_forecast)
-    cli = ActivityAssetCli(operations=operations)
     tui = ActivityAssetTuiActionsV1(operations=operations)
     revision = _revision("forecast-parity")
-    cli.create(revision.model_dump_json())
+    operations.create(revision)
     selection = _selection()
 
-    cli_forecast = cli.forecast(
+    shared_forecast = operations.forecast(
         asset_id=revision.asset_id,
-        selection_json=selection.model_dump_json(),
-        covered_from="2025-01-01",
-        covered_until="2026-01-01",
+        selection=selection,
+        covered_from=date(2025, 1, 1),
+        covered_until=date(2026, 1, 1),
     )
     tui_forecast = tui.forecast(
         ActivityAssetForecastRequestV1(
@@ -210,8 +210,8 @@ def test_cli_and_tui_forecasts_are_the_same_non_consuming_operation() -> None:
         ),
     )
 
-    assert cli_forecast == tui_forecast
-    assert cli_forecast.amount == Decimal("520.00")
+    assert tui_forecast == shared_forecast
+    assert tui_forecast.amount == Decimal("520.00")
     assert repository.history.claims == ()
 
 
