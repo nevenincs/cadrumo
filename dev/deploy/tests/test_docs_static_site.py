@@ -368,7 +368,7 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
     inlined form is refused here by name.
     """
     calls = _direct_calls(_docs_static_site._publish)
-    assert calls.index("_build_site_roots") < calls.index("_validate_built_site") < calls.index("_sync_site"), (
+    assert calls.index("_build_site_roots") < calls.index("_validate_built_site") < calls.index("_upload_release"), (
         f"the publish no longer builds, then validates, then uploads: {calls}"
     )
     inlined = sorted(

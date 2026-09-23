@@ -70,7 +70,7 @@ def _workflow_documents() -> tuple[Path, ...]:
 
 #: The publishing verbs. Membership is asserted rather than trusted, so an
 #: undeclared publisher cannot join the command surface.
-_DEPLOY_RECIPES = frozenset({"docs-publish", "docs-stack-provision"})
+_DEPLOY_RECIPES = frozenset({"docs-publish", "docs-rollback", "docs-site-provision"})
 
 #: The prefixes that name a development check surface. Deliberately broad: the
 #: question is "can verification reach publication", so over-including a recipe
@@ -366,15 +366,13 @@ def test_the_traversal_fires_on_a_planted_edge(tmp_path: Path) -> None:
     )
 
     invocation = source.replace(
-        b"\naudit-code *ARGS:\r\n", b"\naudit-code *ARGS:\r\n    just docs-stack-provision\r\n", 1
+        b"\naudit-code *ARGS:\r\n", b"\naudit-code *ARGS:\r\n    just docs-site-provision\r\n", 1
     )
     if invocation == source:
-        invocation = source.replace(
-            b"\naudit-code *ARGS:\n", b"\naudit-code *ARGS:\n    just docs-stack-provision\n", 1
-        )
+        invocation = source.replace(b"\naudit-code *ARGS:\n", b"\naudit-code *ARGS:\n    just docs-site-provision\n", 1)
     assert invocation != source, "could not plant a body invocation; audit-code was not found"
     planted.write_bytes(invocation)
-    assert "docs-stack-provision" in _reachable(_recipe_graph(planted), "audit-code"), (
+    assert "docs-site-provision" in _reachable(_recipe_graph(planted), "audit-code"), (
         "a planted body invocation was not detected; the traversal is blind"
     )
 

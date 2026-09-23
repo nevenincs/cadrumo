@@ -291,6 +291,37 @@ Both channel jobs refuse to start without their credentials:
 A channel failure does not undo the PyPI upload. Fix the credential or the channel and
 re-run the failed jobs of the same run.
 
+## Documentation site
+
+The user documentation is served at `https://cadrumo.neve.md/docs/` and
+`https://neve.md/cadrumo/docs/` by the Cloudflare Worker `cadrumo-docs`, from the
+private R2 bucket `cadrumo-docs`. After the channels are reacquired, the `publish-docs`
+job of the publish phase builds the site from the proven commit, uploads it as a new
+release under `releases/<tag>-<UTC instant>/`, deploys the Worker with that release id
+and checks both mounts live. Every response carries the `x-cadrumo-docs-release`
+header naming the release it came from.
+
+The job runs in the `docs` environment and refuses to start without its five secrets:
+`CLOUDFLARE_ACCOUNT_ID`, `CLOUDFLARE_API_TOKEN` (a token limited to deploying the Worker
+and its routes on `neve.md`), `CADRUMO_DOCS_R2_BUCKET`, `CADRUMO_DOCS_R2_ACCESS_KEY_ID`
+and `CADRUMO_DOCS_R2_SECRET_ACCESS_KEY` (an R2 key limited to that bucket). A failed
+documentation publish does not affect the release.
+
+To republish the documentation of a ref without a release, dispatch the `docs` phase:
+
+```sh
+gh workflow run release.yml -f phase=docs -f ref=v<VERSION> -f version=<VERSION>
+```
+
+Locally, the same credentials are read from `env/.env`:
+
+| Command | Effect |
+| --- | --- |
+| `just docs-site-preview` | Build and validate every site root; uploads nothing. |
+| `just docs-publish` | Build, upload, deploy and verify one release. |
+| `just docs-rollback <release id>` | Serve an earlier uploaded release again; uploads nothing. |
+| `just docs-site-provision` | One-time zone wiring: proxy `cadrumo.neve.md` through Cloudflare and disable the redirect rules on `neve.md/cadrumo/docs`. Needs a token with DNS and redirect-rule access. |
+
 ## Authorities
 
 - `.github/workflows/release-please.yml` — computes the version, cuts the release, dispatches proof and publication
