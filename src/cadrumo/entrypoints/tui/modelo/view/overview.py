@@ -78,6 +78,24 @@ _CAPABILITY_COLUMN_KEYS: tuple[str, ...] = ("capability", "disposition")
 _OTHER_DESTINATIONS: tuple[str, ...] = ("inputs", "results", "verification", "provenance", "filing")
 
 
+def edit_control_id(kind: str, key: str) -> str:
+    """Encode one registry edit key as a Textual widget id, one-to-one.
+
+    Semantic casilla ids such as ``iva.prorrata-volumen-con-derecho`` contain
+    characters a widget id may not, and one invalid id stops the whole screen
+    from composing. ASCII letters, digits and ``-`` pass through unchanged, so
+    numeric and hyphenated ids keep their spelling. Every other character,
+    including ``_`` itself, becomes ``_<hex>_``; because a literal ``_`` is
+    always escaped, every ``_`` in the result opens or closes an escape and
+    distinct keys can never produce the same id.
+    """
+    encoded = "".join(
+        character if (character.isascii() and character.isalnum()) or character == "-" else f"_{ord(character):x}_"
+        for character in key
+    )
+    return f"modelo-edit-{kind}-{encoded}"
+
+
 class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
     """Address, revision coordinates, status, and the capability denominator."""
 
@@ -112,13 +130,13 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
                         if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
                             yield Input(
                                 placeholder=tr("tui.modelo.edit.scalar", casilla=entry.casilla_id),
-                                id=f"modelo-edit-scalar-{entry.casilla_id}",
+                                id=edit_control_id("scalar", str(entry.casilla_id)),
                                 classes="modelo-edit-value",
                             )
                         elif isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1):
                             yield Input(
                                 placeholder=tr("tui.modelo.edit.binding", binding=entry.binding_id),
-                                id=f"modelo-edit-binding-{entry.binding_id}",
+                                id=edit_control_id("binding", str(entry.binding_id)),
                                 classes="modelo-edit-value",
                             )
                     yield Button(tr("tui.modelo.edit.apply"), id="modelo-edit-apply")
@@ -195,11 +213,11 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
             binding_values: dict[str, str] = {}
             for entry in baseline.permitted_surface:
                 if isinstance(entry, ModeloEditWritableScalarSurfaceEntryV1):
-                    value = self.query_one(f"#modelo-edit-scalar-{entry.casilla_id}", Input).value.strip()
+                    value = self.query_one(f"#{edit_control_id('scalar', str(entry.casilla_id))}", Input).value.strip()
                     if value:
                         scalar_values[str(entry.casilla_id)] = value
                 elif isinstance(entry, ModeloEditWritableBindingOverrideSurfaceEntryV1):
-                    value = self.query_one(f"#modelo-edit-binding-{entry.binding_id}", Input).value.strip()
+                    value = self.query_one(f"#{edit_control_id('binding', str(entry.binding_id))}", Input).value.strip()
                     if value:
                         binding_values[str(entry.binding_id)] = value
             keyword_arguments = {"scalar_values": scalar_values, "binding_values": binding_values}
@@ -477,4 +495,4 @@ class ModeloWorkspaceOverviewScreen(TypedAppAccess, AccountChromeScreen):
         toggle_appearance(self.app)
 
 
-__all__ = ["ModeloWorkspaceOverviewScreen"]
+__all__ = ["ModeloWorkspaceOverviewScreen", "edit_control_id"]

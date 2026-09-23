@@ -8,10 +8,13 @@ STATED rather than shown as an empty list.
 
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 from textual.widgets import Button, Input, Static
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from ......application.modelo.edit_models import ModeloEditWritableScalarSurfaceEntryV1
 from ......application.modelo.workspace_models import (
     ModeloWorkspaceCapabilityName,
     ModeloWorkspaceLifecycleProjectionV1,
@@ -23,7 +26,7 @@ from ....components.host import ScreenHostApp
 from ....components.widgets import ContentDataTable
 from ...lifecycle import ModeloLifecycleActionUnavailableError
 from ..controller import ModeloWorkspaceReadSession, open_workspace_read_session
-from ..overview import ModeloWorkspaceOverviewScreen
+from ..overview import ModeloWorkspaceOverviewScreen, edit_control_id
 from .conftest import resolve_real_result
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -141,6 +144,67 @@ async def test_the_destination_offers_no_editing_affordance(
             assert not app.screen.query(editing_widget), (
                 f"the read destination mounted an editing widget: {editing_widget.__name__}"
             )
+
+
+def test_edit_control_ids_keep_valid_keys_and_encode_the_rest_distinctly() -> None:
+    """Numeric and hyphenated keys keep their spelling; everything else is escaped one-to-one."""
+    assert edit_control_id("scalar", "0165") == "modelo-edit-scalar-0165"
+    assert edit_control_id("binding", "renta-certificado-trabajo-retenciones") == (
+        "modelo-edit-binding-renta-certificado-trabajo-retenciones"
+    )
+    assert edit_control_id("scalar", "iva.prorrata-volumen-con-derecho") == (
+        "modelo-edit-scalar-iva_2e_prorrata-volumen-con-derecho"
+    )
+    adversarial = ("a.b", "a_2e_b", "a_b", "a_5f_b", "a__b", "a-b", "ab")
+    encoded = [edit_control_id("scalar", key) for key in adversarial]
+    assert len(set(encoded)) == len(adversarial)
+
+
+class _DottedCasillaEditActions:
+    """A lifecycle door whose edit surface admits one semantic, dotted casilla id."""
+
+    def __init__(self) -> None:
+        self.edit_baseline = SimpleNamespace(
+            permitted_surface=(
+                ModeloEditWritableScalarSurfaceEntryV1.model_construct(
+                    casilla_id="iva.prorrata-volumen-con-derecho", data_type="money", allowed_intents=("set",)
+                ),
+            )
+        )
+        self.applied: list[dict[str, object]] = []
+
+    async def apply_edits(self, **kwargs: object) -> object:
+        self.applied.append(kwargs)
+        raise ModeloLifecycleActionUnavailableError(
+            translated_message="application.modelo.lifecycle.refusal.calculation_required"
+        )
+
+
+@pytest.mark.asyncio
+async def test_a_dotted_semantic_casilla_edit_control_composes_and_submits_its_value(
+    bucket_and_repository: tuple[str, WorkUnitCatalogueRepository],
+) -> None:
+    """One casilla id that is not a valid widget id must not stop the whole workspace from composing."""
+    bucket_id, repository = bucket_and_repository
+    projection = resolve_real_result(bucket_id, repository, OutputLanguage.ES).projection
+    actions = _DottedCasillaEditActions()
+    session = open_workspace_read_session(
+        projection,
+        lifecycle=ModeloWorkspaceLifecycleProjectionV1(target=projection.target),
+        lifecycle_actions=actions,
+    )
+    app = ScreenHostApp(ModeloWorkspaceOverviewScreen(session))
+
+    async with app.run_test() as pilot:
+        await pilot.pause()
+        assert app.screen.query_one("#modelo-lifecycle-calculate", Button)
+        field = app.screen.query_one(f"#{edit_control_id('scalar', 'iva.prorrata-volumen-con-derecho')}", Input)
+        field.value = "150.00"
+        app.screen.query_one("#modelo-edit-apply", Button).press()
+        await pilot.pause()
+        await app.workers.wait_for_complete()
+
+    assert actions.applied == [{"scalar_values": {"iva.prorrata-volumen-con-derecho": "150.00"}, "binding_values": {}}]
 
 
 @pytest.mark.asyncio
