@@ -1357,6 +1357,22 @@ tui:
       not_applicable: Nem alkalmazható
       result_unknown: Nem érhető el
       'yes': Igen
+    work_create:
+      created: '{address} létrehozva. A munkához nyisd meg újra a Bevallások részt.'
+      modelo: Nyomtatvány
+      period: Időszak
+      progress: A kiválasztott bevallás létrehozása vagy folytatása…
+      refusal:
+        modelo: Add meg a nyomtatvány számát.
+        not_applicable: 'A(z) %{modelo} nyomtatvány nem vonatkozik erre a profilra:
+          %{reason} Ha vonatkoznia kellene, javítsd a profilt a Profil (F4) nézetben,
+          és próbáld újra.'
+        period: Adj meg az évhez tartozó érvényes időszakot.
+        year: Adj meg egy támogatott, négyjegyű bevallási évet.
+      reused: '{address} folytatva. A munkához nyisd meg újra a Bevallások részt.'
+      submit: Létrehozás vagy folytatás
+      title: Bevallás létrehozása vagy folytatása
+      year: Bevallási év
     work_state:
       borrador: Piszkozat
       descartado: Elvetve
@@ -1368,9 +1384,9 @@ tui:
     profile: Profil
     withholding: Levonások
   filing_year_route:
-    prompt: Válasszon adóévet (ÉÉÉÉ)
-    open: Levonások megnyitása
     invalid: Adjon meg érvényes négyjegyű adóévet.
+    open: Levonások megnyitása
+    prompt: Válasszon adóévet (ÉÉÉÉ)
     unavailable: A levonási adatok nem érhetők el ehhez a profilhoz és évhez.
   home:
     account_fallback: Fiók
@@ -1645,8 +1661,8 @@ tui:
         invoice_class: Számla fajtája
         invoice_date: Számla dátuma (ÉÉÉÉ-HH-NN)
         invoice_number: Számlaszám
-        iva_rate: IVA-kulcs (%)
         iva_category: Áfakezelés (nyilvántartási azonosító)
+        iva_rate: IVA-kulcs (%)
         kind: Számla típusa
         notes: Megjegyzések
         retention_amount: IRPF-visszatartás összege
@@ -1674,22 +1690,6 @@ tui:
         identity: '{kind} számla: {number}, kelte {date}'
         retention: 'IRPF-visszatartás: kulcs {rate} · összeg {amount}'
       title: Számla hozzáadása
-    records:
-      failed: A módosítás elutasítva, vagy nem sikerült menteni.
-      identity: Rekordazonosító
-      invoice_detail: Számla részletei
-      invoices: Rögzített számlák
-      links: Kapcsolt rekordok
-      loading: Rekord olvasása…
-      no_change: Ellenőrzés előtt adjon meg eltérő értéket.
-      open_invoices: Számlák megtekintése
-      open_transaction: Kijelölt tétel megtekintése vagy szerkesztése
-      reviewed: Ellenőrizze az értéket, majd mentse.
-      save: Módosítás mentése
-      saved: Módosítás mentve.
-      saving: Módosítás mentése…
-      source: Forrásfájl
-      transaction_detail: Tétel részletei
     overview:
       affected_declarations: Érintett bevallások
       areas: Főkönyvi területek
@@ -1724,6 +1724,22 @@ tui:
       suggestions: Javasolt kapcsolatok
       title: Helyi főkönyvi egyeztetés
       'yes': Igen
+    records:
+      failed: A módosítás elutasítva, vagy nem sikerült menteni.
+      identity: Rekordazonosító
+      invoice_detail: Számla részletei
+      invoices: Rögzített számlák
+      links: Kapcsolt rekordok
+      loading: Rekord olvasása…
+      no_change: Ellenőrzés előtt adjon meg eltérő értéket.
+      open_invoices: Számlák megtekintése
+      open_transaction: Kijelölt tétel megtekintése vagy szerkesztése
+      reviewed: Ellenőrizze az értéket, majd mentse.
+      save: Módosítás mentése
+      saved: Módosítás mentve.
+      saving: Módosítás mentése…
+      source: Forrásfájl
+      transaction_detail: Tétel részletei
     refusal:
       application_state: Ez a terület a főkönyv jelenlegi állapotában nem érhető el.
       destination_pending: Ez a terület ebben a verzióban még nem érhető el.
@@ -1843,10 +1859,6 @@ tui:
     unreadable: Az olvasó állapotát nem sikerült lekérdezni.
     verify: Modell ellenőrzése
   modelo:
-    edit:
-      apply: 'Bevallott értékek alkalmazása'
-      scalar: '{casilla}. rovat'
-      binding: 'Bevallott adat: {binding}'
     assertion:
       matched: Egyezik
       mismatched: Nem egyezik
@@ -1869,6 +1881,10 @@ tui:
       not_applicable: Nem vonatkozik rá
       refused: Elutasítva
       unmeasured: Nincs felmérve
+    edit:
+      apply: Bevallott értékek alkalmazása
+      binding: 'Bevallott adat: {binding}'
+      scalar: '{casilla}. rovat'
     finding_kind:
       advisory: Tanács
       blocking_rule: Nem teljesülő szabály
@@ -1979,16 +1995,16 @@ tui:
       declarations: Bevallások megnyitása
       home: Főoldal megnyitása
       ledger: Főkönyv megnyitása
-      withholding: Levonási bizonylatok megnyitása
       profile: Profil megnyitása
       unknown: Munkafelület megnyitása
+      withholding: Levonási bizonylatok megnyitása
     destination_help:
-      withholding: Számla-levonások rögzítése és megtekintése a kiválasztott adóévben
       aeat_sync: Amit az AEAT-tól már beolvastunk, és amit legközelebb be lehet olvasni
       declarations: Bevallások, számítási változatok, benyújtási előzmények és naptár
       home: Következő teendők, bevallások és határidők egy pillantással
       ledger: Tételek, ellenőrzés, besorolás és igazoló dokumentumok
       profile: A profil adatai és az azokat kitöltő források
+      withholding: Számla-levonások rögzítése és megtekintése a kiválasztott adóévben
     refusal:
       not_composed: A munkafelület nem minden forrása volt még olvasható.
       refresh_failed: A legutóbbi frissítés nem tudta újraépíteni az indexet.

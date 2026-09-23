@@ -1335,6 +1335,21 @@ tui:
       not_applicable: Not applicable
       result_unknown: Not available
       'yes': 'Yes'
+    work_create:
+      created: Created {address}. Reopen Declarations to work on it.
+      modelo: Modelo
+      period: Period
+      progress: Creating or reopening the selected declaration…
+      refusal:
+        modelo: Enter a Modelo number.
+        not_applicable: 'Modelo %{modelo} does not apply to this profile: %{reason}
+          If it should, correct the profile in Profile (F4) and try again.'
+        period: Enter a valid period for the selected year.
+        year: Enter a supported four-digit filing year.
+      reused: Reopened {address}. Reopen Declarations to work on it.
+      submit: Create or reopen
+      title: Create or reopen a declaration
+      year: Filing year
     work_state:
       borrador: Draft
       descartado: Discarded
@@ -1346,9 +1361,9 @@ tui:
     profile: Profile
     withholding: Withholding
   filing_year_route:
-    prompt: Select a filing year (YYYY)
-    open: Open withholding
     invalid: Enter a valid four-digit filing year.
+    open: Open withholding
+    prompt: Select a filing year (YYYY)
     unavailable: Withholding evidence is unavailable for this profile and year.
   home:
     account_fallback: Account
@@ -1623,8 +1638,8 @@ tui:
         invoice_class: Invoice class
         invoice_date: Invoice date (YYYY-MM-DD)
         invoice_number: Invoice number
-        iva_rate: IVA rate (%)
         iva_category: IVA treatment (registry token)
+        iva_rate: IVA rate (%)
         kind: Invoice type
         notes: Notes
         retention_amount: IRPF retention amount
@@ -1651,22 +1666,6 @@ tui:
         identity: '{kind} invoice {number} dated {date}'
         retention: 'IRPF retention: rate {rate} · amount {amount}'
       title: Add an invoice
-    records:
-      failed: The change was refused or could not be saved.
-      identity: Record ID
-      invoice_detail: Invoice detail
-      invoices: Recorded invoices
-      links: Linked records
-      loading: Reading the record…
-      no_change: Enter a different value before reviewing.
-      open_invoices: View invoices
-      open_transaction: View or edit selected entry
-      reviewed: Check the value, then save it.
-      save: Save change
-      saved: Change saved.
-      saving: Saving change…
-      source: Source file
-      transaction_detail: Entry detail
     overview:
       affected_declarations: Affected declarations
       areas: Ledger areas
@@ -1701,6 +1700,22 @@ tui:
       suggestions: Suggested links
       title: Local Ledger reconciliation
       'yes': 'Yes'
+    records:
+      failed: The change was refused or could not be saved.
+      identity: Record ID
+      invoice_detail: Invoice detail
+      invoices: Recorded invoices
+      links: Linked records
+      loading: Reading the record…
+      no_change: Enter a different value before reviewing.
+      open_invoices: View invoices
+      open_transaction: View or edit selected entry
+      reviewed: Check the value, then save it.
+      save: Save change
+      saved: Change saved.
+      saving: Saving change…
+      source: Source file
+      transaction_detail: Entry detail
     refusal:
       application_state: This area is unavailable in the current Ledger state.
       destination_pending: This area is not available in this version yet.
@@ -1820,10 +1835,6 @@ tui:
     unreadable: The reader's state could not be read.
     verify: Check model
   modelo:
-    edit:
-      apply: 'Apply declared values'
-      scalar: 'Box {casilla}'
-      binding: 'Declared input {binding}'
     assertion:
       matched: Matches
       mismatched: Does not match
@@ -1846,6 +1857,10 @@ tui:
       not_applicable: Does not apply
       refused: Refused
       unmeasured: Not measured
+    edit:
+      apply: Apply declared values
+      binding: Declared input {binding}
+      scalar: Box {casilla}
     finding_kind:
       advisory: Advice
       blocking_rule: Rule not met
@@ -1956,16 +1971,16 @@ tui:
       declarations: Open Declarations
       home: Open Home
       ledger: Open Ledger
-      withholding: Open withholding evidence
       profile: Open Profile
       unknown: Open workbench area
+      withholding: Open withholding evidence
     destination_help:
-      withholding: Capture and inspect invoice withholding for a selected filing year
       aeat_sync: What has been read from the AEAT and what can be read next
       declarations: Declarations, calculation revisions, filing history and calendar
       home: Next actions, declarations and deadlines at a glance
       ledger: Entries, review, classification and supporting evidence
       profile: This profile's details and the sources that fill them in
+      withholding: Capture and inspect invoice withholding for a selected filing year
     refusal:
       not_composed: Not every workbench source could be read yet.
       refresh_failed: The last refresh could not rebuild the index.

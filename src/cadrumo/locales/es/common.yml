@@ -1378,6 +1378,21 @@ tui:
       not_applicable: No aplicable
       result_unknown: No disponible
       'yes': Sí
+    work_create:
+      created: Se ha creado {address}. Vuelve a Declaraciones para trabajar en ella.
+      modelo: Modelo
+      period: Período
+      progress: Creando o retomando la declaración seleccionada…
+      refusal:
+        modelo: Indica un número de modelo.
+        not_applicable: 'El modelo %{modelo} no se aplica a este perfil: %{reason}
+          Si debería aplicarse, corrige el perfil en Perfil (F4) y vuelve a intentarlo.'
+        period: Indica un período válido para el ejercicio seleccionado.
+        year: Indica un ejercicio admitido de cuatro cifras.
+      reused: Se ha retomado {address}. Vuelve a Declaraciones para trabajar en ella.
+      submit: Crear o retomar
+      title: Crear o retomar una declaración
+      year: Ejercicio
     work_state:
       borrador: Borrador
       descartado: Descartado
@@ -1389,10 +1404,11 @@ tui:
     profile: Perfil
     withholding: Retenciones
   filing_year_route:
-    prompt: Seleccione un ejercicio (AAAA)
-    open: Abrir retenciones
     invalid: Introduzca un ejercicio válido de cuatro cifras.
-    unavailable: Los justificantes de retenciones no están disponibles para este perfil y ejercicio.
+    open: Abrir retenciones
+    prompt: Seleccione un ejercicio (AAAA)
+    unavailable: Los justificantes de retenciones no están disponibles para este perfil
+      y ejercicio.
   home:
     account_fallback: Cuenta
     action:
@@ -1667,8 +1683,8 @@ tui:
         invoice_class: Clase de factura
         invoice_date: Fecha de la factura (AAAA-MM-DD)
         invoice_number: Número de factura
-        iva_rate: Tipo de IVA (%)
         iva_category: Tratamiento del IVA (clave del registro)
+        iva_rate: Tipo de IVA (%)
         kind: Tipo de factura
         notes: Notas
         retention_amount: Importe de la retención de IRPF
@@ -1696,22 +1712,6 @@ tui:
         identity: Factura {kind} {number} con fecha {date}
         retention: 'Retención de IRPF: tipo {rate} · importe {amount}'
       title: Añadir una factura
-    records:
-      failed: El cambio se rechazó o no se pudo guardar.
-      identity: ID del registro
-      invoice_detail: Detalle de la factura
-      invoices: Facturas registradas
-      links: Registros vinculados
-      loading: Leyendo el registro…
-      no_change: Introduzca un valor diferente antes de revisar.
-      open_invoices: Ver facturas
-      open_transaction: Ver o editar el apunte seleccionado
-      reviewed: Revise el valor y después guárdelo.
-      save: Guardar cambio
-      saved: Cambio guardado.
-      saving: Guardando cambio…
-      source: Archivo de origen
-      transaction_detail: Detalle del apunte
     overview:
       affected_declarations: Declaraciones afectadas
       areas: Áreas del libro
@@ -1747,6 +1747,22 @@ tui:
       suggestions: Enlaces sugeridos
       title: Conciliación local del libro
       'yes': Sí
+    records:
+      failed: El cambio se rechazó o no se pudo guardar.
+      identity: ID del registro
+      invoice_detail: Detalle de la factura
+      invoices: Facturas registradas
+      links: Registros vinculados
+      loading: Leyendo el registro…
+      no_change: Introduzca un valor diferente antes de revisar.
+      open_invoices: Ver facturas
+      open_transaction: Ver o editar el apunte seleccionado
+      reviewed: Revise el valor y después guárdelo.
+      save: Guardar cambio
+      saved: Cambio guardado.
+      saving: Guardando cambio…
+      source: Archivo de origen
+      transaction_detail: Detalle del apunte
     refusal:
       application_state: Esta área no está disponible en el estado actual del libro
         contable.
@@ -1869,10 +1885,6 @@ tui:
     unreadable: No se ha podido leer el estado del lector.
     verify: Comprobar modelo
   modelo:
-    edit:
-      apply: 'Aplicar valores declarados'
-      scalar: 'Casilla {casilla}'
-      binding: 'Dato declarado {binding}'
     assertion:
       matched: Coincide
       mismatched: No coincide
@@ -1895,6 +1907,10 @@ tui:
       not_applicable: No se aplica
       refused: Rechazado
       unmeasured: Sin medir
+    edit:
+      apply: Aplicar valores declarados
+      binding: Dato declarado {binding}
+      scalar: Casilla {casilla}
     finding_kind:
       advisory: Consejo
       blocking_rule: Regla no cumplida
@@ -2005,17 +2021,17 @@ tui:
       declarations: Abrir declaraciones
       home: Abrir inicio
       ledger: Abrir libro mayor
-      withholding: Abrir justificantes de retenciones
       profile: Abrir perfil
       unknown: Abrir área de trabajo
+      withholding: Abrir justificantes de retenciones
     destination_help:
-      withholding: Registrar y consultar retenciones de facturas del ejercicio seleccionado
       aeat_sync: Lo que se ha leído de la AEAT y lo que se puede leer a continuación
       declarations: Declaraciones, revisiones de cálculo, historial de presentaciones
         y calendario
       home: Próximas acciones, declaraciones y plazos de un vistazo
       ledger: Apuntes, revisión, clasificación y justificantes
       profile: Los datos de este perfil y las fuentes que los completan
+      withholding: Registrar y consultar retenciones de facturas del ejercicio seleccionado
     refusal:
       not_composed: Todavía no se han podido leer todas las fuentes del espacio de
         trabajo.

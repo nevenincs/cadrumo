@@ -1366,6 +1366,22 @@ tui:
       not_applicable: No aplicable
       result_unknown: No disponible
       'yes': Sí
+    work_create:
+      created: S'ha creat {address}. Torna a Declaracions per treballar-hi.
+      modelo: Model
+      period: Període
+      progress: Creant o reprenent la declaració seleccionada…
+      refusal:
+        modelo: Indica un número de model.
+        not_applicable: 'El model %{modelo} no s''aplica a aquest perfil: %{reason}
+          Si s''hi hauria d''aplicar, corregeix el perfil a Perfil (F4) i torna-ho
+          a provar.'
+        period: Indica un període vàlid per a l'exercici seleccionat.
+        year: Indica un exercici admès de quatre xifres.
+      reused: S'ha reprès {address}. Torna a Declaracions per treballar-hi.
+      submit: Crear o reprendre
+      title: Crear o reprendre una declaració
+      year: Exercici
     work_state:
       borrador: Esborrany
       descartado: Descartat
@@ -1377,10 +1393,11 @@ tui:
     profile: Perfil
     withholding: Retencions
   filing_year_route:
-    prompt: Seleccioneu un exercici (AAAA)
-    open: Obre les retencions
     invalid: Introduïu un exercici vàlid de quatre xifres.
-    unavailable: Els justificants de retencions no estan disponibles per a aquest perfil i exercici.
+    open: Obre les retencions
+    prompt: Seleccioneu un exercici (AAAA)
+    unavailable: Els justificants de retencions no estan disponibles per a aquest
+      perfil i exercici.
   home:
     account_fallback: Compte
     action:
@@ -1654,8 +1671,8 @@ tui:
         invoice_class: Classe de factura
         invoice_date: Data de la factura (AAAA-MM-DD)
         invoice_number: Número de factura
-        iva_rate: Tipus d'IVA (%)
         iva_category: Tractament de l'IVA (clau del registre)
+        iva_rate: Tipus d'IVA (%)
         kind: Tipus de factura
         notes: Notes
         retention_amount: Import de la retenció d'IRPF
@@ -1683,22 +1700,6 @@ tui:
         identity: Factura {kind} {number} amb data {date}
         retention: 'Retenció d''IRPF: tipus {rate} · import {amount}'
       title: Afegeix una factura
-    records:
-      failed: El canvi s'ha rebutjat o no s'ha pogut desar.
-      identity: ID del registre
-      invoice_detail: Detall de la factura
-      invoices: Factures registrades
-      links: Registres vinculats
-      loading: Llegint el registre…
-      no_change: Introduïu un valor diferent abans de revisar.
-      open_invoices: Veure factures
-      open_transaction: Veure o editar l'assentament seleccionat
-      reviewed: Reviseu el valor i després deseu-lo.
-      save: Desar el canvi
-      saved: Canvi desat.
-      saving: Desant el canvi…
-      source: Fitxer d'origen
-      transaction_detail: Detall de l'assentament
     overview:
       affected_declarations: Declaracions afectades
       areas: Àrees del llibre
@@ -1733,6 +1734,22 @@ tui:
       suggestions: Enllaços suggerits
       title: Conciliació local del llibre
       'yes': Sí
+    records:
+      failed: El canvi s'ha rebutjat o no s'ha pogut desar.
+      identity: ID del registre
+      invoice_detail: Detall de la factura
+      invoices: Factures registrades
+      links: Registres vinculats
+      loading: Llegint el registre…
+      no_change: Introduïu un valor diferent abans de revisar.
+      open_invoices: Veure factures
+      open_transaction: Veure o editar l'assentament seleccionat
+      reviewed: Reviseu el valor i després deseu-lo.
+      save: Desar el canvi
+      saved: Canvi desat.
+      saving: Desant el canvi…
+      source: Fitxer d'origen
+      transaction_detail: Detall de l'assentament
     refusal:
       application_state: Aquesta àrea no està disponible en l'estat actual del llibre
         comptable.
@@ -1855,10 +1872,6 @@ tui:
     unreadable: No s'ha pogut llegir l'estat del lector.
     verify: Comprova el model
   modelo:
-    edit:
-      apply: 'Aplica els valors declarats'
-      scalar: 'Casella {casilla}'
-      binding: 'Dada declarada {binding}'
     assertion:
       matched: Coincideix
       mismatched: No coincideix
@@ -1881,6 +1894,10 @@ tui:
       not_applicable: No s'aplica
       refused: Rebutjat
       unmeasured: Sense mesurar
+    edit:
+      apply: Aplica els valors declarats
+      binding: Dada declarada {binding}
+      scalar: Casella {casilla}
     finding_kind:
       advisory: Consell
       blocking_rule: Regla no complerta
@@ -1990,17 +2007,17 @@ tui:
       declarations: Obre les declaracions
       home: Obre inici
       ledger: Obre el llibre major
-      withholding: Obre els justificants de retencions
       profile: Obre el perfil
       unknown: Obre l'espai de treball
+      withholding: Obre els justificants de retencions
     destination_help:
-      withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
       aeat_sync: El que s'ha llegit de l'AEAT i el que es pot llegir a continuació
       declarations: Declaracions, revisions de càlcul, historial de presentacions
         i calendari
       home: Properes accions, declaracions i terminis d'un cop d'ull
       ledger: Apunts, revisió, classificació i justificants
       profile: Les dades d'aquest perfil i les fonts que les completen
+      withholding: Registra i consulta les retencions de factures de l'exercici seleccionat
     refusal:
       not_composed: Encara no s'han pogut llegir totes les fonts de l'espai de treball.
       refresh_failed: La darrera actualització no ha pogut reconstruir l'índex.
