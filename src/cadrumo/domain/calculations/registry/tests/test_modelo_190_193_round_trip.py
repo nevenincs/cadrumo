@@ -45,11 +45,17 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> None:
-    """M193 relation formulas cover money only; perceptor count is a bound distinct-NIF fact."""
+    """The 2024 M193 copies the modelo 123 money relations; its perceptor count is a bound distinct-NIF fact.
+
+    The 2025 design sums and counts the type-2 records instead, keeping modelo
+    123 as a reconciliation check; that edition is proven by the registry's
+    own Modelo 193 tests.
+    """
 
     modelo, catalogues = bundled_modelo_components("193")
-    # The bound perceptor count arrives with the 2024 design; pin the current revision.
-    revision = modelo.revisions["2025-y-siguientes"]
+    # The bound perceptor count arrives with the 2024 design, the last edition
+    # whose totals are the modelo 123 relations.
+    revision = modelo.revisions["2024"]
 
     # Graph-wiring assertions — each monetary output casilla must declare an
     # op=copy formula sourcing the matching 123 relation. The perceptor count
@@ -80,7 +86,8 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
     # Runtime threading — two distinct relation values must land in the
     # relation-backed casillas without cross-contamination; the count arrives
     # through the binding channel.
-    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2026, period="0A")
+    snapshot = build_snapshot(modelo, catalogues, source_root=bundled_path(), filing_year=2024, period="0A")
+    assert snapshot.revision.id == revision.id
     relation_values = {
         "modelo-193-123-base-anual": Decimal("7000.50"),
         "modelo-193-123-retenciones-anual": Decimal("1330.10"),
@@ -89,7 +96,7 @@ def test_modelo_193_copies_monetary_relations_and_binds_perceptor_count() -> Non
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": date(2026, 1, 31)},
+        date_context={"filing_period": date(2025, 1, 31)},
         binding_values=binding_values,
         relation_values=relation_values,
     )

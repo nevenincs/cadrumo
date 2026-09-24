@@ -22,7 +22,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 
 from ......adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ......application.modelo.work_addressing import ModeloVisibleFilingTarget
+from ......application.modelo.work_addressing import ModeloVisibleFilingTarget, law_selected_revision_for_work_target
 from ......application.modelo.work_lifecycle import create_work_unit
 from ......application.modelo.workspace import resolve_static_inspection_result
 from ......application.modelo.workspace_models import ModeloWorkspaceVisibleFilingTargetV1
@@ -31,8 +31,6 @@ from ......core.period import Period
 from ......domain.user_profile.values import ProfileSetupState, UserProfileFact
 
 _PROFILE_ID = "13000000-0000-4000-8000-000000000231"
-#: The law-selected revision of each seeded modelo for 2026 1T.
-_REVISIONS: dict[str, str] = {"130": "2019-y-siguientes", "303": "2026-y-siguientes"}
 _T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
 _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
     UserProfileFact(path="identity.tax_id", value="00000000T"),
@@ -82,12 +80,15 @@ def _seeded_bucket(tmp_path: Path, *, modelo: str) -> Iterator[tuple[str, WorkUn
             ),
         )
         repository = WorkUnitCatalogueRepository(objects=profile.repository)
+        period = Period.from_year_and_code(2026, "1T")
         create_work_unit(
             bucket_id=profile.bucket_id,
             modelo=modelo,
             filing_year=2026,
-            period=Period.from_year_and_code(2026, "1T"),
-            revision_id=_REVISIONS[modelo],
+            period=period,
+            revision_id=law_selected_revision_for_work_target(
+                modelo=modelo, filing_year=2026, period=period, operation=operation
+            ),
             ports=WorkLifecyclePorts(
                 work_unit_repository=repository,
                 bucket_event_repository=BucketEventHistoryRepository(),

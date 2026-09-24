@@ -25,6 +25,7 @@ from ....core.aggregation import BindingSourceKind
 from ....domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ....domain.calculations.registry.tests.published_authority import published_revision_definitions
 from ...aggregation.inventory import InventorySourceResolver
+from ...aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ...modelo.calculation_route import CALCULATION_ROUTE_RESOLVER_OWNERSHIP
 from ..row_set_assembly import _GROUPING_DISPATCH
 
@@ -39,10 +40,17 @@ _INVOICE_GROUPINGS: frozenset[str] = frozenset({"contraparte_clave", "operator_c
 
 # Groupings whose row values are materialised by a source resolver rather than
 # by ``_GROUPING_DISPATCH`` or invoice-row materialisation.  This is a mapping,
-# not an unqualified allowlist: each exception names the binding source whose
-# enrolment the route proof below must establish.
+# not an unqualified allowlist: each exception names the binding source and the
+# resolver whose enrolment the route proof below must establish.
 _MESH_RESOLVED_GROUPINGS: dict[str, BindingSourceKind] = {
     "per_inventory_activity": BindingSourceKind.INVENTORY,
+    # Modelo 180's official type-2 records, materialised by the retenciones
+    # aggregation as its canonical type-2 rows.
+    "per_type2_record": BindingSourceKind.RETENCIONES_AGGREGATION,
+}
+_MESH_GROUPING_RESOLVERS: dict[str, type[InventorySourceResolver] | type[RetencionesAggregationSourceResolver]] = {
+    "per_inventory_activity": InventorySourceResolver,
+    "per_type2_record": RetencionesAggregationSourceResolver,
 }
 
 
@@ -118,13 +126,14 @@ def test_mesh_resolved_groupings_have_a_real_enrolled_route_owner() -> None:
     or merely leaving inventory deferred all make this gate fail.
     """
 
-    assert _MESH_RESOLVED_GROUPINGS == {"per_inventory_activity": BindingSourceKind.INVENTORY}
+    assert set(_MESH_GROUPING_RESOLVERS) == set(_MESH_RESOLVED_GROUPINGS)
     for grouping, source_kind in _MESH_RESOLVED_GROUPINGS.items():
+        resolver_type = _MESH_GROUPING_RESOLVERS[grouping]
         owners = tuple(owner for owner in CALCULATION_ROUTE_RESOLVER_OWNERSHIP if source_kind in owner.owned_sources)
 
         assert len(owners) == 1, f"{grouping!r} has no unique calculation-route owner for {source_kind.value!r}"
         owner = owners[0]
         assert owner.stage == "mesh", f"{grouping!r} must resolve in the calculation mesh"
-        assert owner.resolver_type is InventorySourceResolver, f"{grouping!r} must use InventorySourceResolver"
-        assert owner.resolver_id == InventorySourceResolver.resolver_id
-        assert source_kind in InventorySourceResolver.owned_sources
+        assert owner.resolver_type is resolver_type, f"{grouping!r} must use {resolver_type.__name__}"
+        assert owner.resolver_id == resolver_type.resolver_id
+        assert source_kind in resolver_type.owned_sources
