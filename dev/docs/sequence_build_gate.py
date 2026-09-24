@@ -153,6 +153,19 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
     goldens_root = _config_root(app, "cadrumo_sequences_goldens_root")
 
     problems: list[str] = []
+    key: str | None = None
+    if pages is None:
+        from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+
+        from .sequences.verdict_cache import reused_verdict, verdict_key
+
+        with bundled_indexed_authority().operation() as operation:
+            generation = str(operation.generation)
+        key = verdict_key(docs_root=docs_root, goldens_root=goldens_root, authority_generation=generation)
+        reused = reused_verdict(key)
+        if reused is not None:
+            print(f"cli-sequence goldens: clean ({reused})", flush=True)
+            return
     if pages is None:
         # A full build checks every enrolled page; shard the pages across a
         # BOUNDED pool of child interpreters (each sequence keeps its own fresh
@@ -183,3 +196,7 @@ def check_sequence_goldens(app: Sphinx, *, pages: list[str] | None = None) -> No
             f"{len(problems)} cli-sequence divergence(s) from committed goldens:\n{detail}\n"
             f"If the new behaviour is intended, update the golden(s) with: {refresh_invocation()}",
         )
+    if key is not None:
+        from .sequences.verdict_cache import record_clean_verdict
+
+        record_clean_verdict(key)
