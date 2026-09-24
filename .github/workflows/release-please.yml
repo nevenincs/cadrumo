@@ -156,7 +156,7 @@ jobs:
           # skipped the release dispatch below and a version was tagged with
           # nothing built or published behind it.
           HEAD_BRANCH: ${{ steps.release.outputs.pr && fromJSON(steps.release.outputs.pr).headBranchName || '' }}
-        run: gh workflow run merge-gate.yml --repo "${GITHUB_REPOSITORY}" --ref "${HEAD_BRANCH}" -f "ref=${HEAD_BRANCH}"
+        run: gh workflow run merge-gate.yml --repo "${GITHUB_REPOSITORY}" --ref "${HEAD_BRANCH}"
 
       - name: Dispatch release proof for the release pull request
         if: steps.release.outputs.pr && !steps.release.outputs.release_created

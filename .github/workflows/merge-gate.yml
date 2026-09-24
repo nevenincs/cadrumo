@@ -15,12 +15,11 @@ on:
   # pushes and pull requests start no workflow runs, so that pull request would
   # never report this gate. A dispatch is exempt from that rule and its check
   # run lands on the branch head the pull request is waiting on.
+  # The dispatch takes no ref input: a run always checks out the ref it was
+  # dispatched on. A run's cache writes land in that ref's scope, so checking
+  # out any other ref would execute that ref's code with this ref's cache
+  # token, and a run dispatched on main could poison main's cache.
   workflow_dispatch:
-    inputs:
-      ref:
-        description: Git ref to validate (defaults to the dispatched ref)
-        required: false
-        type: string
 
 permissions:
   contents: read
@@ -30,7 +29,7 @@ concurrency:
   # release proving a branch; a later pull request event on the same branch
   # must not cancel it. Two pull request events still share a group and
   # still supersede each other, so that path is unchanged.
-  group: merge-gate-${{ github.event.pull_request.number || inputs.ref || github.ref }}-${{ github.event_name }}
+  group: merge-gate-${{ github.event.pull_request.number || github.ref }}-${{ github.event_name }}
   cancel-in-progress: true
 
 # Pull requests from forks never start a working job: every job that checks out
@@ -46,7 +45,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref || '' }}
           persist-credentials: false
 
       - name: Set up toolchain
@@ -91,7 +89,6 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ inputs.ref || '' }}
           fetch-depth: 0
           persist-credentials: false
 

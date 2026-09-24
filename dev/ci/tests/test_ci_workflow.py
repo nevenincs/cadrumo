@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import ast
+import itertools
 import pathlib
 import re
 import shlex
@@ -16,6 +17,7 @@ from dev._paths import REPO_ROOT
 from dev.packaging.command_execution import run_command
 
 from ..lane_reachability import declared_lanes, resolved_recipe_commands
+from ..workflow_job_gates import dispatch_input_defaults
 from ..workflow_run_text import executed_text
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -513,6 +515,85 @@ def test_the_dotenv_gate_refuses_a_lane_that_loads_operator_overrides(tmp_path: 
     workflow = tmp_path / "dotenv.yml"
     workflow.write_text(_fixture_workflow("Cadrumo Dotenv", "just test-unit", "just env-setup"), encoding="utf-8")
     assert _dotenv_offenders(_lane_documents((workflow,))) == ["dotenv.yml: env-setup"]
+
+
+#: A checkout ref drawn from a dispatch input. A dispatched run owns the cache
+#: scope of the ref it was dispatched on, so checking out a different ref runs
+#: that ref's code with the dispatching ref's cache token.
+_DISPATCH_INPUT_EXPRESSION = re.compile(r"\binputs\.")
+
+
+def _input_selected_checkouts(documents: tuple[tuple[Path, dict[str, Any]], ...]) -> list[str]:
+    offenders: list[str] = []
+    for path, document in documents:
+        for job_name, job in document["jobs"].items():
+            for step in job.get("steps") or ():
+                if not str(step.get("uses", "")).startswith("actions/checkout@"):
+                    continue
+                ref = (step.get("with") or {}).get("ref")
+                if ref is not None and _DISPATCH_INPUT_EXPRESSION.search(str(ref)):
+                    offenders.append(f"{path.name}: {job_name}: {ref}")
+    return offenders
+
+
+def test_the_merge_gate_checks_out_only_the_ref_it_runs_on() -> None:
+    """The merge gate executes its checkout, so the checkout is never input-selected."""
+    assert _input_selected_checkouts(_lane_documents((_MERGE_GATE,))) == []
+
+
+def test_the_checkout_gate_refuses_an_input_selected_ref(tmp_path: Path) -> None:
+    """Teeth: a dispatch that checks out an input-named ref and runs its code is reported."""
+    workflow = tmp_path / "poisonable.yml"
+    fillers = "".join("      - run: just check-style\n" for _ in range(_MINIMUM_LANE_STEPS))
+    workflow.write_text(
+        "name: Cadrumo Poisonable\n"
+        "on:\n  workflow_dispatch:\n    inputs:\n      ref:\n        type: string\n"
+        "jobs:\n  lane:\n    runs-on: [self-hosted, Linux, X64]\n    steps:\n"
+        "      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1\n"
+        "        with:\n          ref: ${{ inputs.ref || '' }}\n"
+        "      - uses: ./.github/actions/setup\n" + fillers,
+        encoding="utf-8",
+    )
+    assert _input_selected_checkouts(_lane_documents((workflow,))) == ["poisonable.yml: lane: ${{ inputs.ref || '' }}"]
+
+
+_DISPATCH_FIELD_FLAGS = frozenset({"-f", "--raw-field", "-F", "--field"})
+
+
+def _dispatched_fields(workflow_name: str, documents: tuple[tuple[Path, dict[str, Any]], ...]) -> list[tuple[str, ...]]:
+    """Return the input names each `gh workflow run <workflow_name>` command passes."""
+    dispatches: list[tuple[str, ...]] = []
+    for _, document in documents:
+        for job in document["jobs"].values():
+            for step in job.get("steps") or ():
+                for line in str(step.get("run") or "").replace("\\\n", " ").splitlines():
+                    if "gh workflow run" not in line:
+                        continue
+                    argv = shlex.split(line, comments=True)
+                    if argv[:4] != ["gh", "workflow", "run", workflow_name]:
+                        continue
+                    dispatches.append(
+                        tuple(
+                            value.partition("=")[0]
+                            for flag, value in itertools.pairwise(argv)
+                            if flag in _DISPATCH_FIELD_FLAGS
+                        )
+                    )
+    return dispatches
+
+
+def test_the_merge_gate_dispatch_passes_only_declared_inputs() -> None:
+    """An undeclared input makes the dispatch fail, and the release pull request then never reports the gate."""
+    declared = set(dispatch_input_defaults(yaml.safe_load(_MERGE_GATE.read_text(encoding="utf-8"))))
+    dispatches = _dispatched_fields(_MERGE_GATE.name, _lane_documents((_WORKFLOWS_DIR / "release-please.yml",)))
+    assert dispatches, "release-please no longer dispatches the merge gate"
+    assert [set(fields) - declared for fields in dispatches] == [set()] * len(dispatches)
+
+
+def test_the_dispatch_field_reader_sees_every_passed_input() -> None:
+    """Teeth: a passed input field is read by name, so an undeclared one cannot hide."""
+    document = {"jobs": {"lane": {"steps": [{"run": 'gh workflow run merge-gate.yml --ref "$B" -f "ref=$B"'}]}}}
+    assert _dispatched_fields("merge-gate.yml", ((Path("fixture.yml"), document),)) == [("ref",)]
 
 
 def _product_surface(document: dict[str, Any]) -> str:
