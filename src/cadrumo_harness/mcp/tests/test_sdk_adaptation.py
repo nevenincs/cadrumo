@@ -12,6 +12,7 @@ import importlib.util
 
 import pytest
 
+from ..dispatch import tool_name_for_command
 from ..server import build_sdk_tools
 from ..tools import build_tool_descriptors
 
@@ -29,18 +30,18 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
     assert len(tools) == len(descriptors)
     by_name = {tool.name: tool for tool in tools}
 
-    inspect_tool = by_name["cadrumo_registry_inspect"]
-    assert inspect_tool.annotations is not None
-    assert inspect_tool.annotations.read_only_hint is True
-    assert inspect_tool.input_schema["type"] == "object"
-    assert inspect_tool.output_schema
-    inspect_branches = inspect_tool.output_schema["oneOf"]
-    assert isinstance(inspect_branches, list) and len(inspect_branches) == 2
-    inspect_success = inspect_branches[0]
-    assert isinstance(inspect_success, dict)
-    inspect_properties = inspect_success["properties"]
-    assert isinstance(inspect_properties, dict)
-    assert set(inspect_properties) == {
+    categories_tool = by_name[tool_name_for_command("ledger.categories")]
+    assert categories_tool.annotations is not None
+    assert categories_tool.annotations.read_only_hint is True
+    assert categories_tool.input_schema["type"] == "object"
+    assert categories_tool.output_schema
+    categories_branches = categories_tool.output_schema["oneOf"]
+    assert isinstance(categories_branches, list) and len(categories_branches) == 2
+    categories_success = categories_branches[0]
+    assert isinstance(categories_success, dict)
+    categories_properties = categories_success["properties"]
+    assert isinstance(categories_properties, dict)
+    assert set(categories_properties) == {
         "schema_version",
         "command",
         "active_profile",
@@ -48,9 +49,9 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
         "result",
         "notices",
     }
-    assert inspect_properties["command"]["const"] == "ledger.categories"
+    assert categories_properties["command"]["const"] == "ledger.categories"
 
-    calculate = by_name["cadrumo_modelo_work_calculate"]
+    calculate = by_name[tool_name_for_command("modelo.work.calculate")]
     assert calculate.output_schema
     calculate_branches = calculate.output_schema["oneOf"]
     assert isinstance(calculate_branches, list) and len(calculate_branches) == 2
@@ -77,7 +78,7 @@ def test_descriptors_adapt_to_sdk_tools_with_annotations() -> None:
     assert inline_result["properties"]["observations_resource"] is False
     assert result_branches[1]["properties"]["observations"] is False
 
-    remove = by_name["cadrumo_ledger_remove"]
+    remove = by_name[tool_name_for_command("ledger.remove")]
     assert remove.annotations is not None
     assert remove.annotations.read_only_hint is False
     assert remove.annotations.destructive_hint is True

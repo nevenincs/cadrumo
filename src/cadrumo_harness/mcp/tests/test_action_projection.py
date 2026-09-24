@@ -208,12 +208,16 @@ def test_mcp_output_schema_uses_the_canonical_notice_action_wire_without_suggest
     success_branch, error_branch = descriptor.output_schema["oneOf"]
     success_notices = success_branch["properties"]["notices"]
     error_notices = error_branch["properties"]["notices"]
+    # Both branches reference the one declared notice body instead of each
+    # inlining a copy of it.
+    notice_ref = "#/$defs/Notice"
+    assert success_notices == error_notices == {"type": "array", "items": {"$ref": notice_ref}}
 
-    for notices in (success_notices, error_notices):
-        notice_properties = notices["items"]["properties"]
-        assert set(notice_properties) == set(Notice.model_fields)
-        assert set(notices["items"]["required"]) == {"severity", "code", "message"}
-        assert "action" in notice_properties
+    notice_body = descriptor.output_schema["$defs"]["Notice"]
+    notice_properties = notice_body["properties"]
+    assert set(notice_properties) == set(Notice.model_fields)
+    assert set(notice_body["required"]) == {"severity", "code", "message"}
+    assert "action" in notice_properties
 
     assert "suggestion" not in _all_mapping_keys(descriptor.output_schema)
     assert {
