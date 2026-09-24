@@ -153,7 +153,7 @@ register_collection_storage_root_cleanup(collection_storage_root())
 if Path(os.environ["CADRUMO_AUTHORITY_ROOT"].strip()).resolve() == _PURE_STDLIB_AUTHORITY_ROOT:
     _frozen_authority_root = import_module("cadrumo.tests.authority_run_snapshot").freeze_authority_root(
         _PURE_STDLIB_AUTHORITY_ROOT,
-        collection_storage_root() / "authority-snapshot",
+        _collection_storage_root.authority_snapshot_root(),
     )
     if _frozen_authority_root is not None:
         os.environ["CADRUMO_AUTHORITY_ROOT"] = str(_frozen_authority_root)
