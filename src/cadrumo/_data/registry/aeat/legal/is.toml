@@ -2667,3 +2667,17 @@ published_at = 2026-01-28
 applies_from = 2026-01-28
 source_url = "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-2024"
 review_status = "agent_reviewed"
+
+[sources."aeat-nota-efectos-rdl-16-2025-rdl-2-2026"]
+evidence_tier = "official_source_guidance"
+authority = "aeat"
+kind = "instructions"
+corpus_path = "corpus/aeat_official/notices/aeat-nota-efectos-rdl-16-2025-rdl-2-2026.html"
+sha256 = "b68a950ed2513bf89db377cea877f9483e5eb2bec3445eebfe58605c81d9c81b"
+bytes = 8890
+retrieved_at = 2026-09-24
+published_at = 2026-04-01
+applies_from = 2025-01-01
+applies_to = 2026-12-31
+source_url = "https://sede.agenciatributaria.gob.es/Sede/todas-noticias/2026/abril/1/nota-sobre-efectos-ambito-tributario-febrero.html"
+review_status = "agent_reviewed"

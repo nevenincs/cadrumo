@@ -1046,13 +1046,17 @@ required_text = ["beneficiarse del régimen de libertad de amortización será d
 # LIS DA 17a.1 letter c): the 2025 period admits installations entering
 # service in 2025 only. Letter c) was added for 2025 by RDL 16/2025 art. 17.Uno,
 # in force from 25 December 2025 until the Congreso derogated it on 27 January
-# 2026. Its application to the 2025 IRPF period rests on the AEAT 2025 manual,
-# which applies it to that accrual; the manual is cited here as its own source.
+# 2026. Its application to the 2025 IRPF period rests on the AEAT: its note of
+# 1 April 2026, following the DGT's criteria, holds that at the 2025 IRPF accrual
+# the RDL's amendments were in force with full effect, and the 2025 manual applies
+# letter c) to 2025 by name. The note's list of 2025 IRPF measures does not name
+# art. 17, so the manual is the source that ties the principle to this incentive.
 [[revisions."2025".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio"
 data_type = "integer"
 unit = "year"
 legal_refs = ["ley-27-2014:da-17", "rdl-16-2025:art-17"]
+source_refs = ["aeat-renta-2025-manual-parte1", "aeat-nota-efectos-rdl-16-2025-rdl-2-2026"]
 [[revisions."2025".parameters.values]]
 value = "2025"
 date_axis = "filing_period"
@@ -1061,12 +1065,16 @@ valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se", "Se podrán amortizar libremente en el período impositivo 2025 las inversiones en"]
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-nota-efectos-rdl-16-2025-rdl-2-2026"
+required_text = ["En la fecha de devengo del IRPF para 2025, las modificaciones introducidas por el Real Decreto-ley 16/2025, de 23 de diciembre, estaban en vigor y desplegando sus plenos efectos jurídicos"]
 
 [[revisions."2025".parameters]]
 id = "renta-actividad-inmovilizado-amortizacion-renovables-ultimo-ejercicio"
 data_type = "integer"
 unit = "year"
 legal_refs = ["ley-27-2014:da-17", "rdl-16-2025:art-17"]
+source_refs = ["aeat-renta-2025-manual-parte1", "aeat-nota-efectos-rdl-16-2025-rdl-2-2026"]
 [[revisions."2025".parameters.values]]
 value = "2025"
 date_axis = "filing_period"
@@ -1075,6 +1083,9 @@ valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se", "Se podrán amortizar libremente en el período impositivo 2025 las inversiones en"]
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-nota-efectos-rdl-16-2025-rdl-2-2026"
+required_text = ["En la fecha de devengo del IRPF para 2025, las modificaciones introducidas por el Real Decreto-ley 16/2025, de 23 de diciembre, estaban en vigor y desplegando sus plenos efectos jurídicos"]
 
 # LIS DA 17a.1: only installations made available to the taxpayer from the
 # entry into force of RDL 18/2022 (20 October 2022) qualify. 1 admits, 0
