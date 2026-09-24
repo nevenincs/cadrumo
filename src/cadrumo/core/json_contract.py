@@ -658,9 +658,13 @@ def _validated_error_envelope(typed_document: dict[str, object]) -> dict[str, ob
         raise OutputSchemaError("operator JSON error envelope has an invalid command")
     if active_profile is not None and not isinstance(active_profile, str):
         raise OutputSchemaError("operator JSON error envelope has an invalid active profile")
+    # A parsed document is JSON, validated as JSON, as the success envelope is:
+    # strict Python-mode validation rejects the lists and plain strings that
+    # JSON carries for the envelope's tuples and enums, so every error that
+    # names a recovery action failed here while plain errors passed.
     try:
-        ErrorEnvelope.model_validate(typed_document["error"])
-        TypeAdapter(list[Notice]).validate_python(typed_document["notices"])
+        ErrorEnvelope.model_validate_json(json.dumps(typed_document["error"]))
+        TypeAdapter(list[Notice]).validate_json(json.dumps(typed_document["notices"]))
     except ValidationError as error:
         raise OutputSchemaError("operator JSON error envelope failed strict validation") from error
     return typed_document
