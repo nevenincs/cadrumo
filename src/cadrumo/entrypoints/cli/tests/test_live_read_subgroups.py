@@ -643,13 +643,16 @@ def _live_process_command_lines() -> str:
                 "PowerShell (powershell or pwsh) is required for Windows process inventory but was not found on PATH",
             )
         script = "Get-CimInstance Win32_Process | Select-Object -ExpandProperty CommandLine | ConvertTo-Json -Compress"
+        # Bytes, decoded leniently exactly as the production inventory does: a
+        # text-mode read decodes with the console code page, and one process
+        # whose command line it cannot map kills the reader thread and leaves
+        # stdout as None.
         completed = subprocess.run(
             [powershell, "-NoProfile", "-Command", script],
             check=True,
             capture_output=True,
-            text=True,
         )
-        payload = completed.stdout.strip()
+        payload = completed.stdout.decode("utf-8", errors="replace").strip()
         if not payload:
             return ""
         decoded = json.loads(payload)
