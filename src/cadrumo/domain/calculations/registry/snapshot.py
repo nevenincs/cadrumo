@@ -507,7 +507,7 @@ def legal_window_covers_devengo(revision: ModeloRevision, reference: LegalRefere
       partway through the following calendar year, while the return is still
       being filed, did NOT govern the tax period and must not ground it, even
       though it overlaps the presentation-extended window below.
-    - Every other kind (``orden``, ``manual``, ``instruction``, ``resolucion``,
+    - Every other kind (``orden``, ``manual``, ``resolucion``,
       ``acuerdo_parlamentario`` -- procedural, interpretive or parliamentary
       instruments) keeps the existing presentation-window-tolerant
       overlap check via :class:`RevisionLegalApplicabilityWindow`: the orden

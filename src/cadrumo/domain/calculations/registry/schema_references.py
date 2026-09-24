@@ -133,7 +133,6 @@ class LegalReferenceKind(StrEnum):
     ACUERDO_INTERNACIONAL = auto()
     DIRECTIVA = auto()
     MANUAL = auto()
-    INSTRUCTION = auto()
     RESOLUCION = auto()
     """An administrative resolución, such as one approving a form or a non-working-day calendar."""
     ACUERDO_PARLAMENTARIO = auto()
