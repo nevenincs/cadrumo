@@ -11,12 +11,13 @@ related:
   - '[[2026-09-23-profile-password-custody-kdf-calibration-reachability-research]]'
   - '[[2026-08-13-recovery-mnemonic-presentation-successor-adr]]'
   - '[[2026-09-23-profile-password-custody-passphrase-reset-adr]]'
+  - '[[2026-07-24-profile-login-session-adr]]'
 supersedes:
   - '2026-05-14-secure-backend-passkey-custody-adr'
   - '2026-08-02-adjacent-domain-deduplication-store-scoped-login-throttle-adr'
 modified: '2026-09-23'
 body_schema: 'body-v1'
-body_hash: 'sha256:44064e9495002b377ac8b93cc5985e08d58b2be119b6d10eebc58f6fd5907572'
+body_hash: 'sha256:28e4cd717080bc49b6fd2f17758cb92f2e4888438f88331d0e62c85bb4172dc9'
 ---
 # `profile-password-custody` adr: `per-profile password custody authority` | (**status:** `accepted`)
 
@@ -74,6 +75,8 @@ Every Argon2 operation runs in a killable supervised child. The child performs A
 Windows uses an assigned Job Object with kill-on-close, active-process, memory, and CPU limits. `STARTUPINFOEX` supplies an explicit handle list; every other handle is non-inheritable. POSIX uses a new process group, hard resource limits, close-from semantics, and exact `pass_fds`. The parent transmits no secret until the worker proves the limits in a ready handshake. Setup failure returns `KDF_SUPERVISION_UNAVAILABLE`; there is no in-process, thread, unsupervised, inherited-environment, or weaker fallback.
 
 Per-profile online backoff and global/cross-process KDF concurrency protect resources only. Missing or corrupt throttle state means clear, never permanent denial. The product states that stolen envelopes support offline guessing.
+
+Amended 2026-09-24. The failed-attempt counter clears only on a successful proof, by password or recovery code, or when its own wait expires; revoking a session, including logout, never touches it. The earlier behaviour, a counter that also reset on logout, came from the superseded `2026-07-24-profile-login-session-adr` backoff row. Because selecting a profile needs no secret and logout revokes whatever is selected, that reset let any caller clear the backoff between guesses, for login and for recovery reset alike. Accepted 2026-09-24 under the user's standing pre-approval of modifications.
 
 ### Optional recovery
 
