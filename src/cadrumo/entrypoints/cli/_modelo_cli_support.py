@@ -4,6 +4,9 @@ These helpers stay at the Typer boundary: they validate operator token shape,
 translate application refusals into ``BadParameter`` messages, and choose the
 default audit actor. Filing selection and revision eligibility remain delegated
 to application services by the caller.
+
+Core types:
+:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
 """
 
 from __future__ import annotations

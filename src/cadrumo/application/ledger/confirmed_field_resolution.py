@@ -34,7 +34,7 @@ from datetime import date
 from decimal import Decimal
 from typing import NoReturn
 
-from ...application.invoices.catalogue_creation import resolve_iva_rate_slot
+from ..invoices.catalogue_creation import resolve_iva_rate_slot
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.authority import bundled_indexed_authority

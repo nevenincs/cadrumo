@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.filing.draft_review_ports import DraftReviewPorts
+from ...filing.draft_review_ports import DraftReviewPorts
 from ....core.config import Settings, override_settings
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue

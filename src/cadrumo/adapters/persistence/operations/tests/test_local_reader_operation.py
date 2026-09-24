@@ -20,16 +20,16 @@ from typing import ClassVar, override
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.persistence.operations.journal import OperationJournalRepository
-from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
-from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ...core.config import Settings, override_settings
-from ...core.model_catalogue import ModelRole, default_model_runtime_id
-from ...core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
-from ...tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
-from ..local_reader import RoleFitnessOutcome, role_model_targets
-from ..local_reader_operation import (
+from ..journal import OperationJournalRepository
+from ..lease import OperationLeaseFilesystemRepository
+from ..secure_references import operation_secure_reference_repository
+from ...storage.tests.secure_sql import isolated_runtime_profile
+from .....core.config import Settings, override_settings
+from .....core.model_catalogue import ModelRole, default_model_runtime_id
+from .....core.operations import OperationEffect, OperationEventKind, OperationTerminalCondition
+from .....tests.loopback_llm import SilentLoopbackHandler, read_json_body, serving_loopback, write_json_response
+from .....application.local_reader import RoleFitnessOutcome, role_model_targets
+from .....application.local_reader_operation import (
     LOCAL_READER_OPERATION_DEFINITION_ID,
     LocalReaderProvisionAction,
     LocalReaderProvisionOutcome,
@@ -46,20 +46,20 @@ from ..local_reader_operation import (
     local_reader_setup_phase,
     provision_local_reader,
 )
-from ..operations.composition import OperationComposedServices, compose_operation_services
-from ..operations.frontend_requests import (
+from .....application.operations.composition import OperationComposedServices, compose_operation_services
+from .....application.operations.frontend_requests import (
     OperationObservationRequestV1,
     OperationObservationSuccessV1,
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
-from ..operations.models import OperationRequest
-from ..operations.registry import OperationRegistry
-from ..operations.tests.authority_test_support import unread_authority_operation
-from ..provisioning_contracts import ProvisioningPreconditionCondition
-from ..provisioning_host import RuntimeInstaller
+from .....application.operations.models import OperationRequest
+from .....application.operations.registry import OperationRegistry
+from .....application.operations.tests.authority_test_support import unread_authority_operation
+from .....application.provisioning_contracts import ProvisioningPreconditionCondition
+from .....application.provisioning_host import RuntimeInstaller
 
-pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
+pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
 _VISION = default_model_runtime_id(ModelRole.VISION_TRANSCRIPTION)
 _TEXT = default_model_runtime_id(ModelRole.TEXT_EXTRACTION)

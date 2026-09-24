@@ -8,8 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from ......adapters.persistence.profile.submission import SubmissionRepository
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from .....persistence.profile.submission import SubmissionRepository
+from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......core.config import Settings
 from ......domain.submission.engine import SubmissionEngine
 from ......domain.submission.models import ModeloPresentado, SubmissionAttempt, SubmissionStatus

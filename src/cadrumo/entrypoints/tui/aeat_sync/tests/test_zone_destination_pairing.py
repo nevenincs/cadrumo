@@ -66,8 +66,8 @@ def test_the_controller_builds_its_target_from_the_shared_pairing() -> None:
     controller went back to a private copy, so this drives the real
     ``target`` call for every zone.
     """
-    from ....tui.navigation import TuiScreenContextV1
-    from ..tests.test_aeat_sync_workspace import _projection
+    from ...navigation import TuiScreenContextV1
+    from .test_aeat_sync_workspace import _projection
 
     controller_type = _controller_type()
     controller = controller_type(TuiScreenContextV1(destination="workbench.aeat_sync"), _projection())

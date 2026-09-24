@@ -6,6 +6,9 @@ deliberately never reads a repository or calculates a recognition date: it only
 collects declared evidence and hands it to the common application command.
 Work income is anchored to the ledger transaction that paid it; professional
 and urban-rent income to the invoice they settle.
+
+Core types:
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
 """
 
 from __future__ import annotations

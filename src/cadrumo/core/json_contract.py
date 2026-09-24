@@ -49,7 +49,7 @@ from pydantic import (
     field_validator,
 )
 
-from ..core.errors.hierarchy import pydantic_validation_boundary
+from .errors.hierarchy import pydantic_validation_boundary
 from .action_argument_resolution import ActionArgumentResolution
 from .errors.hierarchy import CadrumoError
 from .identifier_grammar import FIELD_KEY_PATTERN

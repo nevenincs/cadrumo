@@ -16,7 +16,7 @@ from __future__ import annotations
 import pytest
 from pydantic import TypeAdapter, ValidationError
 
-from ....core.errors.hierarchy import CoreValidationError
+from ...errors.hierarchy import CoreValidationError
 from ..codes import IsoCurrencyCode, normalise_iso_3166_alpha2_jurisdiction, normalise_iso_4217_currency
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]

@@ -94,6 +94,9 @@ def pending_payer_fact_notices(record: UserProfileRecord | None, *, modelo: str 
     """Return notices for cleared payer facts the active record has not answered again.
 
     With ``modelo`` the notices are limited to facts that gate that modelo.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     if record is None:
         return ()

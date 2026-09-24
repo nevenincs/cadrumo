@@ -70,8 +70,8 @@ from .schema import (
 _logger = get_logger(__name__)
 
 if TYPE_CHECKING:
-    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.calculations.registry.facts.resolution import ResolvedMappingFact
+    from ..calculations.registry.authority import PinnedAuthorityOperation
+    from ..calculations.registry.facts.resolution import ResolvedMappingFact
     from ..calculations.registry.iva_category_catalogue import IvaCategoryCatalogue
     from ..calculations.registry.iva_rate_kind_catalogue import IvaRateKindCatalogue
 
@@ -1058,8 +1058,8 @@ def _registry_iva_classification_catalogue(
     operation: PinnedAuthorityOperation,
 ) -> ResolvedMappingFact:
     """Resolve the dated IVA catalogue consumed by the generic evaluator."""
-    from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-    from ...domain.calculations.registry.schema_base import DateAxis
+    from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+    from ..calculations.registry.schema_base import DateAxis
 
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(

@@ -71,6 +71,7 @@ import keyring.core
 from click.testing import Result
 from pydantic import BaseModel, Field, JsonValue
 
+from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.adapters.persistence.storage.master_key.active_session import (
     active_session,
     close_active_bucket_session,
@@ -94,7 +95,6 @@ from cadrumo.core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from cadrumo.core.time.clock import frozen_clock
 from cadrumo.domain.user_profile.values import UserProfileFact
 from cadrumo.entrypoints.cli.tests.cli_runner import invoke_cached_cli, semantic_cli_text
-from cadrumo.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from dev._paths import REPO_ROOT
 
 from .errors import SequenceExecutionError

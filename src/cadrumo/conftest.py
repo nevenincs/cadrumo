@@ -84,7 +84,7 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
     :func:`_scope_tests_that_request_the_operation`; a wider-scoped fixture
     that computes under it enters ``validating_governed_facts`` itself.
     """
-    from .tests.authority_lease_support import private_authority_lease
+    from .domain.calculations.registry.tests.authority_lease_support import private_authority_lease
 
     with private_authority_lease() as pinned:
         yield pinned
@@ -98,7 +98,7 @@ def _scope_tests_that_request_the_operation(request: pytest.FixtureRequest) -> I
         return
     # A test's own parametrized ``operation`` argument also appears in
     # ``fixturenames``; ``scoped_when_requested`` tells the two apart.
-    from .tests.authority_lease_support import scoped_when_requested
+    from .domain.calculations.registry.tests.authority_lease_support import scoped_when_requested
 
     with scoped_when_requested(request, "operation"):
         yield
@@ -206,6 +206,7 @@ def compose_runtime_ports() -> Iterator[None]:
     from .adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
     from .adapters.outbound.aeat.auth.provider_selection import select_provider as select_outbound_auth_provider
     from .adapters.outbound.aeat.auth.session_store import build_session_store
+    from .adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
     from .adapters.persistence.profile.buckets import build_bucket_event_history_repository
     from .adapters.persistence.profile.confirmation_records import ConfirmationRecordRepository
     from .adapters.persistence.profile.extraction_drafts import ExtractionDraftRepository
@@ -246,7 +247,6 @@ def compose_runtime_ports() -> Iterator[None]:
     from .application.modelo.work_unit_repository import bind_work_unit_catalogue_repository_factory
     from .core.redaction.tax_identity_admission import bind_tax_identity_admission
     from .domain.calculations.registry.tax_identity_admission import RegistryTaxIdentityAdmission
-    from .tests.recorded_ecb_rates import recorded_ecb_rate_provider
 
     with (
         bind_tax_identity_admission(RegistryTaxIdentityAdmission()),

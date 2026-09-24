@@ -160,7 +160,6 @@ from ._m303_m349_reconcile import m303_m349_intracom_reconcile_findings
 from ._m720_redeclaration_gate import modelo_720_redeclaration_findings
 from ._objective_estimation_advisory import _objective_estimation_exclusion_advisory_findings
 from ._registry_helpers import assert_revision_content_integrity as _assert_revision_content_integrity
-from ._registry_helpers import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
 from ._required_binding_gate import (
     require_persisted_revision_required_bindings_resolved as _require_persisted_required_bindings_resolved,
 )
@@ -194,6 +193,7 @@ from .revision_persistence import (
 from .revision_persistence import (
     require_filing_instance_evidence_for_work_unit,
 )
+from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
 from .verification_cross_period import (
     cross_period_clean_state_findings,
     cross_period_clean_state_verdict_for_work_unit,

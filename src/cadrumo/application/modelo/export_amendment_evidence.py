@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from typing import NoReturn, Protocol
 
-from ...application.filing.producer_snapshot import AmendmentEvidence
+from ..filing.producer_snapshot import AmendmentEvidence
 from ...core.modelo import Modelo
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.deadlines.models import TaxpayerProfile

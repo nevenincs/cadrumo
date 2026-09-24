@@ -32,11 +32,11 @@ from dataclasses import dataclass, replace
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
-from ...application.calculations.maritime_exemption_service import (
+from ..calculations.maritime_exemption_service import (
     resolve_maritime_exemption,
     retmar_mandatory_filing,
 )
-from ...application.user_profile.projections import fact_value
+from ..user_profile.projections import fact_value
 from ...core.parsing.utils import parse_bool
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import bundled_indexed_authority

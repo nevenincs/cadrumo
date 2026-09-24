@@ -32,8 +32,8 @@ from ....application.user_profile.login_session import logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.authority_artifact import ProfileDecodeContext
-from ....entrypoints.tui.components.host import ScreenHostApp
-from ....entrypoints.tui.secret.login import LoginScreen
+from ..components.host import ScreenHostApp
+from ..secret.login import LoginScreen
 
 pytestmark = [
     pytest.mark.integration,

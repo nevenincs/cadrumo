@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 from datetime import UTC, datetime
 from pathlib import Path
 
-from ...application.auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
+from ..auth.sessions import AuthenticatedAeatSessionResult as _AuthenticatedAeatSessionResult
 from ...core.access_gate.gate import AeatAccessGate as _AeatAccessGate
 from ...core.config import Settings as _Settings
 from ...core.config import load_settings as _load_settings

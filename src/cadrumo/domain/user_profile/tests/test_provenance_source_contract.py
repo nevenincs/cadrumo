@@ -20,7 +20,7 @@ from ....core.external_constants import (
     PROVENANCE_SOURCE_CENSO_ARTEFACT,
     PROVENANCE_SOURCE_MANUAL_CLI,
 )
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
+from ...calculations.registry.tests.published_authority import published_profile_schema
 from ..errors import UserProfileValidationError
 from ..values import UserProfileFact, declared_provenance_sources, validate_profile_fact
 

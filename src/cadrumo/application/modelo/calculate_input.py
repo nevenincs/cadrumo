@@ -496,6 +496,9 @@ def resolve_binding_overrides(
 
     ``work_unit`` is the calculate target; when supplied, a refused override
     carries its declared ``modelo.work.calculate`` precondition failure.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     binding_values: dict[BindingId, Decimal] = {}
     enum_binding_values: dict[BindingId, str] = {}

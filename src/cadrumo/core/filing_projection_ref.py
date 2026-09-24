@@ -8,7 +8,7 @@ from typing import Annotated, Final, Literal, cast, get_args
 
 from pydantic import BaseModel, Field, TypeAdapter, model_validator
 
-from ..core.errors.hierarchy import pydantic_validation_boundary
+from .errors.hierarchy import pydantic_validation_boundary
 from . import filing_projection_ref_support as _projection_ref_support
 from .casilla_id import CasillaId
 from .models import STRICT_FROZEN_CONFIG

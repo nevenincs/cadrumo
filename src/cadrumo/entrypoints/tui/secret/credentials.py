@@ -39,10 +39,10 @@ from textual.worker import Worker, WorkerState
 from ....core.credentials import PassphraseStrength, ProfilePasswordAssessment
 from ....core.errors.hierarchy import InternalInvariantError
 from ....core.i18n.render import tr
-from ....entrypoints.tui.components.host import ScreenHostApp
-from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import toggle_appearance, tokenised
-from ....entrypoints.tui.components.widgets import ContentScroll
+from ..components.host import ScreenHostApp
+from ..components.status import PinnedStatusBar
+from ..components.theme import toggle_appearance, tokenised
+from ..components.widgets import ContentScroll
 from ..components.app_access import TypedAppAccess
 
 if TYPE_CHECKING:

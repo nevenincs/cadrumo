@@ -22,9 +22,6 @@ from collections.abc import Iterator
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    profile_authority_contexts as _profile_contexts_for_test,
-)
 from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -42,6 +39,7 @@ from ..sessions import (
     _prepare_clave_auth,
     clave_auth_facts_from_profile_values,
 )
+from .leased_profile_authority import leased_profile_decode_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -50,7 +48,6 @@ _TAX_ID = "12345678Z"
 _OTHER_TAX_ID = "00000001R"
 _SOPORTE = "E12345678"
 _FECHA_VALIDEZ = "2030-01-01"
-_, _PROFILE_DECODE_CONTEXT = _profile_contexts_for_test()
 
 _ACTIVE_PROFILE_FACTS = ClaveAuthFacts()
 
@@ -105,7 +102,7 @@ def test_profile_dni_nie_wins_over_settings_and_reaches_the_provider() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert expected_identity == _TAX_ID
@@ -126,7 +123,7 @@ def test_settings_remain_the_identity_fallback_when_the_profile_carries_the_requ
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert expected_identity == _TAX_ID
@@ -148,7 +145,7 @@ def test_missing_profile_route_refuses_even_when_environment_selects_qr() -> Non
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     expected_label = build_profile_preflight_requirement(
@@ -182,7 +179,7 @@ def test_profile_numero_soporte_reaches_the_non_qr_contraste_setting() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert bound.cadrumo_clave_movil_nie_soporte is not None
@@ -207,7 +204,7 @@ def test_rebinding_the_settings_preserves_every_other_secret() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert bound is not settings
@@ -231,7 +228,7 @@ def test_clave_mode_without_any_dni_nie_refuses_naming_the_absent_credential() -
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_identity_missing"
@@ -270,7 +267,7 @@ def test_non_qr_route_without_a_contraste_refuses_before_the_browser_opens() -> 
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_contraste_missing"
@@ -294,7 +291,7 @@ def test_qr_route_is_not_refused_for_a_missing_contraste() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert expected_identity == _TAX_ID
@@ -316,7 +313,7 @@ def test_profile_qr_route_overrides_an_environment_app_request() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert expected_identity == _TAX_ID
@@ -340,7 +337,7 @@ def test_profile_app_request_route_requires_contraste_and_reaches_provider_setti
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert expected_identity == _TAX_ID
@@ -368,7 +365,7 @@ def test_dni_validity_date_from_settings_satisfies_the_contraste() -> None:
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert expected_identity == _TAX_ID
@@ -401,7 +398,7 @@ def test_profile_fecha_validez_carries_a_dni_holder_through_the_non_qr_route() -
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert expected_identity == _TAX_ID
@@ -432,7 +429,7 @@ def test_a_profile_carrying_neither_contraste_still_refuses_the_non_qr_route() -
             settings,
             AuthProviderKind.CLAVE_MOVIL,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert raised.value.translated_message == "application.auth.sessions.errors.clave_contraste_missing"
@@ -451,7 +448,7 @@ def test_clave_permanente_resolves_its_identity_from_the_profile() -> None:
             settings,
             AuthProviderKind.CLAVE_PERMANENTE,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert bound.cadrumo_clave_permanente_dni_nie is not None
@@ -480,7 +477,7 @@ def test_certificate_provider_needs_neither_clave_field() -> None:
             settings,
             AuthProviderKind.CERTIFICATE,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            profile_decode_context=_PROFILE_DECODE_CONTEXT,
+            profile_decode_context=leased_profile_decode_context(),
         )
 
     assert bound is settings
@@ -515,7 +512,7 @@ def test_every_provider_carries_an_expectation_for_the_session_check() -> None:
                 settings,
                 kind,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                profile_decode_context=_PROFILE_DECODE_CONTEXT,
+                profile_decode_context=leased_profile_decode_context(),
             )
         if expected_identity != _TAX_ID:
             missing.append(f"{kind.value} -> {expected_identity!r}")
@@ -546,7 +543,7 @@ def test_a_clave_identity_disagreeing_with_the_profile_is_refused_for_every_clav
                     settings,
                     kind,
                     operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-                    profile_decode_context=_PROFILE_DECODE_CONTEXT,
+                    profile_decode_context=leased_profile_decode_context(),
                 )
             except AuthProfileIdentityMismatchError:
                 refused[kind.value] = True

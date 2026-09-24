@@ -189,7 +189,11 @@ class LedgerPaymentWithholdingCapture(BaseModel):
 
 
 def resolve_ledger_payment_transaction(catalogue: TransactionCatalogue, transaction_id: str) -> Transaction:
-    """Return the addressed transaction, refusing an id the catalogue does not hold."""
+    """Return the addressed transaction, refusing an id the catalogue does not hold.
+
+    Core types:
+    :class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
+    """
     transaction = catalogue.get(transaction_id)
     if transaction is None:
         raise LedgerPaymentWithholdingEvidenceError("transaction_not_found")

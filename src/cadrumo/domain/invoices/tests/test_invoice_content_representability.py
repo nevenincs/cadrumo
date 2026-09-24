@@ -30,7 +30,7 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.invoices.enums import InvoiceLegalMention, resolve_iva_rate_token
 
 from ....core.resources.bundled_data import bundled_path
-from ....domain.iva.classification import InvoiceKind
+from ...iva.classification import InvoiceKind
 from ..enums import PaymentStatus
 from ..models import Invoice, InvoiceLine
 
@@ -170,7 +170,7 @@ def test_legal_mentions_are_never_derived_from_iva_category() -> None:
     ``exemption_reference``, so a caller that never states them gets exactly
     that -- an honest gap, not a fabricated one.
     """
-    from ....domain.iva.schema import IvaCategory
+    from ...iva.schema import IvaCategory
 
     invoice = _invoice(
         iva_category=IvaCategory("domestic_exempt"),

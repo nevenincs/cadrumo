@@ -14,7 +14,7 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.time.utc import UtcInstant
-from ...domain.user_profile.values import UserProfileRecord
+from ..user_profile.values import UserProfileRecord
 from .errors import AttachmentValidationError
 
 M303_EXONERADO_390_APPLICABILITY_SCHEMA_VERSION = 1
@@ -41,7 +41,11 @@ class M303Exonerado390ApplicabilityProfileWitness(BaseModel):
 
     @classmethod
     def from_profile_record(cls, record: UserProfileRecord) -> M303Exonerado390ApplicabilityProfileWitness:
-        """Project the exact immutable witness from an authenticated profile record."""
+        """Project the exact immutable witness from an authenticated profile record.
+
+        Core types:
+        :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+        """
         return cls(
             profile_id=record.profile_id,
             record_revision=record.record_revision,

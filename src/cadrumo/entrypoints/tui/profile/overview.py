@@ -52,16 +52,16 @@ from ....domain.user_profile.errors import ProfileSchemaValidationError
 from ....domain.user_profile.plantilla_media import PLANTILLA_MEDIA_PATH
 from ....domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ....domain.user_profile.values import ProfileSetupState
-from ....entrypoints.tui.components.account_chrome import AccountChromeScreen
-from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import (
+from ..components.account_chrome import AccountChromeScreen
+from ..components.status import PinnedStatusBar
+from ..components.theme import (
     BASE_CSS,
     NOTICE_BAND_CSS,
     install_cadrumo_themes,
     toggle_appearance,
     tokenised,
 )
-from ....entrypoints.tui.components.widgets import (
+from ..components.widgets import (
     ContentDataTable,
     ContentScroll,
     CredentialRequirement,

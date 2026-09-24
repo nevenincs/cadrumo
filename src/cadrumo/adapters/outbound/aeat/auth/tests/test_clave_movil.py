@@ -12,7 +12,7 @@ from pydantic import AnyUrl, SecretStr
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......core.auth_provider import AuthProviderKind
 from ......core.config import Settings
 from ......core.i18n.render import tr

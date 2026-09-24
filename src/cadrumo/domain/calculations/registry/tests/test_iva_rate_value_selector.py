@@ -18,8 +18,8 @@ from .....core.aggregation import (
     BindingAggregation,
     BindingAggregationOp,
 )
-from .....domain.iva.flow import IvaFlowDirection
-from .....domain.iva.schema import (
+from ....iva.flow import IvaFlowDirection
+from ....iva.schema import (
     IvaCashAccountingTreatment,
     IvaCategory,
     IvaLedgerObservationRole,

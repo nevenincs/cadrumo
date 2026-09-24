@@ -12,10 +12,10 @@ from collections.abc import Iterator
 
 import pytest
 
-from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from ..authority import PinnedAuthorityOperation
+from ..governed_fact_scope import governed_facts_in_scope
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 @pytest.fixture

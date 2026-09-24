@@ -18,7 +18,7 @@ from ....domain.calculations.registry.ledger_iva_bindings import structurally_un
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
-from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from ...exchange_rate_provider import exchange_rate_provider
 from ...invoices.catalogue_creation import build_catalogue_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -52,7 +52,7 @@ def test_the_predicate_narrows_to_categories_that_had_a_casilla_to_reach() -> No
         # Clave E: an ordinary entrega intracomunitaria. Stated because the
         # category alone cannot separate E from the exempt-importation claves.
         operation_type=IntracomOperationType.E,
-        rate_provider=recorded_ecb_rate_provider(),
+        rate_provider=exchange_rate_provider(),
     )
     domestic = build_catalogue_invoice(
         bucket_id=_BUCKET_ID,
@@ -66,7 +66,7 @@ def test_the_predicate_narrows_to_categories_that_had_a_casilla_to_reach() -> No
         iva_rate=Decimal("0"),
         currency="EUR",
         iva_category=IvaCategory("domestic_exempt"),
-        rate_provider=recorded_ecb_rate_provider(),
+        rate_provider=exchange_rate_provider(),
     )
 
     revision = published_snapshot("303", filing_year=_YEAR, period=_PERIOD).revision

@@ -292,6 +292,9 @@ class InvoiceCatalogueRepository:
         compare-and-swap write with the event-history write in one storage
         batch means a failed batch leaves neither a changed invoice catalogue
         nor an audit entry behind.
+
+        Core types:
+        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
         """
         invoice_write = self.to_secure_object_write(
             catalogue,

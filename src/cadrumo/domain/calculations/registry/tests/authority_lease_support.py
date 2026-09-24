@@ -14,8 +14,8 @@ from contextlib import ExitStack, contextmanager
 
 import pytest
 
-from ..domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ..domain.calculations.registry.governed_fact_scope import validating_governed_facts
+from ..authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ..governed_fact_scope import validating_governed_facts
 
 
 @contextmanager

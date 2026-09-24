@@ -101,6 +101,9 @@ def verification_ordering_instants(
     The verified revision takes the clock as ``updated_at`` and a work unit
     whose current pointer is repaired takes it as ``updated_at``; both loaders
     order that stamp after ``created_at``.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
     return (_revision_created_at(revision), *work_unit_ordering_instants(work_unit))
 
@@ -118,6 +121,10 @@ def filing_ordering_instants(
     supersedes ``prior_current`` stamps that record's ``superseded_at``, which
     its loader orders after ``filed_at``, and advances a still ``PRESENTADO``
     ``prior_revision``, whose ``updated_at`` is ordered after ``created_at``.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`,
+    :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
     """
     instants = list(verification_ordering_instants(revision=revision, work_unit=work_unit))
     if prior_current is not None:
@@ -140,6 +147,9 @@ def amendment_ordering_instants(
     ``baseline`` is superseded at the clock, and a pending ``in_force`` entry
     other than the baseline is retired at the clock; the filing-record loader
     orders each ``superseded_at`` after that record's ``filed_at``.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.filing_record.ModeloRecord`.
     """
     instants = list(work_unit_ordering_instants(work_unit))
     if baseline.status is ModeloRecordStatus.VIGENTE:

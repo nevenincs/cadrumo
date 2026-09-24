@@ -21,7 +21,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.models import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection

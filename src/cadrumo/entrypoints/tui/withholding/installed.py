@@ -5,6 +5,11 @@ payment lookups are reads of that bucket's encrypted catalogues; all mutations
 remain in the shared withholding observation service used by the CLI.  The
 filer's schedule is read from the bucket's profile at each capture, so a
 profile change while the screen is open is honoured.
+
+Core types:
+:class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`,
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`,
+:class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
 """
 
 from __future__ import annotations

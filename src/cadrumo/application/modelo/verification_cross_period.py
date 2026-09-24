@@ -3,6 +3,9 @@
 Revision coordinates, relation definitions, applicability, predicates, and
 provenance are selected from the validated registry.  This module keeps the
 application boundary and does not reproduce declaration facts locally.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations

@@ -26,7 +26,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from ....application.aggregation.ledger_filing_snapshot import row_fingerprint
+from ...aggregation.ledger_filing_snapshot import row_fingerprint
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.casilla_membership import (

@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import pytest
 
-from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
+from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.tests.published_authority import published_profile_schema
 from ..schema import ProfileSchemaDefinition
 
 

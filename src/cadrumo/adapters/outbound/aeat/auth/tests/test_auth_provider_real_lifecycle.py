@@ -9,8 +9,8 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from ......adapters.persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from .....persistence.profile.auth_diagnostics import build_auth_diagnostic_persistence
+from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......application.auth.diagnostics import load_auth_diagnostic
 from ......application.auth.providers import AuthProvider
 from ......application.auth.session_types import (

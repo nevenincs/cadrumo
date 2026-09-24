@@ -23,7 +23,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ...calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.classification.policies import SensitivityClass
 from ....core.period import Period

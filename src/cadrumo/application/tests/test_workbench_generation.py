@@ -11,7 +11,6 @@ from typing import Any, cast
 import pytest
 from pydantic import ValidationError
 
-from ...adapters.outbound.aeat.browser.factory import default_browser_session_factory
 from ...core.errors.hierarchy import InternalInvariantError
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -24,7 +23,6 @@ from ...domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
-from ...entrypoints.adapter_composition import build_censal_fetch_port
 from .. import workbench_generation as generation_module
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionError, AeatSyncWorkspaceProjectionV1
 from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
@@ -36,6 +34,7 @@ from ..ledger.workspace import (
     LedgerWorkspaceSource,
     LedgerWorkspaceStatus,
 )
+from ..live.tests.unopened_live_ports import unopened_browser_session_factory, unopened_censal_fetch
 from ..modelo.declarations_calendar import DeclarationsCalendarProjectionV1
 from ..modelo.declarations_workspace import DeclarationsWorkspaceProjectionV1
 from ..modelo.workspace_models import ModeloWorkspaceProjectionV1
@@ -92,9 +91,9 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 def _test_censal_operation_definition():
     return build_censal_operation_definition(
         certificate_secret_backend_factory=InMemoryCertificateSecretBackendFactory(),
-        browser_session_factory=default_browser_session_factory,
+        browser_session_factory=unopened_browser_session_factory,
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        censal_fetch_port=build_censal_fetch_port(),
+        censal_fetch_port=unopened_censal_fetch,
     )
 
 

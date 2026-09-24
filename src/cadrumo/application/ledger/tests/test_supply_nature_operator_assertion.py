@@ -31,9 +31,9 @@ from ....core.classifier_input_source import ClassifierInputSource
 from ....domain.iva.classification import InvoiceKind, IvaTerritorialScope
 from ....domain.iva.schema import IvaCategory
 from ....domain.iva.supply_nature import SupplyNature, supply_nature_implied_by_category
-from ...ledger.classification_assembly import DeclaredFact
-from ...ledger.confirm_establishment import _declared_facts
-from ...ledger.establishment_ladder import CounterpartyEstablishment
+from ..classification_assembly import DeclaredFact
+from ..confirm_establishment import _declared_facts
+from ..establishment_ladder import CounterpartyEstablishment
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -393,7 +393,7 @@ def test_the_draft_carries_a_proposal_that_is_not_an_extracted_field() -> None:
     put an unanchorable value inside the model whose whole guarantee is that
     values are copied.
     """
-    from ...ledger.invoice_draft_records import InvoiceDraft
+    from ..invoice_draft_records import InvoiceDraft
 
     assert "proposed_supply_nature" in InvoiceDraft.model_fields
     assert InvoiceDraft().proposed_supply_nature is None
@@ -407,7 +407,7 @@ def test_a_proposal_does_not_reach_the_classifier_on_its_own() -> None:
     axis exactly as open as one carrying none, or the model would be deciding
     through a channel labelled as the operator's.
     """
-    from ...ledger.invoice_draft_records import InvoiceDraft
+    from ..invoice_draft_records import InvoiceDraft
 
     proposed = InvoiceDraft(proposed_supply_nature=SupplyNature.SERVICES)
 

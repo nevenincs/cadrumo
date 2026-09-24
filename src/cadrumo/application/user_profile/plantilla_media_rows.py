@@ -99,7 +99,11 @@ def _publish(
 
 
 def plantilla_media_years_of(record: UserProfileRecord) -> tuple[PlantillaMediaYear, ...]:
-    """Return a record's declared years through the canonical reader."""
+    """Return a record's declared years through the canonical reader.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
+    """
     return plantilla_media_years(
         {path: value for path, value in _effective_values(record).items() if value is not None},
     )

@@ -23,7 +23,7 @@ from .....core.config import override_settings
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.iva.classification import InvoiceKind
 from .....tests.ecb_stub import ecb_csv_fetch
-from ....tui.components.host import ScreenHostApp
+from ...components.host import ScreenHostApp
 from ...ledger_doors import ledger_invoice_add_door
 from ..controller import LedgerWorkspaceController
 from ..invoice_entry import LedgerInvoiceEntryScreen

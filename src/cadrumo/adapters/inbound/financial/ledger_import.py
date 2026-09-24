@@ -12,7 +12,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import override
 
-from ....adapters.persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
+from ...persistence.storage.secure_object_namespaces import TRANSACTION_CATALOGUE_NAMESPACE
 from ....application.ledger.import_ports import (
     LedgerImportPorts,
     LedgerParsedRow,

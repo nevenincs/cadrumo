@@ -379,6 +379,45 @@ def _export_field_from_binding_member(
     return _export_field_from_row_binding(record, binding, selector, bindings_by_id=bindings_by_id)
 
 
+def row_binding_casilla_ids_by_field(
+    revision: ModeloRevision,
+    layout: ExportLayoutDefinition,
+) -> dict[ExportFieldId, CasillaId]:
+    """Return the row-field casilla each materialized repeated-binding slot fills.
+
+    Materializing a ``binding_record`` row turns the record's casilla template
+    field into a ``BINDING`` field and clears its ``casilla_id``, because the
+    renderer fills the slot per binding row. A reader of a filed payload still
+    needs to know which casilla that slot states; this is the inverse of the
+    same ``row_field_casilla_ids`` edge the derivation resolved, so the two
+    directions cannot name different casillas for one slot.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
+    """
+    bindings = {str(binding.id): binding for binding in revision.bindings}
+    casilla_ids: dict[ExportFieldId, CasillaId] = {}
+    for record in layout.records:
+        if not record.row_field_casilla_ids:
+            continue
+        for field in record.fields:
+            if field.kind != CasillaFieldKind.BINDING or field.binding is None:
+                continue
+            binding = bindings.get(str(field.binding))
+            if binding is None:
+                continue
+            selector = binding_export_selector(binding, revision=revision)
+            if selector is None:
+                continue
+            row_field = _row_binding_field(binding, selector)
+            if row_field is None:
+                continue
+            casilla_id = record.row_field_casilla_ids.get(row_field)
+            if casilla_id is not None:
+                casilla_ids[field.id] = casilla_id
+    return casilla_ids
+
+
 def _row_binding_field(binding: BindingDefinition, selector: BindingExportSelector) -> str | None:
     if binding_aggregation_op(binding) != BindingAggregationOp.ROWS:
         return None
@@ -619,4 +658,5 @@ __all__ = [
     "derive_export_layouts_from_bindings",
     "fixed_width_record_casilla_ids",
     "resolve_export_layout",
+    "row_binding_casilla_ids_by_field",
 ]

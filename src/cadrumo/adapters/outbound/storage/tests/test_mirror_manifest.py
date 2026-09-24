@@ -12,7 +12,7 @@ from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.storage.tests.namespace_registry_support import lookup_namespace_definition
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.directory_scan import iter_directory, scan_directory
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from ....persistence.storage.namespace_taxonomy import StorageRemoteMirrorPolicy

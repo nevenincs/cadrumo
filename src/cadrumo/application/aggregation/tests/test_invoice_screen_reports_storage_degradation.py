@@ -33,7 +33,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
-from ....application.invoices.catalogue_reads_ports import (
+from ...invoices.catalogue_reads_ports import (
     InvoiceCatalogueReader,
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,

@@ -3,6 +3,9 @@
 The application facts remain their own domain models.  These root schemas
 preserve their already-canonical JSON shapes at the operator boundary while
 preventing an untyped application result from bypassing the CLI output gate.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
 """
 
 from __future__ import annotations

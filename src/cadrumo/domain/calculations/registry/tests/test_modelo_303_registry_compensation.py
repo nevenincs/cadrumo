@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from .....core.resources.bundled_data import bundled_path
-from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from .registry_observations import registry_grounded_modelo_observation
 from ..binding_temporal import TargetPeriodOffset
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..bindings_previous_filing import previous_filing_binding_source_casilla_ids

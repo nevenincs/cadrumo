@@ -1,4 +1,8 @@
-"""Encrypted SQL repository for append-only IRPF activity-asset history."""
+"""Encrypted SQL repository for append-only IRPF activity-asset history.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+"""
 
 from __future__ import annotations
 

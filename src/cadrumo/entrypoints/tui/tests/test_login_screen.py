@@ -28,9 +28,9 @@ from ....application.user_profile.login_interaction import ProfileLoginChoice, a
 from ....application.user_profile.login_session import login_profile, logout_active_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....entrypoints.tui.components.host import ScreenHostApp
-from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.secret.login import LoginScreen
+from ..components.host import ScreenHostApp
+from ..components.status import PinnedStatusBar
+from ..secret.login import LoginScreen
 
 pytestmark = [
     pytest.mark.integration,

@@ -19,9 +19,9 @@ from __future__ import annotations
 import pytest
 
 from ....core.renta_declaracion_type import RentaDeclaracionType
-from ....domain import contribuyente
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
-from ....domain.contribuyente.renta_codes import RentaMaritalStatus, RentaSexCode
+from ... import contribuyente
+from ...calculations.registry.tests.published_authority import published_profile_schema
+from ...contribuyente.renta_codes import RentaMaritalStatus, RentaSexCode
 from ..errors import UserProfileNotFoundError
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

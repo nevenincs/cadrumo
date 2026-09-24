@@ -19,7 +19,7 @@ from pydantic import ValidationError
 
 from ....core.aggregation import ThirdPartyDeclarationRole
 from ....core.period import Period
-from ....domain.calculations.registry.tests.published_authority import (
+from ...calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
 )

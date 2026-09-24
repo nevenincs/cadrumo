@@ -31,10 +31,10 @@ import pytest
 from ....core.directory_scan import scan_directory
 from ....core.resources.bundled_data import bundled_path
 from ....core.toml import load_toml
-from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.calculations.registry.facts.resolution import ScalarFactQuery
-from ....domain.calculations.registry.schema_base import DateAxis
-from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...calculations.registry.facts.resolution import ScalarFactQuery
+from ...calculations.registry.schema_base import DateAxis
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ..errors import TransactionValidationError
 from ..retencion_facts import (
     RirpfArt95RetencionRates,

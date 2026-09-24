@@ -29,8 +29,8 @@ from textual.widgets import Button, Footer, Input, Label, Static
 
 from ....core.external_constants import UTF_8_ENCODING
 from ....core.i18n.render import tr
-from ....entrypoints.tui.components.status import PinnedStatusBar
-from ....entrypoints.tui.components.theme import BASE_CSS, install_cadrumo_themes, tokenised
+from ..components.status import PinnedStatusBar
+from ..components.theme import BASE_CSS, install_cadrumo_themes, tokenised
 from .credentials import (
     CREDENTIAL_PANEL_CSS,
     CredentialAttempt,

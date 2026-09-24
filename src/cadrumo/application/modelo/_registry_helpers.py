@@ -50,7 +50,6 @@ from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnaps
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, derive_calculation_revision_id_from_revision
-from ...domain.modelos.work_unit import WorkUnit
 from ._registry_resources import (
     reject_unknown_period_for_revision,
     reject_unknown_revision,
@@ -60,7 +59,6 @@ from .action_errors import (
     AmendmentVerificationRefusedError,
     ExternalModeloImportError,
     StoredCalculationDriftError,
-    StoredRowFieldScalarInputError,
 )
 
 # Casilla data types the engine represents on the numeric Decimal channel. This
@@ -184,40 +182,6 @@ def _normalise_registry_casilla_inputs[CasillaKey](
         noncanonical=noncanonical,
         unknown_only=unknown_only,
     )
-
-
-def refuse_stored_row_field_scalar_inputs(
-    revision: CalculationRevision,
-    *,
-    work_unit: WorkUnit,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Refuse a saved revision holding a scalar input for a casilla an export record fills per row.
-
-    Raises:
-        StoredRowFieldScalarInputError: When ``revision`` stores such an input;
-            the error names the casillas, the revision and the work unit to
-            recalculate.
-    """
-    snapshot = _resolve_registry_snapshot(
-        modelo=str(work_unit.modelo),
-        filing_year=work_unit.filing_year,
-        period=work_unit.period,
-        operation=operation,
-        grade=RegistryAuthorityGrade.CALCULATION,
-    )
-    stored = sorted(
-        set(revision.input_values_by_casilla_id).intersection(row_field_template_records_by_casilla(snapshot.revision))
-    )
-    if stored:
-        raise StoredRowFieldScalarInputError(
-            translated_message="errors.refused.refused_modelo_stored_row_field_input",
-            context={
-                "casilla_ids": ",".join(stored),
-                "calculation_revision_id": revision.calculation_revision_id,
-                "work_unit_id": work_unit.work_unit_id,
-            },
-        )
 
 
 def reject_incomplete_amendment_casillas(
@@ -683,7 +647,6 @@ def assert_revision_content_integrity(revision: CalculationRevision) -> None:
 __all__ = [
     "NUMERIC_CASILLA_DATA_TYPES",
     "assert_revision_content_integrity",
-    "refuse_stored_row_field_scalar_inputs",
     "reject_incomplete_amendment_casillas",
     "reject_unknown_import_casillas",
     "reject_unknown_override_casillas",

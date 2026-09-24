@@ -16,8 +16,8 @@ from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.external_constants import OutputLanguage
 from .....tests.terminal_sizes import TERMINAL_WIDE
-from ....tui.components.host import ScreenHostApp
-from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1
+from ...components.host import ScreenHostApp
+from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
 from ..entries import LedgerEntriesScreen
 from ..overview import LedgerOverviewScreen

@@ -19,9 +19,9 @@ from decimal import Decimal
 
 import pytest
 
-from ....tests.authority_lease_support import private_authority_lease, scoped_when_requested
 from ...calculations.registry.authority import PinnedAuthorityOperation
 from ...calculations.registry.schema_base import ThresholdComparison
+from ...calculations.registry.tests.authority_lease_support import private_authority_lease, scoped_when_requested
 from ..regularizacion_parameters import (
     BienesInversionParameterResolutionError,
     resolve_bienes_inversion_regularizacion_parameters,

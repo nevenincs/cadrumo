@@ -14,11 +14,11 @@ from typing import TYPE_CHECKING, Protocol
 
 from pydantic import BaseModel
 
-from ....adapters.persistence.profile.calculation_observations import (
+from ..profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
-from ....adapters.persistence.profile.filing_history import FilingHistoryRepositoryAdapter
+from ..profile.filing_history import FilingHistoryRepositoryAdapter
 from ....application.calculations.observations_repository import (
     IvaWalletDecisionEnvelopePayload,
     iva_wallet_decision_event_key,

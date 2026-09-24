@@ -18,10 +18,10 @@ from datetime import datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, override
 
-from .....adapters.persistence.profile.calculation_observations import (
+from ....persistence.profile.calculation_observations import (
     CalculationObservationRepository,
 )
-from .....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
+from ....persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from .....application.calculations.iva_compensation_history import persist_observation_envelope_and_iva_history
 from .....application.calculations.observations_repository import (
     ObservationEnvelopePayload,

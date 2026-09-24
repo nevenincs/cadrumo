@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field, ValidationError, model_validator
 
-from ..core.errors.hierarchy import ActiveProfilePointerError, pydantic_validation_boundary
+from .errors.hierarchy import ActiveProfilePointerError, pydantic_validation_boundary
 from .identity.bucket import BucketId
 from .models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from .toml import TomlDecodeError, parse_toml

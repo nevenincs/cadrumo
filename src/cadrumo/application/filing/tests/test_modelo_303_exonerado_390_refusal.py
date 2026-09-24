@@ -14,7 +14,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
 )
 
-from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
+from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.casilla_id import validated_casilla_id
 from ....core.modelo import Modelo
 from ....core.payment_election import PaymentElection

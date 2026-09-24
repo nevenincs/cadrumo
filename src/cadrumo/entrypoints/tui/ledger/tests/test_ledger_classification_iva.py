@@ -18,7 +18,7 @@ from .....core.iva_deduction_fact import IvaDeductionFactKind
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.enums import BusinessClassification
 from .....domain.transactions.models import BucketTransactionRef
-from ....tui.components.host import ScreenHostApp
+from ...components.host import ScreenHostApp
 from .. import classification as classification_ui
 from ..classification import LedgerClassificationScreen
 from ..controller import LedgerWorkspaceController

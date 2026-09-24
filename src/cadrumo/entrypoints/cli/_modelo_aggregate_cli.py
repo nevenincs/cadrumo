@@ -1,4 +1,8 @@
-"""Behavior handlers for modelo aggregation commands."""
+"""Behavior handlers for modelo aggregation commands.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.profile.transactions.TransactionCatalogueRepository`.
+"""
 
 from __future__ import annotations
 

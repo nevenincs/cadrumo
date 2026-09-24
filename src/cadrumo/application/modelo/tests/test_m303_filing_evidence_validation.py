@@ -8,7 +8,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
+from ...calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....domain.calculations.registry.iva_schema_vocabulary import m303_regime_composition_simplified_scope

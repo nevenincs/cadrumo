@@ -495,6 +495,10 @@ def drop_row_field_template_outputs(
     The engine evaluates every declared casilla, so a row-field template
     casilla comes out as a scalar with no row behind it; its real values live
     on the detail rows that the export emits one record for each.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.bindings.CasillaObservation`,
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     row_field_casilla_ids = frozenset(row_field_template_records_by_casilla(revision))
     if not row_field_casilla_ids:

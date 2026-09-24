@@ -26,17 +26,17 @@ from decimal import Decimal
 
 import pytest
 
-from ...domain.calculations.registry.amendment_regime_policy import resolve_amendment_regime_policy_for_period
-from ..amendment_kind_regime import (
+from .....core.amendment_kind_regime import (
     AmendmentLiabilityDirection,
     AmendmentRegimePolicy,
     classify_amendment_liability_direction,
     resolve_amendment_kind_regime,
 )
-from ..modelo import Modelo
-from ..period import Period
+from .....core.modelo import Modelo
+from .....core.period import Period
+from ..amendment_regime_policy import resolve_amendment_regime_policy_for_period
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_core, pytest.mark.usefixtures("operation")]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
 _COMPLEMENTARIA = "complementaria"
 _SUSTITUTIVA = "sustitutiva"

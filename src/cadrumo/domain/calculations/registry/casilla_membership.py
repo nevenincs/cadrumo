@@ -113,6 +113,9 @@ def reject_row_field_template_scalar_inputs(
         RegistryValidationError: When any of ``casilla_ids`` is a row-field
             template casilla of ``revision``; the error names the casillas and
             the export records whose detail rows carry them.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     records_by_casilla = row_field_template_records_by_casilla(revision)
     offending = sorted(set(casilla_ids).intersection(records_by_casilla))

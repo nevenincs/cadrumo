@@ -25,11 +25,11 @@ from cadrumo.tests.audited_process import run_audited_process
 from ......core.errors.hierarchy import CoreValidationError
 from ......core.profile_session import ProfileSessionRefusalReason
 from ......tests.os_keychain_hook import require_os_credential_store
-from ...custody.filesystem import (
+from ..filesystem import (
     compare_and_replace_profile_custody_local_record,
     profile_custody_root_lock,
 )
-from ...custody.filesystem_primitives import ensure_profile_custody_local_directory
+from ..filesystem_primitives import ensure_profile_custody_local_directory
 from ...errors import DecryptionError, EncryptionError, KeyringUnavailableError, StorageValidationError
 from ..acceleration_receipt import (
     PROFILE_SESSION_KEYCHAIN_SERVICE,

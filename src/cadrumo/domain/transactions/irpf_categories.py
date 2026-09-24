@@ -6,9 +6,9 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 
 from ...core.time.clock import today_madrid
-from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
-from ...domain.calculations.registry.schema_base import DateAxis
+from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
+from ..calculations.registry.schema_base import DateAxis
 from .enums import TransactionDirection
 
 

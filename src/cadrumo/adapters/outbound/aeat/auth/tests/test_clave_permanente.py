@@ -9,7 +9,7 @@ from urllib.parse import urlsplit
 import pytest
 from pydantic import AnyUrl
 
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......application.auth.protocols import BrowserPagePort
 from ......application.auth.session_types import AeatSession, ClavePermanenteSessionDetail
 from ......core.auth_provider import AuthProviderKind

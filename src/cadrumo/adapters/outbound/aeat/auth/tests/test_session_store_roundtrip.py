@@ -23,7 +23,7 @@ from typing import cast
 import pytest
 from pydantic import ValidationError
 
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......core.auth_session_keys import aeat_auth_session_storage_state_path
 from ......core.config_support import AEAT_CERTIFICATE_PROTECTED_URL
 from ......core.time.clock import now

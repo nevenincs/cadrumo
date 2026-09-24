@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....calculations.registry.authority import bundled_indexed_authority
+from ..authority import bundled_indexed_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

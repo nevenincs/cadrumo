@@ -5,7 +5,7 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from ....domain.calculations.registry.tests.published_authority import leased_profile_create_context
+from ...calculations.registry.tests.published_authority import leased_profile_create_context
 from ..errors import UserProfileValidationError
 from ..values import ProfileSetupState, UserProfileRecord, UserProfileSnapshot, create_user_profile_record
 

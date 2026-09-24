@@ -11,7 +11,7 @@ from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.models import InvoiceLine
 from ....domain.iva.classification import InvoiceKind
-from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -41,7 +41,7 @@ def _build(*, lines: tuple[InvoiceLine, ...] | None = None, taxable_base: Decima
         invoice_number="LINES-001",
         issued_at=date(2026, 3, 10),
         currency="EUR",
-        rate_provider=recorded_ecb_rate_provider(),
+        rate_provider=exchange_rate_provider(),
         taxable_base=taxable_base,
         iva_rate=None if lines is not None else Decimal("21"),
         lines=lines,

@@ -12,7 +12,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
     published_snapshot,
 )
 
-from ....application.filing.producer_snapshot import build_filing_producer_snapshot
+from ..producer_snapshot import build_filing_producer_snapshot
 from ....core.filing_projection_ref import (
     M303RegimenSimplificadoActivityField,
     M303RegimenSimplificadoActivityProjectionRef,

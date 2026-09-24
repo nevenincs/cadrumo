@@ -5,6 +5,9 @@ authority snapshot pinned to the caller's operation, and the public operation
 contract set.  It deliberately accepts no workspace projection and no taxpayer
 value: an edit baseline is a fresh compare-and-swap coordinate, never a copy of
 what a renderer happened to display.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
 """
 
 from __future__ import annotations

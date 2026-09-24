@@ -24,7 +24,7 @@ import json
 
 import pytest
 
-from ....storage.errors import StorageValidationError
+from ...errors import StorageValidationError
 from .._secure_object_schema import (
     build_revision_ancestor_ids,
     database_bytes,

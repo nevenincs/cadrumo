@@ -51,7 +51,11 @@ class _InvoiceAuditRepository(Protocol):
         expected_revision_id: str,
         extra_writes: tuple[SecureObjectWrite, ...],
     ) -> None:
-        """Commit the guarded invoice write with related secure objects."""
+        """Commit the guarded invoice write with related secure objects.
+
+        Core types:
+        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        """
         ...
 
 
@@ -195,7 +199,11 @@ class CatalogueCreationAuditCommitAdapter(CatalogueInvoiceAuditCommitPort):
         *,
         attempts: int = 4,
     ) -> InvoiceCatalogue:
-        """Retry guarded composition without exposing a partial write."""
+        """Retry guarded composition without exposing a partial write.
+
+        Core types:
+        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        """
         last_conflict: SecureObjectRevisionConflictError | None = None
         for _attempt in range(attempts):
             try:

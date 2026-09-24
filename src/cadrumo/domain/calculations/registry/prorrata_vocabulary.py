@@ -16,7 +16,7 @@ from types import MappingProxyType
 from typing import Final, overload
 
 from ....core.time.clock import today_madrid
-from ....domain.iva.prorrata import InputClassification, ProrrataKind
+from ...iva.prorrata import InputClassification, ProrrataKind
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope

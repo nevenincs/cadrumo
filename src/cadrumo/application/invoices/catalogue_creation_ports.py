@@ -71,7 +71,11 @@ class CatalogueInvoiceAuditCommitPort(Protocol):
         *,
         attempts: int = 4,
     ) -> InvoiceCatalogue:
-        """Commit ``mutation`` and ``event`` atomically under both revisions."""
+        """Commit ``mutation`` and ``event`` atomically under both revisions.
+
+        Core types:
+        :class:`~cadrumo.domain.invoices.models.InvoiceCatalogue`.
+        """
         ...
 
 

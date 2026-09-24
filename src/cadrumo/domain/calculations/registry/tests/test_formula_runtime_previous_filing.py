@@ -9,7 +9,7 @@ from pydantic import ValidationError
 
 from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.authority_grade import RegistryAuthorityGrade
-from .....domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
+from .registry_observations import registry_grounded_modelo_observation
 from ..binding_temporal import FilingYearOffset, TargetPeriodOffset
 from ..bindings_previous_filing import (
     PreviousFilingProvider,

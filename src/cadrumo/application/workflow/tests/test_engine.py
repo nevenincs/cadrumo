@@ -17,7 +17,7 @@ import pytest
 
 from cadrumo.domain.deadlines.models import IVARegime
 
-from ....application.state_projection import build_pending_obligations
+from ...state_projection import build_pending_obligations
 from ....core.errors.error_codes import ErrorCategory, build_error_envelope
 from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from ....domain.deadlines.engine import DeadlineEngine, compute_obligation_schedule

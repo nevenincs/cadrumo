@@ -23,8 +23,8 @@ from .....application.operator_actions.models import ActionReference
 from .....core.config import override_settings
 from .....core.period import Period
 from .....domain.attachments.enums import AttachmentSource
-from ....tui.components.host import ScreenHostApp
-from ....tui.navigation import TuiFocusIdentityV1, TuiScreenContextV1
+from ...components.host import ScreenHostApp
+from ...navigation import TuiFocusIdentityV1, TuiScreenContextV1
 from ...tests.frame import geometry_band
 from ..controller import LedgerWorkspaceController, ledger_copy
 from ..evidence import LedgerEvidenceScreen

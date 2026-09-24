@@ -30,7 +30,7 @@ from textual.theme import Theme
 
 from ....core.config_support import TuiAppearance
 from ....core.directory_scan import scan_directory
-from ....entrypoints.tui.secret.registration import RegistrationAttempt, RegistrationScreen
+from ..secret.registration import RegistrationAttempt, RegistrationScreen
 from ..components.host import ScreenHostApp
 from ..components.theme import (
     BASE_CSS,

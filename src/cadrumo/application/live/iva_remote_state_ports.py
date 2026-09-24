@@ -12,8 +12,8 @@ from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import TYPE_CHECKING, Protocol
 
-from ...application.auth.session_types import AeatSession
-from ...application.auth.sessions import AuthenticatedAeatSessionResult
+from ..auth.session_types import AeatSession
+from ..auth.sessions import AuthenticatedAeatSessionResult
 from ...core.config import Settings
 from ...core.period import Period
 from .remote_state_models import (

@@ -11,7 +11,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ...calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....core.casilla_id import validated_casilla_id
 from ....core.directory_scan import scan_directory
 from ....core.period import Period

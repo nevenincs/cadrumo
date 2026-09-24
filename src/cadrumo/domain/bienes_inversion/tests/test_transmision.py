@@ -34,7 +34,7 @@ import pytest
 
 from cadrumo.domain.bienes_inversion.vocabulary import BienInversionDisposalRegime, BienInversionKind
 
-from ....domain.calculations.registry.schema_base import ThresholdComparison
+from ...calculations.registry.schema_base import ThresholdComparison
 from ..register import (
     BienInversionValidationError,
     RegularizacionDireccion,

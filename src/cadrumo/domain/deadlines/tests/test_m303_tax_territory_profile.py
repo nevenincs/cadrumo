@@ -2,7 +2,7 @@
 
 import pytest
 
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
+from ...calculations.registry.tests.published_authority import published_profile_schema
 from ...user_profile.errors import UserProfileNotFoundError
 from ..errors import ProfileError
 from ..models import M303TaxTerritory

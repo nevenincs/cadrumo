@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from ...user_profile import profile_summary
+from .. import profile_summary
 from ..custody_ports import ProfileCustodyConcurrentChangeError, ProfileCustodyRecordIntegrityError
 from ..profile_summary import summary_inventory, summary_inventory_snapshot
 

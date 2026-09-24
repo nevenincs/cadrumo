@@ -873,6 +873,7 @@
         "cadrumo.application.modelo.selectors",
         "cadrumo.application.modelo.semantic_role_resolution",
         "cadrumo.application.modelo.settlement_casilla",
+        "cadrumo.application.modelo.stored_row_field_input_gate",
         "cadrumo.application.modelo.taxation_comparison",
         "cadrumo.application.modelo.taxation_comparison_ports",
         "cadrumo.application.modelo.verification_actions",

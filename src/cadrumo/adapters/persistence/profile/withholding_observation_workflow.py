@@ -1,4 +1,8 @@
-"""Atomic encrypted persistence adapter for withholding observation windows."""
+"""Atomic encrypted persistence adapter for withholding observation windows.
+
+Core types:
+:class:`~cadrumo.adapters.persistence.storage.sql.secure_objects.SecureObjectRepository`.
+"""
 
 from __future__ import annotations
 

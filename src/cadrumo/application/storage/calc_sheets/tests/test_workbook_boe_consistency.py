@@ -28,7 +28,7 @@ from datetime import date
 
 import pytest
 
-from .....application.filing.runtime import build_runtime_schema_provider
+from ....filing.runtime import build_runtime_schema_provider
 from .....core.export_layout_format import ExportLayoutFormat
 from .....core.period import Period
 from .....domain.calculations.export_field_kind import CasillaFieldKind

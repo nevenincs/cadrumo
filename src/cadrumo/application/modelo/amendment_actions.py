@@ -100,7 +100,6 @@ from ._calculation_helpers import amendment_observations as _amendment_observati
 from ._calculation_helpers import resolve_registry_snapshot_for_work_unit as _resolve_registry_snapshot_for_work_unit
 from ._calculation_modelo_adjustments import detail_row_declaration_modelos
 from ._ledger_anchor_capture import capture_revision_ledger_evidence
-from ._registry_helpers import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
 from ._registry_helpers import reject_incomplete_amendment_casillas as _reject_incomplete_amendment_casillas
 from ._registry_helpers import reject_unknown_override_casillas as _reject_unknown_override_casillas
 from .action_errors import (
@@ -125,6 +124,7 @@ from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_rev
 from .profile_export_binding import resolve_export_identity
 from .result_disposition_resolution import base_modelo_result_disposition
 from .revision_persistence import build_modelo_bucket_event as _build_bucket_event
+from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
 
 
 def _load_amendment_baseline[CasillaKey](

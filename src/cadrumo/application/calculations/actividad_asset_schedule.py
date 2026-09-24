@@ -65,6 +65,9 @@ def forecast_activity_asset_charge(
 
     The profile's average workforce is read only for the incentives it
     conditions, so no other method depends on that field being readable.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     workforce = taxpayer_workforce() if asset_revision.amortization.method in WORKFORCE_CONDITIONED_METHODS else ()
     try:

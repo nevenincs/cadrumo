@@ -20,8 +20,8 @@ from .....core.aggregation import (
     BindingAggregationOp,
 )
 from .....core.casilla_id import validated_casilla_id
-from .....domain.iva.flow import IvaFlowDirection
-from .....domain.iva.schema import (
+from ....iva.flow import IvaFlowDirection
+from ....iva.schema import (
     IvaCashAccountingTreatment,
     IvaCategory,
     IvaLedgerObservationRole,

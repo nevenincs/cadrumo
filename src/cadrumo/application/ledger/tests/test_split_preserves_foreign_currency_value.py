@@ -23,7 +23,7 @@ from pathlib import Path
 
 import pytest
 
-from ....application.aggregation.currency_predicates import is_non_eur_without_conversion
+from ...aggregation.currency_predicates import is_non_eur_without_conversion
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.money.rounding import round_to_cents
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance

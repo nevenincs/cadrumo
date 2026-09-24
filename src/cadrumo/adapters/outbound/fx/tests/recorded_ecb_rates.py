@@ -22,9 +22,9 @@ from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
-from ..adapters.outbound.fx.ecb_provider import ECB_EXR_ENDPOINT, EcbReferenceRateProvider
-from ..domain.currency.errors import ExchangeRateProviderError
-from .inventory import FIXTURES_DIR
+from .....domain.currency.errors import ExchangeRateProviderError
+from .....tests.inventory import FIXTURES_DIR
+from ..ecb_provider import ECB_EXR_ENDPOINT, EcbReferenceRateProvider
 
 RECORDED_ECB_RATES_PATH: Final[Path] = FIXTURES_DIR / "financial" / "ecb-reference-rates.recorded.json"
 RECORDING_SCHEMA: Final = "cadrumo-recorded-ecb-answers/v1"

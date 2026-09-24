@@ -53,7 +53,7 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from sqlalchemy import Engine, select
 
-from ......adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
+from ...tests.secure_sql import mutate_encrypted_secure_object_json
 from ......core.classification.policies import SensitivityClass
 from ......core.config import override_settings
 from ...errors import ClassificationError, PathContainmentError
@@ -215,7 +215,7 @@ def _database_payload_is_encrypted_audit_data[T: BaseModel](
     case: SecureRepositoryContractCase[T],
     db_path: Path,
 ) -> None:
-    from ......adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
+    from ...tests.secure_sql import read_db_at_rest_bytes
 
     repo = case.repository_factory()
     repo.save(case.first_payload)

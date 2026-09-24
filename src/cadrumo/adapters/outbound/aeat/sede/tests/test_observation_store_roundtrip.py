@@ -24,7 +24,7 @@ from pathlib import Path
 import pytest
 from pydantic import AnyHttpUrl, ValidationError
 
-from ......adapters.persistence.storage.tests.secure_sql import (
+from .....persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
 )

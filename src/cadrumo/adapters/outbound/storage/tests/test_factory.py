@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....core.config import override_settings
 from .....core.errors.error_codes import resolve_error_message
 from .....core.google_credential_source import GoogleCredentialSourceKind

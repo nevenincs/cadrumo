@@ -6,6 +6,9 @@ ledger transaction read, that it obtained through the encrypted catalogue, and
 this door turns that evidence into the established capture command before
 calling the shared producer.  Composition stays with the TUI host so this
 module can be exercised without a launcher.
+
+Core types:
+:class:`~cadrumo.domain.transactions.models.TransactionCatalogue`.
 """
 
 from __future__ import annotations

@@ -220,8 +220,8 @@ def _settled_amount_authority_diagnostics(
                     f"Modelo {advisory.modelo} {advisory.filing_year}: a record settles income accrued in "
                     f"{advisory.accrual_year} from captured capital withholding (Modelo "
                     f"{advisory.source_modelo} allocation, {row.phase.value} disclosure phase). Its "
-                    f"{fields} carry the full accrual amounts, but no official source settles what this "
-                    f"payment-year record declares in those fields; the withholding was declared in the "
+                    f"{fields} carry the accrual amounts; no official source settles what this "
+                    f"payment-year record declares there; the withholding was declared in the "
                     f"{advisory.accrual_year} Modelo {advisory.source_modelo}."
                 ),
                 remedy=(

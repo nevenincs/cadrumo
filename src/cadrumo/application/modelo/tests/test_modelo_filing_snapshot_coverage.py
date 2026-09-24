@@ -18,7 +18,7 @@ from pydantic import ValidationError
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
-from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ...calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....core.period import Period
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (

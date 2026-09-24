@@ -8,7 +8,7 @@ from textual.app import ComposeResult
 from textual.containers import Vertical
 from textual.widgets import LoadingIndicator, Static
 
-from ..components.theme import tokenised
+from .theme import tokenised
 
 type StatusTone = Literal["idle", "progress", "success", "warning", "error"]
 """Closed presentation states supported by :class:`PinnedStatusBar`."""

@@ -103,12 +103,12 @@ class TestInvoiceDirectionToSourceKind:
     """The application direction-to-settlement mapping is total."""
 
     def test_issued_maps_to_collectible(self) -> None:
-        from ....application.invoices.source_resolver import invoice_direction_to_source_kind
+        from ..source_resolver import invoice_direction_to_source_kind
 
         assert invoice_direction_to_source_kind(InvoiceKind.ISSUED) is BindingSourceKind.COLLECTIBLE_INVOICE
 
     def test_received_maps_to_payable(self) -> None:
-        from ....application.invoices.source_resolver import invoice_direction_to_source_kind
+        from ..source_resolver import invoice_direction_to_source_kind
 
         assert invoice_direction_to_source_kind(InvoiceKind.RECEIVED) is BindingSourceKind.PAYABLE_INVOICE
 

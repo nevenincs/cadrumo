@@ -1,4 +1,8 @@
-"""Typed ``--json`` payload schemas for the ``config profile plantilla-media`` family."""
+"""Typed ``--json`` payload schemas for the ``config profile plantilla-media`` family.
+
+Core types:
+:class:`~cadrumo.core.json_contract.OutputSchema`.
+"""
 
 from __future__ import annotations
 

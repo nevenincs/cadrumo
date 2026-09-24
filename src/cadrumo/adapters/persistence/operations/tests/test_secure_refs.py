@@ -12,7 +12,7 @@ from pydantic import BaseModel, Field
 
 from cadrumo.adapters.persistence.storage.tests.namespace_registry_support import lookup_namespace_definition
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
+from ...storage.tests.secure_sql import isolated_runtime_profile, read_db_at_rest_bytes
 from .....core.classification.policies import SensitivityClass
 from .....core.hashing import sha256_hex
 from ...storage.errors import RepositoryError

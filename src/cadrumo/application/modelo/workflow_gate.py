@@ -50,8 +50,8 @@ from functools import lru_cache
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from ...application.auth.certificate_secret_backend import CertificateSecretBackendFactory
-from ...application.auth.providers import select_provider
+from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
+from ..auth.providers import select_provider
 from ...core.auth_provider import AuthProviderKind
 from ...core.config import Settings, load_settings
 from ...core.period import Period

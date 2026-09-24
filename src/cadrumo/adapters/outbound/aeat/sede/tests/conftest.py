@@ -6,7 +6,7 @@ from collections.abc import Iterator
 
 import pytest
 
-from ......adapters.inbound.reconciliation_parser import InboundReconciliationEvidenceParser
+from .....inbound.reconciliation_parser import InboundReconciliationEvidenceParser
 from ......application.modelo.reconciliation_parsing import bind_reconciliation_evidence_parser
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 

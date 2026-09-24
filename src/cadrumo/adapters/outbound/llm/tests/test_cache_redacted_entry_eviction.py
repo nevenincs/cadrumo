@@ -16,7 +16,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....adapters.persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
+from ....persistence.storage.runtime_repository import secure_object_repository_for_active_bucket
 from .....core.classification.policies import SensitivityClass
 from .....core.config_support import LLMProvider
 from .....core.redaction.rules import (

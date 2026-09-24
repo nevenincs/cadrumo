@@ -30,8 +30,8 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.attachment import AttachmentStore
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....persistence.storage.attachment import AttachmentStore
+from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
 from .....tests.google_credentials import unused_google_credentials

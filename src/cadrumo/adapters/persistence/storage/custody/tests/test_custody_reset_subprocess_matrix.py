@@ -22,7 +22,7 @@ from uuid import UUID
 
 import pytest
 
-from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ...tests.secure_sql import isolated_profile_storage_root
 from ......application.user_profile.custody_transactions import ProfileCustodyTransactionRefusalError
 from ......application.user_profile.lifecycle import ProfileCapsuleLifecycle
 from ..errors import ProfileCustodyRecoveryGuidance, ProfileCustodyRefusal

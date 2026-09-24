@@ -38,7 +38,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 
-from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ...tests.secure_sql import isolated_profile_storage_root
 from ......application.user_profile.login_session import login_profile
 from ......application.user_profile.profile_record_repository import close_active_profile_record_session
 from ......application.user_profile.registration import register_profile_with_credentials

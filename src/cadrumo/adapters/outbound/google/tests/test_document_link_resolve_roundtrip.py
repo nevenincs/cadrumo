@@ -27,8 +27,8 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.attachment import AttachmentStore
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....persistence.storage.attachment import AttachmentStore
+from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.attachments.enums import AttachmentKind, AttachmentSource
 from .....domain.attachments.errors import AttachmentValidationError
 from .....domain.attachments.service import AttachmentBytesContent, AttachmentIngestionRequest, add_attachment
@@ -104,8 +104,8 @@ def test_blob_mutation_after_store_surfaces_on_reverify(tmp_path: Path) -> None:
     """
     from sqlalchemy import select
 
-    from .....adapters.persistence.storage.sql.engine import get_engine
-    from .....adapters.persistence.storage.sql.session import session_scope
+    from ....persistence.storage.sql.engine import get_engine
+    from ....persistence.storage.sql.session import session_scope
     from ....persistence.storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,

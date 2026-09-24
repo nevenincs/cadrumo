@@ -22,7 +22,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
     profile_authority_contexts as _profile_contexts_for_test,
 )
 
-from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ...tests.secure_sql import isolated_profile_storage_root
 from ......application.user_profile.custody_ports import (
     profile_custody_recovery_envelope_path,
     unlock_profile_custody_password,

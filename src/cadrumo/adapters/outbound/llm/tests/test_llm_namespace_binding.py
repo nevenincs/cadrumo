@@ -27,7 +27,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import select
 
-from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from ....persistence.storage.tests.secure_sql import TestRuntimeProfile
 from .....core.config_support import LLMProvider
 from ....persistence.llm.cache import LLMCache
 from ....persistence.llm.run_telemetry import LLMRunRecord, LLMRunTelemetryRecorder

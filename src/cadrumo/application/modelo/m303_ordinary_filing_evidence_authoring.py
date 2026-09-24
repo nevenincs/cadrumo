@@ -1,4 +1,9 @@
-"""Transient authoring of the ordinary Modelo 303 filing-evidence envelope."""
+"""Transient authoring of the ordinary Modelo 303 filing-evidence envelope.
+
+Core types:
+:class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`,
+:class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+"""
 
 from __future__ import annotations
 

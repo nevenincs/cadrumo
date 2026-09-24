@@ -38,7 +38,7 @@ def sandbox_notice_for_active_bucket() -> Notice | None:
     module's own cheapness contract, and neither the lock nor the publication
     tells us anything a label check needs.
     """
-    from ...application.user_profile.profile_summary import summary_inventory
+    from ..user_profile.profile_summary import summary_inventory
     from ...core.bucket_pointer import resolve_active_bucket_id
     from ...core.config_state_root import FormerProductStateError
     from ...core.external_constants import SANDBOX_LABEL_PREFIX

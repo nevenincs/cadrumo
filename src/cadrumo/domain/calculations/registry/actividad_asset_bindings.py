@@ -230,6 +230,9 @@ def resolve_activity_asset_schedule_authority(
     ``workforce`` is the taxpayer profile's declared average workforce per
     calendar year; only the workforce-conditioned incentives read it, and an
     undeclared year they need refuses rather than counting as zero.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     if modelo_revision.id != str(tax_year):
         raise ActividadAssetUnsupportedError(

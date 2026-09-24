@@ -11,8 +11,8 @@ from __future__ import annotations
 import pytest
 
 from .....tests.live_gate import requires_live_enabled
-from .....tests.recorded_ecb_rates import recorded_ecb_answers
 from ..ecb_provider import _https_fetch, _parse_observations
+from .recorded_ecb_rates import recorded_ecb_answers
 
 pytestmark = [pytest.mark.aeat_live, pytest.mark.hex_outbound_adapter]
 

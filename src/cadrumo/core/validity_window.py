@@ -32,7 +32,7 @@ from datetime import date
 
 from pydantic import BaseModel, model_validator
 
-from ..core.errors.hierarchy import pydantic_validation_boundary
+from .errors.hierarchy import pydantic_validation_boundary
 from .models import STRICT_FROZEN_CONFIG
 
 

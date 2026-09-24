@@ -22,6 +22,7 @@ from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel, Field
 
+from ...core.filing_year import FilingYear
 from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -94,7 +95,7 @@ class WithholdingModeloSchedule(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     modelo: str = Field(min_length=1, max_length=8)
-    filing_year: int = Field(ge=1)
+    filing_year: FilingYear
     scheduled_periods: tuple[str, ...]
     quarterly_periods: tuple[str, ...]
 
@@ -109,7 +110,7 @@ class WithholdingFilerCadence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    filing_year: int = Field(ge=1)
+    filing_year: FilingYear
     schedules: tuple[WithholdingModeloSchedule, ...]
 
     def schedule_for(self, modelo: str) -> WithholdingModeloSchedule:
@@ -156,7 +157,11 @@ def resolve_withholding_filer_cadence(
     filing_year: int,
     operation: PinnedAuthorityOperation,
 ) -> WithholdingFilerCadence:
-    """Resolve which withholding periods the filer's canonical filing schedule assigns in ``filing_year``."""
+    """Resolve which withholding periods the filer's canonical filing schedule assigns in ``filing_year``.
+
+    Core types:
+    :class:`~cadrumo.domain.deadlines.models.TaxpayerProfile`.
+    """
     return WithholdingFilerCadence(
         filing_year=filing_year,
         schedules=tuple(

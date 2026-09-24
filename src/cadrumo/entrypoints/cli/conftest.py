@@ -4,6 +4,9 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
+from cadrumo.adapters.persistence.profile.tests.published_authority_support import (
+    release_published_authority_operation,
+)
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
 from ...adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
@@ -11,6 +14,13 @@ from ...core.config import reset_settings_cache
 from ...core.external_constants import OUTPUT_LANGUAGE_ENV_VAR
 from ...core.i18n.render import clear_output_language_cache
 from ...tests.env import temporary_env
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _published_authority_lease() -> Iterator[None]:
+    """Release the per-worker published authority lease that seeded CLI fixtures take."""
+    yield
+    release_published_authority_operation()
 
 
 @pytest.fixture

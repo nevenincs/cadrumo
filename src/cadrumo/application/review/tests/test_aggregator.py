@@ -12,7 +12,7 @@ import pytest
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from ....application.filing.draft_review_ports import DraftReviewPorts
+from ...filing.draft_review_ports import DraftReviewPorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.config import Settings
 from ....core.errors.severity import BaseSeverity

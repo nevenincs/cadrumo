@@ -23,7 +23,7 @@ from .....core.identity.transaction_ids import TransactionId
 from .....domain.transactions.enums import BusinessClassification
 from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.models import BucketTransactionRef
-from ....tui.components.host import ScreenHostApp
+from ...components.host import ScreenHostApp
 from ...tests.frame import geometry_band
 from ..classification import LedgerClassificationScreen
 from ..controller import LedgerWorkspaceController

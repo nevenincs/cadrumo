@@ -1016,7 +1016,7 @@ def test_missing_active_bucket_session_is_classified_from_the_typed_chain_not_th
     expected cold start, because that downgrades a genuine fault to a warning
     and suppresses the detail the operator needs.
     """
-    from .....adapters.persistence.storage.master_key.active_session import NoActiveBucketSessionError
+    from ..master_key.active_session import NoActiveBucketSessionError
     from .....application.diagnostics import is_missing_active_bucket_session_failure
 
     session_error = NoActiveBucketSessionError()

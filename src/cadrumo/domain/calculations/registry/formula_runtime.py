@@ -36,7 +36,7 @@ from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.decimal.constants import ONE, ZERO
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
-from ....domain.period import calculation_filing_date
+from ...period import calculation_filing_date
 from . import _formula_runtime_irnr as _irnr
 from . import _formula_runtime_m131 as _m131
 from . import formula_runtime_m100 as _m100

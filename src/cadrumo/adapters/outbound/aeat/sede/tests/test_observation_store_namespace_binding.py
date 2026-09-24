@@ -29,7 +29,7 @@ import pytest
 from pydantic import AnyHttpUrl
 from sqlalchemy import select
 
-from ......adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ......core.config import Settings
 from ......core.period import Period
 from ......domain.calculations.registry.tests.published_authority import published_snapshot

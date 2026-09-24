@@ -25,7 +25,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....application.calculations.maritime_exemption_service import (
+from ...calculations.maritime_exemption_service import (
     resolve_maritime_exemption,
     retmar_mandatory_filing,
 )

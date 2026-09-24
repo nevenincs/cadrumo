@@ -58,8 +58,8 @@ from typing import TYPE_CHECKING, Final, NamedTuple, NoReturn
 
 from pydantic import BaseModel, Field
 
-from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
-from ...application.invoices.catalogue_creation_ports import CatalogueCreationPorts
+from ..invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+from ..invoices.catalogue_creation_ports import CatalogueCreationPorts
 from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings
 from ...core.config import load_settings as _load_settings

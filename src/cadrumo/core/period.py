@@ -43,7 +43,7 @@ from typing import Annotated, override
 
 from pydantic import BaseModel, BeforeValidator, Field
 
-from ..core.models import STRICT_FROZEN_CONFIG
+from .models import STRICT_FROZEN_CONFIG
 from .errors.hierarchy import CadrumoError
 
 

@@ -16,7 +16,7 @@ from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
 from ....core.time.clock import today_madrid
-from ....domain.iva.flow import IvaFlowDirection, IvaSettlementSide
+from ...iva.flow import IvaFlowDirection, IvaSettlementSide
 from .errors import RegistryValidationError
 from .facts.resolution import MappingFactQuery, ResolvedMappingFact, required_mapping_entry, unique_mapping_tokens
 from .governed_fact_scope import GovernedFactSource, cache_governed_projection, governed_facts_in_scope

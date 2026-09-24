@@ -315,6 +315,9 @@ def resolve_retenciones_aggregation_binding_row_values(
     last withholding percentage for each row.  This resolver only projects that
     canonical result into the generic repeated-record channel; it does not
     regroup observations or calculate an alternative annual total.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     row_bindings = [
         (binding, selector)

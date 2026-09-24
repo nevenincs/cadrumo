@@ -20,7 +20,7 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
+from ....persistence.storage.tests.secure_sql import TestRuntimeProfile, mutate_encrypted_secure_object_json
 from .....core.config_support import LLMProvider
 from ....persistence.llm.cache import LLMCache
 from ....persistence.storage.secure_object_namespaces import LLM_CACHE_NAMESPACE

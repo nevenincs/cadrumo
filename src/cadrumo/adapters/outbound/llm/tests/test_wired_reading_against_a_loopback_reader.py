@@ -33,6 +33,7 @@ from typing import ClassVar, override
 
 import pytest
 
+from cadrumo.adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from cadrumo.adapters.outbound.llm.evidence_draft_text import extract_invoice_fields_from_text
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.ledger import invoice_draft_extraction as invoice_draft_extraction_module
@@ -40,6 +41,7 @@ from cadrumo.application.ledger.document_transcription import DocumentTranscript
 from cadrumo.application.ledger.evidence_input import EvidenceInput
 from cadrumo.application.ledger.evidence_input_ports import EvidenceInputPorts
 from cadrumo.application.ledger.evidence_textlayer import transcribe_text_layer
+from cadrumo.application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from cadrumo.application.ledger.invoice_draft_extraction_ports import (
     EvidenceConsentProof,
     InvoiceDraftExtractionPorts,
@@ -58,7 +60,6 @@ from cadrumo.core.draft_discrepancy import DraftDiscrepancyKind
 from cadrumo.core.field_grounding import FieldGroundingOutcome
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
-from cadrumo.entrypoints.ledger_evidence_extraction_composition import evidence_text_layer_ports
 from cadrumo.tests.loopback_llm import (
     SilentLoopbackHandler,
     ollama_chat_reply,
@@ -74,7 +75,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _CORPUS = Path(__file__).resolve().parents[4] / "application" / "ledger" / "tests" / "_evidence_corpus"
 _CONTROL = _CORPUS / "com_2026_0005_layout_minimal.pdf"
-_CONTROL_TEXT_LAYER_PORTS = evidence_text_layer_ports()
+
+
+def _extract_control_pages_text(data: bytes) -> tuple[str, ...]:
+    """Read the control document's text layer through the real PDF adapter."""
+    return extract_pages_text_from_bytes(data, error_class=ValueError, pdf_label="the control invoice PDF")
+
+
+_CONTROL_TEXT_LAYER_PORTS = EvidenceTextLayerPorts(extract_pages_text=_extract_control_pages_text)
 
 
 def _reader_ports(*, operation: PinnedAuthorityOperation) -> InvoiceDraftExtractionPorts:

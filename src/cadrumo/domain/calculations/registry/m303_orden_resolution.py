@@ -6,8 +6,8 @@ from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING
 
 from ....core.modelo import Modelo
-from ....domain.iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
-from ....domain.period import period_end_date
+from ...iva.regimen_simplificado_rows import M303RegimenSimplificadoScopeDecision
+from ...period import period_end_date
 from .errors import RegistryValidationError
 from .ids import SourceRefId
 from .m303_orden_projection_models import (

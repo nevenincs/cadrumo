@@ -156,6 +156,9 @@ def did_page_suppressed(
 
     This function is shared by the renderer and parity derivations so they
     cannot disagree about which official record reaches disk.
+
+    Core types:
+    :class:`~cadrumo.domain.filing.schema.ModeloDraft`.
     """
     if record.record_type != _DID_PAGE_RECORD_TYPE:
         return False

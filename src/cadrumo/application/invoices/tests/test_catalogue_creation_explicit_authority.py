@@ -14,9 +14,9 @@ from decimal import Decimal
 import pytest
 
 from ....core.aggregation import IntracomOperationType
+from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
 from ....domain.iva.classification import InvoiceKind
-from ....tests.authority_lease_support import private_authority_lease
-from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from ...exchange_rate_provider import exchange_rate_provider
 from ..catalogue_creation import build_catalogue_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -36,7 +36,7 @@ def test_operator_asserted_facts_resolve_under_the_explicit_operation() -> None:
             taxable_base=Decimal("100.00"),
             iva_rate=Decimal("21"),
             currency="EUR",
-            rate_provider=recorded_ecb_rate_provider(),
+            rate_provider=exchange_rate_provider(),
             operation=operation,
         )
 
@@ -60,7 +60,7 @@ def test_the_modelo_349_clave_rule_resolves_under_the_explicit_operation() -> No
             iva_rate=Decimal("0"),
             operation_type=IntracomOperationType.E,
             currency="EUR",
-            rate_provider=recorded_ecb_rate_provider(),
+            rate_provider=exchange_rate_provider(),
             operation=operation,
         )
 

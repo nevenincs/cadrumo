@@ -75,7 +75,11 @@ def modelo_193_settled_prior_accrual_contributors(
     work_unit: WorkUnit,
     revision: CalculationRevision,
 ) -> tuple[CalculationSourceRef, ...]:
-    """Return the persisted Modelo 193 phase contributors that are settled prior-accrual rows."""
+    """Return the persisted Modelo 193 phase contributors that are settled prior-accrual rows.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
     if work_unit.modelo != _MODELO_193:
         return ()
     return tuple(
@@ -93,7 +97,11 @@ def require_modelo_193_settled_row_amount_authority(
     *,
     stage: Modelo193SettledRowStage,
 ) -> None:
-    """Refuse to file or export a Modelo 193 revision that carries a settled prior-accrual row."""
+    """Refuse to file or export a Modelo 193 revision that carries a settled prior-accrual row.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
     settled = modelo_193_settled_prior_accrual_contributors(work_unit, revision)
     if not settled:
         return
@@ -122,7 +130,11 @@ def modelo_193_settled_row_amount_authority_unresolved_failure(
     settled_row_count: int,
     stage: Modelo193SettledRowStage,
 ) -> ModeloPreconditionFailure:
-    """Build the declared no-action verdict for an unresolved settled-row amount at ``stage``."""
+    """Build the declared no-action verdict for an unresolved settled-row amount at ``stage``.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
+    """
     leaf = stage.value
     return build_modelo_precondition_failure_for_scenario(
         subject_leaf_key=leaf,
@@ -152,6 +164,9 @@ def modelo_193_settled_row_verification_finding(
     unverifiable for a reason verification cannot resolve, while filing and
     export already refuse the revision themselves; this finding tells the
     operator before they try.
+
+    Core types:
+    :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
     settled = modelo_193_settled_prior_accrual_contributors(work_unit, revision)
     if not settled:

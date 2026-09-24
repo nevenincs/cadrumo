@@ -32,7 +32,7 @@ from typing import Any, Final, Literal
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
-from ..core.errors.hierarchy import pydantic_validation_boundary
+from .errors.hierarchy import pydantic_validation_boundary
 from .errors.hierarchy import CoreValidationError
 from .models import STRICT_FROZEN_CONFIG
 from .toml import load_toml, parse_toml

@@ -20,7 +20,7 @@ import pytest
 from textual.widgets import DataTable, Static
 
 from .....application.ledger.workspace import LedgerWorkspaceArea
-from ....tui.components.host import ScreenHostApp
+from ...components.host import ScreenHostApp
 from ..classification import LedgerClassificationScreen
 from ..controller import LedgerWorkspaceController, ledger_copy
 from ..entries import LedgerEntriesScreen

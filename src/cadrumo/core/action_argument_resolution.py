@@ -7,7 +7,7 @@ from typing import Self
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from ..core.errors.hierarchy import pydantic_validation_boundary
+from .errors.hierarchy import pydantic_validation_boundary
 from .identifier_grammar import FIELD_KEY_PATTERN, NAMESPACED_ID_PATTERN
 from .operator_action_enums import ActionArgumentSource, ActionArgumentStatus
 

@@ -22,7 +22,7 @@ from ....application.ledger.attachment_review import AttachmentReviewItem
 from ....application.operations.composition import OperationComposedServices
 from ....application.overview.next_actions import declare_next_action
 from ....application.search.workbench import WorkbenchSearchService
-from ...tui.components.host import ScreenHostApp
+from ..components.host import ScreenHostApp
 from ..app import CadrumoTuiApp, RootBindingV1
 from ..declarations.calendar import DeclarationsCalendarScreen
 from ..declarations.tests.calendar_fixtures import calendar_controller, calendar_projection

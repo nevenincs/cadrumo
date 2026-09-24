@@ -10,8 +10,8 @@ from typing import Literal
 import pytest
 from pydantic import AnyHttpUrl
 
-from ......adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from ......adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from .....persistence.storage.tests.secure_sql import TestRuntimeProfile
+from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ......core.casilla_id import CasillaId, validated_casilla_id
 from ......core.casilla_value_kind import CasillaValueKind
 from ......core.config import Settings
@@ -84,7 +84,7 @@ def test_store_persists_filed_data_as_ciphertext_and_roundtrips_through_store_ap
     assert b"12345678Z" not in persisted_bytes
     assert b"12.34" not in persisted_bytes
     assert b"202610013522222A" not in persisted_bytes
-    from ......adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
+    from .....persistence.storage.tests.secure_sql import read_db_at_rest_bytes
 
     database_bytes = read_db_at_rest_bytes(active_storage.paths.database_file)
     assert body not in database_bytes

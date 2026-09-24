@@ -109,7 +109,7 @@ def diagnostics_telemetry_flush(
     from ...application.diagnostics_telemetry import build_telemetry_flush_preview, flush_telemetry
     from ...core.config import load_settings, override_settings
     from ...core.json_contract import Notice, NoticeSeverity
-    from ...entrypoints.diagnostics_run_health_composition import (
+    from ..diagnostics_run_health_composition import (
         compose_diagnostics_auth_probe_port,
         compose_diagnostics_run_health_port,
     )

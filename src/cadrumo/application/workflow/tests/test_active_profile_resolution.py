@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from ....application.workflow.active_profile import resolve_active_profile_record
-from ....application.workflow.state_models import WorkflowState
+from ..active_profile import resolve_active_profile_record
+from ..state_models import WorkflowState
 from ....core.bucket_pointer import BucketPointer, resolve_active_bucket_id, write_pointer
 from ....core.config import override_settings
 from ....core.errors.error_codes import get_registered_error_code

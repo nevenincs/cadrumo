@@ -15,7 +15,7 @@ from .....core.config import override_settings
 from .....domain.invoices.errors import InvoiceValidationError
 from .....domain.iva.classification import InvoiceKind
 from .....domain.transactions.models import BucketTransactionRef
-from ....tui.components.host import ScreenHostApp
+from ...components.host import ScreenHostApp
 from ..controller import LedgerWorkspaceController
 from ..evidence import LedgerEvidenceScreen
 from ..invoice_entry import LedgerInvoiceEntryScreen

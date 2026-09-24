@@ -9,7 +9,7 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 
-from ......adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
+from ...tests.secure_sql import isolated_profile_storage_root
 from ......core.classification.policies import SensitivityClass
 from ......core.config import Settings
 from ...secret_store.store import SecretRecord

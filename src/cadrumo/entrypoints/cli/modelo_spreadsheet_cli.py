@@ -271,7 +271,7 @@ def execute_google_sheets_export(
     )
     from ...application.operations.models import OperationRequest
     from ...core.operations import OperationTerminalCondition, profile_operation_subject
-    from ...entrypoints.operation_composition import compose_operation_dependencies
+    from ..operation_composition import compose_operation_dependencies
 
     active = resolve_active_profile()
 

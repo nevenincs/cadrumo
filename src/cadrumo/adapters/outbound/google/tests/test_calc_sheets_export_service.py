@@ -16,11 +16,11 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.outbound.google.calc_sheets_apply import apply_export_plan
-from .....adapters.outbound.storage.errors import OutboundStorageValidationError
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.sync_runs import SyncRunRecordRepository
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ..calc_sheets_apply import apply_export_plan
+from ...storage.errors import OutboundStorageValidationError
+from ....persistence.profile.buckets import BucketEventHistoryRepository
+from ....persistence.profile.sync_runs import SyncRunRecordRepository
+from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .....application.storage.calc_sheets.engine import build_export_plan
 from .....application.storage.calc_sheets.export_service import export_modelo_to_sheets
 from .....core.sync_surface import SyncSurface

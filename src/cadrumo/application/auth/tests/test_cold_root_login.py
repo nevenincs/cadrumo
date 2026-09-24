@@ -7,22 +7,23 @@ from pathlib import Path
 import pytest
 from pydantic import SecretStr
 
-from cadrumo.adapters.outbound.aeat.browser.factory import default_browser_session_factory
-from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 from cadrumo.application.auth.tests._operator_scope_fakes import build_inward_operator_scope_ports_for_active_route
 
 from ....core.auth_provider import AuthProviderKind
 from ....core.config import override_settings
 from ....tests.certificates import CERTIFICATE_BUNDLE_INPUT, build_pkcs12_bundle
+from ...live.tests.unopened_live_ports import unopened_browser_session_factory
 from ..credentials import active_auth_projection_span
 from ..operator import login_operator_auth
 from ..operator_results import AuthConfigureNoActiveBucketError
 from ._operator_probe_fakes import fake_operator_probe_ports
+from .certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _OPERATOR_PROBE_PORTS = fake_operator_probe_ports(active_profile_session_bound=False)
+_CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
 
 
 def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(tmp_path: Path) -> None:
@@ -46,7 +47,7 @@ def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(
     ) as settings:
         with active_auth_projection_span(
             settings=settings,
-            certificate_secret_backend_factory=build_certificate_secret_backend,
+            certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
             requested_provider=AuthProviderKind.CERTIFICATE.value,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         ) as snapshot:
@@ -59,8 +60,8 @@ def test_login_cold_root_preserves_unnamed_certificate_before_no_bucket_refusal(
             asyncio.run(
                 login_operator_auth(
                     AuthProviderKind.CERTIFICATE.value,
-                    certificate_secret_backend_factory=build_certificate_secret_backend,
-                    browser_session_factory=default_browser_session_factory,
+                    certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
+                    browser_session_factory=unopened_browser_session_factory,
                     settings=settings,
                     guarded_read_context="",
                     operator_probe_ports=_OPERATOR_PROBE_PORTS,

@@ -56,7 +56,7 @@ from typing import override
 
 import pytest
 
-from .....adapters.inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
+from ....inbound.pdf.page_text_extraction import extract_pages_text_from_bytes
 from .....application.ledger.closure_findings import closure_findings
 from .....application.ledger.document_transcription import DocumentTranscription, TranscriberIdentity
 from .....application.ledger.evidence_errors import PurchaseInvoiceEvidenceInputError

@@ -19,7 +19,7 @@ import pytest
 
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 
-from ....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from ....core.period import Period
 from ....domain.invoices.enums import PaymentStatus, resolve_iva_rate_token
 from ....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine

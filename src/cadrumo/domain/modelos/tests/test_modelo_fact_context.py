@@ -7,7 +7,7 @@ from decimal import Decimal
 
 import pytest
 
-from ....domain.calculations.registry.tests.published_authority import PublishedGovernedFactSource
+from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
 from ...calculations.registry.errors import RegistryValidationError
 from ..modelo_fact_context import ModeloFactResolutionContext
 

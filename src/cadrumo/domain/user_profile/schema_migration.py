@@ -161,6 +161,9 @@ def pending_cleared_payer_fact_paths(
 
     A path counts as answered once the record carries a fact on it with a
     value, whether yes or no; a cleared (``None``) fact is still unanswered.
+
+    Core types:
+    :class:`~cadrumo.domain.user_profile.values.UserProfileRecord`.
     """
     answered = {fact.path for fact in record.facts if fact.value is not None}
     cleared = {path for migration in migrations for path in migration.cleared_paths}

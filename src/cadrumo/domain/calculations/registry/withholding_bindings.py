@@ -996,6 +996,9 @@ def resolve_withholding_binding_row_values(
 
     Unset facts remain absent.  Conflicting non-additive facts refuse before an
     export can choose a first or last observation arbitrarily.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.ModeloRevision`.
     """
     available = tuple(observations)
     resolved: dict[tuple[BindingId, int], Decimal | str | int | bool] = {}

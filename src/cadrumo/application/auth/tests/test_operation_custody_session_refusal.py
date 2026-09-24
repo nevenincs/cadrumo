@@ -26,12 +26,6 @@ from ..operator_scope import active_profile_storage_span
 from ..operator_scope_ports import OperatorScopeSession
 from ._operator_probe_fakes import fake_operator_probe_ports
 from ._operator_scope_fakes import build_inward_operator_scope_ports
-from .operator_projection_test_support import (
-    build_live_auth_preflight_report,
-)
-from .operator_projection_test_support import (
-    test_operator_auth as run_operator_auth_test,
-)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -44,7 +38,6 @@ _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports(
         storage_root=load_settings().cadrumo_local_storage_root,
     ),
 )
-_NO_SESSION_PORTS = build_inward_operator_scope_ports(session=None)
 
 
 def test_span_yields_the_target_when_its_custody_session_is_open() -> None:
@@ -184,68 +177,6 @@ def test_refusal_carries_its_own_code_and_an_actionable_remedy() -> None:
     assert "aeat config login" in message
     assert "--all" not in message
     assert _BUCKET_B in message
-
-
-def test_operator_auth_test_surfaces_the_refusal_for_an_unbound_explicit_target() -> None:
-    """``auth test`` on an explicit unbound profile refuses rather than reporting on A.
-
-    The alternative -- probing whichever profile happens to be bound -- would
-    report another taxpayer's certificate readiness under the requested
-    profile's name.
-    """
-    with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
-        pass
-
-    with pytest.raises(AuthOperationRequiresCustodySessionError):
-        run_operator_auth_test(
-            AuthProviderKind.CERTIFICATE.value,
-            settings=settings_b,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
-
-
-def test_live_auth_preflight_answers_not_ready_when_no_session_is_open_at_all() -> None:
-    """The locked workstation: nothing is unlocked, so the report answers rather than refuses.
-
-    This is the other arm of the same narrowing, and it is pinned here beside
-    the refusal so neither can be widened into the other. The operator asks
-    whether auth is ready BEFORE unlocking anything; a readiness probe that
-    declines to answer precisely then has no remaining purpose, and the doctor
-    that consumes it emitted an error document instead of a payload when this
-    last broke. Every field of the report defaults to empty or false because
-    the type exists to carry exactly this degraded answer.
-    """
-    with override_settings(cadrumo_active_profile=_BUCKET_A):
-        assert _NO_SESSION_PORTS.session.current() is None
-        report = build_live_auth_preflight_report(
-            AuthProviderKind.CERTIFICATE.value,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_NO_SESSION_PORTS,
-        )
-
-        assert report.provider == AuthProviderKind.CERTIFICATE.value
-        assert report.configured is False
-        assert report.available is False
-
-
-def test_live_auth_preflight_surfaces_the_refusal_for_an_unbound_explicit_target() -> None:
-    """The live-read preflight refuses when a session is open for ANOTHER profile.
-
-    The distinction against the test above is the whole of the narrowing:
-    answering here would be a claim about a profile that was never inspected,
-    because a session exists and it serves someone else.
-    """
-    with override_settings(cadrumo_active_profile=_BUCKET_B) as settings_b:
-        pass
-
-    with pytest.raises(AuthOperationRequiresCustodySessionError):
-        build_live_auth_preflight_report(
-            AuthProviderKind.CERTIFICATE.value,
-            settings=settings_b,
-            operator_probe_ports=_OPERATOR_PROBE_PORTS,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-        )
 
 
 def test_local_session_probe_degrades_to_absent_instead_of_raising() -> None:

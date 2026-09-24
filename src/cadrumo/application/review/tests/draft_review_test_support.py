@@ -13,7 +13,7 @@ from pathlib import Path
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from ....application.calculations.observations_repository import (
+from ...calculations.observations_repository import (
     CalculationObservationStorageProtocol,
     ObservationEnvelopePayload,
     ObservationLayers,
@@ -22,7 +22,7 @@ from ....application.calculations.observations_repository import (
     PriorDomiciliationElectionProjection,
     ResultDispositionProjection,
 )
-from ....application.filing.draft_review_ports import DraftReviewPorts
+from ...filing.draft_review_ports import DraftReviewPorts
 from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.calculations.registry.bindings import RegistryModeloObservation

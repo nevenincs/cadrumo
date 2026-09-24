@@ -6,9 +6,9 @@ from datetime import datetime
 
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.errors import RegistryValidationError
-from ...domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from ..calculations.registry.authority import PinnedAuthorityOperation
+from ..calculations.registry.errors import RegistryValidationError
+from ..calculations.registry.governed_fact_scope import governed_facts_in_scope
 
 # Registry authority: M303 annual settlement ordering is resolved through the
 # generation-pinned revision directory; the authored revision remains external.

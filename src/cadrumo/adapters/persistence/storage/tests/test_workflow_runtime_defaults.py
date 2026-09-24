@@ -7,8 +7,8 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.errors import StorageValidationError
-from .....adapters.persistence.storage.sql.engine import dispose_engine
+from ..errors import StorageValidationError
+from ..sql.engine import dispose_engine
 from .....application.workflow.persistence import WorkflowRunRepository, workflow_state_repository
 from .....core.config import override_settings
 

@@ -18,7 +18,7 @@ from .....core.aggregation import IntracomOperationType
 from .....core.config import override_settings
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.iva.classification import InvoiceKind
-from ....tui.components.host import ScreenHostApp
+from ...components.host import ScreenHostApp
 from ...ledger_doors import LedgerRecordDoors, ledger_invoice_add_door
 from ..controller import LedgerWorkspaceController
 from ..invoice_entry import LedgerInvoiceEntryScreen

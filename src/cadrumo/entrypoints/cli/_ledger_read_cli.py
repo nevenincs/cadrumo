@@ -91,7 +91,7 @@ def ledger_llm_diagnostics(
     """Report existing LLM usage, cost, and classification-confidence metrics."""
     from ...application.ledger.llm_diagnostics import build_llm_diagnostics_report
     from ...core.unit_proportion import is_unit_proportion
-    from ...entrypoints.ledger_llm_diagnostics_composition import compose_ledger_llm_diagnostics_ports
+    from ..ledger_llm_diagnostics_composition import compose_ledger_llm_diagnostics_ports
     from .common import active_bucket_id_or_refuse
 
     since_date = _parse_iso_date(since, "--since")

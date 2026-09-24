@@ -37,7 +37,7 @@ from datetime import date
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
-from ...application.operator_actions.catalogue import next_action
+from ..operator_actions.catalogue import next_action
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.period import Period as _Period

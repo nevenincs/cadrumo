@@ -26,11 +26,9 @@ _FIXTURE = _SEDE_ROOT / "_no_write_surface_fixture.txt"
 
 _OBSERVATION_STORE_MODULE = "observation_store.py"
 _PORT_ADAPTER_MODULE = "filed_observation_persistence.py"
-_OPERATION_SUBMISSION_TEST = "tests/test_filed_history_operation.py"
 
 _PROFILE_PERSISTENCE_PACKAGE = "cadrumo.adapters.persistence.profile"
 _STORAGE_PERSISTENCE_PACKAGE = "cadrumo.adapters.persistence.storage"
-_OPERATION_SUPERVISOR_MODULE = "cadrumo.application.operations.supervisor"
 
 _DYNAMIC_ATTRIBUTE_WRITERS = frozenset({"setattr", "delattr", "__setattr__", "__delattr__"})
 
@@ -299,60 +297,11 @@ def _storage_property_save_lines(tree: ast.Module, package: str) -> list[int]:
     return lines
 
 
-def _only_bound_as_supervisor(function: ast.AST, name: str, supervisor_types: frozenset[str]) -> bool:
-    """Whether every binding of ``name`` in ``function`` is ``name = OperationSupervisor(...)``.
-
-    Parameters, walrus, loop, ``with``, tuple, augmented, import, ``global`` and
-    nested-definition bindings all disqualify the name.
-    """
-    arguments = function.args if isinstance(function, (ast.FunctionDef, ast.AsyncFunctionDef)) else None
-    if arguments is not None and name in {
-        argument.arg
-        for argument in (
-            *arguments.posonlyargs,
-            *arguments.args,
-            *arguments.kwonlyargs,
-            *(item for item in (arguments.vararg, arguments.kwarg) if item is not None),
-        )
-    }:
-        return False
-    sanctioned_targets = [
-        statement.targets[0]
-        for statement in ast.walk(function)
-        if isinstance(statement, ast.Assign)
-        and len(statement.targets) == 1
-        and isinstance(statement.targets[0], ast.Name)
-        and statement.targets[0].id == name
-        and isinstance(statement.value, ast.Call)
-        and isinstance(statement.value.func, ast.Name)
-        and statement.value.func.id in supervisor_types
-    ]
-    sites = [site for site in _binding_sites(function, name) if site is not function]
-    return bool(sanctioned_targets) and all(any(site is target for target in sanctioned_targets) for site in sites)
-
-
-def _operation_supervisor_submit_lines(tree: ast.Module, package: str) -> list[int]:
-    """``<name>.submit(...)`` where ``<name>`` is only ever an ``OperationSupervisor`` in its function."""
-    supervisor_types = _names_imported_only_from(tree, package, _OPERATION_SUPERVISOR_MODULE) & {"OperationSupervisor"}
-    exempt: dict[int, int] = {}
-    for function in (node for node in ast.walk(tree) if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef))):
-        for node in _walk_scope(function):
-            if (
-                isinstance(node, ast.Call)
-                and isinstance(node.func, ast.Attribute)
-                and node.func.attr == "submit"
-                and isinstance(node.func.value, ast.Name)
-                and _only_bound_as_supervisor(function, node.func.value.id, supervisor_types)
-            ):
-                exempt[id(node)] = _call_line(node)
-    return list(exempt.values())
-
-
 def _exempt_call_lines(relative_path: str, tree: ast.Module, verb: str) -> Counter[int]:
     """Lines holding sanctioned local calls of ``verb`` in ``relative_path``, with multiplicity.
 
-    Local encrypted persistence and the in-process operation queue are allowed;
-    this guard exists for REMOTE Sede mutation verbs. Every exemption is keyed
+    Local encrypted persistence is allowed; this guard exists for REMOTE Sede
+    mutation verbs. Every exemption is keyed
     on the exact path relative to the sede root and on the typed binding of the
     receiver, so the same text elsewhere, or a receiver rebound to anything
     else, is still refused.
@@ -362,8 +311,6 @@ def _exempt_call_lines(relative_path: str, tree: ast.Module, verb: str) -> Count
         return Counter(_storage_property_save_lines(tree, package))
     if verb == "save" and relative_path == _PORT_ADAPTER_MODULE:
         return Counter(_profile_repository_forwarding_lines(tree, package))
-    if verb == "submit" and relative_path == _OPERATION_SUBMISSION_TEST:
-        return Counter(_operation_supervisor_submit_lines(tree, package))
     return Counter()
 
 
@@ -486,16 +433,6 @@ class JustificanteRepositoryAdapter:
         _call_adapter("save_justificante", lambda: self._repository.save(justificante))
 """
 
-_SUBMISSION_TEST_SOURCE = """\
-from ......application.operations.supervisor import OperationSupervisor
-
-
-async def test_flow(request, page, form):
-    supervisor = OperationSupervisor(store=None)
-    operation_id = await supervisor.submit(request, operation_id="3" * 64)
-    await page.submit(form)
-"""
-
 
 def _line_of(source_text: str, fragment: str) -> int:
     """The single 1-based line of ``source_text`` containing ``fragment``."""
@@ -509,14 +446,6 @@ def _port_adapter_save_lines(source_text: str) -> tuple[int, int]:
     return (
         _line_of(source_text, "def save(self, justificante"),
         _line_of(source_text, "lambda: self._repository.save(justificante)"),
-    )
-
-
-def _supervisor_submit_lines(source_text: str) -> tuple[int, int]:
-    """The supervisor enqueue line and the page submit line."""
-    return (
-        _line_of(source_text, "await supervisor.submit("),
-        _line_of(source_text, "await page.submit(form)"),
     )
 
 
@@ -715,58 +644,3 @@ class TestTheGuardCanActuallyFire:
         assert _offending_lines(_PORT_ADAPTER_MODULE, source, "submit") == (
             _line_of(source, "self._repository.submit(justificante)"),
         )
-
-    def test_the_operation_submission_exemption_applies_only_to_its_test_path_and_supervisor(self) -> None:
-        """Only the supervisor enqueue in the filed-history operation test is excused."""
-        supervisor_line, page_line = _supervisor_submit_lines(_SUBMISSION_TEST_SOURCE)
-        assert _offending_lines(_OPERATION_SUBMISSION_TEST, _SUBMISSION_TEST_SOURCE, "submit") == (page_line,)
-        assert _offending_lines("test_filed_history_operation.py", _SUBMISSION_TEST_SOURCE, "submit") == (
-            supervisor_line,
-            page_line,
-        )
-        assert _offending_lines("_declarations_fetch.py", _SUBMISSION_TEST_SOURCE, "submit") == (
-            supervisor_line,
-            page_line,
-        )
-
-    @pytest.mark.parametrize(
-        ("case", "old", "new"),
-        [
-            (
-                "assignment",
-                "    operation_id = await supervisor.submit(",
-                "    supervisor = page\n    operation_id = await supervisor.submit(",
-            ),
-            (
-                "walrus",
-                "    operation_id = await supervisor.submit(",
-                "    if (supervisor := page):\n        pass\n    operation_id = await supervisor.submit(",
-            ),
-            (
-                "for-loop",
-                "    operation_id = await supervisor.submit(",
-                "    for supervisor in (page,):\n        pass\n    operation_id = await supervisor.submit(",
-            ),
-            (
-                "with-target",
-                "    operation_id = await supervisor.submit(",
-                "    with page as supervisor:\n        pass\n    operation_id = await supervisor.submit(",
-            ),
-            (
-                "parameter",
-                "async def test_flow(request, page, form):",
-                "async def test_flow(request, page, form, supervisor=None):",
-            ),
-            (
-                "duplicate-import",
-                "from ......application.operations.supervisor import OperationSupervisor\n",
-                "from ......application.operations.supervisor import OperationSupervisor\n"
-                "from .fakes import OperationSupervisor\n",
-            ),
-        ],
-    )
-    def test_a_supervisor_name_bound_any_other_way_is_refused(self, case: str, old: str, new: str) -> None:
-        """A ``supervisor`` name bound other than as ``OperationSupervisor(...)`` buys no exemption."""
-        source = _SUBMISSION_TEST_SOURCE.replace(old, new, 1)
-        assert source != _SUBMISSION_TEST_SOURCE, f"{case}: the synthetic mutation did not apply"
-        assert _offending_lines(_OPERATION_SUBMISSION_TEST, source, "submit") == _supervisor_submit_lines(source), case

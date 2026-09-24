@@ -22,8 +22,8 @@ from pathlib import Path
 
 import pytest
 
-from ....domain.calculations.registry.tests.published_authority import published_profile_schema
-from ....domain.deadlines.setup_answer_projection import setup_answer_fields
+from ...calculations.registry.tests.published_authority import published_profile_schema
+from ..setup_answer_projection import setup_answer_fields
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
