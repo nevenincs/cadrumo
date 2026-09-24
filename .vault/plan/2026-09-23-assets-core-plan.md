@@ -9,7 +9,8 @@ related:
   - '[[2026-09-21-assets-core-lifecycle-contract-adr]]'
   - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
   - '[[2026-09-23-assets-core-vehicle-affectation-adr]]'
-modified: '2026-09-23'
+  - '[[2026-09-24-assets-core-average-workforce-write-path-adr]]'
+modified: '2026-09-24'
 body_schema: body-v2
 body_hash: 'sha256:66083aa9c456f46c6ec37df7c33570834c7305582a1d2ccb4e4aa4252931d6d5'
 ---
