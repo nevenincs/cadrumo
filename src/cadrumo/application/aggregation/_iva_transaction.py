@@ -294,9 +294,13 @@ def _resolved_iva_transaction_amounts(
     )
     if isinstance(rate_kind, _IvaTransactionOutcome):
         return rate_kind
+    # Only the cuota follows the business share. The Modelo 303 instructions
+    # declare the deductible bases "sin prorratear" (IVA Deducible), and for
+    # bienes de inversion state that the base goes unreduced even where the
+    # deduction percentage for partial affectation (LIVA art. 95.Tres) applies.
     return _IvaTransactionAmounts(
         rate_kind=rate_kind,
-        base_amount=taxable_base * proportionality,
+        base_amount=taxable_base,
         iva_amount=iva_amount * proportionality,
         recargo_amount=(transaction.recargo_amount or Decimal("0")) * proportionality,
     )
@@ -691,7 +695,7 @@ def _cash_accounting_observations(
                 exemption_article=transaction.exemption_article,
                 rate_kind=rate_kind,
                 flow_direction=flow_direction,
-                base_amount=base_amount * proportionality,
+                base_amount=base_amount,
                 iva_amount=iva_amount * proportionality,
                 recargo_amount=recargo_amount * proportionality,
                 prorrata_reference_id=linked_prorrata_id,
