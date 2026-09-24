@@ -332,6 +332,9 @@ cli:
         add_help: Kapcsolható egyeztetési számla létrehozása a katalógusban.
         country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
           adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
+        euro_rate_unavailable_message: Nem található euró árfolyam {currency} pénznemre
+          {date} napra, ezért a számla euróérték nélkül került rögzítésre, és kimarad
+          az eurós összesítésekből, amíg árfolyam nem kerül hozzá.
         group_help: Üzleti számlák nyilvántartása (kiállított vagy beérkezett).
         import_all_refused: 'a számlák tömeges importálása sikertelen: minden sor
           elutasításra került; nem jött létre számla'

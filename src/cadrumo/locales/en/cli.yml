@@ -314,6 +314,9 @@ cli:
         add_help: Create a linkable reconciliation invoice in the catalogue.
         country_code_help: 'Counterparty ISO 3166-1 alpha-2 country code. Required:
           it routes both informativas, so it is never assumed.'
+        euro_rate_unavailable_message: No euro exchange rate for {currency} on {date}
+          was found, so this invoice was recorded without a euro value and is left
+          out of euro totals until a rate is added.
         group_help: Business invoice records (issued or received)
         import_all_refused: 'bulk invoice import failed: every row was refused; no
           invoices were created'

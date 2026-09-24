@@ -1666,6 +1666,9 @@ tui:
         simplificada: Simplified invoice (simplificada)
       confirm: Record invoice
       confirming: Check the invoice below, then record it.
+      euro_rate_unavailable: No euro exchange rate for {currency} on that date was
+        found. The invoice is kept, but it stays out of euro totals until a rate is
+        added.
       failure: The invoice was not recorded.
       field:
         counterparty_name: Counterparty name

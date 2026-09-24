@@ -306,6 +306,7 @@ def ledger_invoice_add_door(profile_id: str, operation: PinnedAuthorityOperation
             iva_total=recorded.iva_total,
             grand_total=recorded.grand_total,
             currency=recorded.currency,
+            euro_value_pending=recorded.euro_value_pending,
         )
 
     return add

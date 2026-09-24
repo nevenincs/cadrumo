@@ -336,6 +336,9 @@ cli:
         country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart. Obligatori:
           determina l''encaminament de totes dues informatives, per això mai no es
           dóna per suposat.'
+        euro_rate_unavailable_message: No s'ha trobat cap tipus de canvi a euros per
+          a {currency} el {date}, així que la factura s'ha registrat sense valor en
+          euros i queda fora dels totals en euros fins que s'hi afegeixi un tipus.
         group_help: Registres de factures de negoci (emeses o rebudes)
         import_all_refused: 'importació massiva de factures fallida: totes les files
           van ser rebutjades; no es va crear cap factura'

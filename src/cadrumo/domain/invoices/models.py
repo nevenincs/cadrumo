@@ -451,6 +451,16 @@ class Invoice(BaseModel):
         return self._in_eur(self.grand_total)
 
     @property
+    def euro_value_pending(self) -> bool:
+        """Whether this is a foreign-currency invoice recorded without a euro rate.
+
+        Such an invoice is kept, and held back from every euro projection until
+        a rate is stamped on it; this names that state so a writer can tell the
+        operator at capture rather than leaving the first sign to a refusal.
+        """
+        return self.grand_total_eur is None
+
+    @property
     def retention_amount_eur(self) -> Decimal | None:
         """The declared retención in euro, or ``None`` when there is none to convert.
 

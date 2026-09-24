@@ -1712,6 +1712,9 @@ tui:
         simplificada: Simplificada
       confirm: Registrar factura
       confirming: Revisa la factura y regístrala.
+      euro_rate_unavailable: No se encontró tipo de cambio a euros para {currency}
+        en esa fecha. La factura se conserva, pero queda fuera de los totales en euros
+        hasta que se añada un tipo.
       failure: La factura no se ha registrado.
       field:
         counterparty_name: Nombre de la contraparte

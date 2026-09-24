@@ -184,6 +184,33 @@ def _parse_invoice_lines(raw_lines: Sequence[str]) -> tuple[InvoiceLine, ...]:
     return tuple(parsed)
 
 
+def _euro_value_pending_notices(invoice: Invoice) -> list[Notice]:
+    """Say at capture that a foreign-currency invoice was recorded without a euro rate.
+
+    The invoice is kept and held back from every euro figure until a rate is
+    stamped on it. Without this notice the first sign was a refusal at
+    calculation, far from the capture that could have been corrected.
+    """
+    if not invoice.euro_value_pending:
+        return []
+    return [
+        Notice(
+            severity=NoticeSeverity.WARNING,
+            code="ledger.invoice.euro_rate_unavailable",
+            message=tr(
+                "cli.app.ledger.invoice.euro_rate_unavailable_message",
+                currency=invoice.currency,
+                date=invoice.issued_at.isoformat(),
+            ),
+            context={
+                "invoice_id": invoice.invoice_id,
+                "currency": invoice.currency,
+                "issued_at": invoice.issued_at.isoformat(),
+            },
+        ),
+    ]
+
+
 def _simplificada_tax_id_notices(invoice: Invoice) -> list[Notice]:
     """Surface RD 1619/2012 art. 6.1.d case 3.º as an advisory, never a refusal.
 
@@ -361,7 +388,7 @@ def invoice_add(
         command="ledger.invoice.add",
         result=CatalogueInvoiceCreatePayload.model_validate(_catalogue_invoice_payload(result.invoice)),
         lines=_catalogue_invoice_lines(result.invoice),
-        notices=_simplificada_tax_id_notices(result.invoice),
+        notices=[*_simplificada_tax_id_notices(result.invoice), *_euro_value_pending_notices(result.invoice)],
     )
 
 
@@ -455,6 +482,7 @@ def invoice_wizard(
             ),
         )
         lines.append(noop_message)
+    notices.extend(_euro_value_pending_notices(wizard_result.invoice))
 
     emit_envelope(
         ctx,

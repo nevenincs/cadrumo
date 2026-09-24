@@ -1690,6 +1690,9 @@ tui:
         simplificada: Egyszerűsített számla (simplificada)
       confirm: Számla rögzítése
       confirming: Ellenőrizd a számlát, majd rögzítsd.
+      euro_rate_unavailable: Nem található euró árfolyam {currency} pénznemre erre
+        a napra. A számla megmarad, de kimarad az eurós összesítésekből, amíg árfolyam
+        nem kerül hozzá.
       failure: A számla nem került rögzítésre.
       field:
         counterparty_name: Partner neve

@@ -337,6 +337,9 @@ cli:
         country_code_help: 'Código de país ISO 3166-1 alfa-2 de la contraparte. Obligatorio:
           determina el encaminamiento de ambas declaraciones informativas, por lo
           que nunca se presupone.'
+        euro_rate_unavailable_message: No se encontró tipo de cambio a euros para
+          {currency} el {date}, así que la factura se registró sin valor en euros
+          y queda fuera de los totales en euros hasta que se añada un tipo.
         group_help: Registros de facturas de negocio (emitidas o recibidas)
         import_all_refused: 'importación masiva de facturas fallida: se rechazaron
           todas las filas; no se creó ninguna factura'

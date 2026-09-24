@@ -448,16 +448,19 @@ class LedgerInvoiceEntryScreen(LedgerConfirmationFlowScreen):
             self.query_one("#ledger-refusal", Static).update(door_refusal_text(error))
         else:
             self._transition(LedgerFlowState.SUCCEEDED)
-            status.update(
-                ledger_copy(
-                    "tui.ledger.invoice.success",
-                    number=result.invoice_number,
-                    base=format(result.base_total, "f"),
-                    iva=format(result.iva_total, "f"),
-                    total=format(result.grand_total, "f"),
-                    currency=result.currency,
-                )
+            recorded = ledger_copy(
+                "tui.ledger.invoice.success",
+                number=result.invoice_number,
+                base=format(result.base_total, "f"),
+                iva=format(result.iva_total, "f"),
+                total=format(result.grand_total, "f"),
+                currency=result.currency,
             )
+            if result.euro_value_pending:
+                recorded = "\n".join(
+                    (recorded, ledger_copy("tui.ledger.invoice.euro_rate_unavailable", currency=result.currency))
+                )
+            status.update(recorded)
         again = self.query_one("#ledger-invoice-again", Button)
         again.add_class("-open")
         again.focus()

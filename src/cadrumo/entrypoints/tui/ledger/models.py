@@ -353,6 +353,8 @@ class LedgerInvoiceAddResultV1(BaseModel):
     iva_total: Decimal
     grand_total: Decimal
     currency: str
+    euro_value_pending: bool = False
+    """The invoice is in a foreign currency and no euro rate was found for it."""
 
 
 class LedgerInvoiceAddDoorV1(Protocol):
