@@ -94,7 +94,7 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ._edit_execution import apply_modelo_edit
-from .action_errors import M303FilingEvidenceError
+from .action_errors import M303FilingEvidenceError, modelo_edit_refusal_error
 from .amendment_action_ports import AmendmentActionPortsFactory
 from .amendment_actions import amend_modelo_revision
 from .calculation_action_ports import CalculationActionPortsFactory
@@ -2114,13 +2114,12 @@ class ModeloEditApplyExecutor:
     ) -> str | None:
         """Delegate to apply_modelo_edit and return the settled receipt id.
 
-        A failed compare-and-swap is a typed domain fact
-        (ModeloEditExecutionNoEffectV1), not an unexpected error, but the
-        executor protocol this method implements returns only an optional
-        reference. No channel exists yet to carry the typed refusal back to a
-        caller outside this package through the operation result path, so it
-        is reported here as a no-effect None rather than fabricated into an
-        exception the refusal was deliberately designed not to be.
+        A refused edit (ModeloEditExecutionNoEffectV1) changed nothing: the
+        effect is reported as NONE, then the refusal is raised as the
+        registered refusal error of its family, which the supervisor settles
+        as REFUSED under that error's code. Only the family travels; the
+        typed refusal's addresses, facts, and evidence stay out of the
+        operation's persisted record.
 
         Unlike its delegating siblings this executor declares ONE phase and
         publishes it, because there is no inner transition it cannot see.
@@ -2145,11 +2144,11 @@ class ModeloEditApplyExecutor:
             result_destination=f"modelo/{baseline.modelo}/{baseline.filing_year}/{baseline.period}/edit-result",
         )
         if isinstance(outcome, ModeloEditExecutionNoEffectV1):
-            # A failed compare-and-swap changed nothing, and NONE is the
-            # truthful report of that -- distinct from the UNKNOWN carried
-            # while the outcome was still open.
+            # A refused edit changed nothing, and NONE is the truthful report
+            # of that -- distinct from the UNKNOWN carried while the outcome
+            # was still open -- recorded before the refusal settles it.
             await context.events.effect(OperationEffect.NONE)
-            return None
+            raise modelo_edit_refusal_error(outcome.refusal)
         await context.events.effect(OperationEffect.UPDATED)
         return str(outcome.receipt.receipt_id)
 

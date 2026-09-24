@@ -24,7 +24,7 @@ from . import supervisor_context as _supervisor_context
 from ._execution_context import DefinitionBoundContext
 from ._supervisor_host import SupervisorHost
 from .capabilities import OperationRequestStoragePolicy
-from .errors import OperationDeclarationError, OperationUnsettledError
+from .errors import OperationDeclarationError, OperationExecutorReturnedNoResultError, OperationUnsettledError
 from .financial_operand import (
     OperationTransientFinancialOperandDelivery,
     OperationTransientFinancialOperandRequirement,
@@ -125,6 +125,19 @@ def _advanced_snapshot(
             "cancellation_deferred": _advance_value(snapshot.cancellation_deferred, cancellation_deferred),
             "executor_entered_at": _advance_value(snapshot.executor_entered_at, executor_entered_at),
         }
+    )
+
+
+_SUSPENDED_LIFECYCLES = frozenset({OperationLifecycle.WAITING_FOR_INTERACTION, OperationLifecycle.WAITING_FOR_EXTERNAL})
+
+
+def _awaits_another_settler(snapshot: OperationPersistedSnapshot) -> bool:
+    """Whether a state left by a ``None`` return is settled by something other than the executor."""
+    return (
+        snapshot.lifecycle in _SUSPENDED_LIFECYCLES
+        or snapshot.pending_interaction is not None
+        or snapshot.cancellation_requested_at is not None
+        or snapshot.lifecycle is OperationLifecycle.TERMINAL
     )
 
 
@@ -576,11 +589,23 @@ class SupervisorExecutionMixin(SupervisorHost):
         snapshot: OperationPersistedSnapshot,
         result_ref: OperationReference | None,
     ) -> OperationPersistedSnapshot:
-        """Join an executor's domain result to successful settlement after it stops."""
+        """Join an executor's domain result to its settlement after it stops.
+
+        ``snapshot`` is the executor's own last committed state. A ``None``
+        return leaves the operation unsettled only when something else will
+        settle it: the executor suspended at a pending interaction or external
+        wait (whose response may already have been consumed), a cancellation
+        request is in flight, or the operation already settled. An
+        acknowledged cancellation settles as cancelled or timed out. Any other
+        ``None`` is an executor contract breach that nothing could ever
+        settle, so it settles as failed with a registered code.
+        """
         if result_ref is None:
             returned = await self.inspect(snapshot.identity.operation_id)
             if returned.cancellation_acknowledged_at is None:
-                return returned
+                if _awaits_another_settler(snapshot) or _awaits_another_settler(returned):
+                    return returned
+                return await self._settle_executor_failure(returned, OperationExecutorReturnedNoResultError())
             condition = self._acknowledged_cancellation_condition(returned)
             if condition is OperationTerminalCondition.TIMED_OUT:
                 self._validate_cancelled_settlement(returned)

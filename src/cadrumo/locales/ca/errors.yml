@@ -737,6 +737,10 @@ errors:
     internal_operation_declaration_breach: 'Error intern: un executor d''operació
       ha reclamat una fase, un efecte, un recurs o una interacció que la seva definició
       no declara.'
+    internal_operation_executor_returned_no_result: 'Error intern: l''operació s''ha
+      aturat sense resultat i sense quedar a l''espera de res, de manera que s''ha
+      tancat com a fallida. No s''hi farà res més; consulteu els registres de diagnòstic
+      per conèixer-ne la causa.'
     internal_operation_unsettled: 'Error intern: l''operació s''ha aturat abans de
       poder registrar-ne el resultat. Queda oberta i es tancarà automàticament quan
       caduqui el seu bloqueig de propietari; consulteu els registres de diagnòstic
@@ -918,6 +922,15 @@ errors:
     modelo_calculation_revision_selector_state: La revisió de càlcul seleccionada
       no està en un estat utilitzable per a aquesta operació.
     modelo_compare_need_two_years: La comparació requereix dos exercicis fiscals diferents.
+    modelo_edit_baseline_stale: La declaració ha canviat des que es va obrir, de manera
+      que no s'ha aplicat l'edició. Torneu-la a obrir i editeu-la de nou.
+    modelo_edit_contract_incompatible: L'edició es va preparar en un format que aquesta
+      versió no accepta, de manera que no s'ha canviat res. Torneu a obrir la declaració
+      i editeu-la de nou.
+    modelo_edit_intent_unsupported: Aquest tipus d'edició encara no està disponible,
+      de manera que no s'ha canviat res.
+    modelo_edit_refused: S'ha rebutjat l'edició i no s'ha canviat res. Reviseu els
+      valors i torneu-ho a provar.
     modelo_export_cross_bucket: La revisió apuntada pertany a un bucket diferent del
       perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
     modelo_export_no_active_bucket: L'exportació necessita un perfil actiu. Crea o

@@ -38,6 +38,14 @@ from ...domain.modelos.errors import ModeloError
 from ..operator_actions.models import PreconditionVerdict
 from ..workflow.abort import WorkflowAbortReason
 from ..workflow.run_models import WorkflowResult
+from .edit_models import (
+    ModeloEditCompatibilityRefusalV1,
+    ModeloEditDomainRefusalV1,
+    ModeloEditRefusalV1,
+    ModeloEditStaleBaselineRefusalV1,
+    ModeloEditUnsupportedIntentRefusalV1,
+    ModeloEditVersionRefusalV1,
+)
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
 WORKFLOW_GATE_LEGAL_REFS: tuple[str, ...] = (
@@ -452,6 +460,46 @@ class WorkUnitRevisionDivergenceError(ModeloError):
     """
 
 
+class ModeloEditRefusedError(ModeloError):
+    """Raised when an admitted modelo edit is refused at its commit point and nothing changed.
+
+    Covers the domain refusals: a disallowed intent, a value that failed
+    validation or parsing, or a conflict with the current declaration. The
+    typed refusal stays with the caller that produced it; only the registered
+    code travels with the operation.
+    """
+
+
+class ModeloEditBaselineStaleError(ModeloEditRefusedError):
+    """Raised when the declaration changed after the edit's baseline was captured."""
+
+
+class ModeloEditIntentUnsupportedError(ModeloEditRefusedError):
+    """Raised when an admitted edit asks for a kind of change that cannot be applied yet."""
+
+
+class ModeloEditContractIncompatibleError(ModeloEditRefusedError):
+    """Raised when an edit was prepared under an edit contract this version does not accept."""
+
+
+def modelo_edit_refusal_error(refusal: ModeloEditRefusalV1) -> ModeloEditRefusedError:
+    """Return the registered refusal an edit's no-effect outcome settles under.
+
+    One error per refusal family: the refusal's addresses, facts, and evidence
+    are deliberately not carried, so none of them can reach operation
+    persistence or a rendered message.
+    """
+    match refusal:
+        case ModeloEditStaleBaselineRefusalV1():
+            return ModeloEditBaselineStaleError()
+        case ModeloEditUnsupportedIntentRefusalV1():
+            return ModeloEditIntentUnsupportedError()
+        case ModeloEditVersionRefusalV1() | ModeloEditCompatibilityRefusalV1():
+            return ModeloEditContractIncompatibleError()
+        case ModeloEditDomainRefusalV1():
+            return ModeloEditRefusedError()
+
+
 __all__ = [
     "WORKFLOW_GATE_LEGAL_REFS",
     "AmendmentComplementariaLiabilityDecreaseError",
@@ -471,6 +519,10 @@ __all__ = [
     "ModeloApplicabilityFilterError",
     "ModeloChargeAccountMissingError",
     "ModeloCrossPeriodCleanStateError",
+    "ModeloEditBaselineStaleError",
+    "ModeloEditContractIncompatibleError",
+    "ModeloEditIntentUnsupportedError",
+    "ModeloEditRefusedError",
     "ModeloLocalObservationError",
     "ModeloPaymentElectionCapabilityRefusedError",
     "ModeloPaymentElectionIncompatibleError",
@@ -487,5 +539,6 @@ __all__ = [
     "WorkUnitNotFoundError",
     "WorkUnitRevisionDivergenceError",
     "amendment_evidence_missing_precondition",
+    "modelo_edit_refusal_error",
     "modelo_work_wizard_retry_exhausted_precondition",
 ]

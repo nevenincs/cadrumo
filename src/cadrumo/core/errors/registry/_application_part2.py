@@ -1217,6 +1217,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.operations.errors.OperationExecutorReturnedNoResultError",
+        ErrorCode(
+            code="INTERNAL_OPERATION_EXECUTOR_RETURNED_NO_RESULT",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_operation_executor_returned_no_result",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.operations.errors.OperationSubjectBusyError",
         ErrorCode(
             code="REFUSED_OPERATION_SUBJECT_BUSY",
@@ -1253,6 +1263,50 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             category=ErrorCategory.REFUSED,
             message_key="errors.refused.modelo_work_discard_approval_stale",
             retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloEditRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_EDIT_REFUSED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_edit_refused",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloEditBaselineStaleError",
+        ErrorCode(
+            code="REFUSED_MODELO_EDIT_BASELINE_STALE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_edit_baseline_stale",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloEditIntentUnsupportedError",
+        ErrorCode(
+            code="REFUSED_MODELO_EDIT_INTENT_UNSUPPORTED",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_edit_intent_unsupported",
+            retryable=False,
+            public_message_from_registry=True,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.application.modelo.action_errors.ModeloEditContractIncompatibleError",
+        ErrorCode(
+            code="REFUSED_MODELO_EDIT_CONTRACT_INCOMPATIBLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.modelo_edit_contract_incompatible",
+            retryable=False,
+            public_message_from_registry=True,
             runbook_id=None,
         ),
     ),

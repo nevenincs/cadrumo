@@ -687,6 +687,9 @@ errors:
     internal_operation_declaration_breach: 'Belső hiba: egy művelet-végrehajtó olyan
       fázist, hatást, erőforrást vagy interakciót igényelt, amelyet a definíciója
       nem deklarál.'
+    internal_operation_executor_returned_no_result: 'Belső hiba: a művelet eredmény
+      nélkül állt le, és semmire sem vár, ezért sikertelenként lezárult. Többé nem
+      történik vele semmi; az okot a diagnosztikai naplókban találja.'
     internal_operation_unsettled: 'Belső hiba: a művelet leállt, mielőtt az eredményét
       rögzíteni lehetett volna. Nyitva marad, és a tulajdonosi zárolás lejártakor
       automatikusan lezárul; az okot a diagnosztikai naplókban találja.'
@@ -862,6 +865,15 @@ errors:
       ehhez a művelethez használható állapotban.
     modelo_compare_need_two_years: Az összehasonlításhoz két különböző benyújtási
       év szükséges.
+    modelo_edit_baseline_stale: A bevallás a megnyitása óta megváltozott, ezért a
+      szerkesztés nem lett alkalmazva. Nyissa meg újra, és szerkessze ismét.
+    modelo_edit_contract_incompatible: A szerkesztés olyan formátumban készült, amelyet
+      ez a verzió nem fogad el, ezért semmi sem változott. Nyissa meg újra a bevallást,
+      és szerkessze ismét.
+    modelo_edit_intent_unsupported: Ez a fajta szerkesztés még nem érhető el, ezért
+      semmi sem változott.
+    modelo_edit_refused: A szerkesztést elutasította a rendszer, és semmi sem változott.
+      Ellenőrizze az értékeket, majd próbálja újra.
     modelo_export_cross_bucket: A megcímzett revízió egy másik bucket-hez tartozik,
       nem az aktív profil bucket-jéhez. Az export csak az aktív profil bucket-en belül
       működik.

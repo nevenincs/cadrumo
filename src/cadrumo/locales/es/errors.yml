@@ -729,6 +729,10 @@ errors:
     internal_operation_declaration_breach: 'Error interno: un ejecutor de operación
       reclamó una fase, un efecto, un recurso o una interacción que su definición
       no declara.'
+    internal_operation_executor_returned_no_result: 'Error interno: la operación se
+      detuvo sin resultado y sin quedar a la espera de nada, por lo que se ha cerrado
+      como fallida. No se hará nada más con ella; consulte los registros de diagnóstico
+      para conocer la causa.'
     internal_operation_unsettled: 'Error interno: la operación se detuvo antes de
       poder registrar su resultado. Queda abierta y se cerrará automáticamente cuando
       caduque su bloqueo de propietario; consulte los registros de diagnóstico para
@@ -910,6 +914,15 @@ errors:
       no está en un estado utilizable para esta operación.
     modelo_compare_need_two_years: La comparación requiere dos ejercicios fiscales
       distintos.
+    modelo_edit_baseline_stale: La declaración ha cambiado desde que se abrió, por
+      lo que no se ha aplicado la edición. Vuelva a abrirla y edítela de nuevo.
+    modelo_edit_contract_incompatible: La edición se preparó en un formato que esta
+      versión no acepta, por lo que no se ha cambiado nada. Vuelva a abrir la declaración
+      y edítela de nuevo.
+    modelo_edit_intent_unsupported: Este tipo de edición todavía no está disponible,
+      por lo que no se ha cambiado nada.
+    modelo_edit_refused: Se ha rechazado la edición y no se ha cambiado nada. Revise
+      los valores y vuelva a intentarlo.
     modelo_export_cross_bucket: La revisión apuntada pertenece a un bucket distinto
       del perfil activo. La exportación solo opera dentro del bucket del perfil activo.
     modelo_export_no_active_bucket: La exportación necesita un perfil activo. Crea
