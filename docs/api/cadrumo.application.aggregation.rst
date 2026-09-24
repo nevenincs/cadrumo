@@ -41,8 +41,11 @@ Submodules
    cadrumo.application.aggregation.irnr_income_ledger
    cadrumo.application.aggregation.iva_ledger
    cadrumo.application.aggregation.ledger_filing_snapshot
+   cadrumo.application.aggregation.ledger_payment_withholding
+   cadrumo.application.aggregation.m193_phase_materialization
    cadrumo.application.aggregation.m303_arrivals
    cadrumo.application.aggregation.modelo_bindings
+   cadrumo.application.aggregation.modelo_bindings_actividad_assets
    cadrumo.application.aggregation.modelo_bindings_renta_expenses
    cadrumo.application.aggregation.modelo_bindings_retenciones
    cadrumo.application.aggregation.observation_window
@@ -58,4 +61,7 @@ Submodules
    cadrumo.application.aggregation.source_profile
    cadrumo.application.aggregation.source_resolution_operations
    cadrumo.application.aggregation.terminal_origin_audit
+   cadrumo.application.aggregation.withholding_observation_service
+   cadrumo.application.aggregation.withholding_producer
+   cadrumo.application.aggregation.withholding_recognition
    cadrumo.application.aggregation.withholding_source

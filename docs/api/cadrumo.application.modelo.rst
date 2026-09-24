@@ -73,6 +73,7 @@ Submodules
    cadrumo.application.modelo.declarations_workspace
    cadrumo.application.modelo.dt12_advisory
    cadrumo.application.modelo.dt12_antiquity_advisory
+   cadrumo.application.modelo.edit_admission
    cadrumo.application.modelo.edit_contract
    cadrumo.application.modelo.edit_models
    cadrumo.application.modelo.edit_receipt_ports
@@ -92,15 +93,20 @@ Submodules
    cadrumo.application.modelo.iva_wallet_seed
    cadrumo.application.modelo.iva_wallet_seed_ports
    cadrumo.application.modelo.justificante_repository
+   cadrumo.application.modelo.lifecycle_clock_gate
    cadrumo.application.modelo.local_observation_actions
    cadrumo.application.modelo.local_observation_spreadsheet
    cadrumo.application.modelo.m036_lifecycle
    cadrumo.application.modelo.m036_lifecycle_ports
+   cadrumo.application.modelo.m123_count_authority_gate
    cadrumo.application.modelo.m145_communication
    cadrumo.application.modelo.m145_communication_period
    cadrumo.application.modelo.m145_communication_records
    cadrumo.application.modelo.m145_communication_records_ports
+   cadrumo.application.modelo.m303_exonerado_390_applicability_attestation
    cadrumo.application.modelo.m303_filing_evidence
+   cadrumo.application.modelo.m303_ordinary_evidence_coordinate
+   cadrumo.application.modelo.m303_ordinary_filing_evidence_authoring
    cadrumo.application.modelo.m303_regimen_simplificado_scope
    cadrumo.application.modelo.maritime_preview
    cadrumo.application.modelo.minimo_descendientes_advisory

@@ -15,6 +15,7 @@ Submodules
 
    cadrumo.domain.attachments.enums
    cadrumo.domain.attachments.errors
+   cadrumo.domain.attachments.m303_filing_evidence
    cadrumo.domain.attachments.models
    cadrumo.domain.attachments.protocols
    cadrumo.domain.attachments.service

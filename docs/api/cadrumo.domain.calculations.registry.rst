@@ -29,6 +29,7 @@ Submodules
    cadrumo.domain.calculations.registry._ledger_binding_resolution
    cadrumo.domain.calculations.registry._schema_export_exemption
    cadrumo.domain.calculations.registry._toml_helpers
+   cadrumo.domain.calculations.registry.actividad_asset_bindings
    cadrumo.domain.calculations.registry.activity_kind_catalogue
    cadrumo.domain.calculations.registry.amendment_regime_policy
    cadrumo.domain.calculations.registry.applicability
@@ -38,6 +39,7 @@ Submodules
    cadrumo.domain.calculations.registry.authority
    cadrumo.domain.calculations.registry.authority_artifact
    cadrumo.domain.calculations.registry.authority_cache
+   cadrumo.domain.calculations.registry.authority_compiler_closure
    cadrumo.domain.calculations.registry.authority_store
    cadrumo.domain.calculations.registry.bienes_inversion_catalogue
    cadrumo.domain.calculations.registry.bienes_inversion_regularizacion_bindings

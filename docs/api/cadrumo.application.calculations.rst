@@ -14,6 +14,7 @@ Submodules
    :maxdepth: 4
 
    cadrumo.application.calculations._per_grupo_member_keys
+   cadrumo.application.calculations.actividad_asset_schedule
    cadrumo.application.calculations.bienes_inversion_regularizacion
    cadrumo.application.calculations.binding_prefill
    cadrumo.application.calculations.cross_period_clean_state
@@ -27,6 +28,7 @@ Submodules
    cadrumo.application.calculations.iva_wallet_balance
    cadrumo.application.calculations.iva_wallet_reconciliation
    cadrumo.application.calculations.m111_no_retenciones
+   cadrumo.application.calculations.m115_no_relevant_payments
    cadrumo.application.calculations.m303_carry_ingress
    cadrumo.application.calculations.m303_regimen_simplificado
    cadrumo.application.calculations.m303_regimen_simplificado_annual_summary

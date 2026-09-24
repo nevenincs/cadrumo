@@ -40,6 +40,7 @@ Submodules
    cadrumo.adapters.persistence.storage.custody.errors
    cadrumo.adapters.persistence.storage.custody.filesystem
    cadrumo.adapters.persistence.storage.custody.filesystem_primitives
+   cadrumo.adapters.persistence.storage.custody.kdf_calibration_search
    cadrumo.adapters.persistence.storage.custody.kdf_supervision
    cadrumo.adapters.persistence.storage.custody.label_head_models
    cadrumo.adapters.persistence.storage.custody.label_head_repository

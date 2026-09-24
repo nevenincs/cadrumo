@@ -13,6 +13,7 @@ Subpackages
 .. toctree::
    :maxdepth: 4
 
+   cadrumo.application.actividad_asset
    cadrumo.application.aeat_sync
    cadrumo.application.aggregation
    cadrumo.application.auth

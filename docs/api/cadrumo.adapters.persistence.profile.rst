@@ -18,6 +18,7 @@ Submodules
    cadrumo.adapters.persistence.profile._revision_guarded_singleton_mutation
    cadrumo.adapters.persistence.profile._secure_enveloped_document
    cadrumo.adapters.persistence.profile._secure_model_document
+   cadrumo.adapters.persistence.profile.actividad_asset
    cadrumo.adapters.persistence.profile.apoderado
    cadrumo.adapters.persistence.profile.auth_diagnostics
    cadrumo.adapters.persistence.profile.bienes_inversion
@@ -69,4 +70,5 @@ Submodules
    cadrumo.adapters.persistence.profile.translated_bucket_event_history
    cadrumo.adapters.persistence.profile.usage_ratios
    cadrumo.adapters.persistence.profile.verify_observations
+   cadrumo.adapters.persistence.profile.withholding_observation_workflow
    cadrumo.adapters.persistence.profile.workflow_gate
