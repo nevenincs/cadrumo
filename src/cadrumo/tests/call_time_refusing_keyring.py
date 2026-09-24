@@ -13,6 +13,8 @@ exactly that shape, selectable in a child process through
 
 from __future__ import annotations
 
+from typing import override
+
 from keyring.backend import KeyringBackend
 
 CALL_TIME_REFUSING_KEYRING = f"{__name__}.CallTimeRefusingKeyring"
@@ -27,12 +29,15 @@ class CallTimeRefusingKeyring(KeyringBackend):
 
     priority = 1
 
+    @override
     def get_password(self, service: str, username: str) -> str | None:
         raise CredentialManagerLogonSessionError(1312, "CredRead", "A specified logon session does not exist.")
 
+    @override
     def set_password(self, service: str, username: str, password: str) -> None:
         raise CredentialManagerLogonSessionError(1312, "CredWrite", "A specified logon session does not exist.")
 
+    @override
     def delete_password(self, service: str, username: str) -> None:
         raise CredentialManagerLogonSessionError(1312, "CredDelete", "A specified logon session does not exist.")
 
