@@ -617,8 +617,9 @@ def test_the_probe_flags_a_network_command_that_reaches_aeat_undeclared(
     with observe_aeat_contact(handler_code(_TEETH_TARGET)) as observed:
         invoke_uncached_typer_app(build_command_app(graph), argv)
 
+    sede_host = canonical_remote_hostname(load_external_constants().aeat.domains.sede)
     assert observed.handler_started
     assert observed.contacts(offline_guard) == [
-        "host sede.agenciatributaria.gob.es",
+        f"host {sede_host}",
         "import cadrumo.adapters.outbound.aeat.browser.factory",
     ]
