@@ -121,6 +121,30 @@ def test_no_verb_output_schema_exceeds_the_size_budget() -> None:
     )
 
 
+#: The share of the per-verb budget a verb may use before its growth must be
+#: a decision rather than a surprise: crossing it fails here with the measured
+#: size, while the hard ceiling above still has room to absorb the change.
+_OUTPUT_SCHEMA_HEADROOM_FRACTION = 0.95
+
+
+def test_no_verb_output_schema_uses_the_last_five_percent_of_its_budget() -> None:
+    threshold = int(_OUTPUT_SCHEMA_BUDGET_CHARS * _OUTPUT_SCHEMA_HEADROOM_FRACTION)
+    near = sorted(
+        (
+            (descriptor.command_key, _verb_payload_size(descriptor.output_schema))
+            for descriptor in build_tool_descriptors()
+            if _verb_payload_size(descriptor.output_schema) > threshold
+        ),
+        key=lambda item: item[1],
+        reverse=True,
+    )
+    assert near == [], (
+        f"output schemas past {threshold} chars, within 5% of the {_OUTPUT_SCHEMA_BUDGET_CHARS}-char "
+        f"budget: {near}. Decide the growth: shrink what the verb returns, or state why the budget "
+        "should move."
+    )
+
+
 def test_the_budget_would_flag_a_hypothetically_oversized_schema() -> None:
     # Anti-tautology: a synthetic oversized schema trips the check, proving teeth.
     huge: dict[str, object] = {
