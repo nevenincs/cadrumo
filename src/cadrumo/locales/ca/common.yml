@@ -1710,6 +1710,10 @@ tui:
         iva_rate: Tipus d'IVA (%)
         kind: Tipus de factura
         notes: Notes
+        operation_date: Data de l'operació, si és diferent de la de la factura (AAAA-MM-DD)
+        operation_type: Clau d'operació del model 349
+        recargo_amount: Import del recàrrec d'equivalència
+        rectifies_invoice_number: Número de la factura que rectifica
         retention_amount: Import de la retenció d'IRPF
         retention_rate: Tipus de retenció d'IRPF (%)
         series: Sèrie
@@ -1717,11 +1721,35 @@ tui:
       kind:
         issued: Emesa
         received: Rebuda
+      line:
+        add: Afegeix una línia
+        field:
+          description: Descripció de la línia
+          iva_amount: Quota d'IVA de la línia
+          iva_rate: Tipus d'IVA (clau del registre, com RATE_21)
+          oss_rate_kind: Classe de tipus OSS (clau del registre)
+          quantity: Quantitat
+          spending_category_id: Categoria de despesa
+          subtotal: Base de la línia
+          unit_price: Preu unitari
+        heading: Línies de la factura. Si la factura té més d'un tipus d'IVA, afegeix
+          aquí cada línia impresa i deixa buits la base imposable i el tipus d'IVA
+          de dalt.
+        none: 'No hi ha línies: s''utilitzen la base imposable i el tipus d''IVA de
+          dalt.'
+        remove: Treu l'última línia
+        row: '{index}. {description} · {quantity} × {unit_price} = {subtotal} · IVA
+          {rate} {amount}'
       open: Afegeix factura
+      operation_type_none: Sense clau del model 349
       optional: '{label} (opcional)'
       problem:
         amount: '{field} ha de ser un número com 1200.00.'
+        base_or_lines: Introdueix una base imposable o afegeix almenys una línia de
+          factura.
         date: '{field} ha de ser una data amb el format AAAA-MM-DD.'
+        lines_and_base: Introdueix la factura per línies o amb una base imposable
+          i un tipus d'IVA, però no de les dues maneres.
         required: '{field} és obligatori.'
       progress: S'està registrant la factura…
       prompt: Introdueix la factura tal com està impresa. Es comprova i es registra
@@ -1733,6 +1761,9 @@ tui:
         amounts: Base imposable {base} {currency} · tipus d'IVA {rate}
         counterparty: 'Contrapart: {name} · NIF {nif} · {country}'
         identity: Factura {kind} {number} amb data {date}
+        operation: Clau del model 349 {code} · data de l'operació {date}
+        recargo: Recàrrec d'equivalència {amount} {currency}
+        rectifies: Rectifica la factura {number}
         retention: 'Retenció d''IRPF: tipus {rate} · import {amount}'
       title: Afegeix una factura
     overview:
@@ -1774,6 +1805,7 @@ tui:
       identity: ID del registre
       invoice_detail: Detall de la factura
       invoices: Factures registrades
+      lines: Línies
       links: Registres vinculats
       loading: Llegint el registre…
       no_change: Introduïu un valor diferent abans de revisar.

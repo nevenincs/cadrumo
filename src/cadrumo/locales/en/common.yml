@@ -1676,6 +1676,10 @@ tui:
         iva_rate: IVA rate (%)
         kind: Invoice type
         notes: Notes
+        operation_date: Operation date, when it differs from the invoice date (YYYY-MM-DD)
+        operation_type: Modelo 349 operation key
+        recargo_amount: Equivalence surcharge amount
+        rectifies_invoice_number: Number of the invoice this one corrects
         retention_amount: IRPF retention amount
         retention_rate: IRPF retention rate (%)
         series: Series
@@ -1683,11 +1687,32 @@ tui:
       kind:
         issued: Issued
         received: Received
+      line:
+        add: Add line
+        field:
+          description: Line description
+          iva_amount: Line IVA amount
+          iva_rate: IVA rate slot (registry token, such as RATE_21)
+          oss_rate_kind: OSS rate kind (registry token)
+          quantity: Quantity
+          spending_category_id: Spending category
+          subtotal: Line base
+          unit_price: Unit price
+        heading: Invoice lines. For an invoice with more than one IVA rate, add each
+          printed line here and leave the taxable base and IVA rate above empty.
+        none: 'No lines entered: the taxable base and IVA rate above are used.'
+        remove: Remove last line
+        row: '{index}. {description} · {quantity} × {unit_price} = {subtotal} · IVA
+          {rate} {amount}'
       open: Add invoice
+      operation_type_none: No Modelo 349 key
       optional: '{label} (optional)'
       problem:
         amount: '{field} must be a number such as 1200.00.'
+        base_or_lines: Enter a taxable base, or add at least one invoice line.
         date: '{field} must be a date written YYYY-MM-DD.'
+        lines_and_base: Enter the invoice either as lines or as one taxable base and
+          IVA rate, not both.
         required: '{field} is required.'
       progress: Recording the invoice…
       prompt: Enter the invoice as it is printed. It is checked and recorded only
@@ -1698,6 +1723,9 @@ tui:
         amounts: Taxable base {base} {currency} · IVA rate {rate}
         counterparty: 'Counterparty: {name} · NIF {nif} · {country}'
         identity: '{kind} invoice {number} dated {date}'
+        operation: Modelo 349 key {code} · operation date {date}
+        recargo: Equivalence surcharge {amount} {currency}
+        rectifies: Corrects invoice {number}
         retention: 'IRPF retention: rate {rate} · amount {amount}'
       title: Add an invoice
     overview:
@@ -1739,6 +1767,7 @@ tui:
       identity: Record ID
       invoice_detail: Invoice detail
       invoices: Recorded invoices
+      lines: Lines
       links: Linked records
       loading: Reading the record…
       no_change: Enter a different value before reviewing.

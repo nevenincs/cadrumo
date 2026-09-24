@@ -25,6 +25,7 @@ from ....application.ledger.workspace import (
     LedgerWorkspaceEntryRefV1,
 )
 from ....application.operator_actions.models import ActionReference
+from ....core.aggregation import IntracomOperationType
 from ....core.country_code import CountryCodeAlpha2
 from ....core.identity.hex_ids import InvoiceId
 from ....core.identity.transaction_ids import TransactionId
@@ -281,12 +282,37 @@ class LedgerInvoiceClassChoice(StrEnum):
     RECTIFICATIVA = "rectificativa"
 
 
+class LedgerInvoiceLineEntryV1(BaseModel):
+    """One printed invoice line as the operator typed it, with its numbers already parsed.
+
+    It carries exactly the domain line's fields. The rate stays the registry
+    slot token as typed: whether that slot is governed, and whether the line's
+    arithmetic holds, are the writer's checks, made against the pinned
+    authority when the line becomes the domain line.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    description: str
+    quantity: Decimal
+    unit_price: Decimal
+    subtotal: Decimal
+    iva_rate: str
+    iva_amount: Decimal
+    spending_category_id: str | None = None
+    oss_rate_kind: str | None = None
+
+
 class LedgerInvoiceEntryV1(BaseModel):
     """One invoice as the operator typed it, already parsed into typed values.
 
     Legal checks -- the NIF format, the IVA slot for the date, the retention
-    consistency -- are the application writer's, so nothing here pre-judges
-    them; this only carries what was entered.
+    consistency, the recargo identity -- are the application writer's, so
+    nothing here pre-judges them; this only carries what was entered.
+
+    An invoice is entered either as one taxable base and rate or as its
+    ordered lines, exactly as the writer accepts it, so a mixed-rate invoice
+    reaches the writer with its per-rate breakdown intact.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -297,8 +323,13 @@ class LedgerInvoiceEntryV1(BaseModel):
     country_code: str
     invoice_number: str
     invoice_date: date
-    taxable_base: Decimal
+    taxable_base: Decimal | None
     iva_rate: Decimal | None
+    lines: tuple[LedgerInvoiceLineEntryV1, ...] = ()
+    operation_type: IntracomOperationType | None = None
+    operation_date: date | None = None
+    recargo_amount: Decimal | None = None
+    rectifies_invoice_number: str | None = None
     iva_category: IvaCategory | None = None
     currency: str
     retention_rate: Decimal | None = None
@@ -520,6 +551,7 @@ __all__ = [
     "LedgerInvoiceAddResultV1",
     "LedgerInvoiceClassChoice",
     "LedgerInvoiceEntryV1",
+    "LedgerInvoiceLineEntryV1",
     "LedgerLinkResultV1",
     "LedgerLinkSubmissionV1",
     "LedgerLinkSubmitterV1",

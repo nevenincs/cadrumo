@@ -1694,12 +1694,16 @@ tui:
         country_code: Partner országa (két betű)
         currency: Pénznem
         invoice_class: Számla fajtája
-        invoice_date: Számla dátuma (ÉÉÉÉ-HH-NN)
+        invoice_date: Számla dátuma (év-hó-nap)
         invoice_number: Számlaszám
         iva_category: Áfakezelés (nyilvántartási azonosító)
         iva_rate: IVA-kulcs (%)
         kind: Számla típusa
         notes: Megjegyzések
+        operation_date: Teljesítés dátuma, ha eltér a számla dátumától (év-hó-nap)
+        operation_type: 349-es nyomtatvány szerinti ügyletkód
+        recargo_amount: Kiegyenlítő pótlék összege
+        rectifies_invoice_number: A helyesbített számla száma
         retention_amount: IRPF-visszatartás összege
         retention_rate: IRPF-visszatartás kulcsa (%)
         series: Sorozat
@@ -1707,11 +1711,32 @@ tui:
       kind:
         issued: Kiállított
         received: Beérkezett
+      line:
+        add: Tétel hozzáadása
+        field:
+          description: A tétel megnevezése
+          iva_amount: A tétel IVA-összege
+          iva_rate: IVA-kulcs (nyilvántartási azonosító, például RATE_21)
+          oss_rate_kind: OSS-kulcs fajtája (nyilvántartási azonosító)
+          quantity: Mennyiség
+          spending_category_id: Költségkategória
+          subtotal: A tétel adóalapja
+          unit_price: Egységár
+        heading: Számlatételek. Ha a számlán több IVA-kulcs szerepel, itt add meg
+          egyenként a nyomtatott tételeket, és hagyd üresen a fenti adóalapot és IVA-kulcsot.
+        none: 'Nincs megadott tétel: a fenti adóalap és IVA-kulcs kerül felhasználásra.'
+        remove: Utolsó tétel törlése
+        row: '{index}. {description} · {quantity} × {unit_price} = {subtotal} · IVA
+          {rate} {amount}'
       open: Számla hozzáadása
+      operation_type_none: Nincs 349-es ügyletkód
       optional: '{label} (nem kötelező)'
       problem:
         amount: '{field} csak szám lehet, például 1200.00.'
-        date: '{field} ÉÉÉÉ-HH-NN formátumú dátum kell legyen.'
+        base_or_lines: Adj meg adóalapot, vagy adj hozzá legalább egy számlatételt.
+        date: '{field} év-hó-nap formátumú dátum kell legyen.'
+        lines_and_base: A számlát vagy tételenként, vagy egyetlen adóalappal és IVA-kulccsal
+          add meg, a kettőt együtt nem.
         required: '{field} megadása kötelező.'
       progress: A számla rögzítése…
       prompt: Add meg a számlát úgy, ahogy nyomtatva szerepel. Csak az áttekintés
@@ -1723,6 +1748,9 @@ tui:
         amounts: Adóalap {base} {currency} · IVA-kulcs {rate}
         counterparty: 'Partner: {name} · NIF {nif} · {country}'
         identity: '{kind} számla: {number}, kelte {date}'
+        operation: '349-es ügyletkód: {code} · teljesítés dátuma: {date}'
+        recargo: 'Kiegyenlítő pótlék: {amount} {currency}'
+        rectifies: Helyesbíti a(z) {number} számlát
         retention: 'IRPF-visszatartás: kulcs {rate} · összeg {amount}'
       title: Számla hozzáadása
     overview:
@@ -1764,6 +1792,7 @@ tui:
       identity: Rekordazonosító
       invoice_detail: Számla részletei
       invoices: Rögzített számlák
+      lines: Tételek
       links: Kapcsolt rekordok
       loading: Rekord olvasása…
       no_change: Ellenőrzés előtt adjon meg eltérő értéket.

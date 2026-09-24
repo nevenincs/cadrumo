@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import cast, override
 
 from pydantic import ValidationError
-from textual.app import App, ComposeResult
+from textual.app import ComposeResult
 from textual.widgets import Button, DataTable, Input, Static
 
 from ....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
@@ -16,6 +16,7 @@ from ....domain.transactions.models import Transaction
 from ..components.widgets import ContentDataTable
 from ..components.workspace_host import replace_workspace_body
 from .controller import LedgerWorkspaceController, LedgerWorkspaceScreen, ledger_copy
+from .invoice_entry import invoice_line_row
 from .record_doors import LedgerRecordDoors
 from .workspace_presentation import door_refusal_text, ledger_workspace_page
 
@@ -76,7 +77,7 @@ class LedgerInvoiceCatalogueScreen(LedgerWorkspaceScreen):
             return
         if event.data_table.id == "ledger-invoice-catalogue" and event.row_key.value is not None:
             replace_workspace_body(
-                cast("App[object]", self.app),
+                self.app,
                 LedgerInvoiceDetailScreen(self.controller, self.doors, str(event.row_key.value)),
             )
 
@@ -176,17 +177,38 @@ class LedgerInvoiceDetailScreen(LedgerWorkspaceScreen):
             if invoice.provenance is not None
             else "-"
         )
-        self.query_one("#ledger-record-detail", Static).update(
-            "\n".join(
-                (
-                    f"{invoice.kind.value} · {invoice.invoice_number} · {invoice.issued_at.isoformat()}",
-                    f"{invoice.counterparty_name} · {invoice.counterparty_tax_id or '-'}",
-                    f"{invoice.base_total} + {invoice.iva_total} = {invoice.grand_total} {invoice.currency}",
-                    f"{ledger_copy('tui.ledger.records.links')}: {linked_ids}",
-                    f"{ledger_copy('tui.ledger.records.source')}: {source}",
+        rows = [
+            f"{invoice.kind.value} · {invoice.invoice_number} · {invoice.issued_at.isoformat()}",
+            f"{invoice.counterparty_name} · {invoice.counterparty_tax_id or '-'}",
+            f"{invoice.base_total} + {invoice.iva_total} = {invoice.grand_total} {invoice.currency}",
+            ledger_copy("tui.ledger.records.lines"),
+            *(invoice_line_row(index, line) for index, line in enumerate(invoice.lines, start=1)),
+        ]
+        if invoice.operation_type is not None or invoice.operation_date is not None:
+            rows.append(
+                ledger_copy(
+                    "tui.ledger.invoice.summary.operation",
+                    code="-" if invoice.operation_type is None else invoice.operation_type.value,
+                    date="-" if invoice.operation_date is None else invoice.operation_date.isoformat(),
                 )
             )
+        if invoice.recargo_amount is not None:
+            rows.append(
+                ledger_copy(
+                    "tui.ledger.invoice.summary.recargo",
+                    amount=format(invoice.recargo_amount, "f"),
+                    currency=invoice.currency,
+                )
+            )
+        if invoice.rectifies_invoice_number is not None:
+            rows.append(ledger_copy("tui.ledger.invoice.summary.rectifies", number=invoice.rectifies_invoice_number))
+        rows.extend(
+            (
+                f"{ledger_copy('tui.ledger.records.links')}: {linked_ids}",
+                f"{ledger_copy('tui.ledger.records.source')}: {source}",
+            )
         )
+        self.query_one("#ledger-record-detail", Static).update("\n".join(rows))
         self.query_one("#ledger-invoice-notes", Input).value = invoice.notes
 
     @override

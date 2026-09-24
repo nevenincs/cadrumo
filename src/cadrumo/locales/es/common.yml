@@ -1722,6 +1722,11 @@ tui:
         iva_rate: Tipo de IVA (%)
         kind: Tipo de factura
         notes: Notas
+        operation_date: Fecha de la operación, si es distinta de la de la factura
+          (AAAA-MM-DD)
+        operation_type: Clave de operación del modelo 349
+        recargo_amount: Importe del recargo de equivalencia
+        rectifies_invoice_number: Número de la factura que rectifica
         retention_amount: Importe de la retención de IRPF
         retention_rate: Tipo de retención de IRPF (%)
         series: Serie
@@ -1729,11 +1734,34 @@ tui:
       kind:
         issued: Emitida
         received: Recibida
+      line:
+        add: Añadir línea
+        field:
+          description: Descripción de la línea
+          iva_amount: Cuota de IVA de la línea
+          iva_rate: Tipo de IVA (clave del registro, como RATE_21)
+          oss_rate_kind: Clase de tipo OSS (clave del registro)
+          quantity: Cantidad
+          spending_category_id: Categoría de gasto
+          subtotal: Base de la línea
+          unit_price: Precio unitario
+        heading: Líneas de la factura. Si la factura tiene más de un tipo de IVA,
+          añade aquí cada línea impresa y deja vacíos la base imponible y el tipo
+          de IVA de arriba.
+        none: 'No hay líneas: se usan la base imponible y el tipo de IVA de arriba.'
+        remove: Quitar la última línea
+        row: '{index}. {description} · {quantity} × {unit_price} = {subtotal} · IVA
+          {rate} {amount}'
       open: Añadir factura
+      operation_type_none: Sin clave del modelo 349
       optional: '{label} (opcional)'
       problem:
         amount: '{field} debe ser un número como 1200.00.'
+        base_or_lines: Introduce una base imponible o añade al menos una línea de
+          factura.
         date: '{field} debe ser una fecha con el formato AAAA-MM-DD.'
+        lines_and_base: Introduce la factura por líneas o con una base imponible y
+          un tipo de IVA, pero no de las dos formas.
         required: '{field} es obligatorio.'
       progress: Registrando la factura…
       prompt: Introduce la factura tal como está impresa. Se comprueba y se registra
@@ -1745,6 +1773,9 @@ tui:
         amounts: Base imponible {base} {currency} · tipo de IVA {rate}
         counterparty: 'Contraparte: {name} · NIF {nif} · {country}'
         identity: Factura {kind} {number} con fecha {date}
+        operation: Clave del modelo 349 {code} · fecha de la operación {date}
+        recargo: Recargo de equivalencia {amount} {currency}
+        rectifies: Rectifica la factura {number}
         retention: 'Retención de IRPF: tipo {rate} · importe {amount}'
       title: Añadir una factura
     overview:
@@ -1787,6 +1818,7 @@ tui:
       identity: ID del registro
       invoice_detail: Detalle de la factura
       invoices: Facturas registradas
+      lines: Líneas
       links: Registros vinculados
       loading: Leyendo el registro…
       no_change: Introduzca un valor diferente antes de revisar.

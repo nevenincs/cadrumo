@@ -158,7 +158,11 @@ def _registry_m349_operation_type_requirement(
         return value.strip()
 
     try:
-        category = require_iva_category(required("modelo.349.operation_type_required_category"))
+        category = require_iva_category(
+            required("modelo.349.operation_type_required_category"),
+            effective_date=effective_date,
+            authority=operation,
+        )
     except (RegistryValidationError, ValueError) as exc:
         raise ValueError("counterpart registry declares an unknown operation-type category") from exc
     tokens = tuple(
@@ -451,85 +455,88 @@ def build_catalogue_invoice(
                 operation=indexed_operation,
             )
 
-    # Normalise once, before either the persisted payload or the FX lookup
-    # reads it: a padded or lowercase token ("gbp", " gbp ") must resolve the
-    # SAME provider rate as its canonical "GBP" form, not silently miss the
-    # rate and leave the invoice unstamped.
-    if lines is not None and (taxable_base is not None or iva_rate is not None):
-        raise InvoiceValidationError("structured lines cannot be combined with taxable_base or iva_rate")
-    currency = normalise_iso_4217_currency(currency)
-    devengo_date = operation_date or issued_at
-    if lines is None:
-        with validating_governed_facts(operation):
+    # Every governed fact this construction reads -- the rate slot, the invoice
+    # class default, the Modelo 349 clave rule, the devengo role and the final
+    # validation -- resolves under the operation the caller handed in, never
+    # under whatever scope the calling thread happens to hold.
+    with validating_governed_facts(operation):
+        if lines is not None and (taxable_base is not None or iva_rate is not None):
+            raise InvoiceValidationError("structured lines cannot be combined with taxable_base or iva_rate")
+        # Normalise once, before either the persisted payload or the FX lookup
+        # reads it: a padded or lowercase token ("gbp", " gbp ") must resolve the
+        # SAME provider rate as its canonical "GBP" form, not silently miss the
+        # rate and leave the invoice unstamped.
+        currency = normalise_iso_4217_currency(currency)
+        devengo_date = operation_date or issued_at
+        if lines is None:
             rate_slot = resolve_iva_rate_slot(iva_rate, devengo_date)
             # The exact devengo date is present at this composition boundary, so both
             # synthesis and Invoice validation project the same authority fact.
             pct = iva_rate_percentage(rate_slot, devengo_date)
-        base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
-            taxable_base=taxable_base,
-            lines=None,
-            invoice_number=invoice_number,
-            rate_slot=rate_slot,
-            iva_percentage=pct,
+            base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
+                taxable_base=taxable_base,
+                lines=None,
+                invoice_number=invoice_number,
+                rate_slot=rate_slot,
+                iva_percentage=pct,
+            )
+        else:
+            if not lines:
+                raise InvoiceValidationError("lines must not be empty")
+            base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
+                taxable_base=None,
+                lines=lines,
+                invoice_number=invoice_number,
+                rate_slot=lines[0].iva_rate,
+                iva_percentage=None,
+            )
+        # The recargo de equivalencia rides INSIDE the invoice total (LIVA art. 161)
+        # while a retencion is settled outside it, which is why only the recargo
+        # appears here. The model re-checks this identity exactly, so a caller that
+        # states a recargo the lines do not support is refused rather than balanced.
+        recargo = recargo_amount or Decimal("0")
+        grand_total = base_total + iva_total + recargo
+        invoice_payload: dict[str, object] = {
+            "bucket_id": bucket_id,
+            "kind": kind.value,
+            "invoice_number": invoice_number,
+            "issued_at": issued_at.isoformat(),
+            "counterparty_name": counterparty_name,
+            "counterparty_tax_id": counterparty_tax_id,
+            "counterparty_country": counterparty_country,
+            "base_total": format(base_total, "f"),
+            "iva_total": format(iva_total, "f"),
+            "grand_total": format(grand_total, "f"),
+            "currency": currency,
+            "payment_status": payment_status.value,
+            "lines": payload_lines,
+            "notes": notes,
+            "invoice_class": (invoice_class or default_invoice_class()).value,
+        }
+        _apply_operator_asserted_invoice_facts(
+            invoice_payload,
+            series=series,
+            rectifies_invoice_number=rectifies_invoice_number,
+            recargo_amount=recargo_amount,
+            iva_category=iva_category,
+            operation_type=operation_type,
+            operation_date=operation_date,
+            retention_rate=retention_rate,
+            retention_amount=retention_amount,
+            effective_date=devengo_date,
+            operation=operation,
         )
-    else:
-        if not lines:
-            raise InvoiceValidationError("lines must not be empty")
-        base_total, iva_total, payload_lines = _resolve_invoice_line_totals(
-            taxable_base=None,
-            lines=lines,
-            invoice_number=invoice_number,
-            rate_slot=lines[0].iva_rate,
-            iva_percentage=None,
+        # The euro-conversion stamp. ``currency`` is already the canonical uppercase
+        # ISO 4217 token (normalised once above), so the provider is queried with the
+        # same token the record stores. WHICH date the rate is taken at, and when a
+        # record is deliberately left unstamped, are resolve_fx_conversion_stamp's to
+        # answer -- this only writes the result into the payload shape.
+        _apply_fx_conversion_stamp(
+            invoice_payload,
+            currency=currency,
+            issued_at=issued_at,
+            rate_provider=rate_provider,
         )
-    # The recargo de equivalencia rides INSIDE the invoice total (LIVA art. 161)
-    # while a retencion is settled outside it, which is why only the recargo
-    # appears here. The model re-checks this identity exactly, so a caller that
-    # states a recargo the lines do not support is refused rather than balanced.
-    recargo = recargo_amount or Decimal("0")
-    grand_total = base_total + iva_total + recargo
-    invoice_payload: dict[str, object] = {
-        "bucket_id": bucket_id,
-        "kind": kind.value,
-        "invoice_number": invoice_number,
-        "issued_at": issued_at.isoformat(),
-        "counterparty_name": counterparty_name,
-        "counterparty_tax_id": counterparty_tax_id,
-        "counterparty_country": counterparty_country,
-        "base_total": format(base_total, "f"),
-        "iva_total": format(iva_total, "f"),
-        "grand_total": format(grand_total, "f"),
-        "currency": currency,
-        "payment_status": payment_status.value,
-        "lines": payload_lines,
-        "notes": notes,
-        "invoice_class": (invoice_class or default_invoice_class()).value,
-    }
-    _apply_operator_asserted_invoice_facts(
-        invoice_payload,
-        series=series,
-        rectifies_invoice_number=rectifies_invoice_number,
-        recargo_amount=recargo_amount,
-        iva_category=iva_category,
-        operation_type=operation_type,
-        operation_date=operation_date,
-        retention_rate=retention_rate,
-        retention_amount=retention_amount,
-        effective_date=devengo_date,
-        operation=operation,
-    )
-    # The euro-conversion stamp. ``currency`` is already the canonical uppercase
-    # ISO 4217 token (normalised once above), so the provider is queried with the
-    # same token the record stores. WHICH date the rate is taken at, and when a
-    # record is deliberately left unstamped, are resolve_fx_conversion_stamp's to
-    # answer -- this only writes the result into the payload shape.
-    _apply_fx_conversion_stamp(
-        invoice_payload,
-        currency=currency,
-        issued_at=issued_at,
-        rate_provider=rate_provider,
-    )
-    with validating_governed_facts(operation):
         return Invoice.model_validate(invoice_payload)
 
 

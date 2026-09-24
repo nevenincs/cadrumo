@@ -14,7 +14,8 @@ from textual.widgets import Button, DataTable, Input, Static
 from .....application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
 from .....application.ledger.models import ManualLedgerTransactionPatch
 from .....core.config import override_settings
-from .....domain.invoices.models import Invoice
+from .....domain.invoices.enums import IvaRate
+from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
 from .....domain.transactions.enums import TransactionDirection
 from .....domain.transactions.errors import TransactionValidationError
@@ -69,6 +70,18 @@ def _invoice() -> Invoice:
         iva_total=Decimal("21.00"),
         grand_total=Decimal("121.00"),
         currency="EUR",
+        # Every persisted invoice carries its printed lines; the detail view
+        # renders them, so a fixture without any is not an invoice it can meet.
+        lines=(
+            InvoiceLine.model_construct(
+                description="Synthetic service",
+                quantity=Decimal(1),
+                unit_price=Decimal("100.00"),
+                subtotal=Decimal("100.00"),
+                iva_rate=IvaRate.from_registry("RATE_21"),
+                iva_amount=Decimal("21.00"),
+            ),
+        ),
         linked_transaction_ids=("t" * 64,),
         notes="before",
         provenance=None,
@@ -99,7 +112,9 @@ async def test_invoice_catalogue_opens_canonical_detail_and_saves_reviewed_notes
             await pilot.app.workers.wait_for_complete()
             detail = pilot.app.screen
             assert isinstance(detail, LedgerInvoiceDetailScreen)
-            assert "121.00" in str(detail.query_one("#ledger-record-detail", Static).render())
+            rendered = str(detail.query_one("#ledger-record-detail", Static).render())
+            assert "121.00" in rendered
+            assert "1. Synthetic service · 1 × 100.00 = 100.00 · IVA RATE_21 21.00" in rendered
             detail.query_one("#ledger-invoice-notes", Input).value = "after"
             detail.query_one("#ledger-invoice-edit-review", Button).press()
             await pilot.pause()
@@ -142,6 +157,9 @@ async def test_linked_transaction_detail_shows_refusal_without_claiming_a_save()
             amount=Decimal("121.00"),
             currency="EUR",
             description="original description",
+            provenance=RawProvenance.model_construct(
+                source_path=Path("synthetic-statement.csv"), source_row_index=1, source_format=SourceFormat.CSV
+            ),
         ),
     )
     door = _LinkedRecordDoor(invoice, transaction)

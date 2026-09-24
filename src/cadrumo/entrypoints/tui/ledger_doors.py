@@ -247,9 +247,25 @@ def ledger_invoice_add_door(profile_id: str, operation: PinnedAuthorityOperation
     def record(entry: LedgerInvoiceEntryV1) -> LedgerInvoiceAddResultV1:
         from ...adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
         from ...application.invoices.catalogue_creation import build_catalogue_invoice, create_catalogue_invoice
+        from ...application.invoices.source_resolver import iva_category_for_operation_type
+        from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
         from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
+        from ...domain.invoices.models import InvoiceLine
 
         ports = build_catalogue_creation_ports(bucket_id=profile_id)
+        # The typed lines and the invoice class read governed facts, so they
+        # resolve under the generation this door was bound to, the same one
+        # the writer below is handed.
+        with validating_governed_facts(operation):
+            lines = tuple(InvoiceLine.model_validate(line.model_dump(exclude_none=True)) for line in entry.lines)
+            invoice_class = _invoice_class(entry.invoice_class, entry.invoice_date)
+        # A stated treatment wins; the one implied by the Modelo 349 key only
+        # fills its absence, exactly as the command-line writer resolves it.
+        iva_category = (
+            require_iva_category(entry.iva_category, effective_date=entry.invoice_date, authority=operation)
+            if entry.iva_category is not None
+            else iva_category_for_operation_type(entry.operation_type)
+        )
         invoice = build_catalogue_invoice(
             bucket_id=profile_id,
             kind=entry.kind,
@@ -260,17 +276,18 @@ def ledger_invoice_add_door(profile_id: str, operation: PinnedAuthorityOperation
             issued_at=entry.invoice_date,
             taxable_base=entry.taxable_base,
             iva_rate=entry.iva_rate,
-            iva_category=(
-                require_iva_category(entry.iva_category, effective_date=entry.invoice_date, authority=operation)
-                if entry.iva_category is not None
-                else None
-            ),
+            lines=lines or None,
+            iva_category=iva_category,
+            operation_type=entry.operation_type,
+            operation_date=entry.operation_date,
             currency=entry.currency,
             notes=entry.notes,
             retention_rate=entry.retention_rate,
             retention_amount=entry.retention_amount,
-            invoice_class=_invoice_class(entry.invoice_class, entry.invoice_date),
+            invoice_class=invoice_class,
             series=entry.series,
+            rectifies_invoice_number=entry.rectifies_invoice_number,
+            recargo_amount=entry.recargo_amount,
             rate_provider=ports.rate_provider,
             operation=operation,
         )
