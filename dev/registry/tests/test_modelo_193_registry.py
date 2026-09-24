@@ -7,19 +7,25 @@ from decimal import Decimal
 
 import pytest
 
-from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind
+from cadrumo.core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
     relation_source_requirements,
     resolve_relation_values_from_observations,
 )
+from cadrumo.domain.calculations.registry.schema import RegistrySnapshot
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.calculations.registry.withholding_bindings import (
+    WithholdingObservation,
+    resolve_withholding_binding_values,
+)
 from cadrumo.domain.deadlines.errors import DeadlineValidationError
 from cadrumo.domain.deadlines.festivos import shift_deadline
 from dev.registry.compiler.authority import compiled_bundled_authority
@@ -242,12 +248,14 @@ def test_modelo_193_relations_resolve_against_modelo_123_registry() -> None:
     } == {("1T", "2T", "3T", "4T")}
 
 
-def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -> None:
-    authority = compiled_bundled_authority()
-    snapshot = authority.snapshot("193", filing_year=2025, period="0A")
-    snapshot_123 = authority.snapshot("123", filing_year=2025, period="1T")
+def _modelo_123_relation_values(
+    snapshot: RegistrySnapshot,
+    snapshot_123: RegistrySnapshot,
+    filing_year: int,
+) -> dict[BindingId, Decimal]:
+    """Resolve the 193 relations from synthetic quarterly modelo 123 observations."""
     source_casilla_ids = {casilla.id: casilla for casilla in snapshot_123.revision.casillas}
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
+    requirements = relation_source_requirements(snapshot.revision, filing_year=filing_year, period="0A")
     observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}
     for requirement in requirements:
         source_casilla_id = requirement.source_casilla_ids[0]
@@ -258,23 +266,30 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
     observations = tuple(
         registry_grounded_modelo_observation(
             modelo="123",
-            filing_year=2025,
+            filing_year=filing_year,
             period=period,
             casilla_values=casilla_values,
         )
         for period, casilla_values in sorted(observed_by_period.items())
     )
-    relation_values = resolve_relation_values_from_observations(
+    return resolve_relation_values_from_observations(
         snapshot.revision,
         observations,
-        filing_year=2025,
+        filing_year=filing_year,
         period="0A",
     )
+
+
+def test_modelo_193_2024_calculation_aggregates_modelo_123_quarterly_observations() -> None:
+    authority = compiled_bundled_authority()
+    snapshot = authority.snapshot("193", filing_year=2024, period="0A")
+    snapshot_123 = authority.snapshot("123", filing_year=2024, period="1T")
+    relation_values = _modelo_123_relation_values(snapshot, snapshot_123, 2024)
     binding_values = {"modelo-193-123-perceptores-anual": Decimal("2")}
     result = calculate_registry_snapshot(
         snapshot,
         inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        date_context={"filing_period": date(2025, 12, 31)},
+        date_context={"filing_period": date(2024, 12, 31)},
         binding_values=binding_values,
         relation_values=relation_values,
     )
@@ -284,6 +299,82 @@ def test_modelo_193_calculation_aggregates_modelo_123_quarterly_observations() -
     assert result.values["decl.total-perceptores"] == Decimal("2")
     assert "modelo-193-123-base-anual" in entries_by_target["decl.base-total"].operand_refs
     assert "modelo-193-123-retenciones-anual" in entries_by_target["decl.retenciones-total"].operand_refs
+
+
+def _perceptor_observation(
+    source_id: str,
+    *,
+    base: str,
+    withholding: str,
+    transaction_date: date,
+    clave: str = "A",
+    accrual_year: int | None = None,
+) -> WithholdingObservation:
+    zero = Decimal("0")
+    return WithholdingObservation(
+        source_id=source_id,
+        perceptor_tax_id="11111111H",
+        perceptor_legal_name="TITULAR SINTETICO",
+        transaction_date=transaction_date,
+        clave=RetencionClave.from_registry(clave),
+        percibido_dinerario=Decimal(base),
+        retencion_practicada=Decimal(withholding),
+        base_retenciones=Decimal(base),
+        accrual_year=accrual_year,
+        incapacity_cash_perception=zero,
+        incapacity_cash_withholding=zero,
+        incapacity_kind_value=zero,
+        incapacity_kind_ingreso_a_cuenta=zero,
+        incapacity_kind_repercutido=zero,
+        foral_retention_estatal=zero,
+        foral_retention_navarra=zero,
+        foral_retention_araba=zero,
+        foral_retention_gipuzkoa=zero,
+        foral_retention_bizkaia=zero,
+    )
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+def test_modelo_193_2025_declarant_totals_count_and_sum_the_type_2_records() -> None:
+    """Positions 136-174 count and sum the perceptor records; modelo 123 is only a cross-check."""
+    authority = compiled_bundled_authority()
+    snapshot = authority.snapshot("193", filing_year=2025, period="0A")
+    snapshot_123 = authority.snapshot("123", filing_year=2025, period="1T")
+    relation_values = _modelo_123_relation_values(snapshot, snapshot_123, 2025)
+    # One holder on three type-2 records: clave A paid twice in 2025 (one record),
+    # a 2025 settlement of a 2024 accrual, and a clave B payment.
+    observations = (
+        _perceptor_observation("a-1", base="100.00", withholding="19.00", transaction_date=date(2025, 2, 1)),
+        _perceptor_observation("a-2", base="40.00", withholding="7.60", transaction_date=date(2025, 8, 1)),
+        _perceptor_observation(
+            "settled", base="300.00", withholding="57.00", transaction_date=date(2025, 3, 10), accrual_year=2024
+        ),
+        _perceptor_observation("b-1", base="10.00", withholding="1.90", transaction_date=date(2025, 4, 1), clave="B"),
+    )
+    binding_values = resolve_withholding_binding_values(snapshot.revision, observations)
+    result = calculate_registry_snapshot(
+        snapshot,
+        inputs=resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
+        date_context={"filing_period": date(2025, 12, 31)},
+        binding_values=binding_values,
+        relation_values=relation_values,
+    )
+
+    entries_by_target = {entry.target_casilla_id: entry for entry in result.entries}
+    assert result.values["decl.total-perceptores"] == Decimal("3")
+    assert result.values["decl.base-total"] == Decimal("450.00")
+    assert result.values["decl.retenciones-total"] == Decimal("85.50")
+    assert entries_by_target["decl.base-total"].operand_refs == ("modelo-193-perceptor-rows-base-total",)
+    assert entries_by_target["decl.retenciones-total"].operand_refs == ("modelo-193-perceptor-rows-retenciones-total",)
+    # The quarterly modelo 123 relation still resolves, as evidence that enters no total.
+    evidence = {
+        binding.id: provider
+        for binding, provider in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
+    }
+    assert set(evidence) == {"modelo-193-123-base-anual", "modelo-193-123-retenciones-anual"}
+    assert {provider.dependency_role for provider in evidence.values()} == {"factual_evidence"}
+    assert set(evidence) <= set(relation_values)
+    assert relation_values["modelo-193-123-base-anual"] != result.values["decl.base-total"]
 
 
 def _value_for(data_type: str, period_index: int) -> Decimal:
