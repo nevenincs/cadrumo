@@ -18,6 +18,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
@@ -103,7 +104,7 @@ class PlanAnnualAmount(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    tax_year: int = Field(ge=2000, le=2200)
+    tax_year: FilingYear
     amount: Decimal
 
     @field_validator("amount")

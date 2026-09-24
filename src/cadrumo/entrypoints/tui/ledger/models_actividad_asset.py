@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field
 
+from ....core.filing_year import FilingYear
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import Period
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
@@ -51,7 +52,7 @@ class ActivityAssetFilingRequestV1(BaseModel):
     """Request for M100 and cumulative M130 filing projections."""
 
     model_config = STRICT_FROZEN_CONFIG
-    tax_year: int = Field(ge=2025, le=2025)
+    tax_year: FilingYear
     m130_period: Period
 
 

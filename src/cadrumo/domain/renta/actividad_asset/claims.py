@@ -7,6 +7,7 @@ from decimal import Decimal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
@@ -25,7 +26,7 @@ class AmortizationClaim(BaseModel):
     asset_id: str = Field(min_length=1, max_length=128)
     asset_revision_id: str = Field(pattern=r"^[0-9a-f]{64}$")
     asset_kind: AssetKind
-    tax_year: int = Field(ge=2025, le=2025)
+    tax_year: FilingYear
     covered_from: date
     covered_until: date
     amount: Decimal
@@ -134,7 +135,7 @@ class ClaimProjection(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     target_casilla_id: str = Field(pattern=r"^(?:\d{2}|0\d{3})$")
-    tax_year: int = Field(ge=2025, le=2025)
+    tax_year: FilingYear
     claim_ids: tuple[str, ...]
     amount: Decimal
 

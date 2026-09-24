@@ -19,6 +19,7 @@ from typing import Self
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
+from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
@@ -77,7 +78,7 @@ class ScheduleAuthority(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    tax_year: int = Field(ge=2025, le=2025)
+    tax_year: FilingYear
     asset_kind: AssetKind
     method: AmortizationMethod
     election_fingerprint: str = Field(pattern=_HEX64)
@@ -149,7 +150,7 @@ class ScheduledAmortizationCharge(BaseModel):
 
     asset_id: str = Field(min_length=1, max_length=128)
     asset_revision_id: str = Field(pattern=_HEX64)
-    tax_year: int = Field(ge=2025, le=2025)
+    tax_year: FilingYear
     covered_from: date
     covered_until: date
     service_days: int = Field(ge=0)
