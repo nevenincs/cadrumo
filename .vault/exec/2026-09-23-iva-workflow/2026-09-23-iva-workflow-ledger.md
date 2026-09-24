@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:d9d7bb828d2dfbef84b8090675d4aa9de385a24abd1ea91f5e218d2a1d244d56'
+body_hash: 'sha256:4e1f70ec304126fd70917938a8cc48fa8af4339d34df76fffc0019dc3ea5c296'
 related:
   - "[[2026-09-23-iva-workflow-plan]]"
 ---
@@ -119,6 +119,9 @@ related:
 - `S07` `M` `docs/_sequences/how-to/verification-reports/verification-reports-work-history.json`
 - `S07` `M` `docs/_sequences/seeds/iva-year-2025.seq`
 - `S07` `verify:` `python -m dev.docs.sequences check --coherence (7 pages)` -> `pass`
+- `S06` `M` `dev/acceptance/iva/installed_m303_evidence_journey.py`
+- `S06` `M` `.agents/session-briefs/handoffs/2026-09-23-iva-modelo-evidence-lease-return.md`
+- `S06` `verify:` `installed m303 evidence journey at 70fdb5c85b, wheel 883579f8, generation 02bd5859` -> `pass`
 
 ## Notes
 
@@ -127,4 +130,5 @@ related:
 - `S04` The CLI reference is generated at docs build time and has no committed output to regenerate.
 - `S05` Whether a period asks the Modelo 390 exemption is a governed fact; the overview first called it outside a pinned scope, which raises in the real TUI. The lifecycle door now resolves it under the pinned authority.
 - `S07` committed 12ede7d99d
+- `S06` fixes found by earlier attempts landed in ba73e0945f, 9ea5028fa4, 0e46b2a89a, 70fdb5c85b; notice-delivery intermittent seen 2 of 5 runs remains open
 

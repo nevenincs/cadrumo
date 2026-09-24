@@ -41,7 +41,32 @@ Inherited, pre-existing (identical at the parent commit, not introduced here): `
 
 ## Installed proof
 
-PENDING. Rehearsal run 1 on a wheel built from `976971d1be` (SHA-256 `ea2f692c…`, generation `605fc350…`) failed at the TUI mismatched-pair refusal because the operation modal dismisses itself on a terminal result; that harness defect is fixed in `b5cd51718e`. Since then the contract changed (S01–S05), so the proof must be rebuilt from a commit at or after `a5eb4dc920` and run in the next installed-run slot (plan Step S06). Quiet-host measurement on 2026-09-23: unauthenticated CLI start 1.4–2.4 s, profile creation 45.7 s, authenticated calls 4.7–18.9 s; the two IVA CLI journeys' call phases alone take 337–713 s, so they carry measured per-journey timeouts.
+PROVEN on 2026-09-24, journey 01:59:38–02:15:47, exit 0. The source was `70fdb5c85b`, built into a fresh detached worktree with its own wheel and venv and `CADRUMO_AUTHORITY_ROOT` unset. Wheel `cadrumo-0.5.1-py3-none-any.whl`, SHA-256 `883579f8…`. Authority generation `02bd5859…` (database `3d8f5697…`), and the bundled generation equals the one read. Installed `__init__` SHA-256 `930e3f61…`. Periods 4T, 12 and 1T of 2025, over four synthetic encrypted stores.
+
+- **tui-led** (4T), in the TUI:
+  - a missing answer stays on the form;
+  - cancelling sends no request;
+  - a mismatched attachment pair and an attestation from the wrong filing context are both refused as unadmissible, visibly;
+  - calculate and verify succeed;
+  - in a fresh process, the export is refused visibly because no reviewed product identity exists, not as a failure.
+- **continuation**: a changed joint election produces a distinct revision.
+- **monthly** (2025/12): a REDEME filer.
+- **first-quarter** (1T): the joint-return question only, and the CLI refuses attestation flags.
+
+The receipt declares what it leaves unexercised:
+- numeric readback on Results, because the workspace admits static inspection only;
+- official export, because the EEDD header identity is unavailable;
+- multi-line invoice capture;
+- AEAT submission.
+
+Earlier attempts, and what each found:
+
+- **`3ddd8d54b7`**: the TUI export failed where the CLI refused, because the export operation carried none of the elections. Fixed in `ba73e0945f` and `9ea5028fa4`.
+- **`e9b5c65c33`**: the monthly store called a profile `set` command that does not exist. Fixed in `0e46b2a89a`, and now guarded by the harness argv gate `c40315b8d7`.
+- **`0e46b2a89a`**: the mismatched-pair calculation was refused in the journal within a second, but no workspace notice appeared for 300 s. It was not reproduced at `70fdb5c85b`, which adds the timeout diagnostic.
+  - With rehearsal run 1, this symptom has appeared in two of five installed runs. It is open as a notice-delivery investigation, not as a closed harness race.
+
+Quiet-host measurement on 2026-09-23: unauthenticated CLI start 1.4–2.4 s, profile creation 45.7 s, authenticated calls 4.7–18.9 s. The call phases of the two IVA CLI journeys alone take 337–713 s, so they carry measured per-journey timeouts.
 
 ## Returned surfaces
 
