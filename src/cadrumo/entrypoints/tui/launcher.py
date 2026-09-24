@@ -805,6 +805,13 @@ def _ledger_generation_factory(
 
         profile_id = dependencies.account.profile_id
 
+        def taxpayer_workforce() -> tuple[PlantillaMediaYear, ...]:
+            from ...domain.user_profile.plantilla_media import plantilla_media_years
+            from ..adapter_composition import build_profile_read_ports
+
+            values = build_profile_read_ports(bucket_id=profile_id).path_values.load_path_values(bucket_id=profile_id)
+            return () if values is None else plantilla_media_years(values)
+
         def forecast_asset(
             revision: ActivityAssetRevision,
             *,
@@ -820,6 +827,7 @@ def _ledger_generation_factory(
                 covered_from=covered_from,
                 covered_until=covered_until,
                 history=history,
+                taxpayer_workforce=taxpayer_workforce,
                 requested_free_amount=requested_free_amount,
             )
 

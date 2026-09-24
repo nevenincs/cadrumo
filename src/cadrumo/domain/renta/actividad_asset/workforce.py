@@ -32,19 +32,21 @@ _TWO_PLACES = Decimal("0.01")
 
 
 class WorkforceIncrease(BaseModel):
-    """The LIS art. 102 increase and the years still carrying a commitment."""
+    """The LIS art. 102 increase, the declared years it rests on and those still committed."""
 
     model_config = STRICT_FROZEN_CONFIG
 
     increase: Decimal
+    years: tuple[PlantillaMediaYear, ...]
     committed_years: tuple[int, ...]
 
 
 class WorkforceMaintenance(BaseModel):
-    """A met LIS DA 17a condition and the years still carrying a commitment."""
+    """A met LIS DA 17a condition, the declared years it rests on and those still committed."""
 
     model_config = STRICT_FROZEN_CONFIG
 
+    years: tuple[PlantillaMediaYear, ...]
     committed_years: tuple[int, ...]
 
 
@@ -86,7 +88,8 @@ def job_creation_increase(years: tuple[PlantillaMediaYear, ...], *, entry_year: 
         raise ActividadAssetUnsupportedError(
             "the workforce increase is not kept for the further 24 months LIS art. 102.1 requires",
         )
-    return WorkforceIncrease(increase=increase, committed_years=_committed((before, *following, *maintained)))
+    used = (before, *following, *maintained)
+    return WorkforceIncrease(increase=increase, years=used, committed_years=_committed(used))
 
 
 def renewable_workforce_maintained(
@@ -102,7 +105,8 @@ def renewable_workforce_maintained(
             "the average workforce of the 24 months after the entry year's start falls below that of the "
             "12 months before (LIS DA 17a.1)",
         )
-    return WorkforceMaintenance(committed_years=_committed((before, *following)))
+    used = (before, *following)
+    return WorkforceMaintenance(years=used, committed_years=_committed(used))
 
 
 __all__ = [

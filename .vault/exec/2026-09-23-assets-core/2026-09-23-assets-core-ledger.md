@@ -5,7 +5,7 @@ tags:
 date: '2026-09-23'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:1ef17c42692480a8232e2d6f1eb691317096b3ee85c8b2a8b39f96662bf98dd4'
+body_hash: 'sha256:73028ecf877512603b08698add29da48b53d198d1f79f35cafc393059becdd5b'
 related:
   - "[[2026-09-23-assets-core-plan]]"
 ---
@@ -109,6 +109,20 @@ related:
 - `S13` `M` `src/cadrumo/locales/en/flows.yml`
 - `S13` `verify:` `locale audit missing=0` -> `pass`
 - `S13` `by:` `assets-core`
+- `S11` `M` `src/cadrumo/domain/renta/actividad_asset/election.py`
+- `S11` `M` `src/cadrumo/domain/renta/actividad_asset/schedule.py`
+- `S11` `M` `src/cadrumo/domain/renta/actividad_asset/claims.py`
+- `S11` `M` `src/cadrumo/domain/renta/actividad_asset/workforce.py`
+- `S11` `M` `src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py`
+- `S11` `M` `src/cadrumo/application/actividad_asset/ports.py`
+- `S11` `M` `src/cadrumo/application/calculations/actividad_asset_schedule.py`
+- `S11` `M` `src/cadrumo/entrypoints/cli/_actividad_asset_cli.py`
+- `S11` `M` `src/cadrumo/entrypoints/tui/launcher.py`
+- `S11` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/parameters/0001-declarations.toml`
+- `S11` `M` `dev/registry/tests/test_activity_asset_schedule_authority_resolution.py`
+- `S11` `M` `dev/registry/tests/test_modelo_100_activity_asset_amortization_parameters.py`
+- `S11` `M` `dev/registry/tests/test_modelo_100_drift_detection.py`
+- `S11` `verify:` `pytest dev/registry/tests 5055 passed, 11 failed outside the activity-asset surface; orphan-parameter gate fixed in this Step` -> `fail`
 
 ## Notes
 
@@ -116,3 +130,7 @@ related:
 - `S07` the superseding-claim fixes f92721ce93 and 2f97378e51 postdate wheel 16d5e13e; installed run 3 at 2f97378e51 is queued for the machine-wide installed-run slot
 - `S12` installed run 5 at 150f306c8b proves the tree before S10; the final installed proof of HEAD remains open
 - `S11` resolver wiring waits for the profile schema version 7 field irpf.plantilla_media
+- `S11` An asset whose investment would take its incentive past the LIS 102.1 or DA 17a.1 cap, and a building-code-mandated installation (DA 17a.5), are refused whole rather than split or proportioned.
+- `S11` The RDL 16/2025 art. 17.Uno amending instrument is cited through the Renta 2025 manual; acquiring it as its own legal entry is a follow-up.
+- `S11` Remaining dev/registry reds are other lanes': render_check 390/296 provenance, modelo 190/193 deadline raises, filing capability worklist, two-channel export proof, pinned conformance vector (200), legal heading-only ceiling 37 over 34 (dias-inhabiles resolutions), modelo 345 grounding.
+

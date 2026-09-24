@@ -16,6 +16,7 @@ from ...domain.renta.actividad_asset.election import DirectEstimationRegime
 from ...domain.renta.actividad_asset.errors import ActividadAssetValidationError
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.renta.actividad_asset.schedule import AssetScheduleHistory, ScheduledAmortizationCharge
+from ...domain.user_profile.plantilla_media import PlantillaMediaYear, plantilla_media_years
 from ._actividad_asset_payloads import (
     ActivityAssetFilingHandoffPayload,
     ActivityAssetForecastPayload,
@@ -92,6 +93,11 @@ def _runtime_cli(ctx: typer.Context) -> ActivityAssetCli:
     bucket_id = active_bucket_id_or_refuse()
     authority = authority_operation(ctx)
     ports = calculation_action_ports_factory(ctx)(bucket_id=bucket_id, operation=authority)
+    profile_values = profile_read_ports_factory(ctx)(bucket_id).path_values
+
+    def _taxpayer_workforce() -> tuple[PlantillaMediaYear, ...]:
+        values = profile_values.load_path_values(bucket_id=bucket_id)
+        return () if values is None else plantilla_media_years(values)
 
     def _forecast(
         revision: ActivityAssetRevision,
@@ -108,10 +114,9 @@ def _runtime_cli(ctx: typer.Context) -> ActivityAssetCli:
             covered_from=covered_from,
             covered_until=covered_until,
             history=history,
+            taxpayer_workforce=_taxpayer_workforce,
             requested_free_amount=requested_free_amount,
         )
-
-    profile_values = profile_read_ports_factory(ctx)(bucket_id).path_values
 
     def _taxpayer_modality() -> DirectEstimationRegime:
         values = profile_values.load_path_values(bucket_id=bucket_id)

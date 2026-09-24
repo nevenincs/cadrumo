@@ -34,10 +34,9 @@ class DirectEstimationRegime(StrEnum):
 class AmortizationMethod(StrEnum):
     """Every depreciation method or incentive an asset can elect.
 
-    Justified amount, small-enterprise employment, renewable self-consumption
-    and entity-regime free depreciation are statutory methods the product
-    refuses with a cited reason; they are typed so the refusal is explicit
-    rather than an unknown token.
+    Justified amount and entity-regime free depreciation are statutory methods
+    the product refuses with a cited reason; they are typed so the refusal is
+    explicit rather than an unknown token.
     """
 
     LINEAR = "linear"
@@ -64,9 +63,19 @@ FREE_AMOUNT_METHODS: frozenset[AmortizationMethod] = frozenset(
         AmortizationMethod.RESEARCH_DEVELOPMENT_FREE,
         AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE,
         AmortizationMethod.ELECTRIC_VEHICLE_FREE,
+        AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
+        AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE,
     },
 )
 """Methods whose per-period amount is the taxpayer's bounded choice."""
+
+WORKFORCE_CONDITIONED_METHODS: frozenset[AmortizationMethod] = frozenset(
+    {
+        AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
+        AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE,
+    },
+)
+"""Incentives conditioned on the taxpayer's average workforce (LIS art. 102.1, DA 17a.1)."""
 
 
 class AcquiredCondition(StrEnum):
@@ -193,6 +202,74 @@ class ChargingInfrastructureEvidence(BaseModel):
     installation_certificate_reference: str = Field(min_length=1, max_length=512)
 
 
+class RenewableInstallationPurpose(StrEnum):
+    """The two installation families LIS DA 17a.1 admits."""
+
+    ELECTRICITY_SELF_CONSUMPTION = "electricity_self_consumption"
+    THERMAL_OWN_USE = "thermal_own_use"
+
+
+class RenewableDocumentationKind(StrEnum):
+    """The documents LIS DA 17a.6 accepts as proof of renewable energy use."""
+
+    OPERATING_AUTHORISATION = "operating_authorisation"
+    """Letter a): the Autorizacion de Explotacion of a generating installation."""
+
+    SURPLUS_REGISTRATION = "surplus_registration"
+    """Letter a): the RAIPREE inscription of an installation with surpluses."""
+
+    LOW_VOLTAGE_CERTIFICATE = "low_voltage_certificate"
+    """Letter a): the Certificado de Instalaciones Electricas below 100 kW."""
+
+    RENEWABLE_GAS_REGISTRATION = "renewable_gas_registration"
+    """Letter b): the inscription of a renewable-gas production installation."""
+
+    THERMAL_PROCESS_REGISTRATION = "thermal_process_registration"
+    """Letter c): the regional inscription or report of industrial or process heat and cold."""
+
+    ENERGY_EFFICIENCY_CERTIFICATE = "energy_efficiency_certificate"
+    """Letter d): the after-works energy-efficiency certificate of climate or hot-water systems."""
+
+
+_ELECTRICITY_DOCUMENTS = frozenset(
+    {
+        RenewableDocumentationKind.OPERATING_AUTHORISATION,
+        RenewableDocumentationKind.SURPLUS_REGISTRATION,
+        RenewableDocumentationKind.LOW_VOLTAGE_CERTIFICATE,
+    },
+)
+
+
+class RenewableSelfConsumptionEvidence(BaseModel):
+    """The installation facts and document LIS DA 17a requires.
+
+    Electricity documents prove an electricity installation and the other
+    letters a thermal one.  A thermal installation must replace one using
+    fossil energy (DA 17a.1).  An installation the Codigo Tecnico de la
+    Edificacion makes mandatory qualifies only for the cost share above the
+    mandatory power (DA 17a.5); declaring it is how that share is refused
+    rather than silently charged at full cost.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    purpose: RenewableInstallationPurpose
+    documentation_kind: RenewableDocumentationKind
+    documentation_reference: str = Field(min_length=1, max_length=512)
+    made_available_on: date
+    replaces_fossil_installation: bool
+    required_by_building_code: bool
+
+    @model_validator(mode="after")
+    def _validate_documentation(self) -> Self:
+        electricity = self.purpose is RenewableInstallationPurpose.ELECTRICITY_SELF_CONSUMPTION
+        if electricity != (self.documentation_kind in _ELECTRICITY_DOCUMENTS):
+            raise ValueError(
+                f"{self.documentation_kind.value} does not evidence a {self.purpose.value} installation (LIS DA 17a.6)",
+            )
+        return self
+
+
 class ActivityAssetAmortizationElection(BaseModel):
     """Regime, table class, method and the facts the chosen method requires.
 
@@ -215,6 +292,7 @@ class ActivityAssetAmortizationElection(BaseModel):
     low_value: LowValueElection | None = None
     research_development_evidence_reference: str | None = Field(default=None, min_length=1, max_length=512)
     charging_infrastructure: ChargingInfrastructureEvidence | None = None
+    renewable_self_consumption: RenewableSelfConsumptionEvidence | None = None
 
     @field_validator("linear_coefficient")
     @classmethod
@@ -246,6 +324,7 @@ class ActivityAssetAmortizationElection(BaseModel):
                 AmortizationMethod.LINEAR,
                 AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE,
                 AmortizationMethod.GOODWILL,
+                AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
             },
         )
         self._admit(
@@ -266,6 +345,11 @@ class ActivityAssetAmortizationElection(BaseModel):
             "charging_infrastructure",
             self.charging_infrastructure,
             {AmortizationMethod.CHARGING_INFRASTRUCTURE_FREE},
+        )
+        self._admit(
+            "renewable_self_consumption",
+            self.renewable_self_consumption,
+            {AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE},
         )
         required: dict[AmortizationMethod, tuple[tuple[str, object], ...]] = {
             AmortizationMethod.LINEAR: (("authority_class_key", self.authority_class_key),),
@@ -289,6 +373,14 @@ class ActivityAssetAmortizationElection(BaseModel):
                 ("charging_infrastructure", self.charging_infrastructure),
             ),
             AmortizationMethod.ELECTRIC_VEHICLE_FREE: (("authority_class_key", self.authority_class_key),),
+            AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE: (
+                ("authority_class_key", self.authority_class_key),
+                ("small_enterprise", self.small_enterprise),
+            ),
+            AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE: (
+                ("authority_class_key", self.authority_class_key),
+                ("renewable_self_consumption", self.renewable_self_consumption),
+            ),
         }
         for field_name, value in required.get(method, ()):
             if value is None:
@@ -309,6 +401,7 @@ class ActivityAssetAmortizationElection(BaseModel):
 
 __all__ = [
     "FREE_AMOUNT_METHODS",
+    "WORKFORCE_CONDITIONED_METHODS",
     "AcquiredCondition",
     "ActivityAssetAmortizationElection",
     "AmortizationMethod",
@@ -320,5 +413,8 @@ __all__ = [
     "LowValueElection",
     "PlanAnnualAmount",
     "PlanApprovalKind",
+    "RenewableDocumentationKind",
+    "RenewableInstallationPurpose",
+    "RenewableSelfConsumptionEvidence",
     "SmallEnterpriseEvidence",
 ]

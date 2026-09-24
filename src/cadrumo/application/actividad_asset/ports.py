@@ -7,6 +7,7 @@ from typing import Protocol
 from ...domain.renta.actividad_asset.claims import AmortizationClaim
 from ...domain.renta.actividad_asset.election import DirectEstimationRegime
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
+from ...domain.user_profile.plantilla_media import PlantillaMediaYear
 from .history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 
 
@@ -34,4 +35,12 @@ class TaxpayerModalityReader(Protocol):
         ...
 
 
-__all__ = ["ActivityAssetHistoryRepository", "TaxpayerModalityReader"]
+class TaxpayerWorkforceReader(Protocol):
+    """Read the taxpayer profile's declared average workforce per calendar year."""
+
+    def __call__(self) -> tuple[PlantillaMediaYear, ...]:
+        """Return the validated years in year order, empty when none is declared."""
+        ...
+
+
+__all__ = ["ActivityAssetHistoryRepository", "TaxpayerModalityReader", "TaxpayerWorkforceReader"]

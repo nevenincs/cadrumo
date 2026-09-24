@@ -23,6 +23,7 @@ import pytest
 
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.directory_scan import scan_directory
+from cadrumo.domain.calculations.registry.actividad_asset_bindings import ACTIVITY_ASSET_PARAMETER_IDS
 from cadrumo.domain.calculations.registry.runtime_graph import (
     expression_binding_refs,
     expression_parameter_refs,
@@ -144,11 +145,13 @@ def test_no_orphan_parameters_in_any_revision() -> None:
     """Every parameter declared in a revision must be referenced.
 
     A parameter counts as referenced when it is consumed either by a
-    formula expression tree (``{ parameter = "..." }`` arg) or by an
+    formula expression tree (``{ parameter = "..." }`` arg), by an
     in-tree ``read_parameter("100", revision, parameter_id, ...)`` call
-    in ``cadrumo.domain.*`` Python source. The latter is the
-    out-of-formula consumption pattern used by the rental tier resolver
-    and any future cross-module readers.
+    in ``cadrumo.domain.*`` Python source, or by the activity-asset
+    resolver's declared read set. The latter two are the out-of-formula
+    consumption patterns: the rental tier resolver and cross-module
+    readers call ``read_parameter``, and the activity-asset resolver
+    refuses to read any id outside :data:`ACTIVITY_ASSET_PARAMETER_IDS`.
 
     A small allow-list (:data:`_PRE_STAGED_PARAMETERS`) covers
     parameters whose data is authoritative on disk (IRPF state-scale
@@ -165,6 +168,7 @@ def test_no_orphan_parameters_in_any_revision() -> None:
         for formula in revision.formulas:
             referenced.update(expression_parameter_refs(formula.expression))
         referenced |= cross_module_refs
+        referenced |= ACTIVITY_ASSET_PARAMETER_IDS
         referenced |= projected_parameter_ids("100")
         referenced |= _PRE_STAGED_PARAMETERS
         orphans = declared - referenced

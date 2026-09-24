@@ -16,11 +16,14 @@ from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
 
+from ....core.money.rounding import round_to_cents
 from ...renta.actividad_asset.election import (
     AcquiredCondition,
     ActivityAssetAmortizationElection,
     AmortizationMethod,
     DirectEstimationRegime,
+    RenewableInstallationPurpose,
+    SmallEnterpriseEvidence,
 )
 from ...renta.actividad_asset.errors import (
     ActividadAssetIncompleteError,
@@ -31,21 +34,23 @@ from ...renta.actividad_asset.errors import (
 from ...renta.actividad_asset.lifecycle import ActivityAssetRevision, AssetKind
 from ...renta.actividad_asset.schedule import ScheduleAuthority, add_fractional_years, add_years
 from ...renta.actividad_asset.vehicle_affectation import require_vehicle_affected
+from ...renta.actividad_asset.workforce import job_creation_increase, renewable_workforce_maintained
+from ...user_profile.plantilla_media import PlantillaMediaYear
 from .formula_runtime_ops import resolve_dated_value, resolve_keyed_bracket
 from .schema import ModeloRevision
-from .schema_base import ThresholdComparison
+from .schema_base import DateAxis, ThresholdComparison
 from .schema_formula import ParameterDefinition
 
 _PREFIX = "renta-actividad-inmovilizado-amortizacion"
-_COEFFICIENT_IDS = {
+_COEFFICIENT_IDS: dict[DirectEstimationRegime, str] = {
     DirectEstimationRegime.NORMAL: f"{_PREFIX}-normal-coeficiente-lineal-maximo",
     DirectEstimationRegime.SIMPLIFIED: f"{_PREFIX}-simplificada-coeficiente-lineal-maximo",
 }
-_PERIOD_IDS = {
+_PERIOD_IDS: dict[DirectEstimationRegime, str] = {
     DirectEstimationRegime.NORMAL: f"{_PREFIX}-normal-periodo-maximo-anos",
     DirectEstimationRegime.SIMPLIFIED: f"{_PREFIX}-simplificada-periodo-maximo-anos",
 }
-_METHOD_ADMISSION_IDS = {
+_METHOD_ADMISSION_IDS: dict[DirectEstimationRegime, str] = {
     DirectEstimationRegime.NORMAL: f"{_PREFIX}-normal-metodo-admitido",
     DirectEstimationRegime.SIMPLIFIED: f"{_PREFIX}-simplificada-metodo-admitido",
 }
@@ -69,23 +74,63 @@ _CHARGING_LAST_YEAR_ID = f"{_PREFIX}-infraestructura-recarga-ultimo-ejercicio"
 _ELECTRIC_VEHICLE_FIRST_YEAR_ID = f"{_PREFIX}-vehiculo-electrico-primer-ejercicio"
 _ELECTRIC_VEHICLE_LAST_YEAR_ID = f"{_PREFIX}-vehiculo-electrico-ultimo-ejercicio"
 _RESTRICTED_VEHICLE_CLASS_ID = f"{_PREFIX}-clase-vehiculo-restringido"
+_EMPLOYMENT_INVESTMENT_PER_UNIT_ID = f"{_PREFIX}-erd-empleo-inversion-por-unidad-plantilla"
+_RENEWABLE_INVESTMENT_CAP_ID = f"{_PREFIX}-renovables-inversion-maxima"
+_RENEWABLE_FIRST_YEAR_ID = f"{_PREFIX}-renovables-primer-ejercicio"
+_RENEWABLE_LAST_YEAR_ID = f"{_PREFIX}-renovables-ultimo-ejercicio"
+_RENEWABLE_AVAILABILITY_ID = f"{_PREFIX}-renovables-puesta-a-disposicion-admitida"
 _INDEFINITE_LIFE_RATE_ID = "renta-actividad-inmovilizado-intangible-vida-util-no-estimable-limite-anual"
 _GOODWILL_RATE_ID = "renta-actividad-fondo-comercio-amortizacion-limite-anual"
 _LOW_VALUE_THRESHOLD_ID = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-umbral-unitario"
 _LOW_VALUE_ANNUAL_CAP_ID = "renta-actividad-inmovilizado-material-nuevo-libertad-amortizacion-limite-anual"
 
+ACTIVITY_ASSET_PARAMETER_IDS: frozenset[str] = frozenset(
+    {
+        *_COEFFICIENT_IDS.values(),
+        *_PERIOD_IDS.values(),
+        *_METHOD_ADMISSION_IDS.values(),
+        _BUILDING_CLASS_ID,
+        _MATERIAL_CLASS_ID,
+        _INTANGIBLE_CLASS_ID,
+        _FURNITURE_CLASS_ID,
+        _WEIGHTING_ID,
+        _MEDIUM_PERIOD_ID,
+        _LONG_PERIOD_ID,
+        _MINIMUM_PERCENTAGE_ID,
+        _USED_MULTIPLIER_ID,
+        _USED_BUILDING_AGE_ID,
+        _SHIFT_HOURS_ID,
+        _ERD_TURNOVER_ID,
+        _ERD_MULTIPLIER_ID,
+        _ERD_INDEFINITE_MULTIPLIER_ID,
+        _RND_BUILDING_PERIOD_ID,
+        _CHARGING_FIRST_YEAR_ID,
+        _CHARGING_LAST_YEAR_ID,
+        _ELECTRIC_VEHICLE_FIRST_YEAR_ID,
+        _ELECTRIC_VEHICLE_LAST_YEAR_ID,
+        _RESTRICTED_VEHICLE_CLASS_ID,
+        _EMPLOYMENT_INVESTMENT_PER_UNIT_ID,
+        _RENEWABLE_INVESTMENT_CAP_ID,
+        _RENEWABLE_FIRST_YEAR_ID,
+        _RENEWABLE_LAST_YEAR_ID,
+        _RENEWABLE_AVAILABILITY_ID,
+        _INDEFINITE_LIFE_RATE_ID,
+        _GOODWILL_RATE_ID,
+        _LOW_VALUE_THRESHOLD_ID,
+        _LOW_VALUE_ANNUAL_CAP_ID,
+    },
+)
+"""Every Modelo 100 parameter this resolver may read, and the only ones it can.
+
+The resolver reads parameters outside any formula, so this set is how the
+registry's orphan check knows they are consumed; reading an id outside it
+refuses, so the set cannot fall behind the code.
+"""
+
 _REFUSED_METHODS: dict[AmortizationMethod, str] = {
     AmortizationMethod.JUSTIFIED_AMOUNT: (
         "LIS art. 12.1.e admits an amount the taxpayer justifies, but no registry authority can validate that "
         "justification, and an unvalidated caller amount cannot become a filing-grade charge"
-    ),
-    AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE: (
-        "LIS art. 102 depends on the average workforce over the following 48 months, and no canonical "
-        "average-workforce fact exists"
-    ),
-    AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE: (
-        "LIS DA 17a depends on maintaining the average workforce for 24 months, and no canonical "
-        "average-workforce fact exists"
     ),
     AmortizationMethod.ENTITY_REGIME_FREE: (
         "LIS art. 12.3.a and 12.3.d apply to sociedades laborales and explotaciones asociativas prioritarias, "
@@ -117,6 +162,10 @@ class _Parameters:
     tax_year: int
 
     def require(self, parameter_id: str) -> ParameterDefinition:
+        if parameter_id not in ACTIVITY_ASSET_PARAMETER_IDS:
+            raise ActividadAssetValidationError(
+                f"activity-asset parameter {parameter_id!r} is not in the resolver's declared read set",
+            )
         parameter = self.by_id.get(parameter_id)
         if parameter is None:
             raise ActividadAssetUnsupportedError(
@@ -145,6 +194,18 @@ class _Parameters:
     def value(self, parameter_id: str) -> Decimal:
         return self.scalar(parameter_id)[0]
 
+    def on_date(self, parameter_id: str, axis: DateAxis, on: date) -> Decimal:
+        """Resolve a value keyed to an event date rather than to the filing period."""
+        try:
+            resolved = resolve_dated_value(self.require(parameter_id), {axis.value: on})
+        except ActividadAssetUnsupportedError:
+            raise
+        except Exception as exc:
+            raise ActividadAssetUnsupportedError(
+                f"activity-asset authority parameter {parameter_id!r} is not resolvable for {axis.value} {on}",
+            ) from exc
+        return resolved.value
+
     def reference(self, parameter_id: str, key: str | None = None) -> str:
         suffix = f":key:{key}" if key is not None else ""
         return f"modelo-100:{self.revision_id}:parameter:{parameter_id}{suffix}"
@@ -162,8 +223,14 @@ def resolve_activity_asset_schedule_authority(
     tax_year: int,
     asset_revision: ActivityAssetRevision,
     authority_generation: str,
+    workforce: tuple[PlantillaMediaYear, ...],
 ) -> ScheduleAuthority:
-    """Validate one revision's election and resolve its tax-year authority."""
+    """Validate one revision's election and resolve its tax-year authority.
+
+    ``workforce`` is the taxpayer profile's declared average workforce per
+    calendar year; only the workforce-conditioned incentives read it, and an
+    undeclared year they need refuses rather than counting as zero.
+    """
     if modelo_revision.id != str(tax_year):
         raise ActividadAssetUnsupportedError(
             f"Modelo 100 revision {modelo_revision.id} does not govern tax year {tax_year}",
@@ -179,7 +246,7 @@ def resolve_activity_asset_schedule_authority(
     )
     admission_reference = _require_method_admitted(parameters, asset_revision)
     vehicle_references = _require_vehicle_affectation(parameters, asset_revision)
-    resolution = _resolve_method(parameters, asset_revision)
+    resolution = _resolve_method(parameters, asset_revision, workforce)
     return ScheduleAuthority.model_validate(
         {
             "tax_year": tax_year,
@@ -217,7 +284,11 @@ def _require_method_admitted(parameters: _Parameters, asset_revision: ActivityAs
     return parameters.reference(parameter_id, key)
 
 
-def _resolve_method(parameters: _Parameters, asset_revision: ActivityAssetRevision) -> _Resolution:
+def _resolve_method(
+    parameters: _Parameters,
+    asset_revision: ActivityAssetRevision,
+    workforce: tuple[PlantillaMediaYear, ...],
+) -> _Resolution:
     method = asset_revision.amortization.method
     if method is AmortizationMethod.LINEAR:
         return _resolve_linear(parameters, asset_revision)
@@ -241,6 +312,10 @@ def _resolve_method(parameters: _Parameters, asset_revision: ActivityAssetRevisi
         return _resolve_charging_infrastructure(parameters, asset_revision)
     if method is AmortizationMethod.ELECTRIC_VEHICLE_FREE:
         return _resolve_electric_vehicle(parameters, asset_revision)
+    if method is AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE:
+        return _resolve_employment_free(parameters, asset_revision, workforce)
+    if method is AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE:
+        return _resolve_renewable_free(parameters, asset_revision, workforce)
     raise ActividadAssetUnsupportedError(f"{method.value} has no enrolled authority resolver")
 
 
@@ -368,6 +443,18 @@ def _small_enterprise_multiplier(
         raise ActividadAssetIncompleteError("reduced-size acceleration requires its evidence")
     if asset_revision.acquired_condition is not AcquiredCondition.NEW:
         raise ActividadAssetUnsupportedError("reduced-size acceleration applies only to new elements (LIS art. 103.1)")
+    references.extend(
+        (_require_reduced_size(parameters, asset_revision, evidence), parameters.reference(_ERD_MULTIPLIER_ID)),
+    )
+    return parameters.value(_ERD_MULTIPLIER_ID)
+
+
+def _require_reduced_size(
+    parameters: _Parameters,
+    asset_revision: ActivityAssetRevision,
+    evidence: SmallEnterpriseEvidence,
+) -> str:
+    """Refuse unless the asset was made available in a LIS art. 101 period; return the threshold reference."""
     if evidence.made_available_on > asset_revision.in_service_date:
         raise ActividadAssetValidationError("an asset cannot enter service before it is made available")
     threshold, comparison = parameters.scalar(_ERD_TURNOVER_ID)
@@ -375,8 +462,7 @@ def _small_enterprise_multiplier(
         raise ActividadAssetUnsupportedError(
             "prior-period net turnover reaches the reduced-size threshold (LIS art. 101.1)",
         )
-    references.extend((parameters.reference(_ERD_TURNOVER_ID), parameters.reference(_ERD_MULTIPLIER_ID)))
-    return parameters.value(_ERD_MULTIPLIER_ID)
+    return parameters.reference(_ERD_TURNOVER_ID)
 
 
 def _elected_coefficient(
@@ -511,17 +597,9 @@ def _resolve_twentieth_limit(parameters: _Parameters, asset_revision: ActivityAs
     references = [parameters.reference(parameter_id)]
     evidence = election.small_enterprise
     if evidence is not None:
-        if evidence.made_available_on > asset_revision.in_service_date:
-            raise ActividadAssetValidationError("an asset cannot enter service before it is made available")
-        threshold, comparison = parameters.scalar(_ERD_TURNOVER_ID)
-        if _reaches(evidence.prior_period_net_turnover, threshold, comparison):
-            raise ActividadAssetUnsupportedError(
-                "prior-period net turnover reaches the reduced-size threshold (LIS art. 101.1)",
-            )
+        references.append(_require_reduced_size(parameters, asset_revision, evidence))
         rate *= parameters.value(_ERD_INDEFINITE_MULTIPLIER_ID)
-        references.extend(
-            (parameters.reference(_ERD_TURNOVER_ID), parameters.reference(_ERD_INDEFINITE_MULTIPLIER_ID)),
-        )
+        references.append(parameters.reference(_ERD_INDEFINITE_MULTIPLIER_ID))
     return _Resolution(method_facts={"annual_rate": rate}, references=tuple(references))
 
 
@@ -643,4 +721,102 @@ def _resolve_electric_vehicle(parameters: _Parameters, asset_revision: ActivityA
     )
 
 
-__all__ = ["resolve_activity_asset_schedule_authority"]
+def _workforce_references(years: tuple[PlantillaMediaYear, ...]) -> tuple[str, ...]:
+    """Name each declared year a workforce test used, with its observed or committed state.
+
+    A committed year is a forecast the taxpayer must regularise if it is not
+    met (LIS art. 102.4, DA 17a.7), so its state travels with the charge.
+    """
+    return tuple(f"taxpayer-profile:irpf.plantilla_media:{item.year}:{item.state.value}" for item in years)
+
+
+def _resolve_employment_free(
+    parameters: _Parameters,
+    asset_revision: ActivityAssetRevision,
+    workforce: tuple[PlantillaMediaYear, ...],
+) -> _Resolution:
+    """Apply LIS art. 102.1: new elements of a reduced-size period, capped by the workforce increase.
+
+    The investment that may benefit is the enrolled amount per unit of the
+    average-workforce increase, the increase calculated with two decimals.
+    """
+    if asset_revision.acquired_condition is not AcquiredCondition.NEW:
+        raise ActividadAssetUnsupportedError(
+            "job-creating free depreciation applies only to new elements (LIS art. 102.1)"
+        )
+    evidence = asset_revision.amortization.small_enterprise
+    if evidence is None:  # defensive: election validation proves unreachable
+        raise ActividadAssetIncompleteError("job-creating free depreciation requires its reduced-size evidence")
+    turnover_reference = _require_reduced_size(parameters, asset_revision, evidence)
+    increase = job_creation_increase(workforce, entry_year=asset_revision.in_service_date.year)
+    per_unit = parameters.value(_EMPLOYMENT_INVESTMENT_PER_UNIT_ID)
+    return _Resolution(
+        method_facts={"free_depreciation_investment_cap": round_to_cents(per_unit * increase.increase)},
+        references=(
+            turnover_reference,
+            parameters.reference(_EMPLOYMENT_INVESTMENT_PER_UNIT_ID),
+            *_workforce_references(increase.years),
+        ),
+    )
+
+
+def _resolve_renewable_free(
+    parameters: _Parameters,
+    asset_revision: ActivityAssetRevision,
+    workforce: tuple[PlantillaMediaYear, ...],
+) -> _Resolution:
+    """Apply LIS DA 17a: a renewable installation charges freely only in the period it enters service.
+
+    An amount not taken in that period cannot be taken freely later, so the
+    entry year must be the tax year as well as a year the period enrols.
+    """
+    election = asset_revision.amortization
+    evidence = election.renewable_self_consumption
+    class_key = election.authority_class_key
+    if evidence is None or class_key is None:  # defensive: election validation proves unreachable
+        raise ActividadAssetIncompleteError("renewable free depreciation requires its table class and evidence")
+    if _class_flag(parameters, _BUILDING_CLASS_ID, class_key):
+        raise ActividadAssetUnsupportedError("buildings cannot use renewable free depreciation (LIS DA 17a.1)")
+    if evidence.purpose is RenewableInstallationPurpose.THERMAL_OWN_USE and not evidence.replaces_fossil_installation:
+        raise ActividadAssetUnsupportedError(
+            "a thermal installation qualifies only when it replaces one using fossil energy (LIS DA 17a.1)",
+        )
+    if evidence.required_by_building_code:
+        raise ActividadAssetUnsupportedError(
+            "an installation the Codigo Tecnico de la Edificacion makes mandatory qualifies only for the cost "
+            "share above the mandatory power (LIS DA 17a.5), and charging that share is not supported",
+        )
+    if evidence.made_available_on > asset_revision.in_service_date:
+        raise ActividadAssetValidationError("an asset cannot enter service before it is made available")
+    if parameters.on_date(_RENEWABLE_AVAILABILITY_ID, DateAxis.TRANSACTION_DATE, evidence.made_available_on) != Decimal(
+        "1",
+    ):
+        raise ActividadAssetUnsupportedError(
+            "the installation was made available before the date LIS DA 17a.1 admits installations from",
+        )
+    entry_year = asset_revision.in_service_date.year
+    first_year = parameters.value(_RENEWABLE_FIRST_YEAR_ID)
+    last_year = parameters.value(_RENEWABLE_LAST_YEAR_ID)
+    if not first_year <= Decimal(entry_year) <= last_year:
+        raise ActividadAssetUnsupportedError("the installation must enter service in a year LIS DA 17a.1 enrols")
+    if entry_year != parameters.tax_year:
+        raise ActividadAssetUnsupportedError(
+            "renewable free depreciation applies only in the tax period the installation enters service "
+            "(LIS DA 17a.1); an amount not taken then cannot be taken freely later",
+        )
+    maintenance = renewable_workforce_maintained(workforce, entry_year=entry_year)
+    return _Resolution(
+        method_facts={"free_depreciation_investment_cap": parameters.value(_RENEWABLE_INVESTMENT_CAP_ID)},
+        references=(
+            parameters.reference(_BUILDING_CLASS_ID, class_key),
+            parameters.reference(_RENEWABLE_AVAILABILITY_ID),
+            parameters.reference(_RENEWABLE_FIRST_YEAR_ID),
+            parameters.reference(_RENEWABLE_LAST_YEAR_ID),
+            parameters.reference(_RENEWABLE_INVESTMENT_CAP_ID),
+            f"renewable-documentation:{evidence.documentation_kind.value}:{evidence.documentation_reference}",
+            *_workforce_references(maintenance.years),
+        ),
+    )
+
+
+__all__ = ["ACTIVITY_ASSET_PARAMETER_IDS", "resolve_activity_asset_schedule_authority"]

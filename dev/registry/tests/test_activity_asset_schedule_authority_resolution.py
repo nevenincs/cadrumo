@@ -20,7 +20,10 @@ from cadrumo.application.actividad_asset.operations import ActivityAssetOperatio
 from cadrumo.application.calculations.actividad_asset_schedule import forecast_activity_asset_charge
 from cadrumo.application.operator_actions.models import PreconditionVerdict
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
+from cadrumo.domain.calculations.registry.actividad_asset_bindings import (
+    ACTIVITY_ASSET_PARAMETER_IDS,
+    resolve_activity_asset_schedule_authority,
+)
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.renta.actividad_asset.claims import AmortizationClaim, effective_claims
 from cadrumo.domain.renta.actividad_asset.election import (
@@ -35,6 +38,9 @@ from cadrumo.domain.renta.actividad_asset.election import (
     LowValueElection,
     PlanAnnualAmount,
     PlanApprovalKind,
+    RenewableDocumentationKind,
+    RenewableInstallationPurpose,
+    RenewableSelfConsumptionEvidence,
     SmallEnterpriseEvidence,
 )
 from cadrumo.domain.renta.actividad_asset.errors import (
@@ -61,6 +67,7 @@ from cadrumo.domain.renta.actividad_asset.vehicle_affectation import (
     VehicleListedUse,
     VehiclePrivateUse,
 )
+from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 
 from ..compiler.loader import load_modelo_directory
 
@@ -76,7 +83,11 @@ def _modelo_100() -> ModeloRevision:
     return load_modelo_directory(bundled_path("registry", "aeat", "modelos", "100")).revisions["2025"]
 
 
-def _election(method: AmortizationMethod, regime: DirectEstimationRegime = _NORMAL, **facts: object):
+def _election(
+    method: AmortizationMethod,
+    regime: DirectEstimationRegime = _NORMAL,
+    **facts: object,
+) -> ActivityAssetAmortizationElection:
     return ActivityAssetAmortizationElection.model_validate({"regime": regime, "method": method, **facts})
 
 
@@ -130,6 +141,7 @@ def _charge(
     covered_until: date = _YEAR_END,
     history: AssetScheduleHistory | None = None,
     free_amount: str | None = None,
+    workforce: tuple[PlantillaMediaYear, ...] = (),
 ) -> ScheduledAmortizationCharge:
     return forecast_activity_asset_charge(
         asset,
@@ -138,6 +150,7 @@ def _charge(
         covered_from=covered_from,
         covered_until=covered_until,
         history=history or AssetScheduleHistory(),
+        taxpayer_workforce=lambda: workforce,
         requested_free_amount=Decimal(free_amount) if free_amount is not None else None,
     )
 
@@ -155,6 +168,7 @@ def test_linear_table_resolves_each_modality_maximum_from_source() -> None:
         tax_year=2025,
         asset_revision=_asset(_linear("equipo-proceso-informacion"), basis="2000"),
         authority_generation="candidate-source",
+        workforce=(),
     )
     simplified = resolve_activity_asset_schedule_authority(
         _modelo_100(),
@@ -165,6 +179,7 @@ def test_linear_table_resolves_each_modality_maximum_from_source() -> None:
             kind=AssetKind.INTANGIBLE,
         ),
         authority_generation="candidate-source",
+        workforce=(),
     )
 
     assert normal.annual_rate == Decimal("0.25")
@@ -631,6 +646,7 @@ def test_low_value_free_resolves_published_threshold_and_cap() -> None:
             basis="300",
         ),
         authority_generation="candidate-source",
+        workforce=(),
     )
 
     assert authority.free_depreciation_unit_threshold == Decimal("300")
@@ -713,8 +729,6 @@ def test_charging_infrastructure_free_depreciation_window() -> None:
     ("method", "provision"),
     [
         (AmortizationMethod.JUSTIFIED_AMOUNT, "LIS art. 12.1.e"),
-        (AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE, "LIS art. 102"),
-        (AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE, "LIS DA 17a"),
         (AmortizationMethod.ENTITY_REGIME_FREE, "LIS art. 12.3.a and 12.3.d"),
     ],
 )
@@ -816,11 +830,315 @@ def test_electric_vehicle_free_depreciation_needs_an_affected_new_vehicle_in_the
         _charge(_asset(election, basis="30000", vehicle=shared), free_amount="100")
 
 
+# --- Workforce-conditioned free depreciation (LIS art. 102; DA 17a) -------------------------------
+
+_OBSERVED = PlantillaMediaState.OBSERVED
+_COMMITTED = PlantillaMediaState.COMMITTED
+
+
+def _workforce(*years: tuple[int, str, PlantillaMediaState]) -> tuple[PlantillaMediaYear, ...]:
+    return tuple(
+        PlantillaMediaYear(year=year, average_workforce=Decimal(average), state=state) for year, average, state in years
+    )
+
+
+# 2024 before; 2025 and 2026 after; 2027 and 2028 the further 24 months.
+_GROWING = _workforce(
+    (2024, "10.00", _OBSERVED),
+    (2025, "12.00", _OBSERVED),
+    (2026, "13.00", _COMMITTED),
+    (2027, "13.00", _COMMITTED),
+    (2028, "13.00", _COMMITTED),
+)
+
+
+def _employment() -> ActivityAssetAmortizationElection:
+    return _election(
+        AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
+        authority_class_key="maquinaria",
+        small_enterprise=_small_enterprise("5000000", made_available=date(2025, 2, 15)),
+    )
+
+
+def test_job_creating_free_depreciation_caps_the_investment_by_the_workforce_increase() -> None:
+    machine = _asset(_employment(), basis="200000", in_service=date(2025, 3, 1))
+    authority = resolve_activity_asset_schedule_authority(
+        _modelo_100(),
+        tax_year=2025,
+        asset_revision=machine,
+        authority_generation="candidate-source",
+        workforce=_GROWING,
+    )
+
+    # 24 months after 1 January 2025: (12 x 365 + 13 x 365) / 730 = 12.50 against 10.00 before, an
+    # increase of 2.50; LIS art. 102.1 lets 120,000 x 2.50 = 300,000.00 of investment benefit.
+    assert authority.free_depreciation_investment_cap == Decimal("300000.00")
+    assert "erd-empleo-inversion-por-unidad-plantilla" in authority.source_reference
+    assert "taxpayer-profile:irpf.plantilla_media:2024:observed" in authority.source_reference
+    assert "taxpayer-profile:irpf.plantilla_media:2028:committed" in authority.source_reference
+    assert _charge(machine, free_amount="150000", workforce=_GROWING).amount == Decimal("150000.00")
+    # The whole 300,000.00 fits the cap exactly; one cent more does not.
+    assert _charge(
+        _asset(_employment(), basis="300000", in_service=date(2025, 3, 1)),
+        free_amount="300000",
+        workforce=_GROWING,
+    ).amount == Decimal("300000.00")
+    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("investment cap of 300000.00")):
+        _charge(
+            _asset(_employment(), basis="300000.01", in_service=date(2025, 3, 1)),
+            free_amount="1",
+            workforce=_GROWING,
+        )
+
+
+def test_job_creating_free_depreciation_refuses_each_unmet_condition() -> None:
+    machine = _asset(_employment(), basis="200000", in_service=date(2025, 3, 1))
+
+    with pytest.raises(ActividadAssetIncompleteError, match="average workforce of 2027 is not declared"):
+        _charge(machine, free_amount="1", workforce=tuple(item for item in _GROWING if item.year != 2027))
+    with pytest.raises(ActividadAssetIncompleteError, match="average workforce of 2024 is not declared"):
+        _charge(machine, free_amount="1")
+    flat = _workforce(*((year, "10.00", _OBSERVED) for year in range(2024, 2029)))
+    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("does not exceed")):
+        _charge(machine, free_amount="1", workforce=flat)
+    lost = _workforce(
+        (2024, "10.00", _OBSERVED),
+        (2025, "12.00", _OBSERVED),
+        (2026, "13.00", _COMMITTED),
+        (2027, "11.00", _COMMITTED),
+        (2028, "11.00", _COMMITTED),
+    )
+    with pytest.raises(ActividadAssetUnsupportedError, match="not kept for the further 24 months"):
+        _charge(machine, free_amount="1", workforce=lost)
+    with pytest.raises(ActividadAssetUnsupportedError, match="new elements"):
+        _charge(
+            _asset(_employment(), basis="200000", in_service=date(2025, 3, 1), condition=AcquiredCondition.USED),
+            free_amount="1",
+            workforce=_GROWING,
+        )
+    large = _election(
+        AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
+        authority_class_key="maquinaria",
+        small_enterprise=_small_enterprise("12000000", made_available=date(2025, 2, 15)),
+    )
+    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("LIS art. 101.1")):
+        _charge(_asset(large, basis="200000", in_service=date(2025, 3, 1)), free_amount="1", workforce=_GROWING)
+    with pytest.raises(ActividadAssetUnsupportedError, match="excluded by law for intangible"):
+        _charge(
+            _asset(
+                _election(
+                    AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE,
+                    authority_class_key="equipo-proceso-informacion",
+                    small_enterprise=_small_enterprise("5000000", made_available=date(2025, 2, 15)),
+                ),
+                basis="2000",
+                kind=AssetKind.INTANGIBLE,
+                in_service=date(2025, 3, 1),
+            ),
+            free_amount="1",
+            workforce=_GROWING,
+        )
+    with pytest.raises(ValueError, match="requires small_enterprise"):
+        _election(AmortizationMethod.SMALL_ENTERPRISE_EMPLOYMENT_FREE, authority_class_key="maquinaria")
+
+
+def test_assets_entering_service_together_share_one_investment_cap() -> None:
+    operations, _ = _operations(_GROWING)
+
+    def forecast(asset_id: str) -> ScheduledAmortizationCharge:
+        return operations.forecast(
+            asset_id=asset_id,
+            covered_from=_YEAR_START,
+            covered_until=_YEAR_END,
+            requested_free_amount=Decimal("1000"),
+        )
+
+    operations.create(_asset(_employment(), basis="200000", in_service=date(2025, 3, 1), asset_id="first-machine"))
+    # A linear asset of the same year and a 2024 asset under the incentive draw on no 2025 cap.
+    operations.create(_asset(_linear("maquinaria"), basis="500000", in_service=date(2025, 3, 1), asset_id="plain"))
+    operations.create(_asset(_employment(), basis="250000", in_service=date(2024, 3, 1), asset_id="earlier-year"))
+
+    assert forecast("first-machine").amount == Decimal("1000.00")
+
+    # 200,000 + 150,000 = 350,000 of 2025 investment exceeds the 300,000.00 cap, so neither asset
+    # is charged freely: the product does not choose which part of which asset benefits.
+    operations.create(_asset(_employment(), basis="150000", in_service=date(2025, 6, 1), asset_id="second-machine"))
+    for asset_id in ("first-machine", "second-machine"):
+        with pytest.raises(ActividadAssetUnsupportedError, match="would reach 350000"):
+            forecast(asset_id)
+
+
+def _renewable_evidence(
+    purpose: RenewableInstallationPurpose = RenewableInstallationPurpose.ELECTRICITY_SELF_CONSUMPTION,
+    documentation: RenewableDocumentationKind = RenewableDocumentationKind.LOW_VOLTAGE_CERTIFICATE,
+    *,
+    made_available: date = date(2025, 1, 10),
+    replaces_fossil: bool = False,
+    building_code: bool = False,
+) -> RenewableSelfConsumptionEvidence:
+    return RenewableSelfConsumptionEvidence(
+        purpose=purpose,
+        documentation_kind=documentation,
+        documentation_reference="cie-2025-0042",
+        made_available_on=made_available,
+        replaces_fossil_installation=replaces_fossil,
+        required_by_building_code=building_code,
+    )
+
+
+def _renewable(
+    evidence: RenewableSelfConsumptionEvidence | None = None,
+    class_key: str = "instalacion-resto",
+) -> ActivityAssetAmortizationElection:
+    return _election(
+        AmortizationMethod.RENEWABLE_SELF_CONSUMPTION_FREE,
+        authority_class_key=class_key,
+        renewable_self_consumption=evidence or _renewable_evidence(),
+    )
+
+
+# 2024 before; 2025 and 2026 after; DA 17a.1 asks only that the average is kept.
+_KEPT = _workforce((2024, "10.00", _OBSERVED), (2025, "10.00", _OBSERVED), (2026, "10.00", _COMMITTED))
+
+
+def test_renewable_free_depreciation_charges_a_2025_installation_up_to_the_investment_cap() -> None:
+    panels = _asset(_renewable(), basis="40000", in_service=date(2025, 2, 1))
+    authority = resolve_activity_asset_schedule_authority(
+        _modelo_100(),
+        tax_year=2025,
+        asset_revision=panels,
+        authority_generation="candidate-source",
+        workforce=_KEPT,
+    )
+
+    assert authority.free_depreciation_investment_cap == Decimal("500000")
+    assert "renewable-documentation:low_voltage_certificate:cie-2025-0042" in authority.source_reference
+    assert "taxpayer-profile:irpf.plantilla_media:2026:committed" in authority.source_reference
+    assert _charge(panels, free_amount="40000", workforce=_KEPT).amount == Decimal("40000.00")
+    heat = _renewable(
+        _renewable_evidence(
+            RenewableInstallationPurpose.THERMAL_OWN_USE,
+            RenewableDocumentationKind.ENERGY_EFFICIENCY_CERTIFICATE,
+            replaces_fossil=True,
+        ),
+    )
+    assert _charge(
+        _asset(heat, basis="9000", in_service=date(2025, 5, 1)), free_amount="9000", workforce=_KEPT
+    ).amount == (Decimal("9000.00"))
+    # The installation made available on the day RDL 18/2022 entered into force qualifies.
+    first_day = _renewable(_renewable_evidence(made_available=date(2022, 10, 20)))
+    assert _charge(
+        _asset(first_day, basis="1000", in_service=date(2025, 2, 1)), free_amount="1000", workforce=_KEPT
+    ).amount == (Decimal("1000.00"))
+    with pytest.raises(ActividadAssetUnsupportedError, match="investment cap of 500000"):
+        _charge(_asset(_renewable(), basis="500000.01", in_service=date(2025, 2, 1)), free_amount="1", workforce=_KEPT)
+
+
+def test_renewable_free_depreciation_refuses_each_unmet_condition() -> None:
+    def refused(
+        election: ActivityAssetAmortizationElection,
+        pattern: str,
+        *,
+        in_service: date = date(2025, 2, 1),
+    ) -> None:
+        with pytest.raises(ActividadAssetUnsupportedError, match=pattern):
+            _charge(_asset(election, basis="40000", in_service=in_service), free_amount="1", workforce=_KEPT)
+
+    refused(_renewable(class_key="edificio-industrial"), "buildings cannot")
+    refused(
+        _renewable(
+            _renewable_evidence(
+                RenewableInstallationPurpose.THERMAL_OWN_USE,
+                RenewableDocumentationKind.THERMAL_PROCESS_REGISTRATION,
+            ),
+        ),
+        "fossil energy",
+    )
+    refused(_renewable(_renewable_evidence(building_code=True)), re.escape("DA 17a.5"))
+    refused(_renewable(_renewable_evidence(made_available=date(2022, 10, 19))), "made available before")
+    refused(_renewable(_renewable_evidence(made_available=date(2024, 1, 10))), "enrols", in_service=date(2024, 6, 1))
+    shrinking = _workforce((2024, "10.00", _OBSERVED), (2025, "9.00", _OBSERVED), (2026, "9.50", _COMMITTED))
+    with pytest.raises(ActividadAssetUnsupportedError, match=re.escape("LIS DA 17a.1")):
+        _charge(_asset(_renewable(), basis="40000", in_service=date(2025, 2, 1)), free_amount="1", workforce=shrinking)
+    with pytest.raises(ActividadAssetUnsupportedError, match="excluded by law for intangible"):
+        _charge(
+            _asset(
+                _renewable(class_key="equipo-proceso-informacion"),
+                basis="2000",
+                kind=AssetKind.INTANGIBLE,
+                in_service=date(2025, 2, 1),
+            ),
+            free_amount="1",
+            workforce=_KEPT,
+        )
+    with pytest.raises(ValueError, match=re.escape("DA 17a.6")):
+        _renewable_evidence(documentation=RenewableDocumentationKind.ENERGY_EFFICIENCY_CERTIFICATE)
+
+
+def test_renewable_free_depreciation_is_taken_only_in_the_entry_year() -> None:
+    """A window reaching an earlier entry year still refuses a later period's free charge."""
+    revision = _modelo_100()
+    widened = revision.model_copy(
+        update={
+            "parameters": tuple(
+                parameter.model_copy(
+                    update={
+                        "values": tuple(
+                            value.model_copy(update={"value": Decimal("2024")}) for value in parameter.values
+                        )
+                    },
+                )
+                if parameter.id == "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio"
+                else parameter
+                for parameter in revision.parameters
+            ),
+        },
+    )
+    installed_2024 = _asset(
+        _renewable(_renewable_evidence(made_available=date(2024, 1, 10))),
+        basis="40000",
+        in_service=date(2024, 6, 1),
+    )
+
+    with pytest.raises(ActividadAssetUnsupportedError, match="only in the tax period the installation enters service"):
+        resolve_activity_asset_schedule_authority(
+            widened,
+            tax_year=2025,
+            asset_revision=installed_2024,
+            authority_generation="candidate-source",
+            workforce=_workforce((2023, "10.00", _OBSERVED), (2024, "10.00", _OBSERVED), (2025, "10.00", _OBSERVED)),
+        )
+
+
+def test_methods_the_workforce_does_not_condition_never_read_it() -> None:
+    def unreadable() -> tuple[PlantillaMediaYear, ...]:
+        raise AssertionError("the average workforce was read for a method it does not condition")
+
+    charge = forecast_activity_asset_charge(
+        _asset(_linear("maquinaria"), basis="10000"),
+        modelo_100_revision=_modelo_100(),
+        authority_generation="candidate-source",
+        covered_from=_YEAR_START,
+        covered_until=_YEAR_END,
+        history=AssetScheduleHistory(),
+        taxpayer_workforce=unreadable,
+    )
+
+    assert charge.amount == Decimal("1200.00")  # machinery 12% of 10,000
+
+
 def test_unknown_class_and_kind_mismatch_fail_closed() -> None:
     with pytest.raises(ActividadAssetUnsupportedError, match="no enrolled group classification"):
         _charge(_asset(_linear("caller-invented-class"), basis="1000"))
     with pytest.raises(ActividadAssetUnsupportedError, match="does not classify intangible assets"):
         _charge(_asset(_linear("mobiliario"), basis="1000", kind=AssetKind.INTANGIBLE))
+
+
+def test_the_declared_read_set_names_only_parameters_the_revision_declares() -> None:
+    """The orphan check trusts this set, so a stale id in it would hide nothing but mislead."""
+    declared = {parameter.id for parameter in _modelo_100().parameters}
+
+    assert declared >= ACTIVITY_ASSET_PARAMETER_IDS, sorted(ACTIVITY_ASSET_PARAMETER_IDS - declared)
 
 
 def test_an_absent_admission_parameter_fails_closed() -> None:
@@ -841,6 +1159,7 @@ def test_an_absent_admission_parameter_fails_closed() -> None:
             tax_year=2025,
             asset_revision=_asset(_linear("mobiliario"), basis="1000"),
             authority_generation="candidate-source",
+            workforce=(),
         )
 
 
@@ -864,7 +1183,9 @@ class _MemoryHistoryRepository:
         return recorded
 
 
-def _operations() -> tuple[ActivityAssetOperations, _MemoryHistoryRepository]:
+def _operations(
+    workforce: tuple[PlantillaMediaYear, ...] = (),
+) -> tuple[ActivityAssetOperations, _MemoryHistoryRepository]:
     def forecast(
         revision: ActivityAssetRevision,
         *,
@@ -880,6 +1201,7 @@ def _operations() -> tuple[ActivityAssetOperations, _MemoryHistoryRepository]:
             covered_from=covered_from,
             covered_until=covered_until,
             history=history,
+            taxpayer_workforce=lambda: workforce,
             requested_free_amount=requested_free_amount,
         )
 

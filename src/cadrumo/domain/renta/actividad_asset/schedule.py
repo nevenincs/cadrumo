@@ -23,7 +23,13 @@ from ....core.filing_year import FilingYear
 from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
-from .election import FREE_AMOUNT_METHODS, AmortizationMethod, DigitOrder, LowValueElection
+from .election import (
+    FREE_AMOUNT_METHODS,
+    WORKFORCE_CONDITIONED_METHODS,
+    AmortizationMethod,
+    DigitOrder,
+    LowValueElection,
+)
 from .errors import ActividadAssetIncompleteError, ActividadAssetUnsupportedError, ActividadAssetValidationError
 from .lifecycle import ActivityAssetRevision, AssetKind, OpeningHistoryStatus
 
@@ -51,6 +57,9 @@ class AssetScheduleHistory(BaseModel):
     Amounts are effective (non-superseded) claims.  Election fingerprints name
     the elections of the revisions those claims were recorded under, so a
     change of method can be judged without the schedule reading storage.
+    ``same_incentive_investment_of_other_assets`` is the investment every
+    other asset's current revision places under the same workforce-conditioned
+    incentive and entry year, which shares one investment cap with this asset.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -58,6 +67,7 @@ class AssetScheduleHistory(BaseModel):
     accumulated_before_tax_year: Decimal = Decimal("0")
     accumulated_in_tax_year: Decimal = Decimal("0")
     taxpayer_low_value_claimed_in_tax_year: Decimal = Decimal("0")
+    same_incentive_investment_of_other_assets: Decimal = Decimal("0")
     election_fingerprints_before_tax_year: tuple[str, ...] = ()
     election_fingerprints_in_tax_year: tuple[str, ...] = ()
 
@@ -65,6 +75,7 @@ class AssetScheduleHistory(BaseModel):
         "accumulated_before_tax_year",
         "accumulated_in_tax_year",
         "taxpayer_low_value_claimed_in_tax_year",
+        "same_incentive_investment_of_other_assets",
     )
     @classmethod
     def _require_finite_nonnegative(cls, value: Decimal) -> Decimal:
@@ -92,6 +103,7 @@ class ScheduleAuthority(BaseModel):
     plan_total: Decimal | None = None
     free_depreciation_unit_threshold: Decimal | None = None
     free_depreciation_annual_cap: Decimal | None = None
+    free_depreciation_investment_cap: Decimal | None = None
     low_value: LowValueElection | None = None
 
     @field_validator("annual_rate")
@@ -106,6 +118,7 @@ class ScheduleAuthority(BaseModel):
         "plan_total",
         "free_depreciation_unit_threshold",
         "free_depreciation_annual_cap",
+        "free_depreciation_investment_cap",
     )
     @classmethod
     def _require_positive_cents_amount(cls, value: Decimal | None) -> Decimal | None:
@@ -126,6 +139,7 @@ class ScheduleAuthority(BaseModel):
             "plan_total": method is AmortizationMethod.APPROVED_PLAN,
             "free_depreciation_unit_threshold": method is AmortizationMethod.LOW_VALUE_FREE,
             "free_depreciation_annual_cap": method is AmortizationMethod.LOW_VALUE_FREE,
+            "free_depreciation_investment_cap": method in WORKFORCE_CONDITIONED_METHODS,
             "low_value": method is AmortizationMethod.LOW_VALUE_FREE,
         }
         for field_name, required in expected.items():
@@ -506,7 +520,29 @@ def _free_amount(
         raise ActividadAssetValidationError("elected free depreciation exceeds the asset's remaining lawful basis")
     if context.authority.method is AmortizationMethod.LOW_VALUE_FREE:
         _require_low_value_election(context, history=history, requested_free_amount=requested_free_amount)
+    if context.authority.method in WORKFORCE_CONDITIONED_METHODS:
+        _require_investment_within_cap(context, history=history)
     return requested_free_amount
+
+
+def _require_investment_within_cap(context: _ChargeContext, *, history: AssetScheduleHistory) -> None:
+    """Refuse when this asset's investment takes its incentive past the investment cap.
+
+    LIS art. 102.1 and DA 17a.1 cap the investment that may benefit, not the
+    period's charge.  An asset that would cross the cap is refused whole:
+    splitting one asset between free and ordinary amortization is not
+    supported, so no part of an over-cap investment is charged freely.
+    """
+    investment_cap = context.authority.free_depreciation_investment_cap
+    if investment_cap is None:  # defensive: authority validation proves unreachable
+        raise ActividadAssetValidationError("workforce-conditioned authority lacks its investment cap")
+    investment = history.same_incentive_investment_of_other_assets + context.revision.basis.deductible_basis()
+    if investment > investment_cap:
+        raise ActividadAssetUnsupportedError(
+            f"the investment entering service in {context.revision.in_service_date.year} under "
+            f"{context.authority.method.value} would reach {investment}, above the investment cap of "
+            f"{investment_cap}; an asset is not split between free and ordinary amortization",
+        )
 
 
 def _require_low_value_election(

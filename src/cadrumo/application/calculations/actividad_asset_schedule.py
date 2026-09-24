@@ -8,6 +8,7 @@ from decimal import Decimal
 from ...core.operator_action_enums import ActionArgumentStatus, ActionConditionality, ActionEvidenceProvenance
 from ...domain.calculations.registry.actividad_asset_bindings import resolve_activity_asset_schedule_authority
 from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.renta.actividad_asset.election import WORKFORCE_CONDITIONED_METHODS
 from ...domain.renta.actividad_asset.errors import ActividadAssetIncompleteError, VehicleAffectationRecovery
 from ...domain.renta.actividad_asset.lifecycle import ActivityAssetRevision
 from ...domain.renta.actividad_asset.schedule import (
@@ -15,6 +16,7 @@ from ...domain.renta.actividad_asset.schedule import (
     ScheduledAmortizationCharge,
     schedule_charge,
 )
+from ..actividad_asset.ports import TaxpayerWorkforceReader
 from ..operator_actions.models import ActionArgumentBinding, ActionReference, ConditionEvidence, PreconditionVerdict
 
 VEHICLE_AFFECTATION_DECLARED_CONDITION = "actividad_asset.vehicle_affectation_declared"
@@ -56,15 +58,22 @@ def forecast_activity_asset_charge(
     covered_from: date,
     covered_until: date,
     history: AssetScheduleHistory,
+    taxpayer_workforce: TaxpayerWorkforceReader,
     requested_free_amount: Decimal | None = None,
 ) -> ScheduledAmortizationCharge:
-    """Forecast through published authority without creating a claim."""
+    """Forecast through published authority without creating a claim.
+
+    The profile's average workforce is read only for the incentives it
+    conditions, so no other method depends on that field being readable.
+    """
+    workforce = taxpayer_workforce() if asset_revision.amortization.method in WORKFORCE_CONDITIONED_METHODS else ()
     try:
         authority = resolve_activity_asset_schedule_authority(
             modelo_100_revision,
             tax_year=covered_from.year,
             asset_revision=asset_revision,
             authority_generation=authority_generation,
+            workforce=workforce,
         )
     except ActividadAssetIncompleteError as exc:
         recovery = exc.vehicle_affectation_recovery

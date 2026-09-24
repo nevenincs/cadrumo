@@ -592,7 +592,7 @@ required_text = ["valor unitario no exceda de", "25.000 euros referido al perío
 id = "renta-actividad-inmovilizado-amortizacion-normal-metodo-admitido"
 data_type = "keyed_bracket_table"
 unit = "flag"
-legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12", "rd-634-2015:art-5", "rd-634-2015:art-6", "rd-634-2015:art-7", "ley-27-2014:da-18"]
+legal_refs = ["ley-35-2006:art-28", "ley-27-2014:art-12", "rd-634-2015:art-5", "rd-634-2015:art-6", "rd-634-2015:art-7", "ley-27-2014:da-18", "ley-27-2014:art-102", "ley-27-2014:da-17"]
 keyed_brackets = [
   { key = "material:linear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "material:constant_percentage", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
@@ -603,6 +603,8 @@ keyed_brackets = [
   { key = "material:research_development_building", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "material:charging_infrastructure_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "material:electric_vehicle_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "material:small_enterprise_employment_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "material:renewable_self_consumption_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:linear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:constant_percentage", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:sum_of_digits", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
@@ -611,6 +613,8 @@ keyed_brackets = [
   { key = "intangible:intangible_indefinite_life", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:goodwill", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:research_development_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible:small_enterprise_employment_free", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible:renewable_self_consumption_free", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -624,7 +628,7 @@ required_text = ["Otros sistemas de amortización son:", "Se ajuste a un plan fo
 id = "renta-actividad-inmovilizado-amortizacion-simplificada-metodo-admitido"
 data_type = "keyed_bracket_table"
 unit = "flag"
-legal_refs = ["ley-35-2006:art-28", "rd-439-2007:art-30", "ley-27-2014:art-12", "ley-27-2014:da-18"]
+legal_refs = ["ley-35-2006:art-28", "rd-439-2007:art-30", "ley-27-2014:art-12", "ley-27-2014:da-18", "ley-27-2014:art-102", "ley-27-2014:da-17"]
 keyed_brackets = [
   { key = "material:linear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "material:constant_percentage", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
@@ -635,11 +639,15 @@ keyed_brackets = [
   { key = "material:research_development_building", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "material:charging_infrastructure_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "material:electric_vehicle_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "material:small_enterprise_employment_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "material:renewable_self_consumption_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:linear", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:intangible_useful_life", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:intangible_indefinite_life", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:goodwill", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
   { key = "intangible:research_development_free", value = "1", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible:small_enterprise_employment_free", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
+  { key = "intangible:renewable_self_consumption_free", value = "0", valid_from = 2025-01-01, valid_to = 2025-12-31 },
 ]
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
@@ -1001,6 +1009,92 @@ valid_to = 2025-12-31
 [[revisions."2025".parameters.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["Que entren en funcionamiento en los períodos impositivos que se inicien en 2024 y 2025."]
+
+# LIS art. 102.1: the investment that may benefit from job-creating free
+# depreciation is this amount times the average-workforce increase, the
+# increase calculated with two decimals.
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-erd-empleo-inversion-por-unidad-plantilla"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:art-102"]
+[[revisions."2025".parameters.values]]
+value = "120000"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["importe resultante de multiplicar la cifra de 120.000 euros por el incremento de la"]
+
+# LIS DA 17a.1 (last paragraph but two): the maximum investment that may
+# benefit from renewable self-consumption free depreciation.
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-renovables-inversion-maxima"
+data_type = "money"
+unit = "EUR"
+legal_refs = ["ley-27-2014:da-17"]
+[[revisions."2025".parameters.values]]
+value = "500000"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["beneficiarse del régimen de libertad de amortización será de 500.000 euros."]
+
+# LIS DA 17a.1 letter c): the 2025 period admits installations entering
+# service in 2025 only. Letter c) was added for 2025 by RDL 16/2025 art. 17.Uno;
+# the AEAT 2025 manual applies it to the 2025 IRPF period on that basis.
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-renovables-primer-ejercicio"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-27-2014:da-17"]
+[[revisions."2025".parameters.values]]
+value = "2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se"]
+
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-renovables-ultimo-ejercicio"
+data_type = "integer"
+unit = "year"
+legal_refs = ["ley-27-2014:da-17"]
+[[revisions."2025".parameters.values]]
+value = "2025"
+date_axis = "filing_period"
+valid_from = 2025-01-01
+valid_to = 2025-12-31
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Atención: el artículo 17 Uno del Real Decreto-ley 16/2025, de 23 de diciembre (BOE de", "impositivos que se inicien o concluyan en 2025, cuando la entrada en funcionamiento se"]
+
+# LIS DA 17a.1: only installations made available to the taxpayer from the
+# entry into force of RDL 18/2022 (20 October 2022) qualify. 1 admits, 0
+# excludes; the value is keyed to the date the installation was made available.
+[[revisions."2025".parameters]]
+id = "renta-actividad-inmovilizado-amortizacion-renovables-puesta-a-disposicion-admitida"
+data_type = "integer"
+unit = "flag"
+legal_refs = ["ley-27-2014:da-17"]
+non_filing_axis_admission = { date_axis = "transaction_date", legal_ref = "ley-27-2014:da-17", reason = "LIS DA 17a.1 admits installations by the date they were made available to the taxpayer (from the entry into force of RDL 18/2022), an event that can precede the tax period by years; the filing period fixes only when the installation enters service, so it cannot express which installations qualify." }
+[[revisions."2025".parameters.values]]
+value = "0"
+date_axis = "transaction_date"
+valid_from = 2015-01-01
+valid_to = 2022-10-19
+[[revisions."2025".parameters.values]]
+value = "1"
+date_axis = "transaction_date"
+valid_from = 2022-10-20
+[[revisions."2025".parameters.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["Que las instalaciones se han de haber puesto a disposición del contribuyente a partir", "del 20 de octubre de 2022."]
 
 # Whether a table class can hold a vehicle RIRPF art. 22.4 denies the accessory
 # private-use allowance (passenger cars and their trailers, mopeds,

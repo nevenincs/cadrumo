@@ -12,7 +12,7 @@ from ....core.hashing import content_hash_hex
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.money.rounding import round_to_cents
 from ....core.period import Period
-from .election import AmortizationMethod
+from .election import WORKFORCE_CONDITIONED_METHODS, AmortizationMethod
 from .errors import ActividadAssetClaimConflictError, ActividadAssetValidationError
 from .lifecycle import ActivityAssetRevision, AssetKind
 from .schedule import AssetScheduleHistory, ScheduledAmortizationCharge
@@ -293,6 +293,41 @@ def asset_schedule_history(
             sorted({elections[claim.asset_revision_id] for claim in before}),
         ),
         election_fingerprints_in_tax_year=tuple(sorted({elections[claim.asset_revision_id] for claim in within})),
+        same_incentive_investment_of_other_assets=_same_incentive_investment_of_other_assets(
+            revisions,
+            asset_id=asset_id,
+        ),
+    )
+
+
+def _same_incentive_investment_of_other_assets(
+    revisions: tuple[ActivityAssetRevision, ...],
+    *,
+    asset_id: str,
+) -> Decimal:
+    """Sum the investment other assets place under this asset's workforce-conditioned incentive.
+
+    Each asset counts through its current revision.  Assets share a cap only
+    when they elect the same incentive and enter service in the same year,
+    because each entry year has its own workforce test and its own cap.
+    """
+    current: dict[str, ActivityAssetRevision] = {}
+    for revision in revisions:
+        held = current.get(revision.asset_id)
+        if held is None or revision.revision_number > held.revision_number:
+            current[revision.asset_id] = revision
+    this = current.get(asset_id)
+    if this is None or this.amortization.method not in WORKFORCE_CONDITIONED_METHODS:
+        return Decimal("0")
+    return sum(
+        (
+            other.basis.deductible_basis()
+            for other in current.values()
+            if other.asset_id != asset_id
+            and other.amortization.method is this.amortization.method
+            and other.in_service_date.year == this.in_service_date.year
+        ),
+        Decimal("0"),
     )
 
 
