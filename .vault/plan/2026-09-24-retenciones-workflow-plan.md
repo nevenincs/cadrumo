@@ -9,7 +9,7 @@ related:
   - '[[2026-09-23-retenciones-workflow-evidence-capture-scope-adr]]'
 modified: '2026-09-24'
 body_schema: body-v2
-body_hash: 'sha256:b2a89495734b402cbc1f17fa65e0d90d2a2ddcc1122b42fdfcddedba3f6e8242'
+body_hash: 'sha256:33339a5be529ac7a5d5359bd511ae401644785aea6cc399c5111fe2946a3f230'
 ---
 
 <!-- LINK RULES:
@@ -142,7 +142,7 @@ map their scope to Steps at L1 or the relevant containers at higher tiers. -->
 - [x] `S06` - attach a structured advisory naming modelo 193, the base and withholding fields and the missing-authority reason to every settled-prior-accrual row, so the unresolved payment-year amounts reach the handoff instead of reading as settled; `src/cadrumo/application/aggregation/m193_phase_materialization.py`.
 - [ ] `S07` - fail closed for a monthly withholding filer: when the canonical obligation schedule makes the filer's Modelo 111 or 123 monthly, refuse capture into a quarterly window and have the 190 and 193 annual sources return a structured refusal naming the modelo, the monthly periods and the reason instead of a quarterly-only total, proven with a monthly filer; `src/cadrumo/application/aggregation/withholding_source.py and the three capture producers`.
 - [ ] `S08` - support monthly withholding filers end to end: place captured withholding in the filer's monthly window through the canonical period vocabulary and schedule, read monthly and quarterly windows in the 190 and 193 annual sources, and remove the S07 refusal; `src/cadrumo/application/aggregation and the retencion observations adapter`.
-- [ ] `S09` - refuse Modelo 193 export at the export boundary while its calculated revision carries a settled-prior-accrual row, with a typed reason and no command action, because the phase row's filing-export flag is read by nothing and so blocks nothing; `src/cadrumo/application/modelo/export.py`.
+- [x] `S09` - refuse Modelo 193 export at the export boundary while its calculated revision carries a settled-prior-accrual row, with a typed reason and no command action, because the phase row's filing-export flag is read by nothing and so blocks nothing; `src/cadrumo/application/modelo/export.py`.
 
 <!-- The plan's tier (declared in frontmatter as `tier: L1`, `L2`, `L3`, or
 `L4`) determines the structure under this section:

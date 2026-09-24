@@ -5,7 +5,7 @@ tags:
 date: '2026-09-24'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:b817d6e451f60a10d3eff73b0878ae1b560f3a7eccd6902d887c9a1822c20984'
+body_hash: 'sha256:8ca5e0d6e4ea6d281f8ce4058c182041d7d4acfa532a80a8b505f1139abf9ac9'
 related:
   - "[[2026-09-24-retenciones-workflow-plan]]"
 ---
@@ -55,10 +55,18 @@ related:
 - `S06` `M` `src/cadrumo/application/aggregation/source_mesh.py`
 - `S06` `M` `src/cadrumo/application/aggregation/tests/test_withholding_source_m193_phases.py`
 - `S06` `verify:` `pytest m193 phases, withholding resolver, producer, ledger capital, source mesh` -> `pass`
+- `S09` `M` `src/cadrumo/application/modelo/export.py`
+- `S09` `M` `src/cadrumo/application/modelo/preconditions.py`
+- `S09` `M` `src/cadrumo/core/errors/registry/_application_part2.py`
+- `S09` `M` `src/cadrumo/application/aggregation/m193_phase_materialization.py`
+- `S09` `A` `src/cadrumo/application/modelo/tests/test_m193_settled_row_export_gate.py`
+- `S09` `A` `dev/quality/tests/test_capability_flags_have_production_readers.py`
+- `S09` `verify:` `pytest export gate 7, application/modelo 1472, core/errors 43, capability flag guard` -> `pass`
 
 ## Notes
 
 - `S01` test_grouping_dispatch_coverage fails on per_type2_record from the Modelo 180 row bindings (b7b4e95d20), pre-existing and outside this Step
 - `S02` the 123 loader reads quarterly windows only, matching capture and the 111 loader; monthly 123 filers are an existing wider gap
 - `S06` end-to-end calculate assertion parked until S03 is published; filing_export_supported is read by nothing, so the export gate is a new Step
+- `S09` detection uses the phase contributor plus the 2025 accrual bound because the revision does not persist the phase; exact per-row detection needs CalculationSourceRef to keep source_filing_year
 
