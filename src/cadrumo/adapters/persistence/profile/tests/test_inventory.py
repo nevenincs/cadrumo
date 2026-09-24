@@ -13,7 +13,7 @@ from decimal import Decimal
 
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from ...storage.tests.secure_sql import TestRuntimeProfile
 from .....domain.contribuyente.inventory.records import (
     InventoryLedger,
     InventoryLedgerDocument,
@@ -133,7 +133,7 @@ def test_inventory_persistence_is_encrypted_financial_secure_object(_runtime_pro
         ),
     )
 
-    from .....adapters.persistence.storage.tests.secure_sql import read_db_at_rest_bytes
+    from ...storage.tests.secure_sql import read_db_at_rest_bytes
 
     repository = InventoryLedgerRepository()
     repository.save(InventoryLedgerDocument(ledgers=(ledger,)))

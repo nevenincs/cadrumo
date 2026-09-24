@@ -63,7 +63,7 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.justificante.schema import Justificante
 from ....domain.modelos.filing_record import ExternalEvidenceKind
-from ....entrypoints.adapter_composition import build_calculation_action_ports, build_filing_action_ports
+from ...adapter_composition import build_calculation_action_ports, build_filing_action_ports
 from ....tests.aeat_literal_fixtures import justificante_cotejo_url
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
 from .._modelo_amend_wizard_cli import (

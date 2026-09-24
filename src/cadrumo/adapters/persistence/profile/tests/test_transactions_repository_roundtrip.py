@@ -34,7 +34,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....core.classification.policies import SensitivityClass
 from .....core.storage_taxonomy import StorageCategory
 from .....core.storage_taxonomy_locations import storage_path

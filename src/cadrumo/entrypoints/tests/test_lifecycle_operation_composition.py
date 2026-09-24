@@ -9,7 +9,7 @@ import pytest
 
 from ...application.modelo import operation_definitions as definitions_module
 from ...application.operations.registry import OperationDefinition
-from ...entrypoints.operation_composition import build_production_operation_registry
+from ..operation_composition import build_production_operation_registry
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 

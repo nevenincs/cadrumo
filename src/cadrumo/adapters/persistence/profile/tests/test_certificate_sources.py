@@ -13,8 +13,8 @@ from typing import override
 import pytest
 
 from cadrumo.adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
-from cadrumo.adapters.persistence.profile.tests._operator_probe_fakes import fake_operator_probe_ports
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
+from cadrumo.adapters.persistence.profile.tests.operator_probe_fakes import fake_operator_probe_ports
+from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
@@ -30,7 +30,7 @@ from cadrumo.application.auth.certificate_source_operations import (
 )
 from cadrumo.application.auth.credentials import resolve_active_certificate_credentials
 from cadrumo.application.auth.operator_results import CertificateSourceNotFoundError
-from cadrumo.application.auth.tests.operator_projection_test_support import (
+from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import (
     configure_operator_auth,
     inspect_operator_auth,
 )

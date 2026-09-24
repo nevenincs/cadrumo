@@ -31,7 +31,7 @@ import pytest
 
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
-from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from .....application.calculations.tests.filing_evidence import regimen_simplificado_filing_evidence
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.classification.policies import SensitivityClass

@@ -45,7 +45,7 @@ from cadrumo.domain.calculations.registry.governed_fact_scope import outside_gov
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 
-from ._iva_compensation_history_support import _state
+from .iva_compensation_history_support import _state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

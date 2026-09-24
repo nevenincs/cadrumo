@@ -26,8 +26,8 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
-    _BUCKET_ID,
-    _create_manual_row,
+    BUCKET_ID as _BUCKET_ID,
+    create_manual_row as _create_manual_row,
     persist_verified_revision_citing_transaction,
 )
 

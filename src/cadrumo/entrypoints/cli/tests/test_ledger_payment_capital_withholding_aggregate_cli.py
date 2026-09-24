@@ -38,7 +38,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....entrypoints.adapter_composition import build_retencion_observation_ports
+from ...adapter_composition import build_retencion_observation_ports
 from ....tests.storage_scope import storage_overrides
 from .cli_runner import invoke_cached_cli
 

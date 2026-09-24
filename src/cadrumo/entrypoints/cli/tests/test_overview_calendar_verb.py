@@ -39,8 +39,8 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ....domain.modelos.filing_record import ExternalEvidenceKind
 from ....domain.modelos.filing_repository import upsert_filing_record
 from ....domain.user_profile.values import ProfileSetupState, create_user_profile_record
-from ....entrypoints.adapter_composition import build_expedientes_ports
-from ....entrypoints.live_state_composition import compose_notifications_ports
+from ...adapter_composition import build_expedientes_ports
+from ...live_state_composition import compose_notifications_ports
 from .._overview_evidence import live_censo_verified_profile_keys
 from ..common import current_workflow_state, profile_to_taxpayer
 from ._overview_calendar_support import (

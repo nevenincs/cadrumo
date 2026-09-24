@@ -14,8 +14,8 @@ from cadrumo.application.ledger.models import LedgerSourceImportCommand
 from cadrumo.domain.transactions.enums import TransactionDirection
 
 from .ledger_action_persistence_support import (
-    _BUCKET_ID,
-    _repositories,
+    BUCKET_ID as _BUCKET_ID,
+    repositories as _repositories,
     parsed_import_transaction,
 )
 

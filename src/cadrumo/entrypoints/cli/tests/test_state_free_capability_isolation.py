@@ -27,7 +27,7 @@ import textwrap
 import pytest
 from pydantic import TypeAdapter
 
-from ....entrypoints.cli.command_specs import COMMAND_GRAPH
+from ..command_specs import COMMAND_GRAPH
 from .cli_performance import IMPORT_FAMILY_PREFIXES
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]

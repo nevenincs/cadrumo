@@ -9,7 +9,7 @@ from pathlib import Path
 import pytest
 from sqlalchemy import delete, select
 
-from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
+from ...storage.tests.secure_sql import TestRuntimeProfile
 from .....core.errors.error_codes import get_registered_error_code
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection
 from .....domain.transactions.errors import LedgerNoActiveBucketError, LedgerStorageError

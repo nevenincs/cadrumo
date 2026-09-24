@@ -7,13 +7,13 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
+from cadrumo.adapters.persistence.profile.tests.llm_saturation_support import (
     _BUCKET,
     _NOW,
     _seed_business,
     _seed_unclassified,
 )
-from cadrumo.adapters.persistence.profile.tests._llm_saturation_support import (
+from cadrumo.adapters.persistence.profile.tests.llm_saturation_support import (
     repositories as repositories,
 )
 from cadrumo.adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test

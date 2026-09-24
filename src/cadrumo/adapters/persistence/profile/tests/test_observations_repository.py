@@ -17,7 +17,7 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import m303_registry_snapshot_ref
+from cadrumo.adapters.persistence.profile.tests.iva_compensation_history_support import m303_registry_snapshot_ref
 from cadrumo.application.calculations.errors import ObservationKeyError
 from cadrumo.application.calculations.observations_repository import (
     iva_wallet_decision_event_key,

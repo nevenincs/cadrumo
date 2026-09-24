@@ -66,11 +66,13 @@ _BYPASSING_WRITE_PATHS = (
     "to_secure_object_write(",
 )
 
-#: The guarded seam an APPLICATION service reaches. The invoice-catalogue
-#: services pass their change to the repository's revision-guarded ``mutate``
-#: verb, itself pinned in ``_GUARDED_VERBS`` below, rather than loading and
-#: saving the catalogue themselves.
-_GUARDED_SERVICE_SEAM = "invoice_repository.mutate("
+#: The guarded seams an APPLICATION service reaches. The invoice-catalogue
+#: services pass their change either to the repository's revision-guarded
+#: ``mutate`` verb, itself pinned in ``_GUARDED_VERBS`` below, or -- when the
+#: write must land together with its audit event -- to the audit co-commit's
+#: ``mutate_with_event``, which retries under both catalogues' revisions. Neither
+#: loads and saves the catalogue itself.
+_GUARDED_SERVICE_SEAMS = ("invoice_repository.mutate(", "audit_commit.mutate_with_event(")
 
 #: Every public verb that mutates a profile singleton document in place.
 _GUARDED_VERBS: tuple[tuple[str, Callable[..., object]], ...] = (
@@ -147,8 +149,8 @@ def test_the_invoice_catalogue_services_route_through_the_guarded_helper(name: s
     verb = dict(_catalogue_services())[name]
     source = inspect.getsource(verb)
 
-    assert _GUARDED_SERVICE_SEAM in source, (
-        f"{name} does not route through {_GUARDED_SERVICE_SEAM}; a service that loads, "
+    assert any(seam in source for seam in _GUARDED_SERVICE_SEAMS), (
+        f"{name} does not route through any of {_GUARDED_SERVICE_SEAMS}; a service that loads, "
         f"rebuilds and saves the catalogue itself drops a concurrently written invoice, "
         f"which under-declares"
     )

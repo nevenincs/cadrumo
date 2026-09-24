@@ -40,7 +40,7 @@ from .....domain.calculations.registry.tests.registry_observations import (
 )
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
-from ._relation_prefill_support import empty_profile_read_ports
+from .relation_prefill_support import empty_profile_read_ports
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

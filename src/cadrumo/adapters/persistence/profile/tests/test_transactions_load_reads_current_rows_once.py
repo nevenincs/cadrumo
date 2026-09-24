@@ -12,7 +12,7 @@ from typing import Any
 import pytest
 from sqlalchemy import update
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.transactions import models as transaction_models
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection

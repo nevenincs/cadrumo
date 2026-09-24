@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
+from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
@@ -15,7 +15,7 @@ from cadrumo.adapters.persistence.storage.sql.engine import dispose_engine
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.auth.operator import logout_operator_auth, reset_operator_auth
-from cadrumo.application.auth.tests.operator_projection_test_support import configure_operator_auth
+from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import configure_operator_auth
 from cadrumo.application.workflow.persistence import workflow_state_repository
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()

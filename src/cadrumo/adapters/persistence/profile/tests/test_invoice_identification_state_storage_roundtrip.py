@@ -22,7 +22,7 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....core.classification.policies import SensitivityClass
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceCatalogue, InvoiceLine

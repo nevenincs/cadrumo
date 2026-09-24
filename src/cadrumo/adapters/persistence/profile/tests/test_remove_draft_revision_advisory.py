@@ -29,8 +29,8 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 
 from .ledger_action_persistence_support import (
-    _BUCKET_ID,
-    _repositories,
+    BUCKET_ID as _BUCKET_ID,
+    repositories as _repositories,
 )
 from .remove_draft_revision_support import create_row, seed_revision_citing_transaction
 

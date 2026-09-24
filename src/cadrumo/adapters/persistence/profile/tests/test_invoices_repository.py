@@ -18,7 +18,7 @@ import pytest
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ..transactions import TransactionCatalogueRepository
 from .....domain.invoices.enums import IvaRate, PaymentStatus
 from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.classification import InvoiceKind

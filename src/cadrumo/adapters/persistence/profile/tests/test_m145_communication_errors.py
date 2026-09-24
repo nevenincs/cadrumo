@@ -20,8 +20,8 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ..m145_communication_records import build_m145_communication_records_ports
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecordAmbiguousError,

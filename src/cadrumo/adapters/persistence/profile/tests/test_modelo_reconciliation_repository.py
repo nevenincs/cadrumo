@@ -32,7 +32,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
+from ...storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
 from .....application.modelo.reconciliation import (

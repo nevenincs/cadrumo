@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import (
+from ...storage.tests.secure_sql import (
     isolated_storage_root as _isolated_storage,
 )
 from .....core.bucket_pointer import resolve_repository_bucket_id

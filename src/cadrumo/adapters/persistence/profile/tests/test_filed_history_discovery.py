@@ -32,7 +32,9 @@ from cadrumo.adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionObservation,
     ObservedCasillaValue,
 )
-from cadrumo.adapters.persistence.profile.tests._filed_capture_history_support import _registry_snapshot
+from cadrumo.adapters.persistence.profile.tests.filed_capture_history_support import (
+    registry_snapshot as _registry_snapshot,
+)
 from cadrumo.application.live.filed_data_capture import (
     ExpectedFiledDeclarationGrid,
     FiledHistoryDiscoveryPair,

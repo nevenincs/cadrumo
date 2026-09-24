@@ -36,7 +36,7 @@ from .....domain.invoices.enums import PaymentStatus, resolve_iva_rate_slot
 from .....domain.invoices.errors import InvoiceNotFoundError, InvoiceValidationError
 from .....domain.invoices.models import Invoice, InvoiceLine
 from .....domain.iva.classification import InvoiceKind
-from .....tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from ....outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..catalogue_creation import (
     build_catalogue_creation_ports,

@@ -16,10 +16,9 @@ Modelo 193 is the annual resumen: it aggregates the four quarters' monetary
 casillas 06 and 09 via ``source = "relation_prefill"`` relations
 (``annual_summary``, ``op=sum``), binding ids
 ``modelo-193-123-base-anual`` and ``modelo-193-123-retenciones-anual``.
-``decl.total-perceptores`` is a ``retenciones_aggregation`` binding over the
-dedicated per-perceptor store, because summing quarterly perceptor counts
-double-counts recurring perceptors. The 193 monetary formulae are pure op=copy
-from those relations into ``decl.base-total`` and ``decl.retenciones-total``.
+From the 2025 edition the declarant totals ``decl.base-total`` and
+``decl.retenciones-total`` are op=copy sums of the type-2 perceptor records,
+and the Modelo 123 relations remain declared as a reconciliation cross-check.
 
 This module is the cross-year behavior coverage for Modelo 193.
 It drives the REAL backend (real encrypted-SQLite observation store, the real
@@ -31,9 +30,9 @@ cross-checked against the cross-year claim via
 
 Grounding (non-tautological): the 123 computed casillas 03/06/09 are _produced
 by the registry engine from the manual sub-inputs. The 193 assertion is the
-*wiring* invariant — each monetary 193 output casilla equals the sum of the
-corresponding 123 quarterly computed values — grounded in the AEAT form
-instructions (BOE-modelo-193-2011-form). Distinct per-quarter values per year
+reconciliation invariant for a filer whose type-2 records carry what its
+quarters declared: each monetary 193 output casilla, summed from those records,
+equals the sum of the corresponding 123 quarterly computed values. Distinct per-quarter values per year
 ensure cross-contamination between years or periods fails loudly. No expected
 value hand-computes the formula under test.
 """
@@ -47,6 +46,7 @@ from pathlib import Path
 import pytest
 
 from .....application.calculations.relation_prefill import resolve_relations_from_local_store
+from .....core.aggregation import RetencionClave
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....domain.calculations.registry.authority import bundled_indexed_authority
 from .....domain.calculations.registry.bindings import (
@@ -59,6 +59,10 @@ from .....domain.calculations.registry.relations import relation_prefill_values_
 from .....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_observation,
+)
+from .....domain.calculations.registry.withholding_bindings import (
+    WithholdingObservation,
+    resolve_withholding_binding_values,
 )
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
@@ -226,15 +230,54 @@ def _123_observation(*, filing_year: int, period: str, result: RegistryCalculati
     )
 
 
+def _perceptor_record(*, filing_year: int, base: Decimal, withholding: Decimal) -> WithholdingObservation:
+    """One type-2 record carrying the year's whole base and withholding."""
+    zero = Decimal("0")
+    return WithholdingObservation(
+        source_id=f"capital-{filing_year}",
+        perceptor_tax_id="11111111H",
+        perceptor_legal_name="TITULAR SINTETICO",
+        transaction_date=date(filing_year, 6, 30),
+        clave=RetencionClave.from_registry("A"),
+        percibido_dinerario=base,
+        retencion_practicada=withholding,
+        base_retenciones=base,
+        incapacity_cash_perception=zero,
+        incapacity_cash_withholding=zero,
+        incapacity_kind_value=zero,
+        incapacity_kind_ingreso_a_cuenta=zero,
+        incapacity_kind_repercutido=zero,
+        foral_retention_estatal=zero,
+        foral_retention_navarra=zero,
+        foral_retention_araba=zero,
+        foral_retention_gipuzkoa=zero,
+        foral_retention_bizkaia=zero,
+    )
+
+
 def _calculate_193(
     *,
     filing_year: int,
     relation_values: dict[RelationId, Decimal],
+    quarterly_totals: dict[CasillaId, Decimal],
 ) -> tuple[RegistryCalculationResult, int]:
-    """Run the REAL 193 annual calculation from resolved relations; return result + count."""
+    """Run the REAL 193 annual calculation from resolved relations; return result + count.
+
+    The declarant totals sum the type-2 perceptor records, resolved through the
+    real withholding bindings from one record that carries what the year's
+    Modelo 123 quarters declared.
+    """
     snapshot = published_authority_operation().snapshot(_MODELO_193, filing_year=filing_year, period="0A")
     relation_binding_values = relation_prefill_values_as_binding_values(snapshot.revision, relation_values, period="0A")
-    binding_values = {**relation_binding_values, "modelo-193-123-perceptores-anual": Decimal("3")}
+    perceptor_record = _perceptor_record(
+        filing_year=filing_year,
+        base=quarterly_totals[_M123_BASE_TOTAL_CASILLA],
+        withholding=quarterly_totals[_M123_RETENCIONES_TOTAL_CASILLA],
+    )
+    binding_values = {
+        **relation_binding_values,
+        **resolve_withholding_binding_values(snapshot.revision, (perceptor_record,)),
+    }
     inputs = {
         **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
     }
@@ -379,7 +422,9 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         snapshot_193_n = published_authority_operation().snapshot(_MODELO_193, filing_year=_YEAR_N, period="0A")
         prefill_n = resolve_relations_from_local_store(snapshot_193_n, operation=operation, repository=obs_repo)
         resolved_n = {item.relation: item.value for item in prefill_n.values if item.value is not None}
-        result_n, _produced_n = _calculate_193(filing_year=_YEAR_N, relation_values=resolved_n)
+        result_n, _produced_n = _calculate_193(
+            filing_year=_YEAR_N, relation_values=resolved_n, quarterly_totals=expected_n
+        )
 
         # Year N+1: same pipeline; Year N observations sit in the store but must
         # not contaminate Year N+1's 193 resolver.
@@ -393,7 +438,9 @@ def test_modelo_193_123_reconciliation_enrolls_two_renta_years(tmp_path: Path) -
         snapshot_193_n1 = published_authority_operation().snapshot(_MODELO_193, filing_year=_YEAR_N_PLUS_1, period="0A")
         prefill_n1 = resolve_relations_from_local_store(snapshot_193_n1, operation=operation, repository=obs_repo)
         resolved_n1 = {item.relation: item.value for item in prefill_n1.values if item.value is not None}
-        result_n1, _produced_n1 = _calculate_193(filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1)
+        result_n1, _produced_n1 = _calculate_193(
+            filing_year=_YEAR_N_PLUS_1, relation_values=resolved_n1, quarterly_totals=expected_n1
+        )
 
     # Wiring invariant Year N: the monetary 193 outputs == summed 123 quarterly
     # totals. decl.total-perceptores is no longer a M123 aggregate — RET-1 sources

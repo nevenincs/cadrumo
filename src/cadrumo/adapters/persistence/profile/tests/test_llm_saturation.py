@@ -23,16 +23,16 @@ from typing import NoReturn
 
 import pytest
 
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.tests._llm_saturation_support import (
+from ..buckets import BucketEventHistoryRepository
+from .llm_saturation_support import (
     _BUCKET,
-    _saturating_subprocess_classifier,
+    saturating_subprocess_classifier as _saturating_subprocess_classifier,
     _seed_unclassified,
 )
-from .....adapters.persistence.profile.tests._llm_saturation_support import (
+from .llm_saturation_support import (
     repositories as repositories,
 )
-from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from ..transactions import TransactionCatalogueRepository
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import saturate_llm_classification
 from .....application.ledger.llm_classification_ports import LLMClassificationPorts, LLMSaturatedSuggestion

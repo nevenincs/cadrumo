@@ -8,16 +8,16 @@ from typing import NoReturn
 
 import pytest
 
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.tests._llm_saturation_support import (
+from ..buckets import BucketEventHistoryRepository
+from .llm_saturation_support import (
     _BUCKET,
     _NOW,
-    _saturating_subprocess_classifier,
+    saturating_subprocess_classifier as _saturating_subprocess_classifier,
     _seed_unclassified,
 )
-from .....adapters.persistence.profile.tests._llm_saturation_support import repositories as repositories
-from .....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
-from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
+from .llm_saturation_support import repositories as repositories
+from .ledger_action_create_support import ledger_ports_for_test
+from ..transactions import TransactionCatalogueRepository
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import (
     apply_saturated_llm_classification,

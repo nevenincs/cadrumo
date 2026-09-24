@@ -28,7 +28,9 @@ from ...storage.secure_object_namespaces import MODELO_CALCULATION_REVISION_CATA
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
-from .ledger_action_persistence_support import _BUCKET_ID as SECURE_OBJECTS_BUCKET_ID
+from .ledger_action_persistence_support import (
+    BUCKET_ID as SECURE_OBJECTS_BUCKET_ID,
+)
 from .secure_objects_fixture import secure_objects
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]

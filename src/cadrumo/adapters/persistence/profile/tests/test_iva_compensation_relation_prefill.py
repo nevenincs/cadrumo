@@ -12,7 +12,7 @@ import pytest
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import (
+from cadrumo.adapters.persistence.profile.tests.iva_compensation_history_support import (
     _BOX_97_BINDING,
     _BOX_662_BINDING,
     _M303_COMPENSACION_APLICADA_CASILLA,

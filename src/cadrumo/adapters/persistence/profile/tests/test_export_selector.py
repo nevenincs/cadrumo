@@ -8,7 +8,7 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from cadrumo.adapters.persistence.profile.tests._export_test_support import isolated_backend
+from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 
@@ -16,7 +16,10 @@ __all__ = ["isolated_backend"]
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._export_test_support import _M130_INPUT_CASILLA, _seed_profile
+from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
+    _M130_INPUT_CASILLA,
+    seed_profile as _seed_profile,
+)
 from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelectorStateError, select_exportable_revision
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.period import Period

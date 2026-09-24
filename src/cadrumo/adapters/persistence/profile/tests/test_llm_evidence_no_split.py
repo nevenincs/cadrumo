@@ -8,21 +8,21 @@ from typing import NoReturn
 
 import pytest
 
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.tests._llm_evidence_split_support import (
+from ..buckets import BucketEventHistoryRepository
+from .llm_evidence_split_support import (
     _BUCKET,
     _NOW,
     _seed_parent,
-    _single_line_proposal,
-    _split_subprocess_proposer,
-    _two_line_proposal,
+    single_line_proposal as _single_line_proposal,
+    split_subprocess_proposer as _split_subprocess_proposer,
+    two_line_proposal as _two_line_proposal,
 )
-from .....adapters.persistence.profile.tests._llm_evidence_split_support import (
+from .llm_evidence_split_support import (
     repositories as repositories,
 )
-from .....adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
-from .....adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from .....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from .ledger_action_create_support import ledger_ports_for_test
+from ..transactions import TransactionCatalogueRepository
+from ...storage.sql.secure_objects import SecureObjectRepository
 from .....application.ledger.evidence_textlayer_ports import EvidenceTextLayerPorts
 from .....application.ledger.llm_classification import (
     apply_evidence_classification,

@@ -103,9 +103,15 @@ from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.iva.supply_nature import SupplyNature
 from cadrumo.tests.country_vocabulary_specimens import an_uncatalogued_alpha2, an_uncatalogued_alpha3
 
-from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, repository, secure_objects
-from ._evidence_test_support import runtime_profile as runtime_profile
-from ._evidence_test_support import seeded_filer_profile as seeded_filer_profile
+from .evidence_test_support import (
+    BUCKET_ID as _BUCKET_ID,
+    make_svc as _make_svc,
+    isolated_settings,
+    repository,
+    secure_objects,
+)
+from .evidence_test_support import runtime_profile as runtime_profile
+from .evidence_test_support import seeded_filer_profile as seeded_filer_profile
 from ._invoice_confirmation_test_support import InvoiceAuthorityFixture, invoice_draft_extraction_kwargs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

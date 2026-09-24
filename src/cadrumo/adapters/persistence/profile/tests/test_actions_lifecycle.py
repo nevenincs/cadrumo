@@ -16,8 +16,8 @@ from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 
 from .ledger_action_persistence_support import (
-    _BUCKET_ID,
-    _repositories,
+    BUCKET_ID as _BUCKET_ID,
+    repositories as _repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

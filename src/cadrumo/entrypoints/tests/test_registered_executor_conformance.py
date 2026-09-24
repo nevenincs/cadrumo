@@ -40,7 +40,7 @@ from ...adapters.persistence.profile.tests.cross_period_seeding import (
     seed_clean_cross_period_sources,
 )
 from ...adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
-from ...adapters.persistence.profile.tests.verification_repository_support import (
+from .profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
 from ...adapters.persistence.storage.sql.secure_objects import SecureObjectRepository

@@ -18,7 +18,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
-from ....adapters.persistence.profile.tests.file_flow_test_support import calculation_ports_for_test
+from ...tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.modelo.calculate_input import WorkCalculateInputBundle, calculate_modelo_work_revision

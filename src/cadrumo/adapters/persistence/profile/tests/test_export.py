@@ -14,26 +14,26 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests._export_test_support import isolated_backend
+from cadrumo.adapters.persistence.profile.tests.modelo_export_support import isolated_backend
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 
 __all__ = ["isolated_backend"]
 from pydantic import ValidationError
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.tests._export_test_support import (
-    _M130_RENDIMIENTO_NETO_CASILLA,
-    _casilla_id_from_payload,
-    _profile,
-    _seed_profile,
-    _seed_revision,
-)
 from cadrumo.adapters.persistence.profile.tests.calculation_catalogue_tamper_support import (
     plant_calculation_revision_unchecked,
 )
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import (
     empty_modelo_export_ports_for_test,
     modelo_export_ports_for_test,
+)
+from cadrumo.adapters.persistence.profile.tests.modelo_export_support import (
+    _M130_RENDIMIENTO_NETO_CASILLA,
+    _casilla_id_from_payload,
+    export_taxpayer_profile as _profile,
+    seed_profile as _seed_profile,
+    seed_revision as _seed_revision,
 )
 from cadrumo.application.filing.export import export_layout_renderability_reason
 from cadrumo.application.modelo.action_errors import (

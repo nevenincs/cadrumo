@@ -50,24 +50,24 @@ from ..transactions import (
 from .published_authority_support import published_authority_operation
 
 _REVISION_CASILLA: CasillaId = validated_casilla_id("01")
-_BUCKET_ID = "26262626-2626-4626-8626-262626262626"
-_OTHER_BUCKET_ID = "27272727-2727-4727-8727-272727272727"
+BUCKET_ID = "26262626-2626-4626-8626-262626262626"
+OTHER_BUCKET_ID = "27272727-2727-4727-8727-272727272727"
 
 __all__ = [
-    "_BUCKET_ID",
-    "_OTHER_BUCKET_ID",
-    "_create_manual_row",
-    "_repositories",
+    "BUCKET_ID",
+    "OTHER_BUCKET_ID",
+    "create_manual_row",
+    "repositories",
     "parsed_import_transaction",
     "persist_verified_revision_citing_transaction",
     "purchase_invoice",
 ]
 
 
-def _repositories(
+def repositories(
     objects: _SecureObjectRepository,
     *,
-    bucket_id: str = _BUCKET_ID,
+    bucket_id: str = BUCKET_ID,
 ) -> tuple[_TransactionCatalogueRepository, _BucketEventHistoryRepository]:
     return (
         _TransactionCatalogueRepository(bucket_id=bucket_id, objects=objects),
@@ -75,7 +75,7 @@ def _repositories(
     )
 
 
-def _create_manual_row(
+def create_manual_row(
     secure_objects: _SecureObjectRepository,
     *,
     description: str,
@@ -88,19 +88,19 @@ def _create_manual_row(
     # for the shared repository and invoice fixtures.
     from .ledger_action_create_support import ledger_ports_for_test
 
-    transaction_repository, event_repository = _repositories(secure_objects)
+    transaction_repository, event_repository = repositories(secure_objects)
     resolved_booked_date = booked_date if booked_date is not None else _date(2026, 5, 2)
     resolved_amount = amount if amount is not None else _Decimal("25.00")
     resolved_occurred_at = occurred_at if occurred_at is not None else _datetime(2026, 5, 4, 9, 30, tzinfo=_UTC)
     with ledger_ports_for_test(
-        bucket_id=_BUCKET_ID,
+        bucket_id=BUCKET_ID,
         objects=secure_objects,
         transaction_repository=transaction_repository,
         bucket_event_repository=event_repository,
     ) as ports:
         created = _create_manual_transaction(
             _ManualLedgerTransactionCommand(
-                bucket_id=_BUCKET_ID,
+                bucket_id=BUCKET_ID,
                 booked_date=resolved_booked_date,
                 amount=resolved_amount,
                 direction=_TransactionDirection.OUTGOING,
@@ -125,7 +125,7 @@ def _purchase_invoice() -> Invoice:
     return Invoice.model_validate(
         {
             "kind": InvoiceKind.RECEIVED,
-            "bucket_id": _BUCKET_ID,
+            "bucket_id": BUCKET_ID,
             "invoice_number": "P-2026-001",
             "issued_at": _date(2026, 5, 2),
             "counterparty_name": "Proveedor SL",
@@ -201,7 +201,7 @@ def _persist_verified_revision_citing_transaction(
     *,
     transaction_id: str,
     additional_transaction_ids: Iterable[str] = (),
-    bucket_id: str = _BUCKET_ID,
+    bucket_id: str = BUCKET_ID,
     operation: PinnedAuthorityOperation,
 ) -> None:
     source_transaction_ids = (transaction_id, *tuple(additional_transaction_ids))
@@ -285,7 +285,7 @@ def persist_verified_revision_citing_transaction(
     *,
     transaction_id: str,
     additional_transaction_ids: Iterable[str] = (),
-    bucket_id: str = _BUCKET_ID,
+    bucket_id: str = BUCKET_ID,
     operation: PinnedAuthorityOperation,
 ) -> None:
     _persist_verified_revision_citing_transaction(

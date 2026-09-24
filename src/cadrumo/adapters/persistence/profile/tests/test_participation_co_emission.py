@@ -34,7 +34,10 @@ from cadrumo.domain.calculations.registry.authority import bundled_indexed_autho
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
 from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_APLICADA_CASILLA,
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA,
     M303_COMPENSATION_RESULTADO_CASILLA,
+    M303_COMPENSATION_RESULTADO_FINAL_CASILLA,
 )
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
@@ -67,6 +70,9 @@ _TX_B = _hex("b")
 # The Modelo 303 result casilla: a filed observation must name a casilla the
 # selected registry revision declares, and its value states the disposition.
 _M303_RESULT_CASILLA: CasillaId = M303_COMPENSATION_RESULTADO_CASILLA
+#: A synthetic, checksum-valid NIF: a local M303 filing projects its IVA
+#: compensation history, and so its settlement snapshot, under the taxpayer.
+_TAXPAYER_NIF = "12345678Z"
 
 
 def _iva_wallet_repositories() -> tuple[CalculationObservationRepository, IvaCompensationHistoryRepository]:
@@ -86,7 +92,7 @@ def _seed_borrador(
     """Persist a BORRADOR revision over two ledger transactions plus its work unit."""
     snapshot = published_snapshot("303", filing_year=2024, period="2T")
     revision_id_seed = str(snapshot.revision.id)
-    result_casilla = casillas_by_id(snapshot.revision)[_M303_RESULT_CASILLA]
+    revision_casillas = casillas_by_id(snapshot.revision)
     work_unit_id = derive_work_unit_id(
         bucket_id=_BUCKET_ID,
         modelo="303",
@@ -109,7 +115,14 @@ def _seed_borrador(
 
     source_transaction_ids = (_TX_A, _TX_B)
     input_values_by_casilla_id = {_M303_RESULT_CASILLA: "1000.00"}
-    casilla_values = {_M303_RESULT_CASILLA: Decimal("1000.00")}
+    # The settlement snapshot every local M303 filing persists reads the final
+    # result and the compensation operands; with no prior credit both are zero.
+    casilla_values = {
+        _M303_RESULT_CASILLA: Decimal("1000.00"),
+        M303_COMPENSATION_RESULTADO_FINAL_CASILLA: Decimal("1000.00"),
+        M303_COMPENSATION_PENDING_PRIOR_CASILLA: Decimal("0"),
+        M303_COMPENSATION_APLICADA_CASILLA: Decimal("0"),
+    }
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -132,13 +145,14 @@ def _seed_borrador(
         input_values_by_casilla_id=input_values_by_casilla_id,
         source_transaction_ids=source_transaction_ids,
         casilla_values=casilla_values,
-        observations=(
+        observations=tuple(
             CasillaObservation(
-                casilla_id=_M303_RESULT_CASILLA,
-                value=Decimal("1000.00"),
-                legal_refs=tuple(result_casilla.legal_refs),
-                source_refs=tuple(result_casilla.source_refs),
-            ),
+                casilla_id=casilla_id,
+                value=value,
+                legal_refs=tuple(revision_casillas[casilla_id].legal_refs),
+                source_refs=tuple(revision_casillas[casilla_id].source_refs),
+            )
+            for casilla_id, value in casilla_values.items()
         ),
         created_at=_T0,
         updated_at=_T0,
@@ -249,6 +263,7 @@ def test_verify_then_file_co_emits_participation_for_every_source_transaction(tm
                 prorrata_register_repository=prorrata_repository,
                 # The seeded result is a positive amount due, so the filing is an ingreso.
                 result_disposition=ResultDisposition.INGRESO,
+                taxpayer_nif=_TAXPAYER_NIF,
                 operation=_authority_operation_for_test,
             )
 

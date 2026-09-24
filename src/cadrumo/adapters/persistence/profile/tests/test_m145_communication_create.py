@@ -20,9 +20,9 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
-from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
-from .....adapters.persistence.storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ..m145_communication_records import build_m145_communication_records_ports
+from ...storage.secure_object_namespaces import M145_COMMUNICATION_RECORD_NAMESPACE
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication import build_m145_communication_service_contract
 from .....application.modelo.m145_communication_period import M145CommunicationPeriod
 from .....application.modelo.m145_communication_records import (

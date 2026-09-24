@@ -37,7 +37,7 @@ from sqlalchemy import select
 
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
-from .....adapters.persistence.storage.tests.secure_sql import mutate_encrypted_secure_object_json
+from ...storage.tests.secure_sql import mutate_encrypted_secure_object_json
 from .....core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period

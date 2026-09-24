@@ -23,7 +23,11 @@ from ..buckets import BucketEventHistoryRepository
 from ..invoices import InvoiceCatalogueRepository
 from ..transactions import TransactionCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
-from .ledger_action_persistence_support import _BUCKET_ID, _repositories, purchase_invoice
+from .ledger_action_persistence_support import (
+    BUCKET_ID as _BUCKET_ID,
+    repositories as _repositories,
+    purchase_invoice,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 

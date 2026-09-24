@@ -13,8 +13,8 @@ from cadrumo.application.ledger.actions_import import import_ledger_transactions
 from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 
 from .ledger_action_persistence_support import (
-    _BUCKET_ID,
-    _repositories,
+    BUCKET_ID as _BUCKET_ID,
+    repositories as _repositories,
     parsed_import_transaction,
 )
 

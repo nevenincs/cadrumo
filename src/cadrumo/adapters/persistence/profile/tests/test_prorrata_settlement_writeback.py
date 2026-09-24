@@ -35,6 +35,11 @@ from .....core.prorrata_register import (
 from .....core.result_disposition import ResultDisposition
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
 from .....domain.calculations.registry.bindings import CasillaObservation
+from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_APLICADA_CASILLA,
+    M303_COMPENSATION_PENDING_PRIOR_CASILLA,
+    M303_COMPENSATION_RESULTADO_FINAL_CASILLA,
+)
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from .....domain.modelos.calculation_repository import upsert_calculation_revision
 from .....domain.modelos.calculation_revision import (
@@ -70,6 +75,10 @@ _VOLUMEN_CON_DERECHO: CasillaId = validated_casilla_id(
 )
 _PORCENTAJE: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")
 _RESULTADO: CasillaId = validated_casilla_id("iva.resultado", surface="test casilla id")
+
+#: A synthetic, checksum-valid NIF: a local M303 filing projects its IVA
+#: compensation history, and so its settlement snapshot, under the taxpayer.
+_TAXPAYER_NIF = "12345678Z"
 
 _SETTLEMENT_VALUES = {
     _VOLUMEN_TOTAL: Decimal("200000.00"),
@@ -107,6 +116,11 @@ def _seed_verified_m303_revision(
     values = dict(_SETTLEMENT_VALUES if casilla_values is None else casilla_values)
     # Filed as an ingreso, so the positive result the disposition declares is observed with it.
     values.setdefault(_RESULTADO, Decimal("100.00"))
+    # The settlement snapshot every local M303 filing persists reads the final
+    # result and the compensation operands; with no prior credit both are zero.
+    values.setdefault(M303_COMPENSATION_RESULTADO_FINAL_CASILLA, values[_RESULTADO])
+    values.setdefault(M303_COMPENSATION_PENDING_PRIOR_CASILLA, Decimal("0"))
+    values.setdefault(M303_COMPENSATION_APLICADA_CASILLA, Decimal("0"))
     period = Period.from_year_and_code(2026, period_code)
     revision_id = (
         published_authority_operation().snapshot("303", filing_year=2026, period=period.registry_token).revision.id
@@ -195,6 +209,7 @@ def _file_verified_revision(
         participation_index_repository=TransactionParticipationIndexRepository(bucket_id=_BUCKET_ID),
         prorrata_register_repository=prorrata_repository,
         result_disposition=ResultDisposition.INGRESO,
+        taxpayer_nif=_TAXPAYER_NIF,
         operation=operation,
     )
 

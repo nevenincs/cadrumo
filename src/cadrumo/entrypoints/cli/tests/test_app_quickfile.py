@@ -32,6 +32,7 @@ from click.testing import Result
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ....adapters.persistence.profile.tests.profile_registration import register_cli_profile
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.engine import dispose_engine
@@ -66,7 +67,6 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....tests.cli_envelope import unwrap_envelope_notices as _notices
 from ....tests.cli_envelope import unwrap_schema_envelope as _payload
-from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from .cli_runner import invoke_cached_cli
 
 __all__ = ["_isolated_cli_backend"]

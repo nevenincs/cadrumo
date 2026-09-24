@@ -33,7 +33,7 @@ from pathlib import Path
 import pydantic
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import (
+from ...storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
 )
@@ -58,8 +58,8 @@ from .....domain.prorrata_register.register import (
     ProrrataRegisterError,
     SectorDefinition,
 )
-from ....persistence.storage.errors import EnvelopeVersionError, SecureObjectRevisionConflictError
-from ....persistence.storage.sql.engine import get_engine
+from ...storage.errors import EnvelopeVersionError, SecureObjectRevisionConflictError
+from ...storage.sql.engine import get_engine
 from ..prorrata_register import ProrrataRegisterRepository
 from .published_authority_support import published_authority_operation
 
@@ -181,7 +181,7 @@ def test_register_outer_secure_schema_matches_the_v2_document(tmp_path: Path) ->
 
     from sqlalchemy import select
 
-    from ....persistence.storage.sql.session import session_scope
+    from ...storage.sql.session import session_scope
     from ...storage.crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
     from ...storage.secure_object_namespaces import (
         PROFILE_PRORRATA_REGISTER_NAMESPACE,
@@ -215,7 +215,7 @@ def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -
     """A re-encrypted v1 SQL row is refused; no upgrader or implicit restamp exists."""
     from sqlalchemy import select
 
-    from ....persistence.storage.sql.session import session_scope
+    from ...storage.sql.session import session_scope
     from ...storage.crypto.encrypted_columns import (
         decrypt_secure_object_payload,
         encrypt_secure_object_payload,

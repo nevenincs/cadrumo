@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests._operator_scope_fakes import (
+from cadrumo.adapters.persistence.profile.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
 )
 from cadrumo.adapters.persistence.profile.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory

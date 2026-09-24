@@ -6,7 +6,7 @@ import pytest
 import typer
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
-from ....entrypoints.adapter_composition import build_calculation_action_ports
+from ...adapter_composition import build_calculation_action_ports
 from ._modelo_fixtures import active_cli_profile_fixture
 from .cli_runner import invoke_cached_cli
 

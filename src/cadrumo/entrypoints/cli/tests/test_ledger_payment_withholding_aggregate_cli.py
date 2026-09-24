@@ -40,7 +40,7 @@ from ....domain.calculations.registry.withholding_bindings import WithholdingObs
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
-from ....entrypoints.adapter_composition import build_retencion_observation_ports
+from ...adapter_composition import build_retencion_observation_ports
 from ....tests.cli_envelope import unwrap_schema_envelope
 from ....tests.storage_scope import storage_overrides
 from .cli_runner import invoke_cached_cli

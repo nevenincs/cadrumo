@@ -49,7 +49,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ....domain.deadlines.models import ObligationStatus
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
-from ....entrypoints.adapter_composition import build_work_lifecycle_ports
+from ...adapter_composition import build_work_lifecycle_ports
 from .cli_runner import invoke_cached_cli
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]

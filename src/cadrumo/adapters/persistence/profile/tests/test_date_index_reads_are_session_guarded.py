@@ -36,10 +36,10 @@ from uuid import uuid4
 
 import pytest
 
-from .....adapters.persistence.storage.errors import StorageValidationError
-from .....adapters.persistence.storage.master_key.active_session import activate_session
-from .....adapters.persistence.storage.master_key.bucket_session import BucketSession
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ...storage.errors import StorageValidationError
+from ...storage.master_key.active_session import activate_session
+from ...storage.master_key.bucket_session import BucketSession
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....core.time.clock import now as _utc_now
 from ..transactions import TransactionCatalogueRepository
 

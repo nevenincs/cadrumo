@@ -25,7 +25,7 @@ import pytest
 
 from cadrumo.adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 
-from ._evidence_test_support import secure_objects
+from .evidence_test_support import secure_objects
 
 __all__ = ["secure_objects"]
 from pydantic import ValidationError

@@ -40,8 +40,13 @@ from cadrumo.core.field_origin import FieldOrigin
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.iva.regime_legend import resolve_regime_legends
 
-from ._evidence_test_support import _BUCKET_ID, _make_svc, isolated_settings, secure_objects
-from ._evidence_test_support import runtime_profile as runtime_profile
+from .evidence_test_support import (
+    BUCKET_ID as _BUCKET_ID,
+    make_svc as _make_svc,
+    isolated_settings,
+    secure_objects,
+)
+from .evidence_test_support import runtime_profile as runtime_profile
 from ._invoice_confirmation_test_support import (
     InvoiceAuthorityFixture,
     invoice_draft_extraction_kwargs,

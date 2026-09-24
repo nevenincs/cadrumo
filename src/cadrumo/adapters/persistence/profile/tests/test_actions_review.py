@@ -23,9 +23,9 @@ from cadrumo.domain.transactions.errors import TransactionNotFoundError
 
 from .ledger_action_create_support import ledger_ports_for_test
 from .ledger_action_persistence_support import (
-    _BUCKET_ID,
-    _OTHER_BUCKET_ID,
-    _repositories,
+    BUCKET_ID as _BUCKET_ID,
+    OTHER_BUCKET_ID as _OTHER_BUCKET_ID,
+    repositories as _repositories,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

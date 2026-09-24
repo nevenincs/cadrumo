@@ -48,7 +48,7 @@ from ....core.observability.capture import capture_envelopes
 from ....core.observability.fingerprint import compute_db_sha256
 from ....core.time.clock import frozen_clock
 from ....domain.transactions.enums import TransactionDirection
-from ....entrypoints.adapter_composition import build_ledger_evidence_ports
+from ...adapter_composition import build_ledger_evidence_ports
 from ....tests.env_scope import scoped_cwd
 from ....tests.golden_comparison import canonicalise, differing_field_names, differing_paths, mask_document
 from .._ledger_payloads import LedgerAddResult

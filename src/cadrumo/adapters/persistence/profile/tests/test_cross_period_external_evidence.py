@@ -10,19 +10,19 @@ from pydantic import AnyHttpUrl, TypeAdapter
 
 from cadrumo.adapters.inbound.pdf.source_provenance import source_pdf_reference_path
 from cadrumo.adapters.persistence.profile.justificante import JustificanteRepository
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support import (
     BUCKET_ID as _BUCKET_ID,
 )
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support import (
     CLOCK as _CLOCK,
 )
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support import (
     external_evidence_blockers as _external_evidence_blockers,
 )
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support import (
     live_capture_filing as _live_capture_filing,
 )
-from cadrumo.adapters.persistence.profile.tests._cross_period_clean_state_support import (
+from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support import (
     persist_justificante_metadata as _persist_justificante_metadata,
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile

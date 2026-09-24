@@ -81,7 +81,7 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ....entrypoints.adapter_composition import (
+from ...adapter_composition import (
     build_amendment_action_ports,
     build_modelo_export_ports,
 )

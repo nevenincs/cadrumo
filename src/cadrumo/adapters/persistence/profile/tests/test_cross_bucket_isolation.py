@@ -15,7 +15,7 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from .....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat

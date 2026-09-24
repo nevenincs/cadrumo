@@ -16,7 +16,7 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPorts,
     persist_percepcion_observations,

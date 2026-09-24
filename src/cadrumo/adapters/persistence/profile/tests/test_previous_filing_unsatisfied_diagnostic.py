@@ -50,7 +50,7 @@ from ...storage.sql.secure_objects import SecureObjectRepository
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..calculation_observations import CalculationObservationRepository
 from ..iva_compensation_history import IvaCompensationHistoryRepository
-from ._relation_prefill_support import empty_profile_read_ports
+from .relation_prefill_support import empty_profile_read_ports
 from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

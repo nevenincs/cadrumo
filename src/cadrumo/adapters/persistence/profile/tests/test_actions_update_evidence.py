@@ -32,8 +32,8 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.errors import TransactionValidationError
 
 from .ledger_action_persistence_support import (
-    _BUCKET_ID,
-    _repositories,
+    BUCKET_ID as _BUCKET_ID,
+    repositories as _repositories,
     purchase_invoice,
 )
 

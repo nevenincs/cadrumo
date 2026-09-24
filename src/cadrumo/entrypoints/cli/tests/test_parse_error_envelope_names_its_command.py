@@ -20,7 +20,7 @@ from __future__ import annotations
 
 import pytest
 
-from ....entrypoints.cli.command_specs import COMMAND_GRAPH
+from ..command_specs import COMMAND_GRAPH
 from ....tests.cli_envelope import parse_json_object
 from .cli_runner import invoke_cached_cli
 

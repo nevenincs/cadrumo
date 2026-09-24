@@ -20,10 +20,10 @@ from pathlib import Path
 
 import pytest
 
-from .....adapters.outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.m145_communication_records import build_m145_communication_records_ports
-from .....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ....outbound.aeat.export.registry_record_renderer import RegistryFixedWidthRecordRenderer
+from ..buckets import BucketEventHistoryRepository
+from ..m145_communication_records import build_m145_communication_records_ports
+from ...storage.tests.secure_sql import isolated_runtime_profile
 from .....application.modelo.m145_communication_records import (
     M145CommunicationCreateCommand,
     M145CommunicationRecordValidationError,

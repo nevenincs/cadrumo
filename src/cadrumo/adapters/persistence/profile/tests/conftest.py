@@ -17,13 +17,15 @@ from ...storage.tests.secure_sql import (
 from ...tests.runtime_profile_fixture import default_bucket_runtime_profile_fixture
 from ._invoice_confirmation_test_support import InvoiceAuthorityFixture
 from .certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
-from .file_flow_test_support import (
+from .....entrypoints.tests.profile_persistence.file_flow_test_support import (
     _file_flow_runtime,
     _FileFlowRuntime,
     _Repos,
     _repos,
 )
-from .ledger_action_persistence_support import _BUCKET_ID
+from .ledger_action_persistence_support import (
+    BUCKET_ID as _BUCKET_ID,
+)
 from .published_authority_support import release_published_authority_operation
 
 # These suites exercise the profile-bound secure-object adapter through an

@@ -20,7 +20,10 @@ from .....domain.transactions.errors import TransactionValidationError
 from .....domain.transactions.service import link_invoice
 from ...storage.sql.secure_objects import SecureObjectRepository
 from .ledger_action_create_support import ledger_ports_for_test
-from .ledger_action_persistence_support import _BUCKET_ID, _repositories
+from .ledger_action_persistence_support import (
+    BUCKET_ID as _BUCKET_ID,
+    repositories as _repositories,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 

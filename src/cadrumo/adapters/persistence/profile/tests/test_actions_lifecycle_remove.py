@@ -24,9 +24,9 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 
 from .ledger_action_persistence_support import (
-    _BUCKET_ID,
-    _create_manual_row,
-    _repositories,
+    BUCKET_ID as _BUCKET_ID,
+    create_manual_row as _create_manual_row,
+    repositories as _repositories,
     purchase_invoice,
 )
 

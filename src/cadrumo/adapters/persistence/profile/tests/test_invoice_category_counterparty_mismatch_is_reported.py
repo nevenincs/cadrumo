@@ -53,7 +53,7 @@ from .....domain.bienes_inversion.register import BienesInversionIvaRegister
 from .....domain.iva.classification import InvoiceKind
 from .....domain.iva.schema import IvaCategory
 from .....domain.transactions.models import LedgerDatePartition, TransactionCatalogue
-from .....tests.recorded_ecb_rates import recorded_ecb_rate_provider
+from ....outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ...storage.sql.secure_objects import SecureObjectRepository
 from ..catalogue_reads import InvoiceCatalogueReadAdapter
 from ..invoices import InvoiceCatalogueRepository

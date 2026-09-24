@@ -29,6 +29,7 @@ import pytest
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.storage.envelope.contract import Envelope
 from ....adapters.persistence.storage.secure_object_namespaces import INVOICE_CATALOGUE_NAMESPACE
@@ -39,7 +40,6 @@ from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.invoices.models import Invoice, InvoiceCatalogue
 from ....domain.iva.classification import InvoiceKind
 from ....domain.iva.schema import IvaCategory
-from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ._cli_text_output_support import _line_value
 from ._isolated_profile_storage_fixtures import active_profile_isolated_backend
 from .cli_runner import invoke_cached_cli

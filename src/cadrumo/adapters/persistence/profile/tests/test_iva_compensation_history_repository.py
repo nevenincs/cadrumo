@@ -15,7 +15,7 @@ from cadrumo.application.calculations.iva_compensation_history_ports import IvaC
 from cadrumo.core.period import Period
 from cadrumo.domain.iva_compensation.carry_forward import build_iva_compensation_carry_forward_report
 
-from ._iva_compensation_history_support import _state
+from .iva_compensation_history_support import _state
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 

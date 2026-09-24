@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.catalogue_creation import (
     CatalogueCreationAuditCommitAdapter,
@@ -28,7 +29,6 @@ from cadrumo.domain.buckets.event import BucketEventObjectType, BucketEventType
 from cadrumo.domain.buckets.event_repository import emit_bucket_event
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.iva.classification import InvoiceKind
-from cadrumo.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 

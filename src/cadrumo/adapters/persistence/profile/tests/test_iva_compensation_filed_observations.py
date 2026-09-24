@@ -11,7 +11,7 @@ from cadrumo.adapters.outbound.aeat.sede.errors import SedeError
 from cadrumo.adapters.outbound.aeat.sede.schema import ObservedCasillaValue
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.tests._iva_compensation_history_support import (
+from cadrumo.adapters.persistence.profile.tests.iva_compensation_history_support import (
     _M303_POSTERIOR_CASILLA,
     _M303_RESULTADO_CASILLA,
     _TAXPAYER_REF,

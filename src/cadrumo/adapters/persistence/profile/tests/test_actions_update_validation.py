@@ -21,8 +21,8 @@ from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.domain.usage_ratios.model import UsageRatioProfile
 
 from .ledger_action_persistence_support import (
-    _BUCKET_ID,
-    _repositories,
+    BUCKET_ID as _BUCKET_ID,
+    repositories as _repositories,
     persist_verified_revision_citing_transaction,
 )
 

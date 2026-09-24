@@ -11,6 +11,7 @@ from click.testing import Result
 
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from ....adapters.outbound.fx.tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -31,7 +32,6 @@ from ....domain.iva_compensation.reconciliation import IvaCompensationReconcilia
 from ....domain.transactions.enums import TransactionDirection
 from ....domain.transactions.models import TransactionCatalogue
 from ....tests.cli_envelope import unwrap_schema_envelope
-from ....tests.recorded_ecb_rates import recorded_ecb_rate_provider
 from ._m303_ordinary_cli_support import OrdinaryM303SecureEvidence, joint_return_options
 from ._modelo_work_ux_support import operator_profile_facts
 from .cli_runner import invoke_cached_cli

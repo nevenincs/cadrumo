@@ -18,14 +18,14 @@ from pathlib import Path
 import pytest
 from reportlab.pdfgen import canvas
 
-from .....adapters.persistence.profile.buckets import BucketEventHistoryRepository
-from .....adapters.persistence.profile.purchase_invoice_evidence import (
+from ..buckets import BucketEventHistoryRepository
+from ..purchase_invoice_evidence import (
     LedgerEvidenceAttachmentIngestor,
     LedgerEvidenceRepositoryAdapter,
 )
-from .....adapters.persistence.storage.attachment import AttachmentStore
-from .....adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
-from .....adapters.persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
+from ...storage.attachment import AttachmentStore
+from ...storage.tests.secure_sql import TestRuntimeProfile
+from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .....application.ledger import tests as ledger_application_tests
 from .....application.ledger.batch_ingest import COMPLETED_BATCH_ITEM_STATUSES, BatchRunResult, run_evidence_batch
 from .....application.ledger.evidence_ports import LedgerEvidencePorts
