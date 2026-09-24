@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import Annotated, Final, Literal
 
 from pydantic import BaseModel, Field, field_validator, model_validator
 
@@ -91,7 +91,15 @@ cosmetic -- it made every Workspace destination unopenable for any modelo
 declaring an uppercase casilla id, which includes Modelo 100. The leading
 character stays lowercase because the first segment is always a namespace
 (``modelo.``, ``flows.``, ``wizard.``) and no producer emits any other shape."""
-type _BoundedLocalizedText = Annotated[str, Field(min_length=1, max_length=512)]
+#: Bound on one localized display string. Official AEAT casilla labels are
+#: quoted in full, never truncated: the longest shipped text, measured across
+#: every catalogue locale on 2026-09-24, is 603 characters (the Modelo 100
+#: 2020 casilla 0814 label, Spanish), which the previous 512 refused and made
+#: its workspace unopenable. The bound keeps a payload ceiling with about 70%
+#: headroom over that measurement; a catalogue test runs every shipped text
+#: through this field, so a longer official text fails the build first.
+_MAX_LOCALIZED_TEXT_LENGTH: Final[int] = 1024
+type _BoundedLocalizedText = Annotated[str, Field(min_length=1, max_length=_MAX_LOCALIZED_TEXT_LENGTH)]
 type _BoundedRefList[T] = Annotated[tuple[T, ...], Field(max_length=_MAX_SCHEMA_EVIDENCE_REFERENCES)]
 
 
