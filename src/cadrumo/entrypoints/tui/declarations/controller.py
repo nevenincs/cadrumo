@@ -40,6 +40,7 @@ from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import ExternalEvidenceKind, ModeloRecordStatus
 from ....domain.modelos.work_unit import WorkUnitState
 from ..components.account_chrome import AccountChromeScreen
+from ..components.app_access import TypedAppAccess
 from ..components.theme import BASE_CSS, tokenised
 from ..components.workspace_host import replace_workspace_body
 from ..navigation import TuiScreenContextV1
@@ -233,7 +234,7 @@ class DeclarationsWorkspaceController:
         return focus.restore_token if focus is not None and focus.semantic_key == semantic_key else None
 
 
-class DeclarationsWorkspaceScreen(AccountChromeScreen):
+class DeclarationsWorkspaceScreen(TypedAppAccess, AccountChromeScreen):
     """One-scroll host-neutral shell with semantic internal navigation."""
 
     BINDINGS: ClassVar = [Binding("escape", "back", "", show=False)]
