@@ -88,7 +88,11 @@ from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runti
 from cadrumo.application.aggregation.modelo_bindings import LedgerIvaAggregationSourceResolver
 from cadrumo.application.aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
-from cadrumo.application.aggregation.retenciones import RetencionObservation
+from cadrumo.application.aggregation.retenciones import (
+    Modelo180PropertyEvidence,
+    Modelo180StructuredAddress,
+    RetencionObservation,
+)
 from cadrumo.application.aggregation.source_mesh import (
     CalculationSourceContext,
 )
@@ -282,7 +286,31 @@ def _seed_115_observations(obs_repo: CalculationObservationRepository) -> dict[C
     return totals
 
 
-def _retencion_observation(nif: str) -> RetencionObservation:
+def _urban_property(nif: str) -> Modelo180PropertyEvidence:
+    """Property detail every annual Modelo 180 urban-lease row must carry."""
+    return Modelo180PropertyEvidence(
+        property_key=f"property-{nif}",
+        situation="1",
+        cadastral_reference=f"{nif}PROPERTY",
+        recipient_province_code="28",
+        modality="1",
+        accrual_year=_YEAR,
+        withholding_percentage=Decimal("19.00"),
+        address=Modelo180StructuredAddress(
+            province_code="28",
+            municipality_code="079",
+            municipality="Madrid",
+            locality="Madrid",
+            postal_code="28001",
+            street_type="CL",
+            street_name="Ejemplo",
+            number_type="NUM",
+            house_number="1",
+        ),
+    )
+
+
+def _retencion_observation(nif: str, *, accrued_on: str) -> RetencionObservation:
     return RetencionObservation(
         source_kind=BindingSourceKind.LEDGER_TRANSACTION,
         source_object_id=f"retencion-{nif}",
@@ -291,19 +319,24 @@ def _retencion_observation(nif: str) -> RetencionObservation:
         scheme=RetencionScheme("arrendamiento_urbano"),
         taxable_base=Decimal("1000.00"),
         retencion_amount=Decimal("190.00"),
-        accrued_on=f"{_YEAR}-03-15",
+        accrued_on=accrued_on,
+        modelo_180_property=_urban_property(nif),
     )
 
 
-def _seed_180_retencion_observations(ports: RetencionObservationPorts) -> Decimal:
-    ports.repository.replace_observations(
-        modelo="180",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, "0A"),
-        observations=tuple(_retencion_observation(nif) for nif in _M180_PERCEPTOR_NIFS),
-        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
-        captured_at=_T0,
-    )
+def _seed_115_retencion_observations(ports: RetencionObservationPorts) -> Decimal:
+    """Persist each perceptor's quarterly Modelo 115 row; Modelo 180 reads the year's quarters."""
+    for quarter, accrued_on, nif in zip(
+        ("1T", "3T"), (f"{_YEAR}-03-15", f"{_YEAR}-09-15"), _M180_PERCEPTOR_NIFS, strict=True
+    ):
+        ports.repository.replace_observations(
+            modelo="115",
+            filing_year=_YEAR,
+            period=Period.from_year_and_code(_YEAR, quarter),
+            observations=(_retencion_observation(nif, accrued_on=accrued_on),),
+            source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+            captured_at=_T0,
+        )
     return Decimal(len(set(_M180_PERCEPTOR_NIFS)))
 
 
@@ -441,7 +474,7 @@ def test_pull_path_and_calculate_path_share_resolver_and_produce_equal_casilla_v
     obs_repo = CalculationObservationRepository()
     expected_totals = _seed_115_observations(obs_repo)
     retencion_ports = build_retencion_observation_ports(bucket_id=_BUCKET_ID)
-    expected_perceptors = _seed_180_retencion_observations(retencion_ports)
+    expected_perceptors = _seed_115_retencion_observations(retencion_ports)
 
     # Non-vacuous gate: the summed base must be strictly positive so a silent
     # blank masquerading as "equal" fails here.
