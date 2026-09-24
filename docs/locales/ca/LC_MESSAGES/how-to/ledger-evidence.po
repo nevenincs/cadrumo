@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-09-23 17:16+0200\n"
+"POT-Creation-Date: 2026-09-24 12:59+0200\n"
 "PO-Revision-Date: 2026-07-18 13:10+0200\n"
 "Last-Translator: Cadrumo translation team\n"
 "Language: ca\n"
@@ -108,22 +108,10 @@ msgstr ""
 "resta més tard."
 
 #: ../../how-to/ledger-evidence.md:26
-msgid ""
-"The stored record keeps the invoice number you typed, but `evidence add`,"
-" `view`, `list`, `update`, and `remove` show only a short digest of it "
-"(`sha256:` followed by eight hexadecimal characters), not the number "
-"itself."
-msgstr ""
-"El registre desat conserva el número de factura que vas escriure, però "
-"`evidence add`, `view`, `list`, `update` i `remove` només en mostren un "
-"resum breu (`sha256:` seguit de vuit caràcters hexadecimals), no el "
-"número mateix."
-
-#: ../../how-to/ledger-evidence.md:28
 msgid "Attach an evidence record to a transaction"
 msgstr "Vincula un registre d'evidència a una transacció"
 
-#: ../../how-to/ledger-evidence.md:30
+#: ../../how-to/ledger-evidence.md:28
 msgid ""
 "Attach the evidence record to the transaction it supports. The sequence "
 "records an evidence file and an expense, then attaches one to the other:"
@@ -132,7 +120,7 @@ msgstr ""
 "seqüència registra un fitxer d'evidència i una despesa, i tot seguit "
 "adjunta l'un a l'altre:"
 
-#: ../../how-to/ledger-evidence.md:37
+#: ../../how-to/ledger-evidence.md:35
 msgid ""
 "A transaction carries at most one purchase-invoice evidence record. The "
 "command refuses a second one, and refuses re-attaching the same one."
@@ -141,7 +129,7 @@ msgstr ""
 "compra. L'ordre en rebutja un segon i rebutja tornar a adjuntar el "
 "mateix."
 
-#: ../../how-to/ledger-evidence.md:39
+#: ../../how-to/ledger-evidence.md:37
 msgid ""
 "Do not reach for `aeat app ledger link` here. `attach` and `link` are "
 "different operations on the same transaction: `attach` carries the "
@@ -158,7 +146,7 @@ msgstr ""
 "imprimeix `aeat app ledger invoice add` és exactament el que has de "
 "passar."
 
-#: ../../how-to/ledger-evidence.md:41
+#: ../../how-to/ledger-evidence.md:39
 msgid ""
 "For most receipts and invoices, `--purchase-invoice-evidence-id` above is"
 " the path to use; the evidence id comes straight from `evidence add`."
@@ -167,7 +155,7 @@ msgstr ""
 "de més amunt és l'opció que has d'utilitzar; l'id de l'evidència prové "
 "directament d'`evidence add`."
 
-#: ../../how-to/ledger-evidence.md:43
+#: ../../how-to/ledger-evidence.md:41
 msgid ""
 "The `attach` command also has an `--attachment-id` option (repeatable) "
 "for a generic secure attachment that does not carry the purchase-invoice "
@@ -190,11 +178,11 @@ msgstr ""
 "s'accepta. Fins que una ordre mostri l'identificador de l'adjunt, "
 "utilitza `--purchase-invoice-evidence-id` o `evidence pull`."
 
-#: ../../how-to/ledger-evidence.md:45
+#: ../../how-to/ledger-evidence.md:43
 msgid "Pull a document from Google Drive instead"
 msgstr "O bé baixa un document de Google Drive"
 
-#: ../../how-to/ledger-evidence.md:47
+#: ../../how-to/ledger-evidence.md:45
 msgid ""
 "When the document lives in Google Drive, pull it straight into encrypted "
 "evidence storage. This command reaches Google Drive, so it runs against "
@@ -205,7 +193,7 @@ msgstr ""
 "Drive, de manera que s'executa contra el teu propi compte autoritzat i no"
 " pas a l'entorn de proves de la documentació:"
 
-#: ../../how-to/ledger-evidence.md:52
+#: ../../how-to/ledger-evidence.md:50
 msgid ""
 "The command downloads the Drive file, stores its bytes encrypted with the"
 " transaction, and keeps the original link as provenance. Evidence always "
@@ -222,11 +210,11 @@ msgstr ""
 "document i adjunta'l amb `aeat app ledger evidence add` o `aeat app "
 "ledger attach --attachment-id`."
 
-#: ../../how-to/ledger-evidence.md:54
+#: ../../how-to/ledger-evidence.md:52
 msgid "Bulk-fetch every invoice in a Drive folder"
 msgstr "Recupera de cop totes les factures d'una carpeta de Drive"
 
-#: ../../how-to/ledger-evidence.md:56
+#: ../../how-to/ledger-evidence.md:54
 msgid ""
 "Fetch every PDF and image invoice in one Drive folder at once, instead of"
 " one document at a time. Like `evidence pull`, this command reaches "
@@ -237,7 +225,7 @@ msgstr ""
 "aquesta ordre accedeix a Google Drive i s'executa amb el teu propi compte"
 " autoritzat:"
 
-#: ../../how-to/ledger-evidence.md:61
+#: ../../how-to/ledger-evidence.md:59
 msgid ""
 "The command lists the folder's contents, downloads each PDF or image, and"
 " stores every file as encrypted evidence. Fetched files are not linked to"
@@ -249,7 +237,7 @@ msgstr ""
 "no queden vinculats a cap transacció; vincula cadascun després amb `aeat "
 "app ledger attach --attachment-id <attachment-id>`."
 
-#: ../../how-to/ledger-evidence.md:63
+#: ../../how-to/ledger-evidence.md:61
 msgid ""
 "Re-run the same command any time. A file already fetched is recognized by"
 " its content and is not stored twice. A file outside the granted Drive "
@@ -263,15 +251,15 @@ msgstr ""
 "no atura la resta del recorregut; descarrega'l tu mateix i adjunta'l amb "
 "`aeat app ledger attach --attachment-id`."
 
-#: ../../how-to/ledger-evidence.md:65
+#: ../../how-to/ledger-evidence.md:63
 msgid "Gmail bulk-fetch is not available yet."
 msgstr "La recuperació massiva des de Gmail encara no està disponible."
 
-#: ../../how-to/ledger-evidence.md:67
+#: ../../how-to/ledger-evidence.md:65
 msgid "Invoice records are a separate feature"
 msgstr "Els registres de factura són una funcionalitat a part"
 
-#: ../../how-to/ledger-evidence.md:69
+#: ../../how-to/ledger-evidence.md:67
 msgid ""
 "An invoice *record* - who owes whom, for what amount - is not a stored "
 "document. [Manage business invoices](manage-invoices.md) owns invoice "
@@ -288,11 +276,11 @@ msgstr ""
 "documents -PDF i imatges- que deses com a evidència i vincules a "
 "transaccions."
 
-#: ../../how-to/ledger-evidence.md:76
+#: ../../how-to/ledger-evidence.md:74
 msgid "List, view, update, and remove evidence records"
 msgstr "Llista, consulta, actualitza i elimina registres d'evidència"
 
-#: ../../how-to/ledger-evidence.md:78
+#: ../../how-to/ledger-evidence.md:76
 msgid ""
 "List every stored record, view one in full, update its details, and "
 "remove one you no longer need. The sequence records an evidence file, "
@@ -303,13 +291,13 @@ msgstr ""
 "fitxer d'evidència, el llista i l'inspecciona, canvia el proveïdor i "
 "confirma el canvi:"
 
-#: ../../how-to/ledger-evidence.md:86
+#: ../../how-to/ledger-evidence.md:84
 msgid "Remove an evidence record you no longer need, addressing it by id:"
 msgstr ""
 "Elimina un registre d'evidència que ja no necessitis, adreçant-t'hi per "
 "id:"
 
-#: ../../how-to/ledger-evidence.md:92
+#: ../../how-to/ledger-evidence.md:90
 msgid ""
 "Removing applies to evidence records, not transactions. To fix a "
 "transaction row itself, see [Correct mistakes in your ledger](correct-"
@@ -319,11 +307,11 @@ msgstr ""
 "Per corregir la fila d'una transacció, consulta [Corregeix errors al teu "
 "ledger](correct-ledger-entries.md)."
 
-#: ../../how-to/ledger-evidence.md:94
+#: ../../how-to/ledger-evidence.md:92
 msgid "After you correct a row"
 msgstr "Després de corregir una fila"
 
-#: ../../how-to/ledger-evidence.md:96
+#: ../../how-to/ledger-evidence.md:94
 msgid ""
 "If you merge or split transactions, check the new rows and re-attach "
 "evidence where needed. [Correct mistakes in your ledger](correct-ledger-"
@@ -333,11 +321,11 @@ msgstr ""
 "adjuntar l'evidència on calgui. [Corregeix errors al teu ledger](correct-"
 "ledger-entries.md) tracta els canvis de files."
 
-#: ../../how-to/ledger-evidence.md:98
+#: ../../how-to/ledger-evidence.md:96
 msgid "Where evidence shows up"
 msgstr "On apareix l'evidència"
 
-#: ../../how-to/ledger-evidence.md:100
+#: ../../how-to/ledger-evidence.md:98
 msgid ""
 "Ledger exports include the evidence link with each transaction. Ledger-"
 "derived calculations carry the evidence trail through to filing "
@@ -347,7 +335,7 @@ msgstr ""
 "transacció. Els càlculs derivats del ledger arrosseguen el rastre "
 "d'evidència fins als artefactes de presentació."
 
-#: ../../how-to/ledger-evidence.md:102
+#: ../../how-to/ledger-evidence.md:100
 msgid ""
 "Read [Import, export, and evidence](../reference/import-export-and-"
 "evidence.md) for the difference between linked ledger evidence, an AEAT "
@@ -358,24 +346,24 @@ msgstr ""
 "vinculada, un fitxer de pujada a l'AEAT, la prova oficial de presentació "
 "i un paquet d'auditoria."
 
-#: ../../how-to/ledger-evidence.md:106
+#: ../../how-to/ledger-evidence.md:104
 msgid "Where to get help"
 msgstr "On demanar ajuda"
 
-#: ../../how-to/ledger-evidence.md:108
+#: ../../how-to/ledger-evidence.md:106
 msgid "If a command fails or refuses, see [Troubleshooting](troubleshooting.md)."
 msgstr ""
 "Si una ordre falla o es nega a continuar, consulta [Resolució de "
 "problemes](troubleshooting.md)."
 
-#: ../../how-to/ledger-evidence.md:109
+#: ../../how-to/ledger-evidence.md:107
 #, python-brace-format
 msgid "If a term is unfamiliar, see the {doc}`Glossary </_generated/glossary>`."
 msgstr ""
 "Si algun terme no et resulta familiar, consulta el {doc}`Glossari "
 "</_generated/glossary>`."
 
-#: ../../how-to/ledger-evidence.md:110
+#: ../../how-to/ledger-evidence.md:108
 msgid ""
 "Before sharing command output with anyone, strip tax identifiers such as "
 "your NIF, CIF, DNI, NIE, or NII."
@@ -383,11 +371,11 @@ msgstr ""
 "Abans de compartir la sortida d'una ordre amb ningú, elimina els "
 "identificadors tributaris com ara el teu NIF, CIF, DNI, NIE o NII."
 
-#: ../../how-to/ledger-evidence.md:112
+#: ../../how-to/ledger-evidence.md:110
 msgid "Next steps"
 msgstr "Passos següents"
 
-#: ../../how-to/ledger-evidence.md:114
+#: ../../how-to/ledger-evidence.md:112
 msgid ""
 "[Import, export, and evidence](../reference/import-export-and-"
 "evidence.md) - understand how evidence participates in calculation, "
@@ -397,7 +385,7 @@ msgstr ""
 "evidence.md) - entén com participa l'evidència en el càlcul, la "
 "presentació i l'auditoria."
 
-#: ../../how-to/ledger-evidence.md:115
+#: ../../how-to/ledger-evidence.md:113
 msgid ""
 "[Import and manage transactions](import-bank-statements.md) - bring more "
 "transactions into the ledger."
@@ -405,7 +393,7 @@ msgstr ""
 "[Importa i gestiona transaccions](import-bank-statements.md) - porta més "
 "transaccions al ledger."
 
-#: ../../how-to/ledger-evidence.md:116
+#: ../../how-to/ledger-evidence.md:114
 msgid ""
 "[Correct mistakes in your ledger](correct-ledger-entries.md) - fix "
 "mistakes in transaction rows."
@@ -413,7 +401,7 @@ msgstr ""
 "[Corregeix errors al teu ledger](correct-ledger-entries.md) - corregeix "
 "errors a les files de transaccions."
 
-#: ../../how-to/ledger-evidence.md:117
+#: ../../how-to/ledger-evidence.md:115
 msgid ""
 "[Classify transactions](classify-transactions.md) - assign tax categories"
 " to your transactions."
@@ -421,7 +409,23 @@ msgstr ""
 "[Classifica transaccions](classify-transactions.md) - assigna categories "
 "tributàries a les teves transaccions."
 
-#: ../../how-to/ledger-evidence.md:118
+#: ../../how-to/ledger-evidence.md:116
 msgid "[CLI reference](../cli/index.rst) - the full command surface."
 msgstr "[Referència de la CLI](../cli/index.rst) - el conjunt complet d'ordres."
+
+#~ msgid ""
+#~ "The stored record keeps the invoice "
+#~ "number you typed, but `evidence add`,"
+#~ " `view`, `list`, `update`, and `remove` "
+#~ "show only a short digest of it "
+#~ "(`sha256:` followed by eight hexadecimal "
+#~ "characters), not the number itself."
+#~ msgstr ""
+#~ "El registre desat conserva el número "
+#~ "de factura que vas escriure, però "
+#~ "`evidence add`, `view`, `list`, `update` "
+#~ "i `remove` només en mostren un "
+#~ "resum breu (`sha256:` seguit de vuit "
+#~ "caràcters hexadecimals), no el número "
+#~ "mateix."
 
