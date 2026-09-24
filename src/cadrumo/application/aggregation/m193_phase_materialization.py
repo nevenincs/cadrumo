@@ -34,6 +34,49 @@ class Modelo193DisclosurePhase(StrEnum):
     SETTLED_PRIOR_ACCRUAL = "settled_prior_accrual"
 
 
+class Modelo193PhaseAmountField(StrEnum):
+    """An amount field of a Modelo 193 perceptor record, named by its withholding row field."""
+
+    BASE_RETENCIONES = "base_retenciones"
+    """Base retenciones e ingresos a cuenta."""
+    RETENCION_PRACTICADA = "retencion_practicada"
+    """Retenciones e ingresos a cuenta."""
+
+
+class Modelo193SettledAmountAuthorityAdvisory(BaseModel):
+    """The payment-year record's amounts rest on the literal design, not on a settled authority.
+
+    The withholding on a prior-accrual allocation was declared in the accrual
+    year's Modelo 123, and the official 2025 record design does not state what
+    the payment-year record carries in its base and withholding fields. The row
+    keeps the full amounts the design literally supports; this advisory keeps
+    that choice visible instead of letting it read as settled.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    reason: Literal["m193_settled_row_amounts_unresolved_authority"] = "m193_settled_row_amounts_unresolved_authority"
+    modelo: Literal["193"] = "193"
+    filing_year: FilingYear
+    accrual_year: int = Field(ge=2000, le=9999)
+    affected_fields: tuple[Modelo193PhaseAmountField, ...] = (
+        Modelo193PhaseAmountField.BASE_RETENCIONES,
+        Modelo193PhaseAmountField.RETENCION_PRACTICADA,
+    )
+    source_modelo: Literal["123"] = "123"
+    """The periodic modelo whose captured capital allocation the row derives from."""
+    source_kind: BindingSourceKind
+    """The captured allocation's own source family."""
+
+    @model_validator(mode="after")
+    def _names_a_later_payment_year_and_both_amounts(self) -> Modelo193SettledAmountAuthorityAdvisory:
+        if self.filing_year <= self.accrual_year:
+            raise ValueError("Modelo 193 settled-row advisory belongs to a later payment year")
+        if self.affected_fields != tuple(Modelo193PhaseAmountField):
+            raise ValueError("Modelo 193 settled-row advisory must name both amount fields")
+        return self
+
+
 class Modelo193PhaseMaterializationError(CadrumoError):
     """Payload-free refusal when active capital evidence cannot support a phase."""
 
@@ -62,6 +105,8 @@ class Modelo193PhaseRow(BaseModel):
     annual_detail: WithholdingObservation
     filing_export_supported: Literal[False] = False
     """Always false: this is domain evidence, not a filing-grade later-year export."""
+    amount_authority_advisory: Modelo193SettledAmountAuthorityAdvisory | None = None
+    """Required on a settled prior-accrual row and absent on a pending one, whose amounts the design settles."""
 
     @model_validator(mode="after")
     def _matches_derived_phase_contract(self) -> Modelo193PhaseRow:
@@ -85,7 +130,17 @@ class Modelo193PhaseRow(BaseModel):
                 raise ValueError("Modelo 193 pending disclosure must use the prescribed recipient values")
             if self.settlement_event_id is not None:
                 raise ValueError("Modelo 193 pending disclosure cannot carry a settlement event")
+            if self.amount_authority_advisory is not None:
+                raise ValueError("Modelo 193 pending disclosure amounts are settled by the design")
         else:
+            advisory = self.amount_authority_advisory
+            if (
+                advisory is None
+                or advisory.filing_year != self.filing_year
+                or advisory.accrual_year != self.original_accrual_year
+                or advisory.source_kind is not self.source_kind
+            ):
+                raise ValueError("Modelo 193 prior-accrual settlement must carry its unresolved-amount advisory")
             if self.filing_year <= self.original_accrual_year:
                 raise ValueError("Modelo 193 prior-accrual settlement must be in a later payment year")
             if self.settlement_event_id is None:
@@ -221,6 +276,11 @@ def _settled_prior_accrual_row(
         taxable_base=observation.taxable_base,
         retencion_amount=observation.retencion_amount,
         annual_detail=detail,
+        amount_authority_advisory=Modelo193SettledAmountAuthorityAdvisory(
+            filing_year=settlement.occurred_on.year,
+            accrual_year=recognized_on.year,
+            source_kind=observation.source_kind,
+        ),
     )
 
 
@@ -236,7 +296,9 @@ def _phase_sort_key(row: Modelo193PhaseRow) -> tuple[str, str, str, str]:
 
 __all__ = [
     "Modelo193DisclosurePhase",
+    "Modelo193PhaseAmountField",
     "Modelo193PhaseMaterializationError",
     "Modelo193PhaseRow",
+    "Modelo193SettledAmountAuthorityAdvisory",
     "materialize_modelo_193_disclosure_phases",
 ]

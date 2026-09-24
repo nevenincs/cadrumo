@@ -23,6 +23,9 @@ Empty-store behaviour materialises an explicit ZERO count AND surfaces a
 non-blocking advisory (NOT a hard refusal) — a legitimate nil-percepciones
 filer must still be able to calculate, and the bound casilla requires its
 fact (``no-silent-under-declaration``: the zero is loud, not silent).
+
+A settled prior-accrual Modelo 193 row carries amounts no official source
+settles, so each one surfaces its own non-blocking advisory beside its values.
 """
 
 from __future__ import annotations
@@ -44,7 +47,11 @@ from ...domain.calculations.registry.withholding_bindings import (
     resolve_withholding_binding_values,
 )
 from .errors import AggregationValidationError
-from .m193_phase_materialization import Modelo193PhaseRow, materialize_modelo_193_disclosure_phases
+from .m193_phase_materialization import (
+    Modelo193PhaseAmountField,
+    Modelo193PhaseRow,
+    materialize_modelo_193_disclosure_phases,
+)
 from .percepciones_observations_repository import (
     PercepcionObservationPersistenceError,
     PercepcionObservationPorts,
@@ -164,6 +171,51 @@ def _phase_allocation_token(row: Modelo193PhaseRow) -> str:
         )
     )
     return sha256_hex(value.encode("utf-8"))
+
+
+_AMOUNT_FIELD_LABELS: Mapping[Modelo193PhaseAmountField, str] = MappingProxyType(
+    {
+        Modelo193PhaseAmountField.BASE_RETENCIONES: "base retenciones e ingresos a cuenta",
+        Modelo193PhaseAmountField.RETENCION_PRACTICADA: "retenciones e ingresos a cuenta",
+    }
+)
+
+
+def _settled_amount_authority_diagnostics(
+    phase_rows: tuple[Modelo193PhaseRow, ...],
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Surface each settled prior-accrual row's unresolved amount authority, one advisory per row.
+
+    ``source_ref`` is the row's contributor provenance reference, so a consumer
+    joins the advisory to the captured allocation it speaks about.
+    """
+    diagnostics: list[CalculationSourceDiagnostic] = []
+    for row in phase_rows:
+        advisory = row.amount_authority_advisory
+        if advisory is None:
+            continue
+        fields = " and ".join(f"{_AMOUNT_FIELD_LABELS[field]} ({field.value})" for field in advisory.affected_fields)
+        diagnostics.append(
+            CalculationSourceDiagnostic(
+                reason=advisory.reason,
+                source_kind=_WITHHOLDING_SOURCE,
+                resolver_id=WithholdingSourceResolver.resolver_id,
+                source_ref=f"retencion:{_phase_allocation_token(row)}",
+                message=(
+                    f"Modelo {advisory.modelo} {advisory.filing_year}: a record settles income accrued in "
+                    f"{advisory.accrual_year} from captured capital withholding (Modelo "
+                    f"{advisory.source_modelo} allocation, {row.phase.value} disclosure phase). Its "
+                    f"{fields} carry the full accrual amounts, but no official source settles what this "
+                    f"payment-year record declares in those fields; the withholding was declared in the "
+                    f"{advisory.accrual_year} Modelo {advisory.source_modelo}."
+                ),
+                remedy=(
+                    "Confirm the base and withholding amounts of this record with AEAT before filing; "
+                    "they are not filing grade."
+                ),
+            )
+        )
+    return tuple(diagnostics)
 
 
 def _refuse_allocation_collisions(
@@ -291,7 +343,7 @@ class WithholdingSourceResolver:
             owned_sources=self.owned_sources,
             binding_values=binding_values,
             row_binding_values=resolve_withholding_binding_row_values(context.revision, observations),
-            diagnostics=diagnostics,
+            diagnostics=(*diagnostics, *_settled_amount_authority_diagnostics(phase_rows)),
             provenance=(*_provenance(observations), *phase_provenance),
         )
 

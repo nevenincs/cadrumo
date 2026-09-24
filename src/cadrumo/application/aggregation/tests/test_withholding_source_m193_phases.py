@@ -29,7 +29,12 @@ from cadrumo.application.aggregation.ledger_payment_withholding import (
     LedgerPaymentWithholdingCapture,
     build_ledger_payment_withholding_capture,
 )
-from cadrumo.application.aggregation.m193_phase_materialization import Modelo193PhaseMaterializationError
+from cadrumo.application.aggregation.m193_phase_materialization import (
+    Modelo193PhaseAmountField,
+    Modelo193PhaseMaterializationError,
+    Modelo193PhaseRow,
+    materialize_modelo_193_disclosure_phases,
+)
 from cadrumo.application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPorts,
     persist_percepcion_observations,
@@ -67,21 +72,35 @@ _ACCRUAL_YEAR_BINDING = "modelo-193-perceptor-row-ejercicio-devengo"
 _PERCIBIDO_BINDING = "modelo-193-perceptor-row-percibido"
 _RETENCION_BINDING = "modelo-193-perceptor-row-retencion"
 _COLLISION_KEY = "aggregation.retenciones.errors.m193_phase_allocation_collision"
+_UNRESOLVED_AMOUNTS = "m193_settled_row_amounts_unresolved_authority"
 
 
 def _capture(capture: LedgerPaymentWithholdingCapture, objects: SecureObjectRepository) -> None:
     assert withholding_producer(objects).capture(capture.command) is not None
 
 
-def _collected_next_year() -> tuple[str, LedgerPaymentWithholdingCapture]:
-    """A key B coupon exigible 15 December 2025 that the holder collected on 20 January 2026."""
+def _collected_next_year(coupon: str = "") -> tuple[str, LedgerPaymentWithholdingCapture]:
+    """A key B coupon exigible 15 December 2025 that the holder collected on 20 January 2026.
+
+    ``coupon`` distinguishes a second coupon's identities from the first's.
+    """
     paid_on = date(2026, 1, 20)
-    transaction = capital_payment(provider_id="coupon-2025-12", booked_date=paid_on)
+    transaction = capital_payment(provider_id=f"coupon-2025-12{coupon}", booked_date=paid_on)
+    distinct = (
+        {
+            "allocation_id": f"{_COUPON_ALLOCATION_ID}{coupon}",
+            "idempotency_key": f"coupon-capture-2025-12{coupon}",
+            "exigibility_event_id": f"coupon-exigible-2025-12{coupon}",
+        }
+        if coupon
+        else {}
+    )
     request = capital_request(
         transaction,
-        payment_event_id="coupon-payment-2026-01",
+        payment_event_id=f"coupon-payment-2026-01{coupon}",
         exigibility_occurred_on=date(2025, 12, 15),
         modelo_193_pending_payment=capital_pending_payment(transaction, transaction_date=paid_on),
+        **distinct,
     )
     capture = build_ledger_payment_withholding_capture(
         transaction,
@@ -203,7 +222,7 @@ def test_the_same_allocation_is_settled_prior_accrual_in_the_2026_source(
     assert _row_values(resolution, _NIF_BINDING) == [CAPITAL_HOLDER_NIF]
     assert _row_values(resolution, _ACCRUAL_YEAR_BINDING) == ["2025"]
     assert _row_values(resolution, _PENDIENTE_BINDING) == []
-    assert resolution.diagnostics == ()
+    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == [_UNRESOLVED_AMOUNTS]
     (contributor,) = _contributors(resolution)
     assert (contributor.source_modelo, contributor.source_filing_year) == ("123", 2025)
 
@@ -304,3 +323,86 @@ def test_a_later_accrual_carrying_pending_evidence_is_refused(
             _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2026)
 
     assert exc_info.value.refusal_code == "unsupported_accrual_year"
+
+
+def test_each_settled_row_carries_one_unresolved_amount_advisory(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """Two settled prior-accrual coupons give two advisories, each joined to its own allocation."""
+    _first_id, first = _collected_next_year()
+    _second_id, second = _collected_next_year("-b")
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        _capture(first, profile.repository)
+        _capture(second, profile.repository)
+        resolution = _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2026)
+
+    assert _row_values(resolution, _RETENCION_BINDING) == [str(CAPITAL_IRPF + CAPITAL_IRPF)]
+    advisories = resolution.diagnostics
+    assert [diagnostic.reason for diagnostic in advisories] == [_UNRESOLVED_AMOUNTS, _UNRESOLVED_AMOUNTS]
+    assert {diagnostic.source_ref for diagnostic in advisories} == {
+        contributor.source_ref for contributor in _contributors(resolution)
+    }
+    for diagnostic in advisories:
+        assert diagnostic.source_kind == BindingSourceKind.WITHHOLDING.value
+        assert diagnostic.binding_source is BindingSourceKind.WITHHOLDING
+        assert diagnostic.resolver_id == WithholdingSourceResolver.resolver_id
+        assert diagnostic.binding_id is None
+        assert diagnostic.remedy is not None
+        for named in (
+            "Modelo 193 2026",
+            "accrued in 2025",
+            "captured capital withholding (Modelo 123 allocation, settled_prior_accrual disclosure phase)",
+            "base retenciones e ingresos a cuenta (base_retenciones)",
+            "retenciones e ingresos a cuenta (retencion_practicada)",
+            "declared in the 2025 Modelo 123.",
+        ):
+            assert named in diagnostic.message
+
+
+@pytest.mark.usefixtures("authority_operation")
+def test_the_settled_row_advisory_is_structured_on_the_phase_row(tmp_path: Path) -> None:
+    """The materialised settled row names modelo, both years, both fields, source family and reason."""
+    _source_id, capture = _collected_next_year()
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        _capture(capture, profile.repository)
+        stored = RetencionObservationRepositoryAdapter(
+            objects=profile.repository
+        ).load_source_observations_through_year("123", 2026)
+
+    (pending,) = materialize_modelo_193_disclosure_phases(stored, filing_year=2025)
+    (settled,) = materialize_modelo_193_disclosure_phases(stored, filing_year=2026)
+    assert pending.amount_authority_advisory is None
+    advisory = settled.amount_authority_advisory
+    assert advisory is not None
+    assert (advisory.reason, advisory.modelo, advisory.filing_year, advisory.accrual_year) == (
+        _UNRESOLVED_AMOUNTS,
+        "193",
+        2026,
+        2025,
+    )
+    assert advisory.affected_fields == (
+        Modelo193PhaseAmountField.BASE_RETENCIONES,
+        Modelo193PhaseAmountField.RETENCION_PRACTICADA,
+    )
+    assert (advisory.source_modelo, advisory.source_kind) == ("123", BindingSourceKind.LEDGER_TRANSACTION)
+
+    fields = {name: getattr(settled, name) for name in Modelo193PhaseRow.model_fields}
+    with pytest.raises(ValidationError, match="unresolved-amount advisory"):
+        Modelo193PhaseRow.model_validate(fields | {"amount_authority_advisory": None})
+    pending_fields = {name: getattr(pending, name) for name in Modelo193PhaseRow.model_fields}
+    with pytest.raises(ValidationError, match="settled by the design"):
+        Modelo193PhaseRow.model_validate(pending_fields | {"amount_authority_advisory": advisory})
+
+
+def test_an_ordinary_manual_row_carries_no_unresolved_amount_advisory(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A hand-declared 193 row is not a disclosure phase, so its amounts raise no authority advisory."""
+    with isolated_runtime_profile(tmp_path=tmp_path) as profile:
+        _persist_manual(profile.repository, _manual_row(source_id="manual-coupon", source_allocation_id="manual-1"))
+        resolution = _resolve(profile.repository, authority_operation, bucket_id=profile.bucket_id, filing_year=2025)
+
+    assert _row_values(resolution, _NIF_BINDING) == [_MANUAL_NIF]
+    assert resolution.diagnostics == ()

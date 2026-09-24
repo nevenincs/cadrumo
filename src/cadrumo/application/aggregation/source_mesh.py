@@ -269,6 +269,13 @@ CalculationSourceDiagnosticReason = Literal[
     # every unrouted reason: nothing here is missing from the return, one of two
     # available figures was chosen over the other.
     "operator_override_diverges_from_computed",
+    # A Modelo 193 payment-year record for income accrued in an earlier year,
+    # whose base and withholding amounts no official source settles: the
+    # withholding was declared in the accrual year's Modelo 123, and the record
+    # design is silent on what the later record repeats. The amounts are kept,
+    # so nothing is missing from the return; what is missing is the authority
+    # for them, which must not read as settled.
+    "m193_settled_row_amounts_unresolved_authority",
 ]
 
 
