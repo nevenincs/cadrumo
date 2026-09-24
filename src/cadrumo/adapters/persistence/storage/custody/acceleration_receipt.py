@@ -583,6 +583,27 @@ def _recover_pending_retirement(*, storage_root: Path, profile_id: UUID) -> bool
     raise StorageValidationError("profile-session retirement receipt conflicts with the current receipt")
 
 
+def _clear_retirement_journal(journal_path: Path, *, payload: bytes) -> bool:
+    """Clear one exact retirement journal whose keychain half cannot be retired.
+
+    The journal carries the wrapped DEK of every receipt it names, so it is an
+    on-disk half of the session exactly like the receipt. A keychain entry it
+    would have retired holds only a random session key that unwraps nothing
+    once no on-disk record names its session id, and no later receipt can name
+    it because every mint draws a fresh one. Clearing the journal is therefore
+    the fail-closed direction: an entry that may exist is left inert, never
+    reachable, and never reused.
+    """
+    cleared = _clear_captured_receipt(
+        journal_path,
+        payload=payload,
+        maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
+    )
+    if cleared:
+        _log.debug("profile-session retirement journal cleared with its keychain half unreachable")
+    return cleared
+
+
 def _discard_known_record(*, path: Path, payload: bytes, record: _crypto.PersistedProfileSession) -> bool:
     """Revoke one verified cache entry, then clear the exact captured receipt."""
     try:
@@ -638,6 +659,7 @@ def _delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
                 _recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
             except (KeyringUnavailableError, ProfileCustodyRecordError, StorageValidationError) as exc:
                 _log.debug("profile-session retirement recovery deferred error_type=%s", type(exc).__name__)
+            _clear_unrecovered_retirement(storage_root=storage_root, profile_id=profile_id)
             try:
                 observed = _read_receipt(path)
             except (ProfileCustodyRecordError, ValueError, ValidationError) as exc:
@@ -659,6 +681,54 @@ def _delete_profile_session(*, storage_root: Path, profile_id: UUID) -> None:
                 )
     except ProfileCustodyRecordError as exc:
         _log.debug("profile-session receipt deletion refused error_type=%s", type(exc).__name__)
+
+
+def _discard_unpublished_journal(
+    *,
+    receipt_path: Path,
+    retirement_path: Path,
+    predecessor: bytes | None,
+    journal: bytes,
+) -> None:
+    """Clear a failed mint's own journal while its successor is still unpublished.
+
+    The journal is then the only on-disk half of a key the store may or may not
+    hold, so a refused login must not leave it behind. A published successor,
+    or a receipt some other writer replaced, is left to the journal's recovery.
+    Never raises: the mint's own failure is what its caller must see.
+    """
+    try:
+        current = read_optional_profile_custody_local_record(
+            receipt_path,
+            maximum_bytes=PROFILE_SESSION_RECORD_MAX_BYTES,
+        )
+        if current == predecessor:
+            _clear_retirement_journal(retirement_path, payload=journal)
+    except ProfileCustodyRecordError as exc:
+        _log.debug("profile-session mint journal clear deferred error_type=%s", type(exc).__name__)
+
+
+def _clear_unrecovered_retirement(*, storage_root: Path, profile_id: UUID) -> None:
+    """Remove a retirement journal that recovery could not consume.
+
+    Revocation is the strong close: it removes every on-disk half whether or
+    not the keychain answers, as it already does for the receipt itself.
+
+    Raises:
+        AccelerationReceiptRevocationError: The journal survived its clear.
+    """
+    journal_path = _profile_session_retirement_path(storage_root=storage_root, profile_id=profile_id)
+    payload = read_optional_profile_custody_local_record(
+        journal_path,
+        maximum_bytes=_PROFILE_SESSION_RETIREMENT_MAX_BYTES,
+    )
+    if payload is None:
+        return
+    if not _clear_retirement_journal(journal_path, payload=payload):
+        raise AccelerationReceiptRevocationError(
+            translated_message="errors.fail.fail_acceleration_receipt_revocation",
+            context={"profile_id": canonical_profile_bucket_id(profile_id)},
+        )
 
 
 def mint_profile_session(
@@ -810,7 +880,15 @@ def _mint_profile_session(
                 # retirement after publication without touching a substitute.
                 try:
                     _recover_pending_retirement(storage_root=storage_root, profile_id=profile_id)
-                except (KeyringUnavailableError, ProfileCustodyRecordError, StorageValidationError) as exc:
+                except KeyringUnavailableError as exc:
+                    _log.debug("profile-session mint cleanup deferred error_type=%s", type(exc).__name__)
+                    _discard_unpublished_journal(
+                        receipt_path=receipt_path,
+                        retirement_path=retirement_path,
+                        predecessor=predecessor,
+                        journal=journal,
+                    )
+                except (ProfileCustodyRecordError, StorageValidationError) as exc:
                     _log.debug("profile-session mint cleanup deferred error_type=%s", type(exc).__name__)
                 raise
             try:
