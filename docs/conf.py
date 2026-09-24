@@ -1639,4 +1639,10 @@ def setup(app):
     from dev.docs.sequence_directive import register as _register_cli_sequence
 
     _register_cli_sequence(app)
+
+    # Each page's sidebar is the collapsed toctree rather than the whole site
+    # tree, which the theme would otherwise recompute and embed on every page.
+    from dev.docs.navigation import register as _register_collapsed_navigation
+
+    _register_collapsed_navigation(app)
     return {"parallel_read_safe": True, "parallel_write_safe": True}
