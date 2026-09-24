@@ -253,15 +253,14 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert window.legal_refs == expected_legal_refs
     assert {"aeat-modelo-190-procedure", "boe-modelo-190-2025-form"} <= set(window.source_refs)
     with bundled_indexed_authority().operation() as operation:
-        if window.closes_on.year == 2026:
-            with pytest.raises(
-                DeadlineValidationError,
-                match="holiday calendar publication for 2026 could not be resolved",
-            ):
-                shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
-        else:
-            shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
-            assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
+        shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
+        assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
+        # A year with no published calendar still refuses rather than guessing.
+        with pytest.raises(
+            DeadlineValidationError,
+            match="holiday calendar publication for 2027 could not be resolved",
+        ):
+            shift_deadline(date(2027, 1, 29), modelo="190", ccaa_code=None, operation=operation)
     # A close date that is NOT the statutory month-end has been moved off a
     # non-working day, and the only sanctioned reason to move it is AEAT's own
     # published calendar -- so such a window must cite the calendar it was read

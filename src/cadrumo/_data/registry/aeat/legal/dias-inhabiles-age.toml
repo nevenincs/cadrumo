@@ -25,6 +25,8 @@ notes = "Resolución de 16 de noviembre de 2023 de la Secretaría de Estado de F
 required_text = [
     "Calendario de días inhábiles, 2024",
     "Día 1: Inhábil en todo el territorio nacional.",
+    "Día 9: Inhábil en las Comunidades Autónomas de Andalucía, de Aragón, del Principado de Asturias, de Extremadura, de la Región de Murcia, así como en la Comunidad de Castilla y León y en la Ciudad de Melilla.",
+    "Día 25: Inhábil en todo el territorio nacional.",
 ]
 
 [legal."resolucion-sefp-2024-12-16-dias-inhabiles-2025:anexo"]
@@ -45,6 +47,8 @@ notes = "Resolución de 16 de diciembre de 2024 de la Secretaría de Estado de F
 required_text = [
     "2025 - Calendario de días inhábiles",
     "Día 1: Inhábil en todo el territorio nacional.",
+    "Día 26: Inhábil en la Comunidad Autónoma de las Illes Balears y de Cataluña.",
+    "Día 25: Inhábil en todo el territorio nacional.",
 ]
 
 [legal."resolucion-sefp-2025-11-18-dias-inhabiles-2026:anexo"]
@@ -65,6 +69,8 @@ notes = "Resolución de 18 de noviembre de 2025 de la Secretaría de Estado de F
 required_text = [
     "2026 Calendario de días inhábiles",
     "Día 1: Inhábil en todo el territorio nacional.",
+    "Día 7: Inhábil en las Comunidades Autónomas de Andalucía, de Aragón, del Principado de Asturias, de Cantabria, de Extremadura, de la Región de Murcia, de La Rioja, así como en la Comunidad de Castilla y León, en la Comunidad de Madrid y en la Ciudad de Melilla.",
+    "Día 25: Inhábil en todo el territorio nacional.",
 ]
 
 [sources."boe-dias-inhabiles-age-2024"]

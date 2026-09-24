@@ -178,11 +178,16 @@ def test_modelo_193_annual_deadline_is_grounded_to_current_revision() -> None:
         # Grounded on art. 5, which establishes the plazo, rather than art. 1,
         # which approves the modelo.
         assert window.legal_refs == ("orden-eha-3377-2011:art-5",)
-        with (
-            pytest.raises(DeadlineValidationError, match="holiday calendar publication for 2026 could not be resolved"),
-            bundled_indexed_authority().operation() as operation,
-        ):
-            shift_deadline(window.closes_on, modelo="193", ccaa_code=None, operation=operation)
+        # 31 January 2026 is a Saturday: the published 2026 calendar moves the
+        # close to Monday 2 February on read, and a year with no published
+        # calendar still refuses rather than guessing.
+        with bundled_indexed_authority().operation() as operation:
+            shift = shift_deadline(window.closes_on, modelo="193", ccaa_code=None, operation=operation)
+            assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (date(2026, 2, 2), True, "sabado")
+            with pytest.raises(
+                DeadlineValidationError, match="holiday calendar publication for 2027 could not be resolved"
+            ):
+                shift_deadline(date(2027, 1, 29), modelo="193", ccaa_code=None, operation=operation)
 
 
 @pytest.mark.parametrize(
