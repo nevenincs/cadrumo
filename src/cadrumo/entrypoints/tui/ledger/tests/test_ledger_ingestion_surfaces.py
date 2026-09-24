@@ -281,6 +281,9 @@ def _evidence_screen(door: _EvidenceDoor, refreshes: list[int]) -> LedgerEvidenc
     )
 
 
+_ROW_REFRESH_PAUSES = 200
+
+
 @pytest.mark.asyncio
 async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> None:
     door = _EvidenceDoor(ready=False)
@@ -303,6 +306,12 @@ async def test_evidence_is_added_listed_and_reading_is_gated_on_the_reader() -> 
             assert door.added[-1] == "C:/synthetic/invoice_A-0003.pdf"
             assert refreshes == [1]
             records = screen.query_one("#ledger-evidence-records", DataTable)
+            # The refreshed rows arrive through the message loop after the add
+            # worker completes, so a loaded host may need more than one pause.
+            for _ in range(_ROW_REFRESH_PAUSES):
+                if records.ordered_rows:
+                    break
+                await pilot.pause(0.05)
             assert tuple(row.key.value for row in records.ordered_rows) == ("8747cbf318cf0adb",)
             records.focus()
             records.move_cursor(row=0)

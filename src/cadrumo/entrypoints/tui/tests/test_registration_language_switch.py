@@ -106,6 +106,23 @@ async def _wait_for_screen(pilot, screen_type: type, *, composed: str, deadline_
     return False
 
 
+async def _click_when_laid_out(pilot, selector: str, *, deadline_seconds: float = 120.0) -> None:
+    """Click ``selector`` once it occupies screen space, retrying only a click that missed.
+
+    A composed widget can still have no region until the next layout pass; on a
+    loaded host the click then lands on nothing and the flow silently stalls.
+    ``Pilot.click`` reports whether it hit the target, so a miss is retried and a
+    hit is never repeated.
+    """
+    deadline = time.monotonic() + deadline_seconds
+    while time.monotonic() < deadline:
+        matches = pilot.app.screen.query(selector)
+        if matches and matches.first().region.area > 0 and await pilot.click(selector):
+            return
+        await pilot.pause(0.1)
+    raise AssertionError(f"{selector} never became clickable within {deadline_seconds:g}s")
+
+
 def _text(app: RegistrationScreen, selector: str) -> str:
     """What one zone of the page currently says."""
     return str(app.query_one(selector, Static).content)
@@ -257,7 +274,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             app.query_one("#field-password", Input).value = _CREDENTIAL_INPUT
             app.query_one("#field-confirm", Input).value = _CREDENTIAL_INPUT
             await pilot.pause()
-            await pilot.click("#btn-create")
+            await _click_when_laid_out(pilot, "#btn-create")
 
             # The offer that follows creation is still the first surface, so
             # it must answer in the language the chooser was left on. Each
@@ -286,7 +303,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             for selector, key in offer_buttons.items():
                 assert str(offer.query_one(selector, Button).label) == tr(key, locale=_TARGET_LANGUAGE), selector
 
-            await pilot.click("#btn-setup-recovery")
+            await _click_when_laid_out(pilot, "#btn-setup-recovery")
             assert await _wait_for_screen(pilot, RecoveryCodeScreen, composed="#btn-confirm-code"), (
                 f"setting up must show the code screen, but {type(pilot.app.screen).__name__} is active: "
                 f"{[str(widget.render()) for widget in pilot.app.screen.query(Static)][:6]}"
@@ -320,7 +337,7 @@ async def test_the_chosen_language_is_the_one_the_profile_is_created_with(tmp_pa
             code = str(code_screen.query_one("#code-value", Static).content)
             assert code, "the code must be on screen before it can be typed back"
             verification.value = code
-            await pilot.click("#btn-confirm-code")
+            await _click_when_laid_out(pilot, "#btn-confirm-code")
             await pilot.app.workers.wait_for_complete()
             for _ in range(300):
                 if app.outcome is not None:
