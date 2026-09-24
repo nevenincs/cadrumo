@@ -224,6 +224,9 @@ def _provisioned_profile_env(tmp_path: Path) -> Generator[None]:
     real published generation is what a host owes this door, exactly as binding
     the persistence ports is.
     """
+    # An explicit directory override is the operator's to provision: the CLI
+    # validates it for every command that runs and never creates it.
+    (tmp_path / "fallback-store").mkdir(exist_ok=True)
     with (
         temporary_env(
             CADRUMO_LOCAL_STORAGE_ROOT=str(tmp_path / "storage"),
