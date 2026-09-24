@@ -5,7 +5,7 @@ tags:
 date: '2026-09-24'
 modified: '2026-09-24'
 body_schema: 'body-v2'
-body_hash: 'sha256:059c461961a60fa5cb8339474cfe3be0935667395f120c30fb56d4e3a8937614'
+body_hash: 'sha256:8238967be0bffca2c9afdc9f07d8e438a638c260e2d036d85bb37372b45755e3'
 related:
   - "[[2026-08-24-tui-operation-observation-adr]]"
   - "[[2026-08-27-tui-architecture-credential-free-type-aware-gate-adr]]"
@@ -90,6 +90,16 @@ completed, or the change is ratified by amending both decisions.
 - Requests persisted under secure-reference storage by the intermediate version
   must either be settled before the change or refused with a typed, localized
   reason. They must never be read as the restored shape.
+- Before `01b78c1021`, edit-apply requests carrying manual amounts were
+  journalled as plain JSON. That breaks the rule that private financial
+  payloads live only in approved encrypted persistence, whichever option is
+  chosen. Journals already written in that shape need a forward, deterministic
+  and idempotent migration that removes the amount fields from every stored
+  edit-apply request and event. The migration keeps the operation's identity,
+  lifecycle and outcome, and records that the values were purged. It does not
+  re-encrypt them, because neither option keeps a settled operation's manual
+  values. A journal the migration cannot rewrite is refused with a typed,
+  localized reason, never loaded as it is.
 
 ## Implementation
 
@@ -104,6 +114,11 @@ request. The composition proofs return to the production declaring definition.
 If the alternative is accepted instead, the retirement follows the no-legacy
 rule: the protocol modules, custody store, submission path, composition guard
 and their tests are removed together, and both decisions are amended.
+Under either option, the journal migration named in the constraints lands
+first. It purges plain-JSON manual amounts from stored edit-apply requests and
+events, and it is tested from every stored request version: plain JSON,
+secure reference and the chosen successor. It also has a test proving that an
+unrewritable journal is refused.
 
 ## Rationale
 
@@ -125,3 +140,6 @@ values without a stated reason.
   proofs stop needing a test-only definition.
 - If the alternative is chosen instead, the protocol's modules and tests are
   deleted, and both accepted decisions are amended to match.
+- Under either option, operation journals written before `01b78c1021` lose
+  their plaintext manual amounts through a forward migration, or are refused.
+  No stored journal keeps a private amount in plain JSON.
